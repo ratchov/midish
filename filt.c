@@ -916,12 +916,6 @@ filt_run(struct filt_s *o, struct ev_s *ev) {
 	 */
 
 pass:
-	/*
-	 * check if the event is handled by at least one voice rule, 
-	 * if not, then check if it is handled at least by one channel rule,
-	 * if not then chek if it is handled at least by one device rule,
-	 * if not, then pass the event.
-	 */
 	ret = 0;
 	for (i = o->voice_rules; i != 0; i = i->next) {
 		ret |= filt_matchrule(o, i, ev);
