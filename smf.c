@@ -53,14 +53,20 @@ unsigned smf_evlen[] = { 2, 2, 2, 2, 1, 1, 2, 0 };
 
 struct smf_s {
 	FILE *file;
-	unsigned length, index;
+	unsigned length, index;		/* current chunk length/position */
 };
+
+	/*
+	 * open a standard midi file and initialise
+	 * the smf_s structure
+	 */
 
 unsigned
 smf_open(struct smf_s *o, char *path, char *mode) {
 	o->file = fopen(path, mode);
 	if (!o->file) {
-		user_printstr("cant open file");
+		user_printstr(path);
+		user_printstr(": failed to open file\n");
 		return 0;
 	}
 	o->length = 0;
@@ -137,6 +143,9 @@ smf_getvar(struct smf_s *o, unsigned *val) {
 		}
 		*val <<= 7;
 		bits += 7;
+		/*
+		 * smf spec forbids more than 32bit per integer
+		 */
 		if (bits > 32) {
 			user_printstr("overflow while reading varlength number\n");
 			return 0;
@@ -171,6 +180,14 @@ smf_getheader(struct smf_s *o, char *hdr) {
 	o->length = len;
 	return 1;
 }
+
+	/*
+	 * in smf_put* routines there is a 'unsigned *used' argument
+	 * if (used == NULL) then data is not written in the smf_s
+	 * structure, only *user is incremented by the number
+	 * of bytes that would be written otherwise.
+	 * This is used to determine chunk's length
+	 */
 
 
 void
@@ -245,7 +262,7 @@ smf_putc(struct smf_s *o, unsigned *used, unsigned val) {
 
 void
 smf_putvar(struct smf_s *o, unsigned *used, unsigned val) {
-#define MAXBYTES (5)
+#define MAXBYTES (5)			/* 32bit / 7bit = 4bytes + 4bit */
 	unsigned char buf[MAXBYTES];
 	unsigned index = 0, bits;
 	for (bits = 7; bits < MAXBYTES * 7; bits += 7) {
@@ -430,7 +447,6 @@ song_exportsmf(struct song_s *o, char *filename) {
 	unsigned ntrks, nchan, used;
 
 	if (!smf_open(&f, filename, "w")) {
-		perror("smf_songexport: open");
 		return 0;
 	}
 	ntrks = 0;
@@ -721,6 +737,6 @@ song_importsmf(char *filename) {
 	return o;
 	
 bad3:	song_delete(o);
-bad2:	smd_close(&f);
+bad2:	smf_close(&f);
 bad1:	return 0;
 }
