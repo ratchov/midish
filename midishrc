@@ -22,11 +22,20 @@ proc cf name {
 #
 # some filter rules
 #
+proc devdrop i {
+	filtdevmap [songgetcurfilt] $i
+}
 proc devmap i o {
 	filtdevmap [songgetcurfilt] $i $o
 }
+proc chandrop i {
+	filtchanmap [songgetcurfilt] $i
+}
 proc chanmap i o {
 	filtchanmap [songgetcurfilt] $i $o
+}
+proc ctldrop i ic {
+	filtctlmap [songgetcurfilt] $i $ic
 }
 proc ctlmap i o ic oc {
 	filtctlmap [songgetcurfilt] $i $o $ic $oc

@@ -121,7 +121,7 @@ unsigned char filt_curve_inv[128] = {
 
 
 void
-rule_changein(struct rule_s *o, unsigned oldc, unsigned newc) {
+rule_setichan(struct rule_s *o, unsigned oldc, unsigned newc) {
 	switch(o->type) {
 	case RULE_CHANMAP:
 	case RULE_KEYMAP:
@@ -477,10 +477,10 @@ filt_conf_setichan(struct filt_s *o, unsigned oldc, unsigned newc) {
 	struct rule_s *i;
 	
 	for (i = o->voice_maps; i != 0; i = i->next) {
-		rule_changein(i, oldc, newc);
+		rule_setichan(i, oldc, newc);
 	}
 	for (i = o->chan_maps; i != 0; i = i->next) {
-		rule_changein(i, oldc, newc);
+		rule_setichan(i, oldc, newc);
 	}
 	if (o->chan_maps == 0) {
 		filt_conf_chanmap(o, newc, oldc);

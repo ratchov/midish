@@ -141,6 +141,12 @@
 
 	<UL>
 	<LI> added <TT>device</TT>-parameter to <TT>sendraw</TT>
+	<LI> renamed <TT>filtchangein</TT> to <TT>filtsetichan</TT>
+	<LI> added ne filter rules: 
+		<TT>filtdevdrop</TT>, 
+		<TT>filtchandrop</TT>,
+		<TT>filtctldrop</TT> and 
+		<TT>filtkeydrop</TT>.
 	</UL>
 
 <A name="language"></A>
@@ -597,212 +603,234 @@
 <H2>Track functions</H2>
 
 <B><TT>tracklist</TT></B>
-<BLOCKQUOTE>
-returns the list of names of the tracks in the song
-example:
+	<BLOCKQUOTE>
+	returns the list of names of the tracks in the song
+	example:
 	<PRE>
 	print [tracklist]
 	</PRE>
-</BLOCKQUOTE>
+	</BLOCKQUOTE>
 
 <B><TT>tracknew trackname</TT></B>
-<BLOCKQUOTE>
-creates an empty track named <TT>trackname</TT>
-</BLOCKQUOTE>
+	<BLOCKQUOTE>
+	creates an empty track named <TT>trackname</TT>
+	</BLOCKQUOTE>
 
 <B><TT>trackexists trackname</TT></B>
-<BLOCKQUOTE>
-returns 1 if <TT>trackname</TT> is a track, 0 otherwise
-</BLOCKQUOTE>
+	<BLOCKQUOTE>
+	returns 1 if <TT>trackname</TT> is a track, 0 otherwise
+	</BLOCKQUOTE>
 
 <B><TT>tracksetcurfilt trackname filtname</TT></B>
-<BLOCKQUOTE>
-sets the default filter (for recording) of
-<TT>trackname</TT> to <TT>filtname</TT>
-</BLOCKQUOTE>
+	<BLOCKQUOTE>
+	sets the default filter (for recording) of
+	<TT>trackname</TT> to <TT>filtname</TT>
+	</BLOCKQUOTE>
 
 <B><TT>trackgetcurfilt trackname</TT></B>
-<BLOCKQUOTE>
-returns the default filter (for recording) 
-of <TT>trackname</TT>, returns <TT>nil</TT> if none
-</BLOCKQUOTE>
+	<BLOCKQUOTE>
+	returns the default filter (for recording) 
+	of <TT>trackname</TT>, returns <TT>nil</TT> if none
+	</BLOCKQUOTE>
 		
 <B><TT>trackcheck trackname</TT></B>
-<BLOCKQUOTE>
-checks the whole track for orphaned notes,
-nested notes and other anomalies; also
-removes multiple controllers in the same tic
-</BLOCKQUOTE>
+	<BLOCKQUOTE>
+	checks the whole track for orphaned notes,
+	nested notes and other anomalies; also
+	removes multiple controllers in the same tic
+	</BLOCKQUOTE>
 
 <B><TT>trackgetlen</TT></B>
-<BLOCKQUOTE>
-returns the size in tics of the current track,
-example:
+	<BLOCKQUOTE>
+	returns the size in tics of the current track,
+	example:
 	<PRE>
 	let l = [trackgetlen];
 	</PRE>
-</BLOCKQUOTE>
+	</BLOCKQUOTE>
 
 <B><TT>tracksave trackname filename</TT></B>
-<BLOCKQUOTE>
-save the events of the track in a file, <TT>filename</TT>
-is a quoted string.
-</BLOCKQUOTE>
+	<BLOCKQUOTE>
+	save the events of the track in a file, <TT>filename</TT>
+	is a quoted string.
+	</BLOCKQUOTE>
 
 <B><TT>trackload trackname filename</TT></B>
-<BLOCKQUOTE>
-loads the events of a track from a file, <TT>filename</TT>
-is a quoted string.
-</BLOCKQUOTE>
+	<BLOCKQUOTE>
+	loads the events of a track from a file, <TT>filename</TT>
+	is a quoted string.
+	</BLOCKQUOTE>
 
 <B><TT>trackcut trackname from amount quantum</TT></B>
-<BLOCKQUOTE>
-cuts <TT>amount</TT> measures of the track <TT>trackname</TT>
-from measure <TT>from</TT>.
-</BLOCKQUOTE>
+	<BLOCKQUOTE>
+	cuts <TT>amount</TT> measures of the track <TT>trackname</TT>
+	from measure <TT>from</TT>.
+	</BLOCKQUOTE>
 
 <B><TT>trackblank trackname from amount quantum</TT></B>
-<BLOCKQUOTE>
-clears <TT>amount</TT> measures of the track <TT>trackname</TT>
-from the measure <TT>from</TT>.
-</BLOCKQUOTE>
+	<BLOCKQUOTE>
+	clears <TT>amount</TT> measures of the track <TT>trackname</TT>
+	from the measure <TT>from</TT>.
+	</BLOCKQUOTE>
 
 <B><TT>trackinsert trackname from amount</TT></B>
-<BLOCKQUOTE>
-inserts <TT>amount</TT> blank measures in track
-<TT>trackname</TT> just before the measure <TT>from</TT>
-</BLOCKQUOTE>
+	<BLOCKQUOTE>
+	inserts <TT>amount</TT> blank measures in track
+	<TT>trackname</TT> just before the measure <TT>from</TT>
+	</BLOCKQUOTE>
 
 <B><TT>trackcopy trackname1 from amount trackname2 where  quantum</TT></B>
-<BLOCKQUOTE>
-copies <TT>amount</TT> measures starting at <TT>from</TT>
-from track <TT>trackname1</TT> into <TT>trackname2</TT>
-at position <TT>where</TT>
-</BLOCKQUOTE>
+	<BLOCKQUOTE>
+	copies <TT>amount</TT> measures starting at <TT>from</TT>
+	from track <TT>trackname1</TT> into <TT>trackname2</TT>
+	at position <TT>where</TT>
+	</BLOCKQUOTE>
 
 <B><TT>trackquant trackname from amount rate quantum</TT></B>
-<BLOCKQUOTE>
-quantises <TT>amount</TT> measures of the track
-<TT>trackname</TT> from measure <TT>from</TT> ; the quantum is
-the round in tics (see songsetsign). Rate must be
-between 0 and 100. 0 means no quantisation and
-100 means full quantisation.
-</BLOCKQUOTE>
+	<BLOCKQUOTE>
+	quantises <TT>amount</TT> measures of the track
+	<TT>trackname</TT> from measure <TT>from</TT> ; the quantum is
+	the round in tics (see songsetsign). Rate must be
+	between 0 and 100. 0 means no quantisation and
+	100 means full quantisation.
+	</BLOCKQUOTE>
 
 <B><TT>tracksetcurfilt trackname filtname</TT></B>
-<BLOCKQUOTE>
-set default filter to use for the next record
-of this track
-</BLOCKQUOTE>
+	<BLOCKQUOTE>
+	set default filter to use for the next record
+	of this track
+	</BLOCKQUOTE>
 
 <B><TT>trackaddev trackname measure beat tic ev</TT></B>
-<BLOCKQUOTE>
-puts the event <TT>ev</TT> on track <TT>trackname</TT>
-at the position given by <TT>measure</TT>,
-<TT>beat</TT> and <TT>tic</TT>
-</BLOCKQUOTE>
+	<BLOCKQUOTE>
+	puts the event <TT>ev</TT> on track <TT>trackname</TT>
+	at the position given by <TT>measure</TT>,
+	<TT>beat</TT> and <TT>tic</TT>
+	</BLOCKQUOTE>
 
 <H2>Channel functions</H2>
 
 <B><TT>channew channelname channelnum</TT></B>
-<BLOCKQUOTE>
-creates an new channel named <TT>channelname</TT>
-and bound to midi channel <TT>channelnum</TT> 
-</BLOCKQUOTE>
+	<BLOCKQUOTE>
+	creates an new channel named <TT>channelname</TT>
+	and bound to midi channel <TT>channelnum</TT> 
+	</BLOCKQUOTE>
 
 <B><TT>chanexists channelname</TT></B>
-<BLOCKQUOTE>
-returns 1 if <TT>channelname</TT> is a channel, 0 otherwise
-</BLOCKQUOTE>
+	<BLOCKQUOTE>
+	returns 1 if <TT>channelname</TT> is a channel, 0 otherwise
+	</BLOCKQUOTE>
 
 <B><TT>changetnum channelname</TT></B>
-<BLOCKQUOTE>
-returns the midi channel number of channel named
-<TT>channelname</TT>
-</BLOCKQUOTE>
+	<BLOCKQUOTE>
+	returns the midi channel number of channel named
+	<TT>channelname</TT>
+	</BLOCKQUOTE>
 
 <B><TT>changetdev channelname</TT></B>
-<BLOCKQUOTE>
-returns the device number of channel named
-<TT>channelname</TT>
-</BLOCKQUOTE>
+	<BLOCKQUOTE>
+	returns the device number of channel named
+	<TT>channelname</TT>
+	</BLOCKQUOTE>
 
 <B><TT>chanconfev channelname event</TT></B>
-<BLOCKQUOTE>
-adds the event to the configuration of 
-channel <TT>channelname</TT>, typically used set
-the program, volume, depth etc... The channel
-of the event is not used.
-</BLOCKQUOTE>
+	<BLOCKQUOTE>
+	adds the event to the configuration of 
+	channel <TT>channelname</TT>, typically used set
+	the program, volume, depth etc... The channel
+	of the event is not used.
+	</BLOCKQUOTE>
 
 <B><TT>chaninfo channame</TT></B>
-<BLOCKQUOTE>
-prints all events on the config
-of the channel.
-</BLOCKQUOTE>
+	<BLOCKQUOTE>
+	prints all events on the config
+	of the channel.
+	</BLOCKQUOTE>
 
 
 <H2>Filter functions</H2>
 
 <B><TT>filtnew filtname</TT></B>
-<BLOCKQUOTE>
-creates an new filter named <TT>filtname</TT>
-</BLOCKQUOTE>
+	<BLOCKQUOTE>
+	creates an new filter named <TT>filtname</TT>
+	</BLOCKQUOTE>
 
 <B><TT>filtexists filtname</TT></B>
-<BLOCKQUOTE>
-returns 1 if <TT>filtname</TT> is a filter, 0 otherwise
-</BLOCKQUOTE>
+	<BLOCKQUOTE>
+	returns 1 if <TT>filtname</TT> is a filter, 0 otherwise
+	</BLOCKQUOTE>
 
 <B><TT>filtreset filtname</TT></B>
-<BLOCKQUOTE>
-removes all rules from the filter <TT>filtname</TT>
-</BLOCKQUOTE>
+	<BLOCKQUOTE>
+	removes all rules from the filter <TT>filtname</TT>
+	</BLOCKQUOTE>
 
 <B><TT>filtinfo filtname</TT></B>
-<BLOCKQUOTE>
-lists the rules of the given filter
-</BLOCKQUOTE>
+	<BLOCKQUOTE>
+	lists the rules of the given filter
+	</BLOCKQUOTE>
 
-<B><TT>filtchangein filtname oldchan newchan</TT></B>
-<BLOCKQUOTE>
-changes the input channel of 
-all rules with input channel equal to <TT>oldchan</TT>
-to <TT>newchan</TT>
-</BLOCKQUOTE>
+<B><TT>filtsetichan filtname oldchan newchan</TT></B>
+	<BLOCKQUOTE>
+	changes the input channel of 
+	all rules with input channel equal to <TT>oldchan</TT>
+	to <TT>newchan</TT>
+	</BLOCKQUOTE>
+
+<B><TT>filtdevdrop filtname inputdev</TT></B>
+	<BLOCKQUOTE>
+	make filter drop events from device <TT>inputdev</TT>
+	</BLOCKQUOTE>
 
 <B><TT>filtdevmap filtname inputdev outputdev</TT></B>
-<BLOCKQUOTE>
-route all events from device <TT>inputdev</TT>
-to device <TT>outputdev</TT>. If multiple dev maps are 
-defined for the same input device then events are 
-duplicated
-</BLOCKQUOTE>
+	<BLOCKQUOTE>
+	route all events from device <TT>inputdev</TT>
+	to device <TT>outputdev</TT>. If multiple dev maps are 
+	defined for the same input device then events are 
+	duplicated
+	</BLOCKQUOTE>
+
+<B><TT>filtchandrop filtname inputchan</TT></B>
+	<BLOCKQUOTE>
+	make filter drop events from channel <TT>inputchan</TT>
+	</BLOCKQUOTE>
 
 <B><TT>filtchanmap filtname inputchan outputchan</TT></B>
-<BLOCKQUOTE>
-route all events from channel <TT>inputchan</TT>
-to channel <TT>outputchan</TT>. If multiple channel maps are 
-defined for the same input channel then events are 
-duplicated
-</BLOCKQUOTE>
+	<BLOCKQUOTE>
+	route all events from channel <TT>inputchan</TT>
+	to channel <TT>outputchan</TT>. If multiple channel maps are 
+	defined for the same input channel then events are 
+	duplicated
+	</BLOCKQUOTE>
 
-<B><TT>filtkeymap filtname inchan outchan keystart keyend keyplus</TT></B>
-<BLOCKQUOTE>
-route note events from channel <TT>inchan</TT> and
-in the range keystart..keyend to <TT>outchan</TT>.
-Routed notes are transposed by keyplus half-tones
-If multiple keymaps are defined for the same input 
-channel and key-range then events are duplicated
-</BLOCKQUOTE>
+<B><TT>filtctldrop filtname inchan inctl</TT></B>
+	<BLOCKQUOTE>
+	make the filter drop controller number <TT>inctl</TT> 
+	on channel <TT>inctl</TT>.
+	</BLOCKQUOTE>
 
 <B><TT>filtctlmap filtname inchan outchan inctl outctl</TT></B>
-<BLOCKQUOTE>
-route controller <TT>inctl</TT> from <TT>inchan</TT>
-to controller <TT>outctl</TT> on <TT>outchan</TT>.
-If multiple ctlmaps are defined for the same input 
-channel and the same input controller then events are duplicated
-</BLOCKQUOTE>
+	<BLOCKQUOTE>
+	route controller <TT>inctl</TT> from <TT>inchan</TT>
+	to controller <TT>outctl</TT> on <TT>outchan</TT>.
+	If multiple ctlmaps are defined for the same input 
+	channel and the same input controller then events are duplicated
+	</BLOCKQUOTE>
+
+<B><TT>filtkeydrop filtname inchan keystart keyend</TT></B>
+	<BLOCKQUOTE>
+	drop notes between <TT>keystart</TT> and <TT>keyend</TT>
+	on channel <TT>inchan</TT>.
+	</BLOCKQUOTE>
+
+<B><TT>filtkeymap filtname inchan outchan keystart keyend keyplus</TT></B>
+	<BLOCKQUOTE>
+	route note events from channel <TT>inchan</TT> and
+	in the range keystart..keyend to <TT>outchan</TT>.
+	Routed notes are transposed by keyplus half-tones
+	If multiple keymaps are defined for the same input 
+	channel and key-range then events are duplicated
+	</BLOCKQUOTE>
 
 <H2>Real-time functions</H2>
 
