@@ -464,13 +464,29 @@ unsigned
 user_func_tracksetcurfilt(struct exec_s *o) {
 	struct songtrk_s *t;
 	struct songfilt_s *f;
+	struct var_s *arg;
 	
-	if (!exec_lookuptrack(o, "trackname", &t) ||
-	    !exec_lookupfilt(o, "filtname", &f)) {
+	if (!exec_lookuptrack(o, "trackname", &t)) {
+		return 0;
+	}	
+	arg = exec_varlookup(o, "filtname");
+	if (!arg) {
+		dbg_puts("user_func_tracksetcurfilt: 'filtname': no such param\n");
 		return 0;
 	}
-	t->curfilt = f;
-	return 1;
+	if (arg->data->type == DATA_NIL) {
+		t->curfilt = f;
+		return 1;
+	} else if (arg->data->type == DATA_REF) {
+		f = song_filtlookup(user_song, arg->data->val.ref);
+		if (!f) {
+			user_printstr("no such filt\n");
+			return 0;
+		}
+		t->curfilt = f;
+		return 1;
+	}
+	return 0;
 }
 
 unsigned
@@ -1154,14 +1170,18 @@ user_func_songsetcurfilt(struct exec_s *o) {
 		return 0;
 	}
 	if (arg->data->type == DATA_NIL) {
-		user_song->curfilt = 0;
+		user_song->curfilt = f;
 		return 1;
-	} 
-	if (!exec_lookupfilt(o, "filtname", &f)) {
-		return 0;
+	} else if (arg->data->type == DATA_REF) {
+		f = song_filtlookup(user_song, arg->data->val.ref);
+		if (!f) {
+			user_printstr("no such filt\n");
+			return 0;
+		}
+		user_song->curfilt = f;
+		return 1;
 	}
-	user_song->curfilt = f;
-	return 1;
+	return 0;
 }
 
 
