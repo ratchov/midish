@@ -255,7 +255,7 @@ Syntax:
 		name. The return value is given to the caller
 		with a 'return' statement.
 
-Devices and channles
+Devices and channels
 --------------------
 
 	devices are numbered between 0 and 15. They are
@@ -277,7 +277,7 @@ Devices and channles
 
 		channew drums { 2 9 }	# define a named channel
 		
-	'drums' and "{2 9}" are equivalent. Named channels
+	'drums' and "{2 9}" become equivalent. Named channels
 	can be also used to hold some configuration events,
 	see channew, chanconfev
 
@@ -286,9 +286,9 @@ Events:
 
 	some functions take event arguments. An event
 	is specified as list containing:
-		- a reference from the followin list:
+		- a reference from the following list:
 		  noff, non, kat, ctl, pc, cat, bend
-		- a channel number
+		- a channel
 		- a number 
 		- a second number (not for 'pc' and 'cat')
 		
@@ -302,6 +302,34 @@ Events:
 				  
 	{ ctl drums 7 99 }	- set value 99 to controller number 7
 				  on device/channel drums
+
+Filters
+-------
+
+	filters are used to route midi events between channels and 
+	devices, to make keyboard splits and controller mappings. 
+	For instance to route events on device 0 channel 0 to
+	device 1 channel 9:
+	
+		filtnew myfilt
+		filtchanmap {0 0} {1 9}
+
+	to map controller 7 (volume) on channel 0, device 0 to controller
+	11 (expression) on channel 9, device 1:
+
+		filtctlmap {0 0} {1 9} 7 11
+
+Tracks
+------
+
+	a track is a set of events ordered in time. They can be
+	recorded and edited. Each track has a name and
+	and a default filter (used for recording). Tracks are
+	not bound to a specific channel/device and can
+	be used to record a complete song (not recommended).
+	On playback all tracks are played simultaneously.
+
+
 
 Track functions:
 ----------------
@@ -666,4 +694,3 @@ Misc. functions:
 	
 		causes the sequencer to core-dump
 	
-
