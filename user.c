@@ -1466,17 +1466,23 @@ unsigned
 user_func_sendraw(struct exec_s *o) {
 	struct var_s *arg;
 	struct data_s *i;
-	struct mididev_s *dev;
 	unsigned char byte;
+	long device;
 	
 	arg = exec_varlookup(o, "list");
 	if (!arg) {
 		dbg_puts("user_func_sendraw: 'list': no such param\n");
-		return 0;
+		dbg_panic();
 	}
 	if (arg->data->type != DATA_LIST) {
 		user_printstr("argument must be a list\n");
 		return 0;
+	}
+	if (!exec_lookuplong(o, "device", &device)) {
+		return 0;
+	}
+	if (device < 0 || device >= DEFAULT_MAXNDEVS) {
+		user_printstr("sendraw: device out of range\n");
 	}
 	for (i = arg->data->val.list; i != 0; i = i->next) {
 		if (i->type != DATA_LONG || i->val.num < 0 || i->val.num > 255) {
@@ -1486,11 +1492,9 @@ user_func_sendraw(struct exec_s *o) {
 	}
 	
 	mux_init(0, 0);
-	for (dev = mididev_list; dev != 0; dev = dev->next) {
-		for (i = arg->data->val.list; i != 0; i = i->next) {
-			byte = i->val.num;
-			mux_sendraw(dev->unit, &byte, 1);
-		}
+	for (i = arg->data->val.list; i != 0; i = i->next) {
+		byte = i->val.num;
+		mux_sendraw(device, &byte, 1);
 	}
 	mux_flush();
 	mux_done();
@@ -1709,7 +1713,8 @@ user_mainloop(void) {
 			name_newarg("eventlo", 0)));
 	exec_newbuiltin(exec, "shut", user_func_shut, 0);
 	exec_newbuiltin(exec, "sendraw", user_func_sendraw, 
-			name_newarg("list", 0));
+			name_newarg("device", 
+			name_newarg("list", 0)));
 
 	exec_newbuiltin(exec, "devattach", user_func_devattach,
 			name_newarg("unit", 

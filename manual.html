@@ -11,6 +11,7 @@
 <UL>
 <LI><A href="#intro">Introduction</A>
 <LI><A href="#install">Installation</A>
+<LI><A href="#changes">Changes</A>
 <LI><A href="#language">Language reference</A>
 <LI><A href="#devices">Devices and channels</A>
 <LI><A href="#events">Events</A>
@@ -133,6 +134,14 @@
 	songplay
 	</PRE>
 
+
+<A name="changes"></A>
+<H1>Changes</H1>
+<H2>from release 0.1 to release 0.2</H2>
+
+	<UL>
+	<LI> added <TT>device</TT>-parameter to <TT>sendraw</TT>
+	</UL>
 
 <A name="language"></A>
 <H1>Language reference</H1>
@@ -820,13 +829,13 @@ the current track (if any) or through
 the current filter (if any).
 </BLOCKQUOTE>
 
-<B><TT>sendraw arrayofbytes</TT></B>
+<B><TT>sendraw device arrayofbytes</TT></B>
 <BLOCKQUOTE>
-sends raw midi data to the device,
+sends raw midi data to device number '<TT>device</TT>',
 can be used to send system exclusive messages,
 example:
 	<PRE>
-	sendraw { 0xF0 0x7E 0x7F 0x09 0x01 0xF7 }
+	sendraw 0 { 0xF0 0x7E 0x7F 0x09 0x01 0xF7 }
 	</PRE>
 </BLOCKQUOTE>
 
