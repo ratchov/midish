@@ -161,17 +161,6 @@ rule_setidev(struct rule_s *o, unsigned oldc, unsigned newc) {
 }
 
 
-void
-rulelist_empty(struct rule_s **list) {
-	struct rule_s *r;
-	
-	while(*list) {
-		r = *list;
-		(*list) = r->next;
-		mem_free(r); 
-	}
-}
-
 /* --------------------------------------------------------------------- */
 
 
@@ -186,29 +175,34 @@ filt_init(struct filt_s *o) {
 		
 	o->statelist = 0;
 	o->active = 1;
-	o->voice_drops = 0;
-	o->voice_maps = 0;
-	o->chan_drops = 0;
-	o->chan_maps = 0;
-	o->dev_drops = 0;
-	o->dev_maps = 0;
-	
-/*	filt_new_chanmap(o, 16, 0);
-	filt_new_ctlmap(o, 16, 0, 7, 11);
-	filt_new_keymap(o,  16, 0, 0, 127, -12);
-*/
+	o->voice_rules = 0;
+	o->chan_rules = 0;
+	o->dev_rules = 0;
 }
 
+	/*
+	 * removes all filtering rules and all states
+	 */
 
 void
 filt_reset(struct filt_s *o) {
 	struct state_s *i;
-	rulelist_empty(&o->voice_drops);
-	rulelist_empty(&o->voice_maps);
-	rulelist_empty(&o->chan_drops);
-	rulelist_empty(&o->chan_maps);
-	rulelist_empty(&o->dev_drops);
-	rulelist_empty(&o->dev_maps);
+	struct rule_s *r;
+	while(o->voice_rules) {
+		r = o->voice_rules;
+		o->voice_rules = r->next;
+		mem_free(r); 
+	}
+	while(o->chan_rules) {
+		r = o->chan_rules;
+		o->chan_rules = r->next;
+		mem_free(r); 
+	}
+	while(o->dev_rules) {
+		r = o->dev_rules;
+		o->dev_rules = r->next;
+		mem_free(r); 
+	}
 	while (o->statelist) {
 		i = o->statelist;
 		o->statelist = i->next;
@@ -289,8 +283,8 @@ filt_conf_devdrop(struct filt_s *o, unsigned ichan) {
 	r = (struct rule_s *)mem_alloc(sizeof(struct rule_s));
 	r->type = RULE_DEVDROP;
 	r->ichan = ichan;
-	r->next = o->dev_drops;
-	o->dev_drops = r;
+	r->next = o->dev_rules;
+	o->dev_rules = r;
 }
 
 	/* 
@@ -302,7 +296,7 @@ void
 filt_conf_nodevdrop(struct filt_s *o, unsigned ichan) {
 	struct rule_s **i, *r;
 	
-	i = &o->dev_drops;
+	i = &o->dev_rules;
 	while(*i) {
 		if ((*i)->type == RULE_DEVDROP &&
 		    (*i)->ichan == ichan) {
@@ -330,8 +324,8 @@ filt_conf_devmap(struct filt_s *o,
 	r->type = RULE_DEVMAP;
 	r->ichan = ichan;
 	r->ochan = ochan;
-	r->next = o->dev_maps;
-	o->dev_maps = r;
+	r->next = o->dev_rules;
+	o->dev_rules = r;
 }
 
 	/* 
@@ -343,7 +337,7 @@ void
 filt_conf_nodevmap(struct filt_s *o, unsigned ochan) {
 	struct rule_s **i, *r;
 	
-	i = &o->dev_maps;
+	i = &o->dev_rules;
 	while(*i != 0) {
 		if ((*i)->type == RULE_DEVMAP && 
 		    (*i)->ochan == ochan) {
@@ -369,8 +363,8 @@ filt_conf_chandrop(struct filt_s *o, unsigned ichan) {
 	r = (struct rule_s *)mem_alloc(sizeof(struct rule_s));
 	r->type = RULE_CHANDROP;
 	r->ichan = ichan;
-	r->next = o->chan_drops;
-	o->chan_drops = r;	
+	r->next = o->chan_rules;
+	o->chan_rules = r;	
 }
 
 	/*
@@ -382,7 +376,7 @@ void
 filt_conf_nochandrop(struct filt_s *o, unsigned ichan) {
 	struct rule_s **i, *r;
 	
-	i = &o->chan_drops;
+	i = &o->chan_rules;
 	while(*i) {
 		if ((*i)->type == RULE_CHANDROP &&
 		    (*i)->ichan == ichan) {
@@ -405,15 +399,15 @@ filt_conf_chanmap(struct filt_s *o,
 	r->type = RULE_CHANMAP;
 	r->ichan = ichan;
 	r->ochan = ochan;
-	r->next = o->chan_maps;
-	o->chan_maps = r;
+	r->next = o->chan_rules;
+	o->chan_rules = r;
 }
 
 void
 filt_conf_nochanmap(struct filt_s *o, unsigned ochan) {
 	struct rule_s **i, *r;
 	
-	i = &o->chan_maps;
+	i = &o->chan_rules;
 	while(*i != 0) {
 		if ((*i)->type == RULE_CHANMAP && 
 		    (*i)->ochan == ochan) {
@@ -436,15 +430,15 @@ filt_conf_ctldrop(struct filt_s *o, unsigned ichan, unsigned ictl) {
 	r->type = RULE_CTLDROP;
 	r->ichan = ichan;
 	r->ictl = ictl;
-	r->next = o->voice_drops;
-	o->voice_drops = r;
+	r->next = o->voice_rules;
+	o->voice_rules = r;
 }
 
 void
 filt_conf_noctldrop(struct filt_s *o, unsigned ichan, unsigned ictl) {
 	struct rule_s **i, *r;
 	
-	i = &o->voice_drops;
+	i = &o->voice_rules;
 	while(*i) {
 		if ((*i)->type == RULE_CTLDROP && 
 		    (*i)->ichan == ichan && 
@@ -471,15 +465,15 @@ filt_conf_ctlmap(struct filt_s *o,
 	r->ictl = ictl;
 	r->octl = octl;
 	r->curve = filt_curve_id;
-	r->next = o->voice_maps;
-	o->voice_maps = r;
+	r->next = o->voice_rules;
+	o->voice_rules = r;
 }
 
 void
 filt_conf_noctlmap(struct filt_s *o, unsigned ochan, unsigned octl) {
 	struct rule_s **i, *r;
 	
-	i = &o->voice_maps;
+	i = &o->voice_rules;
 	while(*i != 0) {
 		if ((*i)->type == RULE_CTLMAP && 
 		    (*i)->ochan == ochan && 
@@ -504,8 +498,8 @@ filt_conf_keydrop(struct filt_s *o, unsigned ichan,
 	r->ichan = ichan;
 	r->keylo = keylo;
 	r->keyhi = keyhi;
-	r->next = o->voice_drops;
-	o->voice_drops = r;
+	r->next = o->voice_rules;
+	o->voice_rules = r;
 }
 
 
@@ -519,7 +513,7 @@ filt_conf_nokeydrop(struct filt_s *o, unsigned ichan,
     unsigned keylo, unsigned keyhi) {
 	struct rule_s **i, *r;
 	
-	i = &o->voice_drops;
+	i = &o->voice_rules;
 	while (*i) {
 		if ((*i)->type == RULE_KEYDROP && 
 		    (*i)->ichan == ichan && 
@@ -549,8 +543,8 @@ filt_conf_keymap(struct filt_s *o, unsigned ichan, unsigned ochan,
 	r->keyhi = keyhi;
 	r->keyplus = keyplus;
 	r->curve = filt_curve_id;
-	r->next = o->voice_maps;
-	o->voice_maps = r;
+	r->next = o->voice_rules;
+	o->voice_rules = r;
 }
 
 
@@ -559,7 +553,7 @@ filt_conf_nokeymap(struct filt_s *o, unsigned ochan,
     unsigned keylo, unsigned keyhi) {
 	struct rule_s **i, *r;
 	
-	i = &o->voice_maps;
+	i = &o->voice_rules;
 	while (*i) {
 		if ((*i)->type == RULE_KEYMAP && 
 		    (*i)->ochan == ochan && 
@@ -579,20 +573,11 @@ void
 filt_conf_setichan(struct filt_s *o, unsigned oldc, unsigned newc) {
 	struct rule_s *i;
 	
-	for (i = o->voice_drops; i != 0; i = i->next) {
+	for (i = o->voice_rules; i != 0; i = i->next) {
 		rule_setichan(i, oldc, newc);
 	}
-	for (i = o->voice_maps; i != 0; i = i->next) {
+	for (i = o->chan_rules; i != 0; i = i->next) {
 		rule_setichan(i, oldc, newc);
-	}
-	for (i = o->chan_drops; i != 0; i = i->next) {
-		rule_setichan(i, oldc, newc);
-	}
-	for (i = o->chan_maps; i != 0; i = i->next) {
-		rule_setichan(i, oldc, newc);
-	}
-	if (o->chan_maps == 0) {
-		filt_conf_chanmap(o, newc, oldc);
 	}
 }
 
@@ -601,26 +586,14 @@ void
 filt_conf_setidev(struct filt_s *o, unsigned oldc, unsigned newc) {
 	struct rule_s *i;
 	
-	for (i = o->voice_drops; i != 0; i = i->next) {
+	for (i = o->voice_rules; i != 0; i = i->next) {
 		rule_setidev(i, oldc, newc);
 	}
-	for (i = o->voice_maps; i != 0; i = i->next) {
+	for (i = o->chan_rules; i != 0; i = i->next) {
 		rule_setidev(i, oldc, newc);
 	}
-	for (i = o->chan_drops; i != 0; i = i->next) {
+	for (i = o->dev_rules; i != 0; i = i->next) {
 		rule_setidev(i, oldc, newc);
-	}
-	for (i = o->chan_maps; i != 0; i = i->next) {
-		rule_setidev(i, oldc, newc);
-	}
-	for (i = o->dev_drops; i != 0; i = i->next) {
-		rule_setidev(i, oldc, newc);
-	}
-	for (i = o->dev_maps; i != 0; i = i->next) {
-		rule_setidev(i, oldc, newc);
-	}
-	if (o->dev_maps == 0) {
-		filt_conf_devmap(o, newc, oldc);
 	}
 }
 
@@ -944,52 +917,28 @@ filt_run(struct filt_s *o, struct ev_s *ev) {
 
 pass:
 	/*
-	 * check if the event is dropped by a voice rule
+	 * check if the event is handled by at least one voice rule, 
+	 * if not, then check if it is handled at least by one channel rule,
+	 * if not then chek if it is handled at least by one device rule,
+	 * if not, then pass the event.
 	 */
-
-	for (i = o->voice_drops; i != 0; i = i->next) {
-		if (filt_matchrule(o, i, ev)) {
-			goto quit;
-		}
-	}
-	ret = 0;	
-	for (i = o->voice_maps; i != 0; i = i->next) {
-		ret |= filt_matchrule(o, i, ev);
-	}
-	if (ret) {
-		goto quit;
-	}
-	
-
-	for (i = o->chan_drops; i != 0; i = i->next) {
-		if (filt_matchrule(o, i, ev)) {
-			goto quit;
-		}
-	}
-	ret = 0;	
-	for (i = o->chan_maps; i != 0; i = i->next) {
-		ret |= filt_matchrule(o, i, ev);
-	}
-	if (ret) {
-		goto quit;
-	}
-
-
-	for (i = o->dev_drops; i != 0; i = i->next) {
-		if (filt_matchrule(o, i, ev)) {
-			goto quit;
-		}
-	}
 	ret = 0;
-	for (i = o->dev_maps; i != 0; i = i->next) {
+	for (i = o->voice_rules; i != 0; i = i->next) {
 		ret |= filt_matchrule(o, i, ev);
 	}
-	if (ret) {
-		goto quit;
+	if (!ret) {
+		for (i = o->chan_rules; i != 0; i = i->next) {
+			ret |= filt_matchrule(o, i, ev);
+		}
+		if (!ret) {
+			for (i = o->dev_rules; i != 0; i = i->next) {
+				ret |= filt_matchrule(o, i, ev);
+			}
+			if (!ret) {
+				filt_pass(o, ev);
+			}
+		}
 	}
-
-	filt_pass(o, ev);
-
 quit:
 	return;
 }

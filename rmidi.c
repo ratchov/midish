@@ -97,17 +97,18 @@ rmidi_inputcb(struct rmidi_s *o, unsigned char *buf, unsigned count) {
 	struct ev_s ev;
 	unsigned data;
 
-	if (rmidi_debug) {
-		dbg_putu(o->mididev.unit);
-		dbg_puts(" < ");
-		dbg_putx(data);
-		dbg_puts("\n");
-	}
 
 	while (count != 0) {
 		data = *buf;
 		count--;
 		buf++;
+
+		if (rmidi_debug) {
+			dbg_putu(o->mididev.unit);
+			dbg_puts(" <- ");
+			dbg_putx(data);
+			dbg_puts("\n");
+		}
 		
 		if (data >= 0xf8) {
 			switch(data) {
@@ -135,23 +136,21 @@ rmidi_inputcb(struct rmidi_s *o, unsigned char *buf, unsigned count) {
 		} else if (data >= 0x80) {
 			o->istatus = data;
 			o->icount = 0;
-		} else {
-			if (o->istatus >= 0x80 && o->istatus < 0xf0) {
-				o->idata[o->icount] = (unsigned char)data;
-				o->icount++;
+		} else if (o->istatus >= 0x80 && o->istatus < 0xf0) {
+			o->idata[o->icount] = (unsigned char)data;
+			o->icount++;
 
-				if (o->icount == RMIDI_EVLEN(o->istatus)) { 
-					o->icount = 0;
-					ev.cmd = o->istatus >> 4;
-					ev.data.voice.b0 = o->idata[0];
-					ev.data.voice.b1 = o->idata[1];
-					ev.data.voice.chan = (o->istatus & 0x0f) + (o->mididev.unit << 4);
-					if (ev.cmd == EV_NON && ev.data.voice.b1 == 0) {
-						ev.cmd = EV_NOFF;
-						ev.data.voice.b1 = EV_NOFF_DEFAULTVEL;
-					}
-					mux_evcb(o->mididev.unit, &ev);
+			if (o->icount == RMIDI_EVLEN(o->istatus)) { 
+				o->icount = 0;
+				ev.cmd = o->istatus >> 4;
+				ev.data.voice.b0 = o->idata[0];
+				ev.data.voice.b1 = o->idata[1];
+				ev.data.voice.chan = (o->istatus & 0x0f) + (o->mididev.unit << 4);
+				if (ev.cmd == EV_NON && ev.data.voice.b1 == 0) {
+					ev.cmd = EV_NOFF;
+					ev.data.voice.b1 = EV_NOFF_DEFAULTVEL;
 				}
+				mux_evcb(o->mididev.unit, &ev);
 			}
 		}
 	}
@@ -165,7 +164,7 @@ void
 rmidi_out(struct rmidi_s *o, unsigned data) {
 	if (rmidi_debug) {
 		dbg_putu(o->mididev.unit);
-		dbg_puts(" > ");
+		dbg_puts(" -> ");
 		dbg_putx(data);
 		dbg_puts("\n");
 	}

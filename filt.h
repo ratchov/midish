@@ -59,8 +59,7 @@ struct rule_s {
 
 struct filt_s {
 	/* config */
-	struct rule_s *voice_maps, *voice_drops, 
-		       *chan_maps, *chan_drops, *dev_maps, *dev_drops;
+	struct rule_s *voice_rules, *chan_rules, *dev_rules;
 	
 	/* real-time stuff*/
 	unsigned active;

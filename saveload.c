@@ -220,22 +220,13 @@ filt_output(struct filt_s *o, struct textout_s *f) {
 	textout_putstr(f, "{\n");
 	textout_shiftright(f);
 	
-	for (i = o->dev_drops; i != 0; i = i->next) {
+	for (i = o->dev_rules; i != 0; i = i->next) {
 		rule_output(i, f);
 	}
-	for (i = o->dev_maps; i != 0; i = i->next) {
+	for (i = o->chan_rules; i != 0; i = i->next) {
 		rule_output(i, f);
 	}
-	for (i = o->chan_drops; i != 0; i = i->next) {
-		rule_output(i, f);
-	}
-	for (i = o->chan_maps; i != 0; i = i->next) {
-		rule_output(i, f);
-	}
-	for (i = o->voice_drops; i != 0; i = i->next) {
-		rule_output(i, f);
-	}
-	for (i = o->voice_maps; i != 0; i = i->next) {
+	for (i = o->voice_rules; i != 0; i = i->next) {
 		rule_output(i, f);
 	}
 	

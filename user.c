@@ -933,22 +933,13 @@ user_func_filtinfo(struct exec_s *o) {
 	if (!exec_lookupfilt(o, "filtname", &f)) {
 		return 0;
 	}
-	for (i = f->filt.voice_drops; i != 0; i = i->next) {
+	for (i = f->filt.voice_rules; i != 0; i = i->next) {
 		rule_output(i, user_stdout);
 	}
-	for (i = f->filt.voice_maps; i != 0; i = i->next) {
+	for (i = f->filt.chan_rules; i != 0; i = i->next) {
 		rule_output(i, user_stdout);
 	}
-	for (i = f->filt.chan_drops; i != 0; i = i->next) {
-		rule_output(i, user_stdout);
-	}
-	for (i = f->filt.chan_maps; i != 0; i = i->next) {
-		rule_output(i, user_stdout);
-	}
-	for (i = f->filt.dev_drops; i != 0; i = i->next) {
-		rule_output(i, user_stdout);
-	}
-	for (i = f->filt.dev_maps; i != 0; i = i->next) {
+	for (i = f->filt.dev_rules; i != 0; i = i->next) {
 		rule_output(i, user_stdout);
 	}
 	return 1;
