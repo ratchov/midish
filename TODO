@@ -1,8 +1,0 @@
-- create an evspec_s structure that
-  can handle an event specification (note range, 
-  controller range etc...). Use it in trackblank,
-  trackcopy etc...
-
-- create a tempo factor for recording
-
-- add sysex support
