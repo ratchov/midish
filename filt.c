@@ -759,6 +759,9 @@ pass:
 			ret |= filt_matchrule(o, i, ev);
 		}
 	}
+	if (!ret) {
+		filt_pass(o, ev);
+	}
 drop:
 	return;
 }
