@@ -23,7 +23,7 @@ proc cf name {
 # some filter rules
 #
 proc devdrop i {
-	filtdevmap [songgetcurfilt] $i
+	filtdevdrop [songgetcurfilt] $i
 }
 proc devmap i o {
 	filtdevmap [songgetcurfilt] $i $o
@@ -134,6 +134,13 @@ proc l  {
 
 
 #
+# change current position
+#
+proc g measure {
+	songsetcurpos $measure
+}
+
+#
 # set note quantum
 #
 proc n denom {
@@ -146,13 +153,6 @@ proc n denom {
 proc q amount rate {
 	trackquant [songgetcurtrack] [songgetcurpos] $amount $rate [songgetcurquant]
 } 
-
-#
-# change current position
-#
-proc g measure {
-	songsetcurpos $measure
-}
 
 #
 # cut a piece of a track
@@ -257,15 +257,15 @@ proc timerm amount {
 #
 # turn on general midi (send sysex)
 #
-proc gmon {
-	sendraw 0 { 0xF0 0x7E 0x7F 0x09 0x01 0xF7 }
+proc gmon devnum{
+	sendraw $devnum { 0xF0 0x7E 0x7F 0x09 0x01 0xF7 }
 }
 
 #
 # turn off general midi (send sysex)
 #
-proc gmoff {
-	sendraw 0 { 0xF0 0x7E 0x7F 0x09 0x02 0xF7 }
+proc gmoff devnum {
+	sendraw $devnum { 0xF0 0x7E 0x7F 0x09 0x02 0xF7 }
 }
 
 #
