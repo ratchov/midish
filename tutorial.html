@@ -17,8 +17,8 @@
 <LI><A href="#track">Tracks</A>
 <LI><A href="#info">Obtaining information</A>
 <LI><A href="#save">Saving and loading songs</A>
-<LI><A href="#export">Exporting and importing standard MIDI files</A>
-<LI><A href="#language">Using the interpreted language</A>
+<LI><A href="#export">Import/export standard MIDI files</A>
+<LI><A href="#language">The interpreter's language</A>
 <LI><A href="#example">Example session</A>
 </UL>
 
@@ -27,10 +27,10 @@
 <H1>Introduction</H1>
 
 	<P>
-	Midish is a MIDI sequencing and filtering tool. 
-	
-	It is implemented as a sequencing engine and a 
-	command-line interpreter.
+	Midish is an open-source MIDI sequencer/filter for Unix-like 
+	operating systems (tested on OpenBSD and Linux)
+	implemented as a simple command-line interpreter 
+	(like a shell)
 	
 	Once midish started, the interpreter prompts
 	for commands. One can configure midi-devices, 
@@ -581,7 +581,7 @@
 	metronome settings) are not saved. 
 	
 <A name="export"></A>
-<H1>Importing and exporting standard MIDI files</H1>
+<H1>Import/export standard MIDI files</H1>
 
 	<P>
 	Standard MIDI files type 0 or 1 can be imported. Each
@@ -615,7 +615,7 @@
 	</PRE>
 	
 <A name="language"></A>
-<H1>Using the interpreted language</H1>
+<H1>The interpreter's language</H1>
 
 	<P>
 	In order to achieve any simple task with midish, we often have
