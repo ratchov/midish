@@ -148,17 +148,31 @@ void
 rule_output(struct rule_s *o, struct textout_s *f) {
 	textout_indent(f);
 	switch(o->type) {
+	case RULE_DEVDROP:
+		textout_putstr(f, "devdrop ");		
+		textout_putlong(f, o->ichan >> 4);
+		break;
 	case RULE_DEVMAP:
 		textout_putstr(f, "devmap ");		
 		textout_putlong(f, o->ichan >> 4);
 		textout_putstr(f, " ");
 		textout_putlong(f, o->ochan >> 4);
 		break;
+	case RULE_CHANDROP:
+		textout_putstr(f, "chandrop ");		
+		chan_output(o->ichan, f);
+		break;
 	case RULE_CHANMAP:
 		textout_putstr(f, "chanmap ");		
 		chan_output(o->ichan, f);
 		textout_putstr(f, " ");
 		chan_output(o->ochan, f);
+		break;
+	case RULE_CTLDROP:
+		textout_putstr(f, "ctldrop ");		
+		chan_output(o->ichan, f);
+		textout_putstr(f, " ");
+		textout_putlong(f, o->ictl);
 		break;
 	case RULE_CTLMAP:
 		textout_putstr(f, "ctlmap ");		
@@ -172,17 +186,25 @@ rule_output(struct rule_s *o, struct textout_s *f) {
 		textout_putstr(f, " ");
 		textout_putstr(f, "id");
 		break;
+	case RULE_KEYDROP:
+		textout_putstr(f, "keydrop ");		
+		chan_output(o->ichan, f);
+		textout_putstr(f, " ");
+		textout_putlong(f, o->keylo);
+		textout_putstr(f, " ");
+		textout_putlong(f, o->keyhi);
+		break;
 	case RULE_KEYMAP:
 		textout_putstr(f, "keymap ");		
 		chan_output(o->ichan, f);
 		textout_putstr(f, " ");
 		chan_output(o->ochan, f);
 		textout_putstr(f, " ");
-		textout_putlong(f, o->key_start);
+		textout_putlong(f, o->keylo);
 		textout_putstr(f, " ");
-		textout_putlong(f, o->key_end);
+		textout_putlong(f, o->keyhi);
 		textout_putstr(f, " ");
-		textout_putlong(f, o->key_plus & 0x7f);
+		textout_putlong(f, o->keyplus & 0x7f);
 		textout_putstr(f, " ");
 		textout_putstr(f, "id");
 		break;
@@ -198,13 +220,22 @@ filt_output(struct filt_s *o, struct textout_s *f) {
 	textout_putstr(f, "{\n");
 	textout_shiftright(f);
 	
-	for (i = o->dev_rules; i != 0; i = i->next) {
+	for (i = o->dev_drops; i != 0; i = i->next) {
 		rule_output(i, f);
 	}
-	for (i = o->chan_rules; i != 0; i = i->next) {
+	for (i = o->dev_maps; i != 0; i = i->next) {
 		rule_output(i, f);
 	}
-	for (i = o->voice_rules; i != 0; i = i->next) {
+	for (i = o->chan_drops; i != 0; i = i->next) {
+		rule_output(i, f);
+	}
+	for (i = o->chan_maps; i != 0; i = i->next) {
+		rule_output(i, f);
+	}
+	for (i = o->voice_drops; i != 0; i = i->next) {
+		rule_output(i, f);
+	}
+	for (i = o->voice_maps; i != 0; i = i->next) {
 		rule_output(i, f);
 	}
 	
@@ -571,8 +602,8 @@ parse_track(struct parse_s *o, struct track_s *t) {
 
 unsigned
 parse_rule(struct parse_s *o, struct filt_s *f) {
-	unsigned long ichan, ochan, ictl, octl, key_start, key_end, ukey_plus;
-	int key_plus;
+	unsigned long ichan, ochan, ictl, octl, keylo, keyhi, ukeyplus;
+	int keyplus;
 	if (!parse_getsym(o)) {
 		return 0;
 	}
@@ -580,26 +611,37 @@ parse_rule(struct parse_s *o, struct filt_s *f) {
 		parse_error(o, "filter-type identifier expected\n");
 		return 0;
 	}
-	if (str_eq(o->lex.strval, "keymap")) {
+	if (str_eq(o->lex.strval, "keydrop")) {
+		if (!parse_chan(o, &ichan)) {
+			return 0;
+		}
+		if (!parse_long(o, EV_MAXB0, &keylo)) {
+			return 0;
+		}
+		if (!parse_long(o, EV_MAXB0, &keyhi)) {
+			return 0;
+		}
+		filt_conf_keydrop(f, ichan, keylo, keyhi);
+	} else if (str_eq(o->lex.strval, "keymap")) {
 		if (!parse_chan(o, &ichan)) {
 			return 0;
 		}
 		if (!parse_chan(o, &ochan)) {
 			return 0;
 		}
-		if (!parse_long(o, EV_MAXB0, &key_start)) {
+		if (!parse_long(o, EV_MAXB0, &keylo)) {
 			return 0;
 		}
-		if (!parse_long(o, EV_MAXB0, &key_end)) {
+		if (!parse_long(o, EV_MAXB0, &keyhi)) {
 			return 0;
 		}
-		if (!parse_long(o, EV_MAXB0, &ukey_plus)) {
+		if (!parse_long(o, EV_MAXB0, &ukeyplus)) {
 			return 0;
 		}
-		if (ukey_plus > 63) {
-			key_plus = ukey_plus - 128;
+		if (ukeyplus > 63) {
+			keyplus = ukeyplus - 128;
 		} else {
-			key_plus = ukey_plus;
+			keyplus = ukeyplus;
 		}
 		if (!parse_getsym(o)) {
 			return 0;
@@ -608,7 +650,15 @@ parse_rule(struct parse_s *o, struct filt_s *f) {
 			parse_error(o, "curve identifier expected\n");
 			return 0;
 		}	
-		filt_new_keymap(f, ichan, ochan, key_start, key_end, key_plus);
+		filt_conf_keymap(f, ichan, ochan, keylo, keyhi, keyplus);
+	} else if (str_eq(o->lex.strval, "ctldrop")) {
+		if (!parse_chan(o, &ichan)) {
+			return 0;
+		}
+		if (!parse_long(o, EV_MAXB0, &ictl)) {
+			return 0;
+		}
+		filt_conf_ctldrop(f, ichan, ictl);
 	} else if (str_eq(o->lex.strval, "ctlmap")) {
 		if (!parse_chan(o, &ichan)) {
 			return 0;
@@ -629,7 +679,12 @@ parse_rule(struct parse_s *o, struct filt_s *f) {
 			parse_error(o, "curve identifier expected\n");
 			return 0;
 		}	
-		filt_new_ctlmap(f, ichan, ochan, ictl, octl);
+		filt_conf_ctlmap(f, ichan, ochan, ictl, octl);
+	} else if (str_eq(o->lex.strval, "chandrop")) {
+		if (!parse_chan(o, &ichan)) {
+			return 0;
+		}
+		filt_conf_chandrop(f, ichan);
 	} else if (str_eq(o->lex.strval, "chanmap")) {
 		if (!parse_chan(o, &ichan)) {
 			return 0;
@@ -637,7 +692,12 @@ parse_rule(struct parse_s *o, struct filt_s *f) {
 		if (!parse_chan(o, &ochan)) {
 			return 0;
 		}
-		filt_new_chanmap(f, ichan, ochan);
+		filt_conf_chanmap(f, ichan, ochan);
+	} else if (str_eq(o->lex.strval, "devdrop")) {
+		if (!parse_long(o, DEFAULT_MAXNDEVS - 1, &ichan)) {
+			return 0;
+		}
+		filt_conf_devdrop(f, ichan * 16);
 	} else if (str_eq(o->lex.strval, "devmap")) {
 		if (!parse_long(o, DEFAULT_MAXNDEVS - 1, &ichan)) {
 			return 0;
@@ -645,10 +705,11 @@ parse_rule(struct parse_s *o, struct filt_s *f) {
 		if (!parse_long(o, DEFAULT_MAXNDEVS - 1, &ochan)) {
 			return 0;
 		}
-		filt_new_devmap(f, ichan * 16, ochan * 16);
+		filt_conf_devmap(f, ichan * 16, ochan * 16);
 	} else {
-		parse_error(o, "unknown filter rule\n");
-		return 0;
+		parse_error(o, "unknown filter rule, ignored\n");
+		parse_ungetsym(o);
+		return parse_ukline(o);
 	}
 	if (!parse_nl(o)) {
 		return 0;
@@ -773,7 +834,7 @@ parse_songtrk(struct parse_s *o, struct song_s *s, struct songtrk_s *t) {
 				if (!f) {
 					f = songfilt_new(c->name.str);
 					song_filtadd(s, f);
-					filt_new_chanmap(&f->filt, 0, c->chan);
+					filt_conf_chanmap(&f->filt, 0, c->chan);
 				}
 				t->curfilt = f;
 				if (!parse_nl(o)) {

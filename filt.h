@@ -33,38 +33,34 @@
 
 #include "ev.h"
 
-#define FILT_NOTE		0x01
-#define FILT_BENDER		0x02
-#define FILT_KEYTOUCH		0x04
-#define FILT_CHANTOUCH		0x08
-#define FILT_CTL		0x10
-#define FILT_PROGCHANGE		0x20
-
 struct state_s {
 	struct state_s *next;
 	struct ev_s ev;			/* initial event */
 };
 
 #define RULE_CTLMAP	1
-#define RULE_KEYMAP	2
-#define RULE_CHANMAP	3
-#define RULE_DEVMAP	4
+#define RULE_CTLDROP	2
+#define RULE_KEYMAP	3
+#define RULE_KEYDROP	4
+#define RULE_CHANMAP	5
+#define RULE_CHANDROP	6
+#define RULE_DEVMAP	7
+#define RULE_DEVDROP	8
 
 struct rule_s {
 	struct rule_s *next;
 	unsigned type;
 	unsigned ichan, ochan;
-	unsigned key_start, key_end;
-	int key_plus;
+	unsigned keylo, keyhi;
+	int keyplus;
 	unsigned ictl, octl;
 	unsigned char *curve;
 };
 
 struct filt_s {
 	/* config */
-	unsigned ichan, ochan;
-	struct rule_s *voice_rules, *chan_rules, *dev_rules;
-	
+	struct rule_s *voice_maps, *voice_drops, 
+		       *chan_maps, *chan_drops, *dev_maps, *dev_drops;
 	
 	/* real-time stuff*/
 	unsigned active;
@@ -94,11 +90,15 @@ void             filt_statedel(struct filt_s *o, struct state_s **p);
 struct state_s **filt_statelookup(struct filt_s *o, struct ev_s *ev);
 void             filt_stateshut(struct filt_s *o, struct state_s **p);
 
-void filt_new_keymap(struct filt_s *o, unsigned ichan, unsigned ochan, unsigned key_start, unsigned key_end, int key_plus);
-void filt_new_ctlmap(struct filt_s *o, unsigned ichan, unsigned ochan, unsigned ictl, unsigned octl);
-void filt_new_chanmap(struct filt_s *o, unsigned ichan, unsigned ochan);
-void filt_new_devmap(struct filt_s *o, unsigned idev, unsigned odev);
-void filt_changein(struct filt_s *o, unsigned oldc, unsigned newc);
+void filt_conf_devdrop(struct filt_s *o, unsigned ichan);
+void filt_conf_devmap(struct filt_s *o, unsigned idev, unsigned odev);
+void filt_conf_chandrop(struct filt_s *o, unsigned ichan);
+void filt_conf_chanmap(struct filt_s *o, unsigned ichan, unsigned ochan);
+void filt_conf_ctldrop(struct filt_s *o, unsigned ichan, unsigned ictl);
+void filt_conf_ctlmap(struct filt_s *o, unsigned ichan, unsigned ochan, unsigned ictl, unsigned octl);
+void filt_conf_keydrop(struct filt_s *o, unsigned ichan, unsigned keylo, unsigned keyhi);
+void filt_conf_keymap(struct filt_s *o, unsigned ichan, unsigned ochan, unsigned keylo, unsigned keyhi, int keyplus);
+void filt_conf_setichan(struct filt_s *o, unsigned oldc, unsigned newc);
 
 extern unsigned filt_debug;
 
