@@ -953,6 +953,26 @@ user_func_filtdevdrop(struct exec_s *o) {
 	return 1;
 }
 
+
+
+unsigned
+user_func_filtnodevdrop(struct exec_s *o) {
+	struct songfilt_s *f;
+	long idev;
+	
+	if (!exec_lookupfilt(o, "filtname", &f) ||
+	    !exec_lookuplong(o, "indev", &idev)) {
+		return 0;
+	}
+	if (idev < 0 || idev >= DEFAULT_MAXNDEVS) {
+	    	user_printstr("device number out of range\n");
+		return 0;
+	}
+	filt_conf_nodevdrop(&f->filt, 16 * idev);
+	return 1;
+}
+
+
 unsigned
 user_func_filtdevmap(struct exec_s *o) {
 	struct songfilt_s *f;
@@ -972,6 +992,25 @@ user_func_filtdevmap(struct exec_s *o) {
 	return 1;
 }
 
+
+unsigned
+user_func_filtnodevmap(struct exec_s *o) {
+	struct songfilt_s *f;
+	long odev;
+	
+	if (!exec_lookupfilt(o, "filtname", &f) ||
+	    !exec_lookuplong(o, "outdev", &odev)) {
+		return 0;
+	}
+	if (odev < 0 || odev >= DEFAULT_MAXNDEVS) {
+	    	user_printstr("device number out of range\n");
+		return 0;
+	}
+	filt_conf_nodevmap(&f->filt, 16 * odev);
+	return 1;
+}
+
+
 unsigned
 user_func_filtchandrop(struct exec_s *o) {
 	struct songfilt_s *f;
@@ -982,6 +1021,20 @@ user_func_filtchandrop(struct exec_s *o) {
 		return 0;
 	}
 	filt_conf_chandrop(&f->filt, ichan);
+	return 1;
+}
+
+
+unsigned
+user_func_filtnochandrop(struct exec_s *o) {
+	struct songfilt_s *f;
+	unsigned ichan;
+	
+	if (!exec_lookupfilt(o, "filtname", &f) ||
+	    !exec_lookupchan_getnum(o, "inchan", &ichan)) {
+		return 0;
+	}
+	filt_conf_nochandrop(&f->filt, ichan);
 	return 1;
 }
 
@@ -996,6 +1049,19 @@ user_func_filtchanmap(struct exec_s *o) {
 		return 0;
 	}
 	filt_conf_chanmap(&f->filt, ichan, ochan);
+	return 1;
+}
+
+unsigned
+user_func_filtnochanmap(struct exec_s *o) {
+	struct songfilt_s *f;
+	unsigned ochan;
+	
+	if (!exec_lookupfilt(o, "filtname", &f) ||
+	    !exec_lookupchan_getnum(o, "outchan", &ochan)) {
+		return 0;
+	}
+	filt_conf_nochanmap(&f->filt, ochan);
 	return 1;
 }
 
@@ -1017,6 +1083,27 @@ user_func_filtctldrop(struct exec_s *o) {
 	filt_conf_ctldrop(&f->filt, ichan, ictl);
 	return 1;
 }
+
+
+unsigned
+user_func_filtnoctldrop(struct exec_s *o) {
+	struct songfilt_s *f;
+	unsigned ichan;
+	long ictl;
+	
+	if (!exec_lookupfilt(o, "filtname", &f) ||
+	    !exec_lookupchan_getnum(o, "inchan", &ichan) ||
+	    !exec_lookuplong(o, "inctl", &ictl)) {
+		return 0;
+	}
+	if (ictl < 0 || ictl > 127) {
+		user_printstr("filtctlmap: controllers must be between 0 and 127\n");
+		return 0;
+	}
+	filt_conf_noctldrop(&f->filt, ichan, ictl);
+	return 1;
+}
+
 
 unsigned
 user_func_filtctlmap(struct exec_s *o) {
@@ -1041,6 +1128,25 @@ user_func_filtctlmap(struct exec_s *o) {
 
 
 unsigned
+user_func_filtnoctlmap(struct exec_s *o) {
+	struct songfilt_s *f;
+	unsigned ochan;
+	long octl;
+	
+	if (!exec_lookupfilt(o, "filtname", &f) ||
+	    !exec_lookupchan_getnum(o, "outchan", &ochan) || 
+	    !exec_lookuplong(o, "outctl", &octl)) {
+		return 0;
+	}
+	if (octl < 0 || octl > 127) {
+		user_printstr("filtctlmap: controllers must be between 0 and 127\n");
+		return 0;
+	}
+	filt_conf_noctlmap(&f->filt, ochan, octl);
+	return 1;
+}
+
+unsigned
 user_func_filtkeydrop(struct exec_s *o) {
 	struct songfilt_s *f;
 	unsigned ichan;
@@ -1057,6 +1163,27 @@ user_func_filtkeydrop(struct exec_s *o) {
 		return 0;
 	}
 	filt_conf_keydrop(&f->filt, ichan, kstart, kend);
+	return 1;
+}
+
+
+unsigned
+user_func_filtnokeydrop(struct exec_s *o) {
+	struct songfilt_s *f;
+	unsigned ichan;
+	long kstart, kend;
+	
+	if (!exec_lookupfilt(o, "filtname", &f) ||
+	    !exec_lookupchan_getnum(o, "inchan", &ichan) ||
+	    !exec_lookuplong(o, "keystart", &kstart) || 
+	    !exec_lookuplong(o, "keyend", &kend)) {
+		return 0;
+	}
+	if (kstart < 0 || kstart > 127 || kend < 0 || kend > 127) {
+		user_printstr("filtkeymap: notes must be between 0 and 127\n");
+		return 0;
+	}
+	filt_conf_nokeydrop(&f->filt, ichan, kstart, kend);
 	return 1;
 }
 
@@ -1089,6 +1216,28 @@ user_func_filtkeymap(struct exec_s *o) {
 
 
 unsigned
+user_func_filtnokeymap(struct exec_s *o) {
+	struct songfilt_s *f;
+	unsigned ochan;
+	long kstart, kend;
+	
+	if (!exec_lookupfilt(o, "filtname", &f) ||
+	    !exec_lookupchan_getnum(o, "outchan", &ochan) ||
+	    !exec_lookuplong(o, "keystart", &kstart) || 
+	    !exec_lookuplong(o, "keyend", &kend)) {
+		return 0;
+	}
+	if (kstart < 0 || kstart > 127 || kend < 0 || kend > 127) {
+		user_printstr("filtkeymap: notes must be between 0 and 127\n");
+		return 0;
+	}
+	filt_conf_nokeymap(&f->filt, ochan, kstart, kend);
+	return 1;
+}
+
+
+
+unsigned
 user_func_filtreset(struct exec_s *o) {
 	struct songfilt_s *f;
 	
@@ -1111,6 +1260,21 @@ user_func_filtsetichan(struct exec_s *o) {
 		return 0;
 	}
 	filt_conf_setichan(&f->filt, oldchan, newchan);
+	return 1;
+}
+
+
+unsigned
+user_func_filtsetidev(struct exec_s *o) {
+	struct songfilt_s *f;
+	unsigned olddev, newdev;
+	
+	if (!exec_lookupfilt(o, "filtname", &f) ||
+	    !exec_lookupchan_getnum(o, "olddev", &olddev) ||
+	    !exec_lookupchan_getnum(o, "newdev", &newdev)) {
+		return 0;
+	}
+	filt_conf_setidev(&f->filt, 16 * olddev, 16 * newdev);
 	return 1;
 }
 
@@ -1719,18 +1883,35 @@ user_mainloop(void) {
 	exec_newbuiltin(exec, "filtdevdrop", user_func_filtdevdrop,
 			name_newarg("filtname",
 			name_newarg("indev", 0)));
+	exec_newbuiltin(exec, "filtnodevdrop", user_func_filtnodevdrop,
+			name_newarg("filtname",
+			name_newarg("indev", 0)));
 	exec_newbuiltin(exec, "filtdevmap", user_func_filtdevmap,
 			name_newarg("filtname",
 			name_newarg("indev", 
 			name_newarg("outdev", 0))));
+	exec_newbuiltin(exec, "filtnodevmap", user_func_filtnodevmap,
+			name_newarg("filtname",
+			name_newarg("outdev", 0)));
 	exec_newbuiltin(exec, "filtchandrop", user_func_filtchandrop,
+			name_newarg("filtname",
+			name_newarg("inchan", 0)));
+	exec_newbuiltin(exec, "filtnochandrop", user_func_filtnochandrop,
 			name_newarg("filtname",
 			name_newarg("inchan", 0)));
 	exec_newbuiltin(exec, "filtchanmap", user_func_filtchanmap,
 			name_newarg("filtname",
 			name_newarg("inchan", 
 			name_newarg("outchan", 0))));
+	exec_newbuiltin(exec, "filtnochanmap", user_func_filtnochanmap,
+			name_newarg("filtname",
+			name_newarg("outchan", 0)));
 	exec_newbuiltin(exec, "filtkeydrop", user_func_filtkeydrop,
+			name_newarg("filtname",
+			name_newarg("inchan", 
+			name_newarg("keystart", 
+			name_newarg("keyend", 0)))));
+	exec_newbuiltin(exec, "filtnokeydrop", user_func_filtnokeydrop,
 			name_newarg("filtname",
 			name_newarg("inchan", 
 			name_newarg("keystart", 
@@ -1742,7 +1923,16 @@ user_mainloop(void) {
 			name_newarg("keystart", 
 			name_newarg("keyend", 
 			name_newarg("keyplus", 0)))))));
+	exec_newbuiltin(exec, "filtnokeymap", user_func_filtnokeymap,
+			name_newarg("filtname",
+			name_newarg("outchan", 
+			name_newarg("keystart", 
+			name_newarg("keyend", 0)))));
 	exec_newbuiltin(exec, "filtctldrop", user_func_filtctldrop,
+			name_newarg("filtname",
+			name_newarg("inchan", 
+			name_newarg("inctl", 0))));
+	exec_newbuiltin(exec, "filtnoctldrop", user_func_filtnoctldrop,
 			name_newarg("filtname",
 			name_newarg("inchan", 
 			name_newarg("inctl", 0))));
@@ -1752,10 +1942,18 @@ user_mainloop(void) {
 			name_newarg("outchan", 
 			name_newarg("inctl", 
 			name_newarg("outctl", 0))))));
+	exec_newbuiltin(exec, "filtnoctlmap", user_func_filtnoctlmap,
+			name_newarg("filtname",
+			name_newarg("outchan", 
+			name_newarg("outctl", 0))));
 	exec_newbuiltin(exec, "filtsetichan", user_func_filtsetichan,
 			name_newarg("filtname",
 			name_newarg("oldchan", 
 			name_newarg("newchan", 0))));
+	exec_newbuiltin(exec, "filtsetidev", user_func_filtsetidev,
+			name_newarg("filtname",
+			name_newarg("olddev", 
+			name_newarg("newdev", 0))));
 
 	exec_newbuiltin(exec, "songgetunit", user_func_songgetunit, 0);
 	exec_newbuiltin(exec, "songsetunit", user_func_songsetunit, 

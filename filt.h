@@ -91,14 +91,25 @@ struct state_s **filt_statelookup(struct filt_s *o, struct ev_s *ev);
 void             filt_stateshut(struct filt_s *o, struct state_s **p);
 
 void filt_conf_devdrop(struct filt_s *o, unsigned ichan);
+void filt_conf_nodevdrop(struct filt_s *o, unsigned ichan);
 void filt_conf_devmap(struct filt_s *o, unsigned idev, unsigned odev);
+void filt_conf_nodevmap(struct filt_s *o, unsigned ochan);
 void filt_conf_chandrop(struct filt_s *o, unsigned ichan);
+void filt_conf_nochandrop(struct filt_s *o, unsigned ichan);
 void filt_conf_chanmap(struct filt_s *o, unsigned ichan, unsigned ochan);
+void filt_conf_nochanmap(struct filt_s *o, unsigned ochan);
 void filt_conf_ctldrop(struct filt_s *o, unsigned ichan, unsigned ictl);
+void filt_conf_noctldrop(struct filt_s *o, unsigned ichan, unsigned ictl);
 void filt_conf_ctlmap(struct filt_s *o, unsigned ichan, unsigned ochan, unsigned ictl, unsigned octl);
+void filt_conf_noctlmap(struct filt_s *o, unsigned ochan, unsigned octl);
 void filt_conf_keydrop(struct filt_s *o, unsigned ichan, unsigned keylo, unsigned keyhi);
+void filt_conf_nokeydrop(struct filt_s *o, unsigned ichan, unsigned keylo, unsigned keyhi);
 void filt_conf_keymap(struct filt_s *o, unsigned ichan, unsigned ochan, unsigned keylo, unsigned keyhi, int keyplus);
+void filt_conf_nokeymap(struct filt_s *o, unsigned ochan, unsigned keylo, unsigned keyhi);
 void filt_conf_setichan(struct filt_s *o, unsigned oldc, unsigned newc);
+void filt_conf_setidev(struct filt_s *o, unsigned oldc, unsigned newc);
+void filt_conf_setochan(struct filt_s *o, unsigned oldc, unsigned newc);
+void filt_conf_setodev(struct filt_s *o, unsigned oldc, unsigned newc);
 
 extern unsigned filt_debug;
 

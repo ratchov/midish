@@ -142,11 +142,22 @@
 	<UL>
 	<LI> added <TT>device</TT>-parameter to <TT>sendraw</TT>
 	<LI> renamed <TT>filtchangein</TT> to <TT>filtsetichan</TT>
-	<LI> added ne filter rules: 
+		and added the "device" corresponding <TT>filtsetidev</TT>
+	<LI> added new filter rules: 
 		<TT>filtdevdrop</TT>, 
 		<TT>filtchandrop</TT>,
 		<TT>filtctldrop</TT> and 
 		<TT>filtkeydrop</TT>.
+	<LI> added functions that remove existing rules: 
+		<TT>filtnodevdrop</TT>, 
+		<TT>filtnodevmap</TT>, 
+		<TT>filtnochandrop</TT>,
+		<TT>filtnochanmap</TT>,
+		<TT>filtnoctldrop</TT>,
+		<TT>filtnoctlmap</TT>,
+		<TT>filtnokeydrop</TT> and
+		<TT>filtnokeymap</TT>.
+
 	</UL>
 
 <A name="language"></A>
@@ -777,9 +788,21 @@
 	to <TT>newchan</TT>
 	</BLOCKQUOTE>
 
+<B><TT>filtsetidev filtname olddev newdev</TT></B>
+	<BLOCKQUOTE>
+	changes the input device of 
+	all rules with input device equal to <TT>olddev</TT>
+	to <TT>newdev</TT>
+	</BLOCKQUOTE>
+
 <B><TT>filtdevdrop filtname inputdev</TT></B>
 	<BLOCKQUOTE>
 	make filter drop events from device <TT>inputdev</TT>
+	</BLOCKQUOTE>
+
+<B><TT>filtnodevdrop filtname inputdev</TT></B>
+	<BLOCKQUOTE>
+	remove <TT>devdrop</TT> rules that drop events from device <TT>inputdev</TT>
 	</BLOCKQUOTE>
 
 <B><TT>filtdevmap filtname inputdev outputdev</TT></B>
@@ -790,23 +813,40 @@
 	duplicated
 	</BLOCKQUOTE>
 
+<B><TT>filtnodevmap filtname outputdev</TT></B>
+	<BLOCKQUOTE>
+	remove <TT>devmap</TT> rules that route events to 
+	device number <TT>outputdev</TT>. 
+	</BLOCKQUOTE>
+
+
 <B><TT>filtchandrop filtname inputchan</TT></B>
 	<BLOCKQUOTE>
 	make filter drop events from channel <TT>inputchan</TT>
 	</BLOCKQUOTE>
 
-<B><TT>filtchanmap filtname inputchan outputchan</TT></B>
+<B><TT>filtchandrop filtname inputchan</TT></B>
 	<BLOCKQUOTE>
-	route all events from channel <TT>inputchan</TT>
-	to channel <TT>outputchan</TT>. If multiple channel maps are 
-	defined for the same input channel then events are 
-	duplicated
+	remove <TT>chandrop</TT> rules that 
+	drop events from channel <TT>inputchan</TT>
+	</BLOCKQUOTE>
+
+<B><TT>filtchanmap filtname outputchan</TT></B>
+	<BLOCKQUOTE>
+	remove channel map rules that route events to channel 
+	<TT>outputchan</TT>. 
 	</BLOCKQUOTE>
 
 <B><TT>filtctldrop filtname inchan inctl</TT></B>
 	<BLOCKQUOTE>
 	make the filter drop controller number <TT>inctl</TT> 
 	on channel <TT>inctl</TT>.
+	</BLOCKQUOTE>
+
+<B><TT>filtnoctldrop filtname inchan inctl</TT></B>
+	<BLOCKQUOTE>
+	remove <TT>ctldrop</TT> rules that drop controller number 
+	<TT>inctl</TT> 	on channel <TT>inctl</TT>.
 	</BLOCKQUOTE>
 
 <B><TT>filtctlmap filtname inchan outchan inctl outctl</TT></B>
@@ -817,20 +857,42 @@
 	channel and the same input controller then events are duplicated
 	</BLOCKQUOTE>
 
+<B><TT>filtnoctlmap filtname outchan outctl</TT></B>
+	<BLOCKQUOTE>
+	remove <TT>ctlmap</TT> rules that route controllers to
+	controller <TT>outctl</TT>, channel <TT>outchan</TT>.
+	</BLOCKQUOTE>
+
 <B><TT>filtkeydrop filtname inchan keystart keyend</TT></B>
 	<BLOCKQUOTE>
 	drop notes between <TT>keystart</TT> and <TT>keyend</TT>
 	on channel <TT>inchan</TT>.
 	</BLOCKQUOTE>
 
+<B><TT>filtnokeydrop filtname inchan keystart keyend</TT></B>
+	<BLOCKQUOTE>
+	remove <TT>keydrop</TT> rule that drop notes between 
+	<TT>keystart</TT> and <TT>keyend</TT>
+	on channel <TT>inchan</TT>.
+	</BLOCKQUOTE>
+
+
 <B><TT>filtkeymap filtname inchan outchan keystart keyend keyplus</TT></B>
 	<BLOCKQUOTE>
 	route note events from channel <TT>inchan</TT> and
-	in the range keystart..keyend to <TT>outchan</TT>.
+	in the range <TT>keystart..keyend</TT> to <TT>outchan</TT>.
 	Routed notes are transposed by keyplus half-tones
 	If multiple keymaps are defined for the same input 
 	channel and key-range then events are duplicated
 	</BLOCKQUOTE>
+
+
+<B><TT>filtnokeymap filtname outchan keystart keyend</TT></B>
+	<BLOCKQUOTE>
+	remove <TT>keymap</TT> rules that route note events 
+	in the range <TT>keystart..keyend</TT> to channel <TT>outchan</TT>.
+	</BLOCKQUOTE>
+
 
 <H2>Real-time functions</H2>
 
