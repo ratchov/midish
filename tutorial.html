@@ -1,4 +1,36 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<!--
+
+Copyright (c) 2003-2005 Alexandre Ratchov
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without 
+modification, are permitted provided that the following conditions 
+are met:
+
+	- Redistributions of source code must retain the above
+	  copyright notice, this list of conditions and the 
+	  following disclaimer.
+
+	- Redistributions in binary form must reproduce the above
+	  copyright notice, this list of conditions and the 
+	  following disclaimer in the documentation and/or other 
+	  materials  provided with the distribution.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.  
+
+-->
+
 <HTML>
 <HEAD>
 <TITLE>midish 0.2 - tutorial</TITLE>
@@ -269,7 +301,7 @@
 	<PRE>
 	channew mybass {0 1}
 	</PRE>
-	this defines a named-channel <TT>drums</TT> that can
+	this defines a named-channel <TT>mybass</TT> that can
 	be used instead of the <TT>{0 1}</TT> pair.
 	
 <H2>Channel configuration</H2>
@@ -330,20 +362,19 @@
 	metroswitch 1		# switch the metronome on
 	songplay		# start playback
 	</PRE>
-	The metronome has to kind of clocks.
+	The metronome has two kind of click-sound:
 	<UL>
-	<LI> hi-click: on the first beat of the measure
-	<LI> lo-click: on the other beats.
+	<LI> high-click: on the first beat of the measure
+	<LI> low-click: on the other beats.
 	</UL>
 	The click-sound can be configured by giving a couple 
 	of note-on events, as follows:
 	<PRE>
-	metroconf { non {0 9} 48 127 } { non {0 9} 64 100}}
+	metroconf {non {0 9} 48 127} {non {0 9} 64 100}
 	</PRE>
-	this configures the hi-click with note 48, velocity 127 on
-	device 0, channel 9 and the lo-click with note 64, velocity 100
+	this configures the high-click with note 48, velocity 127 on
+	device 0, channel 9 and the low-click with note 64, velocity 100
 	on device 0, channel 9.
-	
 
 <H2>Time signature changes</H2>
 
@@ -682,11 +713,11 @@
 	three character statements.
 	
 <A name="example"></A>
-<H1>Example session</H1>
+<H1>Example sessions</H1>
 
 <HR>
 <SMALL><EM>
-Copyright (c) 2003-2005 Alexandre Ratchov	<BR>
+Copyright (c) 2003-2005 Alexandre Ratchov<BR>
 Last updated mar 11, 2005 	
 </EM></SMALL>
 	
