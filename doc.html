@@ -4,7 +4,7 @@
 <TITLE>midish - user manual</TITLE>
 <META http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
 </HEAD>
-<BODY>
+<BODY bgcolor="white" text="black" link="blue" vlink="navy">
 
 <H1>Table of contents</H1>
 <P>
@@ -24,29 +24,30 @@
 <H1>Introduction</H1>
 
 	<P>
-	Midish is a MIDI sequencing and filtering tool for unix-like
-	operating systems. It can be used to manage multiple
-	midi devices in real-time. Midish is implemented as
-	a sequencing engine and a command-line interpreter.
+	Midish is a MIDI sequencing and filtering tool for 
+	unix-like operating systems.
+ 
+	It's is implemented as a sequencing engine and a 
+	command-line interpreter.
 
 <A name="install"></A>
 <H1>Installation</H1>
 
 <H2>Requirements</H2>
 
-	in order to use midish you must have:
+	Requirements:
 	<UL>
-	<LI> a midi sound module 
-	<LI> a midi keyboard
-	<LI> an unix-like operating system with "raw" midi support.
-		midish works on OpenBSD (its developpement platform)
-		and Linux
+	<LI>	a midi sound module 
+	<LI>	a midi keyboard
+	<LI>	an unix-like operating system with "raw" midi support.
+		Midish works on OpenBSD (its development platform)
+		and Linux.
 	</UL>
 
 <H2>Installation</H2>
 
 	<UL>
-	<LI> untar and gunzip the tarball:
+	<LI> untar and gunzip the tar-ball:
 
 	<PRE>
 	gzip -dc midish-0.1.tar.gz | tar xf -
@@ -54,7 +55,8 @@
 	</PRE>
 
 	<LI> 
-	edit Makefile and change CC, CFLAGS, etc... (if needed)
+	edit <TT>Makefile</TT> and change <TT>CC</TT>, 
+	<TT>CFLAGS</TT>, etc... (if needed)
 
 	<LI> 
 	comment or uncomment readline(3) options in Makefile
@@ -63,10 +65,10 @@
 	compile the sequencer, just type '<TT>make all</TT>'
 
 	<LI>
-	install binaries by typing <TT>make install</TT>; by default
+	install binaries by typing '<TT>make install</TT>'; by default
 	they are installed in <TT>$HOME/bin</TT>, where <TT>$HOME</TT> is
 	your home directory. If you want to change this,
-	set the PREFIX variable, for instance: 
+	set the <TT>PREFIX</TT> variable, for instance: 
 
 	<PRE>
 	make PREFIX=/usr/local install
@@ -77,7 +79,7 @@
 	typing '<TT>cp midishrc ~/.midishrc</TT>' in your shell
 
 	<LI>
-	read the documentation and edit your ~/.midishrc in order 
+	read the documentation and edit your <TT>~/.midishrc</TT> in order 
 	to choose your default midi device by using the <TT>devattach</TT> 
 	function (example: '<TT>devattach 0 "/dev/rmidi3"</TT>', see next section)
 
@@ -93,7 +95,7 @@
 	</PRE>
 
 	in your shell. On startup, it tries to execute
-	the script $HOME/.midishrc.
+	the script <TT>$HOME/.midishrc</TT>.
 
 	You can specify your midi devices
 	by using the function <TT>devattach</TT>, for instance:
@@ -105,10 +107,10 @@
 
 	will attach <TT>/dev/rmidi3</TT> and <TT>/dev/rmidi1</TT> as devices
 	number 0 and 1. You can put those statements in 
-	your $HOME/.midishrc
+	your <TT>$HOME/.midishrc</TT>
 
 	<P>
-	once started, the sequencer reads and executes commands
+	Once started, the sequencer reads and executes commands
 	from stdin and writes results (and user non-fatal errors)
 	to stdout. If stdin and stdout are both tty terminals, and if
 	compiled with the readline(3) library an interactive prompt is
@@ -136,11 +138,11 @@
 <H1>Language reference</H1>
 <H2>Lexical structure</H2>
 
-	the input line is split into tokens:
+	The input line is split into tokens:
 
 	<UL>
-	<LI> identifier:
-		<P>
+	<LI> Identifiers:
+		<BR>
 		an identifier is a sequence of up to 32
 		characters, digits and underscores (<TT>_</TT>).
 		However, an identifier cannot start with a
@@ -151,58 +153,55 @@
 	mytrackabcdefghijklmnopqrstuvwxyz	# bad, to long
 	</PRE>
 	
-	<LI> numbers 
-
-		<P>
+	<LI> Numbers 
+		<BR>
 		numbers should be in decimal or hex format and may
 		not exceed 2^31. Hex numbers are preceded
 		by "0x", as in the C language. Examples:
-
-			123	- 123 in decimal
-			0x100	- 256 in hex
-			0xF0	- 240 in hex
+		
+		<P align="center">
+		<TABLE border="1">
+		<TR>	<TD><TT>123</TT>	<TD>123 in decimal
+		<TR>	<TD><TT>0x100</TT>	<TD>256 in hex
+		<TR>	<TD><TT>0xF0<TT>	<TD>240 in hex
+		</TABLE>
 			
-	<LI> string constant
-
-		<P>
-		String constants are sequence of printable
+	<LI> String constants
+		<BR>
+		string constants are sequence of printable
 		characters enclosed in pairs of double quotes.
 		Thus a string cannot contain double quotes, 
 		tabs, newlines.
 
-	<LI> keywords
-
-		<P>
+	<LI> Keywords
+		<BR>
 		valid keywords are: <TT>nil</TT>, <TT>let</TT>, 
 		<TT>if</TT>, <TT>else</TT>, <TT>for</TT>, and <TT>proc</TT>.
 
-	<LI> operators, separators etc...
-
-		<P>
+	<LI> Operators, separators etc...
+		<BR>
 		sequences of meta-characters like '<TT>(</TT>', '<TT>)</TT>', 
 		'<TT>+</TT>', '<TT>$</TT>', newline character, 
 		'<TT>;</TT>',  etc... 
 
-	<LI> comments are ignored
-
-		<P>
-		Comments are ignored, the start with '<TT>#</TT>' 
-		and ends with the new line
+	<LI> Comments 
+		<BR>
+		comments are ignored, they start with '<TT>#</TT>' 
+		and end with the new line
 		character.
 
-	<LI> multiple lines ending with '<TT>\</TT>' are parsed as a 
-	single line.
-
-	<LI> anything else generates a "bad token" error.
 	</UL>
+
+	Multiple lines ending with '<TT>\</TT>' are parsed as a 
+	single line. Anything else generates a "bad token" error.
+
 
 <H2>Statements</H2>
 
 	<P>
-	the input can be ether a function definition or a
-	statement.
-	
-	<P>
+	The input can be ether a function definition or a
+	statement. 
+
 	Most of the statements end with the '<TT>;</TT>'
 	character.  However, in order to improve
 	interactivity, the newline character can be used
@@ -213,7 +212,7 @@
 		
 	<UL>
 	<LI>
-	a procedure call, example:
+	A procedure call, example:
 
 	<PRE>
 	myproc arg1 arg2
@@ -221,7 +220,7 @@
 
 
 	<LI>
-	an assignment using the <TT>let</TT> keyword,
+	An assignment using the <TT>let</TT> keyword,
 	examples:
 
 	<PRE>
@@ -236,7 +235,7 @@
 
 
 	<LI>
-	an if..else statement, example:
+	An <TT>if..else</TT> statement, example:
 
 	<PRE>
 	if $i {
@@ -248,11 +247,11 @@
 
 	the <TT>else</TT> and the second block are
 	not mandatory. Note that since newline
-	character is interpreted as a <TT>;</TT>, the
+	character is interpreted as a '<TT>;</TT>', the
 	line cannot be broken in an arbitrary
 	way. If the expression following the <TT>if</TT>
 	keyword is true the first block is executed,
-	otherwise the second one (if any)is executed. The
+	otherwise the second one (if any) is executed. The
 	expression is evaluated in the following way:
 
 	<P align="center">
@@ -266,7 +265,7 @@
 	</TABLE>
 	
 	<LI>
-	a loop over a list:
+	A loop over a list:
 
 	<PRE>
 	for i in { "bli" "bla" "blu" } {
@@ -274,28 +273,28 @@
 	}
 	</PRE>
 
-
 	the block is executed for each value
 	of the list to which '<TT>$i</TT>' is set.
 
 	<LI>
-	a return statement. The return statement ends
+	A return statement. The return statement ends
 	the procedure execution and returns a
 	value to the caller. Example:
-	</UL>
 
 	<PRE>
 	return $x * $x;
 	</PRE>
 
+	</UL>
+
 
 <H2>Expressions</H2>
 
 	An expression can be an arithmetic expression of constants,
-	expression, variable values, return values of
+	expressions, variable values, return values of
 	function calls. 
 
-	The following constant are supported:	
+	The following constant types are supported:
 
 	<P align="center">
 	<TABLE border="1">
@@ -315,18 +314,14 @@
 	print $i		# prints the value of 'i'
 	</PRE>
 
-
-
-
-The following operators are recognised:
+	The following operators are recognised:
 
 	<P align="center">
 	<TABLE border="1">
 
 	<TR>	<TH>oper.	<TH>usage		<TH>associativity
 
-	<TR>
-		<TD><TT>{}</TT>	
+	<TR>	<TD><TT>{}</TT>	
 		<TD>list definition	
 		<TD rowspan="3">left to right
 
@@ -352,22 +347,22 @@ The following operators are recognised:
 
 	<TR>	<TD><TT>/</TT>
 		<TD>division
-		
-	<TR>	<TD><TT>%</TT>
+
+	<TR>	<TD><TT>%</TT
 		<TD>reminder
 
-	<TR>	<TD><TT>+</TT>
+	<TR>	<TD><TT>+</TT
 		<TD>addition
 		<TD rowspan="2">left to right
 
-	<TR>	<TD><TT>-</TT>
+	<TR>	<TD><TT>-</TT
 		<TD>subtraction
 
-	<TR>	<TD><TT>&lt;&lt;</TT>
+	<TR>	<TD><TT>&lt;&lt;</TT
 		<TD>left shift	
 		<TD rowspan="2">left to right
 
-	<TR>	<TD><TT>&gt;&gt;</TT>
+	<TR>	<TD><TT>&gt;&gt;</TT
 		<TD>right shift
 	
 	<TR>	<TD><TT>&lt;</TT>
@@ -381,14 +376,14 @@ The following operators are recognised:
 		<TD>greater
 
 	<TR>	<TD><TT>&gt;=</TT>
-		<TD>greater or equal
+		<TD>greater or equa
 
 	<TR>	<TD><TT>==</TT>
 		<TD>equal
-		<TD rowspan="2">left to right
+		<TD rowspan="2">left to righ
 
 	<TR>	<TD><TT>!=</TT>
-		<TD>not equal
+		<TD>not equa
 
 	<TR>	<TD><TT>&amp;</TT>
 		<TD>bitwise AND
@@ -409,7 +404,6 @@ The following operators are recognised:
 	<TR>	<TD><TT>||</TT>
 		<TD>logical OR
 		<TD>left to right
-
 	</TABLE>
 
 	<P>
@@ -444,35 +438,43 @@ The following operators are recognised:
 
 <H2>Procedure definition</H2>
 
-	a procedure is defined with the keyword
+	A procedure is defined with the keyword
 	<TT>proc</TT> followed by the name of the procedure, 
 	the names of its arguments and a block containing
 	its body, example:
 
 	<PRE>
-	proc myprint x { 
+	proc doubleprint x y { 
 		print $x
-		return 2 * $x
+		print $y
 	}
 	</PRE>
 
-	the variables are local the the procedure
+	Argulements and variables defined whithin a procedure 
+	are local to that procedure
 	and may shadow a global variable with the same
 	name. The return value is given to the caller
-	with a <TT>return</TT> statement.
+	with a <TT>return</TT> statement:
+
+	<PRE>
+	proc square x {
+		return $x * $y
+	}
+	</PRE>
 
 <A name="devices"></A>
 <H1>Devices and channels</H1>
 
 	<P>
-	devices are numbered between 0 and 15. They are
-	configured with devattach and devdetach. Example:
+	Devices are numbered between 0 and 15. They are
+	configured with <TT>devattach</TT> and <TT>devdetach</TT>.
+	Example:
 
 	<PRE>
 	devattach 0 "/dev/rmidi3"
 	</PRE>
 
-	channels are specified by giving the device number
+	Channels are specified by giving the device number
 	and the midi channel number in a list:
 
 	<PRE>
@@ -484,7 +486,6 @@ The following operators are recognised:
 	<PRE>
 	{ 2 9 }
 	</PRE>
-
 	
 	<P>
 	Named channels can be specified by their names, for
@@ -502,62 +503,46 @@ The following operators are recognised:
 <H1>Events</H1>
 
 	<P>
-	some functions take event arguments. An event
-	is specified as list containing:
-		<UL>
-		<LI> a reference from the following list:
-		     <TT>noff</TT>, <TT>non</TT>, <TT>kat</TT>, 
-		     <TT>ctl</TT>, <TT>pc</TT>, <TT>cat</TT>, <TT>bend</TT>.
-		<LI> a channel
-		<LI> a number 
-		<LI> a second number (not for <TT>pc</TT> and <TT>cat</TT>)
-		</UL>
+	Some functions take events as arguments. An event
+	is specified as a list containing:
+	<UL>
+	<LI> a reference from the following list:
+	     <TT>noff</TT>, <TT>non</TT>, <TT>kat</TT>, 
+	     <TT>ctl</TT>, <TT>pc</TT>, <TT>cat</TT>, <TT>bend</TT>.
+	<LI> a channel
+	<LI> a number 
+	<LI> a second number (not for <TT>pc</TT> and <TT>cat</TT>)
+	</UL>
 		
 	Event references correspond to the following
 	midi events:
-			<P align="center">
-			<TABLE border="1">
-			<TR>
-			<TD><TT>noff</TT>
-			<TD>note off
-			<TR>
-			<TD><TT>non</TT>
-			<TD>note off
-			<TR>
-			<TD><TT>kat</TT>
-			<TD>key after-touch (poly)
-			<TR>
-			<TD><TT>ctl</TT>
-			<TD>controller
-			<TR>
-			<TD><TT>pc</TT>
-			<TD>program change
-			<TR>
-			<TD><TT>cat</TT>
-			<TD>channel after-touch (mono)
-			<TR>
-			<TD><TT>bend</TT>
-			<TD>pitch bend
-			</TABLE>
+	<P align="center">
+	<TABLE border="1">
+	<TR>	<TD><TT>noff</TT>	<TD>note off
+	<TR>	<TD><TT>non</TT>	<TD>note off
+	<TR>	<TD><TT>kat</TT>	<TD>key after-touch (poly)
+	<TR>	<TD><TT>ctl</TT>	<TD>controller
+	<TR>	<TD><TT>pc</TT>		<TD>program change
+	<TR>	<TD><TT>cat</TT>	<TD>channel after-touch (mono)
+	<TR>	<TD><TT>bend</TT>	<TD>pitch bend
+	</TABLE>
 
 	<P>
 	Examples:
 	<BR>
-	a note-on event on device 2 channel 9 note 64 with velocity 100:
+	note-on event on device 2, channel 9, note 64 with velocity 100:
 
 	<PRE>
 	{ non {2 9} 64 100 }
 	</PRE>
 
-	select patch 34 on device 1, channel 3:
+	program change device 1, channel 3, patch 34
 
 	<PRE>
 	{ pc {1 3} 34 }
 	</PRE>
 
-
-
-	set value 99 to controller number 7
+	set controller number 7 to 99
 	on device/channel drums:
 
 	<PRE>
@@ -590,13 +575,12 @@ The following operators are recognised:
 <H1>Tracks</H1>
 
 	<P>
-	a track is a set of events ordered in time. They can be
-	recorded and edited. Each track has a name and
+	A track is a set of events ordered in time. They can be
+	recorded, edited and quantised. Each track has a name and
 	and a default filter (used for recording). Tracks are
 	not bound to a specific channel/device and can
 	be used to record a complete song (not recommended).
 	On playback all tracks are played simultaneously.
-
 
 <A name="functs"></A>
 <H1>Function reference</H1>
@@ -649,7 +633,6 @@ example:
 	let l = [trackgetlen];
 	</PRE>
 </BLOCKQUOTE>
-
 
 <B><TT>tracksave trackname filename</TT></B>
 <BLOCKQUOTE>
@@ -1034,18 +1017,16 @@ turned off. <TT>flag</TT> can be: <TT>parse</TT>, <TT>tree</TT>,
 <TT>filt</TT>
 </BLOCKQUOTE>
 
-
 <B><TT>panic</TT></B>
 <BLOCKQUOTE>
 causes the sequencer to core-dump
 </BLOCKQUOTE>
 	
 <HR>
-<SMALL><I>
-Last updated mar 11, 2005 			<BR>
+<SMALL><EM>
 Copyright (c) 2003-2005 Alexandre Ratchov	<BR>
-All rights reserved				<BR>
-</I></SMALL>
+Last updated mar 11, 2005 	
+</EM></SMALL>
 
 </BODY>
 </HTML>

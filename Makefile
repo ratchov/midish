@@ -45,7 +45,7 @@ install:	${PROG}
 		${INSTALL} -d ${PREFIX}/bin
 		${INSTALL} -d ${PREFIX}/share/doc/midish
 		${INSTALL} -m 755 -s ${PROG} ${PREFIX}/bin
-		${INSTALL} -m 644 README INSTALL midishrc sample.sng ${PREFIX}/share/doc/midish
+		${INSTALL} -m 644 doc.html midishrc sample.sng ${PREFIX}/share/doc/midish
 		@echo
 		@echo You can copy manually midishrc to ${HOME}/.midishrc
 		@echo
