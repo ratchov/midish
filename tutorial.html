@@ -284,6 +284,84 @@
 	chanconfev mybass { ctl mybass 7 125 }
 	</PRE>
 	
+<A name="time"></A>
+<H1>Time structure</H1>
+
+	<P>
+	In midish, time is split in <EMPH>measures</EMPH>. Each measure
+	is split in <EMPH>beats</EMPH> and each beat is split in 
+	<EMPH>tics</EMPH>. The <EMPH>tic</EMPH> is the fundamental
+	time unit in midish. Duration of tics is fixed
+	by the <EMPH>tempo</EMPH>. By default midish uses:
+		<UL>
+		<LI>24 tics per beat
+		<LI>4 beats per measure
+		<LI>120 beats per minute
+		</UL>
+	From the musical point of view, a beat often corresponds to
+	a quarter note, to an eight note etc... 
+	By default 
+	an unit note corresponds to 96 tics, thus by default
+	one beat corrsponds to one quarter note, i.e. 
+	the time signature is 4/4.
+	
+	
+<H2>Metronome</H2>
+
+	In order to "hear" time, we can use a metronome. It is
+	used only in play and record modes. It produces
+	a click sound on every beat. Let us start the metronome:
+	<PRE>
+	metroswitch 1		# switch the metronome on
+	songplay		# start playback
+	</PRE>
+	The metronome has to kind of clocks.
+	<UL>
+	<LI> hi-click: on the first beat of the measure
+	<LI> lo-click: on the other beats.
+	</UL>
+	The click-sound can be configured by giving a couple 
+	of note-on events, as follows:
+	<PRE>
+	metroconf { non {0 9} 48 127 } { non {0 9} 64 100}}
+	</PRE>
+	this configures the hi-click with note 48, velocity 127 on
+	device 0, channel 9 and the lo-click with note 64, velocity 100
+	on device 0, channel 9.
+	
+
+<H2>Time signature changes</H2>
+
+	Time signature changes are achieved by inserting or
+	deleting measures. For instance let us start
+	a song with time signature of 4/4 (at measure 0) and
+	change the time signature to 6/8 at measure 2 during
+	5 measures:
+	<PRE>
+	songtimeins 0 2 4 4	# 4/4 at measure 0 during 2 measures
+	songtimeins 2 5 6 8	# 8/6 at measure 2 during 5 measures
+	metroswitch 1		# switch the metronome on
+	songplay		# test it
+	</PRE>
+	Now we can suppress measure number 2 (the first 6/8 measure)
+	<PRE>
+	songtimerm  2 1		# remove 1 measure starting a measure 2
+	metroswitch 1		# switch the metronome on
+	songplay		# test it
+	</PRE>
+	
+<H2>Tempo changes</H2>
+	
+	Tempo changes are achieved simply by giving the measure
+	number and the tempo value in beats per minute. For
+	instance, the following changes tempo on measure 0
+	to 100 beats per minute and on measure 2 to 180 beats 
+	per minute.
+	<PRE>
+	songsettempo 0 100
+	songsettempo 2 180
+	</PRE>
+	
 <A name="track"></A>
 <H1>Tracks</H1>
 	
