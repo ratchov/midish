@@ -13,6 +13,13 @@
 <LI><A href="#dev">Device setup</A>
 <LI><A href="#filt">Filtering/routing</A>
 <LI><A href="#chan">Channels</A>
+<LI><A href="#time">Time structure</A>
+<LI><A href="#track">Tracks</A>
+<LI><A href="#info">Obtaining information</A>
+<LI><A href="#save">Saving and loading songs</A>
+<LI><A href="#export">Exporting and importing standard MIDI files</A>
+<LI><A href="#language">Using the interpreted language</A>
+<LI><A href="#example">Example session</A>
 </UL>
 
 
@@ -84,7 +91,7 @@
 	Once your are satisfied by your setup,
 	you can put the "<TT>devattach</TT>" commands
 	in your <TT>$HOME/.midishrc</TT>. They will be
-	automaticaly executed the next time you run midish.
+	automatically executed the next time you run midish.
 	
 <A name="filt"></A>
 <H1>Filtering/routing</H1>
@@ -213,7 +220,7 @@
 	the key-rule and other events (controllers) fall trough
 	the channel-rule. Arguments 4 and 5 to <TT>filtkeymap</TT>
 	give the note range that will be transposed 
-	(from 0 to 127, ie the whole keyboard)
+	(from 0 to 127, i.e. the whole keyboard)
 	and the 6-th argument give the number of half-tones 
 	(12, one octave).
 	
@@ -242,7 +249,7 @@
 <A name="chan"></A>
 <H1>Channels</H1>
 
-	Because midish handles multiple devices, enstead of
+	Because midish handles multiple devices, instead of
 	using midi-channels, it uses device/midi-channel pairs.
 	We'll often refer by <EMPH>channel</EMPH>
 	the device/midi-channel pair. As we have seen, channels
@@ -267,9 +274,9 @@
 	<PRE>
 	chanconfev mybass { pc mybass 32 }
 	</PRE>
-	the list-argumet gives the event to attach to the channel.
-	Such events are sent to the output when performace starts,
-	for instance juste before playback starts. This approach avoids
+	the list-argument gives the event to attach to the channel.
+	Such events are sent to the output when performance starts,
+	for instance just before playback starts. This approach avoids
 	flooding midi devices when playback starts.
 	
 	In the same way, to set the volume (controller 7) 
@@ -277,7 +284,7 @@
 	<PRE>
 	chanconfev mybass { ctl mybass 7 120 }
 	</PRE>
-	If seferal events of the same type are attached, 
+	If several events of the same type are attached, 
 	the just the last one is kept. So, to change
 	the volume to 125, we just need:
 	<PRE>
@@ -302,7 +309,7 @@
 	a quarter note, to an eight note etc... 
 	By default 
 	an unit note corresponds to 96 tics, thus by default
-	one beat corrsponds to one quarter note, i.e. 
+	one beat corresponds to one quarter note, i.e. 
 	the time signature is 4/4.
 	
 	
@@ -361,12 +368,24 @@
 	songsettempo 0 100
 	songsettempo 2 180
 	</PRE>
+
+
+<H2>Moving in the song</H2>
+
+	We can select the current position in the song to
+	measure number 3 as follows:
+	<PRE>
+	songsetcurpos 3
+	</PRE>
+	This will make <TT>songrecord</TT> and <TT>songplay</TT>
+	start at this particular position instead of measure
+	number 0.
 	
 <A name="track"></A>
 <H1>Tracks</H1>
 	
 	<P>
-	A track is a piece of music, namely a ordered list 
+	A track is a piece of music, namely an ordered in time list 
 	of midi events. In play mode, midish play simultaneously
 	all defined tracks, in record-mode it plays all defined tracks
 	and records the current track.
@@ -377,9 +396,9 @@
 	<EMPH>current filter</EMPH>; in this case, midi events
 	are passed through that filter before being recorded. If the
 	track has no current filter, then the song current
-	filter is used instead. If there is neither a track current
+	filter is used instead. If there is neither track current
 	filter nor song current filter, then midi events
-	from all devices are recorded as-is.s
+	from all devices are recorded as-is.
 
 <H2>Recording track without a filter</H2>
 
@@ -397,8 +416,8 @@
 	</PRE>
 	However, with the above configuration this will not
 	work as expected because events from the input
-	keyboard (device number 1) will be sent back
-	to the device number 1 instead of being sent
+	keyboard (device number 1) will be recorded as-is and then 
+	sent back to the device number 1 instead of being sent
 	to the sound module (device number 0).
 	
 <H2>Recording track with a filter</H2>
@@ -407,17 +426,262 @@
 	record to the above track:
 	<PRE>
 	filtnew mypiano
-	filltchanmap {1 0} {0 0}	# route dev1/chan0 -> dev0/chan0
+	filtchanmap mypiano {1 0} {0 0}		# dev1/chan0 -> dev0/chan0
 	tracksetcurfilt mypiano
 	trackrecord
 	</PRE>
 	
-	
-	
-	
-	 record data using an already 
-	defined filte
+<H2>Basic editing of a track</H2>
 
+	<P>
+	Most track editing functions in midish take at least the
+	following arguments:
+	<UL>
+	<LI> start measure
+	<LI> number of measures
+	<LI> precision/quantum (in tics).
+	</UL>
+	For instance let us blank measure number 3 of
+	track <TT>mypiano</TT>:
+	<PRE>
+	trackblank mypiano 3 1 (96 / 16)
+	</PRE>
+	the 3-rd argument set the precision to sixteenth note
+	(assuming 96 tics per unit note). This
+	means that notes starting just before the 3-rd measure will
+	be suppressed. This is useful, because often recorded notes
+	doesn't start exactly on the measure boundary. The precision
+	argument let you edit a track that is not quantised.
+
+	<P>
+	In a similar way, one can cut a piece of a track, 
+	for instance let us cut 2 measures starting
+	at measure number 5:
+	<PRE>
+	trackcut mypiano 5 2 (96 / 16)
+	</PRE>
+	
+	<P>
+	Now, let us insert 2 blank measure at
+	measure number 3:
+	<PRE>
+	trackinsert mypiano 3 2 (96 / 16)
+	</PRE>
+	
+	<P>
+	A track portion ca be copied into
+	another track as follows:
+	<PRE>
+	trackcopy mypiano 3 2 mypiano2 5 (96 / 16)
+	</PRE>
+	this will copy 2 measures starting from measure
+	number 3 into (the already existing) track <TT>mypiano2</TT>
+	at measure 5.
+	
+
+<H2>Track quantisation</H2>
+
+	In order to make a track sound more "precise", 
+	on can regularise it by rounding note-positions
+	to the nearest round position. The following
+	will quantise 4 measures starting at measure number
+	3 by rounding notes to the nearest quarter notes.
+	<PRE>
+	trackquant mypiano 3 4 (96 / 4) 75
+	</PRE>
+	The last arguments gives the percent of quantisation.
+	100% means full quantisation and 0% leans no
+	quantisation at all. This is useful because full quantisation
+	often sound to regular especially on acoustic patches.
+	
+
+<H2>Checking a track</H2>
+
+	It is possible that a midi device transmits 
+	bogus midi data. In principle when a filter is
+	used data is rewritten and contains no anomalies.
+	The following scans the track and removes bogus notes
+	and unused controller events:
+	<PRE>
+	trackcheck mytrack
+	</PRE>
+	This function can be useful to remove 
+	nested notes when a track is recorded twice (or more) 
+	without being erased.
+
+<A name="info"></A>
+<H1>Obtaining information</H2>
+
+	<P>
+	The following functions gives some informations
+	about midish objects:
+	<PRE>
+	songinfo
+	chaninfo mydrums	# about channel 'mydrums'
+	filtinfo myfilt		# about filter 'myfilt'
+	</PRE>
+	
+	<P>
+	Objects can be listed as follows:
+	<PRE>
+	print [tracklist]
+	print [chanlist]
+	print [filtlist]
+	print [devlist]
+	</PRE>
+
+	<P>
+	Current values can be obtained as follows:
+	<PRE>
+	print [songgetunit]		# tics per unit note
+	print [songgetcurpos]		# print current position
+	print [songgetcurfilt]		# current filter
+	print [songgetcurtrack]		# current track
+	print [trackgetcurfilt mypiano]	# current filter of track 'mypiano'
+	</PRE>
+
+	<P>
+	The device and the midi channel of a channel definition
+	can be obtained as follows:
+	<PRE>
+	print [changetnum mydrums]	# print midi chan number
+	print [changetdev mydrums]	# print device number
+	</PRE>
+	
+	<P>
+	To check if object exists:
+	<PRE>
+	print [chanexists]
+	print [filtexists]
+	print [trackexists]
+	</PRE>
+	this will print 1 if the corresponding object exists
+	and 0 otherwise.
+	
+
+<A name="save"></A>
+<H1>Saving and loading songs</H1>
+
+	<P>
+	A song can be saved into a file. All channel definitions, 
+	filters, tracks, their properties, 
+	and values of the current track, current 
+	filter will be saved by:
+	<PRE>
+	songsave "myfile"
+	</PRE>
+	In a similar way, the song can be load from a file 
+	as follows:
+	<PRE>
+	songload "myfile"
+	</PRE>
+	
+	<P>
+	Note that the "local settings" (like device configuration,
+	metronome settings) are not saved. 
+	
+<A name="export"></A>
+<H1>Importing and exporting standard MIDI files</H1>
+
+	<P>
+	Standard MIDI files type 0 or 1 can be imported. Each
+	track in the standard midi file corresponds to a track in midish.
+	Tracks are named <TT>trk00</TT>, <TT>trk01</TT>, ... 
+	All midi events are binded to device number 0. Only the following
+	meta events are handled:
+		<UL>
+		<LI> tempo changes
+		<LI> time signature changes
+		</UL>
+	all meta-events are removed from the "voice" tracks and
+	are moved into the midish's meta-track. Finally tracks
+	are checked for anomalies. Example:
+	<PRE>
+	songimportsmf "mysong.mid"
+	</PRE>
+	
+	<P>
+	Midish songs can be exported into standard midi files.
+	Tempo changes and time signature changes are exported
+	to a meta-track (first track of the midi file). Each
+	channel definition is exported as a track containing
+	the channel configuration events. Voice tracks
+	are exported as is in separate tracks. Note that device 
+	numbers of midi events are not stored in the midi file
+	because the file format does not allow this.	
+	Example:
+	<PRE>
+	songexportsmf "mysong.mid"
+	</PRE>
+	
+<A name="language"></A>
+<H1>Using the interpreted language</H1>
+
+	<P>
+	In order to achieve any simple task with midish, we often have
+	to write several long statements. In order to make midish easier
+	to use we can use variables and/or define our own procedures.
+	For more details about the interpreted language, please
+	refer to the <A href="manual.html">manual</A>.
+
+<H2>Defining simple procedures</H2>
+
+	<P>
+	For instance, let
+	us create a procedure named "<TT>i</TT>" that just replaces
+	<TT>songidle</TT> in order to avoid typing its name.
+	<PRE>
+	proc i { songidle; }
+	</PRE>
+	The <TT>proc</TT> keyword is followed by the procedure
+	name and then follows a list of statements between
+	braces. In a similar way can define the following
+	procedures:
+	<PRE>
+	proc p {
+		metroswith 0		# turn off metronome
+		songplay		# start playback
+	}
+	
+	proc r {
+		metroswitch 1		# turn on metronome
+		songrecord		# start recording
+	}
+	</PRE>
+	
+	<P>
+	Procedures can take arguments. 
+	For instance, let us define a procedure named <TT>nf</TT> 
+	that creates a new filter and then makes it the current filter:
+	<PRE>
+	proc nf filtname {
+		filtnew $filtname
+		songsetcurfilt $filtname
+	}
+	</PRE>
+	After the name of the procedure follows the argument names list
+	that can be arbitrary identifiers. The value of the arguments
+	is obtained by preceding the variable name by the dollar
+	sign ("$"). We can use the above procedure to create a filter:
+	<PRE>
+	nf myfilt
+	</PRE>
+	
+	A lot of similar procedures are defined in the
+	sample <TT>midishrc</TT> file, shipped in the source
+	tar-ball. The make midish easy to use, most of
+	the usual tasks can be performed with only 2 or
+	three character statements.
+	
+<A name="example"></A>
+<H1>Example session</H1>
+
+<HR>
+<SMALL><EM>
+Copyright (c) 2003-2005 Alexandre Ratchov	<BR>
+Last updated mar 11, 2005 	
+</EM></SMALL>
+	
 
 </BODY>
 </HTML>

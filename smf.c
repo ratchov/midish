@@ -675,20 +675,17 @@ song_importsmf(char *filename) {
 	return 0;
 	*/
 	
-	f.file = fopen(filename, "r");
-	if (f.file == NULL) {
-		user_printstr(strerror(errno));
+	if (!smf_open(&f, filename, "r")) {
 		goto bad1;
 	}
-	f.length = f.index = 0;
 	if (!smf_getheader(&f, smftype_header)) {
 		goto bad2;
 	}
 	if (!smf_get16(&f, &format)) {
 		goto bad2;
 	}
-	if (format != 1) {
-		user_printstr("only format 1 is supported\n");
+	if (format != 1 && format != 0) {
+		user_printstr("only smf format 0 or 1 can be imported\n");
 		goto bad2;
 	}
 	if (!smf_get16(&f, &ntrks)) {
@@ -713,7 +710,7 @@ song_importsmf(char *filename) {
 			goto bad3;
 		}
 	}
-	fclose(f.file);
+	smf_close(&f);
 	
 	if (format == 0) {
 		song_fix0(o);
@@ -724,6 +721,6 @@ song_importsmf(char *filename) {
 	return o;
 	
 bad3:	song_delete(o);
-bad2:	fclose(f.file);
+bad2:	smd_close(&f);
 bad1:	return 0;
 }
