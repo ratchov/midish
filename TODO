@@ -1,0 +1,17 @@
+- most important: write a tutorial
+
+- for each 'filt*map' create the corresponding 'filt*unmap'
+  and add filtdrop/filtpass
+
+- (easy) add 'mute' flag to tracks
+
+- (trivial) enable support for external clock sources
+
+- create an evspec_s structure that
+  can handle an event specification (note range, 
+  controller range etc...). Use it in trackblank,
+  trackcopy etc...
+
+- create a tempo factor for recording
+
+- add sysex support: create an allocator for real-time recording
