@@ -62,12 +62,12 @@ mididev_done(struct mididev_s *o) {
 /* -------------------------------------------- device list stuff --- */
 
 struct mididev_s *mididev_list;
-struct mididev_s *mididev_byunit[DEFAULT_MAXDEVS];
+struct mididev_s *mididev_byunit[DEFAULT_MAXNDEVS];
 
 void
 mididev_listinit(void) {
 	unsigned i;
-	for (i = 0; i < DEFAULT_MAXDEVS; i++) {
+	for (i = 0; i < DEFAULT_MAXNDEVS; i++) {
 		mididev_byunit[i] = 0;
 	}
 	mididev_list = 0;
@@ -78,7 +78,7 @@ mididev_listdone(void) {
 	unsigned i;
 	struct mididev_s *dev;
 	
-	for (i = 0; i < DEFAULT_MAXDEVS; i++) {
+	for (i = 0; i < DEFAULT_MAXNDEVS; i++) {
 		dev = mididev_byunit[i];
 		if (dev != 0) {
 			rmidi_done(RMIDI(dev));
@@ -92,7 +92,7 @@ unsigned
 mididev_attach(unsigned unit, char *path, unsigned in, unsigned out) {
 	struct mididev_s *dev;
 
-	if (unit >= DEFAULT_MAXDEVS) {
+	if (unit >= DEFAULT_MAXNDEVS) {
 		user_printstr("given unit is too large\n");
 		return 0;
 	}
@@ -115,7 +115,7 @@ unsigned
 mididev_detach(unsigned unit) {
 	struct mididev_s **i, *dev;
 	
-	if (unit >= DEFAULT_MAXDEVS || mididev_byunit[unit] == 0) {
+	if (unit >= DEFAULT_MAXNDEVS || mididev_byunit[unit] == 0) {
 		user_printstr("no such device\n");
 		return 0;
 	}

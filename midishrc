@@ -52,14 +52,12 @@ proc tf filt {
 # set the current track
 #
 proc ct name { 
-	if [trackexists $name] {
-		songsetcurtrack $name
+	songsetcurtrack $name
+	if [songgetcurtrack] {
 		let filt = [trackgetcurfilt $name]
 		if (filt) {
-			tracksetcurfilt $name $filt
+			songsetcurfilt $name $filt
 		}
-	} else {
-		print { "no such track :" $name }
 	}
 }
 
@@ -75,6 +73,9 @@ proc cf name {
 #
 # some filter rules
 #
+proc devmap i o {
+	filtdevmap [songgetcurfilt] $i $o
+}
 proc chanmap i o {
 	filtchanmap [songgetcurfilt] $i $o
 }
@@ -124,7 +125,7 @@ proc l  {
 	}
 	print "channels:"
 	for i in [chanlist] {
-		print { "   " $i "->" [changetnum $i] }
+		print { "   " $i "(" "dev:" [changetdev $i] "chan:" [changetnum $i] ")" }
 	}
 	print "filters:"
 	let cur = [songgetcurfilt]

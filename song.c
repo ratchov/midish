@@ -415,6 +415,9 @@ song_rt_setup(struct song_s *o) {
 	if (o->curtrk) {
 		if (o->curtrk->curfilt) {
 			o->filt = &o->curtrk->curfilt->filt;
+			if (o->curfilt != o->curtrk->curfilt) {
+				dbg_puts("warning: using track filter instead of current filt\n");
+			}
 		} else {
 			o->filt = 0;
 		}

@@ -241,7 +241,7 @@ mux_putev(struct ev_s *ev) {
 	
 	if (EV_ISVOICE(ev)) {
 		unit = ev->data.voice.chan >> 4;
-		if (unit < DEFAULT_MAXDEVS) {
+		if (unit < DEFAULT_MAXNDEVS) {
 			dev = mididev_byunit[unit];
 			if (dev != 0) {
 				rmidi_putev(RMIDI(dev), ev);
@@ -259,7 +259,7 @@ mux_putev(struct ev_s *ev) {
 void
 mux_sendraw(unsigned unit, unsigned char *buf, unsigned len) {
 	struct mididev_s *dev;
-	if (unit >= DEFAULT_MAXDEVS) {
+	if (unit >= DEFAULT_MAXNDEVS) {
 		return;
 	}
 	dev = mididev_byunit[unit];

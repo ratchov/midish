@@ -46,8 +46,8 @@ struct song_s song;
 int
 main(int argc, char *argv[]) {
 	cons_init();
-	seqev_pool_init(DEFAULT_MAXSEQEVS);
-	state_pool_init(DEFAULT_MAXSTATES);
+	seqev_pool_init(DEFAULT_MAXNSEQEVS);
+	state_pool_init(DEFAULT_MAXNSTATES);
 	mididev_listinit();
 	song_init(&song);
 	

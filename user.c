@@ -147,9 +147,65 @@ exec_lookuptrack(struct exec_s *o, char *var, struct songtrk_s **res) {
 	return 1;
 }
 
+unsigned
+data_list2chan(struct data_s *o, unsigned *num) {
+	struct songchan_s *i;
+	long chan, dev;
+
+	if (o->type == DATA_LONG) {
+		*num = o->val.num;
+		return 1;
+	} else if (o->type == DATA_LIST) {
+		if (!o->val.list || 
+		    !o->val.list->next || 
+		    o->val.list->next->next ||
+		    o->val.list->type != DATA_LONG || 
+		    o->val.list->next->type != DATA_LONG) {
+			user_printstr("bad {dev midichan} in spec\n");
+			return 0;
+		}
+		dev = o->val.list->val.num;
+		chan = o->val.list->next->val.num;
+		if (chan < 0 || chan >= 16 || 
+		    dev < 0 || dev >= DEFAULT_MAXNDEVS) {
+			user_printstr("bad dev/midichan ranges\n");
+		}
+		*num = dev * 16 + chan;
+		return 1;
+	} else if (o->type == DATA_REF) {
+		i = song_chanlookup(user_song, o->val.ref);
+		if (i == 0) {
+			user_printstr("no such chan name\n");
+			return 0;
+		}
+		*num = i->chan;
+		return 1;
+	} else {
+		user_printstr("bad channel specification\n");
+		return 0;
+	}
+}
+
 
 unsigned
-exec_lookupchan(struct exec_s *o, char *var, struct songchan_s **res) {
+exec_lookupchan_getnum(struct exec_s *o, char *var, unsigned *res) {
+	struct var_s *arg;
+	unsigned num;
+	
+	arg = exec_varlookup(o, var);
+	if (!arg) {
+		dbg_puts("exec_lookupchan_getnum: no such var\n");
+		dbg_panic();
+	}
+	if (!data_list2chan(arg->data, &num)) {
+		return 0;
+	}
+	*res = num;
+	return 1;
+}
+
+unsigned
+exec_lookupchan_getref(struct exec_s *o, char *var, struct songchan_s **res) {
 	struct var_s *arg;
 	struct songchan_s *i;
 	
@@ -160,10 +216,8 @@ exec_lookupchan(struct exec_s *o, char *var, struct songchan_s **res) {
 	}
 	if (arg->data->type == DATA_REF) {
 		i = song_chanlookup(user_song, arg->data->val.ref);
-	} else if (arg->data->type == DATA_LONG) {
-		i = song_chanlookup_bynum(user_song, arg->data->val.num);
 	} else {
-		user_printstr("bad channel specification\n");
+		user_printstr("bad channel name\n");
 		return 0;
 	}
 	if (i == 0) {
@@ -197,6 +251,8 @@ unsigned
 exec_lookupev(struct exec_s *o, char *name, struct ev_s *ev) {
 	struct var_s *arg;
 	struct data_s *d;
+	unsigned chan;
+
 	arg = exec_varlookup(o, name);
 	if (!arg) {
 		dbg_puts("exec_lookupev: no such var\n");
@@ -216,11 +272,14 @@ exec_lookupev(struct exec_s *o, char *name, struct ev_s *ev) {
 		return 0;
 	}
 	d = d->next;
-	if (!d || d->type != DATA_LONG) {
-		user_printstr("bad channel in event spec\n");
+	if (!d) {
+		user_printstr("no channel in event spec\n");
 		return 0;
 	}
-	ev->data.voice.chan = d->val.num;
+	if (!data_list2chan(d, &chan)) {
+		return 0;
+	}
+	ev->data.voice.chan = chan;
 	d = d->next;
 	if (!d || d->type != DATA_LONG) {
 		user_printstr("bad byte0 in event spec\n");
@@ -277,6 +336,8 @@ user_func_debug(struct exec_s *o) {
 		parse_debug = value;
 	} else if (str_eq(flag, "tree")) {
 		tree_debug = value;
+	} else if (str_eq(flag, "filt")) {
+		filt_debug = value;
 	} else {
 		user_printstr("debug: unknuwn debug-flag\n");
 		return 0;
@@ -691,16 +752,24 @@ user_func_chanlist(struct exec_s *o) {
 unsigned
 user_func_channew(struct exec_s *o) {
 	char *name;
+	struct var_s *arg;
 	struct songchan_s *i;
-	long chan;
+	unsigned chan;
 	
-	if (!exec_lookupname(o, "channame", &name) ||
-	    !exec_lookuplong(o, "channum", &chan)) {
+	if (!exec_lookupname(o, "channame", &name)) {
 		return 0;
 	}
 	i = song_chanlookup(user_song, name);
 	if (i != 0) {
 		user_printstr("channew: chan already exists\n");
+		return 0;
+	}
+	arg = exec_varlookup(o, "channum");
+	if (!arg) {
+		dbg_puts("exec_lookupchan: no such var\n");
+		dbg_panic();
+	}
+	if (!data_list2chan(arg->data, &chan)) {
 		return 0;
 	}
 	i = song_chanlookup_bynum(user_song, chan);
@@ -713,8 +782,8 @@ user_func_channew(struct exec_s *o) {
 	
 	
 	i = songchan_new(name);
-	if (chan >= DEFAULT_MAXCHANS) {
-		user_printstr("channew: channel must be between 0 and MAXCHANS (see default.h)\n");
+	if (chan >= DEFAULT_MAXNCHANS) {
+		user_printstr("channew: channel must be between 0 and MAXNCHANS (see default.h)\n");
 		return 0;
 	}
 	i->chan = chan;
@@ -736,18 +805,23 @@ user_func_chanexists(struct exec_s *o) {
 
 unsigned
 user_func_changetnum(struct exec_s *o) {
-	char *channame;
 	struct songchan_s *i;
 	
-	if (!exec_lookupname(o, "channame", &channame)) {
+	if (!exec_lookupchan_getref(o, "channame", &i)) {
 		return 0;
 	}
-	i = song_chanlookup(user_song, channame);
-	if (i == 0) {
-		user_printstr("changetnum: no such chan\n");
+	exec_putacc(o, data_newlong(i->chan % 16));
+	return 1;
+}
+
+unsigned
+user_func_changetdev(struct exec_s *o) {
+	struct songchan_s *i;
+	
+	if (!exec_lookupchan_getref(o, "channame", &i)) {
 		return 0;
 	}
-	exec_putacc(o, data_newlong(i->chan));
+	exec_putacc(o, data_newlong(i->chan / 16));
 	return 1;
 }
 
@@ -757,7 +831,7 @@ user_func_chanconfev(struct exec_s *o) {
 	struct seqptr_s cp;
 	struct ev_s ev;
 	
-	if (!exec_lookupchan(o, "channame", &c) ||
+	if (!exec_lookupchan_getref(o, "channame", &c) ||
 	    !exec_lookupev(o, "event", &ev)) {
 		return 0;
 	}
@@ -772,7 +846,7 @@ unsigned
 user_func_chaninfo(struct exec_s *o) {
 	struct songchan_s *c;
 	
-	if (!exec_lookupchan(o, "channame", &c)) {
+	if (!exec_lookupchan_getref(o, "channame", &c)) {
 		return 0;
 	}
 	track_output(&c->conf, user_stdout);
@@ -841,23 +915,40 @@ user_func_filtinfo(struct exec_s *o) {
 	for (i = f->filt.chan_rules; i != 0; i = i->next) {
 		rule_output(i, user_stdout);
 	}
+	for (i = f->filt.dev_rules; i != 0; i = i->next) {
+		rule_output(i, user_stdout);
+	}
 	return 1;
 }
 
 
 unsigned
-user_func_filtchanmap(struct exec_s *o) {
+user_func_filtdevmap(struct exec_s *o) {
 	struct songfilt_s *f;
-	long ichan, ochan;
+	long idev, odev;
 	
 	if (!exec_lookupfilt(o, "filtname", &f) ||
-	    !exec_lookuplong(o, "inchan", &ichan) ||
-	    !exec_lookuplong(o, "outchan", &ochan)) {
+	    !exec_lookuplong(o, "indev", &idev) ||
+	    !exec_lookuplong(o, "outdev", &odev)) {
 		return 0;
 	}
-	if (ichan < 0 || ichan >= DEFAULT_MAXCHANS || 
-	    ochan < 0 || ochan >= DEFAULT_MAXCHANS ) {
-		user_printstr("filtchanmap: channels must be between 0 and MAXCHANS (see default.h)\n");
+	if (idev < 0 || idev >= DEFAULT_MAXNDEVS ||
+	    odev < 0 || odev >= DEFAULT_MAXNDEVS) {
+	    	user_printstr("device number out of range\n");
+		return 0;
+	}
+	filt_new_devmap(&f->filt, 16 * idev, 16 * odev);
+	return 1;
+}
+
+unsigned
+user_func_filtchanmap(struct exec_s *o) {
+	struct songfilt_s *f;
+	unsigned ichan, ochan;
+	
+	if (!exec_lookupfilt(o, "filtname", &f) ||
+	    !exec_lookupchan_getnum(o, "inchan", &ichan) ||
+	    !exec_lookupchan_getnum(o, "outchan", &ochan)) {
 		return 0;
 	}
 	filt_new_chanmap(&f->filt, ichan, ochan);
@@ -869,19 +960,15 @@ user_func_filtchanmap(struct exec_s *o) {
 unsigned
 user_func_filtkeymap(struct exec_s *o) {
 	struct songfilt_s *f;
-	long ichan, ochan, kstart, kend, kplus;
+	unsigned ichan, ochan;
+	long kstart, kend, kplus;
 	
 	if (!exec_lookupfilt(o, "filtname", &f) ||
-	    !exec_lookuplong(o, "inchan", &ichan) ||
-	    !exec_lookuplong(o, "outchan", &ochan) ||
+	    !exec_lookupchan_getnum(o, "inchan", &ichan) ||
+	    !exec_lookupchan_getnum(o, "outchan", &ochan) ||
 	    !exec_lookuplong(o, "keystart", &kstart) || 
 	    !exec_lookuplong(o, "keyend", &kend) ||
 	    !exec_lookuplong(o, "keyplus", &kplus)) {
-		return 0;
-	}
-	if (ichan < 0 || ichan >= DEFAULT_MAXCHANS || 
-	    ochan < 0 || ochan >= DEFAULT_MAXCHANS ) {
-		user_printstr("filtkeymap: channels must be between 0 and MAXCHANS (see default.h)\n");
 		return 0;
 	}
 	if (kstart < 0 || kstart > 127 || kend < 0 || kend > 127) {
@@ -900,18 +987,14 @@ user_func_filtkeymap(struct exec_s *o) {
 unsigned
 user_func_filtctlmap(struct exec_s *o) {
 	struct songfilt_s *f;
-	long ichan, ochan, ictl, octl;
+	unsigned ichan, ochan;
+	long ictl, octl;
 	
 	if (!exec_lookupfilt(o, "filtname", &f) ||
-	    !exec_lookuplong(o, "inchan", &ichan) ||
-	    !exec_lookuplong(o, "outchan", &ochan) ||
+	    !exec_lookupchan_getnum(o, "inchan", &ichan) ||
+	    !exec_lookupchan_getnum(o, "outchan", &ochan) ||
 	    !exec_lookuplong(o, "inctl", &ictl) || 
 	    !exec_lookuplong(o, "outctl", &octl)) {
-		return 0;
-	}
-	if (ichan < 0 || ichan >= DEFAULT_MAXCHANS || 
-	    ochan < 0 || ochan >= DEFAULT_MAXCHANS ) {
-		user_printstr("filtctlmap: channels must be between 0 and MAXCHANS (see default.h)\n");
 		return 0;
 	}
 	if (ictl < 0 || ictl > 127 || octl < 0 || octl > 127) {
@@ -937,11 +1020,11 @@ user_func_filtreset(struct exec_s *o) {
 unsigned
 user_func_filtchangein(struct exec_s *o) {
 	struct songfilt_s *f;
-	long oldchan, newchan;
+	unsigned oldchan, newchan;
 	
 	if (!exec_lookupfilt(o, "filtname", &f) ||
-	    !exec_lookuplong(o, "oldchan", &oldchan) ||
-	    !exec_lookuplong(o, "newchan", &newchan)) {
+	    !exec_lookupchan_getnum(o, "oldchan", &oldchan) ||
+	    !exec_lookupchan_getnum(o, "newchan", &newchan)) {
 		return 0;
 	}
 	filt_changein(&f->filt, oldchan, newchan);
@@ -1025,7 +1108,17 @@ user_func_songgetcurquant(struct exec_s *o) {
 unsigned
 user_func_songsetcurtrack(struct exec_s *o) {
 	struct songtrk_s *t;
+	struct var_s *arg;
 	
+	arg = exec_varlookup(o, "trackname");
+	if (!arg) {
+		dbg_puts("user_func_songsetcurtrack: 'trackname': no such param\n");
+		return 0;
+	}
+	if (arg->data->type == DATA_NIL) {
+		user_song->curtrk = 0;
+		return 1;
+	} 
 	if (!exec_lookuptrack(o, "trackname", &t)) {
 		return 0;
 	}
@@ -1048,7 +1141,17 @@ user_func_songgetcurtrack(struct exec_s *o) {
 unsigned
 user_func_songsetcurfilt(struct exec_s *o) {
 	struct songfilt_s *f;
+	struct var_s *arg;
 	
+	arg = exec_varlookup(o, "filtname");
+	if (!arg) {
+		dbg_puts("user_func_songsetcurfilt: 'filtname': no such param\n");
+		return 0;
+	}
+	if (arg->data->type == DATA_NIL) {
+		user_song->curfilt = 0;
+		return 1;
+	} 
 	if (!exec_lookupfilt(o, "filtname", &f)) {
 		return 0;
 	}
@@ -1510,6 +1613,8 @@ user_mainloop(void) {
 			name_newarg("channame", 0));
 	exec_newbuiltin(exec, "changetnum", user_func_changetnum,
 			name_newarg("channame", 0));
+	exec_newbuiltin(exec, "changetdev", user_func_changetdev,
+			name_newarg("channame", 0));
 	exec_newbuiltin(exec, "chanconfev", user_func_chanconfev,
 			name_newarg("channame",
 			name_newarg("event", 0)));
@@ -1523,6 +1628,10 @@ user_mainloop(void) {
 			name_newarg("filtname", 0));
 	exec_newbuiltin(exec, "filtreset", user_func_filtreset, 
 			name_newarg("filtname", 0));
+	exec_newbuiltin(exec, "filtdevmap", user_func_filtdevmap,
+			name_newarg("filtname",
+			name_newarg("indev", 
+			name_newarg("outdev", 0))));
 	exec_newbuiltin(exec, "filtchanmap", user_func_filtchanmap,
 			name_newarg("filtname",
 			name_newarg("inchan", 

@@ -33,6 +33,8 @@ cons.o data.o dbg.o ev.o filt.o lex.o main.o mdep.o mididev.o mux.o name.o \
 parse.o pool.o rmidi.o saveload.o smf.o song.o str.o textio.o \
 track.o trackop.o tree.o user.o
 
+all:		${PROG}
+
 ${PROG}:	${OBJS}
 		${CC} ${LDFLAGS} ${OBJS} -o ${PROG} ${LIB}
 
