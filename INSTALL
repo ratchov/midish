@@ -1,0 +1,42 @@
+REQUIREMENTS
+------------
+
+- a midi sound module
+
+- a midi keyboard
+
+- an unix-like operating system with "raw" midi support
+
+INSTALLATION
+------------
+
+- untar and gunzip the tarball:
+  gzip -dc midish-YYYYMMDD.tgz | tar xf -
+  cd midish-YYYYMMDD
+
+- edit Makefile and change CC, CFLAGS, etc... (if needed)
+
+- comment or uncomment readline(3) options in Makefile
+
+- compile the sequencer, just type "make" 
+
+- install binaries by typing "make install"; by default
+  they are installed in $HOME/bin, where $HOME is
+  your home directory. If you want to change this,
+  set the PREFIX variable, for instance: 
+
+		make PREFIX=/usr/local install
+
+- if you don't have a .midishrc, copy the sample file by
+  typing "cp midishrc ~/.midishrc" in your shell
+
+- read README and edit your ~/.midishrc in order to choose your
+  default midi device by using the 'devattach' function
+  (example: devattach 0 "/dev/rmidi3")
+
+- start the sequencer by typing "./midish"
+
+- try this:
+  songload "sample.sng"
+  songplay
+

@@ -1,0 +1,342 @@
+#
+# set midi device config
+#
+#devattach 0 "/dev/rmidi3"
+#devattach 1 "/dev/rmidi2"
+
+#
+# create a new channel
+#
+proc nc name chan {
+	channew $name $chan
+}
+
+#
+# create a new track 
+#
+proc nt name { 
+	tracknew $name 
+	let filt = [songgetcurfilt]
+	if (filt) {
+		tracksetcurfilt $name $filt
+	}
+	songsetcurtrack $name
+}
+
+#
+# create a new filter 
+#
+proc nf name { 
+	filtnew $name 
+	songsetcurfilt $name
+}
+
+
+#
+# set the track's filter
+#
+proc tf filt {
+	if [filtexists $filt] {
+		let track = [songgetcurtrack]
+		if (track) {
+			tracksetcurfilt $track $filt
+		} else {
+			print "warning, no current track";
+		}
+	} else {
+		print { "no such track :" $name }
+	}
+}
+
+#
+# set the current track
+#
+proc ct name { 
+	if [trackexists $name] {
+		songsetcurtrack $name
+		let filt = [trackgetcurfilt $name]
+		if (filt) {
+			tracksetcurfilt $name $filt
+		}
+	} else {
+		print { "no such track :" $name }
+	}
+}
+
+
+#
+# set the current filt
+#
+proc cf name { 
+	songsetcurfilt $name
+}
+
+
+#
+# some filter rules
+#
+proc chanmap i o {
+	filtchanmap [songgetcurfilt] $i $o
+}
+proc ctlmap i o ic oc {
+	filtctlmap [songgetcurfilt] $i $o $ic $oc
+}
+
+
+#
+# do nothing, just echo trough the configuration of the current track
+#
+proc i  {
+	songidle;
+}
+
+#
+# play the song
+#
+proc p  {
+	metroswitch 0;
+	songplay;
+	shut;
+}
+
+#
+# record a track while playing the song
+#
+proc r  { 
+	metroswitch 1; 
+	songrecord;
+	shut; 
+}
+
+#
+# print the list of tracks, channels and filters
+#
+proc l  {
+	print "tracks:"
+	let cur = [songgetcurtrack]
+	for i in [tracklist] {
+		if $i == $cur {
+			let prefix = " ->";
+		} else {
+			let prefix = "   ";
+		}
+		print { $prefix $i "( record:" [trackgetcurfilt $i] ")" }
+	}
+	print "channels:"
+	for i in [chanlist] {
+		print { "   " $i "->" [changetnum $i] }
+	}
+	print "filters:"
+	let cur = [songgetcurfilt]
+	for i in [filtlist] {
+		if $i == $cur {
+			let prefix = " ->";
+		} else {
+			let prefix = "   ";
+		}
+		print { $prefix $i ":"}
+	}
+	songinfo; 
+}
+
+
+#
+# set note quantum
+#
+proc n denom {
+	songsetcurquant 96/$denom
+} 
+
+#
+# quantise
+#
+proc q amount rate {
+	trackquant [songgetcurtrack] [songgetcurpos] $amount [songgetcurquant] $rate
+} 
+
+#
+# change current position
+#
+proc g measure {
+	songsetcurpos $measure
+}
+
+#
+# cut a piece of a track
+#
+proc cut amount {
+	trackcut [songgetcurtrack] [songgetcurpos] $amount [songgetcurquant]
+}
+
+
+#
+# clear a piece of a track
+#
+proc clr amount {
+	trackblank [songgetcurtrack] [songgetcurpos] $amount [songgetcurquant]
+}
+
+#
+# insert measures in a track
+#
+proc ins amount {
+	trackinsert [songgetcurtrack] [songgetcurpos] $amount
+}
+
+#
+# copy measures in a track
+#
+proc copy amount where {
+	let track = [songgetcurtrack]
+	let from = [songgetcurpos]
+	trackcopy $track $from $amount $track ($where + $from) [songgetcurquant]
+}
+
+#
+# cut a piece of the song
+#
+proc gcut amount {
+	let pos = [songgetcurpos] 
+	for i in [tracklist] {
+		trackcut $i $pos $amount [songgetcurquant]
+	}
+}
+
+#
+# insert measures in the song
+#
+proc gins amount {
+	let pos = [songgetcurpos] 
+	for i in [tracklist] {
+		trackinsert $i $pos $amount [songgetcurquant]
+	}
+}
+
+#
+# save the song
+#
+proc save filename {
+	songsave $filename
+}
+
+#
+# load a song
+#
+proc load filename {
+	songload $filename
+}
+
+#
+# export a song in a .mid
+#
+proc export filename {
+	songexportsmf $filename
+}
+
+#
+# import a song from a .mid
+#
+proc import filename {
+	songimportsmf $filename
+}
+
+#
+# change tempo a current position
+#
+proc tempo beat_per_measure {
+	songsettempo [songgetcurpos] $beat_per_measure
+}
+
+#
+# insert measures in the meta-track
+#
+proc timeins amount numerator denominator {
+	songtimeins [songgetcurpos] $amount $numerator $denominator
+}
+
+#
+# remove measures froim the meta-track
+#
+proc timerm amount {
+	songtimerm [songgetcurpos] $amount
+}
+
+#
+# turn on general midi (send sysex)
+#
+proc gmon {
+	sendraw { 0xF0 0x7E 0x7F 0x09 0x01 0xF7 }
+}
+
+#
+# turn off general midi (send sysex)
+#
+proc gmoff {
+	sendraw { 0xF0 0x7E 0x7F 0x09 0x02 0xF7 }
+}
+
+#
+# configure an instrument for a given general midi patch
+#
+proc gmp chan patch {
+	chanconfev $chan 0xc ($patch + 1) 0 
+}
+
+
+#
+# XV-2020 specific macros
+#
+# configures a instrument with the given bank/patch or bank rhythm
+# bank 1,2,3,4 corresponds to preset A,B,C,D
+# patches/rhythmes are counted from 1 to 128
+#
+proc xvp chan bank patch {
+	chanconfev $chan { ctl 0 0  87 } 
+	chanconfev $chan { ctl 0 32 (64 + $bank - 1) } 
+	chanconfev $chan { pc  0 ($patch  - 1) }
+}
+proc xvr chan bank rhythm { 
+	chanconfev $chan { ctl 0 0  86 } 
+	chanconfev $chan { ctl 0 32 (64 + $bank - 1) } 
+	chanconfev $chan { pc  0 ($rhythm - 1) }
+}
+
+#
+# turn off general midi, put the XV2020 in performance mode
+# select bank msb=85, lsb=65 (ie PST-B) and performance 14
+# and put output_assign->path
+#
+proc xvperf {
+	sendraw { 						\
+		  0xF0 0x7E 0x7F 0x09 0x02 0xF7			\	
+		  0xF0 0x41 0x7F 0x00 0x10 0x12  		\
+		       0x01 0x00 0x00 0x00 0x02 0x7D 0xF7	\
+		  0xBF 0  85   					\
+		  0xBF 32 65					\
+		  0xCF 13 					\
+		  0xF0 0x41 0x7F 0x00 0x10 0x12			\
+		       0x10 0x00 0x20 0x1F   13   36 0xF7	\
+		}
+}
+
+#
+# set parameter on addres (a0,a1,a2,a3) to val
+#
+proc xvparam a0 a1 a2 a3 val {
+	sendraw {  0xF0 0x41 0x7F 0x00 0x10 0x12 $a0 $a1 $a2 $a3 $val	\
+		   128 - ($a0 + $a1 + $a2 + $a3 + $val) % 128		\
+		   0xf7 }
+}
+
+#
+# controllers config
+#
+proc mod  	chan value { chanconfev $chan {ctl 0 1  $value}; }
+proc breath  	chan value { chanconfev $chan {ctl 0 2  $value}; }
+proc vol  	chan value { chanconfev $chan {ctl 0 7  $value}; }
+proc bal  	chan value { chanconfev $chan {ctl 0 8  $value}; }
+proc pan  	chan value { chanconfev $chan {ctl 0 10 $value}; }
+proc reverb	chan value { chanconfev $chan {ctl 0 91 $value}; }
+proc chorus	chan value { chanconfev $chan {ctl 0 93 $value}; }
+
+print "midishrc completed"
