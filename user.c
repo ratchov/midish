@@ -665,12 +665,13 @@ user_func_trackinsert(struct exec_s *o) {
 	char *trkname;
 	struct songtrk_s *t;
 	struct seqptr_s tp;
-	long from, amount;
+	long from, amount, quant;
 	unsigned tic, len;
 	
 	if (!exec_lookupname(o, "trackname", &trkname) ||
 	    !exec_lookuplong(o, "from", &from) ||
-	    !exec_lookuplong(o, "amount", &amount)) {
+	    !exec_lookuplong(o, "amount", &amount) ||
+	    !exec_lookuplong(o, "quantum", &quant)) {
 		return 0;
 	}
 	t = song_trklookup(user_song, trkname);
@@ -681,6 +682,10 @@ user_func_trackinsert(struct exec_s *o) {
 
 	tic = song_measuretotic(user_song, from);
 	len = song_measuretotic(user_song, from + amount) - tic;
+
+	if (tic > quant/2) {
+		tic -= quant/2;
+	}
 
 	track_rew(&t->track, &tp);
 	track_seekblank(&t->track, &tp, tic);
@@ -1595,7 +1600,8 @@ user_mainloop(void) {
 	exec_newbuiltin(exec, "trackinsert", user_func_trackinsert,
 			name_newarg("trackname", 
 			name_newarg("from", 
-			name_newarg("amount", 0))));
+			name_newarg("amount", 
+			name_newarg("quantum", 0)))));
 	exec_newbuiltin(exec, "trackquant", user_func_trackquant, 
 			name_newarg("trackname", 
 			name_newarg("from", 
