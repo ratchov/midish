@@ -48,10 +48,10 @@
 	<UL>
 	<LI> untar and gunzip the tarball:
 
-<BLOCKQUOTE><PRE>
-gzip -dc midish-0.1.tar.gz | tar xf -
-cd midish-0.1
-</PRE></BLOCKQUOTE>
+	<PRE>
+	gzip -dc midish-0.1.tar.gz | tar xf -
+	cd midish-0.1
+	</PRE>
 
 	<LI> 
 	edit Makefile and change CC, CFLAGS, etc... (if needed)
@@ -60,26 +60,26 @@ cd midish-0.1
 	comment or uncomment readline(3) options in Makefile
 
 	<LI> 
-	compile the sequencer, just type "make all" 
+	compile the sequencer, just type '<TT>make all</TT>'
 
 	<LI>
-	install binaries by typing "make install"; by default
-	they are installed in $HOME/bin, where $HOME is
+	install binaries by typing <TT>make install</TT>; by default
+	they are installed in <TT>$HOME/bin</TT>, where <TT>$HOME</TT> is
 	your home directory. If you want to change this,
 	set the PREFIX variable, for instance: 
 
-<BLOCKQUOTE><PRE>
-make PREFIX=/usr/local install
-</PRE></BLOCKQUOTE>
+	<PRE>
+	make PREFIX=/usr/local install
+	</PRE>
 
 	<LI>
 	if you don't have a .midishrc, copy the sample file by
-	typing "cp midishrc ~/.midishrc" in your shell
+	typing '<TT>cp midishrc ~/.midishrc</TT>' in your shell
 
 	<LI>
 	read the documentation and edit your ~/.midishrc in order 
-	to choose your default midi device by using the 'devattach' function
-	(example: devattach 0 "/dev/rmidi3", see next section)
+	to choose your default midi device by using the <TT>devattach</TT> 
+	function (example: '<TT>devattach 0 "/dev/rmidi3"</TT>', see next section)
 
 	</UL>
 
@@ -88,22 +88,22 @@ make PREFIX=/usr/local install
 	midish currently doesn't take any arguments, so it's started
 	by typing:
 
-<BLOCKQUOTE><PRE>
-./midish
-</PRE></BLOCKQUOTE>
+	<PRE>
+	./midish
+	</PRE>
 
 	in your shell. On startup, it tries to execute
 	the script $HOME/.midishrc.
 
 	You can specify your midi devices
-	by using the function "devattach", for instance:
+	by using the function <TT>devattach</TT>, for instance:
 
-<BLOCKQUOTE><PRE>
-devattach 0 "/dev/rmidi3"
-devattach 1 "/dev/rmidi1"
-</PRE></BLOCKQUOTE>
+	<PRE>
+	devattach 0 "/dev/rmidi3"
+	devattach 1 "/dev/rmidi1"
+	</PRE>
 
-	will attach "/dev/rmidi3" and "/dev/rmidi1" as devices
+	will attach <TT>/dev/rmidi3</TT> and <TT>/dev/rmidi1</TT> as devices
 	number 0 and 1. You can put those statements in 
 	your $HOME/.midishrc
 
@@ -126,10 +126,11 @@ devattach 1 "/dev/rmidi1"
 	<P>
 	You can try to play the demo song in the source tar-ball
 
-<BLOCKQUOTE><PRE>
-songload "sample.sng"
-songplay
-</PRE></BLOCKQUOTE>
+	<PRE>
+	songload "sample.sng"
+	songplay
+	</PRE>
+
 
 <A name="language"></A>
 <H1>Language reference</H1>
@@ -141,14 +142,14 @@ songplay
 	<LI> identifier:
 		<P>
 		an identifier is a sequence of up to 32
-		characters, digits and underscores ('_').
+		characters, digits and underscores (<TT>_</TT>).
 		However, an identifier cannot start with a
 		digit. Examples:
-<BLOCKQUOTE><PRE>
-mytrack _mytrack  my34_track23			# good
-123mytrack 					# bad, starts with digit
-mytrackabcdefghijklmnopqrstuvwxyz		# bad, to long
-</PRE></BLOCKQUOTE>
+	<PRE>
+	mytrack _mytrack  my34_track23		# good
+	123mytrack 				# bad, starts with digit
+	mytrackabcdefghijklmnopqrstuvwxyz	# bad, to long
+	</PRE>
 	
 	<LI> numbers 
 
@@ -172,23 +173,25 @@ mytrackabcdefghijklmnopqrstuvwxyz		# bad, to long
 	<LI> keywords
 
 		<P>
-		valid keywords are: 'nil', 'let', 'if', 'else',
-		'for', and 'proc'.
+		valid keywords are: <TT>nil</TT>, <TT>let</TT>, 
+		<TT>if</TT>, <TT>else</TT>, <TT>for</TT>, and <TT>proc</TT>.
 
 	<LI> operators, separators etc...
 
 		<P>
-		sequences of meta-characters like '(', ')', '+',
-		'$', newline character, ';',  etc... 
+		sequences of meta-characters like '<TT>(</TT>', '<TT>)</TT>', 
+		'<TT>+</TT>', '<TT>$</TT>', newline character, 
+		'<TT>;</TT>',  etc... 
 
 	<LI> comments are ignored
 
 		<P>
-		Comments are ignored, the start with '#' 
+		Comments are ignored, the start with '<TT>#</TT>' 
 		and ends with the new line
 		character.
 
-	<LI> multiple lines ending with '\' are parsed as a single line.
+	<LI> multiple lines ending with '<TT>\</TT>' are parsed as a 
+	single line.
 
 	<LI> anything else generates a "bad token" error.
 	</UL>
@@ -200,7 +203,7 @@ mytrackabcdefghijklmnopqrstuvwxyz		# bad, to long
 	statement.
 	
 	<P>
-	Most of the statements end with the ';'
+	Most of the statements end with the '<TT>;</TT>'
 	character.  However, in order to improve
 	interactivity, the newline character can be used
 	instead. Thus, the newline character cannot be
@@ -212,18 +215,19 @@ mytrackabcdefghijklmnopqrstuvwxyz		# bad, to long
 	<LI>
 	a procedure call, example:
 
-<BLOCKQUOTE><PRE>
-myproc arg1 arg2
-</PRE></BLOCKQUOTE>
+	<PRE>
+	myproc arg1 arg2
+	</PRE>
+
 
 	<LI>
-	an assignment using the 'let' keyword,
+	an assignment using the <TT>let</TT> keyword,
 	examples:
 
-<BLOCKQUOTE><PRE>
-let x = 123
-let y = 1 + 2 * (3 + x)
-</PRE></BLOCKQUOTE>
+	<PRE>
+	let x = 123
+	let y = 1 + 2 * (3 + x)
+	</PRE>
 
 	<P>
 	The left-hand side should be the name of
@@ -234,19 +238,19 @@ let y = 1 + 2 * (3 + x)
 	<LI>
 	an if..else statement, example:
 
-<BLOCKQUOTE><PRE>
-if $i {
-	print "i is not zero";
-} else {
-	print "i is zero";
-}
-</PRE></BLOCKQUOTE>
+	<PRE>
+	if $i {
+		print "i is not zero";
+	} else {
+		print "i is zero";
+	}
+	</PRE>
 
-	the 'else' and the second block are
+	the <TT>else</TT> and the second block are
 	not mandatory. Note that since newline
-	character is interpreted as a ';', the
+	character is interpreted as a <TT>;</TT>, the
 	line cannot be broken in an arbitrary
-	way. If the expression following the 'if'
+	way. If the expression following the <TT>if</TT>
 	keyword is true the first block is executed,
 	otherwise the second one (if any)is executed. The
 	expression is evaluated in the following way:
@@ -264,14 +268,15 @@ if $i {
 	<LI>
 	a loop over a list:
 
-<BLOCKQUOTE><PRE>
-for i in { "bli" "bla" "blu" } {
-	print $i;
-}
-</PRE></BLOCKQUOTE>
+	<PRE>
+	for i in { "bli" "bla" "blu" } {
+		print $i;
+	}
+	</PRE>
+
 
 	the block is executed for each value
-	of the list to which '$i' is set.
+	of the list to which '<TT>$i</TT>' is set.
 
 	<LI>
 	a return statement. The return statement ends
@@ -279,9 +284,9 @@ for i in { "bli" "bla" "blu" } {
 	value to the caller. Example:
 	</UL>
 
-<BLOCKQUOTE><PRE>
-return $x * $x;
-</PRE></BLOCKQUOTE>
+	<PRE>
+	return $x * $x;
+	</PRE>
 
 
 <H2>Expressions</H2>
@@ -302,13 +307,13 @@ return $x * $x;
 
 	<P>
 	Variable are referenced by their identifier. 
-	Value of a variable is obtained with the '$'
+	Value of a variable is obtained with the '<TT>$</TT>'
 	character.
 
-<BLOCKQUOTE><PRE>
-let i = 123		# puts 123 in 'i'
-print $i		# prints the value of 'i'
-</PRE></BLOCKQUOTE>
+	<PRE>
+	let i = 123		# puts 123 in 'i'
+	print $i		# prints the value of 'i'
+	</PRE>
 
 
 
@@ -410,51 +415,51 @@ The following operators are recognised:
 	<P>
 	Examples:
 
-<BLOCKQUOTE><PRE>	
-2 * (3 + 4) + $x
-</PRE></BLOCKQUOTE>
+	<PRE>	
+	2 * (3 + 4) + $x
+	</PRE>
 
 	is an usual integer arithmetic expression.
 
-<BLOCKQUOTE><PRE>
-[tracklen mytrack]
-</PRE></BLOCKQUOTE>
+	<PRE>
+	[tracklen mytrack]
+	</PRE>
 		
-	is the returned value of the procedure 'tracklen'
-	called with a single argument 'mytrack'.
+	is the returned value of the procedure <TT>tracklen</TT>
+	called with a single argument <TT>mytrack</TT>.
 
-<BLOCKQUOTE><PRE>
-{ "bla" 3 zer }
-</PRE></BLOCKQUOTE>
+	<PRE>
+	{ "bla" 3 zer }
+	</PRE>
 
-	is a list containing the string "bla" the integer
-	3 and the name 'zer'. A list is a set of
+	is a list containing the string <TT>"bla"</TT> the integer
+	3 and the name <TT>zer</TT>. A list is a set of
 	expressions separated by spaces and enclosed by
 	square brackets, a more complicated example is:
 
-<BLOCKQUOTE><PRE>
-{ "hello" 1+2*3 mytrack $i [myproc] { a b c } }	
-</PRE></BLOCKQUOTE>
+	<PRE>
+	{ "hello" 1+2*3 mytrack $i [myproc] { a b c } }	
+	</PRE>
 
 
 <H2>Procedure definition</H2>
 
 	a procedure is defined with the keyword
-	'proc' followed by the name of the procedure, 
+	<TT>proc</TT> followed by the name of the procedure, 
 	the names of its arguments and a block containing
 	its body, example:
 
-<BLOCKQUOTE><PRE>
-proc myprint x { 
-	print $x
-	return 2 * $x
-}
-</PRE></BLOCKQUOTE>
+	<PRE>
+	proc myprint x { 
+		print $x
+		return 2 * $x
+	}
+	</PRE>
 
 	the variables are local the the procedure
 	and may shadow a global variable with the same
 	name. The return value is given to the caller
-	with a 'return' statement.
+	with a <TT>return</TT> statement.
 
 <A name="devices"></A>
 <H1>Devices and channels</H1>
@@ -463,34 +468,35 @@ proc myprint x {
 	devices are numbered between 0 and 15. They are
 	configured with devattach and devdetach. Example:
 
-<BLOCKQUOTE><PRE>
-devattach 0 "/dev/rmidi3"
-</PRE></BLOCKQUOTE>
+	<PRE>
+	devattach 0 "/dev/rmidi3"
+	</PRE>
 
 	channels are specified by giving the device number
 	and the midi channel number in a list:
 
-<BLOCKQUOTE><PRE>
-{ devicenum midichan }
-</PRE></BLOCKQUOTE>
+	<PRE>
+	{ devicenum midichan }
+	</PRE>
 
 	For instance, to specify channel 9 on device number 2:
 
-<BLOCKQUOTE><PRE>
-{ 2 9 }
-</PRE></BLOCKQUOTE>
+	<PRE>
+	{ 2 9 }
+	</PRE>
+
 	
 	<P>
 	Named channels can be specified by their names, for
 	instance, after:
 
-<BLOCKQUOTE><PRE>
-channew drums { 2 9 }	# define a named channel
-</PRE></BLOCKQUOTE>
+	<PRE>
+	channew drums { 2 9 }	# define a named channel
+	</PRE>
 		
-	'drums' and "{2 9}" become equivalent. Named channels
+	<TT>drums</TT> and <TT>{2 9}</TT> become equivalent. Named channels
 	can be also used to hold some configuration events,
-	see channew, chanconfev
+	see <TT>channew</TT>, <TT>chanconfev</TT>
 
 <A name="events"></A>
 <H1>Events</H1>
@@ -500,10 +506,11 @@ channew drums { 2 9 }	# define a named channel
 	is specified as list containing:
 		<UL>
 		<LI> a reference from the following list:
-		     'noff', 'non', 'kat', 'ctl', 'pc', 'cat', 'bend'.
+		     <TT>noff</TT>, <TT>non</TT>, <TT>kat</TT>, 
+		     <TT>ctl</TT>, <TT>pc</TT>, <TT>cat</TT>, <TT>bend</TT>.
 		<LI> a channel
 		<LI> a number 
-		<LI> a second number (not for 'pc' and 'cat')
+		<LI> a second number (not for <TT>pc</TT> and <TT>cat</TT>)
 		</UL>
 		
 	Event references correspond to the following
@@ -511,26 +518,26 @@ channew drums { 2 9 }	# define a named channel
 			<P align="center">
 			<TABLE border="1">
 			<TR>
-			<TD>'noff'
-			<TD> note off
+			<TD><TT>noff</TT>
+			<TD>note off
 			<TR>
-			<TD>'non'
-			<TD> note off
+			<TD><TT>non</TT>
+			<TD>note off
 			<TR>
-			<TD>'kat'
-			<TD> key after-touch (poly)
+			<TD><TT>kat</TT>
+			<TD>key after-touch (poly)
 			<TR>
-			<TD>'ctl'
-			<TD> controller
+			<TD><TT>ctl</TT>
+			<TD>controller
 			<TR>
-			<TD>'pc'
-			<TD> program change
+			<TD><TT>pc</TT>
+			<TD>program change
 			<TR>
-			<TD>'cat'
-			<TD> channel after-touch (mono)
+			<TD><TT>cat</TT>
+			<TD>channel after-touch (mono)
 			<TR>
-			<TD>'bend'
-			<TD> pitch bend
+			<TD><TT>bend</TT>
+			<TD>pitch bend
 			</TABLE>
 
 	<P>
@@ -538,24 +545,25 @@ channew drums { 2 9 }	# define a named channel
 	<BR>
 	a note-on event on device 2 channel 9 note 64 with velocity 100:
 
-<BLOCKQUOTE><PRE>
-{ non {2 9} 64 100 }
-</PRE></BLOCKQUOTE>
-
+	<PRE>
+	{ non {2 9} 64 100 }
+	</PRE>
 
 	select patch 34 on device 1, channel 3:
 
-<BLOCKQUOTE><PRE>
-{ pc {1 3} 34 }
-</PRE></BLOCKQUOTE>
+	<PRE>
+	{ pc {1 3} 34 }
+	</PRE>
+
 
 
 	set value 99 to controller number 7
 	on device/channel drums:
 
-<BLOCKQUOTE><PRE>
-{ ctl drums 7 99 }
-</PRE></BLOCKQUOTE>
+	<PRE>
+	{ ctl drums 7 99 }
+	</PRE>
+
 
 <A name="filters"></A>
 <H1>Filters</H1>
@@ -566,17 +574,17 @@ channew drums { 2 9 }	# define a named channel
 	For instance to route events on device 0 channel 0 to
 	device 1 channel 9:
 
-<BLOCKQUOTE><PRE>
-filtnew myfilt
-filtchanmap {0 0} {1 9}
-</PRE></BLOCKQUOTE>
+	<PRE>
+	filtnew myfilt
+	filtchanmap {0 0} {1 9}
+	</PRE>
 
 	to map controller 7 (volume) on channel 0, device 0 to controller
 	11 (expression) on channel 9, device 1:
 
-<BLOCKQUOTE><PRE>
-filtctlmap {0 0} {1 9} 7 11
-<PRE></BLOCKQUOTE>
+	<PRE>
+	filtctlmap {0 0} {1 9} 7 11
+	</PRE>
 
 <A name="tracks"></A>
 <H1>Tracks</H1>
@@ -599,31 +607,31 @@ filtctlmap {0 0} {1 9} 7 11
 <BLOCKQUOTE>
 returns the list of names of the tracks in the song
 example:
-<BLOCKQUOTE><PRE>
-print [tracklist]
-</PRE></BLOCKQUOTE>
+	<PRE>
+	print [tracklist]
+	</PRE>
 </BLOCKQUOTE>
 
 <B><TT>tracknew trackname</TT></B>
 <BLOCKQUOTE>
-creates an empty track named 'trackname'
+creates an empty track named <TT>trackname</TT>
 </BLOCKQUOTE>
 
 <B><TT>trackexists trackname</TT></B>
 <BLOCKQUOTE>
-returns 1 if 'trackname' is a track, 0 otherwise
+returns 1 if <TT>trackname</TT> is a track, 0 otherwise
 </BLOCKQUOTE>
 
 <B><TT>tracksetcurfilt trackname filtname</TT></B>
 <BLOCKQUOTE>
 sets the default filter (for recording) of
-'trackname' to 'filtname'
+<TT>trackname</TT> to <TT>filtname</TT>
 </BLOCKQUOTE>
 
 <B><TT>trackgetcurfilt trackname</TT></B>
 <BLOCKQUOTE>
 returns the default filter (for recording) 
-of 'trackname', returns 'nil' if none
+of <TT>trackname</TT>, returns <TT>nil</TT> if none
 </BLOCKQUOTE>
 		
 <B><TT>trackcheck trackname</TT></B>
@@ -637,51 +645,53 @@ removes multiple controllers in the same tic
 <BLOCKQUOTE>
 returns the size in tics of the current track,
 example:
-<BLOCKQUOTE><PRE>
-let l = [trackgetlen];
-</PRE></BLOCKQUOTE>
+	<PRE>
+	let l = [trackgetlen];
+	</PRE>
 </BLOCKQUOTE>
 
 
-<B><TT>tracksave trackname "filename"</TT></B>
+<B><TT>tracksave trackname filename</TT></B>
 <BLOCKQUOTE>
-save the events of the track in a file
+save the events of the track in a file, <TT>filename</TT>
+is a quoted string.
 </BLOCKQUOTE>
 
-<B><TT>trackload trackname "filename"</TT></B>
+<B><TT>trackload trackname filename</TT></B>
 <BLOCKQUOTE>
-loads the events of a track from a file
+loads the events of a track from a file, <TT>filename</TT>
+is a quoted string.
 </BLOCKQUOTE>
 
 <B><TT>trackcut trackname from amount quantum</TT></B>
 <BLOCKQUOTE>
-cuts 'amount' measures of the track 'trackname' 
-from measure 'from'.
+cuts <TT>amount</TT> measures of the track <TT>trackname</TT>
+from measure <TT>from</TT>.
 </BLOCKQUOTE>
 
 <B><TT>trackblank trackname from amount quantum</TT></B>
 <BLOCKQUOTE>
-clears 'amount' measures of the track 'trackname'
-from the measure 'from'.
+clears <TT>amount</TT> measures of the track <TT>trackname</TT>
+from the measure <TT>from</TT>.
 </BLOCKQUOTE>
 
 <B><TT>trackinsert trackname from amount</TT></B>
 <BLOCKQUOTE>
-inserts 'amount' blank measures in track
-'trackname' just before the measure 'from'
+inserts <TT>amount</TT> blank measures in track
+<TT>trackname</TT> just before the measure <TT>from</TT>
 </BLOCKQUOTE>
 
 <B><TT>trackcopy trackname1 from amount trackname2 where  quantum</TT></B>
 <BLOCKQUOTE>
-copies 'amount' measures starting at 'from' 
-from track 'trackname1' into 'trackname2'
-at position 'where'
+copies <TT>amount</TT> measures starting at <TT>from</TT>
+from track <TT>trackname1</TT> into <TT>trackname2</TT>
+at position <TT>where</TT>
 </BLOCKQUOTE>
 
 <B><TT>trackquant trackname from amount rate quantum</TT></B>
 <BLOCKQUOTE>
-quantises 'amount' measures of the track
-'trackname' from measure 'from' ; the quantum is
+quantises <TT>amount</TT> measures of the track
+<TT>trackname</TT> from measure <TT>from</TT> ; the quantum is
 the round in tics (see songsetsign). Rate must be
 between 0 and 100. 0 means no quantisation and
 100 means full quantisation.
@@ -695,40 +705,40 @@ of this track
 
 <B><TT>trackaddev trackname measure beat tic ev</TT></B>
 <BLOCKQUOTE>
-puts the event 'ev' on track 'trackname'
-at the position given by 'measure',
-'beat' and 'tic'
+puts the event <TT>ev</TT> on track <TT>trackname</TT>
+at the position given by <TT>measure</TT>,
+<TT>beat</TT> and <TT>tic</TT>
 </BLOCKQUOTE>
 
-<H2>Channel functions</H3>
+<H2>Channel functions</H2>
 
 <B><TT>channew channelname channelnum</TT></B>
 <BLOCKQUOTE>
-creates an new channel named 'channelname'
-and bound to midi channel 'channelnum' 
+creates an new channel named <TT>channelname</TT>
+and bound to midi channel <TT>channelnum</TT> 
 </BLOCKQUOTE>
 
 <B><TT>chanexists channelname</TT></B>
 <BLOCKQUOTE>
-returns 1 if 'channelname' is a channel, 0 otherwise
+returns 1 if <TT>channelname</TT> is a channel, 0 otherwise
 </BLOCKQUOTE>
 
 <B><TT>changetnum channelname</TT></B>
 <BLOCKQUOTE>
 returns the midi channel number of channel named
-'channelname'
+<TT>channelname</TT>
 </BLOCKQUOTE>
 
 <B><TT>changetdev channelname</TT></B>
 <BLOCKQUOTE>
 returns the device number of channel named
-'channelname'
+<TT>channelname</TT>
 </BLOCKQUOTE>
 
 <B><TT>chanconfev channelname event</TT></B>
 <BLOCKQUOTE>
 adds the event to the configuration of 
-channel 'channelname', typically used set
+channel <TT>channelname</TT>, typically used set
 the program, volume, depth etc... The channel
 of the event is not used.
 </BLOCKQUOTE>
@@ -744,17 +754,17 @@ of the channel.
 
 <B><TT>filtnew filtname</TT></B>
 <BLOCKQUOTE>
-creates an new filter named 'filtname'
+creates an new filter named <TT>filtname</TT>
 </BLOCKQUOTE>
 
 <B><TT>filtexists filtname</TT></B>
 <BLOCKQUOTE>
-returns 1 if 'filtname' is a filter, 0 otherwise
+returns 1 if <TT>filtname</TT> is a filter, 0 otherwise
 </BLOCKQUOTE>
 
 <B><TT>filtreset filtname</TT></B>
 <BLOCKQUOTE>
-removes all rules from the filter 'filtname'
+removes all rules from the filter <TT>filtname</TT>
 </BLOCKQUOTE>
 
 <B><TT>filtinfo filtname</TT></B>
@@ -765,30 +775,30 @@ lists the rules of the given filter
 <B><TT>filtchangein filtname oldchan newchan</TT></B>
 <BLOCKQUOTE>
 changes the input channel of 
-all rules with input channel equal to 'oldchan'
-to 'newchan'
+all rules with input channel equal to <TT>oldchan</TT>
+to <TT>newchan</TT>
 </BLOCKQUOTE>
 
 <B><TT>filtdevmap filtname inputdev outputdev</TT></B>
 <BLOCKQUOTE>
-route all events from device 'inputdev' 
-to device 'outputdev'. If multiple dev maps are 
+route all events from device <TT>inputdev</TT>
+to device <TT>outputdev</TT>. If multiple dev maps are 
 defined for the same input device then events are 
 duplicated
 </BLOCKQUOTE>
 
 <B><TT>filtchanmap filtname inputchan outputchan</TT></B>
 <BLOCKQUOTE>
-route all events from channel 'inputchan' 
-to channel 'outputchan'. If multiple channel maps are 
+route all events from channel <TT>inputchan</TT>
+to channel <TT>outputchan</TT>. If multiple channel maps are 
 defined for the same input channel then events are 
 duplicated
 </BLOCKQUOTE>
 
 <B><TT>filtkeymap filtname inchan outchan keystart keyend keyplus</TT></B>
 <BLOCKQUOTE>
-route note events from channel 'inchan' and
-in the range keystart..keyend to 'outchan'.
+route note events from channel <TT>inchan</TT> and
+in the range keystart..keyend to <TT>outchan</TT>.
 Routed notes are transposed by keyplus half-tones
 If multiple keymaps are defined for the same input 
 channel and key-range then events are duplicated
@@ -796,8 +806,8 @@ channel and key-range then events are duplicated
 
 <B><TT>filtctlmap filtname inchan outchan inctl outctl</TT></B>
 <BLOCKQUOTE>
-route controller 'inctl' from 'inchan'
-to controller 'outctl' on 'outchan'.
+route controller <TT>inctl</TT> from <TT>inchan</TT>
+to controller <TT>outctl</TT> on <TT>outchan</TT>.
 If multiple ctlmaps are defined for the same input 
 channel and the same input controller then events are duplicated
 </BLOCKQUOTE>
@@ -832,9 +842,9 @@ the current filter (if any).
 sends raw midi data to the device,
 can be used to send system exclusive messages,
 example:
-<BLOCKQUOTE><PRE>
-sendraw { 0xF0 0x7E 0x7F 0x09 0x01 0xF7 }
-</PRE></BLOCKQUOTE>
+	<PRE>
+	sendraw { 0xF0 0x7E 0x7F 0x09 0x01 0xF7 }
+	</PRE>
 </BLOCKQUOTE>
 
 <H2>Song functions</H2>
@@ -851,10 +861,10 @@ Currently this value is not used in real-time.
 get the number of tics in the time scale.
 </BLOCKQUOTE>
 
-<B><TT>songsetcurpos measurenum</TT></B>
+<B><TT>songsetcurpos measure</TT></B>
 <BLOCKQUOTE>
 set the current song position pointer to
-the measure 'measurenum'. record and playback
+the measure <TT>measure</TT>. record and playback
 will start a that position
 </BLOCKQUOTE>
 
@@ -871,11 +881,11 @@ set the current track ie the track to be recorded
 
 <B><TT>songgetcurtrack</TT></B>
 <BLOCKQUOTE>
-returns the current track (if any) or 'nil'
+returns the current track (if any) or <TT>nil</TT>
 </BLOCKQUOTE>
 
 <B><TT>songsetcurfilt filtname</TT></B>
-<BLCOKQUOTE>
+<BLOCKQUOTE>
 set the current filter ie the one used (with
 songplay and songidle) if there is no current track
 </BLOCKQUOTE>
@@ -887,7 +897,7 @@ returns the current filter
 
 <B><TT>songsetunit tpu</TT></B>
 <BLOCKQUOTE>
-set the time resolution of the sequencer to 'tpu'
+set the time resolution of the sequencer to <TT>tpu</TT>
 tics per unit (1 unit = 4 quarter notes).  the
 unit shall be changed before creating any tracks. 
 The default is 96 tics per unit, which is the
@@ -901,23 +911,23 @@ returns the number of tics per unit note
 
 <B><TT>songsettempo measure bpm</TT></B>
 <BLOCKQUOTE>
-sets the tempo to 'bpm' beats per
-minute at measure 'measure'
+sets the tempo to <TT>bpm</TT> beats per
+minute at measure <TT>measure</TT>
 </BLOCKQUOTE>
 
 <B><TT>songtimeins from amount denominator numerator</TT></B>
 <BLOCKQUOTE>
-inserts 'amount' blank measures at measure
-'from'. The used time signature is given
+inserts <TT>amount</TT> blank measures at measure
+<TT>from</TT>. The used time signature is given
 by denominator/numerator.
 </BLOCKQUOTE>
 
 <B><TT>songtimerm from amount</TT></B>
 <BLOCKQUOTE>
-deletes 'amount' measures starting at
-measure 'from'. The time signature is
+deletes <TT>amount</TT> measures starting at
+measure <TT>from</TT>. The time signature is
 restored with the value preceding the
-'from' measure.
+<TT>from</TT> measure.
 </BLOCKQUOTE>
 
 <B><TT>songtimeinfo</TT></B>
@@ -934,12 +944,13 @@ the song
 
 <B><TT>songsave filename</TT></B>
 <BLOCKQUOTE>
-saves the song in a file named 'filename'.
+saves the song in a file, <TT>filename</TT>
+is a quoted string.
 </BLOCKQUOTE>
 
 <B><TT>songload filename</TT></B>
 <BLOCKQUOTE>
-load the song from a file named 'filename'.
+load the song from a file named <TT>filename</TT>.
 the current song is destroyed, even if 
 the load command failed
 </BLOCKQUOTE>
@@ -953,13 +964,14 @@ program
 
 <B><TT>songexportsmf filename</TT></B>
 <BLOCKQUOTE>
-saves the song into a standard midi file named 'filename'
+saves the song into a standard midi file, <TT>filename</TT>
+is a quoted string.
 </BLOCKQUOTE>
 
 <B><TT>songimportsmf filename</TT></B>
 <BLOCKQUOTE>
-loads the song from a standard midi file named
-'filename'. Currently only midi file "type 1" is
+loads the song from a standard midi file, <TT>filename</TT>
+is a quoted string. Currently only midi file "type 1" is
 supported.
 </BLOCKQUOTE>
 
@@ -973,20 +985,21 @@ returns the list of attached devices
 
 <B><TT>devattach devnum filename</TT></B>
 <BLOCKQUOTE>
-attach midi device 'filename' as
-device number 'devnum'. 
+attach midi device <TT>filename</TT> as
+device number <TT>devnum</TT>; <TT>filename</TT>
+is a quoted string.
 </BLOCKQUOTE>
 
 <B><TT>devdetach devnum</TT></B>
 <BLOCKQUOTE>
-detach device number 'devnum'
+detach device number <TT>devnum</TT>
 </BLOCKQUOTE>
 		
 <H2>Misc. functions</H2>
 
 <B><TT>metroswitch number</TT></B>
 <BLOCKQUOTE>
-if 'number' is equal to zero then the metronome is disabled
+if <TT>number</TT> is equal to zero then the metronome is disabled
 else it is enabled
 </BLOCKQUOTE>	
 
@@ -1007,16 +1020,18 @@ procedures
 displays the value of the expression
 </BLOCKQUOTE>
 
-<B><TT>exec "filename"</TT></B>
+<B><TT>exec filename</TT></B>
 <BLOCKQUOTE>
-reads and executes the script from "filename"
+reads and executes the script from a file, <TT>filename</TT>
+is a quoted string.
 </BLOCKQUOTE>
 
 <B><TT>debug flag val</TT></B>
 <BLOCKQUOTE>
-sets debug-flag 'flag' to (integer) value 'val'. 
-If val=0 the corresponding debug-info are
-turned off. 'flag' can be: 'parse', 'tree', 'filt'
+sets debug-flag <TT>flag</TT> to (integer) value <TT>val</TT>. 
+If <TT>val=0</TT> the corresponding debug-info are
+turned off. <TT>flag</TT> can be: <TT>parse</TT>, <TT>tree</TT>, 
+<TT>filt</TT>
 </BLOCKQUOTE>
 
 
