@@ -263,7 +263,7 @@ proc gmoff {
 # configure an instrument for a given general midi patch
 #
 proc gmp chan patch {
-	chanconfev $chan 0xc ($patch + 1) 0 
+	chanconfev $chan { pc $chan ($patch - 1) }
 }
 
 
