@@ -1,11 +1,4 @@
-- most important: write a tutorial
-
-- for each 'filt*map' create the corresponding 'filt*nomap'
-  and for each 'filt*drop' create 'filt*nodrop'
-  
 - (easy) add 'mute' flag to tracks
-
-- (trivial) enable support for external clock sources
 
 - create an evspec_s structure that
   can handle an event specification (note range, 
