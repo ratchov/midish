@@ -1,7 +1,7 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <HTML>
 <HEAD>
-<TITLE>midish - user manual</TITLE>
+<TITLE>midish - tutorial</TITLE>
 <META http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
 </HEAD>
 <BODY bgcolor="white" text="black" link="blue" vlink="navy">
@@ -10,14 +10,9 @@
 <P>
 <UL>
 <LI><A href="#intro">Introduction</A>
-<LI><A href="#install">Installation</A>
-<LI><A href="#changes">Changes</A>
-<LI><A href="#language">Language reference</A>
-<LI><A href="#devices">Devices and channels</A>
-<LI><A href="#events">Events</A>
-<LI><A href="#filters">Filters</A>
-<LI><A href="#tracks">Tracks</A>
-<LI><A href="#functions">Function reference</A>
+<LI><A href="#dev">Device setup</A>
+<LI><A href="#filt">Filtering/routing</A>
+<LI><A href="#chan">Channels</A>
 </UL>
 
 
@@ -25,1017 +20,278 @@
 <H1>Introduction</H1>
 
 	<P>
-	Midish is a MIDI sequencing and filtering tool for 
-	unix-like operating systems.
- 
-	It's is implemented as a sequencing engine and a 
+	Midish is a MIDI sequencing and filtering tool. 
+	
+	It is implemented as a sequencing engine and a 
 	command-line interpreter.
+	
+	Once midish started, the interpreter prompts
+	for commands. One can configure midi-devices, 
+	create tracks, define channel/controller mappings,
+	route events from one device to another, playback, 
+	record etc.
 
-<A name="install"></A>
-<H1>Installation</H1>
+	To start midish, just type:
+	<PRE>
+	midish
+	</PRE>
+	
+	Now you can issue commands, for instance:
+	<PRE>
+	print "hello world"
+	</PRE>
 
-<H2>Requirements</H2>
+<A name="dev"></A>
+<H1>Device setup</H1>
 
-	Requirements:
+	In midish, midi-devices are numbered from 0 to 15.
+	Each midi-device has its "slot number". For instance, 
+	suppose	that one have:
+
 	<UL>
-	<LI>	a midi sound module 
-	<LI>	a midi keyboard
-	<LI>	an unix-like operating system with "raw" midi support.
-		Midish works on OpenBSD (its development platform)
-		and Linux.
+	<LI>
+		a midi sound module known as
+		<TT>/dev/rmidi3</TT> by the operating
+		system (or <TT>/dev/snd/midiC3D0</TT> on Linux)
+	<LI>
+		a midi keyboard known as
+		<TT>/dev/rmidi2</TT> by the operating
+		system (or <TT>/dev/snd/midiC2D0</TT> on Linux)
 	</UL>
-
-<H2>Installation</H2>
-
-	<UL>
-	<LI> untar and gunzip the tar-ball:
-
-	<PRE>
-	gzip -dc midish-0.1.tar.gz | tar xf -
-	cd midish-0.1
-	</PRE>
-
-	<LI> 
-	edit <TT>Makefile</TT> and change <TT>CC</TT>, 
-	<TT>CFLAGS</TT>, etc... (if needed)
-
-	<LI> 
-	comment or uncomment readline(3) options in Makefile
-
-	<LI> 
-	compile the sequencer, just type '<TT>make all</TT>'
-
-	<LI>
-	install binaries by typing '<TT>make install</TT>'; by default
-	they are installed in <TT>$HOME/bin</TT>, where <TT>$HOME</TT> is
-	your home directory. If you want to change this,
-	set the <TT>PREFIX</TT> variable, for instance: 
-
-	<PRE>
-	make PREFIX=/usr/local install
-	</PRE>
-
-	<LI>
-	if you don't have a .midishrc, copy the sample file by
-	typing '<TT>cp midishrc ~/.midishrc</TT>' in your shell
-
-	<LI>
-	read the documentation and edit your <TT>~/.midishrc</TT> in order 
-	to choose your default midi device by using the <TT>devattach</TT> 
-	function (example: '<TT>devattach 0 "/dev/rmidi3"</TT>', see next section)
-
-	</UL>
-
-<H2>Invocation</H2>
-	<P>
-	midish currently doesn't take any arguments, so it's started
-	by typing:
-
-	<PRE>
-	./midish
-	</PRE>
-
-	in your shell. On startup, it tries to execute
-	the script <TT>$HOME/.midishrc</TT>.
-
-	You can specify your midi devices
-	by using the function <TT>devattach</TT>, for instance:
-
+	
+	To configure the module as device number 0 and
+	the keyboard as device number 1, type:
 	<PRE>
 	devattach 0 "/dev/rmidi3"
-	devattach 1 "/dev/rmidi1"
+	devattach 1 "/dev/rmidi2"
 	</PRE>
-
-	will attach <TT>/dev/rmidi3</TT> and <TT>/dev/rmidi1</TT> as devices
-	number 0 and 1. You can put those statements in 
-	your <TT>$HOME/.midishrc</TT>
+	
+	<P>
+	<STRONG>Important note</STRONG>
+	We strongly suggest that the main sound module (most used)
+	be attached as device number 0. This makes easier
+	to import/export music from systems with different configurations.
 
 	<P>
-	Once started, the sequencer reads and executes commands
-	from stdin and writes results (and user non-fatal errors)
-	to stdout. If stdin and stdout are both tty terminals, and if
-	compiled with the readline(3) library an interactive prompt is
-	used.
-
-	fatal errors and other debugging information is logged
-	to stderr.
-
-	while performing real-time functions (playback,
-	recording) the controlling terminal (see tty(1)) is
-	polled. Real-time function is terminated if any key is
-	pressed. Thus the sequencer must have controlling tty
-	for real-time performance.
-
-	<P>
-	You can try to play the demo song in the source tar-ball
-
+	Now, let's check that the sound module is properly configured, 
+	for instance we can play the demo song. Put your module in 
+	general midi mode and type:
 	<PRE>
 	songload "sample.sng"
 	songplay
 	</PRE>
-
-
-<A name="changes"></A>
-<H1>Changes</H1>
-<H2>from release 0.1 to release 0.2</H2>
-
-	<UL>
-	<LI> added <TT>device</TT>-parameter to <TT>sendraw</TT>
-	</UL>
-
-<A name="language"></A>
-<H1>Language reference</H1>
-<H2>Lexical structure</H2>
-
-	The input line is split into tokens:
-
-	<UL>
-	<LI> Identifiers:
-		<BR>
-		an identifier is a sequence of up to 32
-		characters, digits and underscores (<TT>_</TT>).
-		However, an identifier cannot start with a
-		digit. Examples:
-	<PRE>
-	mytrack _mytrack  my34_track23		# good
-	123mytrack 				# bad, starts with digit
-	mytrackabcdefghijklmnopqrstuvwxyz	# bad, to long
-	</PRE>
 	
-	<LI> Numbers 
-		<BR>
-		numbers should be in decimal or hex format and may
-		not exceed 2^31. Hex numbers are preceded
-		by "0x", as in the C language. Examples:
-		
-		<P align="center">
-		<TABLE border="1">
-		<TR>	<TD><TT>123</TT>	<TD>123 in decimal
-		<TR>	<TD><TT>0x100</TT>	<TD>256 in hex
-		<TR>	<TD><TT>0xF0<TT>	<TD>240 in hex
-		</TABLE>
-			
-	<LI> String constants
-		<BR>
-		string constants are sequence of printable
-		characters enclosed in pairs of double quotes.
-		Thus a string cannot contain double quotes, 
-		tabs, newlines.
-
-	<LI> Keywords
-		<BR>
-		valid keywords are: <TT>nil</TT>, <TT>let</TT>, 
-		<TT>if</TT>, <TT>else</TT>, <TT>for</TT>, and <TT>proc</TT>.
-
-	<LI> Operators, separators etc...
-		<BR>
-		sequences of meta-characters like '<TT>(</TT>', '<TT>)</TT>', 
-		'<TT>+</TT>', '<TT>$</TT>', newline character, 
-		'<TT>;</TT>',  etc... 
-
-	<LI> Comments 
-		<BR>
-		comments are ignored, they start with '<TT>#</TT>' 
-		and end with the new line
-		character.
-
-	</UL>
-
-	Multiple lines ending with '<TT>\</TT>' are parsed as a 
-	single line. Anything else generates a "bad token" error.
-
-
-<H2>Statements</H2>
+	Once your are satisfied by your setup,
+	you can put the "<TT>devattach</TT>" commands
+	in your <TT>$HOME/.midishrc</TT>. They will be
+	automaticaly executed the next time you run midish.
+	
+<A name="filt"></A>
+<H1>Filtering/routing</H1>
 
 	<P>
-	The input can be ether a function definition or a
-	statement. 
-
-	Most of the statements end with the '<TT>;</TT>'
-	character.  However, in order to improve
-	interactivity, the newline character can be used
-	instead. Thus, the newline character cannot be
-	used as a space.
-
-	A statement can be:
-		
+	Midish supports midi filtering. That means, that you can
+	define a "filter" that transforms input events before
+	sending them to the output. Currently a filter can mainly be
+	used to:
 	<UL>
 	<LI>
-	A procedure call, example:
-
-	<PRE>
-	myproc arg1 arg2
-	</PRE>
-
-
+	route events from one device to another one
 	<LI>
-	An assignment using the <TT>let</TT> keyword,
-	examples:
-
-	<PRE>
-	let x = 123
-	let y = 1 + 2 * (3 + x)
-	</PRE>
-
-	<P>
-	The left-hand side should be the name of
-	a variable and the right hand side an
-	expression (see the expression section).
-
-
+	map a controller to another one
 	<LI>
-	An <TT>if..else</TT> statement, example:
-
-	<PRE>
-	if $i {
-		print "i is not zero";
-	} else {
-		print "i is zero";
-	}
-	</PRE>
-
-	the <TT>else</TT> and the second block are
-	not mandatory. Note that since newline
-	character is interpreted as a '<TT>;</TT>', the
-	line cannot be broken in an arbitrary
-	way. If the expression following the <TT>if</TT>
-	keyword is true the first block is executed,
-	otherwise the second one (if any) is executed. The
-	expression is evaluated in the following way:
-
-	<P align="center">
-	<TABLE border="1">
-	<TR>	<TD>non-zero integer	<TD>true
-	<TR>	<TD>zero integer	<TD>false
-	<TR>	<TD>non-empty list	<TD>true
-	<TR>	<TD>empty list		<TD>false
-	<TR>	<TD>any name		<TD>true
-	<TR>	<TD>nil			<td>false
-	</TABLE>
-	
+	make keyboard splits
 	<LI>
-	A loop over a list:
-
-	<PRE>
-	for i in { "bli" "bla" "blu" } {
-		print $i;
-	}
-	</PRE>
-
-	the block is executed for each value
-	of the list to which '<TT>$i</TT>' is set.
-
-	<LI>
-	A return statement. The return statement ends
-	the procedure execution and returns a
-	value to the caller. Example:
-
-	<PRE>
-	return $x * $x;
-	</PRE>
-
+	etc...
 	</UL>
 
-
-<H2>Expressions</H2>
-
-	An expression can be an arithmetic expression of constants,
-	expressions, variable values, return values of
-	function calls. 
-
-	The following constant types are supported:
-
-	<P align="center">
-	<TABLE border="1">
-	<TR>	<TD><TT>"this is a string"</TT>		<TD> a string
-	<TR>	<TD><TT>12345</TT>			<TD> a number
-	<TR>	<TD><TT>mytrack</TT>			<TD> a reference
-	<TR>	<TD><TT>nil</TT>			<TD> has no value
-	</TABLE>
-
 	<P>
-	Variable are referenced by their identifier. 
-	Value of a variable is obtained with the '<TT>$</TT>'
-	character.
-
+	If no filters are defined, in performance mode, input is send 
+	to the output as-is. Filters are defined as follows:
 	<PRE>
-	let i = 123		# puts 123 in 'i'
-	print $i		# prints the value of 'i'
+	filtnew myfilt			# define filter 'myfilt'
 	</PRE>
-
-	The following operators are recognised:
-
-	<P align="center">
-	<TABLE border="1">
-
-	<TR>	<TH>oper.	<TH>usage		<TH>associativity
-
-	<TR>	<TD><TT>{}</TT>	
-		<TD>list definition	
-		<TD rowspan="3">left to right
-
-	<TR>	<TD><TT>()</TT>	
-		<TD>grouping		
-
-	<TR>	<TD><TT>[]</TT>	
-		<TD>function call
-
-	<TR>	<TD><TT>!</TT>	
-		<TD>logical NOT 	
-		<TD rowspan="3">right to left
-
-	<TR>	<TD><TT>~</TT>	
-		<TD>bitwise NOT		
-
-	<TR>	<TD><TT>-</TT>
-		<TD>unary minus
-
-	<TR>	<TD><TT>*</TT>
-	 	<TD>multiplication
-		<TD rowspan="3">left to right
-
-	<TR>	<TD><TT>/</TT>
-		<TD>division
-
-	<TR>	<TD><TT>%</TT
-		<TD>reminder
-
-	<TR>	<TD><TT>+</TT
-		<TD>addition
-		<TD rowspan="2">left to right
-
-	<TR>	<TD><TT>-</TT
-		<TD>subtraction
-
-	<TR>	<TD><TT>&lt;&lt;</TT
-		<TD>left shift	
-		<TD rowspan="2">left to right
-
-	<TR>	<TD><TT>&gt;&gt;</TT
-		<TD>right shift
-	
-	<TR>	<TD><TT>&lt;</TT>
-		<TD>less
-		<TD rowspan="4">left to right
-
-	<TR>	<TD><TT>&lt;=</TT>
-		<TD>less or equal
-
-	<TR>	<TD><TT>&gt;</TT>
-		<TD>greater
-
-	<TR>	<TD><TT>&gt;=</TT>
-		<TD>greater or equa
-
-	<TR>	<TD><TT>==</TT>
-		<TD>equal
-		<TD rowspan="2">left to righ
-
-	<TR>	<TD><TT>!=</TT>
-		<TD>not equa
-
-	<TR>	<TD><TT>&amp;</TT>
-		<TD>bitwise AND
-		<TD>left to right
-
-	<TR>	<TD><TT>^</TT>
-		<TD>bitwise XOR
-		<TD>left to right
-
-	<TR>	<TD><TT>|</TT>
-		<TD>bitwise OR
-		<TD>left to right
-
-	<TR>	<TD><TT>&amp;&amp;</TT>
-		<TD>logical AND
-		<TD>left to right
-
-	<TR>	<TD><TT>||</TT>
-		<TD>logical OR
-		<TD>left to right
-	</TABLE>
-
-	<P>
-	Examples:
-
-	<PRE>	
-	2 * (3 + 4) + $x
-	</PRE>
-
-	is an usual integer arithmetic expression.
-
+	initially the filter is empty and will send input to output
+	as-is.
+	Several filters can be defined, however only the
+	<EMPH>current filter</EMPH> will run in performance
+	mode. The current filter is set as follows:
 	<PRE>
-	[tracklen mytrack]
-	</PRE>
-		
-	is the returned value of the procedure <TT>tracklen</TT>
-	called with a single argument <TT>mytrack</TT>.
-
-	<PRE>
-	{ "bla" 3 zer }
-	</PRE>
-
-	is a list containing the string <TT>"bla"</TT> the integer
-	3 and the name <TT>zer</TT>. A list is a set of
-	expressions separated by spaces and enclosed by
-	square brackets, a more complicated example is:
-
-	<PRE>
-	{ "hello" 1+2*3 mytrack $i [myproc] { a b c } }	
-	</PRE>
-
-
-<H2>Procedure definition</H2>
-
-	A procedure is defined with the keyword
-	<TT>proc</TT> followed by the name of the procedure, 
-	the names of its arguments and a block containing
-	its body, example:
-
-	<PRE>
-	proc doubleprint x y { 
-		print $x
-		print $y
-	}
-	</PRE>
-
-	Argulements and variables defined whithin a procedure 
-	are local to that procedure
-	and may shadow a global variable with the same
-	name. The return value is given to the caller
-	with a <TT>return</TT> statement:
-
-	<PRE>
-	proc square x {
-		return $x * $y
-	}
-	</PRE>
-
-<A name="devices"></A>
-<H1>Devices and channels</H1>
-
-	<P>
-	Devices are numbered between 0 and 15. They are
-	configured with <TT>devattach</TT> and <TT>devdetach</TT>.
-	Example:
-
-	<PRE>
-	devattach 0 "/dev/rmidi3"
-	</PRE>
-
-	Channels are specified by giving the device number
-	and the midi channel number in a list:
-
-	<PRE>
-	{ devicenum midichan }
-	</PRE>
-
-	For instance, to specify channel 9 on device number 2:
-
-	<PRE>
-	{ 2 9 }
+	songsetcurfilt myfilt		# make 'myfilt' the current filter
 	</PRE>
 	
+	Once the filter is created, filtering rules can be added
+	using <TT>filtdevmap, filtchanmap, filtctlmap, filtkeymap</TT>.
+	Rules can be listed with <TT>filtinfo</TT>. Currently it
+	is not yet possible to modify/remove individual rules, the
+	only way is to remove all rules with <TT>filtreset</TT>.
+	
+<H2>Device redirections</H2>
+
+	Let us define a filter and use it to route events from
+	device number 1 (the midi keyboard) to device number 0
+	(the sound module). First we define the filter and
+	make it the current filter:
+	<PRE>
+	filtnew mydevmap		# define filter 'mydevmap'
+	songsetcurfilt mydevmap		# make 'mydevmap' the current filter
+	</PRE>
+	the we define a "device map" rule:
+	<PRE>
+	filtdevmap mydevmap 1 0		# route device 1 -> device 0
+	</PRE>
+	Finally, we can test the filter, by starting performance mode:
+	<PRE>
+	songidle
+	</PRE>
+	The filter will run until "Enter" is hit on the console.
+	
+<H2>Channel maps</H2>
+
+	Let us define a filter that routes events from
+	device 1, channel 0 (first channel of the keyboard) to
+	device 0, channel 9 (default drum channel of the sound module).
+	First, we define the filter:
+	<PRE>
+	filtnew mydrums			# define filter 'mydrums'
+	songsetcurfilt mydrums		# make 'mydevmap' the current filter
+	</PRE>
+	then we define a rule that maps device 1 channel 0 to 
+	device 0 channel 9:
+	<PRE>
+	filtchanmap mydrums {1 0} {0 9}
+	</PRE>
+	The device/channel pair is in braces. The first <TT>{1 0}</TT>
+	is the input device/channel and <TT>{0 9}</TT> is the output channel.
+	Finally we try the filter:
+	<PRE>
+	songidle
+	</PRE>
+	Playing on channel 0 of the keyboard will make
+	sound channel 9 of the sound-module.
+
+<H2>Controller maps</H2>
+
+	Let us continue with the later filter. Now 
+	we will add a new rule that maps the modulation wheel (controller 1)
+	of device 1, channel 0 (first channel of the keyboard) to
+	the expression controller (number 11) of device 0, channel 9 (the
+	default drums channel of the sound module).
+	<PRE>
+	filtctlmap mydrums {1 0} {0 9} 1 11
+	</PRE>
+	the first three arguments are the name of the filter, 
+	the input and the output device/channel pair. The 4-th
+	argument is the controller number on the input (1 = modulation)
+	and the 5-th the controller number on the output (11 = expression).
+	Rules of the filter can be listed on the console as follows:
+	<PRE>
+	filtinfo mydrums
+	</PRE>
+	normally this prints something like:
+	<PRE>
+	ctlmap {1 0} {0 9} 1 11 id
+	chanmap {1 0} {0 9}
+	</PRE>
+
+<H2>Transpose</H2>
+
+	Let us create a filter that transposes by 12 half-tones
+	(one octave) notes played on device 1, channel 0 (keyboard) and
+	sends them on device 0 channel 2 (sound-module). First
+	we create the input filter:
+	<PRE>
+	filtnew mypiano			# define filter 'mypiano'
+	songsetcurfilt mypiano		# make 'mypiano' the current filter
+	</PRE>
+	then, we create a add a channel-map and a key-map rule to the filter:
+	<PRE>
+	filtchanmap mypiano {1 0} {0 2}
+	filtkeymap mypiano {1 0} {0 2} 0 127 12
+	</PRE>
+	both rules are necessary. Note events are handled by 
+	the key-rule and other events (controllers) fall trough
+	the channel-rule. Arguments 4 and 5 to <TT>filtkeymap</TT>
+	give the note range that will be transposed 
+	(from 0 to 127, ie the whole keyboard)
+	and the 6-th argument give the number of half-tones 
+	(12, one octave).
+	
+<H2>Keyboard splits</H2>
+
+	In the same way we can create a keyboard-split with two
+	key-rules and two channel-rules. 
+	Let us splits the
+	keyboard in two parts (left and right) on note 64 (note E3),  in
+	the middle. 
+	Notes on the left part 	will be routed to
+	channel 3  of the sound module and notes on the right
+	part will be routed to channel 2 of the sound module.
+	<PRE>
+	filtnew mysplit
+	filtchanmap mysplit {1 0} {0 2}
+	filtkeymap mysplit {1 0} {0 2} 0 63 0
+	filtchanmap mysplit {1 0} {0 3}
+	filtkeymap mysplit {1 0} {0 3} 64 127 0
+	songsetcurfilt mysplit
+	</PRE>
 	<P>
-	Named channels can be specified by their names, for
-	instance, after:
+	It defining filters seem quite tedious, however it's possible
+	to define procedures that do the same in a very simpler way.
 
+<A name="chan"></A>
+<H1>Channels</H1>
+
+	Because midish handles multiple devices, enstead of
+	using midi-channels, it uses device/midi-channel pairs.
+	We'll often refer by <EMPH>channel</EMPH>
+	the device/midi-channel pair. As we have seen, channels
+	are handles by two-item lists, like this:
 	<PRE>
-	channew drums { 2 9 }	# define a named channel
+	{0 1}			# device 0, midi-channel 1
 	</PRE>
-		
-	<TT>drums</TT> and <TT>{2 9}</TT> become equivalent. Named channels
-	can be also used to hold some configuration events,
-	see <TT>channew</TT>, <TT>chanconfev</TT>
-
-<A name="events"></A>
-<H1>Events</H1>
-
-	<P>
-	Some functions take events as arguments. An event
-	is specified as a list containing:
-	<UL>
-	<LI> a reference from the following list:
-	     <TT>noff</TT>, <TT>non</TT>, <TT>kat</TT>, 
-	     <TT>ctl</TT>, <TT>pc</TT>, <TT>cat</TT>, <TT>bend</TT>.
-	<LI> a channel
-	<LI> a number 
-	<LI> a second number (not for <TT>pc</TT> and <TT>cat</TT>)
-	</UL>
-		
-	Event references correspond to the following
-	midi events:
-	<P align="center">
-	<TABLE border="1">
-	<TR>	<TD><TT>noff</TT>	<TD>note off
-	<TR>	<TD><TT>non</TT>	<TD>note off
-	<TR>	<TD><TT>kat</TT>	<TD>key after-touch (poly)
-	<TR>	<TD><TT>ctl</TT>	<TD>controller
-	<TR>	<TD><TT>pc</TT>		<TD>program change
-	<TR>	<TD><TT>cat</TT>	<TD>channel after-touch (mono)
-	<TR>	<TD><TT>bend</TT>	<TD>pitch bend
-	</TABLE>
-
-	<P>
-	Examples:
-	<BR>
-	note-on event on device 2, channel 9, note 64 with velocity 100:
-
+	Channels can also be named, is follows:
 	<PRE>
-	{ non {2 9} 64 100 }
+	channew mybass {0 1}
 	</PRE>
+	this defines a named-channel <TT>drums</TT> that can
+	be used instead of the <TT>{0 1}</TT> pair.
+	
+<H2>Channel configuration</H2>
 
-	program change device 1, channel 3, patch 34
-
+	Since a channel represents a musical instrument, 
+	midish allow to attach to the channel definition 
+	basic configuration. For instance;
+	to select patch 34 on channel drums, we attach
+	a "program change" event:
 	<PRE>
-	{ pc {1 3} 34 }
+	chanconfev mybass { pc mybass 32 }
 	</PRE>
-
-	set controller number 7 to 99
-	on device/channel drums:
-
+	the list-argumet gives the event to attach to the channel.
+	Such events are sent to the output when performace starts,
+	for instance juste before playback starts. This approach avoids
+	flooding midi devices when playback starts.
+	
+	In the same way, to set the volume (controller 7) 
+	of this channel to 120:
 	<PRE>
-	{ ctl drums 7 99 }
+	chanconfev mybass { ctl mybass 7 120 }
 	</PRE>
-
-
-<A name="filters"></A>
-<H1>Filters</H1>
-
-	<P>
-	Filters are used to route midi events between channels and 
-	devices, to make keyboard splits and controller mappings. 
-	For instance to route events on device 0 channel 0 to
-	device 1 channel 9:
-
+	If seferal events of the same type are attached, 
+	the just the last one is kept. So, to change
+	the volume to 125, we just need:
 	<PRE>
-	filtnew myfilt
-	filtchanmap {0 0} {1 9}
+	chanconfev mybass { ctl mybass 7 125 }
 	</PRE>
-
-	to map controller 7 (volume) on channel 0, device 0 to controller
-	11 (expression) on channel 9, device 1:
-
-	<PRE>
-	filtctlmap {0 0} {1 9} 7 11
-	</PRE>
-
-<A name="tracks"></A>
+	
+<A name="track"></A>
 <H1>Tracks</H1>
-
-	<P>
-	A track is a set of events ordered in time. They can be
-	recorded, edited and quantised. Each track has a name and
-	and a default filter (used for recording). Tracks are
-	not bound to a specific channel/device and can
-	be used to record a complete song (not recommended).
-	On playback all tracks are played simultaneously.
-
-<A name="functs"></A>
-<H1>Function reference</H1>
-
-<H2>Track functions</H2>
-
-<B><TT>tracklist</TT></B>
-<BLOCKQUOTE>
-returns the list of names of the tracks in the song
-example:
-	<PRE>
-	print [tracklist]
-	</PRE>
-</BLOCKQUOTE>
-
-<B><TT>tracknew trackname</TT></B>
-<BLOCKQUOTE>
-creates an empty track named <TT>trackname</TT>
-</BLOCKQUOTE>
-
-<B><TT>trackexists trackname</TT></B>
-<BLOCKQUOTE>
-returns 1 if <TT>trackname</TT> is a track, 0 otherwise
-</BLOCKQUOTE>
-
-<B><TT>tracksetcurfilt trackname filtname</TT></B>
-<BLOCKQUOTE>
-sets the default filter (for recording) of
-<TT>trackname</TT> to <TT>filtname</TT>
-</BLOCKQUOTE>
-
-<B><TT>trackgetcurfilt trackname</TT></B>
-<BLOCKQUOTE>
-returns the default filter (for recording) 
-of <TT>trackname</TT>, returns <TT>nil</TT> if none
-</BLOCKQUOTE>
-		
-<B><TT>trackcheck trackname</TT></B>
-<BLOCKQUOTE>
-checks the whole track for orphaned notes,
-nested notes and other anomalies; also
-removes multiple controllers in the same tic
-</BLOCKQUOTE>
-
-<B><TT>trackgetlen</TT></B>
-<BLOCKQUOTE>
-returns the size in tics of the current track,
-example:
-	<PRE>
-	let l = [trackgetlen];
-	</PRE>
-</BLOCKQUOTE>
-
-<B><TT>tracksave trackname filename</TT></B>
-<BLOCKQUOTE>
-save the events of the track in a file, <TT>filename</TT>
-is a quoted string.
-</BLOCKQUOTE>
-
-<B><TT>trackload trackname filename</TT></B>
-<BLOCKQUOTE>
-loads the events of a track from a file, <TT>filename</TT>
-is a quoted string.
-</BLOCKQUOTE>
-
-<B><TT>trackcut trackname from amount quantum</TT></B>
-<BLOCKQUOTE>
-cuts <TT>amount</TT> measures of the track <TT>trackname</TT>
-from measure <TT>from</TT>.
-</BLOCKQUOTE>
-
-<B><TT>trackblank trackname from amount quantum</TT></B>
-<BLOCKQUOTE>
-clears <TT>amount</TT> measures of the track <TT>trackname</TT>
-from the measure <TT>from</TT>.
-</BLOCKQUOTE>
-
-<B><TT>trackinsert trackname from amount</TT></B>
-<BLOCKQUOTE>
-inserts <TT>amount</TT> blank measures in track
-<TT>trackname</TT> just before the measure <TT>from</TT>
-</BLOCKQUOTE>
-
-<B><TT>trackcopy trackname1 from amount trackname2 where  quantum</TT></B>
-<BLOCKQUOTE>
-copies <TT>amount</TT> measures starting at <TT>from</TT>
-from track <TT>trackname1</TT> into <TT>trackname2</TT>
-at position <TT>where</TT>
-</BLOCKQUOTE>
-
-<B><TT>trackquant trackname from amount rate quantum</TT></B>
-<BLOCKQUOTE>
-quantises <TT>amount</TT> measures of the track
-<TT>trackname</TT> from measure <TT>from</TT> ; the quantum is
-the round in tics (see songsetsign). Rate must be
-between 0 and 100. 0 means no quantisation and
-100 means full quantisation.
-</BLOCKQUOTE>
-
-<B><TT>tracksetcurfilt trackname filtname</TT></B>
-<BLOCKQUOTE>
-set default filter to use for the next record
-of this track
-</BLOCKQUOTE>
-
-<B><TT>trackaddev trackname measure beat tic ev</TT></B>
-<BLOCKQUOTE>
-puts the event <TT>ev</TT> on track <TT>trackname</TT>
-at the position given by <TT>measure</TT>,
-<TT>beat</TT> and <TT>tic</TT>
-</BLOCKQUOTE>
-
-<H2>Channel functions</H2>
-
-<B><TT>channew channelname channelnum</TT></B>
-<BLOCKQUOTE>
-creates an new channel named <TT>channelname</TT>
-and bound to midi channel <TT>channelnum</TT> 
-</BLOCKQUOTE>
-
-<B><TT>chanexists channelname</TT></B>
-<BLOCKQUOTE>
-returns 1 if <TT>channelname</TT> is a channel, 0 otherwise
-</BLOCKQUOTE>
-
-<B><TT>changetnum channelname</TT></B>
-<BLOCKQUOTE>
-returns the midi channel number of channel named
-<TT>channelname</TT>
-</BLOCKQUOTE>
-
-<B><TT>changetdev channelname</TT></B>
-<BLOCKQUOTE>
-returns the device number of channel named
-<TT>channelname</TT>
-</BLOCKQUOTE>
-
-<B><TT>chanconfev channelname event</TT></B>
-<BLOCKQUOTE>
-adds the event to the configuration of 
-channel <TT>channelname</TT>, typically used set
-the program, volume, depth etc... The channel
-of the event is not used.
-</BLOCKQUOTE>
-
-<B><TT>chaninfo channame</TT></B>
-<BLOCKQUOTE>
-prints all events on the config
-of the channel.
-</BLOCKQUOTE>
-
-
-<H2>Filter functions</H2>
-
-<B><TT>filtnew filtname</TT></B>
-<BLOCKQUOTE>
-creates an new filter named <TT>filtname</TT>
-</BLOCKQUOTE>
-
-<B><TT>filtexists filtname</TT></B>
-<BLOCKQUOTE>
-returns 1 if <TT>filtname</TT> is a filter, 0 otherwise
-</BLOCKQUOTE>
-
-<B><TT>filtreset filtname</TT></B>
-<BLOCKQUOTE>
-removes all rules from the filter <TT>filtname</TT>
-</BLOCKQUOTE>
-
-<B><TT>filtinfo filtname</TT></B>
-<BLOCKQUOTE>
-lists the rules of the given filter
-</BLOCKQUOTE>
-
-<B><TT>filtchangein filtname oldchan newchan</TT></B>
-<BLOCKQUOTE>
-changes the input channel of 
-all rules with input channel equal to <TT>oldchan</TT>
-to <TT>newchan</TT>
-</BLOCKQUOTE>
-
-<B><TT>filtdevmap filtname inputdev outputdev</TT></B>
-<BLOCKQUOTE>
-route all events from device <TT>inputdev</TT>
-to device <TT>outputdev</TT>. If multiple dev maps are 
-defined for the same input device then events are 
-duplicated
-</BLOCKQUOTE>
-
-<B><TT>filtchanmap filtname inputchan outputchan</TT></B>
-<BLOCKQUOTE>
-route all events from channel <TT>inputchan</TT>
-to channel <TT>outputchan</TT>. If multiple channel maps are 
-defined for the same input channel then events are 
-duplicated
-</BLOCKQUOTE>
-
-<B><TT>filtkeymap filtname inchan outchan keystart keyend keyplus</TT></B>
-<BLOCKQUOTE>
-route note events from channel <TT>inchan</TT> and
-in the range keystart..keyend to <TT>outchan</TT>.
-Routed notes are transposed by keyplus half-tones
-If multiple keymaps are defined for the same input 
-channel and key-range then events are duplicated
-</BLOCKQUOTE>
-
-<B><TT>filtctlmap filtname inchan outchan inctl outctl</TT></B>
-<BLOCKQUOTE>
-route controller <TT>inctl</TT> from <TT>inchan</TT>
-to controller <TT>outctl</TT> on <TT>outchan</TT>.
-If multiple ctlmaps are defined for the same input 
-channel and the same input controller then events are duplicated
-</BLOCKQUOTE>
-
-<H2>Real-time functions</H2>
-
-<B><TT>songrecord</TT></B>
-<BLOCKQUOTE>
-plays the song and records the input.
-Input passes through the filter of
-the current track (if any).
-</BLOCKQUOTE>
-
-<B><TT>songplay</TT></B>
-<BLOCKQUOTE>
-plays the song from the current position.
-Input passes through the filter of
-the current track (if any) or through
-the current filter (if any).
-</BLOCKQUOTE>
-
-<B><TT>songidle</TT></B>
-<BLOCKQUOTE>
-puts midi input to the midi output,
-data passes through the filter of
-the current track (if any) or through
-the current filter (if any).
-</BLOCKQUOTE>
-
-<B><TT>sendraw device arrayofbytes</TT></B>
-<BLOCKQUOTE>
-sends raw midi data to device number '<TT>device</TT>',
-can be used to send system exclusive messages,
-example:
-	<PRE>
-	sendraw 0 { 0xF0 0x7E 0x7F 0x09 0x01 0xF7 }
-	</PRE>
-</BLOCKQUOTE>
-
-<H2>Song functions</H2>
-
-<B><TT>songsetcurquant tics</TT></B>
-<BLOCKQUOTE>
-set the number of tics in the time scale 
-(for quantisation, track editing...). 
-Currently this value is not used in real-time.
-</BLOCKQUOTE>
-
-<B><TT>songgetcurquant tics</TT></B>
-<BLOCKQUOTE>
-get the number of tics in the time scale.
-</BLOCKQUOTE>
-
-<B><TT>songsetcurpos measure</TT></B>
-<BLOCKQUOTE>
-set the current song position pointer to
-the measure <TT>measure</TT>. record and playback
-will start a that position
-</BLOCKQUOTE>
-
-<B><TT>songgetcurpos</TT></B>
-<BLOCKQUOTE>
-returns the current measure ie the
-current song position pointer
-</BLOCKQUOTE>
-
-<B><TT>songsetcurtrack trackname</TT></B>
-<BLOCKQUOTE>
-set the current track ie the track to be recorded
-</BLOCKQUOTE>
-
-<B><TT>songgetcurtrack</TT></B>
-<BLOCKQUOTE>
-returns the current track (if any) or <TT>nil</TT>
-</BLOCKQUOTE>
-
-<B><TT>songsetcurfilt filtname</TT></B>
-<BLOCKQUOTE>
-set the current filter ie the one used (with
-songplay and songidle) if there is no current track
-</BLOCKQUOTE>
-
-<B><TT>songgetcurfilt</TT></B>
-<BLOCKQUOTE>
-returns the current filter
-</BLOCKQUOTE>
-
-<B><TT>songsetunit tpu</TT></B>
-<BLOCKQUOTE>
-set the time resolution of the sequencer to <TT>tpu</TT>
-tics per unit (1 unit = 4 quarter notes).  the
-unit shall be changed before creating any tracks. 
-The default is 96 tics per unit, which is the
-default of the midi standard.
-</BLOCKQUOTE>
-
-<B><TT>songgetunit</TT></B>
-<BLOCKQUOTE>
-returns the number of tics per unit note
-</BLOCKQUOTE>
-
-<B><TT>songsettempo measure bpm</TT></B>
-<BLOCKQUOTE>
-sets the tempo to <TT>bpm</TT> beats per
-minute at measure <TT>measure</TT>
-</BLOCKQUOTE>
-
-<B><TT>songtimeins from amount denominator numerator</TT></B>
-<BLOCKQUOTE>
-inserts <TT>amount</TT> blank measures at measure
-<TT>from</TT>. The used time signature is given
-by denominator/numerator.
-</BLOCKQUOTE>
-
-<B><TT>songtimerm from amount</TT></B>
-<BLOCKQUOTE>
-deletes <TT>amount</TT> measures starting at
-measure <TT>from</TT>. The time signature is
-restored with the value preceding the
-<TT>from</TT> measure.
-</BLOCKQUOTE>
-
-<B><TT>songtimeinfo</TT></B>
-<BLOCKQUOTE>
-print the meta-track (tempo changes, time signature
-changes
-</BLOCKQUOTE>
-
-<B><TT>songinfo</TT></B>
-<BLOCKQUOTE>
-display some info about the default values of
-the song
-</BLOCKQUOTE>
-
-<B><TT>songsave filename</TT></B>
-<BLOCKQUOTE>
-saves the song in a file, <TT>filename</TT>
-is a quoted string.
-</BLOCKQUOTE>
-
-<B><TT>songload filename</TT></B>
-<BLOCKQUOTE>
-load the song from a file named <TT>filename</TT>.
-the current song is destroyed, even if 
-the load command failed
-</BLOCKQUOTE>
-
-<B><TT>songreset</TT></B>
-<BLOCKQUOTE>
-destroy completely the song, useful to
-start a new song without restarting the
-program
-</BLOCKQUOTE>
-
-<B><TT>songexportsmf filename</TT></B>
-<BLOCKQUOTE>
-saves the song into a standard midi file, <TT>filename</TT>
-is a quoted string.
-</BLOCKQUOTE>
-
-<B><TT>songimportsmf filename</TT></B>
-<BLOCKQUOTE>
-loads the song from a standard midi file, <TT>filename</TT>
-is a quoted string. Currently only midi file "type 1" is
-supported.
-</BLOCKQUOTE>
-
-<H2>Device functions</H2>
-
-<B><TT>devlist</TT></B>
-<BLOCKQUOTE>
-returns the list of attached devices
-(list of numbers)
-</BLOCKQUOTE>
-
-<B><TT>devattach devnum filename</TT></B>
-<BLOCKQUOTE>
-attach midi device <TT>filename</TT> as
-device number <TT>devnum</TT>; <TT>filename</TT>
-is a quoted string.
-</BLOCKQUOTE>
-
-<B><TT>devdetach devnum</TT></B>
-<BLOCKQUOTE>
-detach device number <TT>devnum</TT>
-</BLOCKQUOTE>
-		
-<H2>Misc. functions</H2>
-
-<B><TT>metroswitch number</TT></B>
-<BLOCKQUOTE>
-if <TT>number</TT> is equal to zero then the metronome is disabled
-else it is enabled
-</BLOCKQUOTE>	
-
-<B><TT>metroconf eventhi eventlo</TT></B>
-<BLOCKQUOTE>	
-select the notes that the metronome plays. The
-pair of events must be note-ons
-</BLOCKQUOTE>
 	
-<B><TT>help</TT></B>
-<BLOCKQUOTE>
-display the list of built-in and user-defined
-procedures
-</BLOCKQUOTE>
+	A track is a piece of music, namely a ordered list 
+	of midi events. In play mode, midish play simultaneously
+	all the trach, in record-mode it plays all the tracks an
+	records the current track.
 
-<B><TT>print expression</TT></B>
-<BLOCKQUOTE>
-displays the value of the expression
-</BLOCKQUOTE>
-
-<B><TT>exec filename</TT></B>
-<BLOCKQUOTE>
-reads and executes the script from a file, <TT>filename</TT>
-is a quoted string.
-</BLOCKQUOTE>
-
-<B><TT>debug flag val</TT></B>
-<BLOCKQUOTE>
-sets debug-flag <TT>flag</TT> to (integer) value <TT>val</TT>. 
-If <TT>val=0</TT> the corresponding debug-info are
-turned off. <TT>flag</TT> can be: <TT>parse</TT>, <TT>tree</TT>, 
-<TT>filt</TT>
-</BLOCKQUOTE>
-
-<B><TT>panic</TT></B>
-<BLOCKQUOTE>
-causes the sequencer to core-dump
-</BLOCKQUOTE>
-	
-<HR>
-<SMALL><EM>
-Copyright (c) 2003-2005 Alexandre Ratchov	<BR>
-Last updated mar 11, 2005 	
-</EM></SMALL>
 
 </BODY>
 </HTML>
