@@ -931,254 +931,254 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <H2>Real-time functions</H2>
 
 <B><TT>songrecord</TT></B>
-<BLOCKQUOTE>
-plays the song and records the input.
-Input passes through the filter of
-the current track (if any).
-</BLOCKQUOTE>
+	<BLOCKQUOTE>
+	plays the song and records the input.
+	Input passes through the filter of
+	the current track (if any).
+	</BLOCKQUOTE>
 
 <B><TT>songplay</TT></B>
-<BLOCKQUOTE>
-plays the song from the current position.
-Input passes through the filter of
-the current track (if any) or through
-the current filter (if any).
-</BLOCKQUOTE>
+	<BLOCKQUOTE>
+	plays the song from the current position.
+	Input passes through the filter of
+	the current track (if any) or through
+	the current filter (if any).
+	</BLOCKQUOTE>
 
 <B><TT>songidle</TT></B>
-<BLOCKQUOTE>
-puts midi input to the midi output,
-data passes through the filter of
-the current track (if any) or through
-the current filter (if any).
-</BLOCKQUOTE>
+	<BLOCKQUOTE>
+	puts midi input to the midi output,
+	data passes through the filter of
+	the current track (if any) or through
+	the current filter (if any).
+	</BLOCKQUOTE>
 
 <B><TT>sendraw device arrayofbytes</TT></B>
-<BLOCKQUOTE>
-sends raw midi data to device number '<TT>device</TT>',
-can be used to send system exclusive messages,
-example:
+	<BLOCKQUOTE>
+	sends raw midi data to device number '<TT>device</TT>',
+	can be used to send system exclusive messages,
+	example:
 	<PRE>
 	sendraw 0 { 0xF0 0x7E 0x7F 0x09 0x01 0xF7 }
 	</PRE>
-</BLOCKQUOTE>
+	</BLOCKQUOTE>
 
 <H2>Song functions</H2>
 
 <B><TT>songsetcurquant tics</TT></B>
-<BLOCKQUOTE>
-set the number of tics in the time scale 
-(for quantisation, track editing...). 
-Currently this value is not used in real-time.
-</BLOCKQUOTE>
+	<BLOCKQUOTE>
+	set the number of tics in the time scale 
+	(for quantisation, track editing...). 
+	Currently this value is not used in real-time.
+	</BLOCKQUOTE>
 
 <B><TT>songgetcurquant tics</TT></B>
-<BLOCKQUOTE>
-get the number of tics in the time scale.
-</BLOCKQUOTE>
+	<BLOCKQUOTE>
+	get the number of tics in the time scale.
+	</BLOCKQUOTE>
 
 <B><TT>songsetcurpos measure</TT></B>
-<BLOCKQUOTE>
-set the current song position pointer to
-the measure <TT>measure</TT>. record and playback
-will start a that position
-</BLOCKQUOTE>
+	<BLOCKQUOTE>
+	set the current song position pointer to
+	the measure <TT>measure</TT>. record and playback
+	will start a that position
+	</BLOCKQUOTE>
 
 <B><TT>songgetcurpos</TT></B>
-<BLOCKQUOTE>
-returns the current measure ie the
-current song position pointer
-</BLOCKQUOTE>
+	<BLOCKQUOTE>
+	returns the current measure ie the
+	current song position pointer
+	</BLOCKQUOTE>
 
 <B><TT>songsetcurtrack trackname</TT></B>
-<BLOCKQUOTE>
-set the current track ie the track to be recorded
-</BLOCKQUOTE>
+	<BLOCKQUOTE>
+	set the current track ie the track to be recorded
+	</BLOCKQUOTE>
 
 <B><TT>songgetcurtrack</TT></B>
-<BLOCKQUOTE>
-returns the current track (if any) or <TT>nil</TT>
-</BLOCKQUOTE>
+	<BLOCKQUOTE>
+	returns the current track (if any) or <TT>nil</TT>
+	</BLOCKQUOTE>
 
 <B><TT>songsetcurfilt filtname</TT></B>
-<BLOCKQUOTE>
-set the current filter ie the one used (with
-songplay and songidle) if there is no current track
-</BLOCKQUOTE>
+	<BLOCKQUOTE>
+	set the current filter ie the one used (with
+	songplay and songidle) if there is no current track
+	</BLOCKQUOTE>
 
 <B><TT>songgetcurfilt</TT></B>
-<BLOCKQUOTE>
-returns the current filter
-</BLOCKQUOTE>
+	<BLOCKQUOTE>
+	returns the current filter
+	</BLOCKQUOTE>
 
 <B><TT>songsetunit tpu</TT></B>
-<BLOCKQUOTE>
-set the time resolution of the sequencer to <TT>tpu</TT>
-tics per unit (1 unit = 4 quarter notes).  the
-unit shall be changed before creating any tracks. 
-The default is 96 tics per unit, which is the
-default of the midi standard.
-</BLOCKQUOTE>
+	<BLOCKQUOTE>
+	set the time resolution of the sequencer to <TT>tpu</TT>
+	tics per unit (1 unit = 4 quarter notes).  the
+	unit shall be changed before creating any tracks. 
+	The default is 96 tics per unit, which is the
+	default of the midi standard.
+	</BLOCKQUOTE>
 
 <B><TT>songgetunit</TT></B>
-<BLOCKQUOTE>
-returns the number of tics per unit note
-</BLOCKQUOTE>
+	<BLOCKQUOTE>
+	returns the number of tics per unit note
+	</BLOCKQUOTE>
 
 <B><TT>songsettempo measure bpm</TT></B>
-<BLOCKQUOTE>
-sets the tempo to <TT>bpm</TT> beats per
-minute at measure <TT>measure</TT>
-</BLOCKQUOTE>
+	<BLOCKQUOTE>
+	sets the tempo to <TT>bpm</TT> beats per
+	minute at measure <TT>measure</TT>
+	</BLOCKQUOTE>
 
 <B><TT>songtimeins from amount denominator numerator</TT></B>
-<BLOCKQUOTE>
-inserts <TT>amount</TT> blank measures at measure
-<TT>from</TT>. The used time signature is given
-by denominator/numerator.
-</BLOCKQUOTE>
+	<BLOCKQUOTE>
+	inserts <TT>amount</TT> blank measures at measure
+	<TT>from</TT>. The used time signature is given
+	by denominator/numerator.
+	</BLOCKQUOTE>
 
 <B><TT>songtimerm from amount</TT></B>
-<BLOCKQUOTE>
-deletes <TT>amount</TT> measures starting at
-measure <TT>from</TT>. The time signature is
-restored with the value preceding the
-<TT>from</TT> measure.
-</BLOCKQUOTE>
+	<BLOCKQUOTE>
+	deletes <TT>amount</TT> measures starting at
+	measure <TT>from</TT>. The time signature is
+	restored with the value preceding the
+	<TT>from</TT> measure.
+	</BLOCKQUOTE>
 
 <B><TT>songtimeinfo</TT></B>
-<BLOCKQUOTE>
-print the meta-track (tempo changes, time signature
-changes
-</BLOCKQUOTE>
+	<BLOCKQUOTE>
+	print the meta-track (tempo changes, time signature
+	changes
+	</BLOCKQUOTE>
 
 <B><TT>songinfo</TT></B>
-<BLOCKQUOTE>
-display some info about the default values of
-the song
-</BLOCKQUOTE>
+	<BLOCKQUOTE>
+	display some info about the default values of
+	the song
+	</BLOCKQUOTE>
 
 <B><TT>songsave filename</TT></B>
-<BLOCKQUOTE>
-saves the song in a file, <TT>filename</TT>
-is a quoted string.
-</BLOCKQUOTE>
+	<BLOCKQUOTE>
+	saves the song in a file, <TT>filename</TT>
+	is a quoted string.
+	</BLOCKQUOTE>
 
 <B><TT>songload filename</TT></B>
-<BLOCKQUOTE>
-load the song from a file named <TT>filename</TT>.
-the current song is destroyed, even if 
-the load command failed
-</BLOCKQUOTE>
+	<BLOCKQUOTE>
+	load the song from a file named <TT>filename</TT>.
+	the current song is destroyed, even if 
+	the load command failed
+	</BLOCKQUOTE>
 
 <B><TT>songreset</TT></B>
-<BLOCKQUOTE>
-destroy completely the song, useful to
-start a new song without restarting the
-program
-</BLOCKQUOTE>
+	<BLOCKQUOTE>
+	destroy completely the song, useful to
+	start a new song without restarting the
+	program
+	</BLOCKQUOTE>
 
 <B><TT>songexportsmf filename</TT></B>
-<BLOCKQUOTE>
-saves the song into a standard midi file, <TT>filename</TT>
-is a quoted string.
-</BLOCKQUOTE>
+	<BLOCKQUOTE>
+	saves the song into a standard midi file, <TT>filename</TT>
+	is a quoted string.
+	</BLOCKQUOTE>
 
 <B><TT>songimportsmf filename</TT></B>
-<BLOCKQUOTE>
-loads the song from a standard midi file, <TT>filename</TT>
-is a quoted string. Currently only midi file "type 1" is
-supported.
-</BLOCKQUOTE>
+	<BLOCKQUOTE>
+	loads the song from a standard midi file, <TT>filename</TT>
+	is a quoted string. Currently only midi file "type 1" is
+	supported.
+	</BLOCKQUOTE>
 
 <H2>Device functions</H2>
 
 <B><TT>devlist</TT></B>
-<BLOCKQUOTE>
-returns the list of attached devices
-(list of numbers)
-</BLOCKQUOTE>
+	<BLOCKQUOTE>
+	returns the list of attached devices
+	(list of numbers)
+	</BLOCKQUOTE>
 
 <B><TT>devattach devnum filename</TT></B>
-<BLOCKQUOTE>
-attach midi device <TT>filename</TT> as
-device number <TT>devnum</TT>; <TT>filename</TT>
-is a quoted string.
-</BLOCKQUOTE>
+	<BLOCKQUOTE>
+	attach midi device <TT>filename</TT> as
+	device number <TT>devnum</TT>; <TT>filename</TT>
+	is a quoted string.
+	</BLOCKQUOTE>
 
 <B><TT>devdetach devnum</TT></B>
-<BLOCKQUOTE>
-detach device number <TT>devnum</TT>
-</BLOCKQUOTE>
+	<BLOCKQUOTE>
+	detach device number <TT>devnum</TT>
+	</BLOCKQUOTE>
 
 <B><TT>devsetmaster devnum</TT></B>
-<BLOCKQUOTE>
-set device number <TT>devnum</TT> to be the master clock source.
-It will give tempo, start event and stop event. If <TT>devnum</TT> is
-<TT>nil</TT>, then the internal clock will be used and midish
-will act as master device.
-</BLOCKQUOTE>
+	<BLOCKQUOTE>
+	set device number <TT>devnum</TT> to be the master clock source.
+	It will give tempo, start event and stop event. If <TT>devnum</TT> is
+	<TT>nil</TT>, then the internal clock will be used and midish
+	will act as master device.
+	</BLOCKQUOTE>
 
 <B><TT>devgetmaster devnum</TT></B>
-<BLOCKQUOTE>
-return the current master device. If non, <TT>nil</TT> is
-returned.
-</BLOCKQUOTE>
+	<BLOCKQUOTE>
+	return the current master device. If non, <TT>nil</TT> is
+	returned.
+	</BLOCKQUOTE>
 
 <B><TT>devsendrt devnum bool</TT></B>
-<BLOCKQUOTE>
-If <TT>bool</TT> is true, the real-time information (midi tics, 
-midi start and midi trop events) will be transmitted to device
-number <TT>devnum</TT>.  Overwise no real-time midi events are transmitted.
-</BLOCKQUOTE>
+	<BLOCKQUOTE>
+	If <TT>bool</TT> is true, the real-time information (midi tics, 
+	midi start and midi trop events) will be transmitted to device
+	number <TT>devnum</TT>.  Overwise no real-time midi events are transmitted.
+	</BLOCKQUOTE>
 		
 <H2>Misc. functions</H2>
 
 <B><TT>metroswitch number</TT></B>
-<BLOCKQUOTE>
-if <TT>number</TT> is equal to zero then the metronome is disabled
-else it is enabled
-</BLOCKQUOTE>	
+	<BLOCKQUOTE>
+	if <TT>number</TT> is equal to zero then the metronome is disabled
+	else it is enabled
+	</BLOCKQUOTE>	
 
 <B><TT>metroconf eventhi eventlo</TT></B>
-<BLOCKQUOTE>	
-select the notes that the metronome plays. The
-pair of events must be note-ons
-</BLOCKQUOTE>
+	<BLOCKQUOTE>	
+	select the notes that the metronome plays. The
+	pair of events must be note-ons
+	</BLOCKQUOTE>
 	
 <B><TT>help</TT></B>
-<BLOCKQUOTE>
-display the list of built-in and user-defined
-procedures
-</BLOCKQUOTE>
+	<BLOCKQUOTE>
+	display the list of built-in and user-defined
+	procedures
+	</BLOCKQUOTE>
 
 <B><TT>print expression</TT></B>
-<BLOCKQUOTE>
-displays the value of the expression
-</BLOCKQUOTE>
+	<BLOCKQUOTE>
+	displays the value of the expression
+	</BLOCKQUOTE>
 
 <B><TT>exec filename</TT></B>
-<BLOCKQUOTE>
-reads and executes the script from a file, <TT>filename</TT>
-is a quoted string.
-</BLOCKQUOTE>
+	<BLOCKQUOTE>
+	reads and executes the script from a file, <TT>filename</TT>
+	is a quoted string.
+	</BLOCKQUOTE>
 
 <B><TT>debug flag val</TT></B>
-<BLOCKQUOTE>
-sets debug-flag <TT>flag</TT> to (integer) value <TT>val</TT>. 
-If <TT>val=0</TT> the corresponding debug-info are
-turned off. <TT>flag</TT> can be: <TT>parse</TT>, <TT>tree</TT>, 
-<TT>rmidi</TT> and <TT>filt</TT>
-</BLOCKQUOTE>
+	<BLOCKQUOTE>
+	sets debug-flag <TT>flag</TT> to (integer) value <TT>val</TT>. 
+	If <TT>val=0</TT> the corresponding debug-info are
+	turned off. <TT>flag</TT> can be: <TT>parse</TT>, <TT>tree</TT>, 
+	<TT>rmidi</TT> and <TT>filt</TT>
+	</BLOCKQUOTE>
 
 <B><TT>panic</TT></B>
-<BLOCKQUOTE>
-causes the sequencer to core-dump
-</BLOCKQUOTE>
+	<BLOCKQUOTE>
+	causes the sequencer to core-dump
+	</BLOCKQUOTE>
 	
 <HR>
 <SMALL><EM>
-Copyright (c) 2003-2005 Alexandre Ratchov	<BR>
+Copyright (c) 2003-2005 Alexandre Ratchov<BR>
 Last updated apr 6, 2005 	
 </EM></SMALL>
 
