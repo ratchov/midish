@@ -255,6 +255,32 @@ Syntax:
 		name. The return value is given to the caller
 		with a 'return' statement.
 
+Devices and channles
+--------------------
+
+	devices are numbered between 0 and 15. They are
+	configured with devattach and devdetach. Example:
+
+		devattach 0 "/dev/rmidi3"
+
+	channels are specified by giving the device number
+	and the midi channel number in a list:
+
+		{ devicenum midichan }
+
+	For instance, to specify channel 9 on device number 2:
+
+		{ 2 9 }
+	
+	Named channels can be specified by their names, for
+	instance, after:
+
+		channew drums { 2 9 }	# define a named channel
+		
+	'drums' and "{2 9}" are equivalent. Named channels
+	can be also used to hold some configuration events,
+	see channew, chanconfev
+
 Events:
 -------
 
@@ -268,14 +294,14 @@ Events:
 		
 	Examples:
 	
-	{ non 0 64 100 }	- an note-on event on channel 0
+	{ non {2 9} 64 100 }	- an note-on event on device 2 channel 9
 				  note 64 with velocity 100
-				  
-				  
-	{ ctl 9 7 99 }		- set value 99 to controller number 7
-				  on channel 9
 		
-	{ pc 1 34 }		- select patch 34 on channel 1
+	{ pc {1 3} 34 }		- select patch 34 on device 1 channel 3
+
+				  
+	{ ctl drums 7 99 }	- set value 99 to controller number 7
+				  on device/channel drums
 
 Track functions:
 ----------------
@@ -382,6 +408,11 @@ Channel functions:
 	changetnum channelname
 
 		returns the midi channel number of channel named
+		'channelname'
+	
+	changetdev channelname
+
+		returns the device number of channel named
 		'channelname'
 	
 	chanconfev channelname event

@@ -124,7 +124,7 @@ proc l  {
 	}
 	print "channels:"
 	for i in [chanlist] {
-		print { "   " $i "->" [changetnum $i] }
+		print { "   " $i "(" "dev:" [changetdev $i] "chan:" [changetnum $i] ")" }
 	}
 	print "filters:"
 	let cur = [songgetcurfilt]
