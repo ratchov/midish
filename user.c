@@ -573,7 +573,7 @@ user_func_trackcut(struct exec_s *o) {
 	if (!exec_lookuptrack(o, "trackname", &t) ||
 	    !exec_lookuplong(o, "from", &from) ||
 	    !exec_lookuplong(o, "amount", &amount) ||
-	    !exec_lookuplong(o, "quant", &quant)) {
+	    !exec_lookuplong(o, "quantum", &quant)) {
 		return 0;
 	}
 	tic = song_measuretotic(user_song, from);
@@ -601,7 +601,7 @@ user_func_trackblank(struct exec_s *o) {
 	if (!exec_lookuptrack(o, "trackname", &t) ||
 	    !exec_lookuplong(o, "from", &from) ||
 	    !exec_lookuplong(o, "amount", &amount) ||
-	    !exec_lookuplong(o, "quant", &quant)) {
+	    !exec_lookuplong(o, "quantum", &quant)) {
 		return 0;
 	}
 	tic = song_measuretotic(user_song, from);
@@ -633,7 +633,7 @@ user_func_trackcopy(struct exec_s *o) {
 	    !exec_lookuplong(o, "amount", &amount) ||
 	    !exec_lookuptrack(o, "trackname2", &t2) ||
 	    !exec_lookuplong(o, "where", &where) ||
-	    !exec_lookuplong(o, "quant", &quant)) {
+	    !exec_lookuplong(o, "quantum", &quant)) {
 		return 0;
 	}
 	tic  = song_measuretotic(user_song, from);
@@ -1579,19 +1579,19 @@ user_mainloop(void) {
 			name_newarg("trackname", 
 			name_newarg("from", 
 			name_newarg("amount", 
-			name_newarg("quant", 0)))));
+			name_newarg("quantum", 0)))));
 	exec_newbuiltin(exec, "trackblank", user_func_trackblank,
 			name_newarg("trackname", 
 			name_newarg("from", 
 			name_newarg("amount", 
-			name_newarg("quant", 0)))));
+			name_newarg("quantum", 0)))));
 	exec_newbuiltin(exec, "trackcopy", user_func_trackcopy,
 			name_newarg("trackname", 
 			name_newarg("from", 
 			name_newarg("amount", 
 			name_newarg("trackname2", 
 			name_newarg("where", 
-			name_newarg("quant", 0)))))));
+			name_newarg("quantum", 0)))))));
 	exec_newbuiltin(exec, "trackinsert", user_func_trackinsert,
 			name_newarg("trackname", 
 			name_newarg("from", 
@@ -1601,7 +1601,7 @@ user_mainloop(void) {
 			name_newarg("from", 
 			name_newarg("amount", 
 			name_newarg("rate", 
-			name_newarg("quant", 0))))));
+			name_newarg("quantum", 0))))));
 
 	exec_newbuiltin(exec, "chanlist", user_func_chanlist, 0);
 	exec_newbuiltin(exec, "channew", user_func_channew, 
