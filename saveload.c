@@ -144,7 +144,7 @@ rule_output(struct rule_s *o, struct textout_s *f) {
 		textout_putstr(f, " ");
 		textout_putlong(f, o->ochan);
 		break;
-	case RULE_CTRLMAP:
+	case RULE_CTLMAP:
 		textout_putstr(f, "ctlmap ");		
 		textout_putlong(f, o->ichan);
 		textout_putstr(f, " ");

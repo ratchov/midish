@@ -37,7 +37,7 @@
 #define FILT_BENDER		0x02
 #define FILT_KEYTOUCH		0x04
 #define FILT_CHANTOUCH		0x08
-#define FILT_CTRL		0x10
+#define FILT_CTL		0x10
 #define FILT_PROGCHANGE		0x20
 
 struct state_s {
@@ -45,7 +45,7 @@ struct state_s {
 	struct ev_s ev;			/* initial event */
 };
 
-#define RULE_CTRLMAP	1
+#define RULE_CTLMAP	1
 #define RULE_KEYMAP	2
 #define RULE_CHANMAP	3
 
@@ -97,5 +97,7 @@ void filt_new_keymap(struct filt_s *o, unsigned ichan, unsigned ochan, unsigned 
 void filt_new_ctlmap(struct filt_s *o, unsigned ichan, unsigned ochan, unsigned ictl, unsigned octl);
 void filt_new_chanmap(struct filt_s *o, unsigned ichan, unsigned ochan);
 void filt_changein(struct filt_s *o, unsigned oldc, unsigned newc);
+
+extern unsigned filt_debug;
 
 #endif /* SEQ_FILT_H */

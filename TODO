@@ -1,3 +1,5 @@
+- add filtdevmap
+
 - create an evspec_s structure that
   can handle an event specification (note range, 
   controller range etc...). Use it in trackblank,

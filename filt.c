@@ -42,7 +42,8 @@
 #include "pool.h"
 
 #define FILT_DEBUG
-#undef FILT_DEBUG_DATA
+
+unsigned filt_debug = 0;
 
 /* ------------------------------------------------------------------ */
 
@@ -118,12 +119,13 @@ unsigned char filt_curve_inv[128] = {
 	7,	6,	5,	4,	3,	2,	1,	0
 };
 
+
 void
 rule_changein(struct rule_s *o, unsigned oldc, unsigned newc) {
 	switch(o->type) {
 	case RULE_CHANMAP:
 	case RULE_KEYMAP:
-	case RULE_CTRLMAP:
+	case RULE_CTLMAP:
 		if (o->ichan == oldc) {
 			o->ichan = newc;
 		}
@@ -133,6 +135,71 @@ rule_changein(struct rule_s *o, unsigned oldc, unsigned newc) {
 	}
 }
 
+#if 0
+
+unsigned
+rule_isused(struct rule_s *o) {
+	switch(o->type) {
+	case RULE_CHANMAP:
+		if (o->ichan != o->ochan) {
+			return 1;
+		} 
+		break;
+	case RULE_KEYMAP:
+		if (o->ichan != o->ochan ||
+		    o->key_plus != 0 ||
+		    o->curve != filt_curve_id) {
+			return 1;
+		}
+		break;
+	case RULE_CTLMAP:
+		if (o->ichan != o->ochan ||
+		    o->ictl != o->octl ||
+		    o->curve != filt_curve_id) {
+			return 1;
+		}
+		break;
+	default:
+		dbg_puts("rule_checkused: unknown rule\n");
+		dbg_panic();
+	}
+	return 0;
+}
+	
+unsigned
+rule_checkchan(struct rule_s *o) {
+	if (o->ichan > EV_MAXCHAN ||
+	    o->ochan > EV_MAXCHAN) {
+		return 0;
+	}
+	return 1;
+}
+
+unsigned
+rule_checkkey(struct rule_s *o) {
+	if (!rule_checkchan(o) ||
+	    o->key_start > o->key_end ||
+	    o->key_start + o->key_plus < 0 ||
+	    o->key_start + o->key_plus > EV_MAXB0 ||
+	    o->key_end + o->key_plus < 0 ||
+	    o->key_end + o->key_plus > EV_MAXB0) {
+		return 0;
+	}
+	return 1;
+}
+
+unsigned
+rule_checkctl(struct rule_s *o) {
+	if (!rule_checkchan(o) ||
+	    o->ictl > EV_MAXB0 ||
+	    o->octl > EV_MAXB0) {
+		return 0;
+	}
+	return 1;
+}
+
+
+#endif
 
 void
 filt_new_chanmap(struct filt_s *o,
@@ -152,12 +219,14 @@ filt_new_chanmap(struct filt_s *o,
 		}
 	}
 	
-	r = (struct rule_s *)mem_alloc(sizeof(struct rule_s));
-	r->type = RULE_CHANMAP;
-	r->ichan = ichan;
-	r->ochan = ochan;
-	r->next = o->chan_rules;
-	o->chan_rules = r;
+	if (ichan != ochan) {
+		r = (struct rule_s *)mem_alloc(sizeof(struct rule_s));
+		r->type = RULE_CHANMAP;
+		r->ichan = ichan;
+		r->ochan = ochan;
+		r->next = o->chan_rules;
+		o->chan_rules = r;
+	}
 }
 
 
@@ -171,10 +240,7 @@ filt_new_keymap(struct filt_s *o, unsigned ichan, unsigned ochan,
 	i = &o->voice_rules;
 	while(*i != 0) {
 		if ((*i)->type == RULE_KEYMAP && 
-		    (*i)->ichan == ichan && 
-		    (*i)->ochan == ochan && 
-		    (*i)->key_start == key_start &&
-		    (*i)->key_end == key_end &&
+		    (*i)->ochan == ochan &&
 		    (*i)->key_plus == key_plus) {
 			found = *i;
 			*i = found->next;
@@ -207,7 +273,7 @@ filt_new_ctlmap(struct filt_s *o,
 	
 	i = &o->voice_rules;
 	while(*i != 0) {
-		if ((*i)->type == RULE_CTRLMAP && 
+		if ((*i)->type == RULE_CTLMAP && 
 		    (*i)->ochan == ochan && 
 		    (*i)->octl == octl) {
 			found = *i;
@@ -220,7 +286,7 @@ filt_new_ctlmap(struct filt_s *o,
 	
 	if (ichan != ochan || ictl != octl) {
 		r = (struct rule_s *)mem_alloc(sizeof(struct rule_s));
-		r->type = RULE_CTRLMAP;
+		r->type = RULE_CTLMAP;
 		r->ichan = ichan;
 		r->ochan = ochan;
 		r->ictl = ictl;
@@ -241,6 +307,9 @@ filt_changein(struct filt_s *o, unsigned oldc, unsigned newc) {
 	}
 	for (i = o->chan_rules; i != 0; i = i->next) {
 		rule_changein(i, oldc, newc);
+	}
+	if (o->chan_rules == 0) {
+		filt_new_chanmap(o, newc, oldc);
 	}
 }
 
@@ -316,10 +385,12 @@ filt_done(struct filt_s *o) {
 
 void
 filt_pass(struct filt_s *o, struct ev_s *ev) {
-#ifdef FILT_DEBUG_DATA
-	dbg_puts("filt_pass: ");
-	ev_dbg(ev);
-	dbg_puts("\n");
+#ifdef FILT_DEBUG
+	if (filt_debug) {
+		dbg_puts("filt_pass: ");
+		ev_dbg(ev);
+		dbg_puts("\n");
+	}
 #endif
 	if (o->cb) {
 		o->cb(o->addr, ev);
@@ -341,10 +412,12 @@ struct state_s **
 filt_statenew(struct filt_s *o, struct ev_s *ev) {
 	struct state_s *s;
 
-#ifdef FILT_DEBUG_DATA
-	dbg_puts("filt_statenew: ");
-	ev_dbg(ev);
-	dbg_puts("\n");
+#ifdef FILT_DEBUG
+	if (filt_debug) {
+		dbg_puts("filt_statenew: ");
+		ev_dbg(ev);
+		dbg_puts("\n");
+	}
 #endif
 	s = state_new();
 	s->ev = *ev;
@@ -366,10 +439,12 @@ filt_statedel(struct filt_s *o, struct state_s **p) {
 	struct state_s *s;
 
 	s = *p;
-#ifdef FILT_DEBUG_DATA
-	dbg_puts("filt_statedel: ");
-	ev_dbg(&s->ev);
-	dbg_puts("\n");
+#ifdef FILT_DEBUG
+	if (filt_debug) {
+		dbg_puts("filt_statedel: ");
+		ev_dbg(&s->ev);
+		dbg_puts("\n");
+	}
 #endif
 	*p = s->next;
 	state_del(s);
@@ -501,7 +576,7 @@ filt_matchrule(struct filt_s *o, struct rule_s *r, struct ev_s *ev) {
 		if (EV_ISNOTE(ev) && 
 		    ev->data.voice.chan == r->ichan && 
 		    ev->data.voice.b0 >= r->key_start &&
-		    ev->data.voice.b1 <= r->key_end) {
+		    ev->data.voice.b0 <= r->key_end) {
 			te = *ev;
 			te.data.voice.chan = r->ochan;
 			te.data.voice.b0 += r->key_plus;
@@ -511,7 +586,7 @@ filt_matchrule(struct filt_s *o, struct rule_s *r, struct ev_s *ev) {
 			return 1;
 		}
 		break;
-	case RULE_CTRLMAP:
+	case RULE_CTLMAP:
 		if (ev->cmd == EV_CTL &&
 		    ev->data.voice.chan == r->ichan &&
 		    ev->data.voice.b0 == r->ictl) {
@@ -537,12 +612,12 @@ filt_run(struct filt_s *o, struct ev_s *ev) {
 	struct rule_s *i;
 	unsigned ret;
 	
-#ifdef FILT_DEBUG_DATA
-	dbg_puts("filt_run: ");
-	ev_dbg(ev);
-	dbg_puts("\n");
-#endif
 #ifdef FILT_DEBUG
+	if (filt_debug) {
+		dbg_puts("filt_run: ");
+		ev_dbg(ev);
+		dbg_puts("\n");
+	}
 	if (o->cb == 0) {
 		dbg_puts("filt_run: cb = 0, bad initialisation\n");
 		dbg_panic();

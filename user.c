@@ -277,6 +277,8 @@ user_func_debug(struct exec_s *o) {
 		parse_debug = value;
 	} else if (str_eq(flag, "tree")) {
 		tree_debug = value;
+	} else if (str_eq(flag, "filt")) {
+		filt_debug = value;
 	} else {
 		user_printstr("debug: unknuwn debug-flag\n");
 		return 0;
