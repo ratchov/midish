@@ -53,17 +53,17 @@
 
 	In midish, midi-devices are numbered from 0 to 15.
 	Each midi-device has its "slot number". For instance, 
-	suppose	that one have:
+	suppose	that we have:
 
 	<UL>
 	<LI>
 		a midi sound module known as
 		<TT>/dev/rmidi3</TT> by the operating
-		system (or <TT>/dev/snd/midiC3D0</TT> on Linux)
+		system
 	<LI>
 		a midi keyboard known as
 		<TT>/dev/rmidi2</TT> by the operating
-		system (or <TT>/dev/snd/midiC2D0</TT> on Linux)
+		system
 	</UL>
 	
 	To configure the module as device number 0 and
@@ -74,8 +74,8 @@
 	</PRE>
 	
 	<P>
-	<STRONG>Important note</STRONG>
-	We strongly suggest that the main sound module (most used)
+	<B>Note:</B>
+	we strongly suggest that the main sound module (most used)
 	be attached as device number 0. This makes easier
 	to import/export music from systems with different configurations.
 
@@ -98,7 +98,7 @@
 
 	<P>
 	Midish supports midi filtering. That means, that you can
-	define a "filter" that transforms input events before
+	define a <I>filter</I> that transforms input events before
 	sending them to the output. Currently a filter can mainly be
 	used to:
 	<UL>
@@ -121,7 +121,7 @@
 	initially the filter is empty and will send input to output
 	as-is.
 	Several filters can be defined, however only the
-	<EMPH>current filter</EMPH> will run in performance
+	<I>current filter</I> will run in performance
 	mode. The current filter is set as follows:
 	<PRE>
 	songsetcurfilt myfilt		# make 'myfilt' the current filter
@@ -143,7 +143,7 @@
 	filtnew mydevmap		# define filter 'mydevmap'
 	songsetcurfilt mydevmap		# make 'mydevmap' the current filter
 	</PRE>
-	the we define a "device map" rule:
+	then we define a "device map" rule:
 	<PRE>
 	filtdevmap mydevmap 1 0		# route device 1 -> device 0
 	</PRE>
@@ -190,7 +190,7 @@
 	the first three arguments are the name of the filter, 
 	the input and the output device/channel pair. The 4-th
 	argument is the controller number on the input (1 = modulation)
-	and the 5-th the controller number on the output (11 = expression).
+	and the 5-th argument is the controller number on the output (11 = expression).
 	Rules of the filter can be listed on the console as follows:
 	<PRE>
 	filtinfo mydrums
@@ -211,7 +211,7 @@
 	filtnew mypiano			# define filter 'mypiano'
 	songsetcurfilt mypiano		# make 'mypiano' the current filter
 	</PRE>
-	then, we create a add a channel-map and a key-map rule to the filter:
+	then, we add a channel-map and a key-map rule to the filter:
 	<PRE>
 	filtchanmap mypiano {1 0} {0 2}
 	filtkeymap mypiano {1 0} {0 2} 0 127 12
@@ -228,7 +228,7 @@
 
 	In the same way we can create a keyboard-split with two
 	key-rules and two channel-rules. 
-	Let us splits the
+	Let us split the
 	keyboard in two parts (left and right) on note 64 (note E3),  in
 	the middle. 
 	Notes on the left part 	will be routed to
@@ -243,7 +243,7 @@
 	songsetcurfilt mysplit
 	</PRE>
 	<P>
-	It defining filters seem quite tedious, however it's possible
+	Defining filters seem quite tedious, however it's possible
 	to define procedures that do the same in a very simpler way.
 
 <A name="chan"></A>
@@ -251,13 +251,13 @@
 
 	Because midish handles multiple devices, instead of
 	using midi-channels, it uses device/midi-channel pairs.
-	We'll often refer by <EMPH>channel</EMPH>
+	We'll often refer by <I>channel</I>
 	the device/midi-channel pair. As we have seen, channels
-	are handles by two-item lists, like this:
+	are handled by two-item lists, like this:
 	<PRE>
 	{0 1}			# device 0, midi-channel 1
 	</PRE>
-	Channels can also be named, is follows:
+	Channels can also be named, as follows:
 	<PRE>
 	channew mybass {0 1}
 	</PRE>
@@ -267,7 +267,7 @@
 <H2>Channel configuration</H2>
 
 	Since a channel represents a musical instrument, 
-	midish allow to attach to the channel definition 
+	midish allow us to attach to the channel definition 
 	basic configuration. For instance;
 	to select patch 34 on channel drums, we attach
 	a "program change" event:
@@ -295,11 +295,11 @@
 <H1>Time structure</H1>
 
 	<P>
-	In midish, time is split in <EMPH>measures</EMPH>. Each measure
-	is split in <EMPH>beats</EMPH> and each beat is split in 
-	<EMPH>tics</EMPH>. The <EMPH>tic</EMPH> is the fundamental
+	In midish, time is split in <I>measures</I>. Each measure
+	is split in <I>beats</I> and each beat is split in 
+	<I>tics</I>. The <I>tic</I> is the fundamental
 	time unit in midish. Duration of tics is fixed
-	by the <EMPH>tempo</EMPH>. By default midish uses:
+	by the <I>tempo</I>. By default midish uses:
 		<UL>
 		<LI>24 tics per beat
 		<LI>4 beats per measure
@@ -393,7 +393,7 @@
 	<P>
 	Tracks aren't binded to any particular device/channel; a track
 	can contain midi data from any device/channel. A track can have its 
-	<EMPH>current filter</EMPH>; in this case, midi events
+	<I>current filter</I>; in this case, midi events
 	are passed through that filter before being recorded. If the
 	track has no current filter, then the song current
 	filter is used instead. If there is neither track current
