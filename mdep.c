@@ -64,7 +64,6 @@ void
 mux_mdep_init(void) {
 	struct mididev_s *i;
 	for (i = mididev_list; i != 0; i = i->next) {
-		rmidi_init(RMIDI(i));
 		RMIDI(i)->mdep.fd = open(RMIDI(i)->mdep.path, O_RDWR);
 		if (RMIDI(i)->mdep.fd < 0) {
 			perror(RMIDI(i)->mdep.path);
@@ -87,7 +86,6 @@ mux_mdep_done(void) {
 		if (RMIDI(i)->mdep.fd >= 0) {
 			close(RMIDI(i)->mdep.fd);
 		}
-		rmidi_done(RMIDI(i));
 	}
 }
 

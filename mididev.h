@@ -34,13 +34,15 @@
 struct mididev_s {
 	struct mididev_s *next;
 	unsigned unit, in, out;
-	unsigned transmit_rt;
+	unsigned sendrt;
+	unsigned tic_per_unit, tic_count;
 };
 
 void mididev_init(struct mididev_s *o);
 void mididev_done(struct mididev_s *o);
 
 extern struct mididev_s *mididev_list;
+extern struct mididev_s *mididev_master;
 extern struct mididev_s *mididev_byunit[];
 
 void mididev_listinit(void);

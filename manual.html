@@ -157,7 +157,9 @@
 		<TT>filtnoctlmap</TT>,
 		<TT>filtnokeydrop</TT> and
 		<TT>filtnokeymap</TT>.
-
+	<LI> added support for external midi synchronisation,
+	     added <TT>devsetmaster</TT>, <TT>devgetmaster</TT>
+	     and <TT>devsendrt</TT>
 	</UL>
 
 <A name="language"></A>
@@ -189,7 +191,7 @@
 		<TABLE border="1">
 		<TR>	<TD><TT>123</TT>	<TD>123 in decimal
 		<TR>	<TD><TT>0x100</TT>	<TD>256 in hex
-		<TR>	<TD><TT>0xF0<TT>	<TD>240 in hex
+		<TR>	<TD><TT>0xF0</TT>	<TD>240 in hex
 		</TABLE>
 			
 	<LI> String constants
@@ -1076,6 +1078,27 @@ is a quoted string.
 <BLOCKQUOTE>
 detach device number <TT>devnum</TT>
 </BLOCKQUOTE>
+
+<B><TT>devsetmaster devnum</TT></B>
+<BLOCKQUOTE>
+set device number <TT>devnum</TT> to be the master clock source.
+It will give tempo, start event and stop event. If <TT>devnum</TT> is
+<TT>nil</TT>, then the internal clock will be used and midish
+will act as master device.
+</BLOCKQUOTE>
+
+<B><TT>devgetmaster devnum</TT></B>
+<BLOCKQUOTE>
+return the current master device. If non, <TT>nil</TT> is
+returned.
+</BLOCKQUOTE>
+
+<B><TT>devsendrt devnum bool</TT></B>
+<BLOCKQUOTE>
+If <TT>bool</TT> is true, the real-time information (midi tics, 
+midi start and midi trop events) will be transmitted to device
+number <TT>devnum</TT>.  Overwise no real-time midi events are transmitted.
+</BLOCKQUOTE>
 		
 <H2>Misc. functions</H2>
 
@@ -1113,7 +1136,7 @@ is a quoted string.
 sets debug-flag <TT>flag</TT> to (integer) value <TT>val</TT>. 
 If <TT>val=0</TT> the corresponding debug-info are
 turned off. <TT>flag</TT> can be: <TT>parse</TT>, <TT>tree</TT>, 
-<TT>filt</TT>
+<TT>rmidi</TT> and <TT>filt</TT>
 </BLOCKQUOTE>
 
 <B><TT>panic</TT></B>

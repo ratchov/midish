@@ -64,4 +64,6 @@ void rmidi_mdep_done(struct rmidi_s *);
 
 void rmidi_inputcb(struct rmidi_s *, unsigned char *, unsigned);
 
+extern unsigned rmidi_debug;
+
 #endif /* SEQ_RMIDI_H */

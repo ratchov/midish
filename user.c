@@ -51,6 +51,7 @@
 #include "user.h"
 #include "smf.h"
 #include "saveload.h"
+#include "rmidi.h"	/* for rmidi_debug */
 
 struct song_s *user_song;
 struct textout_s *user_stdout;
@@ -336,6 +337,8 @@ user_func_debug(struct exec_s *o) {
 		parse_debug = value;
 	} else if (str_eq(flag, "tree")) {
 		tree_debug = value;
+	} else if (str_eq(flag, "rmidi")) {
+		rmidi_debug = value;
 	} else if (str_eq(flag, "filt")) {
 		filt_debug = value;
 	} else {
@@ -1778,6 +1781,61 @@ user_func_devdetach(struct exec_s *o) {
 	return mididev_detach(unit);
 }
 
+unsigned
+user_func_devsetmaster(struct exec_s *o) {
+	struct var_s *arg;
+	long unit;
+	
+	arg = exec_varlookup(o, "unit");
+	if (!arg) {
+		dbg_puts("user_func_devsetmaster: no such var\n");
+		dbg_panic();
+	}
+	if (arg->data->type == DATA_NIL) {
+		mididev_master = 0;
+		return 0;
+	} else if (arg->data->type == DATA_LONG) {
+		unit = arg->data->val.num;
+		if (unit < 0 || unit >= DEFAULT_MAXNDEVS || !mididev_byunit[unit]) {
+			user_printstr("no such device\n");
+			return 0;		
+		}
+		mididev_master = mididev_byunit[unit];
+		return 1;
+	}
+	
+	user_printstr("bad argument type for 'unit'\n");
+	return 0;
+}
+
+
+unsigned
+user_func_devgetmaster(struct exec_s *o) {
+	if (mididev_master) {
+		exec_putacc(o, data_newlong(mididev_master->unit));
+	} else {
+		exec_putacc(o, data_newnil());
+	}
+	return 1;
+}
+
+unsigned
+user_func_devsendrt(struct exec_s *o) {
+	long unit, sendrt;
+
+	if (!exec_lookuplong(o, "unit", &unit) || 
+	    !exec_lookupbool(o, "sendrt", &sendrt)) {
+		return 0;
+	}
+	if (unit < 0 || unit >= DEFAULT_MAXNDEVS || !mididev_byunit[unit]) {
+		user_printstr("no such device\n");
+		return 0;		
+	}
+	mididev_byunit[unit]->sendrt = sendrt;
+	return 1;
+}
+
+
 
 void
 user_mainloop(void) {
@@ -2013,6 +2071,12 @@ user_mainloop(void) {
 	exec_newbuiltin(exec, "devdetach", user_func_devdetach,
 			name_newarg("unit", 0));
 	exec_newbuiltin(exec, "devlist", user_func_devlist, 0);
+	exec_newbuiltin(exec, "devsetmaster", user_func_devsetmaster,
+			name_newarg("unit", 0));
+	exec_newbuiltin(exec, "devgetmaster", user_func_devgetmaster, 0);
+	exec_newbuiltin(exec, "devsendrt", user_func_devsendrt,
+			name_newarg("unit", 
+			name_newarg("sendrt", 0)));
 
 	user_parsefile(exec, user_rcname());	/* parse rc file */
 	

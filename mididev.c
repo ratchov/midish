@@ -52,7 +52,7 @@ mididev_init(struct mididev_s *o) {
 	 * by default we don't transmit realtime information 
 	 * (midi_tic, midi_start, midi_stop etc...)
 	 */
-	o->transmit_rt = 0;
+	o->sendrt = 0;
 }
 
 void
@@ -61,7 +61,7 @@ mididev_done(struct mididev_s *o) {
 
 /* -------------------------------------------- device list stuff --- */
 
-struct mididev_s *mididev_list;
+struct mididev_s *mididev_list, *mididev_master;
 struct mididev_s *mididev_byunit[DEFAULT_MAXNDEVS];
 
 void
@@ -71,6 +71,7 @@ mididev_listinit(void) {
 		mididev_byunit[i] = 0;
 	}
 	mididev_list = 0;
+	mididev_master = 0;	/* no master, use internal clock */
 }
 
 void
@@ -85,6 +86,7 @@ mididev_listdone(void) {
 			mididev_byunit[i] = 0;
 		}
 	}
+	mididev_master = 0;
 	mididev_list = 0;
 }
 
@@ -120,6 +122,11 @@ mididev_detach(unsigned unit) {
 		return 0;
 	}
 	
+	if (mididev_byunit[unit] == mididev_master) {
+		user_printstr("cant detach master device\n");
+		return 0;
+	}
+	
 	for (i = &mididev_list; *i != 0; i = &(*i)->next) {
 		dev = *i;
 		if (dev->unit == unit) {
@@ -133,4 +140,5 @@ mididev_detach(unsigned unit) {
 	dbg_panic();
 	return 0;
 }
+
 

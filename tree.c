@@ -315,6 +315,22 @@ exec_lookuplong(struct exec_s *exec, char *name, long *val) {
 	return 1;
 }
 
+unsigned
+exec_lookupbool(struct exec_s *exec, char *name, long *val) {
+	struct var_s *var;
+	unsigned res;
+	
+	var = exec_varlookup(exec, name);
+	if (var == 0) {
+		exec_error(exec, name);
+		exec_error(exec, ": no such bool\n");
+		return 0;
+	}
+	res = data_eval(var->data);
+	*val = res;
+	return 1;
+}
+
 
 /* --------------------------------------------------------- node --- */
 

@@ -50,6 +50,8 @@
 #define MIDI_STOP	0xfc
 #define MIDI_ACK	0xfe
 
+unsigned rmidi_debug = 0;
+
 struct rmidi_s *
 rmidi_new(void) {
 	struct rmidi_s *o;
@@ -94,6 +96,13 @@ void
 rmidi_inputcb(struct rmidi_s *o, unsigned char *buf, unsigned count) {
 	struct ev_s ev;
 	unsigned data;
+
+	if (rmidi_debug) {
+		dbg_putu(o->mididev.unit);
+		dbg_puts(" < ");
+		dbg_putx(data);
+		dbg_puts("\n");
+	}
 
 	while (count != 0) {
 		data = *buf;
@@ -154,6 +163,12 @@ rmidi_inputcb(struct rmidi_s *o, unsigned char *buf, unsigned count) {
 
 void
 rmidi_out(struct rmidi_s *o, unsigned data) {
+	if (rmidi_debug) {
+		dbg_putu(o->mididev.unit);
+		dbg_puts(" > ");
+		dbg_putx(data);
+		dbg_puts("\n");
+	}
 	if (o->oused == RMIDI_BUFLEN) {
 		dbg_puts("rmidi_out: buffer overflow\n");
 		dbg_panic();

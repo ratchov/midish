@@ -57,7 +57,6 @@
 unsigned long mux_ticlength, mux_curpos, mux_nextpos;
 unsigned mux_curtic;
 unsigned mux_phase;
-unsigned mux_master;
 void (*mux_cb)(void *, struct ev_s *);
 void *mux_addr;
 
@@ -75,7 +74,6 @@ mux_init(void (*cb)(void *, struct ev_s *), void *addr) {
 	mux_curpos = 0;
 	mux_nextpos = 0;
 	mux_phase = MUX_STOP;
-	mux_master = 1;
 	mux_cb = cb;
 	mux_addr = addr;
 	mux_mdep_init();
@@ -133,7 +131,7 @@ mux_timercb(unsigned long delta) {
 	struct ev_s ev;
 	mux_curpos += delta;
 
-	if (mux_master) {
+	if (!mididev_master) {	/* if internal clock source */
 		if (mux_phase == MUX_STARTWAIT) {
 			mux_chgphase(MUX_START);
 			/*
@@ -191,7 +189,8 @@ mux_evcb(unsigned unit, struct ev_s *ev) {
 	
 	switch(ev->cmd) {
 	case EV_TIC:
-		if (!mux_master) {
+		if (mididev_master && 				/* if external clock */
+		    mididev_byunit[unit] == mididev_master) {	
 			if (mux_phase == MUX_FIRST) {
 				mux_chgphase(MUX_NEXT);
 			} else if (mux_phase == MUX_START) {
@@ -207,14 +206,16 @@ mux_evcb(unsigned unit, struct ev_s *ev) {
 		}
 		break;
 	case EV_START:
-		if (!mux_master) {
+		if (mididev_master && 				/* if external clock */
+		    mididev_byunit[unit] == mididev_master) {	
 			mux_chgphase(MUX_START);
 			if (mux_cb)
 				mux_cb(mux_addr, ev);
 		}
 		break;
 	case EV_STOP:
-		if (!mux_master) {
+		if (mididev_master && 				/* if external clock */
+		    mididev_byunit[unit] == mididev_master) {	
 			mux_chgphase(MUX_STOP);
 			if (mux_cb)
 				mux_cb(mux_addr, ev);
@@ -249,7 +250,7 @@ mux_putev(struct ev_s *ev) {
 		}
 	} else {
 		for (dev = mididev_list; dev != 0; dev = dev->next) {
-			if (dev->transmit_rt) {
+			if (dev->sendrt && dev != mididev_master) {
 				rmidi_putev(RMIDI(dev), ev);
 			}
 		}
