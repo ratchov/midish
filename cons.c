@@ -39,6 +39,7 @@
 
 #include "dbg.h"
 #include "textio.h"
+#include "cons.h"
 
 #ifdef HAVE_READLINE
 unsigned cons_index, cons_interactive;

@@ -53,7 +53,7 @@ mkcurves:	mkcurves.c
 .c.o:
 		${CC} ${CFLAGS} ${INCLUDE} -c $<
 
-cons.o:		cons.c cons.h
+cons.o:		cons.c dbg.h cons.h textio.h
 data.o:		data.c dbg.h data.h str.h user.h
 dbg.o:		dbg.c dbg.h dbg.h
 ev.o:		ev.c dbg.h ev.h default.h str.h

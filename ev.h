@@ -46,6 +46,8 @@ struct ev_s {
 #define EV_MAXB0	0x7f
 #define EV_MAXB1	0x7f
 #define EV_MAXCHAN	(16 * DEFAULT_MAXNDEVS - 1)
+#define EV_CHANMASK	((unsigned char)0x0f)
+#define EV_DEVMASK	((unsigned char)0xf0)
 			unsigned char chan, b0, b1;
 		} voice;
 	} data;
@@ -89,6 +91,8 @@ unsigned ev_str2cmd(struct ev_s *ev, char *str);
 #define EV_GETNOTE(ev)	((ev)->data.voice.b0)
 #define EV_GETCHAN(ev)	((ev)->data.voice.chan)
 
-#define EV_NOFFVEL	100
+#define EV_NOFF_DEFAULTVEL	100
+#define EV_BEND_DEFAULTLO	0
+#define EV_BEND_DEFAULTHI	0x40
 
 #endif /* SEQ_EV_H */

@@ -139,7 +139,7 @@ rmidi_inputcb(struct rmidi_s *o, unsigned char *buf, unsigned count) {
 					ev.data.voice.chan = (o->istatus & 0x0f) + (o->mididev.unit << 4);
 					if (ev.cmd == EV_NON && ev.data.voice.b1 == 0) {
 						ev.cmd = EV_NOFF;
-						ev.data.voice.b1 = 100;
+						ev.data.voice.b1 = EV_NOFF_DEFAULTVEL;
 					}
 					mux_evcb(o->mididev.unit, &ev);
 				}

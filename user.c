@@ -1452,8 +1452,8 @@ user_func_shut(struct exec_s *o) {
 			mux_putev(&ev);
 			ev.cmd = EV_BEND;
 			ev.data.voice.chan = i + (dev->unit << 4);
-			ev.data.voice.b0 = 0;
-			ev.data.voice.b1 = 0x40;
+			ev.data.voice.b0 = EV_BEND_DEFAULTLO;
+			ev.data.voice.b1 = EV_BEND_DEFAULTHI;
 		}
 	}
 	

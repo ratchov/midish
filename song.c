@@ -287,7 +287,7 @@ song_metrotic(struct song_s *o) {
 		}
 		mux_putev(&ev);
 		ev.cmd = EV_NOFF;
-		ev.data.voice.b0 = EV_NOFFVEL;
+		ev.data.voice.b0 = EV_NOFF_DEFAULTVEL;
 		mux_putev(&ev);
 	}
 }

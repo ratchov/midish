@@ -40,9 +40,6 @@
 #include "user.h"
 #include "smf.h"
 
-#define SMF_MAXNAME 	15		/* must be <= 127 */
-#define SMF_MAXLEN 	(0x100000)	
-
 char smftype_header[4] = { 'M', 'T', 'h', 'd' };
 char smftype_track[4]  = { 'M', 'T', 'r', 'k' };
 
@@ -605,7 +602,7 @@ smf_gettrack(struct smf_s *o, struct song_s *s, struct songtrk_s *t) {
 		putev:
 			if (ev.cmd == EV_NON && ev.data.voice.b1 == 0) {
 				ev.cmd = EV_NOFF;
-				ev.data.voice.b1 = 100;
+				ev.data.voice.b1 = EV_NOFF_DEFAULTVEL;
 			}
 			track_evput(&t->track, &tp, &ev);
 			/*

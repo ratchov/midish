@@ -543,11 +543,11 @@ filt_stateshut(struct filt_s *o, struct state_s **p) {
 	
 	if (ev->cmd == EV_NON) {
 		ev->cmd = EV_NOFF;
-		ev->data.voice.b1 = 100;
+		ev->data.voice.b1 = EV_NOFF_DEFAULTVEL;
 		filt_pass(o, ev);
 	} else if (ev->cmd == EV_BEND) {
-		ev->data.voice.b0 = 0;
-		ev->data.voice.b1 = 0x40;
+		ev->data.voice.b0 = EV_BEND_DEFAULTLO;
+		ev->data.voice.b1 = EV_BEND_DEFAULTHI;
 		filt_pass(o, ev);
 	}
 	filt_statedel(o, p);
@@ -608,9 +608,9 @@ filt_matchrule(struct filt_s *o, struct rule_s *r, struct ev_s *ev) {
 		
 	switch(r->type) {
 	case RULE_DEVMAP:
-		if ((ev->data.voice.chan & 0xf0) == r->ichan) {
+		if ((ev->data.voice.chan & EV_DEVMASK) == r->ichan) {
 			te = *ev;
-			te.data.voice.chan &= 0x0f;
+			te.data.voice.chan &= EV_CHANMASK;
 			te.data.voice.chan |= r->ochan;
 			filt_pass(o, &te);
 			return 1;
@@ -716,7 +716,8 @@ filt_run(struct filt_s *o, struct ev_s *ev) {
 		}
 	} else if (ev->cmd == EV_BEND) {
 		p = filt_statelookup(o, ev);
-		if (ev->data.voice.b0 == 0 && ev->data.voice.b1 == 0x40) {
+		if (ev->data.voice.b0 == EV_BEND_DEFAULTLO && 
+		    ev->data.voice.b1 == EV_BEND_DEFAULTHI) {
 			if (p) {
 				filt_statedel(o, p);
 			}
