@@ -27,13 +27,13 @@
 <H1>Introduction</H1>
 
 	<P>
-	Midish is an open-source MIDI sequencer/filter for Unix-like 
-	operating systems (tested on OpenBSD and Linux)
-	implemented as a simple command-line interpreter 
-	(like a shell)
+	Midish is a MIDI sequencer/filter driven by a command-line 
+	interpreter (like a shell).
 	
 	Once midish started, the interpreter prompts
-	for commands. One can configure midi-devices, 
+	for commands. 
+
+	You can configure midi-devices, 
 	create tracks, define channel/controller mappings,
 	route events from one device to another, playback, 
 	record etc.
@@ -42,32 +42,39 @@
 	<PRE>
 	midish
 	</PRE>
-	
-	Now you can issue commands, for instance:
+
+	At the prompt you can issue commands, like:
 	<PRE>
 	print "hello world"
 	</PRE>
+
+	Midish has two modes: <I>prompt mode</I> and <I>performance mode</I>.
+
+	<P>
+	In prompt mode, midish interactively waits for commands
+	from the command-line.
+
+	Midi devices aren't used, they are let closed in order
+	to let other applications to use them.
+
+	<P>
+	In performance mode, midish processes midi input/output
+	in real-time.
+
+	Commands cannot be issued on the command-line.
+	This mode is typically used for playback and record.
 
 <A name="dev"></A>
 <H1>Device setup</H1>
 
 	In midish, midi-devices are numbered from 0 to 15.
 	Each midi-device has its "slot number". For instance, 
-	suppose	that we have:
+	suppose	that we have a midi sound module known as
+	<TT>/dev/rmidi3</TT> and a midi keyboard known as
+	<TT>/dev/rmidi2</TT>.
 
-	<UL>
-	<LI>
-		a midi sound module known as
-		<TT>/dev/rmidi3</TT> by the operating
-		system
-	<LI>
-		a midi keyboard known as
-		<TT>/dev/rmidi2</TT> by the operating
-		system
-	</UL>
-	
 	To configure the module as device number 0 and
-	the keyboard as device number 1, type:
+	the keyboard as device number 1, just type:
 	<PRE>
 	devattach 0 "/dev/rmidi3"
 	devattach 1 "/dev/rmidi2"
@@ -75,45 +82,45 @@
 	
 	<P>
 	<B>Note:</B>
-	we strongly suggest that the main sound module (most used)
-	be attached as device number 0. This makes easier
-	to import/export music from systems with different configurations.
-
+	To make easier the import/export procedure from systems 
+	with different configurations, I strongly recommend to 
+	attach the main sound module (the one you use mostly)
+	as device number 0.
+	
 	<P>
-	Now, let's check that the sound module is properly configured, 
-	for instance we can play the demo song. Put your module in 
-	general midi mode and type:
+	In order to check that the sound module is properly configured
+	play the demo song: put your module (output midi device) 
+	in "general midi" mode and type:
 	<PRE>
 	songload "sample.sng"
 	songplay
 	</PRE>
-	
-	Once your are satisfied by your setup,
-	you can put the "<TT>devattach</TT>" commands
-	in your <TT>$HOME/.midishrc</TT>. They will be
+
+	When your configuration is setup, put your "devattach" 
+	commands in your <TT>$HOME/.midishrc</TT>. It will be
 	automatically executed the next time you run midish.
 	
 <A name="filt"></A>
 <H1>Filtering/routing</H1>
 
 	<P>
-	Midish supports midi filtering. That means, that you can
-	define a <I>filter</I> that transforms input events before
-	sending them to the output. Currently a filter can mainly be
-	used to:
+	Midish supports midi filtering: you can define <I>a filter</I> to 
+	transform input events and send them to the output. 
+	
+	Filters are in general used to:
 	<UL>
 	<LI>
-	route events from one device to another one
+	route events from a device to another
 	<LI>
-	map a controller to another one
+	map a controller to another
 	<LI>
-	make keyboard splits
+	split the keyboard
 	<LI>
 	etc...
 	</UL>
 
 	<P>
-	If no filters are defined, in performance mode, input is send 
+	If no filters are defined, in performance mode input is send 
 	to the output as-is. Filters are defined as follows:
 	<PRE>
 	filtnew myfilt			# define filter 'myfilt'
