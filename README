@@ -480,6 +480,13 @@ Filter functions:
 		all rules with input channel equal to 'oldchan'
 		to 'newchan'
 
+	filtdevmap filtname inputdev outputdev
+
+		route all events from device 'inputdev' 
+		to device 'outputdev'. If multiple dev maps are 
+		defined for the same input device then events are 
+		duplicated
+
 	filtchanmap filtname inputchan outputchan
 
 		route all events from channel 'inputchan' 

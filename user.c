@@ -915,9 +915,31 @@ user_func_filtinfo(struct exec_s *o) {
 	for (i = f->filt.chan_rules; i != 0; i = i->next) {
 		rule_output(i, user_stdout);
 	}
+	for (i = f->filt.dev_rules; i != 0; i = i->next) {
+		rule_output(i, user_stdout);
+	}
 	return 1;
 }
 
+
+unsigned
+user_func_filtdevmap(struct exec_s *o) {
+	struct songfilt_s *f;
+	long idev, odev;
+	
+	if (!exec_lookupfilt(o, "filtname", &f) ||
+	    !exec_lookuplong(o, "indev", &idev) ||
+	    !exec_lookuplong(o, "outdev", &odev)) {
+		return 0;
+	}
+	if (idev < 0 || idev >= DEFAULT_MAXNDEVS ||
+	    odev < 0 || odev >= DEFAULT_MAXNDEVS) {
+	    	user_printstr("device number out of range\n");
+		return 0;
+	}
+	filt_new_devmap(&f->filt, 16 * idev, 16 * odev);
+	return 1;
+}
 
 unsigned
 user_func_filtchanmap(struct exec_s *o) {
@@ -1086,7 +1108,17 @@ user_func_songgetcurquant(struct exec_s *o) {
 unsigned
 user_func_songsetcurtrack(struct exec_s *o) {
 	struct songtrk_s *t;
+	struct var_s *arg;
 	
+	arg = exec_varlookup(o, "trackname");
+	if (!arg) {
+		dbg_puts("user_func_songsetcurtrack: 'trackname': no such param\n");
+		return 0;
+	}
+	if (arg->data->type == DATA_NIL) {
+		user_song->curtrk = 0;
+		return 1;
+	} 
 	if (!exec_lookuptrack(o, "trackname", &t)) {
 		return 0;
 	}
@@ -1109,7 +1141,17 @@ user_func_songgetcurtrack(struct exec_s *o) {
 unsigned
 user_func_songsetcurfilt(struct exec_s *o) {
 	struct songfilt_s *f;
+	struct var_s *arg;
 	
+	arg = exec_varlookup(o, "filtname");
+	if (!arg) {
+		dbg_puts("user_func_songsetcurfilt: 'filtname': no such param\n");
+		return 0;
+	}
+	if (arg->data->type == DATA_NIL) {
+		user_song->curfilt = 0;
+		return 1;
+	} 
 	if (!exec_lookupfilt(o, "filtname", &f)) {
 		return 0;
 	}
@@ -1586,6 +1628,10 @@ user_mainloop(void) {
 			name_newarg("filtname", 0));
 	exec_newbuiltin(exec, "filtreset", user_func_filtreset, 
 			name_newarg("filtname", 0));
+	exec_newbuiltin(exec, "filtdevmap", user_func_filtdevmap,
+			name_newarg("filtname",
+			name_newarg("indev", 
+			name_newarg("outdev", 0))));
 	exec_newbuiltin(exec, "filtchanmap", user_func_filtchanmap,
 			name_newarg("filtname",
 			name_newarg("inchan", 

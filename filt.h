@@ -48,6 +48,7 @@ struct state_s {
 #define RULE_CTLMAP	1
 #define RULE_KEYMAP	2
 #define RULE_CHANMAP	3
+#define RULE_DEVMAP	4
 
 struct rule_s {
 	struct rule_s *next;
@@ -62,7 +63,7 @@ struct rule_s {
 struct filt_s {
 	/* config */
 	unsigned ichan, ochan;
-	struct rule_s *voice_rules, *chan_rules;
+	struct rule_s *voice_rules, *chan_rules, *dev_rules;
 	
 	
 	/* real-time stuff*/
@@ -96,6 +97,7 @@ void             filt_stateshut(struct filt_s *o, struct state_s **p);
 void filt_new_keymap(struct filt_s *o, unsigned ichan, unsigned ochan, unsigned key_start, unsigned key_end, int key_plus);
 void filt_new_ctlmap(struct filt_s *o, unsigned ichan, unsigned ochan, unsigned ictl, unsigned octl);
 void filt_new_chanmap(struct filt_s *o, unsigned ichan, unsigned ochan);
+void filt_new_devmap(struct filt_s *o, unsigned idev, unsigned odev);
 void filt_changein(struct filt_s *o, unsigned oldc, unsigned newc);
 
 extern unsigned filt_debug;

@@ -130,6 +130,7 @@ rule_changein(struct rule_s *o, unsigned oldc, unsigned newc) {
 			o->ichan = newc;
 		}
 		break;
+	case RULE_DEVMAP:
 	default:
 		break;
 	}
@@ -140,6 +141,11 @@ rule_changein(struct rule_s *o, unsigned oldc, unsigned newc) {
 unsigned
 rule_isused(struct rule_s *o) {
 	switch(o->type) {
+	case RULE_DEVMAP:
+		if (o->ichan != o->ochan) {
+			return 1;
+		} 
+		break;
 	case RULE_CHANMAP:
 		if (o->ichan != o->ochan) {
 			return 1;
@@ -200,6 +206,35 @@ rule_checkctl(struct rule_s *o) {
 
 
 #endif
+
+void
+filt_new_devmap(struct filt_s *o,
+    unsigned ichan, unsigned ochan) {
+	struct rule_s **i, *found;
+	struct rule_s *r;
+	
+	i = &o->dev_rules;
+	while(*i != 0) {
+		if ((*i)->type == RULE_DEVMAP && 
+		    (*i)->ochan == ochan) {
+			found = *i;
+			*i = found->next;
+			mem_free(found);
+		} else {
+			i = &(*i)->next;
+		}
+	}
+	
+	if (ichan != ochan) {
+		r = (struct rule_s *)mem_alloc(sizeof(struct rule_s));
+		r->type = RULE_DEVMAP;
+		r->ichan = ichan;
+		r->ochan = ochan;
+		r->next = o->dev_rules;
+		o->dev_rules = r;
+	}
+}
+
 
 void
 filt_new_chanmap(struct filt_s *o,
@@ -298,6 +333,7 @@ filt_new_ctlmap(struct filt_s *o,
 }
 
 
+
 void
 filt_changein(struct filt_s *o, unsigned oldc, unsigned newc) {
 	struct rule_s *i;
@@ -329,7 +365,7 @@ filt_init(struct filt_s *o) {
 		
 	o->statelist = 0;
 	o->active = 1;
-	o->voice_rules = o->chan_rules = 0;
+	o->voice_rules = o->chan_rules = o->dev_rules = 0;
 	
 /*	filt_new_chanmap(o, 16, 0);
 	filt_new_ctlmap(o, 16, 0, 7, 11);
@@ -351,6 +387,11 @@ filt_reset(struct filt_s *o) {
 	while(o->chan_rules) {
 		r = o->chan_rules;
 		o->chan_rules = r->next;
+		mem_free(r); 
+	}
+	while(o->dev_rules) {
+		r = o->dev_rules;
+		o->dev_rules = r->next;
 		mem_free(r); 
 	}
 	while (o->statelist) {
@@ -559,11 +600,22 @@ filt_shut(struct filt_s *o) {
 	 * the event then return 1, else retrun 0
 	 */
 	 	
-
+extern void *user_stdout;
+		
 unsigned
 filt_matchrule(struct filt_s *o, struct rule_s *r, struct ev_s *ev) {
 	struct ev_s te;
+		
 	switch(r->type) {
+	case RULE_DEVMAP:
+		if ((ev->data.voice.chan & 0xf0) == r->ichan) {
+			te = *ev;
+			te.data.voice.chan &= 0x0f;
+			te.data.voice.chan |= r->ochan;
+			filt_pass(o, &te);
+			return 1;
+		}
+		break;
 	case RULE_CHANMAP:
 		if (ev->data.voice.chan == r->ichan) {
 			te = *ev;
@@ -699,6 +751,11 @@ pass:
 	}
 	if (!ret) {
 		for (i = o->chan_rules; i != 0; i = i->next) {
+			ret |= filt_matchrule(o, i, ev);
+		}
+	}
+	if (!ret) {
+		for (i = o->dev_rules; i != 0; i = i->next) {
 			ret |= filt_matchrule(o, i, ev);
 		}
 	}

@@ -148,6 +148,12 @@ void
 rule_output(struct rule_s *o, struct textout_s *f) {
 	textout_indent(f);
 	switch(o->type) {
+	case RULE_DEVMAP:
+		textout_putstr(f, "devmap ");		
+		textout_putlong(f, o->ichan >> 4);
+		textout_putstr(f, " ");
+		textout_putlong(f, o->ochan >> 4);
+		break;
 	case RULE_CHANMAP:
 		textout_putstr(f, "chanmap ");		
 		chan_output(o->ichan, f);
@@ -192,6 +198,9 @@ filt_output(struct filt_s *o, struct textout_s *f) {
 	textout_putstr(f, "{\n");
 	textout_shiftright(f);
 	
+	for (i = o->dev_rules; i != 0; i = i->next) {
+		rule_output(i, f);
+	}
 	for (i = o->chan_rules; i != 0; i = i->next) {
 		rule_output(i, f);
 	}
@@ -629,6 +638,14 @@ parse_rule(struct parse_s *o, struct filt_s *f) {
 			return 0;
 		}
 		filt_new_chanmap(f, ichan, ochan);
+	} else if (str_eq(o->lex.strval, "devmap")) {
+		if (!parse_long(o, DEFAULT_MAXNDEVS - 1, &ichan)) {
+			return 0;
+		}
+		if (!parse_long(o, DEFAULT_MAXNDEVS - 1, &ochan)) {
+			return 0;
+		}
+		filt_new_devmap(f, ichan * 16, ochan * 16);
 	} else {
 		parse_error(o, "unknown filter rule\n");
 		return 0;
