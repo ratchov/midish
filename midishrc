@@ -5,25 +5,6 @@
 #devattach 1 "/dev/rmidi2"
 
 #
-# create a new channel
-#
-proc nc name chan {
-	channew $name $chan
-}
-
-#
-# create a new track 
-#
-proc nt name { 
-	tracknew $name 
-	let filt = [songgetcurfilt]
-	if (filt) {
-		tracksetcurfilt $name $filt
-	}
-	songsetcurtrack $name
-}
-
-#
 # create a new filter 
 #
 proc nf name { 
@@ -31,44 +12,12 @@ proc nf name {
 	songsetcurfilt $name
 }
 
-
-#
-# set the track's filter
-#
-proc tf filt {
-	if [filtexists $filt] {
-		let track = [songgetcurtrack]
-		if (track) {
-			tracksetcurfilt $track $filt
-		} else {
-			print "warning, no current track";
-		}
-	} else {
-		print { "no such track :" $name }
-	}
-}
-
-#
-# set the current track
-#
-proc ct name { 
-	songsetcurtrack $name
-	if [songgetcurtrack] {
-		let filt = [trackgetcurfilt $name]
-		if (filt) {
-			songsetcurfilt $filt
-		}
-	}
-}
-
-
 #
 # set the current filt
 #
 proc cf name { 
 	songsetcurfilt $name
 }
-
 
 #
 # some filter rules
@@ -83,6 +32,40 @@ proc ctlmap i o ic oc {
 	filtctlmap [songgetcurfilt] $i $o $ic $oc
 }
 
+#
+# create a new track 
+#
+proc nt name { 
+	tracknew $name 
+	tracksetcurfilt $name [songgetcurfilt]
+	songsetcurtrack $name
+}
+
+#
+# set the current track
+#
+proc ct name { 
+	songsetcurtrack $name
+	if [songgetcurtrack] {
+		let filt = [trackgetcurfilt $name]
+		songsetcurfilt $filt
+	}
+}
+
+#
+# set the track's filter
+#
+proc tf filt {
+	let track = [songgetcurtrack]
+	tracksetcurfilt $track $filt
+}
+
+#
+# create a new channel
+#
+proc nc name chan {
+	channew $name $chan
+}
 
 #
 # do nothing, just echo trough the configuration of the current track
@@ -152,7 +135,7 @@ proc n denom {
 # quantise
 #
 proc q amount rate {
-	trackquant [songgetcurtrack] [songgetcurpos] $amount [songgetcurquant] $rate
+	trackquant [songgetcurtrack] [songgetcurpos] $amount $rate [songgetcurquant]
 } 
 
 #
@@ -341,3 +324,4 @@ proc reverb	chan value { chanconfev $chan {ctl 0 91 $value}; }
 proc chorus	chan value { chanconfev $chan {ctl 0 93 $value}; }
 
 print "midishrc completed"
+
