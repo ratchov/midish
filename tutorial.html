@@ -10,8 +10,9 @@
 <P>
 <UL>
 <LI><A href="#intro">Introduction</A>
-<LI><A href="#setup">Device setup</A>
-<LI><A href="#filter">Filtering/routing</A>
+<LI><A href="#dev">Device setup</A>
+<LI><A href="#filt">Filtering/routing</A>
+<LI><A href="#chan">Channels</A>
 </UL>
 
 
@@ -40,7 +41,7 @@
 	print "hello world"
 	</PRE>
 
-<A name="setup"></A>
+<A name="dev"></A>
 <H1>Device setup</H1>
 
 	In midish, midi-devices are numbered from 0 to 15.
@@ -85,7 +86,7 @@
 	in your <TT>$HOME/.midishrc</TT>. They will be
 	automaticaly executed the next time you run midish.
 	
-<A name="filter"></A>
+<A name="filt"></A>
 <H1>Filtering/routing</H1>
 
 	<P>
@@ -118,6 +119,12 @@
 	<PRE>
 	songsetcurfilt myfilt		# make 'myfilt' the current filter
 	</PRE>
+	
+	Once the filter is created, filtering rules can be added
+	using <TT>filtdevmap, filtchanmap, filtctlmap, filtkeymap</TT>.
+	Rules can be listed with <TT>filtinfo</TT>. Currently it
+	is not yet possible to modify/remove individual rules, the
+	only way is to remove all rules with <TT>filtreset</TT>.
 	
 <H2>Device redirections</H2>
 
@@ -193,14 +200,93 @@
 	(one octave) notes played on device 1, channel 0 (keyboard) and
 	sends them on device 0 channel 2 (sound-module). First
 	we create the input filter:
+	<PRE>
+	filtnew mypiano			# define filter 'mypiano'
+	songsetcurfilt mypiano		# make 'mypiano' the current filter
+	</PRE>
+	then, we create a add a channel-map and a key-map rule to the filter:
+	<PRE>
+	filtchanmap mypiano {1 0} {0 2}
+	filtkeymap mypiano {1 0} {0 2} 0 127 12
+	</PRE>
+	both rules are necessary. Note events are handled by 
+	the key-rule and other events (controllers) fall trough
+	the channel-rule. Arguments 4 and 5 to <TT>filtkeymap</TT>
+	give the note range that will be transposed 
+	(from 0 to 127, ie the whole keyboard)
+	and the 6-th argument give the number of half-tones 
+	(12, one octave).
 	
 <H2>Keyboard splits</H2>
 
-	Let us create a new filter that splits the keyboard
-	in two parts (left and right). Notes on the left part
-	will be routed to channel 1 of the sound module and
-	notes on the right part will be routed to channel 2
-	of the sound module. First we create the filter
+	In the same way we can create a keyboard-split with two
+	key-rules and two channel-rules. 
+	Let us splits the
+	keyboard in two parts (left and right) on note 64 (note E3),  in
+	the middle. 
+	Notes on the left part 	will be routed to
+	channel 3  of the sound module and notes on the right
+	part will be routed to channel 2 of the sound module.
+	<PRE>
+	filtnew mysplit
+	filtchanmap mysplit {1 0} {0 2}
+	filtkeymap mysplit {1 0} {0 2} 0 63 0
+	filtchanmap mysplit {1 0} {0 3}
+	filtkeymap mysplit {1 0} {0 3} 64 127 0
+	songsetcurfilt mysplit
+	</PRE>
+	<P>
+	It defining filters seem quite tedious, however it's possible
+	to define procedures that do the same in a very simpler way.
+
+<A name="chan"></A>
+<H1>Channels</H1>
+
+	Because midish handles multiple devices, enstead of
+	using midi-channels, it uses device/midi-channel pairs.
+	We'll often refer by <EMPH>channel</EMPH>
+	the device/midi-channel pair. As we have seen, channels
+	are handles by two-item lists, like this:
+	<PRE>
+	{0 1}			# device 0, midi-channel 1
+	</PRE>
+	Channels can also be named, is follows:
+	<PRE>
+	channew mybass {0 1}
+	</PRE>
+	this defines a named-channel <TT>drums</TT> that can
+	be used instead of the <TT>{0 1}</TT> pair.
+	
+<H2>Channel configuration</H2>
+
+	Since a channel represents a musical instrument, 
+	midish allow to attach to the channel definition 
+	basic configuration. For instance;
+	to select patch 34 on channel drums, we attach
+	a "program change" event:
+	<PRE>
+	chanconfev mybass { pc mybass 32 }
+	</PRE>
+	the list-argumet gives the event to attach to the channel.
+	Such events are sent to the output when performace starts,
+	for instance juste before playback starts. This approach avoids
+	flooding midi devices when playback starts.
+	
+	In the same way, to set the volume (controller 7) 
+	of this channel to 120:
+	<PRE>
+	chanconfev mybass { ctl mybass 7 120 }
+	</PRE>
+	If seferal events of the same type are attached, 
+	the just the last one is kept. So, to change
+	the volume to 125, we just need:
+	<PRE>
+	chanconfev mybass { ctl mybass 7 125 }
+	</PRE>
+	
+<A name="track"></A>
+<H1>Tracks</H1>
+	
 	
 
 </BODY>

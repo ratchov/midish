@@ -148,7 +148,13 @@ mux_run(void) {
 			perror("mux_run: gettimeofday failed");
 			goto bad2;
 		}
-		timersub(&tv, &mdep_tv, &delta);
+
+		delta.tv_sec = tv.tv_sec - mdep_tv.tv_sec;
+		delta.tv_usec = tv.tv_usec - mdep_tv.tv_usec;
+		if (delta.tv_usec < 0) {
+			delta.tv_sec--;
+                        delta.tv_usec += 1000000;
+		}
 		mdep_tv = tv;
 
 		/*
