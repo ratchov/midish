@@ -1,0 +1,207 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML>
+<HEAD>
+<TITLE>midish - tutorial</TITLE>
+<META http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+</HEAD>
+<BODY bgcolor="white" text="black" link="blue" vlink="navy">
+
+<H1>Table of contents</H1>
+<P>
+<UL>
+<LI><A href="#intro">Introduction</A>
+<LI><A href="#setup">Device setup</A>
+<LI><A href="#filter">Filtering/routing</A>
+</UL>
+
+
+<A name="intro"></A>
+<H1>Introduction</H1>
+
+	<P>
+	Midish is a MIDI sequencing and filtering tool. 
+	
+	It is implemented as a sequencing engine and a 
+	command-line interpreter.
+	
+	Once midish started, the interpreter prompts
+	for commands. One can configure midi-devices, 
+	create tracks, define channel/controller mappings,
+	route events from one device to another, playback, 
+	record etc.
+
+	To start midish, just type:
+	<PRE>
+	midish
+	</PRE>
+	
+	Now you can issue commands, for instance:
+	<PRE>
+	print "hello world"
+	</PRE>
+
+<A name="setup"></A>
+<H1>Device setup</H1>
+
+	In midish, midi-devices are numbered from 0 to 15.
+	Each midi-device has its "slot number". For instance, 
+	suppose	that one have:
+
+	<UL>
+	<LI>
+		a midi sound module known as
+		<TT>/dev/rmidi3</TT> by the operating
+		system (or <TT>/dev/snd/midiC3D0</TT> on Linux)
+	<LI>
+		a midi keyboard known as
+		<TT>/dev/rmidi2</TT> by the operating
+		system (or <TT>/dev/snd/midiC2D0</TT> on Linux)
+	</UL>
+	
+	To configure the module as device number 0 and
+	the keyboard as device number 1, type:
+	<PRE>
+	devattach 0 "/dev/rmidi3"
+	devattach 1 "/dev/rmidi2"
+	</PRE>
+	
+	<P>
+	<STRONG>Important note</STRONG>
+	We strongly suggest that the main sound module (most used)
+	be attached as device number 0. This makes easier
+	to import/export music from systems with different configurations.
+
+	<P>
+	Now, let's check that the sound module is properly configured, 
+	for instance we can play the demo song. Put your module in 
+	general midi mode and type:
+	<PRE>
+	songload "sample.sng"
+	songplay
+	</PRE>
+	
+	Once your are satisfied by your setup,
+	you can put the "<TT>devattach</TT>" commands
+	in your <TT>$HOME/.midishrc</TT>. They will be
+	automaticaly executed the next time you run midish.
+	
+<A name="filter"></A>
+<H1>Filtering/routing</H1>
+
+	<P>
+	Midish supports midi filtering. That means, that you can
+	define a "filter" that transforms input events before
+	sending them to the output. Currently a filter can mainly be
+	used to:
+	<UL>
+	<LI>
+	route events from one device to another one
+	<LI>
+	map a controller to another one
+	<LI>
+	make keyboard splits
+	<LI>
+	etc...
+	</UL>
+
+	<P>
+	If no filters are defined, in performance mode, input is send 
+	to the output as-is. Filters are defined as follows:
+	<PRE>
+	filtnew myfilt			# define filter 'myfilt'
+	</PRE>
+	initially the filter is empty and will send input to output
+	as-is.
+	Several filters can be defined, however only the
+	<EMPH>current filter</EMPH> will run in performance
+	mode. The current filter is set as follows:
+	<PRE>
+	songsetcurfilt myfilt		# make 'myfilt' the current filter
+	</PRE>
+	
+<H2>Device redirections</H2>
+
+	Let us define a filter and use it to route events from
+	device number 1 (the midi keyboard) to device number 0
+	(the sound module). First we define the filter and
+	make it the current filter:
+	<PRE>
+	filtnew mydevmap		# define filter 'mydevmap'
+	songsetcurfilt mydevmap		# make 'mydevmap' the current filter
+	</PRE>
+	the we define a "device map" rule:
+	<PRE>
+	filtdevmap mydevmap 1 0		# route device 1 -> device 0
+	</PRE>
+	Finally, we can test the filter, by starting performance mode:
+	<PRE>
+	songidle
+	</PRE>
+	The filter will run until "Enter" is hit on the console.
+	
+<H2>Channel maps</H2>
+
+	Let us define a filter that routes events from
+	device 1, channel 0 (first channel of the keyboard) to
+	device 0, channel 9 (default drum channel of the sound module).
+	First, we define the filter:
+	<PRE>
+	filtnew mydrums			# define filter 'mydrums'
+	songsetcurfilt mydrums		# make 'mydevmap' the current filter
+	</PRE>
+	then we define a rule that maps device 1 channel 0 to 
+	device 0 channel 9:
+	<PRE>
+	filtchanmap mydrums {1 0} {0 9}
+	</PRE>
+	The device/channel pair is in braces. The first <TT>{1 0}</TT>
+	is the input device/channel and <TT>{0 9}</TT> is the output channel.
+	Finally we try the filter:
+	<PRE>
+	songidle
+	</PRE>
+	Playing on channel 0 of the keyboard will make
+	sound channel 9 of the sound-module.
+
+<H2>Controller maps</H2>
+
+	Let us continue with the later filter. Now 
+	we will add a new rule that maps the modulation wheel (controller 1)
+	of device 1, channel 0 (first channel of the keyboard) to
+	the expression controller (number 11) of device 0, channel 9 (the
+	default drums channel of the sound module).
+	<PRE>
+	filtctlmap mydrums {1 0} {0 9} 1 11
+	</PRE>
+	the first three arguments are the name of the filter, 
+	the input and the output device/channel pair. The 4-th
+	argument is the controller number on the input (1 = modulation)
+	and the 5-th the controller number on the output (11 = expression).
+	Rules of the filter can be listed on the console as follows:
+	<PRE>
+	filtinfo mydrums
+	</PRE>
+	normally this prints something like:
+	<PRE>
+	ctlmap {1 0} {0 9} 1 11 id
+	chanmap {1 0} {0 9}
+	</PRE>
+
+<H2>Transpose</H2>
+
+	Let us create a filter that transposes by 12 half-tones
+	(one octave) notes played on device 1, channel 0 (keyboard) and
+	sends them on device 0 channel 2 (sound-module). First
+	we create the input filter:
+	
+<H2>Keyboard splits</H2>
+
+	Let us create a new filter that splits the keyboard
+	in two parts (left and right). Notes on the left part
+	will be routed to channel 1 of the sound module and
+	notes on the right part will be routed to channel 2
+	of the sound module. First we create the filter
+	
+
+</BODY>
+</HTML>
