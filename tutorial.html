@@ -549,7 +549,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 	without being erased.
 
 <A name="info"></A>
-<H1>Obtaining information</H2>
+<H1>Obtaining information</H1>
 
 	<P>
 	The following functions gives some informations
@@ -735,175 +735,250 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 	
 <H2>Sample rc-file</H2>
 	
+	<P>
 	The sample rc file shipped in the source tar-balls
 	contains a lot of examples of procedure definitions.
 	They can be used the drive midish:
 	
-	<UL>
-	<LI><TT>nf filtname</TT><BR>
+	<P>
+	<B><TT>nf filtname</TT></B>
+		<BLOCKQUOTE>
 		create a new filter named <TT>filtname</TT>
 		and make it the current filter
-		
-	<LI><TT>cf filtname</TT><BR>
+		</BLOCKQUOTE>
+
+	<B><TT>cf filtname</TT></B>
+		<BLOCKQUOTE>
 		set the current filter to <TT>filtname</TT>
+		</BLOCKQUOTE>
 		
-	<LI><TT>devdrop devnum</TT><BR>
+	<B><TT>devdrop devnum</TT></B>
+		<BLOCKQUOTE>
 		make the current filter drop events from 
 		device number <TT>devnum</TT>
+		</BLOCKQUOTE>
 	
-	<LI><TT>devmap idevnum odevnum</TT><BR>
+	<B><TT>devmap idevnum odevnum</TT></B>
+		<BLOCKQUOTE>
 		make the current filter route events
 		from device number <TT>idevnum</TT>
 		to device <TT>odevnum</TT>
+		</BLOCKQUOTE>
 
-	<LI><TT>chandrop chan</TT><BR>
+	<B><TT>chandrop chan</TT></B>
+		<BLOCKQUOTE>
 		make the current filter drop events from
 		{channel device} pair <TT>chan</TT>
+		</BLOCKQUOTE>
 	
-	<LI><TT>chanmap ichan ochan</TT><BR>
+	<B><TT>chanmap ichan ochan</TT></B>
+		<BLOCKQUOTE>
 		make the current filter route events
 		from {channel device} pair <TT>ichan</TT>
 		to {channel device} pair <TT>ochan</TT>
+		</BLOCKQUOTE>
 
-	<LI><TT>chandrop chan</TT><BR>
+	<B><TT>chandrop chan</TT></B>
+		<BLOCKQUOTE>
 		make the current filter drop events from
 		{device channel} pair <TT>chan</TT>
+		</BLOCKQUOTE>
 	
-	<LI><TT>chanmap ichan ochan</TT><BR>
+	<B><TT>chanmap ichan ochan</TT></B>
+		<BLOCKQUOTE>
 		make the current filter route events
 		from {channel device} pair <TT>ichan</TT>
 		to {device channel} pair <TT>ochan</TT>
+		</BLOCKQUOTE>
 	
-	<LI><TT>ctldrop ichan ictl</TT><BR>
+	<B><TT>ctldrop ichan ictl</TT></B>
+		<BLOCKQUOTE>
 		make the current filter drop controller number
 		<TT>ictl</TT> on {device channel} pair <TT>ichan</TT>.
+		</BLOCKQUOTE>
 
-	<LI><TT>ctlmap ichan ochan ictl octl</TT><BR>
+	<B><TT>ctlmap ichan ochan ictl octl</TT></B>
+		<BLOCKQUOTE>
 		make the current filter route controller number
 		<TT>ictl</TT> on {device channel} pair <TT>ichan</TT>
 		to conroller <TT>octl</TT> on <TT>ochan</TT>
+		</BLOCKQUOTE>
 		
-	<LI><TT>nt trackname</TT><BR>
+	<B><TT>nt trackname</TT></B>
+		<BLOCKQUOTE>
 		create a track named <TT>trackname</TT>
 		and set its default filter (for recording) to
 		the current filter and make it the current track
+		</BLOCKQUOTE>
 		
-	<LI><TT>ct trackname</TT><BR>
+	<B><TT>ct trackname</TT></B>
+		<BLOCKQUOTE>
 		make <TT>trackname</TT> the current track; it
 		if has a default filter, then make it the current
 		filter for the song
+		</BLOCKQUOTE>
 		
-	<LI><TT>tf filtname</TT><BR>
+	<B><TT>tf filtname</TT></B>
+		<BLOCKQUOTE>
 		set the current track's filter the <TT>filtname</TT>
+		</BLOCKQUOTE>
 	
-	<LI><TT>nc channame</TT><BR>
+	<B><TT>nc channame</TT></B>
+		<BLOCKQUOTE>
 		create a new channel named <TT>channame</TT>
+		</BLOCKQUOTE>
 		
-	<LI><TT>i</TT><BR>
+	<B><TT>i</TT></B>
+		<BLOCKQUOTE>
 		go into performance mode and run the current filter
 		of the current track.
+		</BLOCKQUOTE>
 		
-	<LI><TT>p</TT><BR>
+	<B><TT>p</TT></B>
+		<BLOCKQUOTE>
 		go in performance mode and play the all defined 
 		tracks and run the current filter of the current track
+		</BLOCKQUOTE>
 		
-	<LI><TT>r</TT><BR>
+	<B><TT>r</TT></B>
+		<BLOCKQUOTE>
 		go in preformance mode and record the current track
 		using its current filter
+		</BLOCKQUOTE>
 		
-	<LI><TT>l</TT><BR>
+	<B><TT>l</TT></B>
+		<BLOCKQUOTE>
 		list tracks, channels and filter
 		and pront some additionnal info
+		</BLOCKQUOTE>
 		
-	<LI><TT>g measurenum</TT><BR> 
+	<B><TT>g measurenum</TT></B> 
+		<BLOCKQUOTE>
 		move the current song position to 
 		measure number <TT>measurenum</TT>. Play/record
 		and all editting procedures that follow
 		will start at that position
+		</BLOCKQUOTE>
 
-	<LI><TT>n denominator</TT><BR>
+	<B><TT>n denominator</TT></B>
+		<BLOCKQUOTE>
 		set the current note length for quantisation
 		to <TT>denominator</TT>, 4 means quarter-note, 
 		8 means eigth-note, 16 means sixeenth-note etc...
+		</BLOCKQUOTE>
 		
-	<LI><TT>q num rate</TT><BR>
+	<B><TT>q num rate</TT></B>
+		<BLOCKQUOTE>
 		quantise <TT>num</TT> measures
 		of the current track starting at the current position.
+		</BLOCKQUOTE>
 		
-	<LI><TT>cut num</TT><BR>
+	<B><TT>cut num</TT></B>
+		<BLOCKQUOTE>
 		cuts (removes events and blank space) <TT>num</TT>
 		measures from the current track at the current position
+		</BLOCKQUOTE>
 		
-	<LI><TT>clr num</TT><BR>
+	<B><TT>clr num</TT></B>
+		<BLOCKQUOTE>
 		clears (removes events but not blank space) <TT>num</TT>
 		measures from the current track at the current position
+		</BLOCKQUOTE>
 		
-	<LI><TT>ins num</TT><BR> 
+	<B><TT>ins num</TT></B> 
+		<BLOCKQUOTE>
 		insert <TT>num</TT> empty measures into the
 		current track at the current position
+		</BLOCKQUOTE>
 		
-	<LI><TT>copy num pos</TT><BR> 
+	<B><TT>copy num pos</TT></B> 
+		<BLOCKQUOTE>
 		copy <TT>num</TT> measures from the current
 		position at measure number <TT>pos</TT>
 		on the current track
+		</BLOCKQUOTE>
 		
-	<LI><TT>gcut num</TT><BR> 
+	<B><TT>gcut num</TT></B> 
+		<BLOCKQUOTE>
 		same as <TT>cut</TT> but acts on all tracks
 		simultaneously ("g" like global).
+		</BLOCKQUOTE>
 		
-	<LI><TT>gins num</TT><BR> 
+	<B><TT>gins num</TT></B> 
+		<BLOCKQUOTE>
 		same as <TT>ins</TT> but acts on all tracks
 		simultaneously ("g" like global).
+		</BLOCKQUOTE>
 
-	<LI><TT>save filename</TT><BR>
+	<B><TT>save filename</TT></B>
+		<BLOCKQUOTE>
 		save the whole project (filters, tracks, channels,
 		and current settings) in file <TT>filename</TT>.
+		</BLOCKQUOTE>
 				
-	<LI><TT>load filename</TT><BR>
+	<B><TT>load filename</TT></B>
+		<BLOCKQUOTE>
 		load the whole project (filters, tracks, channels,
 		and current settings) from file <TT>filename</TT>.
+		</BLOCKQUOTE>
 		
-	<LI><TT>tempo bpm</TT><BR>
+	<B><TT>tempo bpm</TT></B>
+		<BLOCKQUOTE>
 		change the tempo at the current position
 		to <TT>bpm</TT> beats per measure.
+		</BLOCKQUOTE>
 		
-	<LI><TT>timeins num numerator denominator</TT><BR> 
+	<B><TT>timeins num numerator denominator</TT></B> 
+		<BLOCKQUOTE>
 		insert <TT>num</TT> measures in the
 		meta-track with the time signature 
 		<TT>numerator/denominator</TT>
+		</BLOCKQUOTE>
 		
-	<LI><TT>timerm num</TT><BR>
+	<B><TT>timerm num</TT></B>
+		<BLOCKQUOTE>
 		remove <TT>num</TT> measures from
 		the meta-track.
+		</BLOCKQUOTE>
 		
-	<LI><TT>gmon devnum</TT><BR>
+	<B><TT>gmon devnum</TT></B>
+		<BLOCKQUOTE>
 		send "general midi on" system excusive message
-		to device number <TT>devnum<TT>
+		to device number <TT>devnum</TT>
+		</BLOCKQUOTE>
 		
-	<LI><TT>gmoff devnum</TT><BR>
+	<B><TT>gmoff devnum</TT></B>
+		<BLOCKQUOTE>
 		send "general midi off" system excusive message
-		to device number <TT>devnum<TT>
+		to device number <TT>devnum</TT>
+		</BLOCKQUOTE>
 		
-	<LI><TT>gmp chan patch</TT><BR> 
+	<B><TT>gmp chan patch</TT></B> 
+		<BLOCKQUOTE>
 		configures named-channel <TT>chan</TT>
 		to use general midi patch number <TT>patch</TT>.
 		(this will send program change event when
 		performance mode is entered).
+		</BLOCKQUOTE>
 		
-	<LI><TT>vol chan value</TT><BR> 
+	<B><TT>vol chan value</TT></B> 
+		<BLOCKQUOTE>
 		set volume (controller number 7) of
 		channel <TT>chan</TT> to <TT>value</TT>.
+		</BLOCKQUOTE>
 		
-	<LI><TT>reverb chan value</TT><BR> 
+	<B><TT>reverb chan value</TT></B> 
+		<BLOCKQUOTE>
 		set reverb (controller number 91) of
 		channel <TT>chan</TT> to <TT>value</TT>.
+		</BLOCKQUOTE>
 		
-	<LI><TT>chorus chan value</TT><BR> 
-		set chorus (controller number 91) of
+	<B><TT>chorus chan value</TT></B> 
+		<BLOCKQUOTE>
+		set chorus (controller number 93) of
 		channel <TT>chan</TT> to <TT>value</TT>.
-
-	<UL>		
-		
+		</BLOCKQUOTE>
+			
 <A name="example"></A>
 <H1>Example sessions</H1>
 <H2>Example - midi filtering</H2>
@@ -995,7 +1070,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 	tics_per_unit=96, curpos=0, curquant=6
 	> save "myrythm"
 	</PRE>
-	first, we define the <TT>drum<TT> channel
+	first, we define the <TT>drum</TT> channel
 	on device 0, channel 9. Then we create a 
 	filter with the same name, that
 	routes events from device 1, channel 0 
@@ -1004,7 +1079,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 	a new track named <TT>dr1</TT> an we start recording.
 	Finally, we set the quantisation step to 16 
 	(sixteenth note), we quantise 8 measures of 
-	the track and we start playback.
+	the track we start playback.
 
 <HR>
 <SMALL><EM>
