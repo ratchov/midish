@@ -164,7 +164,7 @@ proc clr amount {
 # insert measures in a track
 #
 proc ins amount {
-	trackinsert [songgetcurtrack] [songgetcurpos] $amount
+	trackinsert [songgetcurtrack] [songgetcurpos] $amount [songgetcurquant]
 }
 
 #
