@@ -287,10 +287,58 @@
 <A name="track"></A>
 <H1>Tracks</H1>
 	
+	<P>
 	A track is a piece of music, namely a ordered list 
 	of midi events. In play mode, midish play simultaneously
-	all the trach, in record-mode it plays all the tracks an
-	records the current track.
+	all defined tracks, in record-mode it plays all defined tracks
+	and records the current track.
+	
+	<P>
+	Tracks aren't binded to any particular device/channel; a track
+	can contain midi data from any device/channel. A track can have its 
+	<EMPH>current filter</EMPH>; in this case, midi events
+	are passed through that filter before being recorded. If the
+	track has no current filter, then the song current
+	filter is used instead. If there is neither a track current
+	filter nor song current filter, then midi events
+	from all devices are recorded as-is.s
+
+<H2>Recording track without a filter</H2>
+
+	<P>
+	Let us define a track and record data
+	as-is from all midi devices.
+	<PRE>
+	tracknew mytrack
+	songsetcurtrack mytrack
+	songrecord
+	</PRE>
+	tracks are played as follows:
+	<PRE>
+	songplay
+	</PRE>
+	However, with the above configuration this will not
+	work as expected because events from the input
+	keyboard (device number 1) will be sent back
+	to the device number 1 instead of being sent
+	to the sound module (device number 0).
+	
+<H2>Recording track with a filter</H2>
+
+	Let us create a filter and use it to
+	record to the above track:
+	<PRE>
+	filtnew mypiano
+	filltchanmap {1 0} {0 0}	# route dev1/chan0 -> dev0/chan0
+	tracksetcurfilt mypiano
+	trackrecord
+	</PRE>
+	
+	
+	
+	
+	 record data using an already 
+	defined filte
 
 
 </BODY>
