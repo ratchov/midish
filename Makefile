@@ -76,4 +76,3 @@ track.o:	track.c dbg.h track.h ev.h default.h pool.h
 trackop.o:	trackop.c dbg.h trackop.h track.h ev.h pool.h default.h
 tree.o:		tree.c dbg.h tree.h str.h name.h data.h user.h
 user.o:		user.c dbg.h default.h tree.h str.h name.h data.h lex.h textio.h parse.h mux.h mididev.h trackop.h track.h ev.h pool.h song.h filt.h user.h smf.h saveload.h
-
