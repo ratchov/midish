@@ -40,6 +40,16 @@
 /* ------------------------------------------------------------------- */
 
 void
+chan_output(unsigned chan, struct textout_s *f) {
+	textout_putstr(f, "{");
+	textout_putlong(f, chan / 16);
+	textout_putstr(f, " ");
+	textout_putlong(f, chan % 16);
+	textout_putstr(f, "}");
+}
+
+
+void
 ev_output(struct ev_s *e, struct textout_s *f) {
 	textout_indent(f);
 	switch(e->cmd) {
@@ -87,7 +97,7 @@ ev_output(struct ev_s *e, struct textout_s *f) {
 	return;	
 two:
 	textout_putstr(f, " ");
-	textout_putlong(f, e->data.voice.chan);
+	chan_output(e->data.voice.chan, f);
 	textout_putstr(f, " ");
 	textout_putlong(f, e->data.voice.b0);
 	textout_putstr(f, " ");
@@ -96,7 +106,7 @@ two:
 	return;
 one:	
 	textout_putstr(f, " ");
-	textout_putlong(f, e->data.voice.chan);
+	chan_output(e->data.voice.chan, f);
 	textout_putstr(f, " ");
 	textout_putlong(f, e->data.voice.b0);
 	textout_putstr(f, "\n");
@@ -140,15 +150,15 @@ rule_output(struct rule_s *o, struct textout_s *f) {
 	switch(o->type) {
 	case RULE_CHANMAP:
 		textout_putstr(f, "chanmap ");		
-		textout_putlong(f, o->ichan);
+		chan_output(o->ichan, f);
 		textout_putstr(f, " ");
-		textout_putlong(f, o->ochan);
+		chan_output(o->ochan, f);
 		break;
 	case RULE_CTLMAP:
 		textout_putstr(f, "ctlmap ");		
-		textout_putlong(f, o->ichan);
+		chan_output(o->ichan, f);
 		textout_putstr(f, " ");
-		textout_putlong(f, o->ochan);
+		chan_output(o->ochan, f);
 		textout_putstr(f, " ");
 		textout_putlong(f, o->ictl);
 		textout_putstr(f, " ");
@@ -158,9 +168,9 @@ rule_output(struct rule_s *o, struct textout_s *f) {
 		break;
 	case RULE_KEYMAP:
 		textout_putstr(f, "keymap ");		
-		textout_putlong(f, o->ichan);
+		chan_output(o->ichan, f);
 		textout_putstr(f, " ");
-		textout_putlong(f, o->ochan);
+		chan_output(o->ochan, f);
 		textout_putstr(f, " ");
 		textout_putlong(f, o->key_start);
 		textout_putstr(f, " ");
@@ -224,7 +234,7 @@ songchan_output(struct songchan_s *o, struct textout_s *f) {
 			
 	textout_indent(f);
 	textout_putstr(f, "chan ");
-	textout_putlong(f, o->chan);
+	chan_output(o->chan, f);
 	textout_putstr(f, "\n");
 
 	textout_indent(f);
@@ -420,6 +430,37 @@ parse_delta(struct parse_s *o, unsigned *delta) {
 	return 1;
 }
 
+unsigned
+parse_chan(struct parse_s *o, unsigned long *chan) {
+	unsigned long dev, midichan;
+	if (!parse_getsym(o)) {
+		return 0;
+	}
+	if (o->lex.id == TOK_LBRACE) {
+		if (!parse_long(o, DEFAULT_MAXNDEVS - 1, &dev)) {
+			return 0;
+		}
+		if (!parse_long(o, 16 - 1, &midichan)) {
+			return 0;
+		}
+		if (!parse_getsym(o)) {
+			return 0;
+		}
+		if (o->lex.id != TOK_RBRACE) {
+			parse_error(o, "'}' expected in channel spec\n");
+			return 0;
+		}
+		*chan = dev * 16 + midichan;
+		return 1;
+	} else if (o->lex.id == TOK_NUM) {
+		*chan = o->lex.longval;
+		return 1;
+	} else {
+		parse_error(o, "bad channel spec\n");
+		return 0;
+	}
+}
+
 
 unsigned
 parse_ev(struct parse_s *o, struct ev_s *ev) {
@@ -436,7 +477,7 @@ parse_ev(struct parse_s *o, struct ev_s *ev) {
 		goto ignore;
 	}
 	if (EV_ISVOICE(ev)) {
-		if (!parse_long(o, EV_MAXCHAN, &val)) {
+		if (!parse_chan(o, &val)) {
 			return 0;
 		}
 		ev->data.voice.chan = val;
@@ -531,10 +572,10 @@ parse_rule(struct parse_s *o, struct filt_s *f) {
 		return 0;
 	}
 	if (str_eq(o->lex.strval, "keymap")) {
-		if (!parse_long(o, EV_MAXCHAN, &ichan)) {
+		if (!parse_chan(o, &ichan)) {
 			return 0;
 		}
-		if (!parse_long(o, EV_MAXCHAN, &ochan)) {
+		if (!parse_chan(o, &ochan)) {
 			return 0;
 		}
 		if (!parse_long(o, EV_MAXB0, &key_start)) {
@@ -560,10 +601,10 @@ parse_rule(struct parse_s *o, struct filt_s *f) {
 		}	
 		filt_new_keymap(f, ichan, ochan, key_start, key_end, key_plus);
 	} else if (str_eq(o->lex.strval, "ctlmap")) {
-		if (!parse_long(o, EV_MAXCHAN, &ichan)) {
+		if (!parse_chan(o, &ichan)) {
 			return 0;
 		}
-		if (!parse_long(o, EV_MAXCHAN, &ochan)) {
+		if (!parse_chan(o, &ochan)) {
 			return 0;
 		}
 		if (!parse_long(o, EV_MAXB0, &ictl)) {
@@ -581,10 +622,10 @@ parse_rule(struct parse_s *o, struct filt_s *f) {
 		}	
 		filt_new_ctlmap(f, ichan, ochan, ictl, octl);
 	} else if (str_eq(o->lex.strval, "chanmap")) {
-		if (!parse_long(o, EV_MAXCHAN, &ichan)) {
+		if (!parse_chan(o, &ichan)) {
 			return 0;
 		}
-		if (!parse_long(o, EV_MAXCHAN, &ochan)) {
+		if (!parse_chan(o, &ochan)) {
 			return 0;
 		}
 		filt_new_chanmap(f, ichan, ochan);
@@ -627,6 +668,7 @@ parse_filt(struct parse_s *o, struct filt_s *f) {
 
 unsigned
 parse_songchan(struct parse_s *o, struct song_s *s, struct songchan_s *i) {
+	unsigned long val;
 	if (!parse_getsym(o)) {
 		return 0;
 	}
@@ -652,14 +694,10 @@ parse_songchan(struct parse_s *o, struct song_s *s, struct songchan_s *i) {
 				}
 				track_opsetchan(&i->conf, 0);
 			} else if (str_eq(o->lex.strval, "chan")) {
-				if (!parse_getsym(o)) {
+				if (!parse_chan(o, &val)) {
 					return 0;
 				}
-				if (o->lex.id != TOK_NUM) {
-					parse_error(o, "number expected afer 'chan' in songchan\n");
-					return 0;
-				}
-				i->chan = o->lex.longval; 
+				i->chan = val; 
 				if (!parse_nl(o)) {
 					return 0;
 				}

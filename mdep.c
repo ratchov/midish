@@ -96,8 +96,8 @@ void
 mux_run(void) {
 	int ifds, res, consfd;
 	struct timeval tv, delta;
-	struct pollfd fds[DEFAULT_MAXDEVS + 1];
-	struct mididev_s *dev, *index2dev[DEFAULT_MAXDEVS];
+	struct pollfd fds[DEFAULT_MAXNDEVS + 1];
+	struct mididev_s *dev, *index2dev[DEFAULT_MAXNDEVS];
 	static char conspath[] = "/dev/tty";
 	static char waitmsg[] = "\r\npress enter to finish\n";
 	static char stoppedmsg[] = "\r\n";

@@ -45,7 +45,7 @@ struct ev_s {
 		struct {
 #define EV_MAXB0	0x7f
 #define EV_MAXB1	0x7f
-#define EV_MAXCHAN	(16 * DEFAULT_MAXDEVS - 1)
+#define EV_MAXCHAN	(16 * DEFAULT_MAXNDEVS - 1)
 			unsigned char chan, b0, b1;
 		} voice;
 	} data;

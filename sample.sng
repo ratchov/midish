@@ -4,7 +4,7 @@
 		tempo 400000
 	}
 	songchan piano {
-		chan 0
+		chan { 0 0 }
 		conf {
 			pc 212 0
 		}

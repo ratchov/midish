@@ -715,8 +715,8 @@ user_func_channew(struct exec_s *o) {
 	
 	
 	i = songchan_new(name);
-	if (chan >= DEFAULT_MAXCHANS) {
-		user_printstr("channew: channel must be between 0 and MAXCHANS (see default.h)\n");
+	if (chan >= DEFAULT_MAXNCHANS) {
+		user_printstr("channew: channel must be between 0 and MAXNCHANS (see default.h)\n");
 		return 0;
 	}
 	i->chan = chan;
@@ -857,9 +857,9 @@ user_func_filtchanmap(struct exec_s *o) {
 	    !exec_lookuplong(o, "outchan", &ochan)) {
 		return 0;
 	}
-	if (ichan < 0 || ichan >= DEFAULT_MAXCHANS || 
-	    ochan < 0 || ochan >= DEFAULT_MAXCHANS ) {
-		user_printstr("filtchanmap: channels must be between 0 and MAXCHANS (see default.h)\n");
+	if (ichan < 0 || ichan >= DEFAULT_MAXNCHANS || 
+	    ochan < 0 || ochan >= DEFAULT_MAXNCHANS ) {
+		user_printstr("filtchanmap: channels must be between 0 and MAXNCHANS (see default.h)\n");
 		return 0;
 	}
 	filt_new_chanmap(&f->filt, ichan, ochan);
@@ -881,9 +881,9 @@ user_func_filtkeymap(struct exec_s *o) {
 	    !exec_lookuplong(o, "keyplus", &kplus)) {
 		return 0;
 	}
-	if (ichan < 0 || ichan >= DEFAULT_MAXCHANS || 
-	    ochan < 0 || ochan >= DEFAULT_MAXCHANS ) {
-		user_printstr("filtkeymap: channels must be between 0 and MAXCHANS (see default.h)\n");
+	if (ichan < 0 || ichan >= DEFAULT_MAXNCHANS || 
+	    ochan < 0 || ochan >= DEFAULT_MAXNCHANS ) {
+		user_printstr("filtkeymap: channels must be between 0 and MAXNCHANS (see default.h)\n");
 		return 0;
 	}
 	if (kstart < 0 || kstart > 127 || kend < 0 || kend > 127) {
@@ -911,8 +911,8 @@ user_func_filtctlmap(struct exec_s *o) {
 	    !exec_lookuplong(o, "outctl", &octl)) {
 		return 0;
 	}
-	if (ichan < 0 || ichan >= DEFAULT_MAXCHANS || 
-	    ochan < 0 || ochan >= DEFAULT_MAXCHANS ) {
+	if (ichan < 0 || ichan >= DEFAULT_MAXNCHANS || 
+	    ochan < 0 || ochan >= DEFAULT_MAXNCHANS ) {
 		user_printstr("filtctlmap: channels must be between 0 and MAXCHANS (see default.h)\n");
 		return 0;
 	}
