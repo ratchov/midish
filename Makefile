@@ -6,12 +6,6 @@ CFLAGS = -g -Wall -Wstrict-prototypes -Wundef -Wpointer-arith # -Wconversion
 LDFLAGS = 
 
 #
-# additionnal include paths or libraries
-#
-INCLUDE = 
-LIB = 
-
-#
 # comment this if you don't have a working readline(3) library
 #
 CFLAGS += -DHAVE_READLINE
@@ -19,8 +13,8 @@ INCLUDE += -I/usr/local/include
 LIB += -L/usr/local/lib -lreadline -ltermcap
 
 #
-# binaries will be installed in ${PREFIX}/bin,
-# documents in ${PREFIX}/share/doc/midish
+# binaries, documentation and examples will be installed in ${PREFIX}/bin,
+# ${PREFIX}/share/doc/midish and ${PREFIX}/share/examples/midish
 #
 PREFIX ?= ${HOME}
 
@@ -44,10 +38,13 @@ clean:
 install:	${PROG}
 		${INSTALL} -d ${PREFIX}/bin
 		${INSTALL} -d ${PREFIX}/share/doc/midish
+		${INSTALL} -d ${PREFIX}/share/examples/midish
 		${INSTALL} -m 755 -s ${PROG} ${PREFIX}/bin
-		${INSTALL} -m 644 manual.html tutorial.html midishrc sample.sng ${PREFIX}/share/doc/midish
+		${INSTALL} -m 644 manual.html tutorial.html
+		${INSTALL} -m 644 midishrc sample.sng ${PREFIX}/share/examples/midish
 		@echo
-		@echo You can copy manually midishrc to ~/.midishrc
+		@echo You can copy manually ${PREFIX}/share/examples/midish/midishrc
+		@echo into ~/.midishrc
 		@echo
 
 mkcurves:	mkcurves.c
@@ -79,7 +76,3 @@ track.o:	track.c dbg.h track.h ev.h default.h pool.h
 trackop.o:	trackop.c dbg.h trackop.h track.h ev.h pool.h default.h
 tree.o:		tree.c dbg.h tree.h str.h name.h data.h user.h
 user.o:		user.c dbg.h default.h tree.h str.h name.h data.h lex.h textio.h parse.h mux.h mididev.h trackop.h track.h ev.h pool.h song.h filt.h user.h smf.h saveload.h
-
-
-
-

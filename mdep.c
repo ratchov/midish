@@ -95,12 +95,13 @@ mux_mdep_done(void) {
 void
 mux_run(void) {
 	int ifds, res, consfd;
-	struct timeval tv, delta;
+	struct timeval tv;
 	struct pollfd fds[DEFAULT_MAXNDEVS + 1];
 	struct mididev_s *dev, *index2dev[DEFAULT_MAXNDEVS];
 	static char conspath[] = "/dev/tty";
 	static char waitmsg[] = "\r\npress enter to finish\n";
 	static char stoppedmsg[] = "\r\n";
+	unsigned long delta_usec;
 	unsigned i;
 
 	consfd = open(conspath, O_RDWR);
@@ -149,19 +150,19 @@ mux_run(void) {
 			goto bad2;
 		}
 
-		delta.tv_sec = tv.tv_sec - mdep_tv.tv_sec;
-		delta.tv_usec = tv.tv_usec - mdep_tv.tv_usec;
-		if (delta.tv_usec < 0) {
-			delta.tv_sec--;
-                        delta.tv_usec += 1000000;
-		}
+		/*
+		 * number of micro-seconds between now
+		 * and the last timeout of poll()
+		 */
+		delta_usec = 1000000 * (tv.tv_sec - mdep_tv.tv_sec);
+		delta_usec += tv.tv_usec - mdep_tv.tv_usec;
 		mdep_tv = tv;
 
 		/*
 		 * update the current position, 
 		 * (time unit = 24th of microsecond
 		 */
-		mux_timercb(24 * (delta.tv_sec * 1000000L + (unsigned long)delta.tv_usec));
+		mux_timercb(24 * delta_usec);
 
 		if (fds[ifds].revents & POLLIN) {
 			if (tcflush(consfd, TCIOFLUSH) < 0) {
