@@ -1,3 +1,8 @@
+- change 'play' semantics not to alway use current filter;
+  songfilter is only used in setcurtrack or not at all
+
+- check that filtseti{chan,dev} do the righ thing.
+
 - (easy) add 'mute' flag to tracks
 
 - create an evspec_s structure that
