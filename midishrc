@@ -56,7 +56,7 @@ proc ct name {
 	if [songgetcurtrack] {
 		let filt = [trackgetcurfilt $name]
 		if (filt) {
-			songsetcurfilt $name $filt
+			songsetcurfilt $filt
 		}
 	}
 }
