@@ -40,7 +40,7 @@ install:	${PROG}
 		${INSTALL} -d ${PREFIX}/share/doc/midish
 		${INSTALL} -d ${PREFIX}/share/examples/midish
 		${INSTALL} -m 755 -s ${PROG} ${PREFIX}/bin
-		${INSTALL} -m 644 manual.html tutorial.html
+		${INSTALL} -m 644 manual.html tutorial.html ${PREFIX}/share/doc/midish
 		${INSTALL} -m 644 midishrc sample.sng ${PREFIX}/share/examples/midish
 		@echo
 		@echo You can copy manually ${PREFIX}/share/examples/midish/midishrc
