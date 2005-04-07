@@ -45,6 +45,7 @@
 #include "name.h"
 #include "rmidi.h"
 
+unsigned mididev_ticrate;	/* global dics per unit */
 
 void
 mididev_init(struct mididev_s *o) {
@@ -53,6 +54,8 @@ mididev_init(struct mididev_s *o) {
 	 * (midi_tic, midi_start, midi_stop etc...)
 	 */
 	o->sendrt = 0;
+	o->ticrate = DEFAULT_TPU;
+	o->ticdelta = 0xdeadbeef;
 }
 
 void

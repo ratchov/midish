@@ -34,8 +34,8 @@
 struct mididev_s {
 	struct mididev_s *next;
 	unsigned unit, in, out;
+	unsigned ticrate, ticdelta;
 	unsigned sendrt;
-	unsigned tic_per_unit, tic_count;
 };
 
 void mididev_init(struct mididev_s *o);

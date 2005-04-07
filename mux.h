@@ -50,6 +50,7 @@ void mux_putev(struct ev_s *);
 void mux_sendraw(unsigned unit, unsigned char *buf, unsigned len);
 unsigned mux_getphase(void);
 void mux_chgtempo(unsigned long tmr_ticlength);
+void mux_chgticrate(unsigned tpu);
 void mux_startwait(void);
 void mux_stopwait(void);
 
@@ -58,5 +59,7 @@ void mux_mdep_done(void);
 
 void mux_timercb(unsigned long delta);
 void mux_evcb(unsigned, struct ev_s *ev);
+
+extern unsigned mux_ticsperunit;
 
 #endif /* SEQ_MUX_H */

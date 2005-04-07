@@ -186,16 +186,13 @@ rmidi_putev(struct rmidi_s *o, struct ev_s *ev) {
 	switch (ev->cmd) {
 	case EV_TIC:
 		rmidi_out(o, MIDI_TIC);
-		break;
-	
+		break;	
 	case EV_START:
 		rmidi_out(o, MIDI_START);
 		break;
-	
 	case EV_STOP:
 		rmidi_out(o, MIDI_STOP);
-		break;
-	
+		break;	
 	default:
 		if (ev->cmd == EV_NOFF) {
 			ev->cmd = EV_NON;

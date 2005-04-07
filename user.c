@@ -478,7 +478,7 @@ user_func_tracksetcurfilt(struct exec_s *o) {
 		return 0;
 	}
 	if (arg->data->type == DATA_NIL) {
-		t->curfilt = f;
+		t->curfilt = 0;
 		return 1;
 	} else if (arg->data->type == DATA_REF) {
 		f = song_filtlookup(user_song, arg->data->val.ref);
@@ -1300,7 +1300,7 @@ user_func_songsetunit(struct exec_s *o) {	/* tics per unit note */
 	if (user_song->trklist) {
 		user_printstr("WARNING: unit must be changed before any tracks are created\n");
 	}
-	if ((tpu % 96) != 0) {
+	if ((tpu % DEFAULT_TPU) != 0 || tpu < DEFAULT_TPU) {
 		user_printstr("unit should multiple of 96\n");
 		return 0;
 	}
@@ -1406,7 +1406,7 @@ user_func_songsetcurfilt(struct exec_s *o) {
 		return 0;
 	}
 	if (arg->data->type == DATA_NIL) {
-		user_song->curfilt = f;
+		user_song->curfilt = 0;
 		return 1;
 	} else if (arg->data->type == DATA_REF) {
 		f = song_filtlookup(user_song, arg->data->val.ref);
@@ -1847,6 +1847,52 @@ user_func_devsendrt(struct exec_s *o) {
 }
 
 
+unsigned
+user_func_devticrate(struct exec_s *o) {
+	long unit, tpu;
+	
+	if (!exec_lookuplong(o, "unit", &unit) || 
+	    !exec_lookuplong(o, "tics_per_unit", &tpu)) {
+		return 0;
+	}
+	if (unit < 0 || unit >= DEFAULT_MAXNDEVS || !mididev_byunit[unit]) {
+		user_printstr("no such device\n");
+		return 0;		
+	}
+	if (tpu < DEFAULT_TPU || (tpu % DEFAULT_TPU)) {
+		user_printstr("device tpu must be multiple of 96\n");
+		return 0;
+	}
+	mididev_byunit[unit]->ticrate = tpu;
+	return 1;
+}
+
+
+unsigned
+user_func_devinfo(struct exec_s *o) {
+	long unit;
+	
+	if (!exec_lookuplong(o, "unit", &unit)) {
+		return 0;
+	}
+	if (unit < 0 || unit >= DEFAULT_MAXNDEVS || !mididev_byunit[unit]) {
+		user_printstr("no such device\n");
+		return 0;		
+	}
+	user_printstr("device = ");
+	user_printlong(unit);
+	if (mididev_master == mididev_byunit[unit]) {
+		user_printstr(", master");
+	}
+	user_printstr(", tics_per_unit = ");
+	user_printlong(mididev_byunit[unit]->ticrate);
+	if (mididev_byunit[unit]->sendrt) {
+		user_printstr(", sending real-time events");
+	}
+	user_printstr("\n");
+	return 1;
+}	
+
 
 void
 user_mainloop(void) {
@@ -2088,6 +2134,11 @@ user_mainloop(void) {
 	exec_newbuiltin(exec, "devsendrt", user_func_devsendrt,
 			name_newarg("unit", 
 			name_newarg("sendrt", 0)));
+	exec_newbuiltin(exec, "devticrate", user_func_devticrate,
+			name_newarg("unit", 
+			name_newarg("tics_per_unit", 0)));
+	exec_newbuiltin(exec, "devinfo", user_func_devinfo,
+			name_newarg("unit", 0));
 
 	user_parsefile(exec, user_rcname());	/* parse rc file */
 	

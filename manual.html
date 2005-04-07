@@ -1129,9 +1129,23 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 	<BLOCKQUOTE>
 	If <TT>bool</TT> is true, the real-time information (midi tics, 
 	midi start and midi trop events) will be transmitted to device
-	number <TT>devnum</TT>.  Overwise no real-time midi events are transmitted.
+	number <TT>devnum</TT>. 
+	Overwise no real-time midi events are transmitted.
 	</BLOCKQUOTE>
 		
+<B><TT>devticrate devnum ticrate</TT></B>
+	<BLOCKQUOTE>
+	set the number of tics per unit note that are transmitted
+	to the midi device if "sendrt" feature is active. Defaut
+	value is 96 tics. This is the standard MIDI value and
+	its not recommended to change it.
+	</BLOCKQUOTE>
+	
+<B><TT>devinfo devnum</TT></B>
+	<BLOCKQUOTE>
+	Print some information about the midi device.
+	</BLOCKQUOTE>
+
 <H2>Misc. functions</H2>
 
 <B><TT>metroswitch number</TT></B>
