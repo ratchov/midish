@@ -157,7 +157,7 @@ lex_str2long(struct lex_s *o, unsigned base) {
 	unsigned digit;
 	unsigned long hi, lo;
 #define BITS		(8 * sizeof(unsigned long) / 2)
-#define LOWORD(a)	((a) & ((1 << BITS) - 1))
+#define LOWORD(a)	((a) & ((1L << BITS) - 1))
 #define HIWORD(a)	((a) >> BITS)
 	o->longval = 0;
 	for (p = o->strval; *p != 0; p++) {

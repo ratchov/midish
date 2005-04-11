@@ -1,3 +1,7 @@
+- fix batch mode:
+	errors -> stderr
+	print, info etc... -> stdout
+	
 - change 'play' semantics not to alway use current filter;
   songfilter is only used in setcurtrack or not at all
 
