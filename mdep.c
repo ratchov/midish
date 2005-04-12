@@ -163,6 +163,11 @@ mux_run(void) {
 		mux_timercb(24 * delta_usec);
 
 		if (fds[ifds].revents & POLLIN) {
+			mux_abortcb();
+			if (tcdrain(consfd) < 0) {
+				perror(conspath);
+				goto bad2;
+			}
 			if (tcflush(consfd, TCIOFLUSH) < 0) {
 				perror(conspath);
 				goto bad2;

@@ -59,6 +59,7 @@ void mux_mdep_done(void);
 
 void mux_timercb(unsigned long delta);
 void mux_evcb(unsigned, struct ev_s *ev);
+void mux_abortcb(void);
 
 extern unsigned mux_ticsperunit;
 

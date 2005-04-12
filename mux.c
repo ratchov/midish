@@ -339,6 +339,24 @@ mux_evcb(unsigned unit, struct ev_s *ev) {
 	}
 }
 
+
+void
+mux_abortcb(void) {
+	struct ev_s ev;
+	if (!mididev_master) {
+		if (mux_phase > MUX_START && mux_phase < MUX_STOP) {
+			mux_chgphase(MUX_STOP);
+			mux_sendstop();
+			mux_flush();
+			if (mux_cb) {
+				ev.cmd = EV_STOP;
+				mux_cb(mux_addr, &ev);
+			}
+		}
+	}
+}
+
+
 /* -------------------------------------- user "public" functions --- */
 
 void
