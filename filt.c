@@ -689,6 +689,7 @@ filt_statelookup(struct filt_s *o, struct ev_s *ev) {
 	if (EV_ISNOTE(ev)) {
 		for (i = &o->statelist; *i != 0; i = &(*i)->next) {
 			if ((*i)->ev.cmd == EV_NON && 
+			    (*i)->ev.data.voice.chan ==	ev->data.voice.chan && 
 			    (*i)->ev.data.voice.b0 == ev->data.voice.b0) {
 				return i;
 			}
@@ -696,13 +697,15 @@ filt_statelookup(struct filt_s *o, struct ev_s *ev) {
 	} else if (ev->cmd == EV_CTL) {
 		for (i = &o->statelist; *i != 0; i = &(*i)->next) {
 			if ((*i)->ev.cmd == EV_CTL && 
+			    (*i)->ev.data.voice.chan ==	ev->data.voice.chan && 
 			    (*i)->ev.data.voice.b0 == ev->data.voice.b0) {
 				return i;
 			}
 		}	
 	} else if (ev->cmd == EV_BEND) {
 		for (i = &o->statelist; *i != 0; i = &(*i)->next) {
-			if ((*i)->ev.cmd == EV_BEND) {
+			if ((*i)->ev.cmd == EV_BEND &&
+			    (*i)->ev.data.voice.chan ==	ev->data.voice.chan) {
 				return i;
 			}
 		}	
