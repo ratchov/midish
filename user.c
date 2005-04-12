@@ -55,6 +55,7 @@
 
 struct song_s *user_song;
 struct textout_s *user_stdout;
+unsigned user_flag_norc = 0;
 
 /* -------------------------------------------------- some tools --- */
 
@@ -2140,8 +2141,10 @@ user_mainloop(void) {
 	exec_newbuiltin(exec, "devinfo", user_func_devinfo,
 			name_newarg("unit", 0));
 
-	user_parsefile(exec, user_rcname());	/* parse rc file */
-	
+	if (!user_flag_norc) {
+		user_parsefile(exec, user_rcname());	/* parse rc file */
+	}
+
 	parse = parse_new(0);
 	if (parse == 0) {
 		return;

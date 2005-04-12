@@ -30,6 +30,7 @@
 
 #include <stdio.h>
 #include "dbg.h"
+#include "str.h"
 
 #include "cons.h"
 #include "ev.h"
@@ -45,12 +46,23 @@ struct song_s song;
 
 int
 main(int argc, char *argv[]) {
+	unsigned i;
+	
+	for (i = 1; i < argc; i++) {
+		if (str_eq(argv[i], "-norc")) {
+			user_flag_norc = 1;
+		} else {
+			dbg_puts("usage: midish [-norc]\n");
+			goto err;
+		} 
+	}
+	
 	cons_init();
 	seqev_pool_init(DEFAULT_MAXNSEQEVS);
 	state_pool_init(DEFAULT_MAXNSTATES);
 	mididev_listinit();
 	song_init(&song);
-	
+		
 	user_mainloop();
 	
 	song_done(&song);
@@ -58,5 +70,6 @@ main(int argc, char *argv[]) {
 	state_pool_done();
 	seqev_pool_done();
 	cons_done();
+err:
 	return 0;
 }

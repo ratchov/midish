@@ -120,15 +120,17 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 <H2>Invocation</H2>
 	<P>
-	midish currently doesn't take any arguments, so it's started
-	by typing:
+	when used interactively, midish doesn't need any arguments, 
+	so it's started	by typing:
 
 	<PRE>
 	./midish
 	</PRE>
 
 	in your shell. On startup, it tries to execute
-	the script <TT>$HOME/.midishrc</TT>.
+	the script <TT>$HOME/.midishrc</TT>. If you
+	don't want so, use the <TT>-norc</TT> flag. This is
+	useful when you want to use midish in scripts.
 
 	You can specify your midi devices
 	by using the function <TT>devattach</TT>, for instance:
@@ -149,10 +151,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 	compiled with the readline(3) library an interactive prompt is
 	used.
 
-	fatal errors and other debugging information is logged
+	Fatal errors and other debugging information is logged
 	to stderr.
 
-	while performing real-time functions (playback,
+	While performing real-time functions (playback,
 	recording) the controlling terminal (see tty(1)) is
 	polled. Real-time function is terminated if any key is
 	pressed. Thus the sequencer must have controlling tty

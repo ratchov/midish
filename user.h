@@ -33,6 +33,7 @@
 
 extern struct song_s *user_song;
 extern struct exec_s *user_exec;
+extern unsigned user_flag_norc;
 
 void user_mainloop(void);
 void user_printstr(char *);
