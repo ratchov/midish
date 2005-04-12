@@ -188,17 +188,17 @@ void
 filt_reset(struct filt_s *o) {
 	struct state_s *i;
 	struct rule_s *r;
-	while(o->voice_rules) {
+	while (o->voice_rules) {
 		r = o->voice_rules;
 		o->voice_rules = r->next;
 		mem_free(r); 
 	}
-	while(o->chan_rules) {
+	while (o->chan_rules) {
 		r = o->chan_rules;
 		o->chan_rules = r->next;
 		mem_free(r); 
 	}
-	while(o->dev_rules) {
+	while (o->dev_rules) {
 		r = o->dev_rules;
 		o->dev_rules = r->next;
 		mem_free(r); 
@@ -297,7 +297,7 @@ filt_conf_nodevdrop(struct filt_s *o, unsigned ichan) {
 	struct rule_s **i, *r;
 	
 	i = &o->dev_rules;
-	while(*i) {
+	while (*i) {
 		if ((*i)->type == RULE_DEVDROP &&
 		    (*i)->ichan == ichan) {
 			r = *i;
@@ -338,7 +338,7 @@ filt_conf_nodevmap(struct filt_s *o, unsigned ochan) {
 	struct rule_s **i, *r;
 	
 	i = &o->dev_rules;
-	while(*i != 0) {
+	while (*i != 0) {
 		if ((*i)->type == RULE_DEVMAP && 
 		    (*i)->ochan == ochan) {
 			r = *i;
@@ -377,7 +377,7 @@ filt_conf_nochandrop(struct filt_s *o, unsigned ichan) {
 	struct rule_s **i, *r;
 	
 	i = &o->chan_rules;
-	while(*i) {
+	while (*i) {
 		if ((*i)->type == RULE_CHANDROP &&
 		    (*i)->ichan == ichan) {
 			r = *i;
@@ -408,7 +408,7 @@ filt_conf_nochanmap(struct filt_s *o, unsigned ochan) {
 	struct rule_s **i, *r;
 	
 	i = &o->chan_rules;
-	while(*i != 0) {
+	while (*i != 0) {
 		if ((*i)->type == RULE_CHANMAP && 
 		    (*i)->ochan == ochan) {
 			r = *i;
@@ -439,7 +439,7 @@ filt_conf_noctldrop(struct filt_s *o, unsigned ichan, unsigned ictl) {
 	struct rule_s **i, *r;
 	
 	i = &o->voice_rules;
-	while(*i) {
+	while (*i) {
 		if ((*i)->type == RULE_CTLDROP && 
 		    (*i)->ichan == ichan && 
 		    (*i)->ictl == ictl) {
@@ -474,7 +474,7 @@ filt_conf_noctlmap(struct filt_s *o, unsigned ochan, unsigned octl) {
 	struct rule_s **i, *r;
 	
 	i = &o->voice_rules;
-	while(*i != 0) {
+	while (*i != 0) {
 		if ((*i)->type == RULE_CTLMAP && 
 		    (*i)->ochan == ochan && 
 		    (*i)->octl == octl) {
