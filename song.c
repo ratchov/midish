@@ -560,8 +560,9 @@ song_playcb(void *addr, struct ev_s *ev) {
 		if (song_finished(o) && phase != MUX_STOP) {
 			mux_stopwait();
 			break;
+		} else {
+			song_playtic(o);
 		}
-		song_playtic(o);
 		mux_flush();
 		break;
 	default:		
