@@ -155,11 +155,11 @@ mux_sendtic(void) {
 	ev.cmd = EV_TIC;
 	for (i = mididev_list; i != 0; i = i->next) {
 		if (i->sendrt && i != mididev_master) {
-			while (i->ticdelta >= i->ticrate) {
+			while (i->ticdelta >= mux_ticrate) {
 				rmidi_putev(RMIDI(i), &ev);
 				i->ticdelta -= mux_ticrate;
 			}
-			i->ticdelta += mux_ticrate;
+			i->ticdelta += i->ticrate;
 		}
 	}
 }
@@ -299,19 +299,24 @@ mux_evcb(unsigned unit, struct ev_s *ev) {
 	case EV_TIC:
 		if (mididev_master && 				/* if external clock */
 		    mididev_byunit[unit] == mididev_master) {	
-			if (mux_phase == MUX_FIRST) {
-				mux_chgphase(MUX_NEXT);
-			} else if (mux_phase == MUX_START) {
-				mux_chgphase(MUX_FIRST);
+		
+			while (mididev_master->ticdelta >= mididev_master->ticrate) {
+				if (mux_phase == MUX_FIRST) {
+					mux_chgphase(MUX_NEXT);
+				} else if (mux_phase == MUX_START) {
+					mux_chgphase(MUX_FIRST);
+				}
+				if (mux_phase == MUX_NEXT) {
+					mux_curtic++;
+				} else if (mux_phase == MUX_FIRST) {
+					mux_curtic = 0;
+				}
+				if (mux_cb) {
+					mux_cb(mux_addr, ev);
+				}
+				mididev_master->ticdelta -= mididev_master->ticrate;
 			}
-			if (mux_phase == MUX_NEXT) {
-				mux_curtic++;
-			} else if (mux_phase == MUX_FIRST) {
-				mux_curtic = 0;
-			}
-			if (mux_cb) {
-				mux_cb(mux_addr, ev);
-			}
+			mididev_master->ticdelta += mux_ticrate;
 		}
 		break;
 	case EV_START:

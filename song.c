@@ -585,7 +585,9 @@ song_play(struct song_s *o) {
 	mux_init(song_inputcb, o);
 	
 	song_playconf(o);
-	mux_chgtempo(o->tempo);	
+	mux_chgtempo(o->tempo);
+	mux_chgticrate(o->tics_per_unit);
+	
 	
 	dbg_puts("song_play: starting loop, waiting for a start event...\n");
 	mux_startwait();
@@ -660,6 +662,7 @@ song_record(struct song_s *o) {
 	
 	song_playconf(o);
 	mux_chgtempo(o->tempo);
+	mux_chgticrate(o->tics_per_unit);
 	
 	dbg_puts("song_record: started loop, waiting for a start event...\n");
 	mux_startwait();
@@ -717,6 +720,8 @@ song_idle(struct song_s *o) {
 	
 	song_playconf(o);
 	mux_chgtempo(o->tempo);
+	mux_chgticrate(o->tics_per_unit);
+
 	dbg_puts("song_idle: started loop...\n");
 	mux_run();
 	
