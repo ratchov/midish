@@ -144,7 +144,7 @@ proc g measure {
 # set note quantum
 #
 proc n denom {
-	songsetcurquant 96/$denom
+	songsetcurquant [songgetunit]/$denom
 } 
 
 #
@@ -248,7 +248,7 @@ proc timeins amount numerator denominator {
 }
 
 #
-# remove measures froim the meta-track
+# remove measures from the meta-track
 #
 proc timerm amount {
 	songtimerm [songgetcurpos] $amount
