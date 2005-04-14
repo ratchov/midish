@@ -332,7 +332,11 @@ track_opquantise(struct track_s *o, struct seqptr_s *p,
 			break;
 		} 
 			
-		remaind = tic % quantum;
+		if (quantum != 0) {
+			remaind = tic % quantum;
+		} else {
+			remaind = 0;
+		}
 		if (remaind < quantum / 2) {
 			ofs = - ((remaind * rate + 99) / 100);
 		} else {
