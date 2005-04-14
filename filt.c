@@ -273,13 +273,28 @@ filt_shut(struct filt_s *o) {
 	/* 
 	 * configure the filt to drop 
 	 * events from a particular device 
+	 * - if the same drop-rule exists then do nothing
+	 * - remove map-rules with the same idev
 	 */
 	 
 void
 filt_conf_devdrop(struct filt_s *o, unsigned ichan) {
-	struct rule_s *r;
+	struct rule_s **i, *r;
 	
-	filt_conf_nodevdrop(o, ichan);
+	i = &o->dev_rules;
+	while (*i) {
+		if ((*i)->type == RULE_DEVDROP &&
+		    (*i)->ichan == ichan) {
+		    	return;
+		} if ((*i)->type == RULE_DEVMAP &&		
+		    (*i)->ichan == ichan) {
+			r = *i;
+			*i = r->next;
+			mem_free(r);
+		} else {
+			i = &(*i)->next;
+		}
+	}
 	r = (struct rule_s *)mem_alloc(sizeof(struct rule_s));
 	r->type = RULE_DEVDROP;
 	r->ichan = ichan;
@@ -310,16 +325,37 @@ filt_conf_nodevdrop(struct filt_s *o, unsigned ichan) {
 }
 
 	/* 
-	 * configure the filter to map 
-	 * one device to another 
+	 * configure the filter to map one device to another 
+	 * - if the same map-rule exists dont add new one
+	 * - remove maps with the same output dev
+	 * - remove drops with the same input
 	 */
 
 void
 filt_conf_devmap(struct filt_s *o,
     unsigned ichan, unsigned ochan) {
-	struct rule_s *r;
+	struct rule_s **i, *r;
 	
-	filt_conf_nodevmap(o, ochan);
+	i = &o->dev_rules;
+	while (*i != 0) {
+		if ((*i)->type == RULE_DEVMAP && 
+		    (*i)->ochan == ochan) {
+		  	if ((*i)->ichan == ichan) {
+				return;
+			} else {
+				r = *i;
+				*i = r->next;
+				mem_free(r);
+			}
+		} else if ((*i)->type == RULE_DEVDROP && 
+		    (*i)->ichan == ichan) {
+			r = *i;
+			*i = r->next;
+			mem_free(r);
+		} else {
+			i = &(*i)->next;
+		}
+	}
 	r = (struct rule_s *)mem_alloc(sizeof(struct rule_s));
 	r->type = RULE_DEVMAP;
 	r->ichan = ichan;
@@ -357,9 +393,22 @@ filt_conf_nodevmap(struct filt_s *o, unsigned ochan) {
 
 void
 filt_conf_chandrop(struct filt_s *o, unsigned ichan) {
-	struct rule_s *r;
-
-	filt_conf_nochandrop(o, ichan);
+	struct rule_s **i, *r;
+	
+	i = &o->chan_rules;
+	while (*i) {
+		if ((*i)->type == RULE_CHANDROP &&
+		    (*i)->ichan == ichan) {
+		    	return;
+		} else if ((*i)->type == RULE_CHANMAP &&
+		    (*i)->ichan == ichan) {
+			r = *i;
+			*i = r->next;
+			mem_free(r);
+		} else {
+			i = &(*i)->next;
+		}
+	}
 	r = (struct rule_s *)mem_alloc(sizeof(struct rule_s));
 	r->type = RULE_CHANDROP;
 	r->ichan = ichan;
@@ -392,9 +441,28 @@ filt_conf_nochandrop(struct filt_s *o, unsigned ichan) {
 void
 filt_conf_chanmap(struct filt_s *o,
     unsigned ichan, unsigned ochan) {
-	struct rule_s *r;
-		
-	filt_conf_nochanmap(o, ochan);
+	struct rule_s **i, *r;
+	
+	i = &o->chan_rules;
+	while (*i != 0) {
+		if ((*i)->type == RULE_CHANMAP && 
+		    (*i)->ochan == ochan) {
+		    	if ((*i)->ichan == ichan) {
+				return;
+			} else {
+				r = *i;
+				*i = r->next;
+				mem_free(r);
+			}
+		} else if ((*i)->type == RULE_CHANDROP && 
+		    (*i)->ichan == ichan) {
+			r = *i;
+			*i = r->next;
+			mem_free(r);
+		} else {
+			i = &(*i)->next;
+		}
+	}
 	r = (struct rule_s *)mem_alloc(sizeof(struct rule_s));
 	r->type = RULE_CHANMAP;
 	r->ichan = ichan;
@@ -423,9 +491,24 @@ filt_conf_nochanmap(struct filt_s *o, unsigned ochan) {
 
 void
 filt_conf_ctldrop(struct filt_s *o, unsigned ichan, unsigned ictl) {
-	struct rule_s *r;
+	struct rule_s **i, *r;
 	
-	filt_conf_noctldrop(o, ichan, ictl);
+	i = &o->voice_rules;
+	while (*i) {
+		if ((*i)->type == RULE_CTLDROP && 
+		    (*i)->ichan == ichan && 
+		    (*i)->ictl == ictl) {
+		    	return;
+		} else if ((*i)->type == RULE_CTLMAP && 
+		    (*i)->ichan == ichan && 
+		    (*i)->ictl == ictl) {
+			r = *i;
+			*i = r->next;
+			mem_free(r);
+		} else{
+			i = &(*i)->next;
+		}
+	}
 	r = (struct rule_s *)mem_alloc(sizeof(struct rule_s));
 	r->type = RULE_CTLDROP;
 	r->ichan = ichan;
@@ -455,9 +538,31 @@ filt_conf_noctldrop(struct filt_s *o, unsigned ichan, unsigned ictl) {
 void
 filt_conf_ctlmap(struct filt_s *o,
     unsigned ichan, unsigned ochan, unsigned ictl, unsigned octl) {
-	struct rule_s *r;
+	struct rule_s **i, *r;
 	
-	filt_conf_noctlmap(o, ochan, octl);
+	i = &o->voice_rules;
+	while (*i != 0) {
+		if ((*i)->type == RULE_CTLMAP && 
+		    (*i)->ochan == ochan && 
+		    (*i)->octl == octl) {
+		    	if ((*i)->ichan == ichan && 
+			    (*i)->ictl == ictl) {
+				return;
+			} else {
+				r = *i;
+				*i = r->next;
+				mem_free(r);
+			}
+		} else if ((*i)->type == RULE_CTLDROP && 
+		    (*i)->ichan == ichan && 
+		    (*i)->ictl == ictl) {
+			r = *i;
+			*i = r->next;
+			mem_free(r);
+		} else {
+			i = &(*i)->next;
+		}
+	}
 	r = (struct rule_s *)mem_alloc(sizeof(struct rule_s));
 	r->type = RULE_CTLMAP;
 	r->ichan = ichan;
@@ -490,9 +595,26 @@ filt_conf_noctlmap(struct filt_s *o, unsigned ochan, unsigned octl) {
 void
 filt_conf_keydrop(struct filt_s *o, unsigned ichan, 
     unsigned keylo, unsigned keyhi) {
-	struct rule_s *r;
+	struct rule_s **i, *r;
 	
-	filt_conf_nokeydrop(o, ichan, keylo, keyhi);
+	i = &o->voice_rules;
+	while (*i) {
+		if ((*i)->type == RULE_KEYDROP && 
+		    (*i)->ichan == ichan && 
+		    keyhi >= (*i)->keylo && 
+		    keylo <= (*i)->keyhi) {
+		    	return;
+		} else if ((*i)->type == RULE_KEYMAP && 
+		    (*i)->ichan == ichan && 
+		    keyhi >= (*i)->keylo && 
+		    keylo <= (*i)->keyhi) {
+		    	r = *i;
+			*i = r->next;
+			mem_free(r);
+		} else {
+			i = &(*i)->next;
+		}
+	}
 	r = (struct rule_s *)mem_alloc(sizeof(struct rule_s));
 	r->type = RULE_KEYDROP;
 	r->ichan = ichan;
@@ -532,9 +654,32 @@ filt_conf_nokeydrop(struct filt_s *o, unsigned ichan,
 void
 filt_conf_keymap(struct filt_s *o, unsigned ichan, unsigned ochan,
     unsigned keylo, unsigned keyhi, int keyplus) {
-	struct rule_s *r;
+	struct rule_s **i, *r;
 	
-	filt_conf_nokeymap(o, ochan, keylo, keyhi);
+	i = &o->voice_rules;
+	while (*i) {
+		if ((*i)->type == RULE_KEYMAP && 
+		    (*i)->ochan == ochan && 
+		    keyhi >= (*i)->keylo && 
+		    keylo <= (*i)->keyhi) {
+		    	if ((*i)->ichan == ichan) {
+				return;
+			} else {
+		    		r = *i;
+				*i = r->next;
+				mem_free(r);
+			}
+		} else if ((*i)->type == RULE_KEYDROP && 
+		    (*i)->ichan == ichan && 
+		    keyhi >= (*i)->keylo && 
+		    keylo <= (*i)->keyhi) {
+		    	r = *i;
+			*i = r->next;
+			mem_free(r);
+		} else {
+			i = &(*i)->next;
+		}
+	}
 	r = (struct rule_s *)mem_alloc(sizeof(struct rule_s));
 	r->type = RULE_KEYMAP;
 	r->ichan = ichan;
