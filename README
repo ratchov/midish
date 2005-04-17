@@ -1,5 +1,7 @@
 Midish - command-line MIDI sequencer/filter for BSD and Linux
+Copyright (c) 2002-2005 Alexandre Ratchov
 
-(refer to manual.html for the installation procedure and
-more details about midish)
+refer to manual.html and tutorial.html for the installation procedure 
+and more details about midish.
 
+feedback appreciated at:  midish [at] caoua [dot] org

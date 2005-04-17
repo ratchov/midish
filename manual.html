@@ -175,8 +175,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 	<UL>
 	<LI> added <TT>device</TT>-parameter to <TT>sendraw</TT>
-	<LI> renamed <TT>filtchangein</TT> to <TT>filtsetichan</TT>
-		and added the "device" corresponding <TT>filtsetidev</TT>
+	<LI> renamed <TT>filtchangein</TT> to <TT>filtswapichan</TT>
+		and added the "device" corresponding <TT>filtswapidev</TT>
 	<LI> added new filter rules: 
 		<TT>filtdevdrop</TT>, 
 		<TT>filtchandrop</TT>,
@@ -817,18 +817,22 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 	lists the rules of the given filter
 	</BLOCKQUOTE>
 
-<B><TT>filtsetichan filtname oldchan newchan</TT></B>
+<B><TT>filtswapichan filtname oldchan newchan</TT></B>
 	<BLOCKQUOTE>
 	changes the input channel of 
 	all rules with input channel equal to <TT>oldchan</TT>
-	to <TT>newchan</TT>
+	to <TT>newchan</TT>, and the input channel of 
+	all rules with input channel equal to <TT>newchan</TT>
+	to <TT>oldchan</TT>,
 	</BLOCKQUOTE>
 
-<B><TT>filtsetidev filtname olddev newdev</TT></B>
+<B><TT>filtswapidev filtname olddev newdev</TT></B>
 	<BLOCKQUOTE>
 	changes the input device of 
 	all rules with input device equal to <TT>olddev</TT>
-	to <TT>newdev</TT>
+	to <TT>newdev</TT>, and the input device of 
+	all rules with input device equal to <TT>newdev</TT>
+	to <TT>olddev</TT>
 	</BLOCKQUOTE>
 
 <B><TT>filtdevdrop filtname inputdev</TT></B>

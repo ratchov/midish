@@ -1261,7 +1261,7 @@ user_func_filtreset(struct exec_s *o) {
 
 
 unsigned
-user_func_filtsetichan(struct exec_s *o) {
+user_func_filtswapichan(struct exec_s *o) {
 	struct songfilt_s *f;
 	unsigned oldchan, newchan;
 	
@@ -1270,13 +1270,13 @@ user_func_filtsetichan(struct exec_s *o) {
 	    !exec_lookupchan_getnum(o, "newchan", &newchan)) {
 		return 0;
 	}
-	filt_conf_setichan(&f->filt, oldchan, newchan);
+	filt_conf_swapichan(&f->filt, oldchan, newchan);
 	return 1;
 }
 
 
 unsigned
-user_func_filtsetidev(struct exec_s *o) {
+user_func_filtswapidev(struct exec_s *o) {
 	struct songfilt_s *f;
 	unsigned olddev, newdev;
 	
@@ -1285,7 +1285,7 @@ user_func_filtsetidev(struct exec_s *o) {
 	    !exec_lookupchan_getnum(o, "newdev", &newdev)) {
 		return 0;
 	}
-	filt_conf_setidev(&f->filt, 16 * olddev, 16 * newdev);
+	filt_conf_swapidev(&f->filt, 16 * olddev, 16 * newdev);
 	return 1;
 }
 
@@ -2062,11 +2062,11 @@ user_mainloop(void) {
 			name_newarg("filtname",
 			name_newarg("outchan", 
 			name_newarg("outctl", 0))));
-	exec_newbuiltin(exec, "filtsetichan", user_func_filtsetichan,
+	exec_newbuiltin(exec, "filtswapichan", user_func_filtswapichan,
 			name_newarg("filtname",
 			name_newarg("oldchan", 
 			name_newarg("newchan", 0))));
-	exec_newbuiltin(exec, "filtsetidev", user_func_filtsetidev,
+	exec_newbuiltin(exec, "filtswapidev", user_func_filtswapidev,
 			name_newarg("filtname",
 			name_newarg("olddev", 
 			name_newarg("newdev", 0))));

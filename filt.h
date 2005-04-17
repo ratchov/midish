@@ -105,10 +105,10 @@ void filt_conf_keydrop(struct filt_s *o, unsigned ichan, unsigned keylo, unsigne
 void filt_conf_nokeydrop(struct filt_s *o, unsigned ichan, unsigned keylo, unsigned keyhi);
 void filt_conf_keymap(struct filt_s *o, unsigned ichan, unsigned ochan, unsigned keylo, unsigned keyhi, int keyplus);
 void filt_conf_nokeymap(struct filt_s *o, unsigned ochan, unsigned keylo, unsigned keyhi);
-void filt_conf_setichan(struct filt_s *o, unsigned oldc, unsigned newc);
-void filt_conf_setidev(struct filt_s *o, unsigned oldc, unsigned newc);
-void filt_conf_setochan(struct filt_s *o, unsigned oldc, unsigned newc);
-void filt_conf_setodev(struct filt_s *o, unsigned oldc, unsigned newc);
+void filt_conf_swapichan(struct filt_s *o, unsigned oldc, unsigned newc);
+void filt_conf_swapidev(struct filt_s *o, unsigned oldc, unsigned newc);
+void filt_conf_swapochan(struct filt_s *o, unsigned oldc, unsigned newc);
+void filt_conf_swapodev(struct filt_s *o, unsigned oldc, unsigned newc);
 
 extern unsigned filt_debug;
 

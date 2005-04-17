@@ -121,7 +121,7 @@ unsigned char filt_curve_inv[128] = {
 
 
 void
-rule_setichan(struct rule_s *o, unsigned oldc, unsigned newc) {
+rule_swapichan(struct rule_s *o, unsigned oldc, unsigned newc) {
 	switch(o->type) {
 	case RULE_CHANDROP:
 	case RULE_CHANMAP:
@@ -129,7 +129,9 @@ rule_setichan(struct rule_s *o, unsigned oldc, unsigned newc) {
 	case RULE_KEYMAP:
 	case RULE_CTLDROP:
 	case RULE_CTLMAP:
-		if (o->ichan == oldc) {
+		if (o->ichan == newc) {
+			o->ichan = oldc;			
+		} else if (o->ichan == oldc) {
 			o->ichan = newc;
 		}
 		break;
@@ -140,7 +142,7 @@ rule_setichan(struct rule_s *o, unsigned oldc, unsigned newc) {
 
 
 void
-rule_setidev(struct rule_s *o, unsigned oldc, unsigned newc) {
+rule_swapidev(struct rule_s *o, unsigned oldc, unsigned newc) {
 	switch(o->type) {
 	case RULE_CHANDROP:
 	case RULE_CHANMAP:
@@ -153,6 +155,9 @@ rule_setidev(struct rule_s *o, unsigned oldc, unsigned newc) {
 		if ((o->ichan & EV_DEVMASK) == oldc) {
 			o->ichan &= ~EV_DEVMASK;
 			o->ichan |= newc;
+		} else 	if ((o->ichan & EV_DEVMASK) == newc) {
+			o->ichan &= ~EV_DEVMASK;
+			o->ichan |= oldc;
 		}
 		break;
 	default:
@@ -715,30 +720,30 @@ filt_conf_nokeymap(struct filt_s *o, unsigned ochan,
 
 
 void
-filt_conf_setichan(struct filt_s *o, unsigned oldc, unsigned newc) {
+filt_conf_swapichan(struct filt_s *o, unsigned oldc, unsigned newc) {
 	struct rule_s *i;
 	
 	for (i = o->voice_rules; i != 0; i = i->next) {
-		rule_setichan(i, oldc, newc);
+		rule_swapichan(i, oldc, newc);
 	}
 	for (i = o->chan_rules; i != 0; i = i->next) {
-		rule_setichan(i, oldc, newc);
+		rule_swapichan(i, oldc, newc);
 	}
 }
 
 
 void
-filt_conf_setidev(struct filt_s *o, unsigned oldc, unsigned newc) {
+filt_conf_swapidev(struct filt_s *o, unsigned oldc, unsigned newc) {
 	struct rule_s *i;
 	
 	for (i = o->voice_rules; i != 0; i = i->next) {
-		rule_setidev(i, oldc, newc);
+		rule_swapidev(i, oldc, newc);
 	}
 	for (i = o->chan_rules; i != 0; i = i->next) {
-		rule_setidev(i, oldc, newc);
+		rule_swapidev(i, oldc, newc);
 	}
 	for (i = o->dev_rules; i != 0; i = i->next) {
-		rule_setidev(i, oldc, newc);
+		rule_swapidev(i, oldc, newc);
 	}
 }
 
