@@ -1038,7 +1038,7 @@ parse_song(struct parse_s *o, struct song_s *s) {
 					return 0;
 				}
 				g = song_filtlookup(s, o->lex.strval);
-				if (t) {
+				if (g) {
 					s->curfilt = g;
 				} else {
 					parse_error(o, "warning, cant set current filt, not such filt\n");
