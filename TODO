@@ -1,15 +1,16 @@
-- change 'play' semantics not to always use current filter;
-  songfilter is only used in setcurtrack or not at all
+- (easy) add {track,chan,filt}rename and {track,chan,filt}delete
 
-- check that filtseti{chan,dev} do the righ thing.
+- (easy) change 'play' semantics not to always use current filter;
+  songfilter is only used in setcurtrack or not at all
 
 - (easy) add 'mute' flag to tracks
 
 - create an evspec_s structure that
   can handle an event specification (note range, 
-  controller range etc...). Use it in trackblank,
-  trackcopy etc...
+  controller range etc...). Use it to let track editing functions
+  to act only on selected events
 
 - create a tempo factor for recording
 
 - add sysex support: create an allocator for real-time recording
+
