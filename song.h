@@ -99,13 +99,17 @@ void song_done(struct song_s *o);
 
 void song_trkadd(struct song_s *o, struct songtrk_s *t);
 struct songtrk_s *song_trklookup(struct song_s *o, char *name);
+unsigned song_trkrm(struct song_s *o, struct songtrk_s *t);
 
 void song_chanadd(struct song_s *o, struct songchan_s *);
 struct songchan_s *song_chanlookup(struct song_s *o, char *name);
 struct songchan_s *song_chanlookup_bynum(struct song_s *o, unsigned num);
+unsigned song_chanrm(struct song_s *o, struct songchan_s *c);
+
 
 void song_filtadd(struct song_s *o, struct songfilt_s *i);
 struct songfilt_s *song_filtlookup(struct song_s *o, char *name);
+unsigned song_filtrm(struct song_s *o, struct songfilt_s *f);
 
 unsigned song_measuretotic(struct song_s *o, unsigned);
 

@@ -1,5 +1,3 @@
-- (easy) add {track,chan,filt}rename and {track,chan,filt}delete
-
 - (easy) change 'play' semantics not to always use current filter;
   songfilter is only used in setcurtrack or not at all
 

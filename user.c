@@ -416,6 +416,39 @@ user_func_tracknew(struct exec_s *o) {
 
 
 unsigned
+user_func_trackdelete(struct exec_s *o) {
+	struct songtrk_s *t;
+	if (!exec_lookuptrack(o, "trackname", &t)) {
+		return 0;
+	}
+	if (!song_trkrm(user_song, t)) {
+		return 0;
+	}
+	songtrk_delete(t);
+	return 1;
+}
+
+
+unsigned
+user_func_trackrename(struct exec_s *o) {
+	struct songtrk_s *t;
+	char *name;
+	
+	if (!exec_lookuptrack(o, "trackname", &t) ||
+	    !exec_lookupname(o, "newname", &name)) {
+		return 0;
+	}
+	if (song_trklookup(user_song, name)) {
+		user_printstr("name already used by another track\n");
+		return 0;
+	}
+	str_delete(t->name.str);
+	t->name.str = str_new(name);
+	return 1;
+}
+
+
+unsigned
 user_func_trackexists(struct exec_s *o) {
 	char *name;
 	struct songtrk_s *t;
@@ -817,6 +850,37 @@ user_func_channew(struct exec_s *o) {
 }
 
 unsigned
+user_func_chandelete(struct exec_s *o) {
+	struct songchan_s *c;
+	if (!exec_lookupchan_getref(o, "channame", &c)) {
+		return 0;
+	}
+	if (!song_chanrm(user_song, c)) {
+		return 0;
+	}
+	songchan_delete(c);
+	return 1;
+}
+
+unsigned
+user_func_chanrename(struct exec_s *o) {
+	struct songchan_s *c;
+	char *name;
+	
+	if (!exec_lookupchan_getref(o, "channame", &c) ||
+	    !exec_lookupname(o, "newname", &name)) {
+		return 0;
+	}
+	if (song_chanlookup(user_song, name)) {
+		user_printstr("name already used by another chan\n");
+		return 0;
+	}
+	str_delete(c->name.str);
+	c->name.str = str_new(name);
+	return 1;
+}
+
+unsigned
 user_func_chanexists(struct exec_s *o) {
 	char *name;
 	struct songchan_s *i;
@@ -911,6 +975,37 @@ user_func_filtnew(struct exec_s *o) {
 	}
 	i = songfilt_new(name);
 	song_filtadd(user_song, i);
+	return 1;
+}
+
+unsigned
+user_func_filtdelete(struct exec_s *o) {
+	struct songfilt_s *f;
+	if (!exec_lookupfilt(o, "filtname", &f)) {
+		return 0;
+	}
+	if (!song_filtrm(user_song, f)) {
+		return 0;
+	}
+	songfilt_delete(f);
+	return 1;
+}
+
+unsigned
+user_func_filtrename(struct exec_s *o) {
+	struct songfilt_s *f;
+	char *name;
+	
+	if (!exec_lookupfilt(o, "filtname", &f) ||
+	    !exec_lookupname(o, "newname", &name)) {
+		return 0;
+	}
+	if (song_filtlookup(user_song, name)) {
+		user_printstr("name already used by another filt\n");
+		return 0;
+	}
+	str_delete(f->name.str);
+	f->name.str = str_new(name);
 	return 1;
 }
 
@@ -1919,6 +2014,11 @@ user_mainloop(void) {
 	exec_newbuiltin(exec, "tracklist", user_func_tracklist, 0);
 	exec_newbuiltin(exec, "tracknew", user_func_tracknew, 
 			name_newarg("trackname", 0));
+	exec_newbuiltin(exec, "trackdelete", user_func_trackdelete, 
+			name_newarg("trackname", 0));
+	exec_newbuiltin(exec, "trackrename", user_func_trackrename,
+			name_newarg("trackname",
+			name_newarg("newname", 0)));
 	exec_newbuiltin(exec, "trackexists", user_func_trackexists, 
 			name_newarg("trackname", 0));
 	exec_newbuiltin(exec, "trackaddev", user_func_trackaddev,
@@ -1975,6 +2075,11 @@ user_mainloop(void) {
 	exec_newbuiltin(exec, "channew", user_func_channew, 
 			name_newarg("channame",
 			name_newarg("channum", 0)));
+	exec_newbuiltin(exec, "chandelete", user_func_chandelete, 
+			name_newarg("channame", 0));
+	exec_newbuiltin(exec, "chanrename", user_func_chanrename,
+			name_newarg("channame",
+			name_newarg("newname", 0)));
 	exec_newbuiltin(exec, "chanexists", user_func_chanexists, 
 			name_newarg("channame", 0));
 	exec_newbuiltin(exec, "chaninfo", user_func_chaninfo, 
@@ -1990,6 +2095,11 @@ user_mainloop(void) {
 	exec_newbuiltin(exec, "filtlist", user_func_filtlist, 0);
 	exec_newbuiltin(exec, "filtnew", user_func_filtnew, 
 			name_newarg("filtname", 0));
+	exec_newbuiltin(exec, "filtdelete", user_func_filtdelete, 
+			name_newarg("filtname", 0));
+	exec_newbuiltin(exec, "filtrename", user_func_filtrename,
+			name_newarg("filtname",
+			name_newarg("newname", 0)));
 	exec_newbuiltin(exec, "filtinfo", user_func_filtinfo, 
 			name_newarg("filtname", 0));
 	exec_newbuiltin(exec, "filtexists", user_func_filtexists, 

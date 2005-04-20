@@ -175,7 +175,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 	<UL>
 	<LI> added <TT>device</TT>-parameter to <TT>sendraw</TT>
-	<LI> renamed <TT>filtchangein</TT> to <TT>filtswapichan</TT>
+	<LI> replaced <TT>filtchangein</TT> to <TT>filtswapichan</TT>
 		and added the "device" corresponding <TT>filtswapidev</TT>
 	<LI> added new filter rules: 
 		<TT>filtdevdrop</TT>, 
@@ -194,6 +194,14 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 	<LI> added support for external midi synchronisation,
 	     added <TT>devsetmaster</TT>, <TT>devgetmaster</TT>
 	     and <TT>devsendrt</TT>
+	<LI> added 
+		<TT>trackdelete</TT>,
+		<TT>chandelete</TT>, 
+		<TT>filtdelete</TT>
+	<LI> added 
+		<TT>trackrename</TT>,
+		<TT>chanrename</TT>, 
+		<TT>filtrename</TT>
 	</UL>
 
 <A name="language"></A>
@@ -663,6 +671,17 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 	creates an empty track named <TT>trackname</TT>
 	</BLOCKQUOTE>
 
+<B><TT>trackdelete trackname</TT></B>
+	<BLOCKQUOTE>
+	delete existing track '<TT>trackname</TT>'.
+	Current track cannot be deleted.
+	</BLOCKQUOTE>
+
+<B><TT>trackrename trackname newname</TT></B>
+	<BLOCKQUOTE>
+	rename track '<TT>trackname</TT>' to '<TT>newname</TT>'
+	</BLOCKQUOTE>
+
 <B><TT>trackexists trackname</TT></B>
 	<BLOCKQUOTE>
 	returns 1 if <TT>trackname</TT> is a track, 0 otherwise
@@ -763,6 +782,16 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 	and bound to midi channel <TT>channelnum</TT> 
 	</BLOCKQUOTE>
 
+<B><TT>chandelete channame</TT></B>
+	<BLOCKQUOTE>
+	delete existing channel '<TT>channame</TT>'.
+	</BLOCKQUOTE>
+
+<B><TT>chanrename channame newname</TT></B>
+	<BLOCKQUOTE>
+	rename channel '<TT>channame</TT>' to '<TT>newname</TT>'
+	</BLOCKQUOTE>
+
 <B><TT>chanexists channelname</TT></B>
 	<BLOCKQUOTE>
 	returns 1 if <TT>channelname</TT> is a channel, 0 otherwise
@@ -800,6 +829,17 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <B><TT>filtnew filtname</TT></B>
 	<BLOCKQUOTE>
 	creates an new filter named <TT>filtname</TT>
+	</BLOCKQUOTE>
+
+<B><TT>filtdelete filtname</TT></B>
+	<BLOCKQUOTE>
+	delete existing filter '<TT>filtname</TT>'.
+	Current filter and filters used by tracks cannot be deleted.
+	</BLOCKQUOTE>
+
+<B><TT>filtrename filtname newname</TT></B>
+	<BLOCKQUOTE>
+	rename filter '<TT>filtname</TT>' to '<TT>newname</TT>'
 	</BLOCKQUOTE>
 
 <B><TT>filtexists filtname</TT></B>

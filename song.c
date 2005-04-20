@@ -34,6 +34,7 @@
 #include "trackop.h"
 #include "filt.h"
 #include "song.h"
+#include "user.h"
 
 #include "default.h"
 
@@ -204,6 +205,25 @@ song_trklookup(struct song_s *o, char *name) {
 }
 
 
+unsigned
+song_trkrm(struct song_s *o, struct songtrk_s *t) {
+	struct songtrk_s **i;
+	if (o->curtrk == t) {
+		user_printstr("cant delete current track\n");
+		return 0;
+	}
+	i = &o->trklist;
+	while(*i != 0) {
+		if (*i == t) {
+			*i = (struct songtrk_s *)t->name.next;
+			break;
+		}
+		i = (struct songtrk_s **)&(*i)->name.next;
+	}
+	return 1;
+}
+
+
 /* -------------------------------------------------- chan stuff --- */
 
 	/*
@@ -237,6 +257,19 @@ song_chanlookup_bynum(struct song_s *o, unsigned num) {
 	return 0;
 }
 
+unsigned
+song_chanrm(struct song_s *o, struct songchan_s *c) {
+	struct songchan_s **i;
+	i = &o->chanlist;
+	while(*i != 0) {
+		if (*i == c) {
+			*i = (struct songchan_s *)c->name.next;
+			break;
+		}
+		i = (struct songchan_s **)&(*i)->name.next;
+	}
+	return 1;
+}
 
 /* -------------------------------------------------- filt stuff --- */
 
@@ -258,6 +291,34 @@ struct songfilt_s *
 song_filtlookup(struct song_s *o, char *name) {
 	return (struct songfilt_s *)name_lookup((struct name_s **)&o->filtlist, name);
 }
+
+
+unsigned
+song_filtrm(struct song_s *o, struct songfilt_s *f) {
+	struct songtrk_s *t;
+	struct songfilt_s **i;
+
+	if (o->curfilt == f) {
+		user_printstr("cant delete current filt\n");
+		return 0;
+	}
+	for (t = o->trklist; t != 0; t = (struct songtrk_s *)t->name.next) {
+		if (t->curfilt == f) {
+			user_printstr("cant delete track current filt\n");
+			return 0;
+		}		
+	}	
+	i = &o->filtlist;
+	while(*i != 0) {
+		if (*i == f) {
+			*i = (struct songfilt_s *)f->name.next;
+			break;
+		}
+		i = (struct songfilt_s **)&(*i)->name.next;
+	}
+	return 1;
+}
+
 
 /* ------------------------------------------------- global stuff --- */
 
