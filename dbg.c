@@ -36,7 +36,6 @@
 
 #define MAGIC_ALLOC	13942
 #define MAGIC_FREE	59811	
-#define DEBUG
 
 unsigned mem_counter = 0;
 
@@ -120,16 +119,13 @@ mem_alloc(unsigned n) {
 void
 mem_free(void *mem) {
 	unsigned *buf, n;
-#ifdef DEBUG
 	unsigned i;
-#endif
 
 	buf = (unsigned *)mem - 3; 
 	n = buf[1];
 
-#ifdef DEBUG
 	if (buf[0] == MAGIC_FREE) {
-		dbg_puts("mem_free: block already freed\n");
+		dbg_puts("mem_free: block seems already freed\n");
 		dbg_panic();
 	}
 
@@ -139,14 +135,13 @@ mem_free(void *mem) {
 	}
 	
 	if (buf[2] != buf[n - 1]) {
-		dbg_puts("mem_free: block overwritten\n");
+		dbg_puts("mem_free: block corrupt\n");
 		dbg_panic();
 	}
 	
 	for (i = 3; i < n; i++) {
 		buf[i] = mem_rnd();
 	}
-#endif
 	buf[0] = MAGIC_FREE;
 
 	free(buf);
