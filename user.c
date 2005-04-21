@@ -154,10 +154,7 @@ data_list2chan(struct data_s *o, unsigned *num) {
 	struct songchan_s *i;
 	long chan, dev;
 
-	if (o->type == DATA_LONG) {
-		*num = o->val.num;
-		return 1;
-	} else if (o->type == DATA_LIST) {
+	if (o->type == DATA_LIST) {
 		if (!o->val.list || 
 		    !o->val.list->next || 
 		    o->val.list->next->next ||
@@ -305,15 +302,152 @@ exec_lookupev(struct exec_s *o, char *name, struct ev_s *ev) {
 }
 
 
+unsigned
+data_list2range(struct data_s *d, unsigned min, unsigned max, 
+    unsigned *lo, unsigned *hi) {
+    	if (d->type == DATA_LONG) {
+		*lo = *hi = d->val.num;
+	} else if (d->type == DATA_LIST) {
+		d = d->val.list;
+		if (!d) {
+			*lo = min;
+			*hi = max;
+			return 1;
+		} 
+		if (!d->next || d->next->next || 
+		    d->type != DATA_LONG || d->next->type != DATA_LONG) {
+			user_printstr("exactly 0 ore 2 numbers expected in range spec\n");
+			return 0;
+		}
+		*lo = d->val.num;
+		*hi = d->next->val.num;
+	} else {
+		user_printstr("list or number expected in range spec\n");
+		return 0;
+	}
+	if (*lo < min || *lo > max || *hi < min || *hi > max || *lo > *hi) {
+		user_printstr("range values out of bounds\n");
+		return 0;
+	}
+	return 1;
+}
+
+
+unsigned
+exec_lookupevspec(struct exec_s *o, char *name, struct evspec_s *e) {
+	struct var_s *arg;
+	struct data_s *d;
+	struct songchan_s *i;
+	unsigned lo, hi;
+
+	arg = exec_varlookup(o, name);
+	if (!arg) {
+		dbg_puts("exec_lookupev: no such var\n");
+		dbg_panic();
+	}
+	d = arg->data;
+	if (d->type != DATA_LIST) {
+		user_printstr("list expected in event range spec\n");
+		return 0;
+	}
+
+	/* default match any event */
+
+	e->min.cmd = EV_NULL;
+	e->min.data.voice.chan = 0;
+	e->min.data.voice.b0 = 0;
+	e->min.data.voice.b1 = 0;
+	e->max.cmd = EV_NULL;
+	e->max.data.voice.chan = EV_MAXCHAN;
+	e->max.data.voice.b0 = EV_MAXB0;
+	e->max.data.voice.b1 = EV_MAXB1;
+
+	d = d->val.list;
+	if (!d) {
+		return 1;
+	}
+	if (d->type != DATA_REF || 
+	    !ev_str2cmd(&e->min, d->val.ref) ||
+	    !EV_ISVOICE(&e->min) ||
+	    (EV_ISNOTE(&e->min) && e->min.cmd != EV_NON)) {
+		user_printstr("bad status in event spec\n");
+		return 0;
+	}
+	e->max.cmd = e->min.cmd;
+
+	d = d->next;
+	if (!d) {
+		return 1;
+	}
+	if (d->type == DATA_REF) {
+		i = song_chanlookup(user_song, d->val.ref);
+		if (i == 0) {
+			user_printstr("no such chan name\n");
+			return 0;
+		}
+		e->min.data.voice.chan = e->max.data.voice.chan = i->chan;
+		return 1;
+	} else if (d->type == DATA_LIST) {
+		if (!d->val.list) {		/* empty list = any chan/dev */
+			/* nothing */
+		} else if (d->val.list && 
+		    d->val.list->next && 
+		    !d->val.list->next->next) {
+			if (!data_list2range(d->val.list, 0, DEFAULT_MAXNDEVS - 1, &lo, &hi)) {
+				return 0;
+			}
+			e->min.data.voice.chan = lo << 4;
+			e->max.data.voice.chan = hi << 4;
+			if (!data_list2range(d->val.list->next, 0, 16 - 1, &lo, &hi)) {
+				return 0;
+			}
+			e->min.data.voice.chan += lo;
+			e->max.data.voice.chan += hi;	
+		} else {
+			user_printstr("bad channel range spec\n");
+			return 0;
+		}
+	}
+
+	d = d->next;
+	if (!d) {
+		return 1;
+	}		
+	if (!data_list2range(d, 0, EV_MAXB0, &lo, &hi)) {
+		return 0;
+	}
+	e->min.data.voice.b0 = lo;
+	e->max.data.voice.b0 = hi;
+	d = d->next;
+	if (!d) {
+		return 1;
+	}
+	if (e->min.cmd != EV_PC && e->min.cmd != EV_CAT) {
+		if (!data_list2range(d, 0, EV_MAXB1, &lo, &hi)) {
+			return 0;
+		}
+		e->min.data.voice.b1 = lo;
+		e->max.data.voice.b1 = hi;
+		d = d->next;
+		if (!d) {
+			return 1;
+		}
+	}
+	user_printstr("too many ranges in event spec\n");
+	return 0;				
+}
+
+
+
 /* ---------------------------------------- interpreter functions --- */
 
 unsigned
 user_func_ev(struct exec_s *o) {
-	struct ev_s ev;
-	if (!exec_lookupev(o, "ev", &ev)) {
+	struct evspec_s ev;
+	if (!exec_lookupevspec(o, "ev", &ev)) {
 		return 0;
 	}
-	ev_dbg(&ev);
+	evspec_dbg(&ev);
 	dbg_puts("\n");
 	return 1;
 }

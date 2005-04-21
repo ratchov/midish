@@ -37,7 +37,7 @@
 #include "str.h"
 
 char *ev_cmdstr[EV_NUMCMD] = { 
-	"null",		"tic",		"start",	"stop", 
+	"nil",		"tic",		"start",	"stop", 
 	0,		0,		0,		0,
 	"noff",		"non",		"kat",		"ctl",
 	"pc",		"cat",		"bend",		0,
@@ -121,31 +121,67 @@ ev_dbg(struct ev_s *ev) {
 		case EV_KAT:
 		case EV_CTL:
 		case EV_BEND:
-			dbg_puts("\t");
+			dbg_puts(" ");
 			dbg_putx(ev->data.voice.chan);
-			dbg_puts("\t");
+			dbg_puts(" ");
 			dbg_putx(ev->data.voice.b0);
-			dbg_puts("\t");
+			dbg_puts(" ");
 			dbg_putx(ev->data.voice.b1);
 			break;
 		case EV_CAT:
 		case EV_PC:
-			dbg_puts("\t");
+			dbg_puts(" ");
 			dbg_putx(ev->data.voice.chan);
-			dbg_puts("\t");
+			dbg_puts(" ");
 			dbg_putx(ev->data.voice.b0);
 			break;
 		case EV_TEMPO:
-			dbg_puts("\t");
+			dbg_puts(" ");
 			dbg_putu((unsigned)ev->data.tempo.usec24);
 			break;
 		case EV_TIMESIG:
-			dbg_puts("\t");
+			dbg_puts(" ");
 			dbg_putx(ev->data.sign.beats);
-			dbg_puts("\t");
+			dbg_puts(" ");
 			dbg_putx(ev->data.sign.tics);
 			break;
 		}
 	}
 }
 
+
+void
+evspec_dbg(struct evspec_s *o) {
+	dbg_puts("[ ");
+	ev_dbg(&o->min);
+	dbg_puts(" : ");
+	ev_dbg(&o->max);
+	dbg_puts(" ]");	
+}
+
+unsigned
+evspec_matchev(struct evspec_s *o, struct ev_s *e) {
+	if (o->min.cmd == EV_NULL) {
+		return 1;
+	} else if ((EV_ISNOTE(&o->min) && EV_ISNOTE(e)) ||
+	    (o->min.cmd == EV_CTL && e->cmd == EV_CTL) ||
+	    (o->min.cmd == EV_BEND && e->cmd == EV_BEND)) {
+		if (e->data.voice.chan >= o->min.data.voice.chan &&
+		    e->data.voice.chan <= o->max.data.voice.chan &&
+		    e->data.voice.b0 >= o->min.data.voice.b0 &&
+		    e->data.voice.b0 <= o->max.data.voice.b0 &&
+		    e->data.voice.b1 >= o->min.data.voice.b1 &&
+		    e->data.voice.b1 <= o->max.data.voice.b1) {
+			return 1;
+		}
+	} else if ((o->min.cmd == EV_CAT && e->cmd == EV_CAT) ||
+	    (o->min.cmd == EV_PC && e->cmd == EV_PC)) {
+		if (e->data.voice.chan >= o->min.data.voice.chan &&
+		    e->data.voice.chan <= o->max.data.voice.chan &&
+		    e->data.voice.b0 >= o->min.data.voice.b0 &&
+		    e->data.voice.b0 <= o->max.data.voice.b0) {
+			return 1;
+		}
+	}
+	return 0;
+}

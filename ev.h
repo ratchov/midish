@@ -54,13 +54,16 @@ struct ev_s {
 };
 
 struct evspec_s {
-	struct ev_s ev1, ev2;
-	unsigned len;
+	struct ev_s min, max;
 };
 
 void ev_dbg(struct ev_s *ev);
 unsigned ev_sameclass(struct ev_s *ev1, struct ev_s *ev2);
 unsigned ev_str2cmd(struct ev_s *ev, char *str);
+
+void evspec_dbg(struct evspec_s *o);
+unsigned evspec_matchev(struct evspec_s *o, struct ev_s *e);
+
 
 #define EV_NULL		0
 #define EV_TIC		0x1
