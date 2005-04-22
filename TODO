@@ -1,3 +1,6 @@
+- big changes were made, bugs may be introduced.
+  take one by one each module audit it and test each piece of code.
+
 - (easy) change 'play' semantics not to always use current filter;
   songfilter is only used in setcurtrack or not at all
 

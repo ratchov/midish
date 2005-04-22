@@ -68,7 +68,8 @@ songchan_new(char *name) {
 	o = (struct songchan_s *)mem_alloc(sizeof(struct songchan_s));
 	name_init(&o->name, name);
 	track_init(&o->conf);
-	o->chan = 0;
+	o->dev = 0;
+	o->ch = 0;
 	return o;
 }
 
@@ -145,11 +146,13 @@ song_init(struct song_s *o) {
 	o->tic = o->beat = o->measure = 0;
 	o->metro_enabled = 1;
 	o->metro_hi.cmd = EV_NON;
-	o->metro_hi.data.voice.chan = 9;
+	o->metro_hi.data.voice.dev = 0;
+	o->metro_hi.data.voice.ch = 9;
 	o->metro_hi.data.voice.b0 = 67;
 	o->metro_hi.data.voice.b1 = 127;
 	o->metro_lo.cmd = EV_NON;
-	o->metro_lo.data.voice.chan = 9;
+	o->metro_lo.data.voice.dev = 0;
+	o->metro_lo.data.voice.ch = 9;
 	o->metro_lo.data.voice.b0 = 68;
 	o->metro_lo.data.voice.b1 = 90;
 	/* defaults */
@@ -247,10 +250,10 @@ song_chanlookup(struct song_s *o, char *name) {
 
 
 struct songchan_s *
-song_chanlookup_bynum(struct song_s *o, unsigned num) {
+song_chanlookup_bynum(struct song_s *o, unsigned dev, unsigned ch) {
 	struct songchan_s *i;
 	for (i = o->chanlist; i != 0; i = (struct songchan_s *)i->name.next) {
-		if (i->chan == num) {
+		if (i->dev == dev && i->ch == ch) {
 			return i;
 		}
 	}
@@ -382,7 +385,8 @@ song_playconf(struct song_s *o) {
 		while (track_evavail(&i->conf, &cp) ) {
 			track_evget(&i->conf, &cp, &ev);
 			if (EV_ISVOICE(&ev)) {
-				ev.data.voice.chan = i->chan;
+				ev.data.voice.dev = i->dev;
+				ev.data.voice.ch = i->ch;
 				mux_putev(&ev);
 				/*
 				dbg_puts("song_playconf: ");
@@ -578,17 +582,21 @@ song_outputshut(struct song_s *o) {
 	unsigned i;
 	struct ev_s ev;
 	
+	/* XXX: do it in another way or at least send thisd to all devices */
+	
 	ev.cmd = EV_CTL;		
+	ev.data.voice.dev = 0;
 	ev.data.voice.b0 = 121;		/* all note off */
 	ev.data.voice.b1 = 0;
-	for (i = 0; i < 16; i++) {
-		ev.data.voice.chan = i;
+	for (i = 0; i <= EV_MAXCH; i++) {
+		ev.data.voice.ch = i;
 		mux_putev(&ev);
 	}
+	ev.data.voice.dev = 0;
 	ev.data.voice.b0 = 123;		/* all ctl reset */
 	ev.data.voice.b1 = 0;
-	for (i = 0; i < 16; i++) {
-		ev.data.voice.chan = i;
+	for (i = 0; i <= EV_MAXCH; i++) {
+		ev.data.voice.ch = i;
 		mux_putev(&ev);
 	}
 	mux_flush();	

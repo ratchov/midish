@@ -145,7 +145,8 @@ rmidi_inputcb(struct rmidi_s *o, unsigned char *buf, unsigned count) {
 				ev.cmd = o->istatus >> 4;
 				ev.data.voice.b0 = o->idata[0];
 				ev.data.voice.b1 = o->idata[1];
-				ev.data.voice.chan = (o->istatus & 0x0f) + (o->mididev.unit << 4);
+				ev.data.voice.ch = o->istatus & 0x0f;
+				ev.data.voice.dev = o->mididev.unit;
 				if (ev.cmd == EV_NON && ev.data.voice.b1 == 0) {
 					ev.cmd = EV_NOFF;
 					ev.data.voice.b1 = EV_NOFF_DEFAULTVEL;
@@ -201,7 +202,7 @@ rmidi_putev(struct rmidi_s *o, struct ev_s *ev) {
 		if (!EV_ISVOICE(ev)) {
 			break;
 		}
-		s = (ev->data.voice.chan & 0x0f) + ((ev->cmd & 0x0f) << 4);
+		s = ev->data.voice.ch + ((ev->cmd & 0x0f) << 4);
 		if (s != o->ostatus) {
 			o->ostatus = s;
 			rmidi_out(o, s);

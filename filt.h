@@ -50,10 +50,11 @@ struct state_s {
 struct rule_s {
 	struct rule_s *next;
 	unsigned type;
-	unsigned ichan, ochan;
+	unsigned idev, odev;
+	unsigned ich, och;
+	unsigned ictl, octl;
 	unsigned keylo, keyhi;
 	int keyplus;
-	unsigned ictl, octl;
 	unsigned char *curve;
 };
 
@@ -89,26 +90,24 @@ void             filt_statedel(struct filt_s *o, struct state_s **p);
 struct state_s **filt_statelookup(struct filt_s *o, struct ev_s *ev);
 void             filt_stateshut(struct filt_s *o, struct state_s **p);
 
-void filt_conf_devdrop(struct filt_s *o, unsigned ichan);
-void filt_conf_nodevdrop(struct filt_s *o, unsigned ichan);
+void filt_conf_devdrop(struct filt_s *o, unsigned idev);
+void filt_conf_nodevdrop(struct filt_s *o, unsigned idev);
 void filt_conf_devmap(struct filt_s *o, unsigned idev, unsigned odev);
-void filt_conf_nodevmap(struct filt_s *o, unsigned ochan);
-void filt_conf_chandrop(struct filt_s *o, unsigned ichan);
-void filt_conf_nochandrop(struct filt_s *o, unsigned ichan);
-void filt_conf_chanmap(struct filt_s *o, unsigned ichan, unsigned ochan);
-void filt_conf_nochanmap(struct filt_s *o, unsigned ochan);
-void filt_conf_ctldrop(struct filt_s *o, unsigned ichan, unsigned ictl);
-void filt_conf_noctldrop(struct filt_s *o, unsigned ichan, unsigned ictl);
-void filt_conf_ctlmap(struct filt_s *o, unsigned ichan, unsigned ochan, unsigned ictl, unsigned octl);
-void filt_conf_noctlmap(struct filt_s *o, unsigned ochan, unsigned octl);
-void filt_conf_keydrop(struct filt_s *o, unsigned ichan, unsigned keylo, unsigned keyhi);
-void filt_conf_nokeydrop(struct filt_s *o, unsigned ichan, unsigned keylo, unsigned keyhi);
-void filt_conf_keymap(struct filt_s *o, unsigned ichan, unsigned ochan, unsigned keylo, unsigned keyhi, int keyplus);
-void filt_conf_nokeymap(struct filt_s *o, unsigned ochan, unsigned keylo, unsigned keyhi);
-void filt_conf_swapichan(struct filt_s *o, unsigned oldc, unsigned newc);
-void filt_conf_swapidev(struct filt_s *o, unsigned oldc, unsigned newc);
-void filt_conf_swapochan(struct filt_s *o, unsigned oldc, unsigned newc);
-void filt_conf_swapodev(struct filt_s *o, unsigned oldc, unsigned newc);
+void filt_conf_nodevmap(struct filt_s *o, unsigned odev);
+void filt_conf_chandrop(struct filt_s *o, unsigned idev, unsigned ich);
+void filt_conf_nochandrop(struct filt_s *o, unsigned idev, unsigned ich);
+void filt_conf_chanmap(struct filt_s *o, unsigned idev, unsigned ich, unsigned odev, unsigned och);
+void filt_conf_nochanmap(struct filt_s *o, unsigned odev, unsigned och );
+void filt_conf_ctldrop(struct filt_s *o, unsigned idev, unsigned ich, unsigned ictl);
+void filt_conf_noctldrop(struct filt_s *o, unsigned idev, unsigned ich, unsigned ictl);
+void filt_conf_ctlmap(struct filt_s *o, unsigned idev, unsigned ich, unsigned odev, unsigned och, unsigned ictl, unsigned octl);
+void filt_conf_noctlmap(struct filt_s *o, unsigned odev, unsigned och, unsigned octl);
+void filt_conf_keydrop(struct filt_s *o, unsigned idev, unsigned ich, unsigned keylo, unsigned keyhi);
+void filt_conf_nokeydrop(struct filt_s *o, unsigned idev, unsigned ich, unsigned keylo, unsigned keyhi);
+void filt_conf_keymap(struct filt_s *o, unsigned idev, unsigned ich, unsigned odev, unsigned och, unsigned keylo, unsigned keyhi, int keyplus);
+void filt_conf_nokeymap(struct filt_s *o, unsigned odev, unsigned och, unsigned keylo, unsigned keyhi);
+void filt_conf_swapichan(struct filt_s *o, unsigned olddev, unsigned oldch, unsigned newdev, unsigned newch);
+void filt_conf_swapidev(struct filt_s *o, unsigned olddev, unsigned newdev);
 
 extern unsigned filt_debug;
 

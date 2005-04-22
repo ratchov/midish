@@ -47,7 +47,7 @@ track_framerm(struct track_s *o, struct seqptr_s *p, struct track_s *frame) {
 	struct seqptr_s op, fp;
 	struct seqev_s *se;
 	unsigned tics;
-	unsigned key, chan;
+	unsigned key, ch, dev;
 	
 	op = *p;
 	track_clear(frame, &fp);
@@ -74,7 +74,8 @@ track_framerm(struct track_s *o, struct seqptr_s *p, struct track_s *frame) {
 	track_seqevins(frame, &fp, se);
 	track_seqevnext(frame, &fp);
 	key = EV_GETNOTE(&se->ev);
-	chan = EV_GETCHAN(&se->ev);
+	ch = EV_GETCH(&se->ev);
+	dev = EV_GETDEV(&se->ev);
 
 	/* move all related note events */
 	for (;;) {
@@ -89,7 +90,8 @@ track_framerm(struct track_s *o, struct seqptr_s *p, struct track_s *frame) {
 		/* check for nested NOTEON */
 		} else if ((*op.pos)->ev.cmd == EV_NON &&
 		    EV_GETNOTE(&(*op.pos)->ev) == key &&
-		    EV_GETCHAN(&(*op.pos)->ev) == chan) {
+		    EV_GETCH(&(*op.pos)->ev) == ch &&
+		    EV_GETDEV(&(*op.pos)->ev) == dev) {
 			dbg_puts("track_framerm: nested noteon, skiped\n");
 			track_evdel(o, &op);
 			continue;
@@ -97,7 +99,8 @@ track_framerm(struct track_s *o, struct seqptr_s *p, struct track_s *frame) {
 		/* is it a note event of the frame */
 		} else if (EV_ISNOTE(&(*op.pos)->ev) && 
 		    EV_GETNOTE(&(*op.pos)->ev) == key &&
-		    EV_GETCHAN(&(*op.pos)->ev) == chan) {
+		    EV_GETCH(&(*op.pos)->ev) == ch &&
+		    EV_GETDEV(&(*op.pos)->ev) == dev) {
 			/* found the corresponding NOTE event */
 			track_seekblank(frame, &fp, tics);
 			track_evlast(frame, &fp);
@@ -483,7 +486,7 @@ track_opinsert(struct track_s *o, struct seqptr_s *p, unsigned len) {
 
 
 void
-track_opsetchan(struct track_s *o, unsigned chan) {
+track_opsetchan(struct track_s *o, unsigned ch, unsigned dev) {
 	struct seqptr_s op;
 	track_rew(o, &op);
 	for (;;) {
@@ -491,7 +494,8 @@ track_opsetchan(struct track_s *o, unsigned chan) {
 			break;
 		}
 		if (EV_ISVOICE(&(*op.pos)->ev)) {
-			(*op.pos)->ev.data.voice.chan = chan;
+			(*op.pos)->ev.data.voice.dev = dev;
+			(*op.pos)->ev.data.voice.ch = ch;
 		}
 		track_seqevnext(o, &op);
 	}

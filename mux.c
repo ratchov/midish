@@ -212,7 +212,7 @@ mux_putev(struct ev_s *ev) {
 	struct mididev_s *dev;
 	
 	if (EV_ISVOICE(ev)) {
-		unit = ev->data.voice.chan >> 4;
+		unit = ev->data.voice.dev;
 		if (unit < DEFAULT_MAXNDEVS) {
 			dev = mididev_byunit[unit];
 			if (dev != 0) {

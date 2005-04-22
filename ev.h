@@ -45,10 +45,9 @@ struct ev_s {
 		struct {
 #define EV_MAXB0	0x7f
 #define EV_MAXB1	0x7f
-#define EV_MAXCHAN	(16 * DEFAULT_MAXNDEVS - 1)
-#define EV_CHANMASK	((unsigned char)0x0f)
-#define EV_DEVMASK	((unsigned char)0xf0)
-			unsigned char chan, b0, b1;
+#define EV_MAXCH	15
+#define EV_MAXDEV	(DEFAULT_MAXNDEVS - 1)
+			unsigned char dev, ch, b0, b1;
 		} voice;
 	} data;
 };
@@ -92,7 +91,8 @@ unsigned evspec_matchev(struct evspec_s *o, struct ev_s *e);
 			 ((ev)->cmd == EV_KAT))
 
 #define EV_GETNOTE(ev)	((ev)->data.voice.b0)
-#define EV_GETCHAN(ev)	((ev)->data.voice.chan)
+#define EV_GETCH(ev)	((ev)->data.voice.ch)
+#define EV_GETDEV(ev)	((ev)->data.voice.dev)
 
 #define EV_NOFF_DEFAULTVEL	100
 #define EV_BEND_DEFAULTLO	0

@@ -378,7 +378,7 @@ smf_puttrk(struct smf_s *o, unsigned *used, struct song_s *s, struct songtrk_s *
 		if (EV_ISVOICE(&(*tp.pos)->ev)) {
 			smf_putvar(o, used, delta);
 			delta = 0;
-			chan = (*tp.pos)->ev.data.voice.chan;
+			chan = (*tp.pos)->ev.data.voice.ch;
 			newstatus = ((*tp.pos)->ev.cmd << 4) + (chan & 0x0f);
 			if (newstatus != status) {
 				status = newstatus;
@@ -415,7 +415,7 @@ smf_putchan(struct smf_s *o, unsigned *used, struct song_s *s, struct songchan_s
 		if (EV_ISVOICE(&(*tp.pos)->ev)) {
 			smf_putvar(o, used, delta);
 			delta = 0;
-			newstatus = ((*tp.pos)->ev.cmd << 4) + (i->chan & 0x0f);
+			newstatus = ((*tp.pos)->ev.cmd << 4) + (i->ch & 0x0f);
 			if (newstatus != status) {
 				status = newstatus;
 				smf_putc(o, used, status);
@@ -591,7 +591,8 @@ smf_gettrack(struct smf_s *o, struct song_s *s, struct songtrk_s *t) {
 			}
 		runningstatus:
 			ev.cmd = (status >> 4) & 0xf;
-			ev.data.voice.chan = status & 0xf;
+			ev.data.voice.dev = 0;
+			ev.data.voice.ch = status & 0xf;
 			ev.data.voice.b0 = c & 0x7f;
 			if (SMF_EVLEN(status) == 2) {
 				if (!smf_getc(o, &c)) {

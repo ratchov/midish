@@ -83,7 +83,8 @@ ev_sameclass(struct ev_s *ev1, struct ev_s *ev2) {
 	case EV_NOFF:
 	case EV_KAT:
 	case EV_CTL:
-		if (ev1->data.voice.chan != ev2->data.voice.chan ||
+		if (ev1->data.voice.dev != ev2->data.voice.dev ||
+		    ev1->data.voice.ch != ev2->data.voice.ch ||
 		    ev1->data.voice.b0 != ev2->data.voice.b0) {
 			return 0;
 		}
@@ -91,7 +92,8 @@ ev_sameclass(struct ev_s *ev1, struct ev_s *ev2) {
 	case EV_BEND:
 	case EV_CAT:
 	case EV_PC:
-		if (ev1->data.voice.chan != ev2->data.voice.chan) {
+		if (ev1->data.voice.dev != ev2->data.voice.dev ||
+		    ev1->data.voice.ch != ev2->data.voice.ch) {
 			return 0;
 		}
 		break;
@@ -121,18 +123,22 @@ ev_dbg(struct ev_s *ev) {
 		case EV_KAT:
 		case EV_CTL:
 		case EV_BEND:
+			dbg_puts(" {");
+			dbg_putx(ev->data.voice.dev);
 			dbg_puts(" ");
-			dbg_putx(ev->data.voice.chan);
-			dbg_puts(" ");
+			dbg_putx(ev->data.voice.ch);
+			dbg_puts("} ");
 			dbg_putx(ev->data.voice.b0);
 			dbg_puts(" ");
 			dbg_putx(ev->data.voice.b1);
 			break;
 		case EV_CAT:
 		case EV_PC:
+			dbg_puts(" {");
+			dbg_putx(ev->data.voice.dev);
 			dbg_puts(" ");
-			dbg_putx(ev->data.voice.chan);
-			dbg_puts(" ");
+			dbg_putx(ev->data.voice.ch);
+			dbg_puts("} ");
 			dbg_putx(ev->data.voice.b0);
 			break;
 		case EV_TEMPO:
@@ -166,22 +172,25 @@ evspec_matchev(struct evspec_s *o, struct ev_s *e) {
 	} else if ((EV_ISNOTE(&o->min) && EV_ISNOTE(e)) ||
 	    (o->min.cmd == EV_CTL && e->cmd == EV_CTL) ||
 	    (o->min.cmd == EV_BEND && e->cmd == EV_BEND)) {
-		if (e->data.voice.chan >= o->min.data.voice.chan &&
-		    e->data.voice.chan <= o->max.data.voice.chan &&
-		    e->data.voice.b0 >= o->min.data.voice.b0 &&
-		    e->data.voice.b0 <= o->max.data.voice.b0 &&
-		    e->data.voice.b1 >= o->min.data.voice.b1 &&
-		    e->data.voice.b1 <= o->max.data.voice.b1) {
-			return 1;
-		}
+		goto two;
 	} else if ((o->min.cmd == EV_CAT && e->cmd == EV_CAT) ||
 	    (o->min.cmd == EV_PC && e->cmd == EV_PC)) {
-		if (e->data.voice.chan >= o->min.data.voice.chan &&
-		    e->data.voice.chan <= o->max.data.voice.chan &&
-		    e->data.voice.b0 >= o->min.data.voice.b0 &&
-		    e->data.voice.b0 <= o->max.data.voice.b0) {
-			return 1;
-		}
+		goto one;
+	} else {
+		return 0;		
 	}
-	return 0;
+
+two:	if (e->data.voice.b1 < o->min.data.voice.b1 ||
+	    e->data.voice.b1 > o->max.data.voice.b1) {
+		return 0;
+	}
+one:	if (e->data.voice.dev < o->min.data.voice.dev ||
+	    e->data.voice.dev > o->max.data.voice.dev ||
+	    e->data.voice.ch < o->min.data.voice.ch ||
+	    e->data.voice.ch > o->max.data.voice.ch ||
+	    e->data.voice.b0 < o->min.data.voice.b0 ||
+	    e->data.voice.b0 > o->max.data.voice.b0) {
+		return 0;
+	}
+	return 1;
 }

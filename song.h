@@ -42,7 +42,7 @@
 struct songchan_s {
 	struct name_s name;
 	struct track_s conf;
-	unsigned chan;
+	unsigned dev, ch;
 };
 
 struct songfilt_s {
@@ -103,7 +103,7 @@ unsigned song_trkrm(struct song_s *o, struct songtrk_s *t);
 
 void song_chanadd(struct song_s *o, struct songchan_s *);
 struct songchan_s *song_chanlookup(struct song_s *o, char *name);
-struct songchan_s *song_chanlookup_bynum(struct song_s *o, unsigned num);
+struct songchan_s *song_chanlookup_bynum(struct song_s *o, unsigned dev, unsigned ch);
 unsigned song_chanrm(struct song_s *o, struct songchan_s *c);
 
 
