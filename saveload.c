@@ -201,7 +201,7 @@ rule_output(struct rule_s *o, struct textout_s *f) {
 		textout_putstr(f, "keymap ");		
 		chan_output(o->idev, o->ich, f);
 		textout_putstr(f, " ");
-		chan_output(o->och, o->och, f);
+		chan_output(o->odev, o->och, f);
 		textout_putstr(f, " ");
 		textout_putlong(f, o->keylo);
 		textout_putstr(f, " ");
