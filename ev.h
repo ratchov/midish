@@ -33,37 +33,6 @@
 
 #include "default.h"
 
-struct ev_s {
-	unsigned cmd;
-	union {
-		struct {
-			unsigned long usec24;
-		} tempo;
-		struct {
-			unsigned short beats, tics;
-		} sign;
-		struct {
-#define EV_MAXB0	0x7f
-#define EV_MAXB1	0x7f
-#define EV_MAXCH	15
-#define EV_MAXDEV	(DEFAULT_MAXNDEVS - 1)
-			unsigned char dev, ch, b0, b1;
-		} voice;
-	} data;
-};
-
-struct evspec_s {
-	struct ev_s min, max;
-};
-
-void ev_dbg(struct ev_s *ev);
-unsigned ev_sameclass(struct ev_s *ev1, struct ev_s *ev2);
-unsigned ev_str2cmd(struct ev_s *ev, char *str);
-
-void evspec_dbg(struct evspec_s *o);
-unsigned evspec_matchev(struct evspec_s *o, struct ev_s *e);
-
-
 #define EV_NULL		0
 #define EV_TIC		0x1
 #define EV_START	0x2
@@ -93,9 +62,63 @@ unsigned evspec_matchev(struct evspec_s *o, struct ev_s *e);
 #define EV_GETNOTE(ev)	((ev)->data.voice.b0)
 #define EV_GETCH(ev)	((ev)->data.voice.ch)
 #define EV_GETDEV(ev)	((ev)->data.voice.dev)
+#define EV_GETBEND(ev)	(0x80 * (ev)->data.voice.b0 + (ev)->data.voice.b1)
+#define EV_SETBEND(ev,v)				\
+	do { 						\
+		(ev)->data.voice.b0 = (v) >> 7;		\
+		(ev)->data.voice.b1 = (v) & 0x7f;	\
+	} while(0);
 
 #define EV_NOFF_DEFAULTVEL	100
 #define EV_BEND_DEFAULTLO	0
 #define EV_BEND_DEFAULTHI	0x40
+
+struct voice_s {
+#define EV_MAXDEV	(DEFAULT_MAXNDEVS - 1)
+#define EV_MAXCH	15
+#define EV_MAXB0	0x7f
+#define EV_MAXB1	0x7f
+#define EV_MAXBEND	0x3fff
+	unsigned char dev, ch, b0, b1;
+};
+
+struct ev_s {
+	unsigned cmd;
+	union {
+		struct {
+			unsigned long usec24;
+		} tempo;
+		struct {
+			unsigned short beats, tics;
+		} sign;
+		struct voice_s voice;
+	} data;
+};
+
+#define EVSPEC_ANY		0
+#define EVSPEC_NOTE		1
+#define EVSPEC_CTL		2
+#define EVSPEC_PC		3
+#define EVSPEC_CAT		4
+#define EVSPEC_BEND		5
+
+struct evspec_s {
+	unsigned cmd;
+	unsigned dev_min, dev_max;
+	unsigned ch_min, ch_max;
+	unsigned b0_min, b0_max;
+	unsigned b1_min, b1_max;
+};
+
+void ev_dbg(struct ev_s *ev);
+unsigned ev_sameclass(struct ev_s *ev1, struct ev_s *ev2);
+unsigned ev_str2cmd(struct ev_s *ev, char *str);
+
+unsigned evspec_str2cmd(struct evspec_s *ev, char *str);
+void evspec_dbg(struct evspec_s *o);
+void evspec_reset(struct evspec_s *o);
+unsigned evspec_matchev(struct evspec_s *o, struct ev_s *e);
+
+
 
 #endif /* SEQ_EV_H */

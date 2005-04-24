@@ -31,6 +31,8 @@
 #ifndef SEQ_TRACKOP_H
 #define SEQ_TRACKOP_H
 
+struct ev_s;
+struct evspec_s;
 struct track_s;
 struct seqptr_s;
 
@@ -39,13 +41,14 @@ void track_frameins(struct track_s *o, struct seqptr_s *p, struct track_s *frame
 unsigned track_framefind(struct track_s *o, struct seqptr_s *p);
 void track_frameuniq(struct track_s *o, struct seqptr_s *p, struct track_s *frame);
 void track_framecp(struct track_s *s, struct track_s *d);
+unsigned track_framematch(struct track_s *s, struct evspec_s *e);
 
 void track_opcheck(struct track_s *o);
 void track_opquantise(struct track_s *o, struct seqptr_s *, unsigned first, unsigned len, unsigned quantum, unsigned rate);
-void track_opextract(struct track_s *o, struct seqptr_s *, unsigned len, struct track_s *targ);
+void track_opextract(struct track_s *o, struct seqptr_s *, unsigned len, struct track_s *targ, struct evspec_s *es);
 void track_opcopy(struct track_s *o, struct seqptr_s *p, unsigned len, struct track_s *targ);
 
-void track_opdelete(struct track_s *o, struct seqptr_s *,  unsigned len);
+void track_opcut(struct track_s *o, struct seqptr_s *,  unsigned len);
 void track_opinsert(struct track_s *o, struct seqptr_s *, unsigned len);
 void track_opsetchan(struct track_s *o, unsigned chan, unsigned dev);
 unsigned track_opfindtic(struct track_s *o, unsigned m0);

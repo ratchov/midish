@@ -44,6 +44,11 @@ char *ev_cmdstr[EV_NUMCMD] = {
 	"tempo",	"timesig"
 };
 
+
+char *evspec_cmdstr[] = {
+	"any", "note", "ctl", "pc", "cat", "bend", 0
+};
+
 char *
 ev_getstr(struct ev_s *ev) {
 	if (ev->cmd >= EV_NUMCMD) {
@@ -155,41 +160,125 @@ ev_dbg(struct ev_s *ev) {
 	}
 }
 
+/* ------------------------------------------------------------------ */
+
+
+unsigned
+evspec_str2cmd(struct evspec_s *ev, char *str) {
+	unsigned i;
+
+	for (i = 0; evspec_cmdstr[i]; i++) {
+		if (str_eq(evspec_cmdstr[i], str)) {
+			ev->cmd = i;
+			return 1;
+		}
+	}
+	return 0;
+}
+
+void
+evspec_reset(struct evspec_s *o) {
+	o->cmd = EVSPEC_ANY;
+	o->dev_min = 0;
+	o->dev_max = EV_MAXDEV;
+	o->ch_min  = 0;
+	o->ch_max  = EV_MAXCH;
+	o->b0_min  = 0;
+	o->b0_max  = EV_MAXB0;
+	o->b1_min  = 0;
+	o->b1_max  = EV_MAXB1;
+}
 
 void
 evspec_dbg(struct evspec_s *o) {
-	dbg_puts("[ ");
-	ev_dbg(&o->min);
-	dbg_puts(" : ");
-	ev_dbg(&o->max);
-	dbg_puts(" ]");	
+	unsigned i;
+	
+	i = 0;
+	for (;;) {
+		if (evspec_cmdstr[i] == 0) {
+			dbg_puts("unknown");
+			break;
+		}
+		if (o->cmd == i) {
+			dbg_puts(evspec_cmdstr[i]);
+			break;
+		}
+		i++;
+	}
+	dbg_puts(" ");
+	dbg_putu(o->dev_min);
+	dbg_puts(":");
+	dbg_putu(o->dev_max);
+		
+	dbg_puts(" ");
+	dbg_putu(o->ch_min);
+	dbg_puts(":");
+	dbg_putu(o->ch_max);
+
+	if (o->cmd != EVSPEC_ANY) {
+		dbg_puts(" ");
+		dbg_putu(o->b0_min);
+		dbg_puts(":");
+		dbg_putu(o->b0_max);
+
+		if (o->cmd != EVSPEC_CAT && 
+		    o->cmd != EVSPEC_PC &&
+		    o->cmd != EVSPEC_BEND) {
+			dbg_puts(" ");
+			dbg_putu(o->b1_min);
+			dbg_puts(":");
+			dbg_putu(o->b1_max);
+		}
+	}
 }
 
 unsigned
 evspec_matchev(struct evspec_s *o, struct ev_s *e) {
-	if (o->min.cmd == EV_NULL) {
-		return 1;
-	} else if ((EV_ISNOTE(&o->min) && EV_ISNOTE(e)) ||
-	    (o->min.cmd == EV_CTL && e->cmd == EV_CTL) ||
-	    (o->min.cmd == EV_BEND && e->cmd == EV_BEND)) {
-		goto two;
-	} else if ((o->min.cmd == EV_CAT && e->cmd == EV_CAT) ||
-	    (o->min.cmd == EV_PC && e->cmd == EV_PC)) {
-		goto one;
-	} else {
-		return 0;		
+	switch(o->cmd) {
+	case EVSPEC_ANY:
+		goto ch;
+	case EVSPEC_NOTE:
+		if (EV_ISNOTE(e)) {
+			goto b0;
+		}
+		break;
+	case EVSPEC_CTL:
+		if (e->cmd == EV_CTL) {
+			goto b0;
+		}
+		break;
+	case EVSPEC_CAT:
+		if (e->cmd == EV_CAT) {
+			goto b1;
+		}
+		break;
+	case EVSPEC_PC:
+		if (e->cmd == EV_PC) {
+			goto b1;
+		}
+		break;
+	case EVSPEC_BEND:
+		if (e->cmd == EV_BEND) {
+			goto b1;
+		}
+		break;
+	default:
+		break;
 	}
+	return 0;
 
-two:	if (e->data.voice.b1 < o->min.data.voice.b1 ||
-	    e->data.voice.b1 > o->max.data.voice.b1) {
+b1:	if (e->data.voice.b1 < o->b1_min ||
+	    e->data.voice.b1 > o->b1_max) {
 		return 0;
 	}
-one:	if (e->data.voice.dev < o->min.data.voice.dev ||
-	    e->data.voice.dev > o->max.data.voice.dev ||
-	    e->data.voice.ch < o->min.data.voice.ch ||
-	    e->data.voice.ch > o->max.data.voice.ch ||
-	    e->data.voice.b0 < o->min.data.voice.b0 ||
-	    e->data.voice.b0 > o->max.data.voice.b0) {
+b0:	if (e->data.voice.b0 < o->b0_min ||
+	    e->data.voice.b0 > o->b0_max) {
+		return 0;
+	}
+ch:	if (e->data.voice.dev < o->dev_min ||
+	    e->data.voice.dev > o->dev_max ||
+	    e->data.voice.ch < o->ch_min ||
+	    e->data.voice.ch > o->ch_max) {
 		return 0;
 	}
 	return 1;

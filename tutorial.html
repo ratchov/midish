@@ -483,14 +483,17 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 	For instance let us blank measure number 3 of
 	track <TT>mypiano</TT>:
 	<PRE>
-	trackblank mypiano 3 1 (96 / 16)
+	trackblank mypiano 3 1 (96 / 16) {}
 	</PRE>
 	the 3-rd argument set the precision to sixteenth note
 	(assuming 96 tics per unit note). This
 	means that notes starting just before the 3-rd measure will
-	be suppressed. This is useful, because often recorded notes
+	be suppressed. 
+	This is useful, because often recorded notes
 	doesn't start exactly on the measure boundary. The precision
 	argument let you edit a track that is not quantised.
+	The latest argument (empty list) selects the events to be 
+	deleted (see section "event ranges" in the manual).
 
 	<P>
 	In a similar way, one can cut a piece of a track, 
@@ -511,11 +514,13 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 	A track portion ca be copied into
 	another track as follows:
 	<PRE>
-	trackcopy mypiano 3 2 mypiano2 5 (96 / 16)
+	trackcopy mypiano 3 2 mypiano2 5 (96 / 16) {}
 	</PRE>
 	this will copy 2 measures starting from measure
 	number 3 into (the already existing) track <TT>mypiano2</TT>
 	at measure 5.
+	The latest argument (empty list) selects the events to be 
+	copied (see section "event ranges" in the manual).
 	
 
 <H2>Track quantisation</H2>
@@ -1084,7 +1089,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <HR>
 <SMALL><EM>
 Copyright (c) 2003-2005 Alexandre Ratchov<BR>
-Last updated apr 6, 2005 	
+Last updated apr 24, 2005 	
 </EM></SMALL>
 	
 

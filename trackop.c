@@ -225,6 +225,27 @@ track_framecp(struct track_s *s, struct track_s *d) {
 	}
 }
 
+	/*
+	 * retrun 1 if all avents match the givent event range
+	 * and zero otherwise
+	 */
+
+unsigned
+track_framematch(struct track_s *s, struct evspec_s *e) {
+	struct seqptr_s sp;
+	track_rew(s, &sp);
+	for (;;) {
+		if (!track_seqevavail(s, &sp)) {
+			break;
+		}
+		if (!evspec_matchev(e, &(*sp.pos)->ev)) {
+			return 0;
+		}
+		track_seqevnext(s, &sp);
+	}
+	return 1;
+}
+
 
 	/*
 	 * suppress orphaned NOTEOFFs and NOTEONs and nested notes
@@ -368,7 +389,7 @@ track_opquantise(struct track_s *o, struct seqptr_s *p,
 
 void
 track_opextract(struct track_s *o, struct seqptr_s *p, 
-    unsigned len, struct track_s *targ) {
+    unsigned len, struct track_s *targ, struct evspec_s *es) {
 	struct track_s frame;
 	struct seqptr_s op, tp;
 	unsigned delta, tic;
@@ -388,8 +409,12 @@ track_opextract(struct track_s *o, struct seqptr_s *p,
 			break;
 		}
 		
-		track_framerm(o, &op, &frame);
-		track_frameins(targ, &tp, &frame);
+		if (evspec_matchev(es, &(*op.pos)->ev)) {
+			track_framerm(o, &op, &frame);
+			track_frameins(targ, &tp, &frame);
+		} else {
+			track_evnext(o, &op);
+		}
 	}	
 	track_done(&frame);
 }
@@ -401,7 +426,7 @@ track_opextract(struct track_s *o, struct seqptr_s *p,
 	
 
 void
-track_opdelete(struct track_s *o, struct seqptr_s *p, unsigned len) {
+track_opcut(struct track_s *o, struct seqptr_s *p, unsigned len) {
 	struct track_s frame, temp;
 	struct seqptr_s op, fp, tp;
 	unsigned delta, tic;

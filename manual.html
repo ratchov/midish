@@ -203,6 +203,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 		<TT>chanrename</TT>, 
 		<TT>filtrename</TT>
 	<LI> renamed <TT>changetnum</TT> into <TT>changetch</TT>
+	<LI> added "event ranges", and an event range argument to 
+		<TT>trackblank</TT> and
+		<TT>trackcopy</TT>
+	<LI> removed support for single number channels.
 	</UL>
 
 <A name="language"></A>
@@ -621,6 +625,49 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 	</PRE>
 
 
+<A name="evrange">
+<H1>Event ranges</H1>
+
+	Some track editiong functions take an event range as argument. 
+	The event range is specified as a list containing:
+	<UL>
+	<LI> an optionnal reference from the following list:
+	     <TT>any</TT>, <TT>note</TT>, <TT>ctl</TT>, <TT>pc</TT>, <TT>cat</TT>, <TT>bend</TT>.
+	<LI> an optionnal channel range specified as a list containing
+		a device number range and a midi-channel number
+		range. Number ranges are specified a two-number list
+		like this. Channel name matches an unique channel.
+	<LI> an optionnal  number range, specified a as a list
+		of two number like this <TT>{12 65}</TT>
+	<LI> an optionnal second number range, in the same
+		format as the first one (not permitted for <TT>pc</TT>, 
+		<TT>bend</TT> and <TT>cat</TT>)
+	</UL>
+	In the above, empty lists can also be used. An empty list
+	means "match everything".
+	
+	<P>
+	Examples:
+	<BR>
+	<PRE>
+	{}			# match everything
+	{ any }			# match everything
+	{ any bass }		# match anything on channel 'bass'
+	{ any {1 4} }		# match anything on device 1, channel 4
+	{ any {1 {}} }		# match anything on device 1, any channel
+	{ any {{} 9} }		# match anything on any device and channel 9
+	{ note }		# match note events
+	{ note {1 9} }		# match notes on dev 1, channel 9
+	{ note {0 {}} }		# match notes on device 0
+	{ note {0 {3 5}} }	# match notes on device 0, channel 3, 4, 5
+	{ note {} {0 64} }	# match notes between 0 an 64
+	{ note {} 60 {80 127} }	# match note 60 with velocity between 80 an 127
+	{ ctl bass }		# match controllers on channel 'bass'
+	{ ctl bass 7 }		# match controller 7 on channel 'bass'
+	{ ctl bass 7 {0 64} }	# match ctl 7 on chan 'bass' with value 0->64
+	{ bend {} {0 0x1fff} }	# match "lower" bender
+	</PRE>	
+
 <A name="filters"></A>
 <H1>Filters</H1>
 
@@ -734,10 +781,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 	from measure <TT>from</TT>.
 	</BLOCKQUOTE>
 
-<B><TT>trackblank trackname from amount quantum</TT></B>
+<B><TT>trackblank trackname from amount quantum evspec</TT></B>
 	<BLOCKQUOTE>
 	clears <TT>amount</TT> measures of the track <TT>trackname</TT>
-	from the measure <TT>from</TT>.
+	from the measure <TT>from</TT>. Only events matching
+	the <TT>evspec</TT> argument are removed (see event
+	<A href="eventrange">ranges</A>)
 	</BLOCKQUOTE>
 
 <B><TT>trackinsert trackname from amount</TT></B>
@@ -746,11 +795,13 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 	<TT>trackname</TT> just before the measure <TT>from</TT>
 	</BLOCKQUOTE>
 
-<B><TT>trackcopy trackname1 from amount trackname2 where  quantum</TT></B>
+<B><TT>trackcopy trackname1 from amount trackname2 where quantum evspec</TT></B>
 	<BLOCKQUOTE>
 	copies <TT>amount</TT> measures starting at <TT>from</TT>
 	from track <TT>trackname1</TT> into <TT>trackname2</TT>
-	at position <TT>where</TT>
+	at position <TT>where</TT>. Only events matching
+	the <TT>evspec</TT> argument are copied (see event
+	<A href="eventrange">ranges</A>)
 	</BLOCKQUOTE>
 
 <B><TT>trackquant trackname from amount rate quantum</TT></B>

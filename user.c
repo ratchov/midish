@@ -283,9 +283,13 @@ exec_lookupev(struct exec_s *o, char *name, struct ev_s *ev) {
 		user_printstr("bad byte0 in event spec\n");
 		return 0;
 	}
-	ev->data.voice.b0 = d->val.num;
+	if (ev->cmd == EV_BEND) {
+		EV_SETBEND(ev, d->val.num);
+	} else {
+		ev->data.voice.b0 = d->val.num;
+	}		
 	d = d->next;
-	if (ev->cmd != EV_PC && ev->cmd != EV_CAT) {
+	if (ev->cmd != EV_PC && ev->cmd != EV_CAT && ev->cmd != EV_BEND) {
 		if (!d || d->type != DATA_LONG) {
 			user_printstr("bad byte1 in event spec\n");
 			return 0;
@@ -351,31 +355,18 @@ exec_lookupevspec(struct exec_s *o, char *name, struct evspec_s *e) {
 	}
 
 	/* default match any event */
-
-	e->min.cmd = EV_NULL;
-	e->min.data.voice.dev = 0;
-	e->min.data.voice.ch = 0;
-	e->min.data.voice.b0 = 0;
-	e->min.data.voice.b1 = 0;
-	e->max.cmd = EV_NULL;
-	e->max.data.voice.dev = EV_MAXDEV;
-	e->max.data.voice.ch = EV_MAXCH;
-	e->max.data.voice.b0 = EV_MAXB0;
-	e->max.data.voice.b1 = EV_MAXB1;
+	evspec_reset(e);
 
 	d = d->val.list;
 	if (!d) {
 		return 1;
 	}
-	if (d->type != DATA_REF || 
-	    !ev_str2cmd(&e->min, d->val.ref) ||
-	    !EV_ISVOICE(&e->min) ||
-	    (EV_ISNOTE(&e->min) && e->min.cmd != EV_NON)) {
+	if (d->type != DATA_REF ||
+	    !evspec_str2cmd(e, d->val.ref)) {
 		user_printstr("bad status in event spec\n");
 		return 0;
 	}
-	e->max.cmd = e->min.cmd;
-
+	
 	d = d->next;
 	if (!d) {
 		return 1;
@@ -386,9 +377,8 @@ exec_lookupevspec(struct exec_s *o, char *name, struct evspec_s *e) {
 			user_printstr("no such chan name\n");
 			return 0;
 		}
-		e->min.data.voice.dev = e->max.data.voice.ch = i->dev;
-		e->min.data.voice.ch = e->max.data.voice.ch = i->ch;
-		return 1;
+		e->dev_min = e->dev_max = i->dev;
+		e->ch_min = e->ch_max = i->ch;
 	} else if (d->type == DATA_LIST) {
 		if (!d->val.list) {		/* empty list = any chan/dev */
 			/* nothing */
@@ -398,13 +388,13 @@ exec_lookupevspec(struct exec_s *o, char *name, struct evspec_s *e) {
 			if (!data_list2range(d->val.list, 0, EV_MAXDEV, &lo, &hi)) {
 				return 0;
 			}
-			e->min.data.voice.dev = lo;
-			e->max.data.voice.dev = hi;
+			e->dev_min = lo;
+			e->dev_max = hi;
 			if (!data_list2range(d->val.list->next, 0, EV_MAXCH, &lo, &hi)) {
 				return 0;
 			}
-			e->min.data.voice.ch = lo;
-			e->max.data.voice.ch = hi;	
+			e->ch_min = lo;
+			e->ch_max = hi;	
 		} else {
 			user_printstr("bad channel range spec\n");
 			return 0;
@@ -414,27 +404,41 @@ exec_lookupevspec(struct exec_s *o, char *name, struct evspec_s *e) {
 	d = d->next;
 	if (!d) {
 		return 1;
-	}		
-	if (!data_list2range(d, 0, EV_MAXB0, &lo, &hi)) {
-		return 0;
 	}
-	e->min.data.voice.b0 = lo;
-	e->max.data.voice.b0 = hi;
+	if (e->cmd == EVSPEC_ANY) {
+		goto toomany;
+	}
+	if (e->cmd == EVSPEC_BEND) {
+		if (!data_list2range(d, 0, EV_MAXBEND, &lo, &hi)) {
+			return 0;
+		}
+		e->b0_min = lo;
+		e->b0_max = hi;
+	} else {
+		if (!data_list2range(d, 0, EV_MAXB0, &lo, &hi)) {
+			return 0;
+		}
+		e->b0_min = lo;
+		e->b0_max = hi;
+	}
 	d = d->next;
 	if (!d) {
 		return 1;
 	}
-	if (e->min.cmd != EV_PC && e->min.cmd != EV_CAT) {
+	if (e->cmd != EVSPEC_PC && 
+	    e->cmd != EVSPEC_CAT && 
+	    e->cmd != EVSPEC_BEND) {
 		if (!data_list2range(d, 0, EV_MAXB1, &lo, &hi)) {
 			return 0;
 		}
-		e->min.data.voice.b1 = lo;
-		e->max.data.voice.b1 = hi;
+		e->b1_min = lo;
+		e->b1_max = hi;
 		d = d->next;
 		if (!d) {
 			return 1;
 		}
 	}
+toomany:
 	user_printstr("too many ranges in event spec\n");
 	return 0;				
 }
@@ -774,7 +778,7 @@ user_func_trackcut(struct exec_s *o) {
 
 	track_rew(&t->track, &op);
 	track_seek(&t->track, &op, tic);
-	track_opdelete(&t->track, &op, len);
+	track_opcut(&t->track, &op, len);
 	return 1;
 }
 
@@ -784,13 +788,15 @@ user_func_trackblank(struct exec_s *o) {
 	struct songtrk_s *t;
 	struct track_s null;
 	struct seqptr_s tp;
+	struct evspec_s es;
 	long from, amount, quant;
 	unsigned tic, len;
 	
 	if (!exec_lookuptrack(o, "trackname", &t) ||
 	    !exec_lookuplong(o, "from", &from) ||
 	    !exec_lookuplong(o, "amount", &amount) ||
-	    !exec_lookuplong(o, "quantum", &quant)) {
+	    !exec_lookuplong(o, "quantum", &quant) ||
+	    !exec_lookupevspec(o, "evspec", &es)) {
 		return 0;
 	}
 	tic = song_measuretotic(user_song, from);
@@ -803,7 +809,7 @@ user_func_trackblank(struct exec_s *o) {
 	track_init(&null);
 	track_rew(&t->track, &tp);
 	track_seek(&t->track, &tp, tic);
-	track_opextract(&t->track, &tp, len, &null);
+	track_opextract(&t->track, &tp, len, &null, &es);
 	track_done(&null);
 	return 1;
 }
@@ -814,6 +820,7 @@ user_func_trackcopy(struct exec_s *o) {
 	struct songtrk_s *t, *t2;
 	struct track_s null, null2;
 	struct seqptr_s tp, tp2;
+	struct evspec_s es;
 	long from, where, amount, quant;
 	unsigned tic, tic2, len;
 	
@@ -822,7 +829,8 @@ user_func_trackcopy(struct exec_s *o) {
 	    !exec_lookuplong(o, "amount", &amount) ||
 	    !exec_lookuptrack(o, "trackname2", &t2) ||
 	    !exec_lookuplong(o, "where", &where) ||
-	    !exec_lookuplong(o, "quantum", &quant)) {
+	    !exec_lookuplong(o, "quantum", &quant) ||
+	    !exec_lookupevspec(o, "evspec", &es)) {
 		return 0;
 	}
 	tic  = song_measuretotic(user_song, from);
@@ -840,7 +848,7 @@ user_func_trackcopy(struct exec_s *o) {
 	track_seek(&t->track, &tp, tic);
 	track_rew(&t2->track, &tp2);
 	track_seekblank(&t2->track, &tp2, tic2);
-	track_opextract(&t->track, &tp, len, &null);
+	track_opextract(&t->track, &tp, len, &null, &es);
 	track_framecp(&null, &null2);
 	track_frameins(&t->track, &tp, &null);
 	track_frameins(&t2->track, &tp2, &null2);
@@ -1863,7 +1871,7 @@ user_func_songtimerm(struct exec_s *o) {
 	if (track_seek(&user_song->meta, &mp, pos)) {
 		return 1;
 	}
-	track_opdelete(&user_song->meta, &mp, tics);
+	track_opcut(&user_song->meta, &mp, tics);
 	track_optimeinfo(&user_song->meta, pos, &usec24, &bpm, &tpb);
 	
 	if (bpm != save_bpm || tpb != save_tpb) {
@@ -2194,14 +2202,16 @@ user_mainloop(void) {
 			name_newarg("trackname", 
 			name_newarg("from", 
 			name_newarg("amount", 
-			name_newarg("quantum", 0)))));
+			name_newarg("quantum", 
+			name_newarg("evspec", 0))))));
 	exec_newbuiltin(exec, "trackcopy", user_func_trackcopy,
 			name_newarg("trackname", 
 			name_newarg("from", 
 			name_newarg("amount", 
 			name_newarg("trackname2", 
 			name_newarg("where", 
-			name_newarg("quantum", 0)))))));
+			name_newarg("quantum", 
+			name_newarg("evspec",  0))))))));
 	exec_newbuiltin(exec, "trackinsert", user_func_trackinsert,
 			name_newarg("trackname", 
 			name_newarg("from", 
