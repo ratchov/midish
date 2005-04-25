@@ -1,12 +1,4 @@
-- big changes were made, bugs may be introduced.
-  take one by one each module audit it and test each piece of code.
-
-- (easy) change 'play' semantics not to always use current filter;
-  songfilter is only used in setcurtrack or not at all
-
-- (easy) add 'mute' flag to tracks
-
-- create a tempo factor for recording
+- (easy) create a tempo factor for recording
 
 - (difficult) add sysex support: create an allocator for real-time recording
 
