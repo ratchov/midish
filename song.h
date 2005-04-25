@@ -55,6 +55,7 @@ struct songtrk_s {
 	struct track_s track;			/* actual data */
 	struct seqptr_s trackptr;		/* track pointer for RT */
 	struct songfilt_s *curfilt;		/* source and dest. channel */
+	unsigned mute;
 };
 
 struct songtrk_s *songtrk_new(char *);

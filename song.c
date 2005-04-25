@@ -50,6 +50,7 @@ songtrk_new(char *name) {
 	o->curfilt = 0;
 	track_init(&o->track);
 	track_rew(&o->track, &o->trackptr);
+	o->mute = 0;
 	return o;
 }
 
@@ -464,7 +465,9 @@ song_playtic(struct song_s *o) {
 			while (track_evavail(&i->track, &i->trackptr)) {
 				track_evget(&i->track, &i->trackptr, &ev);
 				if (EV_ISVOICE(&ev)) {
-					mux_putev(&ev);
+					if (!i->mute) {
+						mux_putev(&ev);
+					}
 				} else {
 					dbg_puts("song_playtic: event not implemented : ");
 					dbg_putx(ev.cmd);
@@ -477,17 +480,10 @@ song_playtic(struct song_s *o) {
 
 void
 song_rt_setup(struct song_s *o) {
-	if (o->curtrk) {
-		if (o->curtrk->curfilt) {
-			o->filt = &o->curtrk->curfilt->filt;
-			if (o->curfilt != o->curtrk->curfilt) {
-				dbg_puts("warning: using track filter instead of current filt\n");
-			}
-		} else {
-			o->filt = 0;
-		}
-	} else if (o->curfilt) {
+	if (o->curfilt) {
 		o->filt = &o->curfilt->filt;	
+	} else if (o->curtrk && o->curtrk->curfilt) {
+			o->filt = &o->curtrk->curfilt->filt;
 	} else {
 		o->filt = 0;
 	}
@@ -715,8 +711,8 @@ song_record(struct song_s *o) {
 	unsigned tic;
 	struct seqptr_s cp;
 	
-	if (!o->curtrk) {
-		dbg_puts("song_record: no current track to record\n");
+	if (!o->curtrk || o->curtrk->mute) {
+		dbg_puts("song_record: no current track or current track is muted\n");
 	}
 	song_rt_setup(o);
 

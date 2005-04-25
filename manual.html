@@ -738,7 +738,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <B><TT>tracksetcurfilt trackname filtname</TT></B>
 	<BLOCKQUOTE>
 	sets the default filter (for recording) of
-	<TT>trackname</TT> to <TT>filtname</TT>
+	<TT>trackname</TT> to <TT>filtname</TT>. It will
+	be user if there is no current filter.
 	</BLOCKQUOTE>
 
 <B><TT>trackgetcurfilt trackname</TT></B>
@@ -754,12 +755,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 	removes multiple controllers in the same tic
 	</BLOCKQUOTE>
 
-<B><TT>trackgetlen</TT></B>
+<B><TT>trackgetlen trackname</TT></B>
 	<BLOCKQUOTE>
-	returns the size in tics of the current track,
+	returns the size in tics of track <TT>trackname</TT>,
 	example:
 	<PRE>
-	let l = [trackgetlen];
+	let l = [trackgetlen mytrack];
 	</PRE>
 	</BLOCKQUOTE>
 
@@ -824,6 +825,20 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 	puts the event <TT>ev</TT> on track <TT>trackname</TT>
 	at the position given by <TT>measure</TT>,
 	<TT>beat</TT> and <TT>tic</TT>
+	</BLOCKQUOTE>
+
+<B><TT>tracksetmute trackname muteflag</TT></B>
+	<BLOCKQUOTE>
+	If <TT>muteflag</TT> is equal to 1 the the track
+	is mutted ie it will not be played during record/playback.
+	If <TT>muteflag</TT> is equal to 0 the the track
+	is no more mutted ie it will be played during record/playback.
+	</BLOCKQUOTE>
+
+
+<B><TT>trackgetmute trackname</TT></B>
+	<BLOCKQUOTE>
+	Return 1 if the give track is mutted and 0 otherwise.
 	</BLOCKQUOTE>
 
 <H2>Channel functions</H2>
@@ -1028,27 +1043,25 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 <H2>Real-time functions</H2>
 
-<B><TT>songrecord</TT></B>
+<B><TT>songidle</TT></B>
 	<BLOCKQUOTE>
-	plays the song and records the input.
-	Input passes through the filter of
-	the current track (if any).
+	puts midi input to the midi output,
+	data passes through the current filter (if any)
+	or through the current track's filter (if any).
 	</BLOCKQUOTE>
 
 <B><TT>songplay</TT></B>
 	<BLOCKQUOTE>
 	plays the song from the current position.
-	Input passes through the filter of
-	the current track (if any) or through
-	the current filter (if any).
+	Input passes through the current filter (if any)
+	or through the current track's filter (if any).
 	</BLOCKQUOTE>
 
-<B><TT>songidle</TT></B>
+<B><TT>songrecord</TT></B>
 	<BLOCKQUOTE>
-	puts midi input to the midi output,
-	data passes through the filter of
-	the current track (if any) or through
-	the current filter (if any).
+	plays the song and records the input.
+	Input passes through the current filter (if any)
+	or through the current track's filter (if any).
 	</BLOCKQUOTE>
 
 <B><TT>sendraw device arrayofbytes</TT></B>
@@ -1101,7 +1114,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <B><TT>songsetcurfilt filtname</TT></B>
 	<BLOCKQUOTE>
 	set the current filter ie the one used (with
-	songplay and songidle) if there is no current track
+	songplay and songidle).
 	</BLOCKQUOTE>
 
 <B><TT>songgetcurfilt</TT></B>

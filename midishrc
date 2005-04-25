@@ -119,7 +119,12 @@ proc l  {
 		} else {
 			let prefix = "   ";
 		}
-		print { $prefix $i "( record:" [trackgetcurfilt $i] ")" }
+		if [trackgetmute $i] {
+			let mute = ", muted";
+		} else {
+			let mute = "";
+		}
+		print { $prefix $i "( record:" [trackgetcurfilt $i] $mute ")"}
 	}
 	print "channels:"
 	for i in [chanlist] {
@@ -218,6 +223,39 @@ proc gcopy amount where {
 	let from = [songgetcurpos]
 	for track in [tracklist] {
 		trackcopy $track $from $amount $track ($where + $from) [songgetcurquant] {}
+	}
+}
+
+
+#
+# mute a track
+#
+proc mute track {
+	tracksetmute $track 1
+}
+
+#
+# unmute a track
+#
+proc unmute track {
+	tracksetmute $track 0
+}
+
+#
+# unmute all tracks
+#
+proc nomute {
+	for i in [tracklist] {
+		tracksetmute $i 0
+	}
+}
+
+#
+# mute all tracks but current
+#
+proc solo {
+	for i in [tracklist] {
+		tracksetmute $i ($i != [songgetcurtrack])
 	}
 }
 

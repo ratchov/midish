@@ -934,6 +934,30 @@ user_func_trackquant(struct exec_s *o) {
 	return 1;
 }
 
+unsigned
+user_func_tracksetmute(struct exec_s *o) {
+	struct songtrk_s *t;
+	long flag;
+	
+	if (!exec_lookuptrack(o, "trackname", &t) ||
+	    !exec_lookupbool(o, "muteflag", &flag)) {
+		return 0;
+	}
+	t->mute = flag;
+	return 1;
+}
+
+unsigned
+user_func_trackgetmute(struct exec_s *o) {
+	struct songtrk_s *t;
+	
+	if (!exec_lookuptrack(o, "trackname", &t)) {
+		return 0;
+	}
+	exec_putacc(o, data_newlong(t->mute));
+	return 1;
+}
+
 /* -------------------------------------------------- chan stuff --- */
 
 
@@ -2223,6 +2247,11 @@ user_mainloop(void) {
 			name_newarg("amount", 
 			name_newarg("rate", 
 			name_newarg("quantum", 0))))));
+	exec_newbuiltin(exec, "tracksetmute", user_func_tracksetmute,
+			name_newarg("trackname",
+			name_newarg("muteflag", 0)));
+	exec_newbuiltin(exec, "trackgetmute", user_func_trackgetmute,
+			name_newarg("trackname", 0));
 
 	exec_newbuiltin(exec, "chanlist", user_func_chanlist, 0);
 	exec_newbuiltin(exec, "channew", user_func_channew, 

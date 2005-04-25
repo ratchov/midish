@@ -902,7 +902,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 		position at measure number <TT>pos</TT>
 		on the current track
 		</BLOCKQUOTE>
-		
+
 	<B><TT>gcut num</TT></B> 
 		<BLOCKQUOTE>
 		same as <TT>cut</TT> but acts on all tracks
@@ -915,6 +915,34 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 		simultaneously ("g" like global).
 		</BLOCKQUOTE>
 
+	<B><TT>gcopy num</TT></B> 
+		<BLOCKQUOTE>
+		same as <TT>copy</TT> but acts on all tracks
+		simultaneously ("g" like global).
+		</BLOCKQUOTE>
+
+	<B><TT>mute trackname</TT>
+		<BLOCKQUOTE>
+		mute track <TT>trackname</TT>. The track will
+		be no more audible during playback.
+		</BLOCKQUOTE>
+		
+	<B><TT>solo</TT>
+		<BLOCKQUOTE>
+		mute all tracks but current
+		</BLOCKQUOTE>
+
+	<B><TT>unmute trackname</TT>
+		<BLOCKQUOTE>
+		unmute track <TT>trackname</TT>. The track will
+		be audible during playback.
+		</BLOCKQUOTE>
+		
+	<B><TT>nomute</TT>
+		<BLOCKQUOTE>
+		unmute all tracks.
+		</BLOCKQUOTE>	
+		
 	<B><TT>save filename</TT></B>
 		<BLOCKQUOTE>
 		save the whole project (filters, tracks, channels,

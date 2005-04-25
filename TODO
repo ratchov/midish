@@ -6,12 +6,10 @@
 
 - (easy) add 'mute' flag to tracks
 
-- create an evspec_s structure that
-  can handle an event specification (note range, 
-  controller range etc...). Use it to let track editing functions
-  to act only on selected events
-
 - create a tempo factor for recording
 
-- add sysex support: create an allocator for real-time recording
+- (difficult) add sysex support: create an allocator for real-time recording
 
+- (difficult) when recording, what to do with datas recieved
+  before the first EV_TIC? shold we record them on the track,
+  at position number 0 ?

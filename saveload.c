@@ -250,6 +250,10 @@ songtrk_output(struct songtrk_s *o, struct textout_s *f) {
 		textout_putstr(f, o->curfilt->name.str);
 		textout_putstr(f, "\n");
 	}
+	textout_indent(f);
+	textout_putstr(f, "mute ");
+	textout_putlong(f, o->mute);
+	textout_putstr(f, "\n");
 
 	textout_indent(f);
 	textout_putstr(f, "track ");
@@ -481,6 +485,14 @@ parse_chan(struct parse_s *o, unsigned long *dev, unsigned long *ch) {
 		}
 		if (o->lex.id != TOK_RBRACE) {
 			parse_error(o, "'}' expected in channel spec\n");
+			return 0;
+		}
+		return 1;
+	} else if (o->lex.id == TOK_NUM) {
+		*dev = o->lex.longval / (EV_MAXCH + 1);
+		*ch = o->lex.longval % (EV_MAXCH + 1);
+		if (*dev > EV_MAXDEV) {
+			parse_error(o, "dev/chan out of range\n");
 			return 0;
 		}
 		return 1;
@@ -790,6 +802,7 @@ unsigned
 parse_songtrk(struct parse_s *o, struct song_s *s, struct songtrk_s *t) {
 	struct songchan_s *c = 0;
 	struct songfilt_s *f;
+	unsigned long val;
 	
 	if (!parse_getsym(o)) {
 		return 0;
@@ -828,6 +841,14 @@ parse_songtrk(struct parse_s *o, struct song_s *s, struct songtrk_s *t) {
 				if (!parse_track(o, &t->track)) {
 					return 0;
 				}
+				if (!parse_nl(o)) {
+					return 0;
+				}
+			} else if (str_eq(o->lex.strval, "mute")) {
+				if (!parse_long(o, 1, &val)) {
+					return 0;
+				}
+				t->mute = val;
 				if (!parse_nl(o)) {
 					return 0;
 				}
