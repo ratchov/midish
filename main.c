@@ -60,6 +60,7 @@ main(int argc, char *argv[]) {
 	cons_init();
 	seqev_pool_init(DEFAULT_MAXNSEQEVS);
 	state_pool_init(DEFAULT_MAXNSTATES);
+	chunk_pool_init(DEFAULT_MAXNCHUNKS);
 	mididev_listinit();
 	song_init(&song);
 		
@@ -67,6 +68,7 @@ main(int argc, char *argv[]) {
 	
 	song_done(&song);
 	mididev_listdone();
+	chunk_pool_done();
 	state_pool_done();
 	seqev_pool_done();
 	cons_done();

@@ -82,6 +82,13 @@ struct voice_s {
 	unsigned char dev, ch, b0, b1;
 };
 
+struct chunk_s {
+	struct chunk_s *next;
+	unsigned used;
+#define CHUNK_SIZE	0x100
+	unsigned char data[CHUNK_SIZE];
+};
+
 struct ev_s {
 	unsigned cmd;
 	union {
@@ -89,9 +96,14 @@ struct ev_s {
 			unsigned long usec24;
 		} tempo;
 		struct {
-			unsigned short beats, tics;
+			unsigned beats, tics;
 		} sign;
+		struct {
+			unsigned unit;
+			struct chunk_s *chunk;
+		} raw;
 		struct voice_s voice;
+		
 	} data;
 };
 
@@ -109,6 +121,11 @@ struct evspec_s {
 	unsigned b0_min, b0_max;
 	unsigned b1_min, b1_max;
 };
+
+void chunk_pool_init(unsigned size);
+void chunk_pool_done(void);
+struct chunk_s *chunk_new(void);
+void chunk_del(struct chunk_s *se);
 
 void ev_dbg(struct ev_s *ev);
 unsigned ev_sameclass(struct ev_s *ev1, struct ev_s *ev2);

@@ -1470,7 +1470,7 @@ user_func_filtkeymap(struct exec_s *o) {
 	
 	if (!exec_lookupfilt(o, "filtname", &f) ||
 	    !exec_lookupchan_getnum(o, "inchan", &idev, &ich) ||
-	    !exec_lookupchan_getnum(o, "outchan", &idev, &och) ||
+	    !exec_lookupchan_getnum(o, "outchan", &odev, &och) ||
 	    !exec_lookuplong(o, "keystart", &kstart) || 
 	    !exec_lookuplong(o, "keyend", &kend) ||
 	    !exec_lookuplong(o, "keyplus", &kplus)) {

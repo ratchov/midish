@@ -41,9 +41,12 @@ pool_init(struct pool_s *o, char *name, unsigned itemsize, unsigned itemnum) {
 	
 	/* round item size */
 	
+	if (itemsize < sizeof(struct poolentry_s)) {
+		itemsize = sizeof(struct poolentry_s);
+	}
 	itemsize += sizeof(unsigned) - 1;
 	itemsize &= ~(sizeof(unsigned) - 1);
-	
+		
 	o->data = mem_alloc(itemsize * itemnum);
 	if (!o->data) {
 		dbg_puts("pool_init(");
@@ -59,6 +62,11 @@ pool_init(struct pool_s *o, char *name, unsigned itemsize, unsigned itemnum) {
 	o->maxused = 0;
 	o->used = 0;
 	o->newcnt = 0;
+	dbg_puts("pool_init(");
+	dbg_puts(o->name);
+	dbg_puts("): using ");
+	dbg_putu((1023 + o->itemnum * o->itemsize)/1024);
+	dbg_puts(" Kbytes\n");	
 #endif	
 	p = o->data;
 	for (i = itemnum; i != 0; i--) {

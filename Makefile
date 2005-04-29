@@ -27,6 +27,8 @@ cons.o data.o dbg.o ev.o filt.o lex.o main.o mdep.o mididev.o mux.o name.o \
 parse.o pool.o rmidi.o saveload.o smf.o song.o str.o textio.o \
 track.o trackop.o tree.o user.o
 
+.PHONY: all clean install
+
 all:		${PROG}
 
 ${PROG}:	${OBJS}
@@ -56,7 +58,7 @@ mkcurves:	mkcurves.c
 cons.o:		cons.c dbg.h cons.h textio.h
 data.o:		data.c dbg.h data.h str.h user.h
 dbg.o:		dbg.c dbg.h dbg.h
-ev.o:		ev.c dbg.h ev.h default.h str.h
+ev.o:		ev.c dbg.h ev.h default.h str.h pool.h
 filt.o:		filt.c dbg.h ev.h default.h filt.h pool.h
 lex.o:		lex.c dbg.h lex.h textio.h str.h user.h
 main.o:		main.c dbg.h cons.h ev.h default.h mux.h track.h pool.h song.h str.h str.h name.h filt.h user.h mididev.h
