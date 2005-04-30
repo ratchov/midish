@@ -54,7 +54,6 @@
 #endif
 
 #define MIDI_BUFSIZE	1024
-#define CONS_LINESIZE	1024
 
 unsigned char mdep_midibuf[MIDI_BUFSIZE];
 struct timeval mdep_tv;
