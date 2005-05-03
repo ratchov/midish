@@ -1,7 +1,21 @@
-Midish - command-line MIDI sequencer/filter for BSD and Linux
-Copyright (c) 2002-2005 Alexandre Ratchov
+Midish is an open-source MIDI sequencer/filter for Unix-like operating 
+systems (tested on OpenBSD and Linux). Implemented as a simple command-line 
+interpreter (like a shell) it's intended to be lightweight, fast and 
+reliable for real-time performance.
 
-refer to manual.html and tutorial.html for the installation procedure 
-and more details about midish.
+Important features:
 
-feedback appreciated at:  midish [at] caoua [dot] org
+	- multiple MIDI devices handling
+	- synchronisation to external midi devices
+	- real-time MIDI filtering/routing (controller 
+	  mapping, keyboard splitting, ...)
+	- track recording, metronome
+	- basic track editing (insert, copy, delete, ...)
+	- track quantisation
+	- import and export of standard MIDI files
+	- tempo and time-signature changes
+
+Contacts:
+
+	http://caoua.org/midish/
+
