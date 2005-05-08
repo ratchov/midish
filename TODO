@@ -1,9 +1,9 @@
-- (easy) create a tempo factor for recording, is it necessary ?
+- sysex: add 'proc sysexadd' to let the user write his own sysex , 
+  add 'proc sysexcopy', 'proc sysexrm', 'proc sysexsetdev', 
+  write macros in midishrc, update manual and then say that
+  sysex support is ok.
 
-- (difficult) add sysex support: create an allocator for real-time recording:
-  create a pool of 256-byte chunks that can be allocated from
-  mididev_*. Should-we let "raw" events in the track? what about 
-  postprocess the rec-track?
+- (easy) create a tempo factor for recording, is it necessary ?
 
 - (difficult) when recording, what to do with datas recieved
   before the first EV_TIC? shold we record them on the track,

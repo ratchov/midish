@@ -61,6 +61,7 @@
 	}
 	songtrk pi1 {
 		curfilt piano
+		mute 0
 		track {
 			864
 			non {0 0} 67 42
@@ -622,6 +623,7 @@
 	}
 	songtrk dr2 {
 		curfilt drums
+		mute 0
 		track {
 			144
 			non {0 9} 37 95
@@ -1144,6 +1146,7 @@
 	}
 	songtrk dr3 {
 		curfilt drums
+		mute 0
 		track {
 			96
 			non {0 9} 56 103
@@ -1537,6 +1540,7 @@
 	}
 	songtrk dr1 {
 		curfilt drums
+		mute 0
 		track {
 			96
 			non {0 9} 42 103
@@ -2551,6 +2555,7 @@
 	}
 	songtrk ba1 {
 		curfilt bass
+		mute 0
 		track {
 			97
 			non {0 1} 28 65
@@ -3019,6 +3024,7 @@
 	}
 	songtrk pi2 {
 		curfilt piano
+		mute 0
 		track {
 			831
 			non {0 0} 71 78
@@ -3577,6 +3583,7 @@
 	}
 	songtrk or1 {
 		curfilt organ
+		mute 0
 		track {
 			120
 			non {0 2} 74 69
@@ -4014,6 +4021,7 @@
 	}
 	songtrk st1 {
 		curfilt strings
+		mute 0
 		track {
 			864
 			non {0 4} 71 41
@@ -4069,6 +4077,12 @@
 			189
 			noff {0 4} 71 100
 			noff {0 4} 67 100
+		}
+	}
+	songsx gm_on {
+		sysex {
+			unit 0
+			data 0xF0 0x7E 0x7F 0x09 0x01 0xF7
 		}
 	}
 	curtrk pi1
