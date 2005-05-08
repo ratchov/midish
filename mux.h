@@ -41,6 +41,7 @@
 #define MUX_LINESIZE		1024
 
 struct ev_s;
+struct sysex_s;
 
 void mux_init(void (*cb)(void *, struct ev_s *), void *addr);
 void mux_done(void);
@@ -60,6 +61,7 @@ void mux_mdep_done(void);
 void mux_timercb(unsigned long delta);
 void mux_evcb(unsigned, struct ev_s *ev);
 void mux_abortcb(void);
+void mux_sysexcb(unsigned unit, struct sysex_s *);
 
 extern unsigned mux_ticsperunit;
 

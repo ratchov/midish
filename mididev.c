@@ -44,6 +44,9 @@
 #include "user.h"
 #include "name.h"
 #include "rmidi.h"
+#include "pool.h"
+
+/* -------------------------------------------- device management --- */
 
 unsigned mididev_ticrate;	/* global dics per unit */
 

@@ -35,11 +35,10 @@
 #include "dbg.h"
 #include "ev.h"
 #include "str.h"
-#include "pool.h"
 
 char *ev_cmdstr[EV_NUMCMD] = { 
 	"nil",		"tic",		"start",	"stop", 
-	0,		0,		0,		0,
+	"sysex",	0,		0,		0,
 	"noff",		"non",		"kat",		"ctl",
 	"pc",		"cat",		"bend",		0,
 	"tempo",	"timesig"
@@ -160,6 +159,7 @@ ev_dbg(struct ev_s *ev) {
 		}
 	}
 }
+
 
 /* ------------------------------------------------------------------ */
 
@@ -284,34 +284,4 @@ ch:	if (e->data.voice.dev < o->dev_min ||
 	}
 	return 1;
 }
-
-
-/* ----------------------------------------------------------------------- */
-
-struct pool_s chunk_pool;
-
-void
-chunk_pool_init(unsigned size) {
-	pool_init(&chunk_pool, "chunk", sizeof(struct chunk_s), size);
-}
-
-void
-chunk_pool_done(void) {
-	pool_done(&chunk_pool);
-}
-
-
-struct chunk_s *
-chunk_new(void) {
-	return (struct chunk_s *)pool_new(&chunk_pool);
-}
-
-void
-chunk_del(struct chunk_s *se) {
-	pool_del(&chunk_pool, se);
-}
-
-
-
-
 

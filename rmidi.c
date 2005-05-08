@@ -42,9 +42,12 @@
 #include "default.h"
 #include "mdep.h"
 #include "ev.h"
+#include "sysex.h"
 #include "mux.h"
 #include "rmidi.h"
 
+#define MIDI_SYSEXSTART	0xf0
+#define MIDI_SYSEXSTOP	0xf7
 #define MIDI_TIC	0xf8
 #define MIDI_START	0xfa
 #define MIDI_STOP	0xfc
@@ -70,6 +73,7 @@ void
 rmidi_init(struct rmidi_s *o) {	
 	o->oused = 0;
 	o->istatus = o->ostatus = 0;
+	o->isysex = 0;
 	mididev_init(&o->mididev);
 	rmidi_mdep_init(o);
 }
@@ -96,7 +100,6 @@ void
 rmidi_inputcb(struct rmidi_s *o, unsigned char *buf, unsigned count) {
 	struct ev_s ev;
 	unsigned data;
-
 
 	while (count != 0) {
 		data = *buf;
@@ -136,6 +139,21 @@ rmidi_inputcb(struct rmidi_s *o, unsigned char *buf, unsigned count) {
 		} else if (data >= 0x80) {
 			o->istatus = data;
 			o->icount = 0;
+			switch(data) {
+			case MIDI_SYSEXSTART:
+				if (o->isysex) {
+					dbg_puts("rmidi_inputcb: lost incomplete sysex\n");
+					sysex_del(o->isysex);
+				}
+				o->isysex = sysex_new(o->mididev.unit);
+				sysex_add(o->isysex, data);
+				break;
+			case MIDI_SYSEXSTOP:
+				sysex_add(o->isysex, data);
+				mux_sysexcb(o->mididev.unit, o->isysex);
+				o->isysex = 0;
+				break;
+			}
 		} else if (o->istatus >= 0x80 && o->istatus < 0xf0) {
 			o->idata[o->icount] = (unsigned char)data;
 			o->icount++;
@@ -153,6 +171,8 @@ rmidi_inputcb(struct rmidi_s *o, unsigned char *buf, unsigned count) {
 				}
 				mux_evcb(o->mididev.unit, &ev);
 			}
+		} else if (o->istatus == MIDI_SYSEXSTART) {
+			sysex_add(o->isysex, data);
 		}
 	}
 }

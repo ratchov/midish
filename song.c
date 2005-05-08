@@ -631,6 +631,9 @@ song_playcb(void *addr, struct ev_s *ev) {
 		mux_flush();
 		break;
 	default:		
+		if (!EV_ISVOICE(ev)) {
+			break;
+		}
 		mux_putev(ev);
 		break;
 	}
@@ -696,6 +699,9 @@ song_recordcb(void *addr, struct ev_s *ev) {
 		mux_flush();
 		break;
 	default:
+		if (!EV_ISVOICE(ev)) {
+			break;
+		}
 		if (phase == MUX_NEXT || phase == MUX_FIRST) {
 			/*ev_dbg(ev);
 			dbg_puts("\n");
@@ -766,6 +772,9 @@ song_idlecb(void *addr, struct ev_s *ev) {
 	case EV_TIC:
 		break;
 	default:
+		if (!EV_ISVOICE(ev)) {
+			break;
+		}
 		mux_putev(ev);
 		break;
 	}

@@ -45,6 +45,8 @@
 #include "mdep.h"
 #include "mux.h"
 #include "rmidi.h"
+#include "sysex.h"
+
 	/* 
 	 * MUX_START_DELAY: 
 	 * delay between the START event and the first TIC
@@ -58,6 +60,7 @@ unsigned mux_ticrate;
 unsigned long mux_ticlength, mux_curpos, mux_nextpos;
 unsigned mux_curtic;
 unsigned mux_phase;
+struct sysexlist_s mux_sysexlist;
 void (*mux_cb)(void *, struct ev_s *);
 void *mux_addr;
 
@@ -91,13 +94,23 @@ mux_init(void (*cb)(void *, struct ev_s *), void *addr) {
 	mux_phase = MUX_STOP;
 	mux_cb = cb;
 	mux_addr = addr;
+	sysexlist_init(&mux_sysexlist);
 	mux_mdep_init();
 }
 
 void
 mux_done(void) {
+	struct mididev_s *i;
 	mux_flush();
+	for (i = mididev_list; i != 0; i = i->next) {
+		if (RMIDI(i)->isysex) {
+			dbg_puts("lost incomplete sysex\n");
+			sysex_del(RMIDI(i)->isysex);
+		}
+	}
 	mux_mdep_done();
+	sysexlist_dbg(&mux_sysexlist);
+	sysexlist_done(&mux_sysexlist);
 }
 
 #ifdef MUX_DEBUG
@@ -362,7 +375,24 @@ mux_abortcb(void) {
 }
 
 
+	/*
+	 * called when an sysex has been received
+	 */
+
+void
+mux_sysexcb(unsigned unit, struct sysex_s *sysex) {
+	struct ev_s ev;
+	sysexlist_put(&mux_sysexlist, sysex);
+	if (mux_cb) {
+		ev.cmd = EV_SYSEX;
+		mux_cb(mux_addr, &ev);
+	}
+}
+
+
 /* -------------------------------------- user "public" functions --- */
+
+
 
 void
 mux_flush(void) {

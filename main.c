@@ -41,6 +41,7 @@
 #include "filt.h"
 #include "mididev.h"
 #include "default.h"
+#include "sysex.h"
 
 struct song_s song;
 
@@ -61,6 +62,7 @@ main(int argc, char *argv[]) {
 	seqev_pool_init(DEFAULT_MAXNSEQEVS);
 	state_pool_init(DEFAULT_MAXNSTATES);
 	chunk_pool_init(DEFAULT_MAXNCHUNKS);
+	sysex_pool_init(DEFAULT_MAXNSYSEXS);
 	mididev_listinit();
 	song_init(&song);
 		
@@ -68,6 +70,7 @@ main(int argc, char *argv[]) {
 	
 	song_done(&song);
 	mididev_listdone();
+	sysex_pool_done();
 	chunk_pool_done();
 	state_pool_done();
 	seqev_pool_done();

@@ -37,6 +37,7 @@
 #define EV_TIC		0x1
 #define EV_START	0x2
 #define EV_STOP		0x3
+#define EV_SYSEX	0x4
 
 #define EV_NOFF		0x8
 #define EV_NON		0x9
@@ -45,7 +46,6 @@
 #define EV_PC		0xc
 #define EV_CAT		0xd
 #define EV_BEND		0xe
-
 #define EV_TEMPO	0x10
 #define EV_TIMESIG	0x11
 
@@ -73,22 +73,6 @@
 #define EV_BEND_DEFAULTLO	0
 #define EV_BEND_DEFAULTHI	0x40
 
-struct voice_s {
-#define EV_MAXDEV	(DEFAULT_MAXNDEVS - 1)
-#define EV_MAXCH	15
-#define EV_MAXB0	0x7f
-#define EV_MAXB1	0x7f
-#define EV_MAXBEND	0x3fff
-	unsigned char dev, ch, b0, b1;
-};
-
-struct chunk_s {
-	struct chunk_s *next;
-	unsigned used;
-#define CHUNK_SIZE	0x100
-	unsigned char data[CHUNK_SIZE];
-};
-
 struct ev_s {
 	unsigned cmd;
 	union {
@@ -96,14 +80,16 @@ struct ev_s {
 			unsigned long usec24;
 		} tempo;
 		struct {
-			unsigned beats, tics;
+			unsigned short beats, tics;
 		} sign;
-		struct {
-			unsigned unit;
-			struct chunk_s *chunk;
-		} raw;
-		struct voice_s voice;
-		
+		struct voice_s {
+#define EV_MAXDEV	(DEFAULT_MAXNDEVS - 1)
+#define EV_MAXCH	15
+#define EV_MAXB0	0x7f
+#define EV_MAXB1	0x7f
+#define EV_MAXBEND	0x3fff
+			unsigned char dev, ch, b0, b1;
+		} voice;
 	} data;
 };
 
@@ -121,11 +107,6 @@ struct evspec_s {
 	unsigned b0_min, b0_max;
 	unsigned b1_min, b1_max;
 };
-
-void chunk_pool_init(unsigned size);
-void chunk_pool_done(void);
-struct chunk_s *chunk_new(void);
-void chunk_del(struct chunk_s *se);
 
 void ev_dbg(struct ev_s *ev);
 unsigned ev_sameclass(struct ev_s *ev1, struct ev_s *ev2);

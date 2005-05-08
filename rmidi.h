@@ -47,6 +47,7 @@ struct	rmidi_s {
 	unsigned char	    idata[2];
 	unsigned 	    oused, ostatus;	/* output stuff */
 	unsigned char	    obuf[RMIDI_BUFLEN];
+	struct sysex_s	   *isysex;
 };
 
 #define RMIDI(o) ((struct rmidi_s *)(o))
