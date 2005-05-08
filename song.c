@@ -83,7 +83,6 @@ songchan_delete(struct songchan_s *o) {
 }
 
 
-
 struct songfilt_s *
 songfilt_new(char *name) {
 	struct songfilt_s *o;
@@ -97,6 +96,23 @@ songfilt_new(char *name) {
 void
 songfilt_delete(struct songfilt_s *o) {
 	filt_done(&o->filt);
+	name_done(&o->name);	
+	mem_free(o);
+}
+
+struct songsx_s *
+songsx_new(char *name) {
+	struct songsx_s *o;
+	o = (struct songsx_s *)mem_alloc(sizeof(struct songsx_s));
+	name_init(&o->name, name);
+	sysexlist_init(&o->sx);
+	return o;
+}
+
+
+void
+songsx_delete(struct songsx_s *o) {
+	sysexlist_done(&o->sx);
 	name_done(&o->name);	
 	mem_free(o);
 }
@@ -133,6 +149,7 @@ song_init(struct song_s *o) {
 	o->trklist = 0;
 	o->chanlist = 0;
 	o->filtlist = 0;
+	o->sxlist = 0;
 	o->tics_per_unit = DEFAULT_TPU;
 	track_init(&o->meta);
 	track_rew(&o->meta, &o->metaptr);
@@ -161,6 +178,7 @@ song_init(struct song_s *o) {
 	o->curfilt = 0;
 	o->curpos = 0;
 	o->curquant = 0;
+	o->cursx = 0;
 }
 
 	/*
@@ -172,6 +190,7 @@ song_done(struct song_s *o) {
 	struct songtrk_s *t, *tnext;
 	struct songchan_s *i, *inext;
 	struct songfilt_s *f, *fnext;
+	struct songsx_s *s, *snext;
 	for (t = o->trklist; t != 0; t = tnext) {
 		tnext = (struct songtrk_s *)t->name.next;
 		songtrk_delete(t);
@@ -183,6 +202,10 @@ song_done(struct song_s *o) {
 	for (f = o->filtlist; f != 0; f = fnext) {
 		fnext = (struct songfilt_s *)f->name.next;
 		songfilt_delete(f);
+	}
+	for (s = o->sxlist; s != 0; s = snext) {
+		snext = (struct songsx_s *)s->name.next;
+		songsx_delete(s);
 	}
 	track_done(&o->meta);
 }
@@ -323,6 +346,47 @@ song_filtrm(struct song_s *o, struct songfilt_s *f) {
 	return 1;
 }
 
+/* -------------------------------------------------- sx stuff --- */
+
+	/*
+	 * adds a new sx to the song
+	 */
+
+void
+song_sxadd(struct song_s *o, struct songsx_s *i) {
+	name_add((struct name_s **)&o->sxlist, (struct name_s *)i);
+}
+
+	/*
+	 * returns the sx conrresponding to the
+	 * given name
+	 */
+
+struct songsx_s *
+song_sxlookup(struct song_s *o, char *name) {
+	return (struct songsx_s *)name_lookup((struct name_s **)&o->sxlist, name);
+}
+
+
+unsigned
+song_sxrm(struct song_s *o, struct songsx_s *f) {
+	struct songsx_s **i;
+
+	if (o->cursx == f) {
+		user_printstr("cant delete current sysex\n");
+		return 0;
+	}
+	i = &o->sxlist;
+	while(*i != 0) {
+		if (*i == f) {
+			*i = (struct songsx_s *)f->name.next;
+			break;
+		}
+		i = (struct songsx_s **)&(*i)->name.next;
+	}
+	return 1;
+}
+
 
 /* ------------------------------------------------- global stuff --- */
 
@@ -403,6 +467,24 @@ song_playconf(struct song_s *o) {
 	}
 	mux_flush();
 }
+
+
+void
+song_playsysex(struct song_s *o) {
+	struct songsx_s *l;
+	struct sysex_s *s;
+	struct chunk_s *c;
+	
+	for (l = o->sxlist; l != 0; l = (struct songsx_s *)l->name.next) {
+		for (s = l->sx.first; s != 0; s = s->next) {
+			for (c = s->first; c != 0; c = c->next) {
+				mux_sendraw(s->unit, c->data, c->used);
+				mux_flush();
+			}
+		}
+	}
+}
+
 
 void
 song_nexttic(struct song_s *o) {
@@ -652,6 +734,7 @@ song_play(struct song_s *o) {
 	song_inputstart(o, song_playcb);
 	mux_init(song_inputcb, o);
 	
+	song_playsysex(o);
 	song_playconf(o);
 	mux_chgtempo(o->tempo);
 	mux_chgticrate(o->tics_per_unit);
@@ -677,6 +760,7 @@ song_play(struct song_s *o) {
 void
 song_recordcb(void *addr, struct ev_s *ev) {
 	struct song_s *o = (struct song_s *)addr;
+	struct sysex_s *sx;
 	unsigned phase;
 	
 	phase = mux_getphase();
@@ -697,6 +781,16 @@ song_recordcb(void *addr, struct ev_s *ev) {
 		}
 		song_playtic(o);
 		mux_flush();
+		break;
+	case EV_SYSEX:
+		if (o->cursx) {
+			sx = mux_getsysex();
+			if (sx == 0) {
+				dbg_puts("got null sx\n");
+			} else {
+				sysexlist_put(&o->cursx->sx, sx);
+			}
+		}
 		break;
 	default:
 		if (!EV_ISVOICE(ev)) {
@@ -731,6 +825,7 @@ song_record(struct song_s *o) {
 	song_inputstart(o, song_recordcb);
 	mux_init(song_inputcb, o);
 	
+	song_playsysex(o);
 	song_playconf(o);
 	mux_chgtempo(o->tempo);
 	mux_chgticrate(o->tics_per_unit);
@@ -792,6 +887,7 @@ song_idle(struct song_s *o) {
 	song_inputstart(o, song_idlecb);
 	mux_init(song_inputcb, o);
 	
+	song_playsysex(o);
 	song_playconf(o);
 	mux_chgtempo(o->tempo);
 	mux_chgticrate(o->tics_per_unit);

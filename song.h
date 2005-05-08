@@ -38,6 +38,7 @@
 #include "name.h"
 #include "track.h"
 #include "filt.h"
+#include "sysex.h"
 
 struct songchan_s {
 	struct name_s name;
@@ -58,6 +59,11 @@ struct songtrk_s {
 	unsigned mute;
 };
 
+struct songsx_s {
+	struct name_s name;
+	struct sysexlist_s sx;
+};
+
 struct songtrk_s *songtrk_new(char *);
 void songtrk_delete(struct songtrk_s *);
 
@@ -67,6 +73,9 @@ void songchan_delete(struct songchan_s *o);
 struct songfilt_s *songfilt_new(char *);
 void songfilt_delete(struct songfilt_s *o);
 
+struct songsx_s *songsx_new(char *);
+void songsx_delete(struct songsx_s *o);
+
 struct song_s {
 	/* music-related fields, should be saved */
 	struct track_s meta;			/* tempo track */
@@ -74,6 +83,7 @@ struct song_s {
 	struct songtrk_s *trklist;
 	struct songchan_s *chanlist;
 	struct songfilt_s *filtlist;
+	struct songsx_s *sxlist;
 	unsigned tics_per_unit;			/* global time resulution */
 	/* real-time parameters */
 	unsigned long tempo;			/* 24th of usec per tic */
@@ -89,6 +99,7 @@ struct song_s {
 	/* defautls */
 	struct songtrk_s *curtrk;
 	struct songfilt_s *curfilt;
+	struct songsx_s *cursx;
 	unsigned curpos;
 	unsigned curquant;
 };
@@ -107,10 +118,14 @@ struct songchan_s *song_chanlookup(struct song_s *o, char *name);
 struct songchan_s *song_chanlookup_bynum(struct song_s *o, unsigned dev, unsigned ch);
 unsigned song_chanrm(struct song_s *o, struct songchan_s *c);
 
-
 void song_filtadd(struct song_s *o, struct songfilt_s *i);
 struct songfilt_s *song_filtlookup(struct song_s *o, char *name);
 unsigned song_filtrm(struct song_s *o, struct songfilt_s *f);
+
+void song_sxadd(struct song_s *o, struct songsx_s *t);
+struct songsx_s *song_sxlookup(struct song_s *o, char *name);
+unsigned song_sxrm(struct song_s *o, struct songsx_s *t);
+
 
 unsigned song_measuretotic(struct song_s *o, unsigned);
 

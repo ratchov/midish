@@ -190,3 +190,8 @@ textout_putlong(struct textout_s *o, unsigned long val) {
 	fprintf(o->file, "%lu", val);
 }
 
+void
+textout_putbyte(struct textout_s *o, unsigned val) {
+	fprintf(o->file, "0x%02X", val & 0xff);
+}
+

@@ -50,6 +50,7 @@ void mux_flush(void);
 void mux_putev(struct ev_s *);
 void mux_sendraw(unsigned unit, unsigned char *buf, unsigned len);
 unsigned mux_getphase(void);
+struct sysex_s *mux_getsysex(void);
 void mux_chgtempo(unsigned long tmr_ticlength);
 void mux_chgticrate(unsigned tpu);
 void mux_startwait(void);

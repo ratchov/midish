@@ -109,7 +109,6 @@ mux_done(void) {
 		}
 	}
 	mux_mdep_done();
-	sysexlist_dbg(&mux_sysexlist);
 	sysexlist_done(&mux_sysexlist);
 }
 
@@ -392,7 +391,10 @@ mux_sysexcb(unsigned unit, struct sysex_s *sysex) {
 
 /* -------------------------------------- user "public" functions --- */
 
-
+struct sysex_s *
+mux_getsysex(void) {
+	return sysexlist_get(&mux_sysexlist);
+}
 
 void
 mux_flush(void) {

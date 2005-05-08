@@ -238,6 +238,65 @@ filt_output(struct filt_s *o, struct textout_s *f) {
 	textout_putstr(f, "}");
 }
 
+void
+sysex_output(struct sysex_s *o, struct textout_s *f) {
+	struct chunk_s *c;
+	unsigned i, col;
+	textout_putstr(f, "{\n");
+	textout_shiftright(f);
+	
+	textout_indent(f);	
+	textout_putstr(f, "unit ");
+	textout_putlong(f, o->unit);
+	textout_putstr(f, "\n");
+	
+	textout_indent(f);	
+	textout_putstr(f, "data\t");
+	textout_shiftright(f);
+	col = 0;
+	for (c = o->first; c != 0; c = c->next) {
+		for (i = 0; i < c->used; i++) {
+			textout_putbyte(f, c->data[i]);
+			if (i + 1 < c->used || c->next != 0) {
+				col++;
+				if (col >= 8) {
+					col = 0;
+					textout_putstr(f, " \\\n");
+					textout_indent(f);	
+				} else {
+					textout_putstr(f, " ");
+				}
+			}
+		}
+	}
+	textout_putstr(f, "\n");
+	textout_shiftleft(f);
+
+
+	textout_shiftleft(f);
+	textout_indent(f);
+	textout_putstr(f, "}");
+}
+
+
+void
+songsx_output(struct songsx_s *o, struct textout_s *f) {
+	struct sysex_s *i;
+	textout_putstr(f, "{\n");
+	textout_shiftright(f);
+	
+	for (i = o->sx.first; i != 0; i = i->next) {
+		textout_indent(f);
+		textout_putstr(f, "sysex ");
+		sysex_output(i, f);
+		textout_putstr(f, "\n");
+	}
+	
+	textout_shiftleft(f);
+	textout_indent(f);
+	textout_putstr(f, "}");
+}
+
 
 void
 songtrk_output(struct songtrk_s *o, struct textout_s *f) {
@@ -306,6 +365,7 @@ song_output(struct song_s *o, struct textout_s *f) {
 	struct songtrk_s *t;
 	struct songchan_s *i;
 	struct songfilt_s *g;
+	struct songsx_s *s;
 
 	textout_putstr(f, "{\n");
 	textout_shiftright(f);
@@ -339,6 +399,14 @@ song_output(struct song_s *o, struct textout_s *f) {
 		songtrk_output(t, f);
 		textout_putstr(f, "\n");
 	}
+	for (s = o->sxlist; s != 0; s = (struct songsx_s *)s->name.next) {
+		textout_indent(f);
+		textout_putstr(f, "songsx ");
+		textout_putstr(f, s->name.str);
+		textout_putstr(f, " ");
+		songsx_output(s, f);
+		textout_putstr(f, "\n");
+	}
 	
 	if (o->curtrk) {
 		textout_indent(f);
@@ -350,6 +418,12 @@ song_output(struct song_s *o, struct textout_s *f) {
 		textout_indent(f);
 		textout_putstr(f, "curfilt ");
 		textout_putstr(f, o->curfilt->name.str);
+		textout_putstr(f, "\n");
+	}
+	if (o->cursx) {
+		textout_indent(f);
+		textout_putstr(f, "cursx ");
+		textout_putstr(f, o->cursx->name.str);
 		textout_putstr(f, "\n");
 	}
 	textout_indent(f);
@@ -747,6 +821,70 @@ parse_filt(struct parse_s *o, struct filt_s *f) {
 }
 
 unsigned
+parse_sysex(struct parse_s *o, struct sysex_s **res) {
+	struct sysex_s *sx;
+	unsigned long val;
+		
+	if (!parse_getsym(o)) {
+		return 0;
+	}
+	if (o->lex.id != TOK_LBRACE) {
+		parse_error(o, "'{' expected while parsing sysex\n");
+		return 0;
+	}	
+	sx = sysex_new(0);
+	for (;;) {
+		if (!parse_getsym(o)) {
+			goto err1;
+		}
+		if (o->lex.id == TOK_ENDLINE) {
+			/* nothing */
+		} else if (o->lex.id == TOK_RBRACE) {
+			break;
+		} else if (o->lex.id == TOK_IDENT) {
+			if (str_eq(o->lex.strval, "data")) {
+				for (;;) {
+					if (!parse_getsym(o)) {
+						goto err1;
+					}
+					if (o->lex.id == TOK_ENDLINE) {
+						break;
+					}
+					parse_ungetsym(o);
+					if (!parse_long(o, 0xff, &val)) {
+						goto err1;
+					}
+					sysex_add(sx, val);
+				}
+			} else if (str_eq(o->lex.strval, "unit")) {
+				if (!parse_long(o, EV_MAXDEV, &val)) {
+					goto err1;
+				}
+				sx->unit = val;
+				if (!parse_nl(o)) {
+					goto err1;
+				}
+			} else {
+				goto unknown;
+			}
+		} else {
+		unknown:
+			parse_error(o, "unknown line format in songchan, ignored\n");
+			parse_ungetsym(o);
+			if (!parse_ukline(o)) {
+				goto err1;
+			}
+		}
+	}
+	*res = sx;
+	return 1;
+	
+err1:
+	sysex_del(sx);
+	return 0;
+}
+
+unsigned
 parse_songchan(struct parse_s *o, struct song_s *s, struct songchan_s *i) {
 	unsigned long val, val2;
 	if (!parse_getsym(o)) {
@@ -912,10 +1050,52 @@ parse_songfilt(struct parse_s *o, struct song_s *s, struct songfilt_s *g) {
 
 
 unsigned
+parse_songsx(struct parse_s *o, struct song_s *s, struct songsx_s *g) {
+	struct sysex_s *sx;
+	
+	if (!parse_getsym(o)) {
+		return 0;
+	}
+	if (o->lex.id != TOK_LBRACE) {
+		parse_error(o, "'{' expected while parsing songsx\n");
+		return 0;
+	}
+	for (;;) {
+		if (!parse_getsym(o)) {
+			return 0;
+		}
+		if (o->lex.id == TOK_ENDLINE) {
+			/* nothing */
+		} else if (o->lex.id == TOK_RBRACE) {
+			break;
+		} else if (o->lex.id == TOK_IDENT) {
+			if (str_eq(o->lex.strval, "sysex")) {
+				if (!parse_sysex(o, &sx)) {
+					return 0;
+				}
+				sysexlist_put(&g->sx, sx);
+			} else {
+				goto unknown;
+			}
+		} else {
+		unknown:
+			parse_error(o, "unknown line format in songsx, ignored\n");
+			parse_ungetsym(o);
+			if (!parse_ukline(o)) {
+				return 0;
+			}
+		}
+	}
+	return 1;
+}
+
+
+unsigned
 parse_song(struct parse_s *o, struct song_s *s) {
 	struct songtrk_s *t;
 	struct songchan_s *i;
 	struct songfilt_s *g;
+	struct songsx_s *l;
 	long num;
 
 	if (!parse_getsym(o)) {
@@ -987,6 +1167,25 @@ parse_song(struct parse_s *o, struct song_s *s) {
 				if (!parse_nl(o)) {
 					return 0;
 				}
+			} else if (str_eq(o->lex.strval, "songsx")) {
+				if (!parse_getsym(o)) {
+					return 0;
+				}
+				if (o->lex.id != TOK_IDENT) {
+					parse_error(o, "identifier expected after 'songsx' in song\n");
+					return 0;
+				}
+				l = song_sxlookup(s, o->lex.strval);
+				if (!l) {
+					l = songsx_new(o->lex.strval);
+					song_sxadd(s, l);
+				}
+				if (!parse_songsx(o, s, l)) {
+					return 0;
+				}
+				if (!parse_nl(o)) {
+					return 0;
+				}
 			} else if (str_eq(o->lex.strval, "meta")) {
 				if (!parse_track(o, &s->meta)) {
 					return 0;
@@ -1039,6 +1238,23 @@ parse_song(struct parse_s *o, struct song_s *s) {
 					s->curfilt = g;
 				} else {
 					parse_error(o, "warning, cant set current filt, not such filt\n");
+				}
+				if (!parse_nl(o)) {
+					return 0;
+				}
+			} else if (str_eq(o->lex.strval, "cursx")) {
+				if (!parse_getsym(o)) {
+					return 0;
+				}
+				if (o->lex.id != TOK_IDENT) {
+					parse_error(o, "identifier expected afer 'cursx' in song\n");
+					return 0;
+				}
+				l = song_sxlookup(s, o->lex.strval);
+				if (l) {
+					s->cursx = l;
+				} else {
+					parse_error(o, "warning, cant set current sysex, not such sysex\n");
 				}
 				if (!parse_nl(o)) {
 					return 0;

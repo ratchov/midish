@@ -51,6 +51,7 @@ void		  textout_shiftright(struct textout_s *o);
 
 void		  textout_putstr(struct textout_s *o, char *str);
 void		  textout_putlong(struct textout_s *o, unsigned long val);
+void		  textout_putbyte(struct textout_s *o, unsigned val);
 
 /* ------------------------------------------------- stdin/stdout --- */
 

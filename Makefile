@@ -69,13 +69,13 @@ name.o:		name.c dbg.h str.h str.h name.h
 parse.o:	parse.c dbg.h lex.h textio.h data.h tree.h str.h str.h name.h parse.h
 pool.o:		pool.c dbg.h pool.h
 rmidi.o:	rmidi.c dbg.h default.h mdep.h ev.h sysex.h mux.h rmidi.h mididev.h
-saveload.o:	saveload.c dbg.h str.h name.h song.h track.h trackop.h ev.h default.h pool.h filt.h parse.h lex.h textio.h saveload.h
-smf.o:		smf.c dbg.h track.h ev.h default.h pool.h song.h str.h name.h filt.h smf.h
-song.o:		song.c dbg.h mux.h track.h ev.h pool.h trackop.h filt.h song.h str.h name.h user.h default.h
+saveload.o:	saveload.c dbg.h str.h name.h song.h track.h trackop.h ev.h default.h pool.h filt.h parse.h lex.h textio.h saveload.h sysex.h
+smf.o:		smf.c dbg.h track.h ev.h default.h pool.h song.h str.h name.h filt.h smf.h sysex.h
+song.o:		song.c dbg.h mux.h track.h ev.h pool.h trackop.h filt.h sysex.h song.h str.h name.h user.h default.h
 str.o:		str.c dbg.h str.h
 sysex.o:	sysex.h dbg.h default.h pool.h
 textio.o:	textio.c cons.h dbg.h textio.h user.h
 track.o:	track.c dbg.h track.h ev.h default.h pool.h
 trackop.o:	trackop.c dbg.h trackop.h track.h ev.h pool.h default.h
 tree.o:		tree.c dbg.h tree.h str.h name.h data.h user.h
-user.o:		user.c dbg.h default.h tree.h str.h name.h data.h lex.h textio.h parse.h mux.h mididev.h trackop.h track.h ev.h pool.h song.h filt.h user.h smf.h saveload.h rmidi.h
+user.o:		user.c dbg.h default.h tree.h str.h name.h data.h lex.h textio.h parse.h mux.h mididev.h trackop.h track.h ev.h pool.h song.h filt.h user.h smf.h saveload.h rmidi.h sysex.h

@@ -245,6 +245,24 @@ exec_lookupfilt(struct exec_s *o, char *var, struct songfilt_s **res) {
 
 
 unsigned
+exec_lookupsx(struct exec_s *o, char *var, struct songsx_s **res) {
+	char *name;	
+	struct songsx_s *t;
+	if (!exec_lookupname(o, var, &name)) {
+		return 0;
+	}
+	t = song_sxlookup(user_song, name);
+	if (t == 0) {
+		user_printstr(name);
+		user_printstr(": no such sysex\n");
+		return 0;
+	}
+	*res = t;
+	return 1;
+}
+
+
+unsigned
 exec_lookupev(struct exec_s *o, char *name, struct ev_s *ev) {
 	struct var_s *arg;
 	struct data_s *d;
@@ -1110,6 +1128,129 @@ user_func_chaninfo(struct exec_s *o) {
 	user_printstr("\n");
 	return 1;
 }
+
+/* -------------------------------------------------- chan stuff --- */
+
+
+unsigned
+user_func_sysexlist(struct exec_s *o) {
+	struct data_s *d, *n;
+	struct songsx_s *i;
+
+	d = data_newlist(0);
+	for (i = user_song->sxlist; i != 0; i = (struct songsx_s *)i->name.next) {
+		n = data_newref(i->name.str);
+		data_listadd(d, n);
+	}
+	exec_putacc(o, d);
+	return 1;
+}
+
+unsigned
+user_func_sysexnew(struct exec_s *o) {
+	char *name;
+	struct songsx_s *i;
+	
+	if (!exec_lookupname(o, "sysexname", &name)) {
+		return 0;
+	}
+	i = song_sxlookup(user_song, name);
+	if (i != 0) {
+		user_printstr("sysexnew: sysex already exists\n");
+		return 0;
+	}
+	i = songsx_new(name);
+	song_sxadd(user_song, i);
+	return 1;
+}
+
+unsigned
+user_func_sysexdelete(struct exec_s *o) {
+	struct songsx_s *c;
+	if (!exec_lookupsx(o, "sysexname", &c)) {
+		return 0;
+	}
+	if (!song_sxrm(user_song, c)) {
+		return 0;
+	}
+	songsx_delete(c);
+	return 1;
+}
+
+unsigned
+user_func_sysexrename(struct exec_s *o) {
+	struct songsx_s *c;
+	char *name;
+	
+	if (!exec_lookupsx(o, "sysexname", &c) ||
+	    !exec_lookupname(o, "newname", &name)) {
+		return 0;
+	}
+	if (song_sxlookup(user_song, name)) {
+		user_printstr("name already used by another sysex\n");
+		return 0;
+	}
+	str_delete(c->name.str);
+	c->name.str = str_new(name);
+	return 1;
+}
+
+unsigned
+user_func_sysexexists(struct exec_s *o) {
+	char *name;
+	struct songsx_s *i;
+	if (!exec_lookupname(o, "sysexname", &name)) {
+		return 0;
+	}
+	i = song_sxlookup(user_song, name);
+	exec_putacc(o, data_newlong(i != 0 ? 1 : 0));
+	return 1;
+}
+
+unsigned
+user_func_sysexinfo(struct exec_s *o) {
+	struct songsx_s *c;
+	
+	if (!exec_lookupsx(o, "sysexname", &c)) {
+		return 0;
+	}
+	sysexlist_dbg(&c->sx);
+	return 1;
+}
+
+
+unsigned
+user_func_songsetcursysex(struct exec_s *o) {
+	struct songsx_s *t;
+	struct var_s *arg;
+	
+	arg = exec_varlookup(o, "sysexname");
+	if (!arg) {
+		dbg_puts("user_func_songsetcursysex: 'sysexname': no such param\n");
+		return 0;
+	}
+	if (arg->data->type == DATA_NIL) {
+		user_song->cursx = 0;
+		return 1;
+	} 
+	if (!exec_lookupsx(o, "sysexname", &t)) {
+		return 0;
+	}
+	user_song->cursx = t;
+	return 1;
+}
+
+
+unsigned
+user_func_songgetcursysex(struct exec_s *o) {
+	if (user_song->cursx) {
+		exec_putacc(o, data_newref(user_song->cursx->name.str));
+	} else {
+		exec_putacc(o, data_newnil());
+	}
+	return 1;
+}
+
 
 /* -------------------------------------------------- filt stuff --- */
 
@@ -2274,6 +2415,20 @@ user_mainloop(void) {
 			name_newarg("channame",
 			name_newarg("event", 0)));
 
+	exec_newbuiltin(exec, "sysexlist", user_func_sysexlist, 0);
+	exec_newbuiltin(exec, "sysexnew", user_func_sysexnew, 
+			name_newarg("sysexname", 0));
+	exec_newbuiltin(exec, "sysexdelete", user_func_sysexdelete, 
+			name_newarg("sysexname", 0));
+	exec_newbuiltin(exec, "sysexrename", user_func_sysexrename,
+			name_newarg("sysexname",
+			name_newarg("newname", 0)));
+	exec_newbuiltin(exec, "sysexexists", user_func_sysexexists, 
+			name_newarg("sysexname", 0));
+	exec_newbuiltin(exec, "sysexinfo", user_func_sysexinfo, 
+			name_newarg("sysexname", 0));
+
+
 	exec_newbuiltin(exec, "filtlist", user_func_filtlist, 0);
 	exec_newbuiltin(exec, "filtnew", user_func_filtnew, 
 			name_newarg("filtname", 0));
@@ -2378,6 +2533,9 @@ user_mainloop(void) {
 	exec_newbuiltin(exec, "songgetcurfilt", user_func_songgetcurfilt, 0);
 	exec_newbuiltin(exec, "songsetcurfilt", user_func_songsetcurfilt, 
 			name_newarg("filtname", 0));
+	exec_newbuiltin(exec, "songgetcursysex", user_func_songgetcursysex, 0);
+	exec_newbuiltin(exec, "songsetcursysex", user_func_songsetcursysex, 
+			name_newarg("sysexname", 0));
 	exec_newbuiltin(exec, "songinfo", user_func_songinfo, 0);
 	exec_newbuiltin(exec, "songsave", user_func_songsave, 
 			name_newarg("filename", 0));
