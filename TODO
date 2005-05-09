@@ -1,3 +1,5 @@
+- implement undo-stack
+
 - sysex: add 'proc sysexadd' to let the user write his own sysex , 
   add 'proc sysexcopy', 'proc sysexrm', 'proc sysexsetdev', 
   write macros in midishrc, update manual and then say that

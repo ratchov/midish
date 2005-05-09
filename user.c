@@ -1220,6 +1220,69 @@ user_func_sysexinfo(struct exec_s *o) {
 
 
 unsigned
+user_func_sysexclear(struct exec_s *o) {
+	struct songsx_s *c;
+	struct sysex_s *x;
+	
+	if (!exec_lookupsx(o, "sysexname", &c)) {
+		return 0;
+	}
+	for (;;) {
+		x = sysexlist_get(&c->sx);
+		if (!x) {
+			break;
+		}
+		sysex_del(x);
+	}
+	return 1;
+}
+
+
+unsigned
+user_func_sysexadd(struct exec_s *o) {
+	struct songsx_s *c;
+	struct sysex_s *x;
+	struct data_s *byte;
+	struct var_s *arg;
+	long unit;
+	
+	if (!exec_lookupsx(o, "sysexname", &c) || 
+	    !exec_lookuplong(o, "unit", &unit)) {
+		return 0;
+	}
+	if (unit < 0 || unit > EV_MAXDEV) {
+		user_printstr("sysexadd: unit out of range\n");
+		return 0;
+	}
+	arg = exec_varlookup(o, "data");
+	if (!arg) {
+		dbg_puts("exec_lookupev: no such var\n");
+		dbg_panic();
+	}
+	if (arg->data->type != DATA_LIST) {
+		user_printstr("sysexadd: data must be a list of numbers\n");
+		return 0;
+	}
+	x = sysex_new(unit);
+	for (byte = arg->data->val.list; byte != 0; byte = byte->next) {
+		if (byte->type != DATA_LONG) {
+			user_printstr("sysexadd: only bytes allowed as data\n");
+			return 0;
+		}
+		if (byte->val.num < 0 || byte->val.num > 0xff) {
+			user_printstr("sysexadd: data out of range\n");
+			return 0;
+		}
+		sysex_add(x, byte->val.num);
+	}
+	if (x->first) {
+		sysexlist_put(&c->sx, x);
+	}
+	return 1;
+}
+
+
+unsigned
 user_func_songsetcursysex(struct exec_s *o) {
 	struct songsx_s *t;
 	struct var_s *arg;
@@ -2427,6 +2490,12 @@ user_mainloop(void) {
 			name_newarg("sysexname", 0));
 	exec_newbuiltin(exec, "sysexinfo", user_func_sysexinfo, 
 			name_newarg("sysexname", 0));
+	exec_newbuiltin(exec, "sysexclear", user_func_sysexclear, 
+			name_newarg("sysexname", 0));
+	exec_newbuiltin(exec, "sysexadd", user_func_sysexadd, 
+			name_newarg("sysexname", 
+			name_newarg("unit",
+			name_newarg("data", 0))));
 
 
 	exec_newbuiltin(exec, "filtlist", user_func_filtlist, 0);
