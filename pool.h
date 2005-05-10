@@ -31,37 +31,9 @@
 #ifndef SEQ_POOL_H
 #define SEQ_POOL_H
 
+#ifdef DEBUG
 #define POOL_DEBUG
-
-#define STACK_HEAD(type)						\
-struct {								\
-	struct type *first;						\
-}
-
-#define STACK_ENTRY(type)						\
-struct {								\
-	struct type *next;						\
-}
- 
-#define	STACK_INIT(head) 						\
-	do {								\
-		(head)->first = 0;					\
-	} while(0)
-
-#define	STACK_FOREACH(i, head, field)					\
-	for((i) = (head)->first; (i) != 0; (i) = (i)->field.next)
-
-#define	STACK_PUSH(head, i, field)					\
-	do {								\
-		(i)->field.next = (head)->first;			\
-		(head)->first = (i);					\
-	} while (0)
-
-#define	STACK_POP(head, i, field)					\
-	do {								\
-		(i) = (head)->first;					\
-		(head)->first = (head)->first->field.next;		\
-	} while (0)
+#endif
 
 struct poolentry_s {
 	struct poolentry_s *next;

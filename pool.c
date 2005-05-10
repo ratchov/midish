@@ -34,6 +34,7 @@
 	/*
 	 * initialises a pool of "itemnum" elements of size "itemsize"
 	 */
+
 void
 pool_init(struct pool_s *o, char *name, unsigned itemsize, unsigned itemnum) {
 	unsigned i;
