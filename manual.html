@@ -50,6 +50,7 @@
 <LI><A href="#evrange">Event ranges</A>
 <LI><A href="#filters">Filters</A>
 <LI><A href="#tracks">Tracks</A>
+<LI><A href="#sysex">System exclusive message</A>
 <LI><A href="#functions">Function reference</A>
 </UL>
 
@@ -702,6 +703,18 @@
 	be used to record a complete song (not recommended).
 	On playback all tracks are played simultaneously.
 
+
+<A name="sysex"></A>
+<H1>System exclusive message</H1>
+
+	<P>
+	Midi system exclusive messages can be recorded and
+	sent back to midi devices. They are typically used
+	to download/upload the configuration of a midi device.
+	Midish uses named 'sysex' banks to record 
+	these messages. On playback all sysex messages
+	from all banks are send to their respective devices.
+
 <A name="functs"></A>
 <H1>Function reference</H1>
 
@@ -1042,6 +1055,46 @@
 	in the range <TT>keystart..keyend</TT> to channel <TT>outchan</TT>.
 	</BLOCKQUOTE>
 
+<H2>System exclusive messages functions</H2>
+
+<B><TT>sysexnew sysexname</TT></B>
+	<BLOCKQUOTE>
+	create a new bank of sysex messages named <TT>sysexname</TT>
+	</BLOCKQUOTE>
+
+<B><TT>sysexdelete sysexname</TT></B>
+	<BLOCKQUOTE>
+	delete the bank of sysex messages named <TT>sysexname</TT>.
+	Current 'sysex' cannot be deleted.
+	</BLOCKQUOTE>
+
+<B><TT>sysexrename sysexname newname</TT></B>
+	<BLOCKQUOTE>
+	rename sysex bank '<TT>sysexname</TT>' to '<TT>newname</TT>'
+	</BLOCKQUOTE>
+
+<B><TT>sysexexists sysexname</TT></B>
+	<BLOCKQUOTE>
+	returns 1 if <TT>sysexname</TT> is a sysex bank, 0 otherwise
+	</BLOCKQUOTE>
+
+<B><TT>sysexclear sysexname</TT></B>
+	<BLOCKQUOTE>
+	removes all sysex messages from sysex bank <TT>sysexname</TT>
+	</BLOCKQUOTE>
+
+<B><TT>sysexadd sysexname unit data</TT></B>
+	<BLOCKQUOTE>
+	adds to sysex bank <TT>sysexname</TT>
+	an new sysex message. <TT>data</TT> is a list containing the
+	raw midi message and <TT>unit</TT> is the device number to which
+	the message will be sent
+	</BLOCKQUOTE>
+
+<B><TT>sysexinfo sysexname</TT></B>
+	<BLOCKQUOTE>
+	print debug info about sysex bank <TT>sysexname</TT>
+	</BLOCKQUOTE>
 
 <H2>Real-time functions</H2>
 
@@ -1122,6 +1175,17 @@
 <B><TT>songgetcurfilt</TT></B>
 	<BLOCKQUOTE>
 	returns the current filter
+	</BLOCKQUOTE>
+
+<B><TT>songsetcursysex sysexname</TT></B>
+	<BLOCKQUOTE>
+	set the current sysex bank, 
+	ie the one that will be recorded
+	</BLOCKQUOTE>
+
+<B><TT>songgetcursysex</TT></B>
+	<BLOCKQUOTE>
+	returns the current sysex bank
 	</BLOCKQUOTE>
 
 <B><TT>songsetunit tpu</TT></B>
