@@ -1,11 +1,6 @@
 - add 'song_debug' flag and disable play/rec/idle messages
 
-- implement undo-stack
-
-- sysex: add 'proc sysexadd' to let the user write his own sysex , 
-  add 'proc sysexcopy', 'proc sysexrm', 'proc sysexsetdev', 
-  write macros in midishrc, update manual and then say that
-  sysex support is ok.
+- (difficult) implement undo-stack
 
 - (easy) create a tempo factor for recording, is it necessary ?
 

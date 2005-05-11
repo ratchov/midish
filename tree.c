@@ -316,6 +316,20 @@ exec_lookuplong(struct exec_s *exec, char *name, long *val) {
 }
 
 unsigned
+exec_lookuplist(struct exec_s *exec, char *name, struct data_s **val) {
+	struct var_s *var;
+	var = exec_varlookup(exec, name);
+	if (var == 0 || var->data->type != DATA_LIST) {
+		exec_error(exec, name);
+		exec_error(exec, ": no such list\n");
+		return 0;
+	}
+	*val = var->data->val.list;
+	return 1;
+}
+
+
+unsigned
 exec_lookupbool(struct exec_s *exec, char *name, long *val) {
 	struct var_s *var;
 	unsigned res;

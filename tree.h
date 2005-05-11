@@ -152,6 +152,7 @@ unsigned exec_lookupname(struct exec_s *exec, char *name, char **val);
 unsigned exec_lookupstring(struct exec_s *exec, char *name, char **val);
 unsigned exec_lookuplong(struct exec_s *exec, char *name, long *val);
 unsigned exec_lookupbool(struct exec_s *exec, char *name, long *val);
+unsigned exec_lookuplist(struct exec_s *exec, char *name, struct data_s **val);
 void     exec_newvar(struct exec_s *o, char *name, struct data_s *val);
 
 struct proc_s *proc_new(char *name);

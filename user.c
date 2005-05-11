@@ -461,6 +461,38 @@ toomany:
 	return 0;				
 }
 
+unsigned
+data_matchsysex(struct data_s *d, struct sysex_s *sx, unsigned *res) {
+	unsigned i;
+	struct chunk_s *ck;
+	
+	i = 0;
+	ck = sx->first;
+	while (d) {
+		if (d->type != DATA_LONG) {
+			user_printstr("not-a-number in sysex pattern\n");
+			return 0;
+		}
+		for (;;) {
+			if (!ck) {
+				*res = 0;
+				return 1;
+			} 
+			if (i < ck->used) {
+				break;
+			}
+			ck = ck->next;
+			i = 0;
+		}		
+		if (d->val.num != ck->data[i++]) {
+			*res = 0;
+			return 1;
+		}
+		d = d->next;	
+	}
+	*res = 1;
+	return 1;
+}
 
 
 /* ---------------------------------------- interpreter functions --- */
@@ -1222,21 +1254,67 @@ user_func_sysexinfo(struct exec_s *o) {
 unsigned
 user_func_sysexclear(struct exec_s *o) {
 	struct songsx_s *c;
-	struct sysex_s *x;
+	struct sysex_s *x, **px;
+	struct data_s *d;
+	unsigned match;
 	
-	if (!exec_lookupsx(o, "sysexname", &c)) {
+	if (!exec_lookupsx(o, "sysexname", &c) ||
+	    !exec_lookuplist(o, "data", &d)) {
 		return 0;
 	}
+	px = &c->sx.first;
 	for (;;) {
-		x = sysexlist_get(&c->sx);
-		if (!x) {
+		if (!*px) {
 			break;
 		}
-		sysex_del(x);
+		if (!data_matchsysex(d, *px, &match)) {
+			return 0;
+		}
+		if (match) {
+			x = *px;
+			*px = x->next;
+			if (*px == 0) {
+				c->sx.lastptr = px;
+			}
+			sysex_del(x);
+		} else {
+			px = &(*px)->next;
+		}
 	}
 	return 1;
 }
 
+
+unsigned
+user_func_sysexsetunit(struct exec_s *o) {
+	struct songsx_s *c;
+	struct sysex_s *x;
+	struct data_s *d;
+	unsigned match;
+	long unit;
+	
+	if (!exec_lookupsx(o, "sysexname", &c) ||
+	    !exec_lookuplong(o, "unit", &unit) ||
+	    !exec_lookuplist(o, "data", &d)) {
+		return 0;
+	}
+	if (unit < 0 || unit >= DEFAULT_MAXNDEVS) {
+		user_printstr("sysexsetunit: unit out of range\n");
+		return 0;
+	}
+	for (x = c->sx.first; x != 0; x = x->next) {
+		if (!x) {
+			break;
+		}
+		if (!data_matchsysex(d, x, &match)) {
+			return 0;
+		}
+		if (match) {
+			x->unit = unit;
+		}
+	}
+	return 1;
+}
 
 unsigned
 user_func_sysexadd(struct exec_s *o) {
@@ -1250,7 +1328,7 @@ user_func_sysexadd(struct exec_s *o) {
 	    !exec_lookuplong(o, "unit", &unit)) {
 		return 0;
 	}
-	if (unit < 0 || unit > EV_MAXDEV) {
+	if (unit < 0 || unit >= DEFAULT_MAXNDEVS) {
 		user_printstr("sysexadd: unit out of range\n");
 		return 0;
 	}
@@ -2491,7 +2569,12 @@ user_mainloop(void) {
 	exec_newbuiltin(exec, "sysexinfo", user_func_sysexinfo, 
 			name_newarg("sysexname", 0));
 	exec_newbuiltin(exec, "sysexclear", user_func_sysexclear, 
-			name_newarg("sysexname", 0));
+			name_newarg("sysexname", 
+			name_newarg("data", 0)));
+	exec_newbuiltin(exec, "sysexsetunit", user_func_sysexsetunit, 
+			name_newarg("sysexname", 
+			name_newarg("unit", 
+			name_newarg("data", 0))));
 	exec_newbuiltin(exec, "sysexadd", user_func_sysexadd, 
 			name_newarg("sysexname", 
 			name_newarg("unit",

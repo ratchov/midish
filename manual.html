@@ -218,6 +218,7 @@
 		<TT>sysexexists</TT>,
 		<TT>sysexinfo</TT>, 
 		<TT>sysexclear</TT>, 
+		<TT>sysexsetunit</TT>, 
 		<TT>sysexadd</TT>, 
 		<TT>songgetcursysex</TT> and
 		<TT>songsetcursysex</TT>.
@@ -1089,9 +1090,21 @@
 	returns 1 if <TT>sysexname</TT> is a sysex bank, 0 otherwise
 	</BLOCKQUOTE>
 
-<B><TT>sysexclear sysexname</TT></B>
+<B><TT>sysexclear sysexname pattern</TT></B>
 	<BLOCKQUOTE>
-	removes all sysex messages from sysex bank <TT>sysexname</TT>
+	removes all sysex messages starting with <TT>pattern</TT>
+	from sysex bank <TT>sysexname</TT>. The given pattern
+	is a list of bytes; an empty pattern matches any 
+	sysex message.
+	</BLOCKQUOTE>
+
+<B><TT>sysexclear sysexname newunit pattern</TT></B>
+	<BLOCKQUOTE>
+	set device number to <TT>newunit</TT> 
+	on all sysex messages starting with <TT>pattern</TT> 
+	from sysex bank <TT>sysexname</TT>. The given pattern
+	is a list of bytes; an empty pattern matches any 
+	sysex message.
 	</BLOCKQUOTE>
 
 <B><TT>sysexadd sysexname unit data</TT></B>
