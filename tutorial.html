@@ -553,6 +553,53 @@
 	nested notes when a track is recorded twice (or more) 
 	without being erased.
 
+
+<A name="sysex"></A>
+<H1>Using system exclusive messages</H1>
+
+	Midish can send several system exclusive messages
+	to midi devices before starting performance mode.
+	Tipically, this feature can be used to change 
+	the configuration of the midi devices. System
+	exclusive ('sysex') messages are stored into 
+	named banks. To create a sysex bank named <TT>mybank</TT>:
+	<PRE>
+	sysexnew mybank
+	</PRE>
+	Then we can add comme messages:
+	<PRE>
+	sysexadd mybank 0 {0xF0 0x7E 0x7F 0x09 0x01 0xF7}
+	</PRE>	
+	This will store the "General-Midi ON" messages into the
+	bank. The sencond argument (here "0") is the device number
+	to which the message will be sent when performance mode
+	is entered. To send the latter messages to 
+	the corresponding device, just enter performance mode,
+	for instance:
+	<PRE>
+	songidle
+	</PRE>
+	Sysex messages can be recorded from
+	midi devices, this is useful to save "bulk dumps"
+	from synthtisers. Sysex messages are automatically
+	recorded on the <I>current bank</I>. So, to record
+	a sysex:
+	<PRE>
+	songsetcursysex mybank
+	songrecord
+	</PRE>
+	The next time performance mode is entered, recorded
+	sysex messages will be sent back to the device.
+	Information about the recorded sysex messages 
+	can be obtained as follows:
+	<PRE>
+	sysexinfo mybank
+	</PRE>
+	A bank can be cleared by:
+	<PRE>
+	sysexclear mybank
+	</PRE>
+
 <A name="info"></A>
 <H1>Obtaining information</H1>
 
@@ -581,6 +628,7 @@
 	print [songgetcurpos]		# print current position
 	print [songgetcurfilt]		# current filter
 	print [songgetcurtrack]		# current track
+	print [songgetcursysex]
 	print [trackgetcurfilt mypiano]	# current filter of track 'mypiano'
 	</PRE>
 
@@ -588,7 +636,7 @@
 	The device and the midi channel of a channel definition
 	can be obtained as follows:
 	<PRE>
-	print [changetnum mydrums]	# print midi chan number
+	print [changetch mydrums]	# print midi chan number
 	print [changetdev mydrums]	# print device number
 	</PRE>
 	
@@ -598,6 +646,7 @@
 	print [chanexists]
 	print [filtexists]
 	print [trackexists]
+	print [sysexexists]
 	</PRE>
 	this will print 1 if the corresponding object exists
 	and 0 otherwise.
@@ -1117,7 +1166,7 @@
 <HR>
 <SMALL><EM>
 Copyright (c) 2003-2005 Alexandre Ratchov<BR>
-Last updated apr 24, 2005 	
+Last updated may 11, 2005 	
 </EM></SMALL>
 	
 
