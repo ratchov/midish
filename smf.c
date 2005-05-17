@@ -435,13 +435,44 @@ smf_putchan(struct smf_s *o, unsigned *used, struct song_s *s, struct songchan_s
 }
 
 
+void
+smf_putsysex(struct smf_s *o, unsigned *used, struct sysex_s *sx) {
+	struct chunk_s *c;
+	unsigned i;
+		
+	for (c = sx->first; c != 0; c = c->next) {
+		for (i = 0; i < c->used; i++) {
+			smf_putc(o, used, c->data[i]);
+		}
+	}
+}
+
+void
+smf_putsx(struct smf_s *o, unsigned *used, struct song_s *s, struct songsx_s *songsx) {
+	unsigned sysexused;
+	struct sysex_s *sx;
+	
+	for (sx = songsx->sx.first; sx != 0; sx = sx->next) {
+		sysexused = 0;
+		smf_putvar(o, used, 0);
+		smf_putc(o, used, 0xf7);
+		smf_putsysex(o, &sysexused, sx);
+		smf_putvar(o, used, sysexused);
+		smf_putsysex(o, used, sx);
+	}
+	smf_putvar(o, used, 0);
+	smf_putc(o, used, 0xff);
+	smf_putc(o, used, 0x2f);
+	smf_putc(o, used, 0x00);		
+}
 
 unsigned
 song_exportsmf(struct song_s *o, char *filename) {
 	struct smf_s f;
 	struct songtrk_s *t;
 	struct songchan_s *i;
-	unsigned ntrks, nchan, used;
+	struct songsx_s *s;
+	unsigned ntrks, nchan, nsx, used;
 
 	if (!smf_open(&f, filename, "w")) {
 		return 0;
@@ -454,11 +485,15 @@ song_exportsmf(struct song_s *o, char *filename) {
 	for (i = o->chanlist; i != 0; i = (struct songchan_s *)i->name.next) {
 		nchan++;
 	}
+	nsx = 0;
+	for (s = o->sxlist; s != 0; s = (struct songsx_s *)s->name.next) {
+		nsx++;
+	}
 
 	/* write the header */
 	smf_putheader(&f, smftype_header, 6);
 	smf_put16(&f, 0, 1);				/* format = 1 */
-	smf_put16(&f, 0, ntrks + nchan + 1);		/* add meta track */
+	smf_put16(&f, 0, nsx + ntrks + nchan + 1);	/* +1 -> meta track */
 	smf_put16(&f, 0, o->tics_per_unit / 4);		/* tics per quarter */
 
 	/* write the tempo track */
@@ -466,8 +501,16 @@ song_exportsmf(struct song_s *o, char *filename) {
 	smf_putmeta(&f, &used, o);
 	smf_putheader(&f, smftype_track, used);
 	smf_putmeta(&f, 0, o);
+		
+	/* write each sx */
+	for (s = o->sxlist; s != 0; s = (struct songsx_s *)s->name.next) {
+		used = 0;
+		smf_putsx(&f, &used, o, s);
+		smf_putheader(&f, smftype_track, used);
+		smf_putsx(&f, 0, o, s);
+	}	
 					
-	/* write each chantr */
+	/* write each chan */
 	for (i = o->chanlist; i != 0; i = (struct songchan_s *)i->name.next) {
 		used = 0;
 		smf_putchan(&f, &used, o, i);
@@ -513,12 +556,12 @@ smf_gettrack(struct smf_s *o, struct song_s *s, struct songtrk_s *t) {
 		abspos += delta;
 		track_seekblank(&t->track, &tp, delta);
 		if (!smf_getc(o, &c)) {
-			goto bad1;
+			return 0;
 		}
 		if (c == 0xff) {
 			status = 0;
 			if (!smf_getc(o, &c)) {
-				goto bad1;
+				return 0;
 			}
 			type = c;
 			if (!smf_getvar(o, &length)) {
@@ -530,7 +573,7 @@ smf_gettrack(struct smf_s *o, struct song_s *s, struct songtrk_s *t) {
 			} else if (type == 0x51 && length == 3) {
 				/* tempo change */
 				if (!smf_get24(o, &tempo)) {
-					goto bad1;
+					return 0;
 				}
 				ev.cmd = EV_TEMPO;
 				ev.data.tempo.usec24 = tempo * 96 / s->tics_per_unit;
@@ -538,16 +581,16 @@ smf_gettrack(struct smf_s *o, struct song_s *s, struct songtrk_s *t) {
 			} else if (type == 0x58 && length == 4) {
 				/* time signature change */
 				if (!smf_getc(o, &num)) {
-					goto bad1;
+					return 0;
 				}
 				if (!smf_getc(o, &den)) {
-					goto bad1;
+					return 0;
 				}
 				ev.cmd = EV_TIMESIG;
 				ev.data.sign.beats = num;
 				ev.data.sign.tics = s->tics_per_unit / (1 << den);
 				if (!smf_getc(o, &dummy)) {
-					goto bad1;
+					return 0;
 				}
 				/*
 				dbg_puts("cc=");
@@ -555,7 +598,7 @@ smf_gettrack(struct smf_s *o, struct song_s *s, struct songtrk_s *t) {
 				dbg_puts(", dd=");
 				*/
 				if (!smf_getc(o, &dummy)) {
-					goto bad1;
+					return 0;
 				}
 				/*
 				dbg_putu(dummy);
@@ -566,7 +609,7 @@ smf_gettrack(struct smf_s *o, struct song_s *s, struct songtrk_s *t) {
 			ignoremeta:
 				for (i = 0; i < length; i++) {
 					if (!smf_getc(o, &c)) {
-						goto bad1;
+						return 0;
 					}
 				}
 			}
@@ -581,13 +624,13 @@ smf_gettrack(struct smf_s *o, struct song_s *s, struct songtrk_s *t) {
 			}
 			for (i = 0; i < length; i++) {
 				if (!smf_getc(o, &c)) {
-					goto bad1;
+					return 0;
 				}
 			}			
 		} else if (c >= 0x80 && c < 0xf0) {
 			status = c;
 			if (!smf_getc(o, &c)) {
-				goto bad1;
+				return 0;
 			}
 		runningstatus:
 			ev.cmd = (status >> 4) & 0xf;
@@ -596,7 +639,7 @@ smf_gettrack(struct smf_s *o, struct song_s *s, struct songtrk_s *t) {
 			ev.data.voice.b0 = c & 0x7f;
 			if (SMF_EVLEN(status) == 2) {
 				if (!smf_getc(o, &c)) {
-					goto bad1;
+					return 0;
 				}
 				ev.data.voice.b1 = c & 0x7f;
 			}
@@ -625,9 +668,6 @@ smf_gettrack(struct smf_s *o, struct song_s *s, struct songtrk_s *t) {
 		}
 	}
 	return 1;
-bad1:
-	user_printstr("failed to read event\n");
-	return 0;
 }
 
 	/*

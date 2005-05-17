@@ -466,14 +466,14 @@
 		<TD>greater
 
 	<TR>	<TD><TT>&gt;=</TT>
-		<TD>greater or equa
+		<TD>greater or equal
 
 	<TR>	<TD><TT>==</TT>
 		<TD>equal
 		<TD rowspan="2">left to righ
 
 	<TR>	<TD><TT>!=</TT>
-		<TD>not equa
+		<TD>not equal
 
 	<TR>	<TD><TT>&amp;</TT>
 		<TD>bitwise AND
@@ -518,8 +518,8 @@
 
 	is a list containing the string <TT>"bla"</TT> the integer
 	3 and the name <TT>zer</TT>. A list is a set of
-	expressions separated by spaces and enclosed by
-	square brackets, a more complicated example is:
+	expressions separated by spaces and enclosed between
+	braces, a more complicated example is:
 
 	<PRE>
 	{ "hello" 1+2*3 mytrack $i [myproc] { a b c } }	
@@ -548,7 +548,7 @@
 
 	<PRE>
 	proc square x {
-		return $x * $y
+		return $x * $x
 	}
 	</PRE>
 
@@ -643,16 +643,16 @@
 <A name="evrange"></A>
 <H1>Event ranges</H1>
 
-	Some track editiong functions take an event range as argument. 
+	Some track editing functions take an event range as argument. 
 	The event range is specified as a list containing:
 	<UL>
 	<LI> an optionnal reference from the following list:
 	     <TT>any</TT>, <TT>note</TT>, <TT>ctl</TT>, <TT>pc</TT>, <TT>cat</TT>, <TT>bend</TT>.
 	<LI> an optionnal channel range specified as a list containing
 		a device number range and a midi-channel number
-		range. Number ranges are specified a two-number list
-		like this. Channel name matches an unique channel.
-	<LI> an optionnal  number range, specified a as a list
+		range. Number ranges are specified as two-number list
+		like this <TT>{12 34}</TT>. Channel name matches an unique channel.
+	<LI> an optionnal  number range, specified as a list
 		of two number like this <TT>{12 65}</TT>
 	<LI> an optionnal second number range, in the same
 		format as the first one (not permitted for <TT>pc</TT>, 
@@ -710,8 +710,8 @@
 	<P>
 	A track is a set of events ordered in time. They can be
 	recorded, edited and quantised. Each track has a name and
-	and a default filter (used for recording). Tracks are
-	not bound to a specific channel/device and can
+	a default filter (used for recording). Tracks are
+	not bound to any specific channel/device and can
 	be used to record a complete song (not recommended).
 	On playback all tracks are played simultaneously.
 

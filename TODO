@@ -1,3 +1,9 @@
+- 'proc f n { print $n; return [f ($n+$n)]; }' will allocate
+  2^20 element list, which will hang the interpreter. Check if
+  it is possible to limit data usage (or at least list size)
+
+- add sysex import/export in smf.c
+
 - add 'song_debug' flag and disable play/rec/idle messages
 
 - (difficult) implement undo-stack
