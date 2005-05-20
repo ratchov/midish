@@ -28,8 +28,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef SEQ_NAME_H
-#define SEQ_NAME_H
+#ifndef MIDISH_NAME_H
+#define MIDISH_NAME_H
 
 #include "str.h"
 
@@ -58,4 +58,4 @@ unsigned       name_eq(struct name_s **first1, struct name_s **first2);
 
 struct name_s *name_lookup(struct name_s **first, char *str);
 
-#endif /* SEQ_NAME_H */
+#endif /* MIDISH_NAME_H */

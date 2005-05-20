@@ -28,8 +28,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef SEQ_FILT_H
-#define SEQ_FILT_H
+#ifndef MIDISH_FILT_H
+#define MIDISH_FILT_H
 
 #include "ev.h"
 
@@ -111,4 +111,4 @@ void filt_conf_swapidev(struct filt_s *o, unsigned olddev, unsigned newdev);
 
 extern unsigned filt_debug;
 
-#endif /* SEQ_FILT_H */
+#endif /* MIDISH_FILT_H */

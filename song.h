@@ -28,8 +28,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef SEQ_SONG_H
-#define SEQ_SONG_H
+#ifndef MIDISH_SONG_H
+#define MIDISH_SONG_H
 
 #define SONG_DEFAULT_BPM	4
 #define SONG_DEFAULT_TPB	24
@@ -141,4 +141,4 @@ void song_idle(struct song_s *o);
 void song_rt_setup(struct song_s *o);
 void song_rt_seek(struct song_s *o);
 
-#endif /* SEQ_SONG_H */
+#endif /* MIDISH_SONG_H */

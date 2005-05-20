@@ -28,8 +28,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef SEQ_DATA_H
-#define SEQ_DATA_H
+#ifndef MIDISH_DATA_H
+#define MIDISH_DATA_H
 
 #define DATA_NIL	0
 #define DATA_LONG	1
@@ -89,4 +89,4 @@ unsigned data_bitor(struct data_s *op1, struct data_s *op2);
 unsigned data_bitxor(struct data_s *op1, struct data_s *op2);
 unsigned data_bitnot(struct data_s *op1);
 
-#endif /* SEQ_DATA_H */
+#endif /* MIDISH_DATA_H */

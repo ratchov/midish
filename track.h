@@ -28,8 +28,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef SEQ_TRACK_H
-#define SEQ_TRACK_H
+#ifndef MIDISH_TRACK_H
+#define MIDISH_TRACK_H
 
 #include "ev.h"
 
@@ -91,4 +91,4 @@ void		track_seekblank(struct track_s *o, struct seqptr_s *p, unsigned ntics);
 unsigned	track_filt(struct track_s *o, struct seqptr_s *p, unsigned ntics,
 			unsigned (*func)(void *, struct ev_s *), void *addr);
 
-#endif /* SEQ_TRACK_H */
+#endif /* MIDISH_TRACK_H */

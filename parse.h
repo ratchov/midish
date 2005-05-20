@@ -28,8 +28,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef SEQ_PARSE_H
-#define SEQ_PARSE_H
+#ifndef MIDISH_PARSE_H
+#define MIDISH_PARSE_H
 
 #include "lex.h"
 
@@ -68,4 +68,4 @@ unsigned	parse_block(struct parse_s *, struct tree_s *);
 unsigned	parse_function(struct parse_s *, struct proc_s **);
 unsigned	parse_prog(struct parse_s *, struct exec_s *);
 
-#endif /* SEQ_PARSE_H */
+#endif /* MIDISH_PARSE_H */

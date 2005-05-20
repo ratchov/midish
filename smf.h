@@ -28,10 +28,12 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef SEQ_SMF_H
-#define SEQ_SMF_H
+#ifndef MIDISH_SMF_H
+#define MIDISH_SMF_H
+
+struct song_s;
 
 unsigned song_exportsmf(struct song_s *o, char *filename);
 struct song_s *song_importsmf(char *filename);
 
-#endif /* SEQ_SMF_H */
+#endif /* MIDISH_SMF_H */

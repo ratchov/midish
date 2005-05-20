@@ -28,8 +28,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef SEQ_TEXTIO_H
-#define SEQ_TEXTIO_H
+#ifndef MIDISH_TEXTIO_H
+#define MIDISH_TEXTIO_H
 
 #define CHAR_EOF (~0)
 
@@ -61,4 +61,4 @@ extern struct textout_s *textio_stdout;
 void textio_init(void);
 void textio_done(void);
 
-#endif /* SEQ_TEXTIO_H */
+#endif /* MIDISH_TEXTIO_H */

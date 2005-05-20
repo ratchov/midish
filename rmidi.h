@@ -28,8 +28,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef SEQ_RMIDI_H
-#define SEQ_RMIDI_H
+#ifndef MIDISH_RMIDI_H
+#define MIDISH_RMIDI_H
 
 #define RMIDI_BUFLEN		0x400
 #undef  RMIDI_DEBUG_OUTPUT
@@ -67,4 +67,4 @@ void rmidi_inputcb(struct rmidi_s *, unsigned char *, unsigned);
 
 extern unsigned rmidi_debug;
 
-#endif /* SEQ_RMIDI_H */
+#endif /* MIDISH_RMIDI_H */

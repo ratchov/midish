@@ -28,8 +28,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef SEQ_TRACKOP_H
-#define SEQ_TRACKOP_H
+#ifndef MIDISH_TRACKOP_H
+#define MIDISH_TRACKOP_H
 
 struct ev_s;
 struct evspec_s;
@@ -54,5 +54,5 @@ void track_opsetchan(struct track_s *o, unsigned chan, unsigned dev);
 unsigned track_opfindtic(struct track_s *o, unsigned m0);
 void track_optimeinfo(struct track_s *o, unsigned pos, unsigned long *usec24, unsigned *bpm, unsigned *tpb);
 
-#endif /* SEQ_TRACKOP_H */
+#endif /* MIDISH_TRACKOP_H */
 

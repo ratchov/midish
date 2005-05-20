@@ -28,8 +28,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef SEQ_LEX_H
-#define SEQ_LEX_H
+#ifndef MIDISH_LEX_H
+#define MIDISH_LEX_H
 
 #define IDENT_MAXLEN	30
 #define STRING_MAXLEN	2400
@@ -79,4 +79,4 @@ void	 lex_ungetchar(struct lex_s *o, int c);
 void	 lex_error(struct lex_s *o, char *msg);
 unsigned lex_str2long(struct lex_s *o, unsigned base);
 
-#endif /* SEQ_LEX_H */
+#endif /* MIDISH_LEX_H */

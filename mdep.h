@@ -28,8 +28,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef SEQ_MDEP_H
-#define SEQ_MDEP_H
+#ifndef MIDISH_MDEP_H
+#define MIDISH_MDEP_H
 
 struct rmidi_mdep_s {
 	char *path;
@@ -37,4 +37,4 @@ struct rmidi_mdep_s {
 	unsigned dying;
 };
 
-#endif /* SEQ_MDEP_H */
+#endif /* MIDISH_MDEP_H */

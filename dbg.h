@@ -28,8 +28,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef SEQ_DBG_H
-#define SEQ_DBG_H
+#ifndef MIDISH_DBG_H
+#define MIDISH_DBG_H
 
 void  dbg_puts(char *);
 void  dbg_putx(unsigned long);
@@ -38,4 +38,4 @@ void  dbg_panic(void);
 void *mem_alloc(unsigned);
 void  mem_free(void *);
 
-#endif /* SEQ_DBG_H */
+#endif /* MIDISH_DBG_H */

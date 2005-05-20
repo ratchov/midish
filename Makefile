@@ -35,7 +35,7 @@ ${PROG}:	${OBJS}
 		${CC} ${LDFLAGS} ${OBJS} -o ${PROG} ${LIB}
 
 clean:		
-		${RM} -f -- ${PROG} .depend *~ *.bak *.o *.s *.core core mkcurves
+		${RM} -f -- ${PROG} mkcurves .depend *~ *.bak *.o *.s *.core core
 
 install:	${PROG}
 		${INSTALL} -d ${PREFIX}/bin

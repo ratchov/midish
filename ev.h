@@ -28,8 +28,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef SEQ_EV_H
-#define SEQ_EV_H
+#ifndef MIDISH_EV_H
+#define MIDISH_EV_H
 
 #include "default.h"
 
@@ -119,4 +119,4 @@ unsigned evspec_matchev(struct evspec_s *o, struct ev_s *e);
 
 
 
-#endif /* SEQ_EV_H */
+#endif /* MIDISH_EV_H */

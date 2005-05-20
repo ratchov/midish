@@ -28,11 +28,11 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef SEQ_CONS_H
-#define SEQ_CONS_H
+#ifndef MIDISH_CONS_H
+#define MIDISH_CONS_H
 
 void cons_init(void);
 void cons_done(void);
 int  cons_getc(char *);
 
-#endif /* SEQ_CONS_H */
+#endif /* MIDISH_CONS_H */

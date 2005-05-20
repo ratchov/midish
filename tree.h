@@ -28,8 +28,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef SEQ_TREE_H
-#define SEQ_TREE_H
+#ifndef MIDISH_TREE_H
+#define MIDISH_TREE_H
 
 #include "name.h"
 
@@ -183,4 +183,4 @@ void	 tree_empty(struct tree_s *o);
 void	 tree_dbg(struct tree_s *o, unsigned depth);
 unsigned tree_exec(struct tree_s *o, struct exec_s *exec);
 
-#endif /* SEQ_TREE_H */
+#endif /* MIDISH_TREE_H */

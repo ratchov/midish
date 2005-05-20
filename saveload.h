@@ -28,9 +28,18 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef SEQ_SAVELOAD_H
-#define SEQ_SAVELOAD_H
+#ifndef MIDISH_SAVELOAD_H
+#define MIDISH_SAVELOAD_H
 
+struct textout_s;
+struct ev_s;
+struct track_s;
+struct filt_s;
+struct rule_s;
+struct songchan_s;
+struct songtrk_s;
+struct songfilt_s;
+struct song_s;
 
 void ev_output(struct ev_s *e, struct textout_s *f);
 void track_output(struct track_s *t, struct textout_s *f);
@@ -42,7 +51,6 @@ void songfilt_output(struct songfilt_s *o, struct textout_s *f);
 void song_output(struct song_s *o, struct textout_s *f);
 
 
-
 void track_save(struct track_s *o, char *name);
 unsigned track_load(struct track_s *o, char *name);
 
@@ -50,4 +58,4 @@ void song_save(struct song_s *o, char *name);
 unsigned song_load(struct song_s *o, char *filename);
 
 
-#endif /* SEQ_SAVELOAD_H */
+#endif /* MIDISH_SAVELOAD_H */

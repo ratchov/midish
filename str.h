@@ -28,12 +28,12 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef SEQ_STR_H
-#define SEQ_STR_H
+#ifndef MIDISH_STR_H
+#define MIDISH_STR_H
 
 char	*str_new(char *);
 void	 str_delete(char *);
 void	 str_dbg(char *);
 unsigned str_eq(char *, char *);
 
-#endif /* SEQ_STR_H */
+#endif /* MIDISH_STR_H */

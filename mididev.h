@@ -28,8 +28,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef SEQ_MIDIDEV_H
-#define SEQ_MIDIDEV_H
+#ifndef MIDISH_MIDIDEV_H
+#define MIDISH_MIDIDEV_H
 
 struct mididev_s {
 	struct mididev_s *next;
@@ -50,4 +50,4 @@ void mididev_listdone(void);
 unsigned mididev_attach(unsigned unit, char *path, unsigned in, unsigned out);
 unsigned mididev_detach(unsigned unit);
 
-#endif /* SEQ_MIDIDEV_H */
+#endif /* MIDISH_MIDIDEV_H */

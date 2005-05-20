@@ -28,8 +28,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef SEQ_POOL_H
-#define SEQ_POOL_H
+#ifndef MIDISH_POOL_H
+#define MIDISH_POOL_H
 
 #ifdef DEBUG
 #define POOL_DEBUG
@@ -55,4 +55,4 @@ void  pool_done(struct pool_s *);
 void *pool_new(struct pool_s *);
 void  pool_del(struct pool_s *, void *);	
 
-#endif /* SEQ_POOL_H */
+#endif /* MIDISH_POOL_H */

@@ -28,8 +28,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef SEQ_MUX_H
-#define SEQ_MUX_H
+#ifndef MIDISH_MUX_H
+#define MIDISH_MUX_H
 
 #define MUX_STARTWAIT		0	/* waiting for a start event */
 #define MUX_START 		1	/* just got a start */
@@ -66,4 +66,4 @@ void mux_sysexcb(unsigned unit, struct sysex_s *);
 
 extern unsigned mux_ticsperunit;
 
-#endif /* SEQ_MUX_H */
+#endif /* MIDISH_MUX_H */

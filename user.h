@@ -28,8 +28,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef SEQ_USER_H
-#define SEQ_USER_H
+#ifndef MIDISH_USER_H
+#define MIDISH_USER_H
 
 extern struct song_s *user_song;
 extern struct exec_s *user_exec;
@@ -41,4 +41,4 @@ void user_printlong(long);
 void user_error(char *);
 char *user_rcname(void);
 
-#endif /* SEQ_USER_H */
+#endif /* MIDISH_USER_H */

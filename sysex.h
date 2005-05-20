@@ -28,8 +28,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef SEQ_SYSEX_H
-#define SEQ_SYSEX_H
+#ifndef MIDISH_SYSEX_H
+#define MIDISH_SYSEX_H
 
 struct chunk_s {
 	struct chunk_s *next;
@@ -66,4 +66,4 @@ void sysexlist_put(struct sysexlist_s *o, struct sysex_s *e);
 struct sysex_s *sysexlist_get(struct sysexlist_s *o);
 void sysexlist_dbg(struct sysexlist_s *o);
 
-#endif /* SEQ_SYSEX_H */
+#endif /* MIDISH_SYSEX_H */
