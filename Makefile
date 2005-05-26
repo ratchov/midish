@@ -40,7 +40,7 @@ install:	${PROG}
 		cp midishrc sample.sng ${PREFIX}/share/examples/midish
 		@echo
 		@echo You can copy manually ${PREFIX}/share/examples/midish/midishrc
-		@echo into ~/.midishrc
+		@echo into ${HOME}/.midishrc
 		@echo
 
 mkcurves:	mkcurves.c
