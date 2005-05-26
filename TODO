@@ -1,6 +1,5 @@
-- 'proc f n { print $n; return [f ($n+$n)]; }' will allocate
-  2^20 element list, which will hang the interpreter. Check if
-  it is possible to limit data usage (or at least list size)
+- remove getacc/putacc, too ugly. Limit call-depth, list-size, number of
+  variables
 
 - add sysex import/export in smf.c
 

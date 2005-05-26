@@ -215,7 +215,7 @@ lex_scan(struct lex_s *o) {
 				}
 			} while (IS_SPACE(c));
 			if (c != '\n') {
-				lex_error(o, "newline exected after '\\'\n");
+				lex_error(o, "newline expected after '\\'\n");
 				return 0;
 			}
 			continue;

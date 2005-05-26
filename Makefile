@@ -8,18 +8,20 @@ LDFLAGS =
 #
 # comment this if you don't have a working readline(3) library
 #
-CFLAGS += -DHAVE_READLINE
-INCLUDE += -I/usr/local/include
-LIB += -L/usr/local/lib -lreadline -ltermcap
+RL_CFLAGS = -DHAVE_READLINE -I/usr/local/include
+RL_LDFLAGS = -L/usr/local/lib -lreadline -ltermcap
 
 #
 # binaries, documentation and examples will be installed in ${PREFIX}/bin,
 # ${PREFIX}/share/doc/midish and ${PREFIX}/share/examples/midish
 #
-PREFIX ?= ${HOME}
+PREFIX = ${HOME}
 
-INSTALL ?= install
-RM ?= rm
+#
+# common binaries
+#
+INSTALL = install
+RM = rm
 
 PROG = midish
 OBJS = \
@@ -27,12 +29,10 @@ cons.o data.o dbg.o ev.o filt.o lex.o main.o mdep.o mididev.o mux.o name.o \
 parse.o pool.o rmidi.o saveload.o smf.o song.o str.o sysex.o textio.o \
 track.o trackop.o tree.o user.o
 
-.PHONY: all clean install
-
 all:		${PROG}
 
 ${PROG}:	${OBJS}
-		${CC} ${LDFLAGS} ${OBJS} -o ${PROG} ${LIB}
+		${CC} ${OBJS} -o ${PROG} ${LDFLAGS} ${RL_LDFLAGS}
 
 clean:		
 		${RM} -f -- ${PROG} mkcurves .depend *~ *.bak *.o *.s *.core core
@@ -50,10 +50,10 @@ install:	${PROG}
 		@echo
 
 mkcurves:	mkcurves.c
-		${CC} ${CFLAGS} ${LDFLAGS} -o mkcurves mkcurves.c -lm
+		${CC} ${CFLAGS} -o mkcurves mkcurves.c ${LDFLAGS} -lm
 
 .c.o:
-		${CC} ${CFLAGS} ${INCLUDE} -c $<
+		${CC} ${CFLAGS} ${RL_CFLAGS} -c $<
 
 cons.o:		cons.c dbg.h cons.h textio.h
 data.o:		data.c dbg.h data.h str.h user.h
