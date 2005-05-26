@@ -538,7 +538,7 @@ smf_gettrack(struct smf_s *o, struct song_s *s, struct songtrk_s *t) {
 	unsigned tempo, num, den, dummy;
 	struct seqptr_s tp;
 	struct ev_s ev;
-	int c;
+	unsigned c;
 	
 	if (!smf_getheader(o, smftype_track)) {
 		return 0;
