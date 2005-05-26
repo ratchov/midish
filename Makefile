@@ -17,12 +17,6 @@ RL_LDFLAGS = -L/usr/local/lib -lreadline -ltermcap
 #
 PREFIX = ${HOME}
 
-#
-# common binaries
-#
-INSTALL = install
-RM = rm
-
 PROG = midish
 OBJS = \
 cons.o data.o dbg.o ev.o filt.o lex.o main.o mdep.o mididev.o mux.o name.o \
@@ -35,15 +29,15 @@ ${PROG}:	${OBJS}
 		${CC} ${OBJS} -o ${PROG} ${LDFLAGS} ${RL_LDFLAGS}
 
 clean:		
-		${RM} -f -- ${PROG} mkcurves .depend *~ *.bak *.o *.s *.core core
+		rm -f -- ${PROG} mkcurves .depend *~ *.bak *.o *.s *.core core
 
 install:	${PROG}
-		${INSTALL} -d ${PREFIX}/bin
-		${INSTALL} -d ${PREFIX}/share/doc/midish
-		${INSTALL} -d ${PREFIX}/share/examples/midish
-		${INSTALL} -m 755 -s ${PROG} ${PREFIX}/bin
-		${INSTALL} -m 644 manual.html tutorial.html ${PREFIX}/share/doc/midish
-		${INSTALL} -m 644 midishrc sample.sng ${PREFIX}/share/examples/midish
+		mkdir -p ${PREFIX}/bin
+		mkdir -p ${PREFIX}/share/doc/midish
+		mkdir -p ${PREFIX}/share/examples/midish
+		cp ${PROG} ${PREFIX}/bin
+		cp manual.html tutorial.html ${PREFIX}/share/doc/midish
+		cp midishrc sample.sng ${PREFIX}/share/examples/midish
 		@echo
 		@echo You can copy manually ${PREFIX}/share/examples/midish/midishrc
 		@echo into ~/.midishrc
