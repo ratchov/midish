@@ -113,8 +113,8 @@ smf_get16(struct smf_s *o, unsigned *val) {
 }
 
 unsigned
-smf_getc(struct smf_s *o, int *c) {
-	if (o->index + 1 > o->length || (*c = fgetc(o->file)) < 0) {
+smf_getc(struct smf_s *o, unsigned *c) {
+	if (o->index + 1 > o->length || (*c = fgetc(o->file) & 0xff) < 0) {
 		user_printstr("failed to read one byte\n");
 		return 0;
 	}

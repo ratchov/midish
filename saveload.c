@@ -608,16 +608,16 @@ parse_ev(struct parse_s *o, struct ev_s *ev) {
 			ev->data.voice.b1 = val;
 		}
 	} else if (ev->cmd == EV_TEMPO) {
-		if (!parse_long(o, ~1, &val)) {
+		if (!parse_long(o, ~1U, &val)) {
 			return 0;
 		}
 		ev->data.tempo.usec24 = val;
 	} else if (ev->cmd == EV_TIMESIG) {
-		if (!parse_long(o, ~1, &val)) {
+		if (!parse_long(o, ~1U, &val)) {
 			return 0;
 		}
 		ev->data.sign.beats = o->lex.longval;
-		if (!parse_long(o, ~1, &val)) {
+		if (!parse_long(o, ~1U, &val)) {
 			return 0;
 		}
 		ev->data.sign.tics = o->lex.longval;
@@ -1194,7 +1194,7 @@ parse_song(struct parse_s *o, struct song_s *s) {
 					return 0;
 				}
 			} else if (str_eq(o->lex.strval, "tics_per_unit")) {
-				if (!parse_long(o, ~1, &num)) {
+				if (!parse_long(o, ~1U, &num)) {
 					return 0;
 				}
 				if ((num % 96) != 0) {
@@ -1260,7 +1260,7 @@ parse_song(struct parse_s *o, struct song_s *s) {
 					return 0;
 				}
 			} else if (str_eq(o->lex.strval, "curpos")) {
-				if (!parse_long(o, ~1, &num)) {
+				if (!parse_long(o, ~1U, &num)) {
 					return 0;
 				}
 				if (!parse_nl(o)) {
@@ -1268,7 +1268,7 @@ parse_song(struct parse_s *o, struct song_s *s) {
 				}
 				s->curpos = num;
 			} else if (str_eq(o->lex.strval, "curquant")) {
-				if (!parse_long(o, ~1, &num)) {
+				if (!parse_long(o, ~1U, &num)) {
 					return 0;
 				}
 				if (num > s->tics_per_unit) {
