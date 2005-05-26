@@ -1096,7 +1096,7 @@ parse_song(struct parse_s *o, struct song_s *s) {
 	struct songchan_s *i;
 	struct songfilt_s *g;
 	struct songsx_s *l;
-	long num;
+	unsigned long num;
 
 	if (!parse_getsym(o)) {
 		return 0;
