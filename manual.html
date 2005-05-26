@@ -92,17 +92,14 @@ Without any midi-devices Midish will be probably usefulness.
 	</PRE>
 
 	<LI> 
-	edit <TT>Makefile</TT> and change <TT>CC</TT>, 
-	<TT>CFLAGS</TT>, etc... (if needed)
+	edit Makefile and comment or uncomment readline(3) options in Makefile
 
 	<LI> 
-	comment or uncomment readline(3) options in Makefile
-
-	<LI> 
-	compile the sequencer, just type '<TT>make all</TT>'
+	compile midish, just type '<TT>make all</TT>'
 
 	<LI>
-	install binaries by typing '<TT>make install</TT>'; by default
+	install binaries and documentation by typing '<TT>make install</TT>'; 
+	by default 
 	they are installed in <TT>$HOME/bin</TT>, where <TT>$HOME</TT> is
 	your home directory. If you want to change this,
 	set the <TT>PREFIX</TT> variable, for instance: 

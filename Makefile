@@ -1,15 +1,10 @@
 #
-# compiler and linker flags
+# comment the following if you don't have a working readline(3) library
 #
-CC = gcc
-CFLAGS = -g -Wall -Wstrict-prototypes -Wundef -Wpointer-arith # -Wconversion
-LDFLAGS = 
-
-#
-# comment this if you don't have a working readline(3) library
-#
-RL_CFLAGS = -DHAVE_READLINE -I/usr/local/include
-RL_LDFLAGS = -L/usr/local/lib -lreadline -ltermcap
+RL_CFLAGS = -DHAVE_READLINE
+RL_LDFLAGS = -L/usr/local/lib		# path to readline libraries
+RL_INCLUDE = -I/usr/local/include	# path to readline include files
+RL_LIB = -lreadline -ltermcap		# readline libraries
 
 #
 # binaries, documentation and examples will be installed in ${PREFIX}/bin,
@@ -26,7 +21,7 @@ track.o trackop.o tree.o user.o
 all:		${PROG}
 
 ${PROG}:	${OBJS}
-		${CC} ${OBJS} -o ${PROG} ${LDFLAGS} ${RL_LDFLAGS}
+		${CC} ${LDFLAGS} ${RL_LDFLAGS} ${OBJS} -o ${PROG} ${RL_LIB}
 
 clean:		
 		rm -f -- ${PROG} mkcurves .depend *~ *.bak *.o *.s *.core core
@@ -40,14 +35,14 @@ install:	${PROG}
 		cp midishrc sample.sng ${PREFIX}/share/examples/midish
 		@echo
 		@echo You can copy manually ${PREFIX}/share/examples/midish/midishrc
-		@echo into ${HOME}/.midishrc
+		@echo into ~/.midishrc
 		@echo
 
 mkcurves:	mkcurves.c
-		${CC} ${CFLAGS} -o mkcurves mkcurves.c ${LDFLAGS} -lm
+		${CC} ${CFLAGS} ${LDFLAGS} -o mkcurves mkcurves.c -lm
 
 .c.o:
-		${CC} ${CFLAGS} ${RL_CFLAGS} -c $<
+		${CC} ${CFLAGS} ${RL_CFLAGS} ${RL_INCLUDE}  -c $<
 
 cons.o:		cons.c dbg.h cons.h textio.h
 data.o:		data.c dbg.h data.h str.h user.h
