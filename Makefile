@@ -12,6 +12,7 @@ RL_LIB = -lreadline -ltermcap		# readline libraries
 #
 PREFIX = ${HOME}
 
+
 PROG = midish
 OBJS = \
 cons.o data.o dbg.o ev.o filt.o lex.o main.o mdep.o mididev.o mux.o name.o \
@@ -24,7 +25,7 @@ ${PROG}:	${OBJS}
 		${CC} ${LDFLAGS} ${RL_LDFLAGS} ${OBJS} -o ${PROG} ${RL_LIB}
 
 clean:		
-		rm -f -- ${PROG} mkcurves .depend *~ *.bak *.o *.s *.core core
+		rm -f -- ${PROG} .depend *~ *.bak *.o *.s *.core core
 
 install:	${PROG}
 		mkdir -p ${PREFIX}/bin
@@ -37,9 +38,6 @@ install:	${PROG}
 		@echo You can copy manually ${PREFIX}/share/examples/midish/midishrc
 		@echo into ~/.midishrc
 		@echo
-
-mkcurves:	mkcurves.c
-		${CC} ${CFLAGS} ${LDFLAGS} -o mkcurves mkcurves.c -lm
 
 .c.o:
 		${CC} ${CFLAGS} ${RL_CFLAGS} ${RL_INCLUDE}  -c $<
