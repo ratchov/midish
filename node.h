@@ -28,40 +28,43 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef MIDISH_PARSE_H
-#define MIDISH_PARSE_H
-
-#include "lex.h"
-
-extern unsigned parse_debug;
+#ifndef MIDISH_NODE_H
+#define MIDISH_NODE_H
 
 struct node_s;
+struct node_vmt_s;
+struct exec_s;
 
-struct parse_s {
-	struct lex_s lex;
-	unsigned lookavail;
+struct node_s {
+	struct node_vmt_s *vmt;
+	struct data_s *data;
+	struct node_s *next, *list;
 };
 
-struct parse_s *parse_new(char *);
-void		parse_delete(struct parse_s *);
+struct node_vmt_s {
+	char *name;
+	unsigned (*exec)(struct node_s *, struct exec_s *, struct data_s **);
+};
 
-void		parse_error(struct parse_s *, char *);
+struct node_s *node_new(struct node_vmt_s *vmt, struct data_s *data);
+void 	       node_delete(struct node_s *o);
+void	       node_dbg(struct node_s *o, unsigned depth);
+void	       node_insert(struct node_s **n, struct node_s *e);
+void	       node_replace(struct node_s **n, struct node_s *e);
+unsigned       node_exec(struct node_s *, struct exec_s *, struct data_s **);
 
-unsigned	parse_getsym(struct parse_s *);
-void		parse_ungetsym(struct parse_s *);
 
-unsigned	parse_end(struct parse_s *, struct node_s **);
-unsigned	parse_call(struct parse_s *, struct node_s **);
-unsigned	parse_expr(struct parse_s *, struct node_s **);
-unsigned	parse_addsub(struct parse_s *, struct node_s **);
-unsigned	parse_muldiv(struct parse_s *, struct node_s **);
-unsigned	parse_neg(struct parse_s *, struct node_s **);
-unsigned	parse_const(struct parse_s *, struct node_s **);
-unsigned	parse_assign(struct parse_s *, struct node_s **);
-unsigned	parse_stmt(struct parse_s *, struct node_s **);
-unsigned	parse_slist(struct parse_s *, struct node_s **);
-unsigned	parse_proc(struct parse_s *, struct node_s **);
-unsigned	parse_line(struct parse_s *o, struct node_s **n);
-unsigned	parse_prog(struct parse_s *o, struct node_s **n);
+extern struct node_vmt_s 
+node_vmt_proc, node_vmt_alist, node_vmt_slist,
+node_vmt_call, node_vmt_elist, node_vmt_builtin,
+node_vmt_cst, node_vmt_var, node_vmt_list,
+node_vmt_eq, node_vmt_neq, node_vmt_le, node_vmt_lt, node_vmt_ge, node_vmt_gt,
+node_vmt_ignore, node_vmt_if, node_vmt_for, 
+node_vmt_return, node_vmt_assign, node_vmt_nop,
+node_vmt_and, node_vmt_or, node_vmt_not, 
+node_vmt_neg, node_vmt_add, node_vmt_sub, 
+node_vmt_mul, node_vmt_div, node_vmt_mod,
+node_vmt_lshift, node_vmt_rshift, 
+node_vmt_bitand, node_vmt_bitor, node_vmt_bitxor, node_vmt_bitnot;
 
-#endif /* MIDISH_PARSE_H */
+#endif /* MIDISH_NODE_H */

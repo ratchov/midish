@@ -32,7 +32,7 @@
 #define MIDISH_LEX_H
 
 #define IDENT_MAXLEN	30
-#define STRING_MAXLEN	2400
+#define STRING_MAXLEN	55
 #define TOK_MAXLEN	STRING_MAXLEN
 
 enum SYM_ID {

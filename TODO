@@ -1,5 +1,4 @@
-- import new interpreter from 'psh', this will simplify midish and
-  remove some ugly constructs like getacc/putacc.
+- clean up console in/out/err handling
 
 - add sysex import from smf and clean up export to smf
 

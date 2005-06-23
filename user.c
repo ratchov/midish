@@ -35,7 +35,8 @@
 
 #include "dbg.h"
 #include "default.h"
-#include "tree.h"
+#include "node.h"
+#include "exec.h"
 #include "data.h"
 
 #include "textio.h"
@@ -63,19 +64,26 @@ unsigned
 user_parsefile(struct exec_s *exec, char *filename) {
 	struct parse_s *parse;
 	struct var_s **locals;
+	struct node_s *root;
+	struct data_s *data;
 	unsigned res;
 	
+	res = 0;
+	root = 0;
+	data = 0;
 	parse = parse_new(filename);	
 	if (!parse) {
 		return 0;
 	}
-	
 	locals = exec->locals;
 	exec->locals = &exec->globals;
-	res = parse_prog(parse, exec);
+	if (parse_prog(parse, &root)) {
+		node_dbg(root, 0);
+		res = node_exec(root, exec, &data);
+	}
 	exec->locals = locals;
-	
 	parse_delete(parse);
+	node_delete(root);
 	return res;
 }
 
@@ -498,7 +506,7 @@ data_matchsysex(struct data_s *d, struct sysex_s *sx, unsigned *res) {
 /* ---------------------------------------- interpreter functions --- */
 
 unsigned
-user_func_ev(struct exec_s *o) {
+user_func_ev(struct exec_s *o, struct data_s **r) {
 	struct evspec_s ev;
 	if (!exec_lookupevspec(o, "ev", &ev)) {
 		return 0;
@@ -509,14 +517,14 @@ user_func_ev(struct exec_s *o) {
 }
 
 unsigned
-user_func_panic(struct exec_s *o) {
+user_func_panic(struct exec_s *o, struct data_s **r) {
 	dbg_panic();
 	/* not reached */
 	return 0;
 }
 
 unsigned
-user_func_debug(struct exec_s *o) {
+user_func_debug(struct exec_s *o, struct data_s **r) {
 	char *flag;
 	long value;
 	
@@ -526,8 +534,8 @@ user_func_debug(struct exec_s *o) {
 	}
 	if (str_eq(flag, "parse")) {
 		parse_debug = value;
-	} else if (str_eq(flag, "tree")) {
-		tree_debug = value;
+	} else if (str_eq(flag, "exec")) {
+		exec_debug = value;
 	} else if (str_eq(flag, "rmidi")) {
 		rmidi_debug = value;
 	} else if (str_eq(flag, "filt")) {
@@ -540,7 +548,7 @@ user_func_debug(struct exec_s *o) {
 }
 
 unsigned
-user_func_exec(struct exec_s *o) {
+user_func_exec(struct exec_s *o, struct data_s **r) {
 	char *filename;		
 	if (!exec_lookupstring(o, "filename", &filename)) {
 		return 0;
@@ -550,7 +558,7 @@ user_func_exec(struct exec_s *o) {
 
 
 unsigned
-user_func_print(struct exec_s *o) {
+user_func_print(struct exec_s *o, struct data_s **r) {
 	struct var_s *arg;
 	arg = exec_varlookup(o, "value");
 	if (!arg) {
@@ -559,12 +567,12 @@ user_func_print(struct exec_s *o) {
 	}
 	exec_printdata(o, arg->data);
 	user_printstr("\n");
-	exec_putacc(o, data_newnil());
+	*r = data_newnil();
 	return 1;
 }
 
 unsigned
-user_func_help(struct exec_s *o) {
+user_func_help(struct exec_s *o, struct data_s **r) {
 	exec_dumpprocs(o);
 	return 1;
 }
@@ -572,7 +580,7 @@ user_func_help(struct exec_s *o) {
 /* -------------------------------------------------- track stuff --- */
 
 unsigned
-user_func_tracklist(struct exec_s *o) {
+user_func_tracklist(struct exec_s *o, struct data_s **r) {
 	struct data_s *d, *n;
 	struct songtrk_s *i;
 
@@ -581,13 +589,13 @@ user_func_tracklist(struct exec_s *o) {
 		n = data_newref(i->name.str);
 		data_listadd(d, n);
 	}
-	exec_putacc(o, d);
+	*r = d;
 	return 1;
 }
 
 
 unsigned
-user_func_tracknew(struct exec_s *o) {
+user_func_tracknew(struct exec_s *o, struct data_s **r) {
 	char *trkname;
 	struct songtrk_s *t;
 	
@@ -606,7 +614,7 @@ user_func_tracknew(struct exec_s *o) {
 
 
 unsigned
-user_func_trackdelete(struct exec_s *o) {
+user_func_trackdelete(struct exec_s *o, struct data_s **r) {
 	struct songtrk_s *t;
 	if (!exec_lookuptrack(o, "trackname", &t)) {
 		return 0;
@@ -620,7 +628,7 @@ user_func_trackdelete(struct exec_s *o) {
 
 
 unsigned
-user_func_trackrename(struct exec_s *o) {
+user_func_trackrename(struct exec_s *o, struct data_s **r) {
 	struct songtrk_s *t;
 	char *name;
 	
@@ -639,7 +647,7 @@ user_func_trackrename(struct exec_s *o) {
 
 
 unsigned
-user_func_trackexists(struct exec_s *o) {
+user_func_trackexists(struct exec_s *o, struct data_s **r) {
 	char *name;
 	struct songtrk_s *t;
 	
@@ -647,13 +655,13 @@ user_func_trackexists(struct exec_s *o) {
 		return 0;
 	}
 	t = song_trklookup(user_song, name);
-	exec_putacc(o, data_newlong(t != 0 ? 1 : 0));
+	*r = data_newlong(t != 0 ? 1 : 0);
 	return 1;
 }
 
 
 unsigned
-user_func_trackaddev(struct exec_s *o) {
+user_func_trackaddev(struct exec_s *o, struct data_s **r) {
 	long measure, beat, tic;
 	struct ev_s ev;
 	struct seqptr_s tp;
@@ -688,7 +696,7 @@ user_func_trackaddev(struct exec_s *o) {
 
 
 unsigned
-user_func_tracksetcurfilt(struct exec_s *o) {
+user_func_tracksetcurfilt(struct exec_s *o, struct data_s **r) {
 	struct songtrk_s *t;
 	struct songfilt_s *f;
 	struct var_s *arg;
@@ -717,23 +725,23 @@ user_func_tracksetcurfilt(struct exec_s *o) {
 }
 
 unsigned
-user_func_trackgetcurfilt(struct exec_s *o) {
+user_func_trackgetcurfilt(struct exec_s *o, struct data_s **r) {
 	struct songtrk_s *t;
 	
 	if (!exec_lookuptrack(o, "trackname", &t)) {
 		return 0;
 	}
 	if (t->curfilt) {
-		exec_putacc(o, data_newref(t->curfilt->name.str));
+		*r = data_newref(t->curfilt->name.str);
 	} else {
-		exec_putacc(o, data_newnil());
+		*r = data_newnil();
 	}		
 	return 1;
 }
 
 
 unsigned
-user_func_trackcheck(struct exec_s *o) {
+user_func_trackcheck(struct exec_s *o, struct data_s **r) {
 	char *trkname;
 	struct songtrk_s *t;
 	
@@ -751,7 +759,7 @@ user_func_trackcheck(struct exec_s *o) {
 
 
 unsigned
-user_func_trackgetlen(struct exec_s *o) {
+user_func_trackgetlen(struct exec_s *o, struct data_s **r) {
 	char *trkname;
 	struct songtrk_s *t;
 	unsigned len;
@@ -765,13 +773,13 @@ user_func_trackgetlen(struct exec_s *o) {
 		return 0;
 	}
 	len = track_numtic(&t->track);
-	exec_putacc(o, data_newlong((long)len));
+	*r = data_newlong((long)len);
 	return 1;
 }
 
 
 unsigned
-user_func_tracksave(struct exec_s *o) {
+user_func_tracksave(struct exec_s *o, struct data_s **r) {
 	char *trkname, *filename;
 	struct songtrk_s *t;
 	if (!exec_lookupname(o, "trackname", &trkname) ||
@@ -789,7 +797,7 @@ user_func_tracksave(struct exec_s *o) {
 
 
 unsigned
-user_func_trackload(struct exec_s *o) {
+user_func_trackload(struct exec_s *o, struct data_s **r) {
 	char *trkname, *filename;
 	struct songtrk_s *t;
 	if (!exec_lookupname(o, "trackname", &trkname) ||  
@@ -807,7 +815,7 @@ user_func_trackload(struct exec_s *o) {
 
 
 unsigned
-user_func_trackcut(struct exec_s *o) {
+user_func_trackcut(struct exec_s *o, struct data_s **r) {
 	struct songtrk_s *t;
 	long from, amount, quant;
 	unsigned tic, len;
@@ -834,7 +842,7 @@ user_func_trackcut(struct exec_s *o) {
 
 
 unsigned
-user_func_trackblank(struct exec_s *o) {
+user_func_trackblank(struct exec_s *o, struct data_s **r) {
 	struct songtrk_s *t;
 	struct track_s null;
 	struct seqptr_s tp;
@@ -866,7 +874,7 @@ user_func_trackblank(struct exec_s *o) {
 
 
 unsigned
-user_func_trackcopy(struct exec_s *o) {
+user_func_trackcopy(struct exec_s *o, struct data_s **r) {
 	struct songtrk_s *t, *t2;
 	struct track_s null, null2;
 	struct seqptr_s tp, tp2;
@@ -908,7 +916,7 @@ user_func_trackcopy(struct exec_s *o) {
 
 
 unsigned
-user_func_trackinsert(struct exec_s *o) {
+user_func_trackinsert(struct exec_s *o, struct data_s **r) {
 	char *trkname;
 	struct songtrk_s *t;
 	struct seqptr_s tp;
@@ -942,7 +950,7 @@ user_func_trackinsert(struct exec_s *o) {
 
 
 unsigned
-user_func_trackquant(struct exec_s *o) {
+user_func_trackquant(struct exec_s *o, struct data_s **r) {
 	char *trkname;
 	struct songtrk_s *t;
 	struct seqptr_s tp;
@@ -985,7 +993,7 @@ user_func_trackquant(struct exec_s *o) {
 }
 
 unsigned
-user_func_tracksetmute(struct exec_s *o) {
+user_func_tracksetmute(struct exec_s *o, struct data_s **r) {
 	struct songtrk_s *t;
 	long flag;
 	
@@ -998,13 +1006,13 @@ user_func_tracksetmute(struct exec_s *o) {
 }
 
 unsigned
-user_func_trackgetmute(struct exec_s *o) {
+user_func_trackgetmute(struct exec_s *o, struct data_s **r) {
 	struct songtrk_s *t;
 	
 	if (!exec_lookuptrack(o, "trackname", &t)) {
 		return 0;
 	}
-	exec_putacc(o, data_newlong(t->mute));
+	*r = data_newlong(t->mute);
 	return 1;
 }
 
@@ -1012,7 +1020,7 @@ user_func_trackgetmute(struct exec_s *o) {
 
 
 unsigned
-user_func_chanlist(struct exec_s *o) {
+user_func_chanlist(struct exec_s *o, struct data_s **r) {
 	struct data_s *d, *n;
 	struct songchan_s *i;
 
@@ -1021,12 +1029,12 @@ user_func_chanlist(struct exec_s *o) {
 		n = data_newref(i->name.str);
 		data_listadd(d, n);
 	}
-	exec_putacc(o, d);
+	*r = d;
 	return 1;
 }
 
 unsigned
-user_func_channew(struct exec_s *o) {
+user_func_channew(struct exec_s *o, struct data_s **r) {
 	char *name;
 	struct var_s *arg;
 	struct songchan_s *i;
@@ -1068,7 +1076,7 @@ user_func_channew(struct exec_s *o) {
 }
 
 unsigned
-user_func_chandelete(struct exec_s *o) {
+user_func_chandelete(struct exec_s *o, struct data_s **r) {
 	struct songchan_s *c;
 	if (!exec_lookupchan_getref(o, "channame", &c)) {
 		return 0;
@@ -1081,7 +1089,7 @@ user_func_chandelete(struct exec_s *o) {
 }
 
 unsigned
-user_func_chanrename(struct exec_s *o) {
+user_func_chanrename(struct exec_s *o, struct data_s **r) {
 	struct songchan_s *c;
 	char *name;
 	
@@ -1099,41 +1107,41 @@ user_func_chanrename(struct exec_s *o) {
 }
 
 unsigned
-user_func_chanexists(struct exec_s *o) {
+user_func_chanexists(struct exec_s *o, struct data_s **r) {
 	char *name;
 	struct songchan_s *i;
 	if (!exec_lookupname(o, "channame", &name)) {
 		return 0;
 	}
 	i = song_chanlookup(user_song, name);
-	exec_putacc(o, data_newlong(i != 0 ? 1 : 0));
+	*r = data_newlong(i != 0 ? 1 : 0);
 	return 1;
 }
 
 unsigned
-user_func_changetch(struct exec_s *o) {
+user_func_changetch(struct exec_s *o, struct data_s **r) {
 	struct songchan_s *i;
 	
 	if (!exec_lookupchan_getref(o, "channame", &i)) {
 		return 0;
 	}
-	exec_putacc(o, data_newlong(i->ch));
+	*r = data_newlong(i->ch);
 	return 1;
 }
 
 unsigned
-user_func_changetdev(struct exec_s *o) {
+user_func_changetdev(struct exec_s *o, struct data_s **r) {
 	struct songchan_s *i;
 	
 	if (!exec_lookupchan_getref(o, "channame", &i)) {
 		return 0;
 	}
-	exec_putacc(o, data_newlong(i->dev));
+	*r = data_newlong(i->dev);
 	return 1;
 }
 
 unsigned
-user_func_chanconfev(struct exec_s *o) {
+user_func_chanconfev(struct exec_s *o, struct data_s **r) {
 	struct songchan_s *c;
 	struct seqptr_s cp;
 	struct ev_s ev;
@@ -1150,7 +1158,7 @@ user_func_chanconfev(struct exec_s *o) {
 }
 
 unsigned
-user_func_chaninfo(struct exec_s *o) {
+user_func_chaninfo(struct exec_s *o, struct data_s **r) {
 	struct songchan_s *c;
 	
 	if (!exec_lookupchan_getref(o, "channame", &c)) {
@@ -1165,7 +1173,7 @@ user_func_chaninfo(struct exec_s *o) {
 
 
 unsigned
-user_func_sysexlist(struct exec_s *o) {
+user_func_sysexlist(struct exec_s *o, struct data_s **r) {
 	struct data_s *d, *n;
 	struct songsx_s *i;
 
@@ -1174,12 +1182,12 @@ user_func_sysexlist(struct exec_s *o) {
 		n = data_newref(i->name.str);
 		data_listadd(d, n);
 	}
-	exec_putacc(o, d);
+	*r = d;
 	return 1;
 }
 
 unsigned
-user_func_sysexnew(struct exec_s *o) {
+user_func_sysexnew(struct exec_s *o, struct data_s **r) {
 	char *name;
 	struct songsx_s *i;
 	
@@ -1197,7 +1205,7 @@ user_func_sysexnew(struct exec_s *o) {
 }
 
 unsigned
-user_func_sysexdelete(struct exec_s *o) {
+user_func_sysexdelete(struct exec_s *o, struct data_s **r) {
 	struct songsx_s *c;
 	if (!exec_lookupsx(o, "sysexname", &c)) {
 		return 0;
@@ -1210,7 +1218,7 @@ user_func_sysexdelete(struct exec_s *o) {
 }
 
 unsigned
-user_func_sysexrename(struct exec_s *o) {
+user_func_sysexrename(struct exec_s *o, struct data_s **r) {
 	struct songsx_s *c;
 	char *name;
 	
@@ -1228,19 +1236,19 @@ user_func_sysexrename(struct exec_s *o) {
 }
 
 unsigned
-user_func_sysexexists(struct exec_s *o) {
+user_func_sysexexists(struct exec_s *o, struct data_s **r) {
 	char *name;
 	struct songsx_s *i;
 	if (!exec_lookupname(o, "sysexname", &name)) {
 		return 0;
 	}
 	i = song_sxlookup(user_song, name);
-	exec_putacc(o, data_newlong(i != 0 ? 1 : 0));
+	*r = data_newlong(i != 0 ? 1 : 0);
 	return 1;
 }
 
 unsigned
-user_func_sysexinfo(struct exec_s *o) {
+user_func_sysexinfo(struct exec_s *o, struct data_s **r) {
 	struct songsx_s *c;
 	
 	if (!exec_lookupsx(o, "sysexname", &c)) {
@@ -1252,7 +1260,7 @@ user_func_sysexinfo(struct exec_s *o) {
 
 
 unsigned
-user_func_sysexclear(struct exec_s *o) {
+user_func_sysexclear(struct exec_s *o, struct data_s **r) {
 	struct songsx_s *c;
 	struct sysex_s *x, **px;
 	struct data_s *d;
@@ -1286,7 +1294,7 @@ user_func_sysexclear(struct exec_s *o) {
 
 
 unsigned
-user_func_sysexsetunit(struct exec_s *o) {
+user_func_sysexsetunit(struct exec_s *o, struct data_s **r) {
 	struct songsx_s *c;
 	struct sysex_s *x;
 	struct data_s *d;
@@ -1317,7 +1325,7 @@ user_func_sysexsetunit(struct exec_s *o) {
 }
 
 unsigned
-user_func_sysexadd(struct exec_s *o) {
+user_func_sysexadd(struct exec_s *o, struct data_s **r) {
 	struct songsx_s *c;
 	struct sysex_s *x;
 	struct data_s *byte;
@@ -1361,7 +1369,7 @@ user_func_sysexadd(struct exec_s *o) {
 
 
 unsigned
-user_func_songsetcursysex(struct exec_s *o) {
+user_func_songsetcursysex(struct exec_s *o, struct data_s **r) {
 	struct songsx_s *t;
 	struct var_s *arg;
 	
@@ -1383,11 +1391,11 @@ user_func_songsetcursysex(struct exec_s *o) {
 
 
 unsigned
-user_func_songgetcursysex(struct exec_s *o) {
+user_func_songgetcursysex(struct exec_s *o, struct data_s **r) {
 	if (user_song->cursx) {
-		exec_putacc(o, data_newref(user_song->cursx->name.str));
+		*r = data_newref(user_song->cursx->name.str);
 	} else {
-		exec_putacc(o, data_newnil());
+		*r = data_newnil();
 	}
 	return 1;
 }
@@ -1397,7 +1405,7 @@ user_func_songgetcursysex(struct exec_s *o) {
 
 
 unsigned
-user_func_filtlist(struct exec_s *o) {
+user_func_filtlist(struct exec_s *o, struct data_s **r) {
 	struct data_s *d, *n;
 	struct songfilt_s *i;
 
@@ -1406,12 +1414,12 @@ user_func_filtlist(struct exec_s *o) {
 		n = data_newref(i->name.str);
 		data_listadd(d, n);
 	}
-	exec_putacc(o, d);
+	*r = d;
 	return 1;
 }
 
 unsigned
-user_func_filtnew(struct exec_s *o) {
+user_func_filtnew(struct exec_s *o, struct data_s **r) {
 	char *name;
 	struct songfilt_s *i;
 	
@@ -1429,7 +1437,7 @@ user_func_filtnew(struct exec_s *o) {
 }
 
 unsigned
-user_func_filtdelete(struct exec_s *o) {
+user_func_filtdelete(struct exec_s *o, struct data_s **r) {
 	struct songfilt_s *f;
 	if (!exec_lookupfilt(o, "filtname", &f)) {
 		return 0;
@@ -1442,7 +1450,7 @@ user_func_filtdelete(struct exec_s *o) {
 }
 
 unsigned
-user_func_filtrename(struct exec_s *o) {
+user_func_filtrename(struct exec_s *o, struct data_s **r) {
 	struct songfilt_s *f;
 	char *name;
 	
@@ -1460,19 +1468,19 @@ user_func_filtrename(struct exec_s *o) {
 }
 
 unsigned
-user_func_filtexists(struct exec_s *o) {
+user_func_filtexists(struct exec_s *o, struct data_s **r) {
 	char *name;
 	struct songfilt_s *i;
 	if (!exec_lookupname(o, "filtname", &name)) {
 		return 0;
 	}
 	i = song_filtlookup(user_song, name);
-	exec_putacc(o, data_newlong(i != 0 ? 1 : 0));
+	*r = data_newlong(i != 0 ? 1 : 0);
 	return 1;
 }
 
 unsigned
-user_func_filtinfo(struct exec_s *o) {
+user_func_filtinfo(struct exec_s *o, struct data_s **r) {
 	struct songfilt_s *f;
 	struct rule_s *i;
 	
@@ -1493,7 +1501,7 @@ user_func_filtinfo(struct exec_s *o) {
 
 
 unsigned
-user_func_filtdevdrop(struct exec_s *o) {
+user_func_filtdevdrop(struct exec_s *o, struct data_s **r) {
 	struct songfilt_s *f;
 	long idev;
 	
@@ -1512,7 +1520,7 @@ user_func_filtdevdrop(struct exec_s *o) {
 
 
 unsigned
-user_func_filtnodevdrop(struct exec_s *o) {
+user_func_filtnodevdrop(struct exec_s *o, struct data_s **r) {
 	struct songfilt_s *f;
 	long idev;
 	
@@ -1530,7 +1538,7 @@ user_func_filtnodevdrop(struct exec_s *o) {
 
 
 unsigned
-user_func_filtdevmap(struct exec_s *o) {
+user_func_filtdevmap(struct exec_s *o, struct data_s **r) {
 	struct songfilt_s *f;
 	long idev, odev;
 	
@@ -1550,7 +1558,7 @@ user_func_filtdevmap(struct exec_s *o) {
 
 
 unsigned
-user_func_filtnodevmap(struct exec_s *o) {
+user_func_filtnodevmap(struct exec_s *o, struct data_s **r) {
 	struct songfilt_s *f;
 	long odev;
 	
@@ -1568,7 +1576,7 @@ user_func_filtnodevmap(struct exec_s *o) {
 
 
 unsigned
-user_func_filtchandrop(struct exec_s *o) {
+user_func_filtchandrop(struct exec_s *o, struct data_s **r) {
 	struct songfilt_s *f;
 	unsigned idev, ich;
 	
@@ -1582,7 +1590,7 @@ user_func_filtchandrop(struct exec_s *o) {
 
 
 unsigned
-user_func_filtnochandrop(struct exec_s *o) {
+user_func_filtnochandrop(struct exec_s *o, struct data_s **r) {
 	struct songfilt_s *f;
 	unsigned idev, ich;
 	
@@ -1595,7 +1603,7 @@ user_func_filtnochandrop(struct exec_s *o) {
 }
 
 unsigned
-user_func_filtchanmap(struct exec_s *o) {
+user_func_filtchanmap(struct exec_s *o, struct data_s **r) {
 	struct songfilt_s *f;
 	unsigned idev, ich, odev, och;
 	
@@ -1609,7 +1617,7 @@ user_func_filtchanmap(struct exec_s *o) {
 }
 
 unsigned
-user_func_filtnochanmap(struct exec_s *o) {
+user_func_filtnochanmap(struct exec_s *o, struct data_s **r) {
 	struct songfilt_s *f;
 	unsigned odev, och;
 	
@@ -1622,7 +1630,7 @@ user_func_filtnochanmap(struct exec_s *o) {
 }
 
 unsigned
-user_func_filtctldrop(struct exec_s *o) {
+user_func_filtctldrop(struct exec_s *o, struct data_s **r) {
 	struct songfilt_s *f;
 	unsigned idev, ich;
 	long ictl;
@@ -1642,7 +1650,7 @@ user_func_filtctldrop(struct exec_s *o) {
 
 
 unsigned
-user_func_filtnoctldrop(struct exec_s *o) {
+user_func_filtnoctldrop(struct exec_s *o, struct data_s **r) {
 	struct songfilt_s *f;
 	unsigned idev, ich;
 	long ictl;
@@ -1662,7 +1670,7 @@ user_func_filtnoctldrop(struct exec_s *o) {
 
 
 unsigned
-user_func_filtctlmap(struct exec_s *o) {
+user_func_filtctlmap(struct exec_s *o, struct data_s **r) {
 	struct songfilt_s *f;
 	unsigned idev, ich, odev, och;
 	long ictl, octl;
@@ -1684,7 +1692,7 @@ user_func_filtctlmap(struct exec_s *o) {
 
 
 unsigned
-user_func_filtnoctlmap(struct exec_s *o) {
+user_func_filtnoctlmap(struct exec_s *o, struct data_s **r) {
 	struct songfilt_s *f;
 	unsigned odev, och;
 	long octl;
@@ -1703,7 +1711,7 @@ user_func_filtnoctlmap(struct exec_s *o) {
 }
 
 unsigned
-user_func_filtkeydrop(struct exec_s *o) {
+user_func_filtkeydrop(struct exec_s *o, struct data_s **r) {
 	struct songfilt_s *f;
 	unsigned idev, ich;
 	long kstart, kend;
@@ -1724,7 +1732,7 @@ user_func_filtkeydrop(struct exec_s *o) {
 
 
 unsigned
-user_func_filtnokeydrop(struct exec_s *o) {
+user_func_filtnokeydrop(struct exec_s *o, struct data_s **r) {
 	struct songfilt_s *f;
 	unsigned idev, ich;
 	long kstart, kend;
@@ -1745,7 +1753,7 @@ user_func_filtnokeydrop(struct exec_s *o) {
 
 
 unsigned
-user_func_filtkeymap(struct exec_s *o) {
+user_func_filtkeymap(struct exec_s *o, struct data_s **r) {
 	struct songfilt_s *f;
 	unsigned idev, ich, odev, och;
 	long kstart, kend, kplus;
@@ -1772,7 +1780,7 @@ user_func_filtkeymap(struct exec_s *o) {
 
 
 unsigned
-user_func_filtnokeymap(struct exec_s *o) {
+user_func_filtnokeymap(struct exec_s *o, struct data_s **r) {
 	struct songfilt_s *f;
 	unsigned odev, och;
 	long kstart, kend;
@@ -1794,7 +1802,7 @@ user_func_filtnokeymap(struct exec_s *o) {
 
 
 unsigned
-user_func_filtreset(struct exec_s *o) {
+user_func_filtreset(struct exec_s *o, struct data_s **r) {
 	struct songfilt_s *f;
 	
 	if (!exec_lookupfilt(o, "filtname", &f)) {
@@ -1806,7 +1814,7 @@ user_func_filtreset(struct exec_s *o) {
 
 
 unsigned
-user_func_filtswapichan(struct exec_s *o) {
+user_func_filtswapichan(struct exec_s *o, struct data_s **r) {
 	struct songfilt_s *f;
 	unsigned olddev, oldch, newdev, newch;
 	
@@ -1821,7 +1829,7 @@ user_func_filtswapichan(struct exec_s *o) {
 
 
 unsigned
-user_func_filtswapidev(struct exec_s *o) {
+user_func_filtswapidev(struct exec_s *o, struct data_s **r) {
 	struct songfilt_s *f;
 	long olddev, newdev;
 	
@@ -1841,7 +1849,7 @@ user_func_filtswapidev(struct exec_s *o) {
 /* ------------------------------------------------- song stuff --- */
 
 unsigned
-user_func_songsetunit(struct exec_s *o) {	/* tics per unit note */
+user_func_songsetunit(struct exec_s *o, struct data_s **r) {	/* tics per unit note */
 	long tpu;
 	if (!exec_lookuplong(o, "tics_per_unit", &tpu)) {
 		return 0;
@@ -1859,14 +1867,14 @@ user_func_songsetunit(struct exec_s *o) {	/* tics per unit note */
 }
 
 unsigned
-user_func_songgetunit(struct exec_s *o) {	/* tics per unit note */
-	exec_putacc(o, data_newlong(user_song->tics_per_unit));
+user_func_songgetunit(struct exec_s *o, struct data_s **r) {	/* tics per unit note */
+	*r = data_newlong(user_song->tics_per_unit);
 	return 1;
 }
 
 
 unsigned
-user_func_songsetcurpos(struct exec_s *o) {
+user_func_songsetcurpos(struct exec_s *o, struct data_s **r) {
 	long measure;
 	
 	if (!exec_lookuplong(o, "measure", &measure)) {
@@ -1882,14 +1890,14 @@ user_func_songsetcurpos(struct exec_s *o) {
 
 
 unsigned
-user_func_songgetcurpos(struct exec_s *o) {
-	exec_putacc(o, data_newlong(user_song->curpos));
+user_func_songgetcurpos(struct exec_s *o, struct data_s **r) {
+	*r = data_newlong(user_song->curpos);
 	return 1;
 }
 
 
 unsigned
-user_func_songsetcurquant(struct exec_s *o) {
+user_func_songsetcurquant(struct exec_s *o, struct data_s **r) {
 	long quantum;
 	
 	if (!exec_lookuplong(o, "quantum", &quantum)) {
@@ -1905,15 +1913,15 @@ user_func_songsetcurquant(struct exec_s *o) {
 
 
 unsigned
-user_func_songgetcurquant(struct exec_s *o) {
-	exec_putacc(o, data_newlong(user_song->curquant));
+user_func_songgetcurquant(struct exec_s *o, struct data_s **r) {
+	*r = data_newlong(user_song->curquant);
 	return 1;
 }
 
 
 
 unsigned
-user_func_songsetcurtrack(struct exec_s *o) {
+user_func_songsetcurtrack(struct exec_s *o, struct data_s **r) {
 	struct songtrk_s *t;
 	struct var_s *arg;
 	
@@ -1935,18 +1943,18 @@ user_func_songsetcurtrack(struct exec_s *o) {
 
 
 unsigned
-user_func_songgetcurtrack(struct exec_s *o) {
+user_func_songgetcurtrack(struct exec_s *o, struct data_s **r) {
 	if (user_song->curtrk) {
-		exec_putacc(o, data_newref(user_song->curtrk->name.str));
+		*r = data_newref(user_song->curtrk->name.str);
 	} else {
-		exec_putacc(o, data_newnil());
+		*r = data_newnil();
 	}
 	return 1;
 }
 
 
 unsigned
-user_func_songsetcurfilt(struct exec_s *o) {
+user_func_songsetcurfilt(struct exec_s *o, struct data_s **r) {
 	struct songfilt_s *f;
 	struct var_s *arg;
 	
@@ -1972,17 +1980,17 @@ user_func_songsetcurfilt(struct exec_s *o) {
 
 
 unsigned
-user_func_songgetcurfilt(struct exec_s *o) {
+user_func_songgetcurfilt(struct exec_s *o, struct data_s **r) {
 	if (user_song->curfilt) {
-		exec_putacc(o, data_newref(user_song->curfilt->name.str));
+		*r = data_newref(user_song->curfilt->name.str);
 	} else {
-		exec_putacc(o, data_newnil());
+		*r = data_newnil();
 	}	
 	return 1;
 }
 
 unsigned
-user_func_songinfo(struct exec_s *o) {
+user_func_songinfo(struct exec_s *o, struct data_s **r) {
 	dbg_puts("tics_per_unit=");
 	dbg_putu(user_song->tics_per_unit);
 	dbg_puts(", ");
@@ -1996,7 +2004,7 @@ user_func_songinfo(struct exec_s *o) {
 }
 
 unsigned
-user_func_songsave(struct exec_s *o) {
+user_func_songsave(struct exec_s *o, struct data_s **r) {
 	char *filename;	
 	if (!exec_lookupstring(o, "filename", &filename)) {
 		return 0;
@@ -2006,7 +2014,7 @@ user_func_songsave(struct exec_s *o) {
 }
 
 unsigned
-user_func_songload(struct exec_s *o) {
+user_func_songload(struct exec_s *o, struct data_s **r) {
 	char *filename;		
 	if (!exec_lookupstring(o, "filename", &filename)) {
 		return 0;
@@ -2018,7 +2026,7 @@ user_func_songload(struct exec_s *o) {
 
 
 unsigned
-user_func_songreset(struct exec_s *o) {
+user_func_songreset(struct exec_s *o, struct data_s **r) {
 	song_done(user_song);
 	song_init(user_song);
 	return 1;
@@ -2027,7 +2035,7 @@ user_func_songreset(struct exec_s *o) {
 
 
 unsigned
-user_func_songexportsmf(struct exec_s *o) {
+user_func_songexportsmf(struct exec_s *o, struct data_s **r) {
 	char *filename;
 	if (!exec_lookupstring(o, "filename", &filename)) {
 		return 0;
@@ -2037,7 +2045,7 @@ user_func_songexportsmf(struct exec_s *o) {
 
 
 unsigned
-user_func_songimportsmf(struct exec_s *o) {
+user_func_songimportsmf(struct exec_s *o, struct data_s **r) {
 	char *filename;
 	struct song_s *sng;
 	if (!exec_lookupstring(o, "filename", &filename)) {
@@ -2054,26 +2062,26 @@ user_func_songimportsmf(struct exec_s *o) {
 
 
 unsigned
-user_func_songidle(struct exec_s *o) {
+user_func_songidle(struct exec_s *o, struct data_s **r) {
 	song_idle(user_song);
 	return 1;
 }
 		
 unsigned
-user_func_songplay(struct exec_s *o) {
+user_func_songplay(struct exec_s *o, struct data_s **r) {
 	song_play(user_song);
 	return 1;
 }
 
 unsigned
-user_func_songrecord(struct exec_s *o) {
+user_func_songrecord(struct exec_s *o, struct data_s **r) {
 	song_record(user_song);
 	return 1;
 }
 
 
 unsigned
-user_func_songsettempo(struct exec_s *o) {	/* beat per minute*/
+user_func_songsettempo(struct exec_s *o, struct data_s **r) {	/* beat per minute*/
 	long tempo, measure;
 	struct ev_s ev;
 	struct seqptr_s mp;
@@ -2105,7 +2113,7 @@ user_func_songsettempo(struct exec_s *o) {	/* beat per minute*/
 }
 
 unsigned
-user_func_songtimeins(struct exec_s *o) {
+user_func_songtimeins(struct exec_s *o, struct data_s **r) {
 	long num, den, amount, from;
 	struct ev_s ev;
 	struct seqptr_s mp;
@@ -2154,7 +2162,7 @@ user_func_songtimeins(struct exec_s *o) {
 }
 
 unsigned
-user_func_songtimerm(struct exec_s *o) {
+user_func_songtimerm(struct exec_s *o, struct data_s **r) {
 	long amount, from;
 	struct ev_s ev;
 	struct seqptr_s mp;
@@ -2199,7 +2207,7 @@ user_func_songtimerm(struct exec_s *o) {
 
 
 unsigned
-user_func_songtimeinfo(struct exec_s *o) {
+user_func_songtimeinfo(struct exec_s *o, struct data_s **r) {
 	track_output(&user_song->meta, user_stdout);
 	user_printstr("\n");
 	return 1;
@@ -2207,7 +2215,7 @@ user_func_songtimeinfo(struct exec_s *o) {
 
 
 unsigned
-user_func_metroswitch(struct exec_s *o) {
+user_func_metroswitch(struct exec_s *o, struct data_s **r) {
 	long onoff;
 	if (!exec_lookuplong(o, "onoff", &onoff)) {
 		return 0;
@@ -2218,7 +2226,7 @@ user_func_metroswitch(struct exec_s *o) {
 
 
 unsigned
-user_func_metroconf(struct exec_s *o) {
+user_func_metroconf(struct exec_s *o, struct data_s **r) {
 	struct ev_s evhi, evlo;
 	if (!exec_lookupev(o, "eventhi", &evhi) ||
 	    !exec_lookupev(o, "eventlo", &evlo)) {
@@ -2237,7 +2245,7 @@ user_func_metroconf(struct exec_s *o) {
 
 
 unsigned
-user_func_shut(struct exec_s *o) {
+user_func_shut(struct exec_s *o, struct data_s **r) {
 	unsigned i;
 	struct ev_s ev;
 	struct mididev_s *dev;
@@ -2272,7 +2280,7 @@ user_func_shut(struct exec_s *o) {
 }
 
 unsigned
-user_func_sendraw(struct exec_s *o) {
+user_func_sendraw(struct exec_s *o, struct data_s **r) {
 	struct var_s *arg;
 	struct data_s *i;
 	unsigned char byte;
@@ -2311,7 +2319,7 @@ user_func_sendraw(struct exec_s *o) {
 }
 
 unsigned
-user_func_devlist(struct exec_s *o) {
+user_func_devlist(struct exec_s *o, struct data_s **r) {
 	struct data_s *d, *n;
 	struct mididev_s *i;
 
@@ -2320,13 +2328,13 @@ user_func_devlist(struct exec_s *o) {
 		n = data_newlong(i->unit);
 		data_listadd(d, n);
 	}
-	exec_putacc(o, d);
+	*r = d;
 	return 1;
 }
 
 
 unsigned
-user_func_devattach(struct exec_s *o) {
+user_func_devattach(struct exec_s *o, struct data_s **r) {
 	long unit;
 	char *path;
 	if (!exec_lookuplong(o, "unit", &unit) || 
@@ -2337,7 +2345,7 @@ user_func_devattach(struct exec_s *o) {
 }
 
 unsigned
-user_func_devdetach(struct exec_s *o) {
+user_func_devdetach(struct exec_s *o, struct data_s **r) {
 	long unit;
 	if (!exec_lookuplong(o, "unit", &unit)) {
 		return 0;
@@ -2346,7 +2354,7 @@ user_func_devdetach(struct exec_s *o) {
 }
 
 unsigned
-user_func_devsetmaster(struct exec_s *o) {
+user_func_devsetmaster(struct exec_s *o, struct data_s **r) {
 	struct var_s *arg;
 	long unit;
 	
@@ -2374,17 +2382,17 @@ user_func_devsetmaster(struct exec_s *o) {
 
 
 unsigned
-user_func_devgetmaster(struct exec_s *o) {
+user_func_devgetmaster(struct exec_s *o, struct data_s **r) {
 	if (mididev_master) {
-		exec_putacc(o, data_newlong(mididev_master->unit));
+		*r = data_newlong(mididev_master->unit);
 	} else {
-		exec_putacc(o, data_newnil());
+		*r = data_newnil();
 	}
 	return 1;
 }
 
 unsigned
-user_func_devsendrt(struct exec_s *o) {
+user_func_devsendrt(struct exec_s *o, struct data_s **r) {
 	long unit, sendrt;
 
 	if (!exec_lookuplong(o, "unit", &unit) || 
@@ -2401,7 +2409,7 @@ user_func_devsendrt(struct exec_s *o) {
 
 
 unsigned
-user_func_devticrate(struct exec_s *o) {
+user_func_devticrate(struct exec_s *o, struct data_s **r) {
 	long unit, tpu;
 	
 	if (!exec_lookuplong(o, "unit", &unit) || 
@@ -2422,7 +2430,7 @@ user_func_devticrate(struct exec_s *o) {
 
 
 unsigned
-user_func_devinfo(struct exec_s *o) {
+user_func_devinfo(struct exec_s *o, struct data_s **r) {
 	long unit;
 	
 	if (!exec_lookuplong(o, "unit", &unit)) {
@@ -2451,6 +2459,8 @@ void
 user_mainloop(void) {
 	struct parse_s *parse;
 	struct exec_s *exec;
+	struct node_s *root;
+	struct data_s *data;
 	
 	user_stdout = textout_new(0);
 	user_song = song_new();
@@ -2751,15 +2761,33 @@ user_mainloop(void) {
 	if (parse == 0) {
 		return;
 	}
-	while (!parse_prog(parse, exec)) {
-		/* nothing */
+
+	root = 0;
+	data = 0;
+	for (;;) {
+		textin_setprompt(parse->lex.in, "> ");
+		if (!parse_getsym(parse)) {
+			break;
+		}
+		if (parse->lex.id == TOK_EOF) {
+			break;
+		}
+		textin_setprompt(parse->lex.in, "! ");
+		if (parse_line(parse, &root)) {
+			node_dbg(root, 0);
+			node_exec(root, exec, &data);
+		}
+		node_delete(root);
+		root = 0;
+		dbg_puts("mem: ");
+		dbg_putu(mem_counter);
+		dbg_puts("\n");		
 	}
 
 	parse_delete(parse);
 	exec_delete(exec);
 	song_delete(user_song);
-	user_song = 0;
-	
+	user_song = 0;	
 	textout_delete(user_stdout);
 }
 

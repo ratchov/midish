@@ -40,7 +40,7 @@
 #include "user.h"	/* for user_printstr */
 
 #define IS_SPACE(c)	((c) == ' ' || (c) == '\r' || (c) == '\t')
-#define IS_PRINTABLE(c)	((c) >= ' ')
+#define IS_PRINTABLE(c)	((c) >= ' ' && (c) <= 0xff)
 #define IS_DIGIT(c)	((c) >= '0' && (c) <= '9')
 #define IS_ALPHA(c)	(((c) >= 'A' && (c) <= 'Z') || ((c) >= 'a' && (c) <= 'z'))
 #define IS_IDFIRST(c)	(IS_ALPHA(c) || (c) == '_')
@@ -138,15 +138,28 @@ lex_ungetchar(struct lex_s *o, int c) {
 
 void
 lex_error(struct lex_s *o, char *msg) {
+	int c;
+	
 	user_printstr("near line ");
 	user_printlong(o->line + 1);
 	user_printstr(", col ");
 	user_printlong(o->col + 1);
 	user_printstr(": ");
 	user_printstr(msg);
+	
+	for (;;) {
+		if (!lex_getchar(o, &c)) {
+			return;
+		}
+		if (c == '\n') {
+			break;
+		}
+		if (c == CHAR_EOF) {
+			lex_ungetchar(o, c);
+			break;
+		}
+	}
 }
-
-
 	/*
 	 * convert string to number in any base between 2 and 36
 	 */
@@ -214,11 +227,15 @@ lex_scan(struct lex_s *o) {
 					return 0;
 				}
 			} while (IS_SPACE(c));
-			if (c != '\n') {
-				lex_error(o, "newline expected after '\\'\n");
-				return 0;
+			if (c == '\n') {
+				continue;
+			} else if (c == CHAR_EOF) {
+				lex_ungetchar(o, c);
+				continue;				
 			}
-			continue;
+			lex_ungetchar(o, c);
+			lex_error(o, "newline exected after '\\'\n");
+			return 0;
 		}
 
 		/* check for newline */
@@ -250,9 +267,9 @@ lex_scan(struct lex_s *o) {
 				 * not to break error recovering code in the parsers
 				 */				 
 				if (!IS_PRINTABLE(c)) {
-					lex_error(o, "non printable char in string constant\n");
 					lex_ungetchar(o, c);
-					goto recover;
+					lex_error(o, "non printable char in string constant\n");
+					return 0;
 				}
 				if (IS_QUOTE(c)) {
 					o->strval[i++] = '\0';
@@ -260,7 +277,7 @@ lex_scan(struct lex_s *o) {
 				}
 				if (i >= STRING_MAXLEN) {
 					lex_error(o, "string constant too long\n");
-					goto recover;
+					return 0;
 				}
 				o->strval[i++] = c;
 			}
@@ -281,9 +298,9 @@ lex_scan(struct lex_s *o) {
 						return 0;
 					}
 					if (!IS_DIGIT(c) && !IS_ALPHA(c)) {
-						lex_error(o, "bad hex constant\n");
 						lex_ungetchar(o, c);
-						goto recover;
+						lex_error(o, "bad hex constant\n");
+						return 0;
 					}
 				} 
 			}
@@ -298,14 +315,14 @@ lex_scan(struct lex_s *o) {
 				o->strval[i++] = c;
 				if (i >= TOK_MAXLEN) {
 					lex_error(o, "numeric constant too long\n");
-					goto recover;
+					return 0;
 				}
 				if (!lex_getchar(o, &c)) {
 					return 0;
 				}
 			}			
 			if (!lex_str2long(o, base)) {
-				goto recover;
+				return 0;
 			}
 			o->id = TOK_NUM;
 			return 1;
@@ -316,8 +333,8 @@ lex_scan(struct lex_s *o) {
 			i = 0;
 			for (;;) {
 				if (i >= IDENT_MAXLEN) {
-					lex_error(o, "alphanumeric token too long\n");
-					goto recover;
+					lex_error(o, "identifier too long\n");
+					return 0;
 				}
 				o->strval[i++] = c;
 				if (!lex_getchar(o, &c)) {
@@ -355,19 +372,9 @@ lex_scan(struct lex_s *o) {
 				}
 			}
 		}
-		lex_error(o, "bad token\n");
 		lex_ungetchar(o, cn);
-		goto recover;
-	}
-recover:
-	for (;;) {
-		if (!lex_getchar(o, &c)) {
-			return 0;
-		}
-		if (c == '\n' || c == '\\' || c == CHAR_EOF) {
-			lex_ungetchar(o, c);
-			break;
-		}
+		lex_error(o, "bad token\n");
+		return 0;
 	}
 	return 0;
 }

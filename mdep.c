@@ -47,7 +47,7 @@
 #include "mdep.h"
 
 #include "user.h"
-#include "tree.h"
+#include "exec.h"
 
 #ifndef RC_NAME
 #define RC_NAME		".midishrc"

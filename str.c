@@ -53,10 +53,7 @@ str_new(char *val) {
 		dbg_puts("str_new: NULL pointer argument\n");
 		dbg_panic();
 	}
-	for (len = 0; val[len] != '\0'; len++) {
-		/* nothing */
-	}
-	len++;
+	len = str_len(val) + 1;
 	s = (char *)mem_alloc(len);
 	for (i = 0; i < len; i++) {
 		s[i] = val[i];
@@ -114,5 +111,14 @@ str_eq(char *s1, char *s2) {
 		s2++;
 	}	
 	return 1;
+}
+
+unsigned
+str_len(char *s) {
+	unsigned n;
+	for (n = 0; *s; s++) {
+		n++;
+	}
+	return n;
 }
 

@@ -35,5 +35,6 @@ char	*str_new(char *);
 void	 str_delete(char *);
 void	 str_dbg(char *);
 unsigned str_eq(char *, char *);
+unsigned str_len(char *);
 
 #endif /* MIDISH_STR_H */

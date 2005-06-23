@@ -36,6 +36,9 @@
 #define DATA_STRING	2
 #define DATA_REF	3
 #define DATA_LIST	4
+#define DATA_USER	5
+
+#define DATA_MAXNITEMS	4096
 
 struct name_s;
 
@@ -46,6 +49,7 @@ struct data_s {
 		long num;
 		struct data_s *list;
 		char *ref;
+		void *user;
 	} val;
 	struct data_s *next;
 };
@@ -55,6 +59,7 @@ struct data_s *data_newlong(long);
 struct data_s *data_newstring(char *);
 struct data_s *data_newref(char *);
 struct data_s *data_newlist(struct data_s *);
+struct data_s *data_newuser(void *);
 void	       data_delete(struct data_s *o);
 void	       data_setfield(struct data_s *dst, char *field);
 void	       data_dbg(struct data_s *);

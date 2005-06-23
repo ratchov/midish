@@ -89,6 +89,29 @@ data_newlist(struct data_s *list) {
 	return o;
 }
 
+struct data_s *
+data_newuser(void *addr) {
+	struct data_s *o;
+	o = data_newnil();
+	o->type = DATA_USER;
+	o->val.user = addr;
+	return o;
+}
+
+
+unsigned
+data_numitem(struct data_s *o) {
+	struct data_s *i;
+	unsigned n;
+
+	n = 1;
+	if (o->type == DATA_LIST) {	
+		for (i = o->val.list; i != 0; i = i->next) {
+			n += data_numitem(i);
+		}
+	}
+	return n;
+}
 
 void
 data_listadd(struct data_s *o, struct data_s *v) {
@@ -118,6 +141,8 @@ data_listremove(struct data_s *o, struct data_s *v) {
 	dbg_panic();
 }
 
+
+
 void
 data_clear(struct data_s *o) {
 	struct data_s *i, *inext;
@@ -136,6 +161,7 @@ data_clear(struct data_s *o) {
 		break;
 	case DATA_LONG:
 	case DATA_NIL:
+	case DATA_USER:
 		break;
 	default:
 		dbg_puts("data_clear: unknown type\n");
@@ -158,6 +184,9 @@ data_dbg(struct data_s *o) {
 	switch(o->type) {
 	case DATA_NIL:
 		dbg_puts("(nil)");
+		break;
+	case DATA_USER:
+		dbg_puts("(user)");
 		break;
 	case DATA_LONG:
 		if (o->val.num < 0) {
@@ -381,9 +410,23 @@ data_eq(struct data_s *op1, struct data_s *op2) {
 
 
 unsigned
+data_neq(struct data_s *op1, struct data_s *op2) {
+	if (data_id(op1, op2)) {
+		data_clear(op1);
+		op1->type = DATA_LONG;
+		op1->val.num = 0;
+	} else {
+		data_clear(op1);
+		op1->type = DATA_LONG;
+		op1->val.num = 1;
+	}	
+	return 1;
+}
+
+unsigned
 data_lt(struct data_s *op1, struct data_s *op2) {
 	if (op1->type != DATA_LONG || op2->type != DATA_LONG) {
-		user_printstr("bad types in integer compare\n");
+		user_printstr("bad types in '<'\n");
 		return 0;
 	}
 	op1->val.num = op1->val.num < op2->val.num ? 1 : 0;
@@ -394,12 +437,35 @@ data_lt(struct data_s *op1, struct data_s *op2) {
 unsigned
 data_le(struct data_s *op1, struct data_s *op2) {
 	if (op1->type != DATA_LONG || op2->type != DATA_LONG) {
-		user_printstr("bad types in integer compare\n");
+		user_printstr("bad types in '<='\n");
 		return 0;
 	}
 	op1->val.num = op1->val.num <= op2->val.num ? 1 : 0;
 	return 1;
 }
+
+
+unsigned
+data_gt(struct data_s *op1, struct data_s *op2) {
+	if (op1->type != DATA_LONG || op2->type != DATA_LONG) {
+		user_printstr("bad types in '>'\n");
+		return 0;
+	}
+	op1->val.num = op1->val.num > op2->val.num ? 1 : 0;
+	return 1;
+}
+
+
+unsigned
+data_ge(struct data_s *op1, struct data_s *op2) {
+	if (op1->type != DATA_LONG || op2->type != DATA_LONG) {
+		user_printstr("bad types in '>='\n");
+		return 0;
+	}
+	op1->val.num = op1->val.num >= op2->val.num ? 1 : 0;
+	return 1;
+}
+
 
 /* ---------------------------------------------------- arithmetic --- */
 
