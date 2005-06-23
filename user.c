@@ -78,7 +78,7 @@ user_parsefile(struct exec_s *exec, char *filename) {
 	locals = exec->locals;
 	exec->locals = &exec->globals;
 	if (parse_prog(parse, &root)) {
-		node_dbg(root, 0);
+		/*node_dbg(root, 0);*/
 		res = node_exec(root, exec, &data);
 	}
 	exec->locals = locals;
@@ -2774,7 +2774,7 @@ user_mainloop(void) {
 		}
 		textin_setprompt(parse->lex.in, "! ");
 		if (parse_line(parse, &root)) {
-			node_dbg(root, 0);
+			/*node_dbg(root, 0);*/
 			node_exec(root, exec, &data);
 		}
 		node_delete(root);
