@@ -1,7 +1,7 @@
-- remove getacc/putacc, too ugly. Limit call-depth, list-size, number of
-  variables
+- import new interpreter from 'psh', this will simplify midish and
+  remove some ugly constructs like getacc/putacc.
 
-- add sysex import/export in smf.c
+- add sysex import from smf and clean up export to smf
 
 - add 'song_debug' flag and disable play/rec/idle messages
 
