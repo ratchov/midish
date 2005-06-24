@@ -355,6 +355,7 @@ node_exec_for(struct node_s *o, struct exec_s *x, struct data_s **r) {
 		v = var_new(o->data->val.ref, data_newnil());
 		var_insert(x->locals, v);
 	}
+	result = RESULT_OK;
 	for (i = list->val.list; i != 0; i = i->next) {
 		data_assign(v->data, i);
 		result = node_exec(o->list->next, x, r);
