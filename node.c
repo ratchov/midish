@@ -125,7 +125,7 @@ node_exec(struct node_s *o, struct exec_s *x, struct data_s **r) {
 	unsigned result;
 	if (x->depth == EXEC_MAXDEPTH) {
 		exec_error(x, "too many nested calls\n");
-		return 0;
+		return RESULT_ERR;
 	}
 	*r = 0;
 	x->depth++;
@@ -141,33 +141,33 @@ node_exec(struct node_s *o, struct exec_s *x, struct data_s **r) {
 unsigned
 node_exec_unary(struct node_s *o, struct exec_s *x, struct data_s **r, 
 	unsigned (*func)(struct data_s *)) { 
-	if (!node_exec(o->list, x, r)) {
-		return 0;
+	if (node_exec(o->list, x, r) == RESULT_ERR) {
+		return RESULT_ERR;
 	}
 	if (!func(*r)) {
-		return 0;
+		return RESULT_ERR;
 	}
-	return 1;
+	return RESULT_OK;
 }
 
 unsigned
 node_exec_binary(struct node_s *o, struct exec_s *x, struct data_s **r,
 	unsigned (*func)(struct data_s *, struct data_s *)) { 
 	struct data_s *lhs;
-	if (!node_exec(o->list, x, r)) {
-		return 0;
+	if (node_exec(o->list, x, r) == RESULT_ERR) {
+		return RESULT_ERR;
 	}
 	lhs = *r;
 	*r = 0;
-	if (!node_exec(o->list->next, x, r)) {
-		return 0;
+	if (node_exec(o->list->next, x, r) == RESULT_ERR) {
+		return RESULT_ERR;
 	}
 	if (!func(lhs, *r)) {
-		return 0;
+		return RESULT_ERR;
 	}
 	data_delete(*r);
 	*r = lhs;
-	return 1;
+	return RESULT_OK;
 }
 
 
@@ -184,7 +184,7 @@ node_exec_proc(struct node_s *o, struct exec_s *x, struct data_s **r) {
 	for (a = o->list->list; a != 0; a = a->next) {
 		if (name_lookup(&args, a->data->val.ref)) {
 			exec_error(x, "duplicate arguments in proc definition\n");
-			return 0;
+			return RESULT_ERR;
 		}
 		name_add(&args, name_new(a->data->val.ref));
 	}
@@ -219,7 +219,7 @@ node_exec_slist(struct node_s *o, struct exec_s *x, struct data_s **r) {
 			return result;
 		}
 	}
-	return 1;
+	return RESULT_OK;
 }
 
 unsigned
@@ -258,8 +258,8 @@ node_exec_var(struct node_s *o, struct exec_s *x, struct data_s **r) {
 
 unsigned
 node_exec_ignore(struct node_s *o, struct exec_s *x, struct data_s **r) {
-	if (!node_exec(o->list, x, r)) {
-		return 0;
+	if (node_exec(o->list, x, r) == RESULT_ERR) {
+		return RESULT_ERR;
 	}
 	data_delete(*r);
 	*r = 0;
@@ -290,7 +290,7 @@ node_exec_call(struct node_s *o, struct exec_s *x, struct data_s **r) {
 			exec_error(x, "to few arguments\n");
 			goto finish;
 		}
-		if (!node_exec(argv, x, r)) {
+		if (node_exec(argv, x, r) == RESULT_ERR) {
 			goto finish;
 		}
 		var_insert(&newlocals, var_new(argn->str, *r));
@@ -303,7 +303,7 @@ node_exec_call(struct node_s *o, struct exec_s *x, struct data_s **r) {
 	}	
 	oldlocals = x->locals;
 	x->locals = &newlocals;
-	if (node_exec(p->code, x, r)) {
+	if (node_exec(p->code, x, r) != RESULT_ERR) {
 		if (*r == 0) {			/* always return something */
 			*r = data_newnil();
 		}
@@ -318,7 +318,7 @@ finish:
 unsigned
 node_exec_if(struct node_s *o, struct exec_s *x, struct data_s **r) {
 	unsigned cond, result;
-	if (!node_exec(o->list, x, r)) {
+	if (node_exec(o->list, x, r) == RESULT_ERR) {
 		return RESULT_ERR;
 	}
 	cond = data_eval(*r);
@@ -343,7 +343,7 @@ node_exec_for(struct node_s *o, struct exec_s *x, struct data_s **r) {
 	unsigned result;
 	struct data_s *list, *i;
 	struct var_s *v;
-	if (!node_exec(o->list, x, &list)) {
+	if (node_exec(o->list, x, &list) == RESULT_ERR) {
 		return RESULT_ERR;
 	}
 	if (list->type != DATA_LIST) {
@@ -373,7 +373,7 @@ node_exec_for(struct node_s *o, struct exec_s *x, struct data_s **r) {
 
 unsigned 
 node_exec_return(struct node_s *o, struct exec_s *x, struct data_s **r) {
-	if (!node_exec(o->list, x, r)) {
+	if (node_exec(o->list, x, r) == RESULT_ERR) {
 		return RESULT_ERR;
 	}
 	return RESULT_RETURN;
@@ -384,7 +384,7 @@ node_exec_assign(struct node_s *o, struct exec_s *x, struct data_s **r) {
 	struct var_s *v;
 	struct data_s *expr;
 
-	if (!node_exec(o->list, x, &expr)) {
+	if (node_exec(o->list, x, &expr) == RESULT_ERR) {
 		return RESULT_ERR;
 	}
 	v = exec_varlookup(x, o->data->val.ref);
@@ -411,7 +411,7 @@ node_exec_list(struct node_s *o, struct exec_s *x, struct data_s **r) {
 	*r = data_newlist(0);
 
 	for (arg = o->list; arg != 0; arg = arg->next) {
-		if (!node_exec(arg, x, &d)) {
+		if (node_exec(arg, x, &d) == RESULT_ERR) {
 			data_delete(*r);
 			*r = 0;
 			return RESULT_ERR;
