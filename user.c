@@ -572,8 +572,9 @@ user_func_print(struct exec_s *o, struct data_s **r) {
 }
 
 unsigned
-user_func_help(struct exec_s *o, struct data_s **r) {
+user_func_info(struct exec_s *o, struct data_s **r) {
 	exec_dumpprocs(o);
+	exec_dumpvars(o);
 	return 1;
 }
 
@@ -2476,7 +2477,7 @@ user_mainloop(void) {
 			name_newarg("flag", 
 			name_newarg("value", 0)));
 	exec_newbuiltin(exec, "panic", user_func_panic, 0);
-	exec_newbuiltin(exec, "help", user_func_help, 0);
+	exec_newbuiltin(exec, "info", user_func_info, 0);
 		
 	exec_newbuiltin(exec, "tracklist", user_func_tracklist, 0);
 	exec_newbuiltin(exec, "tracknew", user_func_tracknew, 

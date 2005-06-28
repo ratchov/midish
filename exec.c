@@ -234,6 +234,13 @@ exec_dumpprocs(struct exec_s *o) {
 
 void
 exec_dumpvars(struct exec_s *o) {
+	struct var_s *v;
+	for (v = o->globals; v != 0; v = (struct var_s *)v->name.next) {
+		dbg_puts(v->name.str);
+		dbg_puts(" = ");
+		data_dbg(v->data);
+		dbg_puts("\n");
+	}
 }
 
 

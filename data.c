@@ -206,14 +206,14 @@ data_dbg(struct data_s *o) {
 		str_dbg(o->val.ref);
 		break;
 	case DATA_LIST:
-		dbg_puts("[");
+		dbg_puts("{");
 		for (i = o->val.list; i != 0; i = i->next) {
 			data_dbg(i);
 			if (i->next) {
-				dbg_puts(", ");
+				dbg_puts(" ");
 			}
 		}
-		dbg_puts("]");
+		dbg_puts("}");
 		break;
 	default:
 		dbg_puts("(unknown type)");
@@ -328,13 +328,10 @@ data_eval(struct data_s *o) {
 	switch(o->type) {
 	case DATA_NIL:
 		return 0;
-		break;
 	case DATA_LONG:
 		return o->val.num != 0 ? 1 : 0;
-		break;
 	case DATA_STRING:
 		return *o->val.str != 0 ? 1 : 0;
-		break;
 	case DATA_REF:
 		return 1;
 	case DATA_LIST:

@@ -29,10 +29,10 @@
  */
 
 /*
- * rmidi_s extends mididev_s and imprlements
- * raw midi devices (à la {Open,Net}BSD and OSS ones)
+ * rmidi_s extends mididev_s and implements
+ * raw midi devices (à la BSD/Linux OSS-compatible devices)
  *
- * converts midi bytes (ie unsigned char *) 
+ * converts midi bytes (ie 'unsigned char') 
  * to midi events (struct ev_s) and calls mux_evcb on the input
  *
  * converts midi events into bytes and sends them on the wire
@@ -93,7 +93,7 @@ unsigned rmidi_evlen[] = { 2, 2, 2, 2, 1, 1, 2, 0 };
 
 	/*
 	 * rmidi_inputcb is called when midi data becomes available
-	 * it calls the mux_evcb
+	 * it calls mux_evcb
 	 */
 
 void
@@ -131,9 +131,11 @@ rmidi_inputcb(struct rmidi_s *o, unsigned char *buf, unsigned count) {
 				/* for now, ignore midi ACKs */
 				break;
 			default:
-				dbg_puts("rmidi_inputcb: ");
-				dbg_putx(data);
-				dbg_puts(" : unimplemented midi status, skipped\n");
+				if (rmidi_debug) {
+					dbg_puts("rmidi_inputcb: ");
+					dbg_putx(data);
+					dbg_puts(" : unimplemented midi status, skipped\n");
+				}
 				break;
 			}
 		} else if (data >= 0x80) {
@@ -142,7 +144,7 @@ rmidi_inputcb(struct rmidi_s *o, unsigned char *buf, unsigned count) {
 			switch(data) {
 			case MIDI_SYSEXSTART:
 				if (o->isysex) {
-					dbg_puts("rmidi_inputcb: lost incomplete sysex\n");
+					dbg_puts("rmidi_inputcb: sysex restart\n");
 					sysex_del(o->isysex);
 				}
 				o->isysex = sysex_new(o->mididev.unit);
@@ -152,6 +154,13 @@ rmidi_inputcb(struct rmidi_s *o, unsigned char *buf, unsigned count) {
 				sysex_add(o->isysex, data);
 				mux_sysexcb(o->mididev.unit, o->isysex);
 				o->isysex = 0;
+				break;
+			default:
+				if (o->isysex) {
+					dbg_puts("rmidi_inputcb: lost incomplete sysex\n");
+					sysex_del(o->isysex);
+					o->isysex = 0;
+				}
 				break;
 			}
 		} else if (o->istatus >= 0x80 && o->istatus < 0xf0) {
@@ -178,7 +187,7 @@ rmidi_inputcb(struct rmidi_s *o, unsigned char *buf, unsigned count) {
 }
 
 	/*
-	 * writes a midi byte to the output buffer, non blocking
+	 * write a midi byte to the output buffer, non-blocking
 	 */
 
 void
@@ -196,8 +205,9 @@ rmidi_out(struct rmidi_s *o, unsigned data) {
 	o->obuf[o->oused] = (unsigned char)data;
 	o->oused++;
 }
+
 	/*
-	 * stores an event in the output buffer
+	 * store an event in the output buffer
 	 */
 
 void

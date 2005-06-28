@@ -93,6 +93,7 @@ void	       exec_error(struct exec_s *o, char *msg);
 
 void exec_newbuiltin(struct exec_s *o, char *name, unsigned func(struct exec_s *, struct data_s **), struct name_s *args);
 void exec_dumpprocs(struct exec_s *o);
+void exec_dumpvars(struct exec_s *o);
 unsigned exec_lookupname(struct exec_s *exec, char *name, char **val);
 unsigned exec_lookupstring(struct exec_s *exec, char *name, char **val);
 unsigned exec_lookuplong(struct exec_s *exec, char *name, long *val);

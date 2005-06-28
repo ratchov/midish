@@ -109,10 +109,10 @@ mididev_attach(unsigned unit, char *path, unsigned in, unsigned out) {
 		return 0;
 	}
 	dev = (struct mididev_s *)rmidi_new();
+	RMIDI(dev)->mdep.path = str_new(path);
 	dev->next = mididev_list;
 	mididev_list = dev;
 	mididev_byunit[unit] = dev;
-	RMIDI(dev)->mdep.path = str_new(path);
 	dev->in = in;
 	dev->out = out;
 	dev->unit = unit;	
@@ -137,6 +137,7 @@ mididev_detach(unsigned unit) {
 		dev = *i;
 		if (dev->unit == unit) {
 			*i = dev->next;
+			str_delete(RMIDI(dev)->mdep.path);
 			rmidi_delete(RMIDI(dev));
 			mididev_byunit[unit] = 0;
 			return 1;

@@ -10,8 +10,7 @@ RL_LIB = -lreadline -ltermcap		# readline libraries
 # binaries, documentation and examples will be installed in ${PREFIX}/bin,
 # ${PREFIX}/share/doc/midish and ${PREFIX}/share/examples/midish
 #
-PREFIX = ${HOME}
-
+PREFIX = /usr/local
 
 PROG = midish
 OBJS = \
@@ -25,7 +24,7 @@ ${PROG}:	${OBJS}
 		${CC} ${LDFLAGS} ${RL_LDFLAGS} ${OBJS} -o ${PROG} ${RL_LIB}
 
 clean:		
-		rm -f -- ${PROG} .depend *~ *.bak *.o *.s *.core core
+		rm -f -- ${PROG} *~ *.bak *.o *.s *.out *.core core
 
 install:	${PROG}
 		mkdir -p ${PREFIX}/bin
@@ -40,31 +39,31 @@ install:	${PROG}
 		@echo
 
 .c.o:
-		${CC} ${CFLAGS} ${RL_CFLAGS} ${RL_INCLUDE}  -c $<
+		${CC} ${CFLAGS} ${RL_CFLAGS} ${RL_INCLUDE} -c $<
 
-cons.o: cons.c dbg.h textio.h cons.h
-data.o: data.c dbg.h str.h user.h data.h
-dbg.o: dbg.c dbg.h
-ev.o: ev.c dbg.h ev.h default.h str.h
-exec.o: exec.c dbg.h exec.h name.h str.h data.h node.h user.h
-filt.o: filt.c dbg.h ev.h default.h filt.h pool.h
-lex.o: lex.c dbg.h lex.h str.h textio.h user.h
-main.o: main.c dbg.h str.h cons.h ev.h default.h mux.h track.h song.h name.h filt.h sysex.h user.h mididev.h
-mdep.o: mdep.c default.h mux.h rmidi.h mdep.h mididev.h user.h exec.h name.h str.h
-mididev.o: mididev.c dbg.h default.h mididev.h data.h user.h name.h str.h rmidi.h mdep.h pool.h
-mkcurves.o: mkcurves.c
-mux.o: mux.c dbg.h ev.h default.h mdep.h mux.h rmidi.h mididev.h sysex.h
-name.o: name.c dbg.h name.h str.h
-node.o: node.c dbg.h str.h data.h node.h exec.h name.h
-parse.o: parse.c dbg.h textio.h lex.h data.h parse.h node.h user.h
-pool.o: pool.c dbg.h pool.h
-rmidi.o: rmidi.c dbg.h default.h mdep.h ev.h sysex.h mux.h rmidi.h mididev.h
-saveload.o: saveload.c dbg.h name.h str.h song.h track.h ev.h default.h filt.h sysex.h parse.h lex.h textio.h saveload.h trackop.h
-smf.o: smf.c dbg.h track.h ev.h default.h trackop.h song.h name.h str.h filt.h sysex.h user.h smf.h
-song.o: song.c dbg.h mux.h track.h ev.h default.h trackop.h filt.h song.h name.h str.h sysex.h user.h
-str.o: str.c dbg.h str.h
-sysex.o: sysex.c dbg.h sysex.h default.h pool.h
-textio.o: textio.c dbg.h textio.h user.h cons.h
-track.o: track.c dbg.h pool.h track.h ev.h default.h
-trackop.o: trackop.c dbg.h trackop.h track.h ev.h default.h
-user.o: user.c dbg.h default.h node.h exec.h name.h str.h data.h textio.h lex.h parse.h mux.h mididev.h trackop.h track.h ev.h song.h filt.h sysex.h user.h smf.h saveload.h rmidi.h mdep.h
+cons.o:		cons.c dbg.h textio.h cons.h
+data.o:		data.c dbg.h str.h user.h data.h
+dbg.o:		dbg.c dbg.h
+ev.o:		ev.c dbg.h ev.h default.h str.h
+exec.o:		exec.c dbg.h exec.h name.h str.h data.h node.h user.h
+filt.o:		filt.c dbg.h ev.h default.h filt.h pool.h
+lex.o:		lex.c dbg.h lex.h str.h textio.h user.h
+main.o:		main.c dbg.h str.h cons.h ev.h default.h mux.h track.h song.h name.h filt.h sysex.h user.h mididev.h
+mdep.o:		mdep.c default.h mux.h rmidi.h mdep.h mididev.h user.h exec.h name.h str.h
+mididev.o:	mididev.c dbg.h default.h mididev.h data.h user.h name.h str.h rmidi.h mdep.h pool.h
+mkcurves.o:	mkcurves.c
+mux.o:		mux.c dbg.h ev.h default.h mdep.h mux.h rmidi.h mididev.h sysex.h
+name.o:		name.c dbg.h name.h str.h
+node.o:		node.c dbg.h str.h data.h node.h exec.h name.h
+parse.o:	parse.c dbg.h textio.h lex.h data.h parse.h node.h user.h
+pool.o:		pool.c dbg.h pool.h
+rmidi.o:	rmidi.c dbg.h default.h mdep.h ev.h sysex.h mux.h rmidi.h mididev.h
+saveload.o:	saveload.c dbg.h name.h str.h song.h track.h ev.h default.h filt.h sysex.h parse.h lex.h textio.h saveload.h trackop.h
+smf.o:		smf.c dbg.h track.h ev.h default.h trackop.h song.h name.h str.h filt.h sysex.h user.h smf.h
+song.o:		song.c dbg.h mux.h track.h ev.h default.h trackop.h filt.h song.h name.h str.h sysex.h user.h
+str.o:		str.c dbg.h str.h
+sysex.o:	sysex.c dbg.h sysex.h default.h pool.h
+textio.o:	textio.c dbg.h textio.h user.h cons.h
+track.o:	track.c dbg.h pool.h track.h ev.h default.h
+trackop.o:	trackop.c dbg.h trackop.h track.h ev.h default.h
+user.o: 	user.c dbg.h default.h node.h exec.h name.h str.h data.h textio.h lex.h parse.h mux.h mididev.h trackop.h track.h ev.h song.h filt.h sysex.h user.h smf.h saveload.h rmidi.h mdep.h
