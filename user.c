@@ -1354,17 +1354,26 @@ user_func_sysexadd(struct exec_s *o, struct data_s **r) {
 	for (byte = arg->data->val.list; byte != 0; byte = byte->next) {
 		if (byte->type != DATA_LONG) {
 			user_printstr("sysexadd: only bytes allowed as data\n");
+			sysex_del(x);
 			return 0;
 		}
 		if (byte->val.num < 0 || byte->val.num > 0xff) {
 			user_printstr("sysexadd: data out of range\n");
+			sysex_del(x);
 			return 0;
 		}
 		sysex_add(x, byte->val.num);
 	}
+	if (!sysex_check(x)) {
+		user_printstr("sysexadd: bad sysex format\n");
+		sysex_del(x);
+		return 0;
+	}
 	if (x->first) {
 		sysexlist_put(&c->sx, x);
-	}
+	} else {
+		sysex_del(x);
+	}	
 	return 1;
 }
 
@@ -2780,9 +2789,11 @@ user_mainloop(void) {
 		}
 		node_delete(root);
 		root = 0;
+		/*
 		dbg_puts("mem: ");
 		dbg_putu(mem_counter);
 		dbg_puts("\n");		
+		*/
 	}
 
 	parse_delete(parse);

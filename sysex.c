@@ -128,6 +128,44 @@ sysex_dbg(struct sysex_s *o) {
 	dbg_puts("}");
 }
 
+unsigned
+sysex_check(struct sysex_s *o) {
+	unsigned status, data;	
+	struct chunk_s *ck;
+	unsigned i;
+	
+	
+	status = 0; 
+	for (ck = o->first; ck != 0; ck = ck->next) {
+		for (i = 0; i < ck->used; i++) {
+			data = ck->data[i];
+			if (data == 0xf0) { 		/* sysex start */
+				if (status != 0) {
+					return 0;
+				}
+				status = data;
+			} else if (data == 0xf7) {
+				if (status != 0xf0) {
+					return 0;
+				}
+				status = data;
+			} else if (data > 0x7f) {
+				return 0;
+			} else {
+				if (status != 0xf0) {
+					return 0;
+				}
+			}
+		}
+	}
+	if (status != 0xf7) {
+		return 0;
+	}
+	return 1;
+}
+
+
+
 
 void
 sysexlist_init(struct sysexlist_s *o) {

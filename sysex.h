@@ -48,22 +48,23 @@ struct sysexlist_s {
 	struct sysex_s *first, **lastptr;
 };
 
-void chunk_pool_init(unsigned size);
-void chunk_pool_done(void);
+void 		chunk_pool_init(unsigned size);
+void 		chunk_pool_done(void);
 struct chunk_s *chunk_new(void);
-void chunk_del(struct chunk_s *o);
+void		chunk_del(struct chunk_s *o);
 
-void sysex_pool_init(unsigned size);
-void sysex_pool_done(void);
+void		sysex_pool_init(unsigned size);
+void		sysex_pool_done(void);
 struct sysex_s *sysex_new(unsigned unit);
-void sysex_del(struct sysex_s *o);
-void sysex_add(struct sysex_s *o, unsigned data);
-void sysex_dbg(struct sysex_s *o);
+void		sysex_del(struct sysex_s *o);
+void		sysex_add(struct sysex_s *o, unsigned data);
+void		sysex_dbg(struct sysex_s *o);
+unsigned	sysex_check(struct sysex_s *o);
 
-void sysexlist_init(struct sysexlist_s *o);
-void sysexlist_done(struct sysexlist_s *o);
-void sysexlist_put(struct sysexlist_s *o, struct sysex_s *e);
+void 		sysexlist_init(struct sysexlist_s *o);
+void		sysexlist_done(struct sysexlist_s *o);
+void		sysexlist_put(struct sysexlist_s *o, struct sysex_s *e);
 struct sysex_s *sysexlist_get(struct sysexlist_s *o);
-void sysexlist_dbg(struct sysexlist_s *o);
+void		sysexlist_dbg(struct sysexlist_s *o);
 
 #endif /* MIDISH_SYSEX_H */
