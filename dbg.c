@@ -57,11 +57,10 @@ dbg_putu(unsigned long n) {
 void
 dbg_panic() {
 #ifdef SIGTRAP
-	fputs("dbg_panic: dumping core\n", stderr);
 	kill(getpid(), SIGTRAP);
-	while(1) {
-		pause();
-	}
+	/* not reached */
+	fputs("dbg_panic: failed to send SIGTRAP\n", stderr);
+	exit(1);
 #else
 	fputs("dbg_panic:\n", stderr);
 	exit(1);

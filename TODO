@@ -1,4 +1,8 @@
+- fix sysex doc (raw data -> system exclusive)
+
 - clean up console in/out/err handling
+
+- add 'DEBUG' flags in Makefile and cleanup #ifdefs in *.c *.h
 
 - add sysex import from smf and clean up export to smf
 

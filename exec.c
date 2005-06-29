@@ -204,7 +204,7 @@ exec_newbuiltin(struct exec_s *o, char *name,
 	
 	newp = proc_new(name);
 	newp->args = args;
-	newp->code = node_new(&node_vmt_builtin, data_newuser(func));
+	newp->code = node_new(&node_vmt_builtin, data_newuser((void *)func));
 	name_add((struct name_s **)&o->procs, (struct name_s *)newp);
 }
 
