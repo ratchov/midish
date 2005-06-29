@@ -72,8 +72,6 @@
 #include "pool.h"
 #include "track.h"
 
-#define	TRACK_DEBUG
-
 struct pool_s seqev_pool;
 
 void

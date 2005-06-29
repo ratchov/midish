@@ -31,6 +31,8 @@
 #ifndef MIDISH_TRACK_H
 #define MIDISH_TRACK_H
 
+#define	TRACK_DEBUG
+
 #include "ev.h"
 
 struct seqev_s {

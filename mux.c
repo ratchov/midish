@@ -54,7 +54,6 @@
 	 * here we use 1 tic at 30bpm
 	 */
 #define MUX_START_DELAY	  (2000000UL)	
-#undef MUX_DEBUG
 
 unsigned mux_ticrate;
 unsigned long mux_ticlength, mux_curpos, mux_nextpos;

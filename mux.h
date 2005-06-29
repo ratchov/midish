@@ -31,6 +31,8 @@
 #ifndef MIDISH_MUX_H
 #define MIDISH_MUX_H
 
+#undef MUX_DEBUG
+
 #define MUX_STARTWAIT		0	/* waiting for a start event */
 #define MUX_START 		1	/* just got a start */
 #define MUX_FIRST		2	/* just got the first tic */

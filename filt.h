@@ -31,6 +31,8 @@
 #ifndef MIDISH_FILT_H
 #define MIDISH_FILT_H
 
+#define FILT_DEBUG
+
 #include "ev.h"
 
 struct state_s {

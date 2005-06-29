@@ -31,9 +31,7 @@
 #ifndef MIDISH_POOL_H
 #define MIDISH_POOL_H
 
-#ifdef DEBUG
-#define POOL_DEBUG
-#endif
+#undef POOL_DEBUG
 
 struct poolentry_s {
 	struct poolentry_s *next;

@@ -41,8 +41,6 @@
 #include "filt.h"
 #include "pool.h"
 
-#define FILT_DEBUG
-
 unsigned filt_debug = 0;
 
 /* ------------------------------------------------------------------ */

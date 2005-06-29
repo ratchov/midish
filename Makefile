@@ -1,16 +1,21 @@
 #
 # comment the following if you don't have a working readline(3) library
+# (don't forget to run 'make clean')
 #
-RL_CFLAGS = -DHAVE_READLINE
-RL_LDFLAGS = -L/usr/local/lib		# path to readline libraries
-RL_INCLUDE = -I/usr/local/include	# path to readline include files
-RL_LIB = -lreadline -ltermcap		# readline libraries
+READLINE_CFLAGS = -DHAVE_READLINE
+READLINE_LDFLAGS = -L/usr/local/lib	# path to readline libraries
+READLINE_INCLUDE = -I/usr/local/include # path to readline header files
+READLINE_LIB = -lreadline -ltermcap	# readline libraries
 
 #
-# binaries, documentation and examples will be installed in ${PREFIX}/bin,
-# ${PREFIX}/share/doc/midish and ${PREFIX}/share/examples/midish
+# binaries, documentation and examples will be installed in 
+# ${BIN_DIR}, ${DOC_DIR}, ${EXAMPLES_DIR}
 #
 PREFIX = /usr/local
+BIN_DIR = ${PREFIX}/bin
+DOC_DIR = ${PREFIX}/share/doc/midish
+EXAMPLES_DIR = ${PREFIX}/share/examples/midish
+
 
 PROG = midish
 OBJS = \
@@ -21,25 +26,24 @@ str.o sysex.o textio.o track.o trackop.o user.o
 all:		${PROG}
 
 ${PROG}:	${OBJS}
-		${CC} ${LDFLAGS} ${RL_LDFLAGS} ${OBJS} -o ${PROG} ${RL_LIB}
+		${CC} ${LDFLAGS} ${READLINE_LDFLAGS} ${OBJS} -o ${PROG} ${READLINE_LIB}
 
 clean:		
 		rm -f -- ${PROG} *~ *.bak *.o *.s *.out *.core core
 
 install:	${PROG}
-		mkdir -p ${PREFIX}/bin
-		mkdir -p ${PREFIX}/share/doc/midish
-		mkdir -p ${PREFIX}/share/examples/midish
-		cp ${PROG} ${PREFIX}/bin
-		cp manual.html tutorial.html ${PREFIX}/share/doc/midish
-		cp midishrc sample.sng ${PREFIX}/share/examples/midish
+		mkdir -p ${BIN_DIR}
+		mkdir -p ${DOC_DIR}
+		mkdir -p ${EXAMPLES_DIR}
+		cp ${PROG} ${BIN_DIR}
+		cp manual.html tutorial.html ${DOC_DIR}
+		cp midishrc sample.sng ${EXAMPLES_DIR}
 		@echo
-		@echo You can copy manually ${PREFIX}/share/examples/midish/midishrc
+		@echo You can copy manually ${EXAMPLES_DIR}/midishrc
 		@echo into ~/.midishrc
 		@echo
-
 .c.o:
-		${CC} ${CFLAGS} ${RL_CFLAGS} ${RL_INCLUDE} -c $<
+		${CC} ${CFLAGS} ${READLINE_CFLAGS} ${READLINE_INCLUDE} -c $<
 
 cons.o:		cons.c dbg.h textio.h cons.h
 data.o:		data.c dbg.h str.h user.h data.h
@@ -51,7 +55,6 @@ lex.o:		lex.c dbg.h lex.h str.h textio.h user.h
 main.o:		main.c dbg.h str.h cons.h ev.h default.h mux.h track.h song.h name.h filt.h sysex.h user.h mididev.h
 mdep.o:		mdep.c default.h mux.h rmidi.h mdep.h mididev.h user.h exec.h name.h str.h
 mididev.o:	mididev.c dbg.h default.h mididev.h data.h user.h name.h str.h rmidi.h mdep.h pool.h
-mkcurves.o:	mkcurves.c
 mux.o:		mux.c dbg.h ev.h default.h mdep.h mux.h rmidi.h mididev.h sysex.h
 name.o:		name.c dbg.h name.h str.h
 node.o:		node.c dbg.h str.h data.h node.h exec.h name.h
