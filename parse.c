@@ -106,7 +106,7 @@
 #include "parse.h"
 #include "node.h"
 
-#include "user.h"	/* user_printXXX */
+#include "cons.h"	/* cons_errXXX */
 
 unsigned parse_debug = 0;
 
@@ -114,13 +114,7 @@ unsigned parse_debug = 0;
 
 void
 parse_error(struct parse_s *o, char *msg) {
-	user_printstr("near line ");
-	user_printlong(o->lex.line + 1);
-	user_printstr(", col ");
-	user_printlong(o->lex.col + 1);
-	user_printstr(": ");
-	user_printstr(msg);
-	
+	cons_erruu(o->lex.line + 1, o->lex.col + 1, msg);	
 	for (;;) {
 		if (o->lex.id == TOK_EOF) {
 			parse_ungetsym(o);
@@ -220,7 +214,7 @@ parse_endl(struct parse_s *o, struct node_s **n) {
 		return 0;
 	}
 	if (o->lex.id != TOK_SEMICOLON && o->lex.id != TOK_ENDLINE) {
-		parse_error(o, "';' or new line expected\n");
+		parse_error(o, "';' or new line expected");
 		return 0;
 	}
 	return 1;
@@ -238,7 +232,7 @@ parse_cst(struct parse_s *o, struct node_s **n) {
 			return 0;
 		}
 		if (!parse_isfirst(o, first_expr)) {
-			parse_error(o, "expression expected afeter '('\n");
+			parse_error(o, "expression expected afeter '('");
 			return 0;
 		}
 		parse_ungetsym(o);
@@ -249,7 +243,7 @@ parse_cst(struct parse_s *o, struct node_s **n) {
 			return 0;
 		}
 		if (o->lex.id != TOK_RPAR) {
-			parse_error(o, "missing closing ')'\n");
+			parse_error(o, "missing closing ')'");
 			return 0;
 		}
 		return 1;
@@ -274,7 +268,7 @@ parse_cst(struct parse_s *o, struct node_s **n) {
 			return 0;
 		}
 		if (o->lex.id != TOK_IDENT) {
-			parse_error(o, "identifier expected after '$'\n");
+			parse_error(o, "identifier expected after '$'");
 			return 0;
 		}
 		*n = node_new(&node_vmt_var, data_newstring(o->lex.strval));
@@ -284,7 +278,7 @@ parse_cst(struct parse_s *o, struct node_s **n) {
 			return 0;
 		}
 		if (!parse_isfirst(o, first_call)) {
-			parse_error(o, "proc call expected after '['\n");
+			parse_error(o, "proc call expected after '['");
 			return 0;
 		}
 		parse_ungetsym(o);
@@ -295,7 +289,7 @@ parse_cst(struct parse_s *o, struct node_s **n) {
 			return 0;
 		}
 		if (o->lex.id != TOK_RBRACKET) {
-			parse_error(o, "']' expected\n");
+			parse_error(o, "']' expected");
 			return 0;
 		}
 		return 1;
@@ -315,12 +309,12 @@ parse_cst(struct parse_s *o, struct node_s **n) {
 			} else if (o->lex.id == TOK_RBRACE) {
 				return 1;
 			} else {
-				parse_error(o, "expression or '}' expected in list\n");
+				parse_error(o, "expression or '}' expected in list");
 				return 0;
 			}
 		}
 	}
-	parse_error(o, "bad term in expression\n");
+	parse_error(o, "bad term in expression");
 	return 0;
 }
 
@@ -676,7 +670,7 @@ parse_stmt(struct parse_s *o, struct node_s **n) {
 			return 0;
 		}
 		if (!parse_isfirst(o, first_expr)) {
-			parse_error(o, "expression expected after 'if'\n");
+			parse_error(o, "expression expected after 'if'");
 			return 0;
 		}
 		parse_ungetsym(o);
@@ -705,7 +699,7 @@ parse_stmt(struct parse_s *o, struct node_s **n) {
 			return 0;
 		}
 		if (o->lex.id != TOK_IDENT) {
-			parse_error(o, "identifier expected in 'for' loop\n");
+			parse_error(o, "identifier expected in 'for' loop");
 			return 0;
 		}
 		*n = node_new(&node_vmt_for, data_newstring(o->lex.strval));
@@ -713,7 +707,7 @@ parse_stmt(struct parse_s *o, struct node_s **n) {
 			return 0;
 		}
 		if (o->lex.id != TOK_IN) {
-			parse_error(o, "'in' expected\n");
+			parse_error(o, "'in' expected");
 			return 0;
 		}
 		if (!parse_expr(o, &(*n)->list)) {
@@ -740,7 +734,7 @@ parse_stmt(struct parse_s *o, struct node_s **n) {
 			return 0;
 		}
 		if (o->lex.id != TOK_IDENT) {
-			parse_error(o, "identifier expected in the lhs of '='\n");
+			parse_error(o, "identifier expected in the lhs of '='");
 			return 0;
 		}
 		*n = node_new(&node_vmt_assign, data_newstring(o->lex.strval));
@@ -748,14 +742,14 @@ parse_stmt(struct parse_s *o, struct node_s **n) {
 			return 0;
 		}
 		if (o->lex.id != TOK_ASSIGN) {
-			parse_error(o, "'=' expected\n");
+			parse_error(o, "'=' expected");
 			return 0;
 		}	
 		if (!parse_getsym(o)) {
 			return 0;
 		}
 		if (!parse_isfirst(o, first_expr)) {
-			dbg_puts("expression expected after '='\n");
+			parse_error(o, "expression expected after '='");
 			return 0;
 		}
 		parse_ungetsym(o);
@@ -774,7 +768,7 @@ parse_stmt(struct parse_s *o, struct node_s **n) {
 		}
 		return 1;
 	}
-	parse_error(o, "bad statement\n");
+	parse_error(o, "bad statement");
 	return 0;
 }
 
@@ -784,7 +778,7 @@ parse_slist(struct parse_s *o, struct node_s **n) {
 		return 0;
 	}
 	if (o->lex.id != TOK_LBRACE) {
-		parse_error(o, "'{' expected\n");
+		parse_error(o, "'{' expected");
 		return 0;
 	}
 	*n = node_new(&node_vmt_slist, 0);
@@ -830,14 +824,14 @@ parse_proc(struct parse_s *o, struct node_s **n) {
 		return 0;
 	}
 	if (o->lex.id != TOK_PROC) {
-		parse_error(o, "'proc' keyword expected\n");
+		parse_error(o, "'proc' keyword expected");
 		return 0;
 	}
 	if (!parse_getsym(o)) {
 		return 0;
 	}
 	if (o->lex.id != TOK_IDENT) {
-		parse_error(o, "proc name expected\n");
+		parse_error(o, "proc name expected");
 		return 0;
 	}
 	*n = node_new(&node_vmt_proc, data_newref(o->lex.strval));
@@ -855,7 +849,7 @@ parse_proc(struct parse_s *o, struct node_s **n) {
 			break;
 		} else {
 			parse_ungetsym(o);
-			parse_error(o, "argument name or block expected\n");
+			parse_error(o, "argument name or block expected");
 			return 0;
 		}
 	}	
@@ -881,7 +875,7 @@ parse_line(struct parse_s *o, struct node_s **n) {
 			return 0;
 		}
 	} else {
-		parse_error(o, "statement or proc definition expected\n");
+		parse_error(o, "statement or proc definition expected");
 		return 0;
 	}
 	return 1;

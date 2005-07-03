@@ -37,7 +37,7 @@
 #include "lex.h"
 #include "str.h"
 #include "textio.h"
-#include "user.h"	/* for user_printstr */
+#include "cons.h"	/* for cons_errXXX */
 
 #define IS_SPACE(c)	((c) == ' ' || (c) == '\r' || (c) == '\t')
 #define IS_PRINTABLE(c)	((c) >= ' ' && (c) <= 0xff)
@@ -140,13 +140,7 @@ void
 lex_error(struct lex_s *o, char *msg) {
 	int c;
 	
-	user_printstr("near line ");
-	user_printlong(o->line + 1);
-	user_printstr(", col ");
-	user_printlong(o->col + 1);
-	user_printstr(": ");
-	user_printstr(msg);
-	
+	cons_erruu(o->line + 1, o->col + 1, msg);
 	for (;;) {
 		if (!lex_getchar(o, &c)) {
 			return;
@@ -182,13 +176,13 @@ lex_str2long(struct lex_s *o, unsigned base) {
 			digit = *p - '0';
 		}
 		if (digit >= base) {
-			lex_error(o, "not allowed digit in numeric constant\n");
+			lex_error(o, "not allowed digit in numeric constant");
 			return 0;
 		}
 		lo = digit + base * LOWORD(o->longval);
 		hi = base * HIWORD(o->longval);
 		if (HIWORD(hi + HIWORD(lo)) != 0) {
-			lex_error(o, "overflow in numeric constant\n");
+			lex_error(o, "overflow in numeric constant");
 			return 0;
 		}
 		o->longval = (hi << BITS) + lo;
@@ -234,7 +228,7 @@ lex_scan(struct lex_s *o) {
 				continue;				
 			}
 			lex_ungetchar(o, c);
-			lex_error(o, "newline exected after '\\'\n");
+			lex_error(o, "newline exected after '\\'");
 			return 0;
 		}
 
@@ -268,7 +262,7 @@ lex_scan(struct lex_s *o) {
 				 */				 
 				if (!IS_PRINTABLE(c)) {
 					lex_ungetchar(o, c);
-					lex_error(o, "non printable char in string constant\n");
+					lex_error(o, "non printable char in string constant");
 					return 0;
 				}
 				if (IS_QUOTE(c)) {
@@ -276,7 +270,7 @@ lex_scan(struct lex_s *o) {
 					break;
 				}
 				if (i >= STRING_MAXLEN) {
-					lex_error(o, "string constant too long\n");
+					lex_error(o, "string constant too long");
 					return 0;
 				}
 				o->strval[i++] = c;
@@ -299,7 +293,7 @@ lex_scan(struct lex_s *o) {
 					}
 					if (!IS_DIGIT(c) && !IS_ALPHA(c)) {
 						lex_ungetchar(o, c);
-						lex_error(o, "bad hex constant\n");
+						lex_error(o, "bad hex constant");
 						return 0;
 					}
 				} 
@@ -314,7 +308,7 @@ lex_scan(struct lex_s *o) {
 				}
 				o->strval[i++] = c;
 				if (i >= TOK_MAXLEN) {
-					lex_error(o, "numeric constant too long\n");
+					lex_error(o, "numeric constant too long");
 					return 0;
 				}
 				if (!lex_getchar(o, &c)) {
@@ -333,7 +327,7 @@ lex_scan(struct lex_s *o) {
 			i = 0;
 			for (;;) {
 				if (i >= IDENT_MAXLEN) {
-					lex_error(o, "identifier too long\n");
+					lex_error(o, "identifier too long");
 					return 0;
 				}
 				o->strval[i++] = c;
@@ -373,7 +367,7 @@ lex_scan(struct lex_s *o) {
 			}
 		}
 		lex_ungetchar(o, cn);
-		lex_error(o, "bad token\n");
+		lex_error(o, "bad token");
 		return 0;
 	}
 	return 0;

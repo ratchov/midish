@@ -34,8 +34,7 @@
 #include "trackop.h"
 #include "filt.h"
 #include "song.h"
-#include "user.h"
-
+#include "cons.h"		/* cons_errXXX */
 #include "default.h"
 
 void song_playcb(void *, struct ev_s *);
@@ -236,7 +235,7 @@ unsigned
 song_trkrm(struct song_s *o, struct songtrk_s *t) {
 	struct songtrk_s **i;
 	if (o->curtrk == t) {
-		user_printstr("cant delete current track\n");
+		cons_err("cant delete current track");
 		return 0;
 	}
 	i = &o->trklist;
@@ -326,12 +325,12 @@ song_filtrm(struct song_s *o, struct songfilt_s *f) {
 	struct songfilt_s **i;
 
 	if (o->curfilt == f) {
-		user_printstr("cant delete current filt\n");
+		cons_err("cant delete current filt");
 		return 0;
 	}
 	for (t = o->trklist; t != 0; t = (struct songtrk_s *)t->name.next) {
 		if (t->curfilt == f) {
-			user_printstr("cant delete track current filt\n");
+			cons_err("cant delete track current filt");
 			return 0;
 		}		
 	}	
@@ -373,7 +372,7 @@ song_sxrm(struct song_s *o, struct songsx_s *f) {
 	struct songsx_s **i;
 
 	if (o->cursx == f) {
-		user_printstr("cant delete current sysex\n");
+		cons_err("cant delete current sysex");
 		return 0;
 	}
 	i = &o->sxlist;

@@ -42,7 +42,6 @@
 
 #include "dbg.h"
 #include "textio.h"
-#include "user.h"
 #include "cons.h"
 
 struct textin_s {
@@ -71,8 +70,7 @@ textin_new(char *filename, char *prompt) {
 		o->console = 0;
 		o->file = fopen(filename, "r");
 		if (o->file == NULL) {
-			user_error(filename);
-			user_error(": cant open file\n");
+			cons_errs(filename, "failed to open input file");
 			mem_free(o);
 			return 0;
 		}
@@ -140,8 +138,7 @@ textout_new(char *filename) {
 	if (filename != 0) {
 		o->file = fopen(filename, "w");
 		if (o->file == NULL) {
-			user_printstr(filename);
-			user_printstr(": unable to open output file\n");
+			cons_errs(filename, "filed to open output file");
 			mem_free(o);
 			return 0;
 		}

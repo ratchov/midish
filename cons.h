@@ -35,4 +35,9 @@ void cons_init(void);
 void cons_done(void);
 int  cons_getc(char *);
 
+void cons_err(char *mesg);
+void cons_errs(char *s, char *mesg);
+void cons_erru(unsigned long u, char *str);
+void cons_erruu(unsigned long u0, unsigned long u1, char *str);
+
 #endif /* MIDISH_CONS_H */

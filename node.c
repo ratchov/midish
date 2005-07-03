@@ -33,6 +33,7 @@
 #include "data.h"
 #include "node.h"
 #include "exec.h"
+#include "cons.h"
 
 struct node_s *
 node_new(struct node_vmt_s *vmt, struct data_s *data) {
@@ -124,7 +125,7 @@ unsigned
 node_exec(struct node_s *o, struct exec_s *x, struct data_s **r) {
 	unsigned result;
 	if (x->depth == EXEC_MAXDEPTH) {
-		exec_error(x, "too many nested calls\n");
+		cons_err("too many nested calls");
 		return RESULT_ERR;
 	}
 	*r = 0;
@@ -183,7 +184,7 @@ node_exec_proc(struct node_s *o, struct exec_s *x, struct data_s **r) {
 	args = 0;
 	for (a = o->list->list; a != 0; a = a->next) {
 		if (name_lookup(&args, a->data->val.ref)) {
-			exec_error(x, "duplicate arguments in proc definition\n");
+			cons_err("duplicate arguments in proc definition");
 			return RESULT_ERR;
 		}
 		name_add(&args, name_new(a->data->val.ref));
@@ -247,8 +248,7 @@ node_exec_var(struct node_s *o, struct exec_s *x, struct data_s **r) {
 	
 	v = exec_varlookup(x, o->data->val.ref);
 	if (v == 0) {
-		exec_error(x, o->data->val.ref);
-		exec_error(x, ": no such variable\n");
+		cons_errs(o->data->val.ref, "no such variable");
 		return RESULT_ERR;
 	}
 	*r = data_newnil();
@@ -280,14 +280,13 @@ node_exec_call(struct node_s *o, struct exec_s *x, struct data_s **r) {
 	
 	p = exec_proclookup(x, o->data->val.ref);
 	if (p == 0) {
-		exec_error(x, o->data->val.ref);
-		exec_error(x, ": no such proc\n");
+		cons_errs(o->data->val.ref, "no such proc");
 		goto finish;
 	}
 	argv = o->list;
 	for (argn = p->args; argn != 0; argn = argn->next) {
 		if (argv == 0) {
-			exec_error(x, "to few arguments\n");
+			cons_errs(o->data->val.ref, "to few arguments");
 			goto finish;
 		}
 		if (node_exec(argv, x, r) == RESULT_ERR) {
@@ -298,7 +297,7 @@ node_exec_call(struct node_s *o, struct exec_s *x, struct data_s **r) {
 		*r = 0;
 	}
 	if (argv != 0) {
-		exec_error(x, "to many arguments\n");
+		cons_errs(o->data->val.ref, "to many arguments");
 		goto finish;
 	}	
 	oldlocals = x->locals;
@@ -347,7 +346,7 @@ node_exec_for(struct node_s *o, struct exec_s *x, struct data_s **r) {
 		return RESULT_ERR;
 	}
 	if (list->type != DATA_LIST) {
-		exec_error(x, "for: argument in not a list\n");
+		cons_err("argument to 'for' must be a list");
 		return RESULT_ERR;
 	}
 	v = exec_varlookup(x, o->data->val.ref);

@@ -37,8 +37,8 @@
 #include "track.h"
 #include "trackop.h"
 #include "song.h"
-#include "user.h"
 #include "smf.h"
+#include "cons.h"
 
 char smftype_header[4] = { 'M', 'T', 'h', 'd' };
 char smftype_track[4]  = { 'M', 'T', 'r', 'k' };
@@ -62,8 +62,7 @@ unsigned
 smf_open(struct smf_s *o, char *path, char *mode) {
 	o->file = fopen(path, mode);
 	if (!o->file) {
-		user_printstr(path);
-		user_printstr(": failed to open file\n");
+		cons_errs(path, "failed to open file");
 		return 0;
 	}
 	o->length = 0;
@@ -80,7 +79,7 @@ unsigned
 smf_get32(struct smf_s *o, unsigned *val) {
 	unsigned char buf[4];
 	if (o->index + 4 > o->length || fread(buf, 1, 4, o->file) != 4) {
-		user_printstr("failed to read 32bit number\n");
+		cons_err("failed to read 32bit number");
 		return 0;
 	}
 	*val = (buf[0] << 24) + (buf[1] << 16) + (buf[2] << 8) + buf[3];
@@ -92,7 +91,7 @@ unsigned
 smf_get24(struct smf_s *o, unsigned *val) {
 	unsigned char buf[4];
 	if (o->index + 3 > o->length || fread(buf, 1, 3, o->file) != 3) {
-		user_printstr("failed to read 24bit number\n");
+		cons_err("failed to read 24bit number");
 		return 0;
 	}
 	*val = (buf[0] << 16) + (buf[1] << 8) + buf[2];
@@ -104,7 +103,7 @@ unsigned
 smf_get16(struct smf_s *o, unsigned *val) {
 	unsigned char buf[4];
 	if (o->index + 2 > o->length || fread(buf, 1, 2, o->file) != 2) {
-		user_printstr("failed to read 16bit number\n");
+		cons_err("failed to read 16bit number");
 		return 0;
 	}
 	*val =  (buf[0] << 8) + buf[1];
@@ -115,7 +114,7 @@ smf_get16(struct smf_s *o, unsigned *val) {
 unsigned
 smf_getc(struct smf_s *o, unsigned *c) {
 	if (o->index + 1 > o->length || (*c = fgetc(o->file) & 0xff) < 0) {
-		user_printstr("failed to read one byte\n");
+		cons_err("failed to read one byte");
 		return 0;
 	}
 	o->index++;
@@ -130,7 +129,7 @@ smf_getvar(struct smf_s *o, unsigned *val) {
 	bits = 0;
 	for (;;) {
 		if (o->index + 1 > o->length || (c = fgetc(o->file)) == EOF) {
-			user_printstr("failed to read varlength number\n");
+			cons_err("failed to read varlength number");
 			return 0;
 		}
 		o->index++;
@@ -144,7 +143,7 @@ smf_getvar(struct smf_s *o, unsigned *val) {
 		 * smf spec forbids more than 32bit per integer
 		 */
 		if (bits > 32) {
-			user_printstr("overflow while reading varlength number\n");
+			cons_err("overflow while reading varlength number");
 			return 0;
 		}
 	}
@@ -157,15 +156,15 @@ smf_getheader(struct smf_s *o, char *hdr) {
 	char buf[4];
 	unsigned len;
 	if (o->index != o->length) {
-		user_printstr("chunk not finished\n");
+		cons_err("chunk not finished");
 		return 0;
 	}
 	if (fread(buf, 1, 4, o->file) != 4) {
-		user_printstr("failed to read header\n");
+		cons_err("failed to read header");
 		return 0;
 	}
 	if (memcmp(buf, hdr, 4) != 0) {
-		user_printstr("header corrupted\n");
+		cons_err("header corrupted");
 		return 0;
 	}
 	o->index = 0;
@@ -615,7 +614,7 @@ smf_gettrack(struct smf_s *o, struct song_s *s, struct songtrk_s *t) {
 			}
 		} else if (c == 0xf0 || c == 0xf7) {
 			/*
-			user_printstr("0xF0 and 0xF7 event not implemented\n");
+			cons_err("0xF0 and 0xF7 event not implemented");
 			*/
 			status = 0;
 			ev.cmd = 0;
@@ -658,12 +657,12 @@ smf_gettrack(struct smf_s *o, struct song_s *s, struct songtrk_s *t) {
 			*/			
 		} else if (c < 0x80) {
 			if (status == 0) {
-				user_printstr("bad status\n");
+				cons_err("bad status");
 				return 0;
 			}
 			goto runningstatus;
 		} else {
-			user_printstr("bad event\n");
+			cons_err("bad event");
 			return 0;
 		}
 	}
@@ -725,7 +724,7 @@ song_importsmf(char *filename) {
 	struct smf_s f;
 	
 	/*
-	user_printstr("not implemented\n");
+	cons_err("not implemented");
 	return 0;
 	*/
 	
@@ -739,7 +738,7 @@ song_importsmf(char *filename) {
 		goto bad2;
 	}
 	if (format != 1 && format != 0) {
-		user_printstr("only smf format 0 or 1 can be imported\n");
+		cons_err("only smf format 0 or 1 can be imported");
 		goto bad2;
 	}
 	if (!smf_get16(&f, &ntrks)) {
@@ -749,7 +748,7 @@ song_importsmf(char *filename) {
 		goto bad2;
 	}
 	if ((timecode & 0x8000) != 0) {
-		user_printstr("SMPTE timecode is not supported\n");
+		cons_err("SMPTE timecode is not supported");
 		goto bad2;
 	}
 	

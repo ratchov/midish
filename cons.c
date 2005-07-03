@@ -101,3 +101,27 @@ cons_getc(char *prompt) {
 #endif
 	return c;
 }
+
+void
+cons_err(char *mesg) {
+	fprintf(stderr, "%s\n", mesg);
+}
+
+void
+cons_errs(char *s, char *mesg) {
+	fprintf(stderr, "%s: %s\n", s, mesg);
+}
+
+void
+cons_erru(unsigned long u, char *mesg) {
+	fprintf(stderr, "%lu: %s\n", u, mesg);
+}
+
+void
+cons_erruu(unsigned long u0, unsigned long u1, char *mesg) {
+	fprintf(stderr, "%lu.%lu: %s\n", u0, u1, mesg);
+}
+
+
+
+

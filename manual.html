@@ -79,7 +79,7 @@
 		and Linux.
 	</UL>
 
-Without any midi-devices Midish will be probably usefulness.
+Without any midi-devices Midish will be probably useless.
 
 <H2>Installation</H2>
 
@@ -98,11 +98,17 @@ Without any midi-devices Midish will be probably usefulness.
 	compile midish, just type '<TT>make all</TT>'
 
 	<LI>
-	install binaries and documentation by typing '<TT>make install</TT>'; 
-	by default 
-	they are installed in <TT>$HOME/bin</TT>, where <TT>$HOME</TT> is
-	your home directory. If you want to change this,
-	set the <TT>PREFIX</TT> variable, for instance: 
+	install binaries, documentation and examples by
+	typing '<TT>make install</TT>'. They are copied
+	as follows:
+	<UL>
+	<LI> binaries in '<TT>PREFIX/bin</TT>'
+	<LI> html documentation in '<TT>PREFIX/share/doc/midish</TT>'
+	<LI> example files in '<TT>PREFIX/share/examples/midish</TT>'
+	</UL>
+	where '<TT>PREFIX</TT>' is by default '<TT>/usr/local</TT>'.
+	To change this, set the '<TT>PREFIX</TT>' variable in
+	<TT>Makefile</TT>, for instance: 
 
 	<PRE>
 	make PREFIX=/usr/local install
@@ -125,25 +131,26 @@ Without any midi-devices Midish will be probably usefulness.
 	so it's started	by typing:
 
 	<PRE>
-	./midish
+	midish
 	</PRE>
 
-	in your shell. On startup, it tries to execute
-	the script <TT>$HOME/.midishrc</TT>. If you
-	don't want so, use the <TT>-norc</TT> flag. This is
+	in your shell. On startup, it tries to execute the
+	'<TT>$HOME/.midishrc</TT>' script . If you
+	don't want so, use the '<TT>-norc</TT>' flag. This is
 	useful when you want to use midish in scripts.
 
 	You can specify your midi devices
-	by using the function <TT>devattach</TT>, for instance:
+	by using the '<TT>devattach</TT>' function,  for instance:
 
 	<PRE>
 	devattach 0 "/dev/rmidi3"
 	devattach 1 "/dev/rmidi1"
 	</PRE>
 
-	will attach <TT>/dev/rmidi3</TT> and <TT>/dev/rmidi1</TT> as devices
+	will attach '<TT>/dev/rmidi3</TT>' and '<TT>/dev/rmidi1</TT>' 
+	as devices
 	number 0 and 1. You can put those statements in 
-	your <TT>$HOME/.midishrc</TT>
+	your '<TT>$HOME/.midishrc</TT>'
 
 	<P>
 	Once started, the sequencer reads and executes commands
@@ -175,9 +182,9 @@ Without any midi-devices Midish will be probably usefulness.
 <H2>from release 0.1 to release 0.2</H2>
 
 	<UL>
-	<LI> added <TT>device</TT>-parameter to <TT>sendraw</TT>
-	<LI> replaced <TT>filtchangein</TT> to <TT>filtswapichan</TT>
-		and added the "device" corresponding <TT>filtswapidev</TT>
+	<LI> added '<TT>device</TT>' parameter to '<TT>sendraw</TT>'
+	<LI> replaced '<TT>filtchangein</TT>' to '<TT>filtswapichan</TT>'
+		and added '<TT>filtswapidev</TT>'
 	<LI> added new filter rules: 
 		<TT>filtdevdrop</TT>, 
 		<TT>filtchandrop</TT>,
@@ -1110,7 +1117,7 @@ Without any midi-devices Midish will be probably usefulness.
 	<BLOCKQUOTE>
 	adds to sysex bank <TT>sysexname</TT>
 	an new sysex message. <TT>data</TT> is a list containing the
-	raw midi message and <TT>unit</TT> is the device number to which
+	midi system exclusive message and <TT>unit</TT> is the device number to which
 	the message will be sent
 	</BLOCKQUOTE>
 

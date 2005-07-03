@@ -38,14 +38,9 @@
 #include "data.h"
 #include "node.h"
 
-#include "user.h"	/* for user_printstr */
+#include "cons.h"	/* for cons_errXXX */
 
 unsigned exec_debug = 0;
-
-void
-exec_error(struct exec_s *o, char *str) {
-	user_printstr(str);
-}
 
 /* ----------------------------------------------- variable lists --- */
 
@@ -249,8 +244,7 @@ exec_lookupname(struct exec_s *exec, char *name, char **val) {
 	struct var_s *var;
 	var = exec_varlookup(exec, name);
 	if (var == 0 || var->data->type != DATA_REF) {
-		exec_error(exec, name);
-		exec_error(exec, ": no such object name\n");
+		cons_errs(name, "no such object name");
 		return 0;
 	}
 	*val = var->data->val.ref;
@@ -263,8 +257,7 @@ exec_lookupstring(struct exec_s *exec, char *name, char **val) {
 	struct var_s *var;
 	var = exec_varlookup(exec, name);
 	if (var == 0 || var->data->type != DATA_STRING) {
-		exec_error(exec, name);
-		exec_error(exec, ": no such string\n");
+		cons_errs(name, "no such string");
 		return 0;
 	}
 	*val = var->data->val.str;
@@ -277,8 +270,7 @@ exec_lookuplong(struct exec_s *exec, char *name, long *val) {
 	struct var_s *var;
 	var = exec_varlookup(exec, name);
 	if (var == 0 || var->data->type != DATA_LONG) {
-		exec_error(exec, name);
-		exec_error(exec, ": no such long\n");
+		cons_errs(name, "no such long");
 		return 0;
 	}
 	*val = var->data->val.num;
@@ -290,8 +282,7 @@ exec_lookuplist(struct exec_s *exec, char *name, struct data_s **val) {
 	struct var_s *var;
 	var = exec_varlookup(exec, name);
 	if (var == 0 || var->data->type != DATA_LIST) {
-		exec_error(exec, name);
-		exec_error(exec, ": no such list\n");
+		cons_errs(name, "no such list");
 		return 0;
 	}
 	*val = var->data->val.list;
@@ -306,8 +297,7 @@ exec_lookupbool(struct exec_s *exec, char *name, long *val) {
 	
 	var = exec_varlookup(exec, name);
 	if (var == 0) {
-		exec_error(exec, name);
-		exec_error(exec, ": no such bool\n");
+		cons_errs(name, "no such bool");
 		return 0;
 	}
 	res = data_eval(var->data);

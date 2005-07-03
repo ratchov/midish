@@ -41,10 +41,11 @@
 #include "default.h"
 #include "mididev.h"
 #include "data.h"
-#include "user.h"
 #include "name.h"
 #include "rmidi.h"
 #include "pool.h"
+
+#include "cons.h"
 
 /* -------------------------------------------- device management --- */
 
@@ -101,11 +102,11 @@ mididev_attach(unsigned unit, char *path, unsigned in, unsigned out) {
 	struct mididev_s *dev;
 
 	if (unit >= DEFAULT_MAXNDEVS) {
-		user_printstr("given unit is too large\n");
+		cons_err("given unit is too large");
 		return 0;
 	}
 	if (mididev_byunit[unit] != 0) {
-		user_printstr("device already exists\n");
+		cons_err("device already exists");
 		return 0;
 	}
 	dev = (struct mididev_s *)rmidi_new();
@@ -124,12 +125,12 @@ mididev_detach(unsigned unit) {
 	struct mididev_s **i, *dev;
 	
 	if (unit >= DEFAULT_MAXNDEVS || mididev_byunit[unit] == 0) {
-		user_printstr("no such device\n");
+		cons_err("no such device");
 		return 0;
 	}
 	
 	if (mididev_byunit[unit] == mididev_master) {
-		user_printstr("cant detach master device\n");
+		cons_err("cant detach master device");
 		return 0;
 	}
 	
