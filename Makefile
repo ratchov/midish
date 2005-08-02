@@ -21,7 +21,8 @@ PROG = midish
 OBJS = \
 cons.o data.o dbg.o ev.o exec.o filt.o lex.o main.o mdep.o mididev.o \
 mux.o name.o node.o parse.o pool.o rmidi.o saveload.o smf.o song.o \
-str.o sysex.o textio.o track.o trackop.o user.o
+str.o sysex.o textio.o track.o trackop.o user.o \
+user_trk.o user_chan.o user_filt.o user_sx.o user_song.o user_dev.o 
 
 all:		${PROG}
 
@@ -70,3 +71,9 @@ textio.o:	textio.c dbg.h textio.h cons.h
 track.o:	track.c dbg.h pool.h track.h ev.h default.h
 trackop.o:	trackop.c dbg.h trackop.h track.h ev.h default.h
 user.o: 	user.c dbg.h default.h node.h exec.h name.h str.h data.h textio.h lex.h parse.h mux.h mididev.h trackop.h track.h ev.h song.h filt.h sysex.h user.h smf.h saveload.h rmidi.h mdep.h cons.h
+user_chan.o:	user_chan.c dbg.h default.h node.h exec.h name.h str.h data.h cons.h trackop.h track.h ev.h song.h filt.h sysex.h user.h saveload.h textio.h
+user_dev.o:	user_dev.c dbg.h default.h node.h exec.h name.h str.h data.h cons.h mididev.h song.h track.h ev.h filt.h sysex.h user.h textio.h
+user_filt.o:	user_filt.c dbg.h default.h node.h exec.h name.h str.h data.h cons.h song.h track.h ev.h filt.h sysex.h user.h saveload.h textio.h
+user_song.o: 	user_song.c dbg.h default.h node.h exec.h name.h str.h data.h cons.h trackop.h song.h track.h ev.h filt.h sysex.h user.h smf.h saveload.h textio.h
+user_sx.o:	user_sx.c dbg.h default.h node.h exec.h name.h str.h data.h cons.h song.h track.h ev.h filt.h sysex.h user.h saveload.h textio.h
+user_trk.o:	user_trk.c dbg.h default.h node.h exec.h name.h str.h data.h cons.h trackop.h track.h ev.h song.h filt.h sysex.h user.h  saveload.h textio.h

@@ -339,7 +339,6 @@ songchan_output(struct songchan_s *o, struct textout_s *f) {
 	track_output(&o->conf, f);
 	textout_putstr(f, "\n");
 
-
 	textout_shiftleft(f);
 	textout_indent(f);
 	textout_putstr(f, "}");
@@ -370,6 +369,11 @@ song_output(struct song_s *o, struct textout_s *f) {
 	textout_putstr(f, "{\n");
 	textout_shiftright(f);
 	
+	textout_indent(f);
+	textout_putstr(f, "tics_per_unit ");
+	textout_putlong(f, o->tics_per_unit);
+	textout_putstr(f, "\n");
+
 	textout_indent(f);
 	textout_putstr(f, "meta ");
 	track_output(&o->meta, f);
@@ -1348,4 +1352,3 @@ song_load(struct song_s *o, char *filename) {
 	parse_delete(parse);
 	return res;
 }
-

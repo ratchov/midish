@@ -42,6 +42,7 @@
 #include "mididev.h"
 #include "default.h"
 #include "sysex.h"
+#include "textio.h"
 
 struct song_s song;
 
@@ -59,6 +60,7 @@ main(int argc, char *argv[]) {
 	}
 	
 	cons_init();
+	textio_init();
 	seqev_pool_init(DEFAULT_MAXNSEQEVS);
 	state_pool_init(DEFAULT_MAXNSTATES);
 	chunk_pool_init(DEFAULT_MAXNCHUNKS);
@@ -74,6 +76,7 @@ main(int argc, char *argv[]) {
 	chunk_pool_done();
 	state_pool_done();
 	seqev_pool_done();
+	textio_done();
 	cons_done();
 err:
 	return 0;

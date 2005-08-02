@@ -72,10 +72,12 @@ struct proc_s {
 	 */
 	 
 struct exec_s {
-	struct var_s **locals, *globals;
-	struct proc_s *procs;
+	struct var_s *globals;	/* list of global variables */
+	struct var_s **locals;	/* pinter to list of local variables */
+	struct proc_s *procs;	/* list of user an built-in procs */
+	char *procname;		/* current proc name, for err messages */
 #define EXEC_MAXDEPTH	40
-	unsigned depth;
+	unsigned depth;		/* call depth */
 };
 
 struct var_s *var_new(char *name, struct data_s *data);
@@ -87,6 +89,8 @@ void	      var_empty(struct var_s **first);
 
 struct exec_s *exec_new(void);
 void	       exec_delete(struct exec_s *o);
+void	       exec_err(struct exec_s *o, char *mesg);
+void	       exec_errs(struct exec_s *o, char *s, char *mesg);
 struct proc_s *exec_proclookup(struct exec_s *o, char *name);
 struct var_s  *exec_varlookup(struct exec_s *o, char *name);
 void	       exec_error(struct exec_s *o, char *msg);

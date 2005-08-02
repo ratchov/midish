@@ -118,6 +118,17 @@ cons_erru(unsigned long u, char *mesg) {
 }
 
 void
+cons_errss(char *s0, char *s1, char *mesg) {
+	fprintf(stderr, "%s: %s: %s\n", s0, s1, mesg);
+}
+
+void
+cons_errsu(char *s, unsigned long u, char *mesg) {
+	fprintf(stderr, "%s: %lu: %s\n", s, u, mesg);
+}
+
+
+void
 cons_erruu(unsigned long u0, unsigned long u1, char *mesg) {
 	fprintf(stderr, "%lu.%lu: %s\n", u0, u1, mesg);
 }

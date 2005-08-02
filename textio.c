@@ -46,14 +46,14 @@
 
 struct textin_s {
 	FILE *file;
-	unsigned console;
+	unsigned isconsole;
 	char *prompt;
 	unsigned line, col;
 };
 
 struct textout_s {
 	FILE *file;
-	unsigned indent, console;
+	unsigned indent, isconsole;
 };
 
 /* -------------------------------------------------------- input --- */
@@ -64,10 +64,10 @@ textin_new(char *filename, char *prompt) {
 
 	o = (struct textin_s *)mem_alloc(sizeof(struct textin_s));
 	if (filename == 0) {
-		o->console = 1;
+		o->isconsole = 1;
 		o->file = stdin;
 	} else {
-		o->console = 0;
+		o->isconsole = 0;
 		o->file = fopen(filename, "r");
 		if (o->file == NULL) {
 			cons_errs(filename, "failed to open input file");
@@ -82,7 +82,7 @@ textin_new(char *filename, char *prompt) {
 
 void
 textin_delete(struct textin_s *o) {
-	if (!o->console) {
+	if (!o->isconsole) {
 		fclose(o->file);
 	}
 	mem_free(o);
@@ -90,7 +90,7 @@ textin_delete(struct textin_s *o) {
 
 unsigned
 textin_getchar(struct textin_s *o, int *c) {
-	if (o->console) {
+	if (o->isconsole) {
 		*c = cons_getc(o->prompt);
 		if (*c == CHAR_EOF) {
 			return 1;
@@ -142,10 +142,10 @@ textout_new(char *filename) {
 			mem_free(o);
 			return 0;
 		}
-		o->console = 0;
+		o->isconsole = 0;
 	} else {
 		o->file = stdout;
-		o->console = 1;
+		o->isconsole = 1;
 	}
 	o->indent = 0;
 	return o;
@@ -153,7 +153,7 @@ textout_new(char *filename) {
 
 void
 textout_delete(struct textout_s *o) {
-	if (!o->console) {
+	if (!o->isconsole) {
 		fclose(o->file);
 	}
 	mem_free(o);
@@ -189,6 +189,25 @@ textout_putlong(struct textout_s *o, unsigned long val) {
 
 void
 textout_putbyte(struct textout_s *o, unsigned val) {
-	fprintf(o->file, "0x%02X", val & 0xff);
+	fprintf(o->file, "0x%02x", val & 0xff);
 }
 
+/* ------------------------------------------------------------------ */
+
+
+struct textout_s *tout;
+struct textin_s *tin;
+
+void
+textio_init(void) {
+	tout = textout_new(0);
+	tin = textin_new(0, 0);
+}
+
+void
+textio_done(void) {
+	textout_delete(tout);
+	tout = 0;
+	textin_delete(tin);
+	tin = 0;
+}

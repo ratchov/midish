@@ -55,14 +55,14 @@ dbg_putu(unsigned long n) {
 }
 
 void
-dbg_panic() {
+dbg_panic(void) {
 #ifdef SIGTRAP
 	kill(getpid(), SIGTRAP);
 	/* not reached */
 	fputs("dbg_panic: failed to send SIGTRAP\n", stderr);
 	exit(1);
 #else
-	fputs("dbg_panic:\n", stderr);
+	fputs("dbg_panic: exciting\n", stderr);
 	exit(1);
 #endif
 }
@@ -102,14 +102,8 @@ mem_alloc(unsigned n) {
 	buf[1] = n;		/* size of the bloc */
 	buf[2] = mem_rnd();	/* a random number */
 	buf[n - 1] = buf[2];
-
-	mem_counter++;
 	
-	/*
-	dbg_puts("mem_alloc: couter=");
-	dbg_putx(mem_counter);
-	dbg_puts("\n");
-	*/
+	mem_counter++;	
 	
 	return buf + 3;
 }

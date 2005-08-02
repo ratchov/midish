@@ -153,6 +153,7 @@ exec_new(void) {
 	o->procs = 0;
 	o->globals = 0;
 	o->locals = &o->globals;
+	o->procname = "top-level";
 	o->depth = 0;
 	return o;
 }
@@ -169,12 +170,20 @@ exec_delete(struct exec_s *o) {
 	mem_free(o);
 }
 
+void
+exec_err(struct exec_s *o, char *mesg) {
+	cons_errs(o->procname, mesg);
+}
+
+void
+exec_errs(struct exec_s *o, char *s, char *mesg) {
+	cons_errss(o->procname, s, mesg);
+}
 
 struct proc_s *
 exec_proclookup(struct exec_s *o, char *name) {
 	return (struct proc_s *)name_lookup((struct name_s **)&o->procs, name);
 }
-
 
 struct var_s *
 exec_varlookup(struct exec_s *o, char *name) {
@@ -240,11 +249,11 @@ exec_dumpvars(struct exec_s *o) {
 
 
 unsigned 
-exec_lookupname(struct exec_s *exec, char *name, char **val) {
+exec_lookupname(struct exec_s *o, char *name, char **val) {
 	struct var_s *var;
-	var = exec_varlookup(exec, name);
+	var = exec_varlookup(o, name);
 	if (var == 0 || var->data->type != DATA_REF) {
-		cons_errs(name, "no such object name");
+		cons_errss(o->procname, name, "no such reference");
 		return 0;
 	}
 	*val = var->data->val.ref;
@@ -253,11 +262,11 @@ exec_lookupname(struct exec_s *exec, char *name, char **val) {
 
 
 unsigned
-exec_lookupstring(struct exec_s *exec, char *name, char **val) {
+exec_lookupstring(struct exec_s *o, char *name, char **val) {
 	struct var_s *var;
-	var = exec_varlookup(exec, name);
+	var = exec_varlookup(o, name);
 	if (var == 0 || var->data->type != DATA_STRING) {
-		cons_errs(name, "no such string");
+		cons_errss(o->procname, name, "no such string");
 		return 0;
 	}
 	*val = var->data->val.str;
@@ -266,11 +275,11 @@ exec_lookupstring(struct exec_s *exec, char *name, char **val) {
 
 
 unsigned
-exec_lookuplong(struct exec_s *exec, char *name, long *val) {
+exec_lookuplong(struct exec_s *o, char *name, long *val) {
 	struct var_s *var;
-	var = exec_varlookup(exec, name);
+	var = exec_varlookup(o, name);
 	if (var == 0 || var->data->type != DATA_LONG) {
-		cons_errs(name, "no such long");
+		cons_errss(o->procname, name, "no such long");
 		return 0;
 	}
 	*val = var->data->val.num;
@@ -278,11 +287,11 @@ exec_lookuplong(struct exec_s *exec, char *name, long *val) {
 }
 
 unsigned
-exec_lookuplist(struct exec_s *exec, char *name, struct data_s **val) {
+exec_lookuplist(struct exec_s *o, char *name, struct data_s **val) {
 	struct var_s *var;
-	var = exec_varlookup(exec, name);
+	var = exec_varlookup(o, name);
 	if (var == 0 || var->data->type != DATA_LIST) {
-		cons_errs(name, "no such list");
+		cons_errss(o->procname, name, "no such list");
 		return 0;
 	}
 	*val = var->data->val.list;
@@ -291,13 +300,13 @@ exec_lookuplist(struct exec_s *exec, char *name, struct data_s **val) {
 
 
 unsigned
-exec_lookupbool(struct exec_s *exec, char *name, long *val) {
+exec_lookupbool(struct exec_s *o, char *name, long *val) {
 	struct var_s *var;
 	unsigned res;
 	
-	var = exec_varlookup(exec, name);
+	var = exec_varlookup(o, name);
 	if (var == 0) {
-		cons_errs(name, "no such bool");
+		cons_errss(o->procname, name, "no such bool");
 		return 0;
 	}
 	res = data_eval(var->data);

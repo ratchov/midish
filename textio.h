@@ -55,8 +55,8 @@ void		  textout_putbyte(struct textout_s *o, unsigned val);
 
 /* ------------------------------------------------- stdin/stdout --- */
 
-extern struct textin_s *textio_stdin;
-extern struct textout_s *textio_stdout;
+extern struct textout_s *tout;
+extern struct textin_s *tin;
 
 void textio_init(void);
 void textio_done(void);

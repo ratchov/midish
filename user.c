@@ -29,7 +29,7 @@
  */
 
 /*
- * implements all built-in functions
+ * implements misc built-in functions
  * available through the interpreter
  */
 
@@ -56,13 +56,12 @@
 #include "rmidi.h"	/* for rmidi_debug */
 
 struct song_s *user_song;
-struct textout_s *user_stdout;
 unsigned user_flag_norc = 0;
 
 /* -------------------------------------------------- some tools --- */
 
 unsigned
-user_parsefile(struct exec_s *exec, char *filename) {
+exec_runfile(struct exec_s *exec, char *filename) {
 	struct parse_s *parse;
 	struct var_s **locals;
 	struct node_s *root;
@@ -88,54 +87,6 @@ user_parsefile(struct exec_s *exec, char *filename) {
 	return res;
 }
 
-/* -------------------------------------------------------- console --- */
-
-void
-user_printstr(char *str) {
-	textout_putstr(user_stdout, str);
-}
-
-void
-user_printlong(long l) {
-	if (l < 0) {
-		textout_putstr(user_stdout, "-");
-		l = -l;
-	}
-	textout_putlong(user_stdout, (unsigned long)l);
-}
-
-void
-exec_printdata(struct exec_s *o, struct data_s *d) {
-	struct data_s *i;
-	
-	switch(d->type) {
-	case DATA_NIL:
-		user_printstr("(nil)");
-		break;
-	case DATA_LONG:
-		user_printlong(d->val.num);
-		break;
-	case DATA_STRING:
-		user_printstr(d->val.str);
-		break;
-	case DATA_REF:
-		user_printstr(d->val.ref);
-		break;
-	case DATA_LIST:
-		for (i = d->val.list; i != 0; i = i->next) {
-			exec_printdata(o, i);
-			if (i->next) {
-				user_printstr(" ");
-			}
-		}
-		break;
-	default:
-		dbg_puts("exec_printdata: unknown type\n");
-		break;
-	}
-}
-
-
 unsigned
 exec_lookuptrack(struct exec_s *o, char *var, struct songtrk_s **res) {
 	char *name;	
@@ -152,40 +103,6 @@ exec_lookuptrack(struct exec_s *o, char *var, struct songtrk_s **res) {
 	return 1;
 }
 
-unsigned
-data_list2chan(struct data_s *o, unsigned *dev, unsigned *ch) {
-	struct songchan_s *i;
-
-	if (o->type == DATA_LIST) {
-		if (!o->val.list || 
-		    !o->val.list->next || 
-		    o->val.list->next->next ||
-		    o->val.list->type != DATA_LONG || 
-		    o->val.list->next->type != DATA_LONG) {
-			cons_err("bad {dev midichan} in spec");
-			return 0;
-		}
-		*dev = o->val.list->val.num;
-		*ch = o->val.list->next->val.num;
-		if (*ch < 0 || *ch > EV_MAXCH || 
-		    *dev < 0 || *dev > EV_MAXDEV) {
-			cons_err("bad dev/midichan ranges");
-		}
-		return 1;
-	} else if (o->type == DATA_REF) {
-		i = song_chanlookup(user_song, o->val.ref);
-		if (i == 0) {
-			cons_err("no such chan name");
-			return 0;
-		}
-		*dev = i->dev;
-		*ch = i->ch;
-		return 1;
-	} else {
-		cons_err("bad channel specification");
-		return 0;
-	}
-}
 
 
 unsigned
@@ -221,7 +138,7 @@ exec_lookupchan_getref(struct exec_s *o, char *var, struct songchan_s **res) {
 		return 0;
 	}
 	if (i == 0) {
-		cons_err("no such chan");
+		cons_errs(arg->data->val.ref, "no such chan");
 		return 0;
 	}
 	*res = i;
@@ -322,38 +239,6 @@ exec_lookupev(struct exec_s *o, char *name, struct ev_s *ev) {
 	}
 	return 1;
 }
-
-
-unsigned
-data_list2range(struct data_s *d, unsigned min, unsigned max, 
-    unsigned *lo, unsigned *hi) {
-    	if (d->type == DATA_LONG) {
-		*lo = *hi = d->val.num;
-	} else if (d->type == DATA_LIST) {
-		d = d->val.list;
-		if (!d) {
-			*lo = min;
-			*hi = max;
-			return 1;
-		} 
-		if (!d->next || d->next->next || 
-		    d->type != DATA_LONG || d->next->type != DATA_LONG) {
-			cons_err("exactly 0 ore 2 numbers expected in range spec");
-			return 0;
-		}
-		*lo = d->val.num;
-		*hi = d->next->val.num;
-	} else {
-		cons_err("list or number expected in range spec");
-		return 0;
-	}
-	if (*lo < min || *lo > max || *hi < min || *hi > max || *lo > *hi) {
-		cons_err("range values out of bounds");
-		return 0;
-	}
-	return 1;
-}
-
 
 unsigned
 exec_lookupevspec(struct exec_s *o, char *name, struct evspec_s *e) {
@@ -462,6 +347,104 @@ toomany:
 	return 0;				
 }
 
+
+void
+data_print(struct data_s *d) {
+	struct data_s *i;
+	
+	switch(d->type) {
+	case DATA_NIL:
+		textout_putstr(tout, "(nil)");
+		break;
+	case DATA_LONG:
+		textout_putlong(tout, d->val.num);
+		break;
+	case DATA_STRING:
+		textout_putstr(tout, d->val.str);
+		break;
+	case DATA_REF:
+		textout_putstr(tout, d->val.ref);
+		break;
+	case DATA_LIST:
+		for (i = d->val.list; i != 0; i = i->next) {
+			data_print(i);
+			if (i->next) {
+				textout_putstr(tout, " ");
+			}
+		}
+		break;
+	default:
+		dbg_puts("data_print: unknown type\n");
+		break;
+	}
+}
+
+
+unsigned
+data_list2chan(struct data_s *o, unsigned *dev, unsigned *ch) {
+	struct songchan_s *i;
+
+	if (o->type == DATA_LIST) {
+		if (!o->val.list || 
+		    !o->val.list->next || 
+		    o->val.list->next->next ||
+		    o->val.list->type != DATA_LONG || 
+		    o->val.list->next->type != DATA_LONG) {
+			cons_err("bad {dev midichan} in spec");
+			return 0;
+		}
+		*dev = o->val.list->val.num;
+		*ch = o->val.list->next->val.num;
+		if (*ch < 0 || *ch > EV_MAXCH || 
+		    *dev < 0 || *dev > EV_MAXDEV) {
+			cons_err("bad dev/midichan ranges");
+		}
+		return 1;
+	} else if (o->type == DATA_REF) {
+		i = song_chanlookup(user_song, o->val.ref);
+		if (i == 0) {
+			cons_errs(o->val.ref, "no such chan name");
+			return 0;
+		}
+		*dev = i->dev;
+		*ch = i->ch;
+		return 1;
+	} else {
+		cons_err("bad channel specification");
+		return 0;
+	}
+}
+
+unsigned
+data_list2range(struct data_s *d, unsigned min, unsigned max, 
+    unsigned *lo, unsigned *hi) {
+    	if (d->type == DATA_LONG) {
+		*lo = *hi = d->val.num;
+	} else if (d->type == DATA_LIST) {
+		d = d->val.list;
+		if (!d) {
+			*lo = min;
+			*hi = max;
+			return 1;
+		} 
+		if (!d->next || d->next->next || 
+		    d->type != DATA_LONG || d->next->type != DATA_LONG) {
+			cons_err("exactly 0 ore 2 numbers expected in range spec");
+			return 0;
+		}
+		*lo = d->val.num;
+		*hi = d->next->val.num;
+	} else {
+		cons_err("list or number expected in range spec");
+		return 0;
+	}
+	if (*lo < min || *lo > max || *hi < min || *hi > max || *lo > *hi) {
+		cons_err("range values out of bounds");
+		return 0;
+	}
+	return 1;
+}
+
 unsigned
 data_matchsysex(struct data_s *d, struct sysex_s *sx, unsigned *res) {
 	unsigned i;
@@ -546,7 +529,7 @@ user_func_exec(struct exec_s *o, struct data_s **r) {
 	if (!exec_lookupstring(o, "filename", &filename)) {
 		return 0;
 	}	
-	return user_parsefile(o, filename);
+	return exec_runfile(o, filename);
 }
 
 
@@ -558,8 +541,8 @@ user_func_print(struct exec_s *o, struct data_s **r) {
 		dbg_puts("user_func_print: 'value': no such param\n");
 		return 0;
 	}
-	exec_printdata(o, arg->data);
-	user_printstr("\n");
+	data_print(arg->data);
+	textout_putstr(tout, "\n");
 	*r = data_newnil();
 	return 1;
 }
@@ -571,1650 +554,6 @@ user_func_info(struct exec_s *o, struct data_s **r) {
 	return 1;
 }
 
-/* -------------------------------------------------- track stuff --- */
-
-unsigned
-user_func_tracklist(struct exec_s *o, struct data_s **r) {
-	struct data_s *d, *n;
-	struct songtrk_s *i;
-
-	d = data_newlist(0);
-	for (i = user_song->trklist; i != 0; i = (struct songtrk_s *)i->name.next) {
-		n = data_newref(i->name.str);
-		data_listadd(d, n);
-	}
-	*r = d;
-	return 1;
-}
-
-
-unsigned
-user_func_tracknew(struct exec_s *o, struct data_s **r) {
-	char *trkname;
-	struct songtrk_s *t;
-	
-	if (!exec_lookupname(o, "trackname", &trkname)) {
-		return 0;
-	}
-	t = song_trklookup(user_song, trkname);
-	if (t != 0) {
-		cons_err("tracknew: track already exists");
-		return 0;
-	}
-	t = songtrk_new(trkname);
-	song_trkadd(user_song, t);
-	return 1;
-}
-
-
-unsigned
-user_func_trackdelete(struct exec_s *o, struct data_s **r) {
-	struct songtrk_s *t;
-	if (!exec_lookuptrack(o, "trackname", &t)) {
-		return 0;
-	}
-	if (!song_trkrm(user_song, t)) {
-		return 0;
-	}
-	songtrk_delete(t);
-	return 1;
-}
-
-
-unsigned
-user_func_trackrename(struct exec_s *o, struct data_s **r) {
-	struct songtrk_s *t;
-	char *name;
-	
-	if (!exec_lookuptrack(o, "trackname", &t) ||
-	    !exec_lookupname(o, "newname", &name)) {
-		return 0;
-	}
-	if (song_trklookup(user_song, name)) {
-		cons_err("name already used by another track");
-		return 0;
-	}
-	str_delete(t->name.str);
-	t->name.str = str_new(name);
-	return 1;
-}
-
-
-unsigned
-user_func_trackexists(struct exec_s *o, struct data_s **r) {
-	char *name;
-	struct songtrk_s *t;
-	
-	if (!exec_lookupname(o, "trackname", &name)) {
-		return 0;
-	}
-	t = song_trklookup(user_song, name);
-	*r = data_newlong(t != 0 ? 1 : 0);
-	return 1;
-}
-
-
-unsigned
-user_func_trackaddev(struct exec_s *o, struct data_s **r) {
-	long measure, beat, tic;
-	struct ev_s ev;
-	struct seqptr_s tp;
-	struct songtrk_s *t;
-	unsigned pos, bpm, tpb;
-	unsigned long dummy;
-
-	if (!exec_lookuptrack(o, "trackname", &t) || 
-	    !exec_lookuplong(o, "measure", &measure) || 
-	    !exec_lookuplong(o, "beat", &beat) || 
-	    !exec_lookuplong(o, "tic", &tic) || 
-	    !exec_lookupev(o, "event", &ev)) {
-		return 0;
-	}
-
-	pos = track_opfindtic(&user_song->meta, measure);
-	track_optimeinfo(&user_song->meta, pos, &dummy, &bpm, &tpb);
-	
-	if (beat < 0 || beat >= bpm || tic < 0 || tic >= tpb) {
-		cons_err("beat and tic must fit in the selected measure");
-		return 0;
-	}
-
-	pos += beat * tpb + tic;	
-
-	track_rew(&t->track, &tp);
-	track_seekblank(&t->track, &tp, pos);
-	track_evlast(&t->track, &tp);
-	track_evput(&t->track, &tp, &ev);
-	return 1;
-}
-
-
-unsigned
-user_func_tracksetcurfilt(struct exec_s *o, struct data_s **r) {
-	struct songtrk_s *t;
-	struct songfilt_s *f;
-	struct var_s *arg;
-	
-	if (!exec_lookuptrack(o, "trackname", &t)) {
-		return 0;
-	}	
-	arg = exec_varlookup(o, "filtname");
-	if (!arg) {
-		dbg_puts("user_func_tracksetcurfilt: 'filtname': no such param\n");
-		return 0;
-	}
-	if (arg->data->type == DATA_NIL) {
-		t->curfilt = 0;
-		return 1;
-	} else if (arg->data->type == DATA_REF) {
-		f = song_filtlookup(user_song, arg->data->val.ref);
-		if (!f) {
-			cons_err("no such filt");
-			return 0;
-		}
-		t->curfilt = f;
-		return 1;
-	}
-	return 0;
-}
-
-unsigned
-user_func_trackgetcurfilt(struct exec_s *o, struct data_s **r) {
-	struct songtrk_s *t;
-	
-	if (!exec_lookuptrack(o, "trackname", &t)) {
-		return 0;
-	}
-	if (t->curfilt) {
-		*r = data_newref(t->curfilt->name.str);
-	} else {
-		*r = data_newnil();
-	}		
-	return 1;
-}
-
-
-unsigned
-user_func_trackcheck(struct exec_s *o, struct data_s **r) {
-	char *trkname;
-	struct songtrk_s *t;
-	
-	if (!exec_lookupname(o, "trackname", &trkname)) {
-		return 0;
-	}
-	t = song_trklookup(user_song, trkname);
-	if (t == 0) {
-		cons_err("trackcheck: no such track");
-		return 0;
-	}
-	track_opcheck(&t->track);
-	return 1;
-}
-
-
-unsigned
-user_func_trackgetlen(struct exec_s *o, struct data_s **r) {
-	char *trkname;
-	struct songtrk_s *t;
-	unsigned len;
-	
-	if (!exec_lookupname(o, "trackname", &trkname)) {
-		return 0;
-	}
-	t = song_trklookup(user_song, trkname);
-	if (t == 0) {
-		cons_err("trackgetlen: no such track");
-		return 0;
-	}
-	len = track_numtic(&t->track);
-	*r = data_newlong((long)len);
-	return 1;
-}
-
-
-unsigned
-user_func_tracksave(struct exec_s *o, struct data_s **r) {
-	char *trkname, *filename;
-	struct songtrk_s *t;
-	if (!exec_lookupname(o, "trackname", &trkname) ||
-	    !exec_lookupstring(o, "filename", &filename)) {
-		return 0;
-	}
-	t = song_trklookup(user_song, trkname);
-	if (t == 0) {
-		cons_err("tracksave: no such track");
-		return 0;
-	}
-	track_save(&t->track, filename);
-	return 1;
-}
-
-
-unsigned
-user_func_trackload(struct exec_s *o, struct data_s **r) {
-	char *trkname, *filename;
-	struct songtrk_s *t;
-	if (!exec_lookupname(o, "trackname", &trkname) ||  
-	    !exec_lookupstring(o, "filename", &filename)) {
-		return 0;
-	}
-	t = song_trklookup(user_song, trkname);
-	if (t == 0) {
-		cons_err("trackload: no such track");
-		return 0;
-	}
-	track_load(&t->track, filename);
-	return 1;
-}
-
-
-unsigned
-user_func_trackcut(struct exec_s *o, struct data_s **r) {
-	struct songtrk_s *t;
-	long from, amount, quant;
-	unsigned tic, len;
-	struct seqptr_s op;
-	
-	if (!exec_lookuptrack(o, "trackname", &t) ||
-	    !exec_lookuplong(o, "from", &from) ||
-	    !exec_lookuplong(o, "amount", &amount) ||
-	    !exec_lookuplong(o, "quantum", &quant)) {
-		return 0;
-	}
-	tic = song_measuretotic(user_song, from);
-	len = song_measuretotic(user_song, from + amount) - tic;
-
-	if (tic > quant/2) {
-		tic -= quant/2;
-	}
-
-	track_rew(&t->track, &op);
-	track_seek(&t->track, &op, tic);
-	track_opcut(&t->track, &op, len);
-	return 1;
-}
-
-
-unsigned
-user_func_trackblank(struct exec_s *o, struct data_s **r) {
-	struct songtrk_s *t;
-	struct track_s null;
-	struct seqptr_s tp;
-	struct evspec_s es;
-	long from, amount, quant;
-	unsigned tic, len;
-	
-	if (!exec_lookuptrack(o, "trackname", &t) ||
-	    !exec_lookuplong(o, "from", &from) ||
-	    !exec_lookuplong(o, "amount", &amount) ||
-	    !exec_lookuplong(o, "quantum", &quant) ||
-	    !exec_lookupevspec(o, "evspec", &es)) {
-		return 0;
-	}
-	tic = song_measuretotic(user_song, from);
-	len = song_measuretotic(user_song, from + amount) - tic;
-	
-	if (tic > quant/2) {
-		tic -= quant/2;
-	}
-
-	track_init(&null);
-	track_rew(&t->track, &tp);
-	track_seek(&t->track, &tp, tic);
-	track_opextract(&t->track, &tp, len, &null, &es);
-	track_done(&null);
-	return 1;
-}
-
-
-unsigned
-user_func_trackcopy(struct exec_s *o, struct data_s **r) {
-	struct songtrk_s *t, *t2;
-	struct track_s null, null2;
-	struct seqptr_s tp, tp2;
-	struct evspec_s es;
-	long from, where, amount, quant;
-	unsigned tic, tic2, len;
-	
-	if (!exec_lookuptrack(o, "trackname", &t) ||
-	    !exec_lookuplong(o, "from", &from) ||
-	    !exec_lookuplong(o, "amount", &amount) ||
-	    !exec_lookuptrack(o, "trackname2", &t2) ||
-	    !exec_lookuplong(o, "where", &where) ||
-	    !exec_lookuplong(o, "quantum", &quant) ||
-	    !exec_lookupevspec(o, "evspec", &es)) {
-		return 0;
-	}
-	tic  = song_measuretotic(user_song, from);
-	len  = song_measuretotic(user_song, from + amount) - tic;
-	tic2 = song_measuretotic(user_song, where);
-
-	if (tic > quant/2 && tic > quant/2) {
-		tic -= quant/2;
-		tic2 -= quant/2;
-	}
-
-	track_init(&null);
-	track_init(&null2);
-	track_rew(&t->track, &tp);
-	track_seek(&t->track, &tp, tic);
-	track_rew(&t2->track, &tp2);
-	track_seekblank(&t2->track, &tp2, tic2);
-	track_opextract(&t->track, &tp, len, &null, &es);
-	track_framecp(&null, &null2);
-	track_frameins(&t->track, &tp, &null);
-	track_frameins(&t2->track, &tp2, &null2);
-	track_done(&null);
-	return 1;
-}
-
-
-unsigned
-user_func_trackinsert(struct exec_s *o, struct data_s **r) {
-	char *trkname;
-	struct songtrk_s *t;
-	struct seqptr_s tp;
-	long from, amount, quant;
-	unsigned tic, len;
-	
-	if (!exec_lookupname(o, "trackname", &trkname) ||
-	    !exec_lookuplong(o, "from", &from) ||
-	    !exec_lookuplong(o, "amount", &amount) ||
-	    !exec_lookuplong(o, "quantum", &quant)) {
-		return 0;
-	}
-	t = song_trklookup(user_song, trkname);
-	if (t == 0) {
-		cons_err("trackinsert: no such track");
-		return 0;
-	}
-
-	tic = song_measuretotic(user_song, from);
-	len = song_measuretotic(user_song, from + amount) - tic;
-
-	if (tic > quant/2) {
-		tic -= quant/2;
-	}
-
-	track_rew(&t->track, &tp);
-	track_seekblank(&t->track, &tp, tic);
-	track_opinsert(&t->track, &tp, len);
-	return 1;
-}
-
-
-unsigned
-user_func_trackquant(struct exec_s *o, struct data_s **r) {
-	char *trkname;
-	struct songtrk_s *t;
-	struct seqptr_s tp;
-	long from, amount;
-	unsigned tic, len, first;
-	long quantum, rate;
-	
-	if (!exec_lookupname(o, "trackname", &trkname) ||
-	    !exec_lookuplong(o, "from", &from) ||
-	    !exec_lookuplong(o, "amount", &amount) ||
-	    !exec_lookuplong(o, "quantum", &quantum) || 
-	    !exec_lookuplong(o, "rate", &rate)) {
-		return 0;
-	}	
-	t = song_trklookup(user_song, trkname);
-	if (t == 0) {
-		cons_err("trackquant: no such track");
-		return 0;
-	}
-	if (rate > 100) {
-		cons_err("trackquant: rate must be between 0 and 100");
-		return 0;
-	}
-
-	tic = song_measuretotic(user_song, from);
-	len = song_measuretotic(user_song, from + amount) - tic;
-	
-	if (tic > quantum / 2) {
-		tic -= quantum / 2;
-		first = quantum / 2;
-	} else {
-		first = 0;
-		len -= quantum / 2;
-	}
-	
-	track_rew(&t->track, &tp);
-	track_seek(&t->track, &tp, tic);
-	track_opquantise(&t->track, &tp, first, len, (unsigned)quantum, (unsigned)rate);
-	return 1;
-}
-
-unsigned
-user_func_tracksetmute(struct exec_s *o, struct data_s **r) {
-	struct songtrk_s *t;
-	long flag;
-	
-	if (!exec_lookuptrack(o, "trackname", &t) ||
-	    !exec_lookupbool(o, "muteflag", &flag)) {
-		return 0;
-	}
-	t->mute = flag;
-	return 1;
-}
-
-unsigned
-user_func_trackgetmute(struct exec_s *o, struct data_s **r) {
-	struct songtrk_s *t;
-	
-	if (!exec_lookuptrack(o, "trackname", &t)) {
-		return 0;
-	}
-	*r = data_newlong(t->mute);
-	return 1;
-}
-
-/* -------------------------------------------------- chan stuff --- */
-
-
-unsigned
-user_func_chanlist(struct exec_s *o, struct data_s **r) {
-	struct data_s *d, *n;
-	struct songchan_s *i;
-
-	d = data_newlist(0);
-	for (i = user_song->chanlist; i != 0; i = (struct songchan_s *)i->name.next) {
-		n = data_newref(i->name.str);
-		data_listadd(d, n);
-	}
-	*r = d;
-	return 1;
-}
-
-unsigned
-user_func_channew(struct exec_s *o, struct data_s **r) {
-	char *name;
-	struct var_s *arg;
-	struct songchan_s *i;
-	unsigned dev, ch;
-	
-	if (!exec_lookupname(o, "channame", &name)) {
-		return 0;
-	}
-	i = song_chanlookup(user_song, name);
-	if (i != 0) {
-		cons_err("channew: chan already exists");
-		return 0;
-	}
-	arg = exec_varlookup(o, "channum");
-	if (!arg) {
-		dbg_puts("exec_lookupchan: no such var\n");
-		dbg_panic();
-	}
-	if (!data_list2chan(arg->data, &dev, &ch)) {
-		return 0;
-	}
-	i = song_chanlookup_bynum(user_song, dev, ch);
-	if (i != 0) {
-		cons_errs(i->name.str, "dev/chan number already used");
-		return 0;
-	}
-	
-	i = songchan_new(name);
-	if (dev > EV_MAXDEV || ch > EV_MAXCH) {
-		cons_err("channew: dev/chan number out of bounds");
-		return 0;
-	}
-	i->dev = dev;
-	i->ch = ch;
-	song_chanadd(user_song, i);
-	return 1;
-}
-
-unsigned
-user_func_chandelete(struct exec_s *o, struct data_s **r) {
-	struct songchan_s *c;
-	if (!exec_lookupchan_getref(o, "channame", &c)) {
-		return 0;
-	}
-	if (!song_chanrm(user_song, c)) {
-		return 0;
-	}
-	songchan_delete(c);
-	return 1;
-}
-
-unsigned
-user_func_chanrename(struct exec_s *o, struct data_s **r) {
-	struct songchan_s *c;
-	char *name;
-	
-	if (!exec_lookupchan_getref(o, "channame", &c) ||
-	    !exec_lookupname(o, "newname", &name)) {
-		return 0;
-	}
-	if (song_chanlookup(user_song, name)) {
-		cons_err("name already used by another chan");
-		return 0;
-	}
-	str_delete(c->name.str);
-	c->name.str = str_new(name);
-	return 1;
-}
-
-unsigned
-user_func_chanexists(struct exec_s *o, struct data_s **r) {
-	char *name;
-	struct songchan_s *i;
-	if (!exec_lookupname(o, "channame", &name)) {
-		return 0;
-	}
-	i = song_chanlookup(user_song, name);
-	*r = data_newlong(i != 0 ? 1 : 0);
-	return 1;
-}
-
-unsigned
-user_func_changetch(struct exec_s *o, struct data_s **r) {
-	struct songchan_s *i;
-	
-	if (!exec_lookupchan_getref(o, "channame", &i)) {
-		return 0;
-	}
-	*r = data_newlong(i->ch);
-	return 1;
-}
-
-unsigned
-user_func_changetdev(struct exec_s *o, struct data_s **r) {
-	struct songchan_s *i;
-	
-	if (!exec_lookupchan_getref(o, "channame", &i)) {
-		return 0;
-	}
-	*r = data_newlong(i->dev);
-	return 1;
-}
-
-unsigned
-user_func_chanconfev(struct exec_s *o, struct data_s **r) {
-	struct songchan_s *c;
-	struct seqptr_s cp;
-	struct ev_s ev;
-	
-	if (!exec_lookupchan_getref(o, "channame", &c) ||
-	    !exec_lookupev(o, "event", &ev)) {
-		return 0;
-	}
-	track_rew(&c->conf, &cp);
-	track_evlast(&c->conf, &cp);
-	track_evput(&c->conf, &cp, &ev);
-	track_opcheck(&c->conf);
-	return 1;
-}
-
-unsigned
-user_func_chaninfo(struct exec_s *o, struct data_s **r) {
-	struct songchan_s *c;
-	
-	if (!exec_lookupchan_getref(o, "channame", &c)) {
-		return 0;
-	}
-	track_output(&c->conf, user_stdout);
-	textout_putstr(user_stdout, "\n");
-	return 1;
-}
-
-/* -------------------------------------------------- chan stuff --- */
-
-
-unsigned
-user_func_sysexlist(struct exec_s *o, struct data_s **r) {
-	struct data_s *d, *n;
-	struct songsx_s *i;
-
-	d = data_newlist(0);
-	for (i = user_song->sxlist; i != 0; i = (struct songsx_s *)i->name.next) {
-		n = data_newref(i->name.str);
-		data_listadd(d, n);
-	}
-	*r = d;
-	return 1;
-}
-
-unsigned
-user_func_sysexnew(struct exec_s *o, struct data_s **r) {
-	char *name;
-	struct songsx_s *i;
-	
-	if (!exec_lookupname(o, "sysexname", &name)) {
-		return 0;
-	}
-	i = song_sxlookup(user_song, name);
-	if (i != 0) {
-		cons_err("sysexnew: sysex already exists");
-		return 0;
-	}
-	i = songsx_new(name);
-	song_sxadd(user_song, i);
-	return 1;
-}
-
-unsigned
-user_func_sysexdelete(struct exec_s *o, struct data_s **r) {
-	struct songsx_s *c;
-	if (!exec_lookupsx(o, "sysexname", &c)) {
-		return 0;
-	}
-	if (!song_sxrm(user_song, c)) {
-		return 0;
-	}
-	songsx_delete(c);
-	return 1;
-}
-
-unsigned
-user_func_sysexrename(struct exec_s *o, struct data_s **r) {
-	struct songsx_s *c;
-	char *name;
-	
-	if (!exec_lookupsx(o, "sysexname", &c) ||
-	    !exec_lookupname(o, "newname", &name)) {
-		return 0;
-	}
-	if (song_sxlookup(user_song, name)) {
-		cons_err("name already used by another sysex");
-		return 0;
-	}
-	str_delete(c->name.str);
-	c->name.str = str_new(name);
-	return 1;
-}
-
-unsigned
-user_func_sysexexists(struct exec_s *o, struct data_s **r) {
-	char *name;
-	struct songsx_s *i;
-	if (!exec_lookupname(o, "sysexname", &name)) {
-		return 0;
-	}
-	i = song_sxlookup(user_song, name);
-	*r = data_newlong(i != 0 ? 1 : 0);
-	return 1;
-}
-
-unsigned
-user_func_sysexinfo(struct exec_s *o, struct data_s **r) {
-	struct songsx_s *c;
-	
-	if (!exec_lookupsx(o, "sysexname", &c)) {
-		return 0;
-	}
-	sysexlist_dbg(&c->sx);
-	return 1;
-}
-
-
-unsigned
-user_func_sysexclear(struct exec_s *o, struct data_s **r) {
-	struct songsx_s *c;
-	struct sysex_s *x, **px;
-	struct data_s *d;
-	unsigned match;
-	
-	if (!exec_lookupsx(o, "sysexname", &c) ||
-	    !exec_lookuplist(o, "data", &d)) {
-		return 0;
-	}
-	px = &c->sx.first;
-	for (;;) {
-		if (!*px) {
-			break;
-		}
-		if (!data_matchsysex(d, *px, &match)) {
-			return 0;
-		}
-		if (match) {
-			x = *px;
-			*px = x->next;
-			if (*px == 0) {
-				c->sx.lastptr = px;
-			}
-			sysex_del(x);
-		} else {
-			px = &(*px)->next;
-		}
-	}
-	return 1;
-}
-
-
-unsigned
-user_func_sysexsetunit(struct exec_s *o, struct data_s **r) {
-	struct songsx_s *c;
-	struct sysex_s *x;
-	struct data_s *d;
-	unsigned match;
-	long unit;
-	
-	if (!exec_lookupsx(o, "sysexname", &c) ||
-	    !exec_lookuplong(o, "unit", &unit) ||
-	    !exec_lookuplist(o, "data", &d)) {
-		return 0;
-	}
-	if (unit < 0 || unit >= DEFAULT_MAXNDEVS) {
-		cons_err("sysexsetunit: unit out of range");
-		return 0;
-	}
-	for (x = c->sx.first; x != 0; x = x->next) {
-		if (!x) {
-			break;
-		}
-		if (!data_matchsysex(d, x, &match)) {
-			return 0;
-		}
-		if (match) {
-			x->unit = unit;
-		}
-	}
-	return 1;
-}
-
-unsigned
-user_func_sysexadd(struct exec_s *o, struct data_s **r) {
-	struct songsx_s *c;
-	struct sysex_s *x;
-	struct data_s *byte;
-	struct var_s *arg;
-	long unit;
-	
-	if (!exec_lookupsx(o, "sysexname", &c) || 
-	    !exec_lookuplong(o, "unit", &unit)) {
-		return 0;
-	}
-	if (unit < 0 || unit >= DEFAULT_MAXNDEVS) {
-		cons_err("sysexadd: unit out of range");
-		return 0;
-	}
-	arg = exec_varlookup(o, "data");
-	if (!arg) {
-		dbg_puts("exec_lookupev: no such var\n");
-		dbg_panic();
-	}
-	if (arg->data->type != DATA_LIST) {
-		cons_err("sysexadd: data must be a list of numbers");
-		return 0;
-	}
-	x = sysex_new(unit);
-	for (byte = arg->data->val.list; byte != 0; byte = byte->next) {
-		if (byte->type != DATA_LONG) {
-			cons_err("sysexadd: only bytes allowed as data");
-			sysex_del(x);
-			return 0;
-		}
-		if (byte->val.num < 0 || byte->val.num > 0xff) {
-			cons_err("sysexadd: data out of range");
-			sysex_del(x);
-			return 0;
-		}
-		sysex_add(x, byte->val.num);
-	}
-	if (!sysex_check(x)) {
-		cons_err("sysexadd: bad sysex format");
-		sysex_del(x);
-		return 0;
-	}
-	if (x->first) {
-		sysexlist_put(&c->sx, x);
-	} else {
-		sysex_del(x);
-	}	
-	return 1;
-}
-
-
-unsigned
-user_func_songsetcursysex(struct exec_s *o, struct data_s **r) {
-	struct songsx_s *t;
-	struct var_s *arg;
-	
-	arg = exec_varlookup(o, "sysexname");
-	if (!arg) {
-		dbg_puts("user_func_songsetcursysex: 'sysexname': no such param\n");
-		return 0;
-	}
-	if (arg->data->type == DATA_NIL) {
-		user_song->cursx = 0;
-		return 1;
-	} 
-	if (!exec_lookupsx(o, "sysexname", &t)) {
-		return 0;
-	}
-	user_song->cursx = t;
-	return 1;
-}
-
-
-unsigned
-user_func_songgetcursysex(struct exec_s *o, struct data_s **r) {
-	if (user_song->cursx) {
-		*r = data_newref(user_song->cursx->name.str);
-	} else {
-		*r = data_newnil();
-	}
-	return 1;
-}
-
-
-/* -------------------------------------------------- filt stuff --- */
-
-
-unsigned
-user_func_filtlist(struct exec_s *o, struct data_s **r) {
-	struct data_s *d, *n;
-	struct songfilt_s *i;
-
-	d = data_newlist(0);
-	for (i = user_song->filtlist; i != 0; i = (struct songfilt_s *)i->name.next) {
-		n = data_newref(i->name.str);
-		data_listadd(d, n);
-	}
-	*r = d;
-	return 1;
-}
-
-unsigned
-user_func_filtnew(struct exec_s *o, struct data_s **r) {
-	char *name;
-	struct songfilt_s *i;
-	
-	if (!exec_lookupname(o, "filtname", &name)) {
-		return 0;
-	}	
-	i = song_filtlookup(user_song, name);
-	if (i != 0) {
-		cons_err("filtnew: filt already exists");
-		return 0;
-	}
-	i = songfilt_new(name);
-	song_filtadd(user_song, i);
-	return 1;
-}
-
-unsigned
-user_func_filtdelete(struct exec_s *o, struct data_s **r) {
-	struct songfilt_s *f;
-	if (!exec_lookupfilt(o, "filtname", &f)) {
-		return 0;
-	}
-	if (!song_filtrm(user_song, f)) {
-		return 0;
-	}
-	songfilt_delete(f);
-	return 1;
-}
-
-unsigned
-user_func_filtrename(struct exec_s *o, struct data_s **r) {
-	struct songfilt_s *f;
-	char *name;
-	
-	if (!exec_lookupfilt(o, "filtname", &f) ||
-	    !exec_lookupname(o, "newname", &name)) {
-		return 0;
-	}
-	if (song_filtlookup(user_song, name)) {
-		cons_err("name already used by another filt");
-		return 0;
-	}
-	str_delete(f->name.str);
-	f->name.str = str_new(name);
-	return 1;
-}
-
-unsigned
-user_func_filtexists(struct exec_s *o, struct data_s **r) {
-	char *name;
-	struct songfilt_s *i;
-	if (!exec_lookupname(o, "filtname", &name)) {
-		return 0;
-	}
-	i = song_filtlookup(user_song, name);
-	*r = data_newlong(i != 0 ? 1 : 0);
-	return 1;
-}
-
-unsigned
-user_func_filtinfo(struct exec_s *o, struct data_s **r) {
-	struct songfilt_s *f;
-	struct rule_s *i;
-	
-	if (!exec_lookupfilt(o, "filtname", &f)) {
-		return 0;
-	}
-	for (i = f->filt.voice_rules; i != 0; i = i->next) {
-		rule_output(i, user_stdout);
-	}
-	for (i = f->filt.chan_rules; i != 0; i = i->next) {
-		rule_output(i, user_stdout);
-	}
-	for (i = f->filt.dev_rules; i != 0; i = i->next) {
-		rule_output(i, user_stdout);
-	}
-	return 1;
-}
-
-
-unsigned
-user_func_filtdevdrop(struct exec_s *o, struct data_s **r) {
-	struct songfilt_s *f;
-	long idev;
-	
-	if (!exec_lookupfilt(o, "filtname", &f) ||
-	    !exec_lookuplong(o, "indev", &idev)) {
-		return 0;
-	}
-	if (idev < 0 || idev > EV_MAXDEV) {
-	    	cons_err("device number out of range");
-		return 0;
-	}
-	filt_conf_devdrop(&f->filt, idev);
-	return 1;
-}
-
-
-
-unsigned
-user_func_filtnodevdrop(struct exec_s *o, struct data_s **r) {
-	struct songfilt_s *f;
-	long idev;
-	
-	if (!exec_lookupfilt(o, "filtname", &f) ||
-	    !exec_lookuplong(o, "indev", &idev)) {
-		return 0;
-	}
-	if (idev < 0 || idev > EV_MAXDEV) {
-	    	cons_err("device number out of range");
-		return 0;
-	}
-	filt_conf_nodevdrop(&f->filt, idev);
-	return 1;
-}
-
-
-unsigned
-user_func_filtdevmap(struct exec_s *o, struct data_s **r) {
-	struct songfilt_s *f;
-	long idev, odev;
-	
-	if (!exec_lookupfilt(o, "filtname", &f) ||
-	    !exec_lookuplong(o, "indev", &idev) ||
-	    !exec_lookuplong(o, "outdev", &odev)) {
-		return 0;
-	}
-	if (idev < 0 || idev > EV_MAXDEV ||
-	    odev < 0 || odev > EV_MAXDEV) {
-	    	cons_err("device number out of range");
-		return 0;
-	}
-	filt_conf_devmap(&f->filt, idev, odev);
-	return 1;
-}
-
-
-unsigned
-user_func_filtnodevmap(struct exec_s *o, struct data_s **r) {
-	struct songfilt_s *f;
-	long odev;
-	
-	if (!exec_lookupfilt(o, "filtname", &f) ||
-	    !exec_lookuplong(o, "outdev", &odev)) {
-		return 0;
-	}
-	if (odev < 0 || odev > EV_MAXDEV) {
-	    	cons_err("device number out of range");
-		return 0;
-	}
-	filt_conf_nodevmap(&f->filt, odev);
-	return 1;
-}
-
-
-unsigned
-user_func_filtchandrop(struct exec_s *o, struct data_s **r) {
-	struct songfilt_s *f;
-	unsigned idev, ich;
-	
-	if (!exec_lookupfilt(o, "filtname", &f) ||
-	    !exec_lookupchan_getnum(o, "inchan", &idev, &ich)) {
-		return 0;
-	}
-	filt_conf_chandrop(&f->filt, idev, ich);
-	return 1;
-}
-
-
-unsigned
-user_func_filtnochandrop(struct exec_s *o, struct data_s **r) {
-	struct songfilt_s *f;
-	unsigned idev, ich;
-	
-	if (!exec_lookupfilt(o, "filtname", &f) ||
-	    !exec_lookupchan_getnum(o, "inchan", &idev, &ich)) {
-		return 0;
-	}
-	filt_conf_nochandrop(&f->filt, idev, ich);
-	return 1;
-}
-
-unsigned
-user_func_filtchanmap(struct exec_s *o, struct data_s **r) {
-	struct songfilt_s *f;
-	unsigned idev, ich, odev, och;
-	
-	if (!exec_lookupfilt(o, "filtname", &f) ||
-	    !exec_lookupchan_getnum(o, "inchan", &idev, &ich) ||
-	    !exec_lookupchan_getnum(o, "outchan", &odev, &och)) {
-		return 0;
-	}
-	filt_conf_chanmap(&f->filt, idev, ich, odev, och);
-	return 1;
-}
-
-unsigned
-user_func_filtnochanmap(struct exec_s *o, struct data_s **r) {
-	struct songfilt_s *f;
-	unsigned odev, och;
-	
-	if (!exec_lookupfilt(o, "filtname", &f) ||
-	    !exec_lookupchan_getnum(o, "outchan", &odev, &och)) {
-		return 0;
-	}
-	filt_conf_nochanmap(&f->filt, odev, och);
-	return 1;
-}
-
-unsigned
-user_func_filtctldrop(struct exec_s *o, struct data_s **r) {
-	struct songfilt_s *f;
-	unsigned idev, ich;
-	long ictl;
-	
-	if (!exec_lookupfilt(o, "filtname", &f) ||
-	    !exec_lookupchan_getnum(o, "inchan", &idev, &ich) ||
-	    !exec_lookuplong(o, "inctl", &ictl)) {
-		return 0;
-	}
-	if (ictl < 0 || ictl > EV_MAXB0) {
-		cons_err("filtctlmap: controllers must be between 0 and 127");
-		return 0;
-	}
-	filt_conf_ctldrop(&f->filt, idev, ich, ictl);
-	return 1;
-}
-
-
-unsigned
-user_func_filtnoctldrop(struct exec_s *o, struct data_s **r) {
-	struct songfilt_s *f;
-	unsigned idev, ich;
-	long ictl;
-	
-	if (!exec_lookupfilt(o, "filtname", &f) ||
-	    !exec_lookupchan_getnum(o, "inchan", &idev, &ich) ||
-	    !exec_lookuplong(o, "inctl", &ictl)) {
-		return 0;
-	}
-	if (ictl < 0 || ictl > EV_MAXB0) {
-		cons_err("filtctlmap: controllers must be between 0 and 127");
-		return 0;
-	}
-	filt_conf_noctldrop(&f->filt, idev, ich, ictl);
-	return 1;
-}
-
-
-unsigned
-user_func_filtctlmap(struct exec_s *o, struct data_s **r) {
-	struct songfilt_s *f;
-	unsigned idev, ich, odev, och;
-	long ictl, octl;
-	
-	if (!exec_lookupfilt(o, "filtname", &f) ||
-	    !exec_lookupchan_getnum(o, "inchan", &idev, &ich) ||
-	    !exec_lookupchan_getnum(o, "outchan", &odev, &och) ||
-	    !exec_lookuplong(o, "inctl", &ictl) || 
-	    !exec_lookuplong(o, "outctl", &octl)) {
-		return 0;
-	}
-	if (ictl < 0 || ictl > EV_MAXB0 || octl < 0 || octl > EV_MAXB0) {
-		cons_err("filtctlmap: controllers must be between 0 and 127");
-		return 0;
-	}
-	filt_conf_ctlmap(&f->filt, idev, ich, odev, och, ictl, octl);
-	return 1;
-}
-
-
-unsigned
-user_func_filtnoctlmap(struct exec_s *o, struct data_s **r) {
-	struct songfilt_s *f;
-	unsigned odev, och;
-	long octl;
-	
-	if (!exec_lookupfilt(o, "filtname", &f) ||
-	    !exec_lookupchan_getnum(o, "outchan", &odev, &och) || 
-	    !exec_lookuplong(o, "outctl", &octl)) {
-		return 0;
-	}
-	if (octl < 0 || octl > EV_MAXB0) {
-		cons_err("filtctlmap: controllers must be between 0 and 127");
-		return 0;
-	}
-	filt_conf_noctlmap(&f->filt, odev, och, octl);
-	return 1;
-}
-
-unsigned
-user_func_filtkeydrop(struct exec_s *o, struct data_s **r) {
-	struct songfilt_s *f;
-	unsigned idev, ich;
-	long kstart, kend;
-	
-	if (!exec_lookupfilt(o, "filtname", &f) ||
-	    !exec_lookupchan_getnum(o, "inchan", &idev, &ich) ||
-	    !exec_lookuplong(o, "keystart", &kstart) || 
-	    !exec_lookuplong(o, "keyend", &kend)) {
-		return 0;
-	}
-	if (kstart < 0 || kstart > EV_MAXB0 || kend < 0 || kend > EV_MAXB0) {
-		cons_err("filtkeymap: notes must be between 0 and 127");
-		return 0;
-	}
-	filt_conf_keydrop(&f->filt, idev, ich, kstart, kend);
-	return 1;
-}
-
-
-unsigned
-user_func_filtnokeydrop(struct exec_s *o, struct data_s **r) {
-	struct songfilt_s *f;
-	unsigned idev, ich;
-	long kstart, kend;
-	
-	if (!exec_lookupfilt(o, "filtname", &f) ||
-	    !exec_lookupchan_getnum(o, "inchan", &idev, &ich) ||
-	    !exec_lookuplong(o, "keystart", &kstart) || 
-	    !exec_lookuplong(o, "keyend", &kend)) {
-		return 0;
-	}
-	if (kstart < 0 || kstart > EV_MAXB0 || kend < 0 || kend > EV_MAXB0) {
-		cons_err("filtkeymap: notes must be between 0 and 127");
-		return 0;
-	}
-	filt_conf_nokeydrop(&f->filt, idev, ich, kstart, kend);
-	return 1;
-}
-
-
-unsigned
-user_func_filtkeymap(struct exec_s *o, struct data_s **r) {
-	struct songfilt_s *f;
-	unsigned idev, ich, odev, och;
-	long kstart, kend, kplus;
-	
-	if (!exec_lookupfilt(o, "filtname", &f) ||
-	    !exec_lookupchan_getnum(o, "inchan", &idev, &ich) ||
-	    !exec_lookupchan_getnum(o, "outchan", &odev, &och) ||
-	    !exec_lookuplong(o, "keystart", &kstart) || 
-	    !exec_lookuplong(o, "keyend", &kend) ||
-	    !exec_lookuplong(o, "keyplus", &kplus)) {
-		return 0;
-	}
-	if (kstart < 0 || kstart > EV_MAXB0 || kend < 0 || kend > EV_MAXB0) {
-		cons_err("filtkeymap: notes must be between 0 and 127");
-		return 0;
-	}
-	if (kplus < - EV_MAXB0/2 || kplus > EV_MAXB0/2) {
-		cons_err("filtkeymap: transpose must be between -63 and 63");
-		return 0;
-	}
-	filt_conf_keymap(&f->filt, idev, ich, odev, och, kstart, kend, kplus);
-	return 1;
-}
-
-
-unsigned
-user_func_filtnokeymap(struct exec_s *o, struct data_s **r) {
-	struct songfilt_s *f;
-	unsigned odev, och;
-	long kstart, kend;
-	
-	if (!exec_lookupfilt(o, "filtname", &f) ||
-	    !exec_lookupchan_getnum(o, "outchan", &odev, &och) ||
-	    !exec_lookuplong(o, "keystart", &kstart) || 
-	    !exec_lookuplong(o, "keyend", &kend)) {
-		return 0;
-	}
-	if (kstart < 0 || kstart > EV_MAXB0 || kend < 0 || kend > EV_MAXB0) {
-		cons_err("filtkeymap: notes must be between 0 and 127");
-		return 0;
-	}
-	filt_conf_nokeymap(&f->filt, odev, och, kstart, kend);
-	return 1;
-}
-
-
-
-unsigned
-user_func_filtreset(struct exec_s *o, struct data_s **r) {
-	struct songfilt_s *f;
-	
-	if (!exec_lookupfilt(o, "filtname", &f)) {
-		return 0;
-	}
-	filt_reset(&f->filt);
-	return 1;
-}
-
-
-unsigned
-user_func_filtswapichan(struct exec_s *o, struct data_s **r) {
-	struct songfilt_s *f;
-	unsigned olddev, oldch, newdev, newch;
-	
-	if (!exec_lookupfilt(o, "filtname", &f) ||
-	    !exec_lookupchan_getnum(o, "oldchan", &olddev, &oldch) ||
-	    !exec_lookupchan_getnum(o, "newchan", &newdev, &newch)) {
-		return 0;
-	}
-	filt_conf_swapichan(&f->filt, olddev, oldch, newdev, newch);
-	return 1;
-}
-
-
-unsigned
-user_func_filtswapidev(struct exec_s *o, struct data_s **r) {
-	struct songfilt_s *f;
-	long olddev, newdev;
-	
-	if (!exec_lookupfilt(o, "filtname", &f) ||
-	    !exec_lookuplong(o, "olddev", &olddev) ||
-	    !exec_lookuplong(o, "newdev", &newdev)) {
-		return 0;
-	}
-	if (olddev < 0 || olddev > EV_MAXDEV || 
-	    newdev < 0 || newdev > EV_MAXDEV) {
-		cons_err("dev numver out of bounds");
-	}
-	filt_conf_swapidev(&f->filt, olddev, newdev);
-	return 1;
-}
-
-/* ------------------------------------------------- song stuff --- */
-
-unsigned
-user_func_songsetunit(struct exec_s *o, struct data_s **r) {	/* tics per unit note */
-	long tpu;
-	if (!exec_lookuplong(o, "tics_per_unit", &tpu)) {
-		return 0;
-	}
-	/* XXX: should check that all tracks are empty (tempo track included) */
-	if (user_song->trklist) {
-		cons_err("WARNING: unit must be changed before any tracks are created");
-	}
-	if ((tpu % DEFAULT_TPU) != 0 || tpu < DEFAULT_TPU) {
-		cons_err("unit should multiple of 96");
-		return 0;
-	}
-	user_song->tics_per_unit = tpu;
-	return 1;
-}
-
-unsigned
-user_func_songgetunit(struct exec_s *o, struct data_s **r) {	/* tics per unit note */
-	*r = data_newlong(user_song->tics_per_unit);
-	return 1;
-}
-
-
-unsigned
-user_func_songsetcurpos(struct exec_s *o, struct data_s **r) {
-	long measure;
-	
-	if (!exec_lookuplong(o, "measure", &measure)) {
-		return 0;
-	}
-	if (measure < 0) {
-		cons_err("measure cant be negative");
-		return 0;
-	}
-	user_song->curpos = measure;
-	return 1;
-}
-
-
-unsigned
-user_func_songgetcurpos(struct exec_s *o, struct data_s **r) {
-	*r = data_newlong(user_song->curpos);
-	return 1;
-}
-
-
-unsigned
-user_func_songsetcurquant(struct exec_s *o, struct data_s **r) {
-	long quantum;
-	
-	if (!exec_lookuplong(o, "quantum", &quantum)) {
-		return 0;
-	}
-	if (quantum < 0 || quantum > user_song->tics_per_unit) {
-		cons_err("quantum must be between 0 and tics_per_unit");
-		return 0;
-	}
-	user_song->curquant = quantum;
-	return 1;
-}
-
-
-unsigned
-user_func_songgetcurquant(struct exec_s *o, struct data_s **r) {
-	*r = data_newlong(user_song->curquant);
-	return 1;
-}
-
-
-
-unsigned
-user_func_songsetcurtrack(struct exec_s *o, struct data_s **r) {
-	struct songtrk_s *t;
-	struct var_s *arg;
-	
-	arg = exec_varlookup(o, "trackname");
-	if (!arg) {
-		dbg_puts("user_func_songsetcurtrack: 'trackname': no such param\n");
-		return 0;
-	}
-	if (arg->data->type == DATA_NIL) {
-		user_song->curtrk = 0;
-		return 1;
-	} 
-	if (!exec_lookuptrack(o, "trackname", &t)) {
-		return 0;
-	}
-	user_song->curtrk = t;
-	return 1;
-}
-
-
-unsigned
-user_func_songgetcurtrack(struct exec_s *o, struct data_s **r) {
-	if (user_song->curtrk) {
-		*r = data_newref(user_song->curtrk->name.str);
-	} else {
-		*r = data_newnil();
-	}
-	return 1;
-}
-
-
-unsigned
-user_func_songsetcurfilt(struct exec_s *o, struct data_s **r) {
-	struct songfilt_s *f;
-	struct var_s *arg;
-	
-	arg = exec_varlookup(o, "filtname");
-	if (!arg) {
-		dbg_puts("user_func_songsetcurfilt: 'filtname': no such param\n");
-		return 0;
-	}
-	if (arg->data->type == DATA_NIL) {
-		user_song->curfilt = 0;
-		return 1;
-	} else if (arg->data->type == DATA_REF) {
-		f = song_filtlookup(user_song, arg->data->val.ref);
-		if (!f) {
-			cons_err("no such filt");
-			return 0;
-		}
-		user_song->curfilt = f;
-		return 1;
-	}
-	return 0;
-}
-
-
-unsigned
-user_func_songgetcurfilt(struct exec_s *o, struct data_s **r) {
-	if (user_song->curfilt) {
-		*r = data_newref(user_song->curfilt->name.str);
-	} else {
-		*r = data_newnil();
-	}	
-	return 1;
-}
-
-unsigned
-user_func_songinfo(struct exec_s *o, struct data_s **r) {
-	dbg_puts("tics_per_unit=");
-	dbg_putu(user_song->tics_per_unit);
-	dbg_puts(", ");
-	dbg_puts("curpos=");
-	dbg_putu(user_song->curpos);
-	dbg_puts(", ");
-	dbg_puts("curquant=");
-	dbg_putu(user_song->curquant);
-	dbg_puts("\n");
-	return 1;
-}
-
-unsigned
-user_func_songsave(struct exec_s *o, struct data_s **r) {
-	char *filename;	
-	if (!exec_lookupstring(o, "filename", &filename)) {
-		return 0;
-	}	
-	song_save(user_song, filename);
-	return 1;
-}
-
-unsigned
-user_func_songload(struct exec_s *o, struct data_s **r) {
-	char *filename;		
-	if (!exec_lookupstring(o, "filename", &filename)) {
-		return 0;
-	}
-	song_done(user_song);
-	song_init(user_song);
-	return song_load(user_song, filename);
-}
-
-
-unsigned
-user_func_songreset(struct exec_s *o, struct data_s **r) {
-	song_done(user_song);
-	song_init(user_song);
-	return 1;
-}
-
-
-
-unsigned
-user_func_songexportsmf(struct exec_s *o, struct data_s **r) {
-	char *filename;
-	if (!exec_lookupstring(o, "filename", &filename)) {
-		return 0;
-	}	
-	return song_exportsmf(user_song, filename);
-}
-
-
-unsigned
-user_func_songimportsmf(struct exec_s *o, struct data_s **r) {
-	char *filename;
-	struct song_s *sng;
-	if (!exec_lookupstring(o, "filename", &filename)) {
-		return 0;
-	}
-	sng = song_importsmf(filename);
-	if (sng == 0) {
-		return 0;
-	}
-	song_delete(user_song);
-	user_song = sng;
-	return 1;
-}
-
-
-unsigned
-user_func_songidle(struct exec_s *o, struct data_s **r) {
-	song_idle(user_song);
-	return 1;
-}
-		
-unsigned
-user_func_songplay(struct exec_s *o, struct data_s **r) {
-	song_play(user_song);
-	return 1;
-}
-
-unsigned
-user_func_songrecord(struct exec_s *o, struct data_s **r) {
-	song_record(user_song);
-	return 1;
-}
-
-
-unsigned
-user_func_songsettempo(struct exec_s *o, struct data_s **r) {	/* beat per minute*/
-	long tempo, measure;
-	struct ev_s ev;
-	struct seqptr_s mp;
-	unsigned bpm, tpb;
-	unsigned long dummy;
-	unsigned pos;
-	
-	if (!exec_lookuplong(o, "measure", &measure) ||
-	    !exec_lookuplong(o, "beats_per_minute", &tempo)) {
-		return 0;
-	}	
-	if (tempo < 40 || tempo > 240) {
-		cons_err("tempo must be between 40 and 240 beats per measure");
-		return 0;
-	}
-	pos = track_opfindtic(&user_song->meta, measure);
-	track_optimeinfo(&user_song->meta, pos, &dummy, &bpm, &tpb);
-	
-	track_rew(&user_song->meta, &mp);
-	track_seekblank(&user_song->meta, &mp, pos);
-	
-	ev.cmd = EV_TEMPO;
-	ev.data.tempo.usec24 = 60L * 24000000L / (tempo * tpb);
-	
-	track_evlast(&user_song->meta, &mp);
-	track_evput(&user_song->meta, &mp, &ev);
-	track_opcheck(&user_song->meta);
-	return 1;
-}
-
-unsigned
-user_func_songtimeins(struct exec_s *o, struct data_s **r) {
-	long num, den, amount, from;
-	struct ev_s ev;
-	struct seqptr_s mp;
-	unsigned pos, tics, save_bpm, save_tpb;
-	unsigned long dummy_usec24;
-	
-	if (!exec_lookuplong(o, "from", &from) ||
-	    !exec_lookuplong(o, "amount", &amount) ||
-	    !exec_lookuplong(o, "numerator", &num) || 
-	    !exec_lookuplong(o, "denominator", &den)) {
-		return 0;
-	}
-	if (den != 2 && den != 4 && den != 8) {
-		cons_err("only 2, 4 and 8 are supported as denominator");
-		return 0;
-	}
-	if (amount == 0) {
-		return 1;
-	}
-
-	ev.cmd = EV_TIMESIG;
-	ev.data.sign.beats = num;
-	ev.data.sign.tics = user_song->tics_per_unit / den;
-
-	pos = track_opfindtic(&user_song->meta, from);
-	tics = ev.data.sign.beats * ev.data.sign.tics * amount;
-
-	track_optimeinfo(&user_song->meta, pos, &dummy_usec24, &save_bpm, &save_tpb);
-	
-	track_rew(&user_song->meta, &mp);
-	track_seekblank(&user_song->meta, &mp, pos);
-	track_opinsert(&user_song->meta, &mp, tics);
-	
-	if (ev.data.sign.beats != save_bpm || ev.data.sign.tics != save_tpb) {
-		track_rew(&user_song->meta, &mp);
-		track_seek(&user_song->meta, &mp, pos);
-		track_evput(&user_song->meta, &mp, &ev);
-	
-		ev.cmd = EV_TIMESIG;
-		ev.data.sign.beats = save_bpm;
-		ev.data.sign.tics = save_tpb;
-		track_seek(&user_song->meta, &mp, tics);
-		track_evput(&user_song->meta, &mp, &ev);
-	}
-	return 1;
-}
-
-unsigned
-user_func_songtimerm(struct exec_s *o, struct data_s **r) {
-	long amount, from;
-	struct ev_s ev;
-	struct seqptr_s mp;
-	unsigned pos, tics, save_bpm, save_tpb, bpm, tpb;
-	unsigned long save_usec24, usec24;
-	
-	if (!exec_lookuplong(o, "from", &from) ||
-	    !exec_lookuplong(o, "amount", &amount)) {
-		return 0;
-	}
-	if (amount == 0) {
-		return 1;
-	}
-
-	pos = track_opfindtic(&user_song->meta, from);
-	tics = track_opfindtic(&user_song->meta, from + amount) - pos;
-	track_optimeinfo(&user_song->meta, pos, &save_usec24, &save_bpm, &save_tpb);
-		
-	track_rew(&user_song->meta, &mp);
-	if (track_seek(&user_song->meta, &mp, pos)) {
-		return 1;
-	}
-	track_opcut(&user_song->meta, &mp, tics);
-	track_optimeinfo(&user_song->meta, pos, &usec24, &bpm, &tpb);
-	
-	if (bpm != save_bpm || tpb != save_tpb) {
-		ev.cmd = EV_TIMESIG;
-		ev.data.sign.beats = save_bpm;
-		ev.data.sign.tics = save_tpb;
-		track_rew(&user_song->meta, &mp);
-		track_seek(&user_song->meta, &mp, pos);
-		track_evput(&user_song->meta, &mp, &ev);
-	}
-	/* 
-	 * XXX: other timesig events should be removed, 
-	 * but we don't have a routine for this,
-	 * so we use track_opcheck 
-	 */
-	track_opcheck(&user_song->meta);
-	return 1;
-}
-
-
-unsigned
-user_func_songtimeinfo(struct exec_s *o, struct data_s **r) {
-	track_output(&user_song->meta, user_stdout);
-	textout_putstr(user_stdout, "\n");
-	return 1;
-}
-
-
 unsigned
 user_func_metroswitch(struct exec_s *o, struct data_s **r) {
 	long onoff;
@@ -2224,7 +563,6 @@ user_func_metroswitch(struct exec_s *o, struct data_s **r) {
 	user_song->metro_enabled = onoff;
 	return 1;
 }
-
 
 unsigned
 user_func_metroconf(struct exec_s *o, struct data_s **r) {
@@ -2241,9 +579,6 @@ user_func_metroconf(struct exec_s *o, struct data_s **r) {
 	user_song->metro_lo = evlo;
 	return 1;
 }
-
-
-
 
 unsigned
 user_func_shut(struct exec_s *o, struct data_s **r) {
@@ -2319,142 +654,6 @@ user_func_sendraw(struct exec_s *o, struct data_s **r) {
 	return 1;
 }
 
-unsigned
-user_func_devlist(struct exec_s *o, struct data_s **r) {
-	struct data_s *d, *n;
-	struct mididev_s *i;
-
-	d = data_newlist(0);
-	for (i = mididev_list; i != 0; i = i->next) {
-		n = data_newlong(i->unit);
-		data_listadd(d, n);
-	}
-	*r = d;
-	return 1;
-}
-
-
-unsigned
-user_func_devattach(struct exec_s *o, struct data_s **r) {
-	long unit;
-	char *path;
-	if (!exec_lookuplong(o, "unit", &unit) || 
-	    !exec_lookupstring(o, "path", &path)) {
-		return 0;
-	}
-	return mididev_attach(unit, path, 1, 1);
-}
-
-unsigned
-user_func_devdetach(struct exec_s *o, struct data_s **r) {
-	long unit;
-	if (!exec_lookuplong(o, "unit", &unit)) {
-		return 0;
-	}
-	return mididev_detach(unit);
-}
-
-unsigned
-user_func_devsetmaster(struct exec_s *o, struct data_s **r) {
-	struct var_s *arg;
-	long unit;
-	
-	arg = exec_varlookup(o, "unit");
-	if (!arg) {
-		dbg_puts("user_func_devsetmaster: no such var\n");
-		dbg_panic();
-	}
-	if (arg->data->type == DATA_NIL) {
-		mididev_master = 0;
-		return 0;
-	} else if (arg->data->type == DATA_LONG) {
-		unit = arg->data->val.num;
-		if (unit < 0 || unit >= DEFAULT_MAXNDEVS || !mididev_byunit[unit]) {
-			cons_err("no such device");
-			return 0;		
-		}
-		mididev_master = mididev_byunit[unit];
-		return 1;
-	}
-	
-	cons_err("bad argument type for 'unit'");
-	return 0;
-}
-
-
-unsigned
-user_func_devgetmaster(struct exec_s *o, struct data_s **r) {
-	if (mididev_master) {
-		*r = data_newlong(mididev_master->unit);
-	} else {
-		*r = data_newnil();
-	}
-	return 1;
-}
-
-unsigned
-user_func_devsendrt(struct exec_s *o, struct data_s **r) {
-	long unit, sendrt;
-
-	if (!exec_lookuplong(o, "unit", &unit) || 
-	    !exec_lookupbool(o, "sendrt", &sendrt)) {
-		return 0;
-	}
-	if (unit < 0 || unit >= DEFAULT_MAXNDEVS || !mididev_byunit[unit]) {
-		cons_err("no such device");
-		return 0;		
-	}
-	mididev_byunit[unit]->sendrt = sendrt;
-	return 1;
-}
-
-
-unsigned
-user_func_devticrate(struct exec_s *o, struct data_s **r) {
-	long unit, tpu;
-	
-	if (!exec_lookuplong(o, "unit", &unit) || 
-	    !exec_lookuplong(o, "tics_per_unit", &tpu)) {
-		return 0;
-	}
-	if (unit < 0 || unit >= DEFAULT_MAXNDEVS || !mididev_byunit[unit]) {
-		cons_err("no such device");
-		return 0;		
-	}
-	if (tpu < DEFAULT_TPU || (tpu % DEFAULT_TPU)) {
-		cons_err("device tpu must be multiple of 96");
-		return 0;
-	}
-	mididev_byunit[unit]->ticrate = tpu;
-	return 1;
-}
-
-
-unsigned
-user_func_devinfo(struct exec_s *o, struct data_s **r) {
-	long unit;
-	
-	if (!exec_lookuplong(o, "unit", &unit)) {
-		return 0;
-	}
-	if (unit < 0 || unit >= DEFAULT_MAXNDEVS || !mididev_byunit[unit]) {
-		cons_err("no such device");
-		return 0;		
-	}
-	user_printstr("device = ");
-	user_printlong(unit);
-	if (mididev_master == mididev_byunit[unit]) {
-		user_printstr(", master");
-	}
-	user_printstr(", tics_per_unit = ");
-	user_printlong(mididev_byunit[unit]->ticrate);
-	if (mididev_byunit[unit]->sendrt) {
-		user_printstr(", sending real-time events");
-	}
-	user_printstr("\n");
-	return 1;
-}	
-
 
 void
 user_mainloop(void) {
@@ -2463,7 +662,6 @@ user_mainloop(void) {
 	struct node_s *root;
 	struct data_s *data;
 	
-	user_stdout = textout_new(0);
 	user_song = song_new();
 	exec = exec_new();
 
@@ -2488,6 +686,8 @@ user_mainloop(void) {
 			name_newarg("trackname",
 			name_newarg("newname", 0)));
 	exec_newbuiltin(exec, "trackexists", user_func_trackexists, 
+			name_newarg("trackname", 0));
+	exec_newbuiltin(exec, "trackinfo", user_func_trackinfo, 
 			name_newarg("trackname", 0));
 	exec_newbuiltin(exec, "trackaddev", user_func_trackaddev,
 			name_newarg("trackname", 
@@ -2755,7 +955,7 @@ user_mainloop(void) {
 			name_newarg("unit", 0));
 
 	if (!user_flag_norc) {
-		user_parsefile(exec, user_rcname());	/* parse rc file */
+		exec_runfile(exec, user_rcname());	/* parse rc file */
 	}
 
 	parse = parse_new(0);
@@ -2791,6 +991,5 @@ user_mainloop(void) {
 	exec_delete(exec);
 	song_delete(user_song);
 	user_song = 0;	
-	textout_delete(user_stdout);
 }
 

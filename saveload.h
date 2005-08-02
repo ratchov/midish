@@ -39,6 +39,7 @@ struct rule_s;
 struct songchan_s;
 struct songtrk_s;
 struct songfilt_s;
+struct songsx_s;
 struct song_s;
 
 void ev_output(struct ev_s *e, struct textout_s *f);
@@ -48,6 +49,7 @@ void filt_output(struct filt_s *o, struct textout_s *f);
 void songtrk_output(struct songtrk_s *o, struct textout_s *f);
 void songchan_output(struct songchan_s *o, struct textout_s *f);
 void songfilt_output(struct songfilt_s *o, struct textout_s *f);
+void songsx_output(struct songsx_s *o, struct textout_s *f);
 void song_output(struct song_s *o, struct textout_s *f);
 
 

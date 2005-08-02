@@ -30,7 +30,7 @@
 
 /*
  * simple string manupulation functions. A NULL pointer
- * is considered as a "non-sense" string, and can be used
+ * is considered as a "non-sense" string, and cannot be used
  * with str_new() and str_delete(). Non-sense strings
  * cannot be compared and have not length
  */
@@ -63,7 +63,7 @@ str_new(char *val) {
 
 	/*
 	 * free a string allocated with str_new()
-	 * can't used a NULL pointer
+	 * can't be used a NULL pointer
 	 */
 
 void

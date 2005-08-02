@@ -114,7 +114,7 @@ unsigned parse_debug = 0;
 
 void
 parse_error(struct parse_s *o, char *msg) {
-	cons_erruu(o->lex.line + 1, o->lex.col + 1, msg);	
+	cons_erruu(o->lex.line + 1, o->lex.col + 1, msg);
 	for (;;) {
 		if (o->lex.id == TOK_EOF) {
 			parse_ungetsym(o);

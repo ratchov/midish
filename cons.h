@@ -37,7 +37,9 @@ int  cons_getc(char *);
 
 void cons_err(char *mesg);
 void cons_errs(char *s, char *mesg);
-void cons_erru(unsigned long u, char *str);
-void cons_erruu(unsigned long u0, unsigned long u1, char *str);
+void cons_erru(unsigned long u, char *mesg);
+void cons_errss(char *s0, char *s1, char *mesg);
+void cons_errsu(char *s, unsigned long u, char *mesg);
+void cons_erruu(unsigned long u0, unsigned long u1, char *mesg);
 
 #endif /* MIDISH_CONS_H */

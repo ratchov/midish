@@ -437,11 +437,16 @@ smf_putchan(struct smf_s *o, unsigned *used, struct song_s *s, struct songchan_s
 void
 smf_putsysex(struct smf_s *o, unsigned *used, struct sysex_s *sx) {
 	struct chunk_s *c;
-	unsigned i;
+	unsigned i, first;
 		
+	first = 1;
 	for (c = sx->first; c != 0; c = c->next) {
 		for (i = 0; i < c->used; i++) {
-			smf_putc(o, used, c->data[i]);
+			if (first) {
+				first = 0;
+			} else {
+				smf_putc(o, used, c->data[i]);
+			}
 		}
 	}
 }
@@ -454,7 +459,7 @@ smf_putsx(struct smf_s *o, unsigned *used, struct song_s *s, struct songsx_s *so
 	for (sx = songsx->sx.first; sx != 0; sx = sx->next) {
 		sysexused = 0;
 		smf_putvar(o, used, 0);
-		smf_putc(o, used, 0xf7);
+		smf_putc(o, used, 0xf0);
 		smf_putsysex(o, &sysexused, sx);
 		smf_putvar(o, used, sysexused);
 		smf_putsysex(o, used, sx);
@@ -670,14 +675,6 @@ smf_gettrack(struct smf_s *o, struct song_s *s, struct songtrk_s *t) {
 }
 
 	/*
-	 * fix song imported from format 0 smf 
-	 */
-
-void
-song_fix0(struct song_s *o) {
-}
-
-	/*
 	 * fix song imported from format 1 smf 
 	 */
 
@@ -714,13 +711,24 @@ song_fix1(struct song_s *o) {
 	}
 }
 
+	/*
+	 * fix song imported from format 0 smf 
+	 */
+
+void
+song_fix0(struct song_s *o) {
+	song_fix1(o);
+}
+
+#define MAXTRACKNAME 100
 
 struct song_s *
 song_importsmf(char *filename) {
 	struct song_s *o;
 	struct songtrk_s *t;
 	unsigned format, ntrks, timecode, i;
-	char trackname[100];	
+	char trackname[MAXTRACKNAME];	
+	struct songsx_s *sx;
 	struct smf_s f;
 	
 	/*
@@ -754,9 +762,12 @@ song_importsmf(char *filename) {
 	
 	o = song_new();
 	o->tics_per_unit = timecode * 4;
+	sx = songsx_new("sx");
+	song_sxadd(o, sx);
+	o->cursx = sx;
 	
 	for (i = 0; i < ntrks; i++) {
-		sprintf(trackname, "trk%02u", i);
+		snprintf(trackname, MAXTRACKNAME, "trk%02u", i);
 		t = songtrk_new(trackname);
 		song_trkadd(o, t);
 		if (!smf_gettrack(&f, o, t)) {

@@ -125,7 +125,7 @@ unsigned
 node_exec(struct node_s *o, struct exec_s *x, struct data_s **r) {
 	unsigned result;
 	if (x->depth == EXEC_MAXDEPTH) {
-		cons_err("too many nested calls");
+		cons_err("too many nested operations");
 		return RESULT_ERR;
 	}
 	*r = 0;
@@ -248,7 +248,7 @@ node_exec_var(struct node_s *o, struct exec_s *x, struct data_s **r) {
 	
 	v = exec_varlookup(x, o->data->val.ref);
 	if (v == 0) {
-		cons_errs(o->data->val.ref, "no such variable");
+		cons_errss(x->procname, o->data->val.ref, "no such variable");
 		return RESULT_ERR;
 	}
 	*r = data_newnil();
@@ -273,6 +273,7 @@ node_exec_call(struct node_s *o, struct exec_s *x, struct data_s **r) {
 	struct var_s  **oldlocals, *newlocals;
 	struct name_s *argn;
 	struct node_s *argv;
+	char *procname_save;
 	unsigned result;
 	
 	newlocals = 0;
@@ -302,6 +303,8 @@ node_exec_call(struct node_s *o, struct exec_s *x, struct data_s **r) {
 	}	
 	oldlocals = x->locals;
 	x->locals = &newlocals;
+	procname_save = x->procname;
+	x->procname = p->name.str;
 	if (node_exec(p->code, x, r) != RESULT_ERR) {
 		if (*r == 0) {			/* always return something */
 			*r = data_newnil();
@@ -309,6 +312,7 @@ node_exec_call(struct node_s *o, struct exec_s *x, struct data_s **r) {
 		result = RESULT_OK;
 	}
 	x->locals = oldlocals;
+	x->procname = procname_save;
 finish:
 	var_empty(&newlocals);
 	return result;
@@ -346,7 +350,7 @@ node_exec_for(struct node_s *o, struct exec_s *x, struct data_s **r) {
 		return RESULT_ERR;
 	}
 	if (list->type != DATA_LIST) {
-		cons_err("argument to 'for' must be a list");
+		cons_errs(x->procname, "argument to 'for' must be a list");
 		return RESULT_ERR;
 	}
 	v = exec_varlookup(x, o->data->val.ref);

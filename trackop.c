@@ -382,7 +382,7 @@ track_opquantise(struct track_s *o, struct seqptr_s *p,
 }
 
 	/*
-	 * extracts all frames from a track
+	 * extract all frames from a track
 	 * begging at the current position during
 	 * 'len' tics.
 	 */
@@ -421,7 +421,7 @@ track_opextract(struct track_s *o, struct seqptr_s *p,
 
 
 	/* 
-	 * cuts a piece of the track (events + blank space)
+	 * cut a piece of the track (events and blank space)
 	 */
 	
 
@@ -472,7 +472,7 @@ track_opcut(struct track_s *o, struct seqptr_s *p, unsigned len) {
 }
 
 	/*
-	 * insert blank space at the giver position
+	 * insert blank space at the given position
 	 */
 
 void
@@ -509,6 +509,10 @@ track_opinsert(struct track_s *o, struct seqptr_s *p, unsigned len) {
 	track_opcheck(o);
 }
 
+	/*
+	 * set the chan (dev/midichan pair) of
+	 * all voice events
+	 */
 
 void
 track_opsetchan(struct track_s *o, unsigned ch, unsigned dev) {
@@ -572,6 +576,10 @@ track_opfindtic(struct track_s *o, unsigned m0) {
 			track_evget(o, &op, &ev);
 			if (ev.cmd == EV_TIMESIG) {
 				if (delta != 0) {
+					/* 
+					 * XXX: may happen with bogus midi 
+					 * files 
+					 */
 					dbg_puts("track_opfindtic: EV_TIMESIG in a measure\n");
 					dbg_panic();
 				}
@@ -580,20 +588,14 @@ track_opfindtic(struct track_s *o, unsigned m0) {
 			}
 		}
 	}
-	/*
-	dbg_puts("track_opfindtic: pos=");
-	dbg_putu(pos);
-	dbg_puts("\n");
-	*/
 	return pos;
 }
 
 	/*
-	 * determines the tempo and the
-	 * time signature at a givent position (in tics)
+	 * determine the tempo and the
+	 * time signature at a given position (in tics)
 	 * (the whole tic is scanned)
 	 */
-
 
 void
 track_optimeinfo(struct track_s *o, unsigned pos, unsigned long *usec24, unsigned *bpm, unsigned *tpb) {
@@ -604,6 +606,7 @@ track_optimeinfo(struct track_s *o, unsigned pos, unsigned long *usec24, unsigne
 	tic = 0;
 	track_rew(o, &op);
 	
+	/* use default midi settings */
 	*tpb = DEFAULT_TPB;
 	*bpm = DEFAULT_BPM;
 	*usec24 = TEMPO_TO_USEC24(DEFAULT_TEMPO, *tpb);
@@ -628,17 +631,5 @@ track_optimeinfo(struct track_s *o, unsigned pos, unsigned long *usec24, unsigne
 			}
 		}
 	}
-	/*
-	dbg_puts("track_optimeinfo: ");
-	dbg_putu(tic);
-	dbg_puts(" tempo=");
-	dbg_putu(*usec24);
-	dbg_puts(" bpm=");
-	dbg_putu(*bpm);
-	dbg_puts(" tpb=");
-	dbg_putu(*tpb);
-	dbg_puts("\n");
-	*/
 }
-
 
