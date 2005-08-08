@@ -151,9 +151,11 @@ rmidi_inputcb(struct rmidi_s *o, unsigned char *buf, unsigned count) {
 				sysex_add(o->isysex, data);
 				break;
 			case MIDI_SYSEXSTOP:
-				sysex_add(o->isysex, data);
-				mux_sysexcb(o->mididev.unit, o->isysex);
-				o->isysex = 0;
+				if (o->isysex) {
+					sysex_add(o->isysex, data);
+					mux_sysexcb(o->mididev.unit, o->isysex);
+					o->isysex = 0;
+				}
 				break;
 			default:
 				if (o->isysex) {

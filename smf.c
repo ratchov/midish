@@ -34,6 +34,7 @@
 #include <string.h>
 
 #include "dbg.h"
+#include "sysex.h"
 #include "track.h"
 #include "trackop.h"
 #include "song.h"
@@ -536,12 +537,38 @@ song_exportsmf(struct song_s *o, char *filename) {
 /* ------------------------------------------------------- import --- */
 
 
+	/* 
+	 * parse '0xF0 varlen data data ... data 0xF7'
+	 */
+
+unsigned
+smf_getsysex(struct smf_s *o, struct sysex_s *sx) {
+	unsigned i, length, c;
+	
+	if (!smf_getvar(o, &length)) {
+		return 0;
+	}
+	for (i = 0; i < length; i++) {
+		if (!smf_getc(o, &c)) {
+			return 0;
+		}
+		sysex_add(sx, c);
+	}
+	return 1;
+}
+
+
+	/*
+	 * parse a track 'varlen event varlen event ... varlen event'
+	 */
+
 unsigned
 smf_gettrack(struct smf_s *o, struct song_s *s, struct songtrk_s *t) {
 	unsigned delta, i, status, type, length, abspos;
 	unsigned tempo, num, den, dummy;
 	struct seqptr_s tp;
 	struct ev_s ev;
+	struct sysex_s *sx;
 	unsigned c;
 	
 	if (!smf_getheader(o, smftype_track)) {
@@ -617,10 +644,9 @@ smf_gettrack(struct smf_s *o, struct song_s *s, struct songtrk_s *t) {
 					}
 				}
 			}
-		} else if (c == 0xf0 || c == 0xf7) {
-			/*
-			cons_err("0xF0 and 0xF7 event not implemented");
-			*/
+		} else if (c == 0xf7) {
+			/* raw data */
+			cons_err("raw data (status = 0xF7) not implemented");
 			status = 0;
 			ev.cmd = 0;
 			if (!smf_getvar(o, &length)) {
@@ -630,7 +656,27 @@ smf_gettrack(struct smf_s *o, struct song_s *s, struct songtrk_s *t) {
 				if (!smf_getc(o, &c)) {
 					return 0;
 				}
-			}			
+			}
+		} else if (c == 0xf0) {
+			/* sys ex */
+			status = 0;
+			ev.cmd = 0;
+			sx = sysex_new(0);
+			sysex_add(sx, 0xf0);
+			if (!smf_getsysex(o, sx)) {
+				sysex_del(sx);
+				return 0;
+			}				
+			if (sysex_check(sx)) {
+				sysexlist_put(&s->sxlist->sx, sx);
+			} else {
+				cons_err("corrupted sysex message, ignored");
+				/*
+				sysex_dbg(sx);
+				dbg_puts("\n");
+				*/
+				sysex_del(sx);
+			}
 		} else if (c >= 0x80 && c < 0xf0) {
 			status = c;
 			if (!smf_getc(o, &c)) {
@@ -761,7 +807,7 @@ song_importsmf(char *filename) {
 	}
 	
 	o = song_new();
-	o->tics_per_unit = timecode * 4;
+	o->tics_per_unit = timecode * 4;   /* timecode = tics per quarter */
 	sx = songsx_new("sx");
 	song_sxadd(o, sx);
 	o->cursx = sx;
@@ -781,6 +827,9 @@ song_importsmf(char *filename) {
 	} else if (format == 1) {
 		song_fix1(o);
 	}
+	
+	
+	/* TODO: move sysex messages into separate songsx */
 	
 	return o;
 	

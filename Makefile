@@ -63,7 +63,7 @@ parse.o:	parse.c dbg.h textio.h lex.h data.h parse.h node.h cons.h
 pool.o:		pool.c dbg.h pool.h
 rmidi.o:	rmidi.c dbg.h default.h mdep.h ev.h sysex.h mux.h rmidi.h mididev.h
 saveload.o:	saveload.c dbg.h name.h str.h song.h track.h ev.h default.h filt.h sysex.h parse.h lex.h textio.h saveload.h trackop.h
-smf.o:		smf.c dbg.h track.h ev.h default.h trackop.h song.h name.h str.h filt.h sysex.h cons.h smf.h
+smf.o:		smf.c dbg.h track.h ev.h default.h trackop.h song.h name.h str.h filt.h sysex.h cons.h smf.h sysex.h
 song.o:		song.c dbg.h mux.h track.h ev.h default.h trackop.h filt.h song.h name.h str.h sysex.h cons.h
 str.o:		str.c dbg.h str.h
 sysex.o:	sysex.c dbg.h sysex.h default.h pool.h
