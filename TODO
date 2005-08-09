@@ -1,13 +1,6 @@
-- cleanup {track,chan,filt,sysex,song}info 
+- cleanup/implement {track,chan,filt,sysex,song}info 
   do we need them? isn't it better to give the user
   primitives and to let him/her define his/her own info
   functions ?
 
 - (difficult) implement undo-stack
-
-- (easy) create a tempo factor for recording, is it necessary ?
-
-- (difficult) when recording, what to do with data recieved
-  before the first EV_TIC? shold we record them on the track,
-  at position number 0? (songrecord must be able to record
-  a song from an ext. sequencer as-is).

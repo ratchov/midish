@@ -802,7 +802,7 @@ song_recordcb(void *addr, struct ev_s *ev) {
 		if (!EV_ISVOICE(ev)) {
 			break;
 		}
-		if (phase == MUX_NEXT || phase == MUX_FIRST) {
+		if (phase == MUX_START || phase == MUX_NEXT || phase == MUX_FIRST) {
 			track_evput(&o->rec, &o->recptr, ev);
 		}
 		mux_putev(ev);
