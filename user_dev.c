@@ -29,7 +29,7 @@
  */
 
 /*
- * implements devXXX built-in functions
+ * implements devxxx built-in functions
  * available through the interpreter
  */
 

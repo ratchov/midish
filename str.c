@@ -109,8 +109,7 @@ str_eq(char *s1, char *s2) {
 		}
 		s1++;
 		s2++;
-	}	
-	return 1;
+	}
 }
 
 unsigned
@@ -121,4 +120,3 @@ str_len(char *s) {
 	}
 	return n;
 }
-

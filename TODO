@@ -3,20 +3,11 @@
   primitives and to let him/her define his/her own info
   functions ?
 
-- implement "songinfo", as something similar de 'proc l'
-  but in user_song.c
-
-- fix sysex doc (raw data -> system exclusive)
-
-- add sysex import from smf and clean up export to smf
-
-- add 'song_debug' flag and disable play/rec/idle messages
-
 - (difficult) implement undo-stack
 
 - (easy) create a tempo factor for recording, is it necessary ?
 
-- (difficult) when recording, what to do with datas recieved
+- (difficult) when recording, what to do with data recieved
   before the first EV_TIC? shold we record them on the track,
   at position number 0? (songrecord must be able to record
   a song from an ext. sequencer as-is).

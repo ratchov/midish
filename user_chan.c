@@ -29,7 +29,7 @@
  */
 
 /*
- * implements chanXXX built-in functions
+ * implements chanxxx built-in functions
  * available through the interpreter
  */
 

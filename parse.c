@@ -106,7 +106,7 @@
 #include "parse.h"
 #include "node.h"
 
-#include "cons.h"	/* cons_errXXX */
+#include "cons.h"	/* cons_errxxx */
 
 unsigned parse_debug = 0;
 

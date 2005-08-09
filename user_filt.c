@@ -29,7 +29,7 @@
  */
 
 /*
- * implements filtXXX built-in functions
+ * implements filtxxx built-in functions
  * available through the interpreter
  */
 

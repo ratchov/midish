@@ -55,9 +55,6 @@
 
 #define MIDI_BUFSIZE	1024
 
-unsigned char mdep_midibuf[MIDI_BUFSIZE];
-struct timeval mdep_tv;
-unsigned mdep_lineused;
 
 void
 mux_mdep_init(void) {
@@ -70,10 +67,6 @@ mux_mdep_init(void) {
 		} else {
 			RMIDI(i)->mdep.dying = 0;
 		}		
-	}
-	if (gettimeofday(&mdep_tv, 0) < 0) {
-		perror("mux_mdep_init: gettimeofday failed\n");
-		exit(1);
 	}
 }
 
@@ -91,12 +84,14 @@ mux_mdep_done(void) {
 
 void
 mux_run(void) {
-	int ifds, res, consfd;
-	struct timeval tv;
+	nfds_t ifds;
+	int res, consfd;
+	struct timeval tv, tv_last;
 	struct pollfd fds[DEFAULT_MAXNDEVS + 1];
 	struct mididev_s *dev, *index2dev[DEFAULT_MAXNDEVS];
+	static unsigned char midibuf[MIDI_BUFSIZE];
 	static char conspath[] = "/dev/tty";
-	static char waitmsg[] = "\r\npress enter to finish\n";
+	static char waitmsg[] = "press enter to finish\n";
 	static char stoppedmsg[] = "\r\n";
 	unsigned long delta_usec;
 	unsigned i;
@@ -122,8 +117,13 @@ mux_run(void) {
 		goto bad2;
 	}
 	
+	if (gettimeofday(&tv_last, 0) < 0) {
+		perror("mux_run: initial gettimeofday() failed\n");
+		exit(1);
+	}
+
 	for (;;) {
-		res = poll(fds, ifds + 1, 1);
+		res = poll(fds, ifds + 1, 1); 		/* 1ms timeout */
 		if (res < 0) {
 			perror("mux_run: poll failed");
 			goto bad2;
@@ -132,12 +132,12 @@ mux_run(void) {
 		for (i = 0; i < ifds; i++) {
 			if (fds[i].revents & POLLIN) {
 				dev = index2dev[i];
-				res = read(fds[i].fd, mdep_midibuf, MIDI_BUFSIZE);
+				res = read(fds[i].fd, midibuf, MIDI_BUFSIZE);
 				if (res < 0) {
 					perror(RMIDI(dev)->mdep.path);
 					RMIDI(dev)->mdep.dying = 1;
 				} else {
-					rmidi_inputcb(RMIDI(dev), mdep_midibuf, (unsigned)res);
+					rmidi_inputcb(RMIDI(dev), midibuf, res);
 				}
 			}
 		}
@@ -151,9 +151,9 @@ mux_run(void) {
 		 * number of micro-seconds between now
 		 * and the last timeout of poll()
 		 */
-		delta_usec = 1000000 * (tv.tv_sec - mdep_tv.tv_sec);
-		delta_usec += tv.tv_usec - mdep_tv.tv_usec;
-		mdep_tv = tv;
+		delta_usec = 1000000 * (tv.tv_sec - tv_last.tv_sec);
+		delta_usec += tv.tv_usec - tv_last.tv_usec;
+		tv_last = tv;
 
 		/*
 		 * update the current position, 
@@ -198,8 +198,10 @@ rmidi_mdep_done(struct rmidi_s *o) {
 
 void
 rmidi_flush(struct rmidi_s *o) {
+	int res;
 	if (!RMIDI(o)->mdep.dying) {
-		if (write(o->mdep.fd, o->obuf, o->oused) != o->oused) {
+		res = write(o->mdep.fd, o->obuf, o->oused);
+		if (res < 0 || (unsigned)res != o->oused) {
 			perror(RMIDI(o)->mdep.path);
 			RMIDI(o)->mdep.dying = 1;
 		}

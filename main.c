@@ -48,7 +48,7 @@ struct song_s song;
 
 int
 main(int argc, char *argv[]) {
-	unsigned i;
+	int i;
 	
 	for (i = 1; i < argc; i++) {
 		if (str_eq(argv[i], "-norc")) {

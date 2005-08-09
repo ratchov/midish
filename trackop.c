@@ -366,8 +366,8 @@ track_opquantise(struct track_s *o, struct seqptr_s *p,
 		} else {
 			ofs = ((quantum - remaind) * rate + 99) / 100;
 		}
-		if (delta + ofs < 0) {
-			dbg_puts("track_opquantise: delta + ofs < 0\n");
+		if (ofs < 0 && delta < (unsigned)(-ofs)) { 
+			dbg_puts("track_opquantise: delta < ofs\n");
 			dbg_panic();
 		}
 		track_seekblank(&ctls, &cp, delta + ofs);

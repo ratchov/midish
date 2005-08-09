@@ -29,13 +29,16 @@
  */
 
 #include "dbg.h"
+#include "mididev.h"
 #include "mux.h"
 #include "track.h"
 #include "trackop.h"
 #include "filt.h"
 #include "song.h"
-#include "cons.h"		/* cons_errXXX */
+#include "cons.h"		/* cons_errxxx */
 #include "default.h"
+
+unsigned song_debug = 0;
 
 void song_playcb(void *, struct ev_s *);
 void song_recordcb(void *, struct ev_s *);
@@ -452,11 +455,6 @@ song_playconf(struct song_s *o) {
 				ev.data.voice.dev = i->dev;
 				ev.data.voice.ch = i->ch;
 				mux_putev(&ev);
-				/*
-				dbg_puts("song_playconf: ");
-				ev_dbg(&ev);
-				dbg_puts("\n");
-				*/
 			} else {
 				dbg_puts("song_playconf: event not implemented : ");
 				dbg_putx(ev.cmd);
@@ -645,36 +643,35 @@ song_inputstop(struct song_s *o) {
 /* --------------------------------------------- output filtering --- */
 
 	/*
-	 * normally, we shoud define a stateful filter (as
+	 * XXX: normally, we shoud define a stateful filter (as
 	 * for the input) attached only to the output of 
 	 * the player (not to the input). In that way
 	 * outputshut would shutsown only notes played from 
-	 * a track.
-	 * 
-	 * but for now, we reset everything
+	 * tracks. But for now, we reset everything
 	 */
 
 void
 song_outputshut(struct song_s *o) {
 	unsigned i;
 	struct ev_s ev;
+	struct mididev_s *dev;
 	
-	/* XXX: do it in another way or at least send thisd to all devices */
-	
-	ev.cmd = EV_CTL;		
-	ev.data.voice.dev = 0;
-	ev.data.voice.b0 = 121;		/* all note off */
-	ev.data.voice.b1 = 0;
-	for (i = 0; i <= EV_MAXCH; i++) {
-		ev.data.voice.ch = i;
-		mux_putev(&ev);
-	}
-	ev.data.voice.dev = 0;
-	ev.data.voice.b0 = 123;		/* all ctl reset */
-	ev.data.voice.b1 = 0;
-	for (i = 0; i <= EV_MAXCH; i++) {
-		ev.data.voice.ch = i;
-		mux_putev(&ev);
+	for (dev = mididev_list; dev != 0; dev = dev->next) {
+		ev.cmd = EV_CTL;		
+		ev.data.voice.dev = dev->unit;
+		ev.data.voice.b0 = 121;		/* all note off */
+		ev.data.voice.b1 = 0;
+		for (i = 0; i <= EV_MAXCH; i++) {
+			ev.data.voice.ch = i;
+			mux_putev(&ev);
+		}
+		ev.data.voice.dev = dev->unit;
+		ev.data.voice.b0 = 123;		/* all ctl reset */
+		ev.data.voice.b1 = 0;
+		for (i = 0; i <= EV_MAXCH; i++) {
+			ev.data.voice.ch = i;
+			mux_putev(&ev);
+		}
 	}
 	mux_flush();	
 }
@@ -696,11 +693,15 @@ song_playcb(void *addr, struct ev_s *ev) {
 	phase = mux_getphase();
 	switch (ev->cmd) {
 	case EV_START:
-		dbg_puts("song_play: got a start\n");
+		if (song_debug) {
+			dbg_puts("song_play: got a start\n");
+		}
 		mux_chgtempo(o->tempo);
 		break;
 	case EV_STOP:
-		dbg_puts("song_play: got a stop\n");
+		if (song_debug) {
+			dbg_puts("song_play: got a stop\n");
+		}
 		break;
 	case EV_TIC:
 		if (song_finished(o) && phase != MUX_STOP) {
@@ -739,7 +740,9 @@ song_play(struct song_s *o) {
 	mux_chgticrate(o->tics_per_unit);
 	
 	
-	dbg_puts("song_play: starting loop, waiting for a start event...\n");
+	if (song_debug) {
+		dbg_puts("song_play: starting loop, waiting for a start event...\n");
+	}
 	mux_startwait();
 	mux_run();
 	
@@ -765,10 +768,14 @@ song_recordcb(void *addr, struct ev_s *ev) {
 	phase = mux_getphase();
 	switch (ev->cmd) {
 	case EV_START:
-		dbg_puts("song_record: got a start\n");
+		if (song_debug) {
+			dbg_puts("song_record: got a start\n");
+		}
 		break;
 	case EV_STOP:
-		dbg_puts("song_record: got a stop\n");
+		if (song_debug) {
+			dbg_puts("song_record: got a stop\n");
+		}
 		break;
 	case EV_TIC:
 		if (phase == MUX_NEXT) {
@@ -796,9 +803,6 @@ song_recordcb(void *addr, struct ev_s *ev) {
 			break;
 		}
 		if (phase == MUX_NEXT || phase == MUX_FIRST) {
-			/*ev_dbg(ev);
-			dbg_puts("\n");
-			*/
 			track_evput(&o->rec, &o->recptr, ev);
 		}
 		mux_putev(ev);
@@ -829,7 +833,9 @@ song_record(struct song_s *o) {
 	mux_chgtempo(o->tempo);
 	mux_chgticrate(o->tics_per_unit);
 	
-	dbg_puts("song_record: started loop, waiting for a start event...\n");
+	if (song_debug) {
+		dbg_puts("song_record: started loop, waiting for a start event...\n");
+	}
 	mux_startwait();
 	mux_run();
 	
@@ -858,10 +864,14 @@ void
 song_idlecb(void *addr, struct ev_s *ev) {
 	switch (ev->cmd) {
 	case EV_START:
-		dbg_puts("song_idle: got a start\n");
+		if (song_debug) {
+			dbg_puts("song_idle: got a start\n");
+		}
 		break;
 	case EV_STOP:
-		dbg_puts("song_idle: got a stop\n");
+		if (song_debug) {
+			dbg_puts("song_idle: got a stop\n");
+		}
 		break;
 	case EV_TIC:
 		break;
@@ -891,7 +901,9 @@ song_idle(struct song_s *o) {
 	mux_chgtempo(o->tempo);
 	mux_chgticrate(o->tics_per_unit);
 
-	dbg_puts("song_idle: started loop...\n");
+	if (song_debug) {
+		dbg_puts("song_idle: started loop...\n");
+	}
 	mux_run();
 	
 	song_inputshut(o);

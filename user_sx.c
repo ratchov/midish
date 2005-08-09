@@ -29,7 +29,7 @@
  */
 
 /*
- * implements sysexXXX built-in functions
+ * implements sysexxxx built-in functions
  * available through the interpreter
  */
 

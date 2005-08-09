@@ -29,7 +29,7 @@
  */
 
 /*
- * implements songXXX built-in functions
+ * implements songxxx built-in functions
  * available through the interpreter
  */
 
@@ -135,7 +135,7 @@ user_func_songsetcurquant(struct exec_s *o, struct data_s **r) {
 	if (!exec_lookuplong(o, "quantum", &quantum)) {
 		return 0;
 	}
-	if (quantum < 0 || quantum > user_song->tics_per_unit) {
+	if (quantum < 0 || (unsigned)quantum > user_song->tics_per_unit) {
 		cons_err("quantum must be between 0 and tics_per_unit");
 		return 0;
 	}

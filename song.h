@@ -141,4 +141,6 @@ void song_idle(struct song_s *o);
 void song_rt_setup(struct song_s *o);
 void song_rt_seek(struct song_s *o);
 
+extern unsigned song_debug;
+
 #endif /* MIDISH_SONG_H */

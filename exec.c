@@ -38,7 +38,7 @@
 #include "data.h"
 #include "node.h"
 
-#include "cons.h"	/* for cons_errXXX */
+#include "cons.h"	/* for cons_errxxx */
 
 unsigned exec_debug = 0;
 

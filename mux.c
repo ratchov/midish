@@ -36,6 +36,10 @@
  * the unit of time is the 24th of microsecond, thus
  * the tempo is stored we the same accurancy than in a 
  * standard midi file.
+ *
+ * the timer has the following states:
+ * STARTWAIT -> START -> FIRST_TIC -> NEXT_TIC -> STOPWAIT -> STOP
+ *
  */
 
 #include "dbg.h"
@@ -50,8 +54,7 @@
 	/* 
 	 * MUX_START_DELAY: 
 	 * delay between the START event and the first TIC
-	 * in 24ths of a micro second, 
-	 * here we use 1 tic at 30bpm
+	 * in 24ths of a micro second, here we use 1 tic at 30bpm
 	 */
 #define MUX_START_DELAY	  (2000000UL)	
 
@@ -153,8 +156,8 @@ mux_chgphase(unsigned phase) {
 }
 
 	/*
-	 * try send a TIC event to all devices the transmid
-	 * real-time events, the tic is only send if
+	 * Send a TIC to all devices that transmit
+	 * real-time events. The tic is only send if
 	 * the device tic_per_unit permits it.
 	 */
 
@@ -176,7 +179,7 @@ mux_sendtic(void) {
 }
 
 	/*
-	 * similar to sendtic, but sends a START event
+	 * Similar to sendtic, but sends a START event
 	 */
 
 
@@ -258,7 +261,7 @@ mux_timercb(unsigned long delta) {
 	struct ev_s ev;
 	mux_curpos += delta;
 
-	if (!mididev_master) {	/* if internal clock source */
+	if (!mididev_master) {	/* if internal clock source (no master) */
 		if (mux_phase == MUX_STARTWAIT) {
 			mux_chgphase(MUX_START);
 			mux_sendstart();
@@ -402,7 +405,6 @@ mux_flush(void) {
 		rmidi_flush(RMIDI(dev));
 	}
 }
-
 
 unsigned
 mux_getphase(void) {

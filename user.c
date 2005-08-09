@@ -381,8 +381,9 @@ data_print(struct data_s *d) {
 
 
 unsigned
-data_list2chan(struct data_s *o, unsigned *dev, unsigned *ch) {
+data_list2chan(struct data_s *o, unsigned *res_dev, unsigned *res_ch) {
 	struct songchan_s *i;
+	long dev, ch;
 
 	if (o->type == DATA_LIST) {
 		if (!o->val.list || 
@@ -393,12 +394,14 @@ data_list2chan(struct data_s *o, unsigned *dev, unsigned *ch) {
 			cons_err("bad {dev midichan} in spec");
 			return 0;
 		}
-		*dev = o->val.list->val.num;
-		*ch = o->val.list->next->val.num;
-		if (*ch < 0 || *ch > EV_MAXCH || 
-		    *dev < 0 || *dev > EV_MAXDEV) {
+		dev = o->val.list->val.num;
+		ch = o->val.list->next->val.num;
+		if (ch < 0 || ch > EV_MAXCH || 
+		    dev < 0 || dev > EV_MAXDEV) {
 			cons_err("bad dev/midichan ranges");
 		}
+		*res_dev = dev;
+		*res_ch = ch;
 		return 1;
 	} else if (o->type == DATA_REF) {
 		i = song_chanlookup(user_song, o->val.ref);
@@ -406,8 +409,8 @@ data_list2chan(struct data_s *o, unsigned *dev, unsigned *ch) {
 			cons_errs(o->val.ref, "no such chan name");
 			return 0;
 		}
-		*dev = i->dev;
-		*ch = i->ch;
+		*res_dev = i->dev;
+		*res_ch = i->ch;
 		return 1;
 	} else {
 		cons_err("bad channel specification");
@@ -516,6 +519,8 @@ user_func_debug(struct exec_s *o, struct data_s **r) {
 		rmidi_debug = value;
 	} else if (str_eq(flag, "filt")) {
 		filt_debug = value;
+	} else if (str_eq(flag, "song")) {
+		song_debug = value;
 	} else {
 		cons_err("debug: unknuwn debug-flag");
 		return 0;

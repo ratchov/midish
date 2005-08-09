@@ -113,12 +113,14 @@ smf_get16(struct smf_s *o, unsigned *val) {
 }
 
 unsigned
-smf_getc(struct smf_s *o, unsigned *c) {
-	if (o->index + 1 > o->length || (*c = fgetc(o->file) & 0xff) < 0) {
+smf_getc(struct smf_s *o, unsigned *res) {
+	int c;
+	if (o->index + 1 > o->length || (c = fgetc(o->file)) < 0) {
 		cons_err("failed to read one byte");
 		return 0;
 	}
 	o->index++;
+	*res = c & 0xff;
 	return 1;
 }
 
@@ -251,7 +253,7 @@ smf_putc(struct smf_s *o, unsigned *used, unsigned val) {
 			dbg_puts("smf_putc: bad chunk length\n");
 			dbg_panic();
 		}
-		fputc(val & 0xff, o->file);
+		fputc((int)val & 0xff, o->file);
 		o->index++;
 	}
 }
@@ -263,7 +265,7 @@ smf_putvar(struct smf_s *o, unsigned *used, unsigned val) {
 	unsigned char buf[MAXBYTES];
 	unsigned index = 0, bits;
 	for (bits = 7; bits < MAXBYTES * 7; bits += 7) {
-		if (val < (1 << bits)) {
+		if (val < (1U << bits)) {
 			bits -= 7;
 			for (; bits != 0; bits -= 7) {
 				buf[index++] = ((val >> bits) & 0x7f) | 0x80;
@@ -337,8 +339,7 @@ smf_putmeta(struct smf_s *o, unsigned *used, struct song_s *s) {
 				denom = 4;
 				break;
 			default:
-				/* XXX: should ignore event */
-				dbg_puts("bad time signature\n");
+				dbg_puts("smf_putmeta: bad time signature\n");
 				dbg_panic();
 			}
 			smf_putvar(o, used, delta);
@@ -348,7 +349,7 @@ smf_putmeta(struct smf_s *o, unsigned *used, struct song_s *s) {
 			smf_putc(o, used, 0x04);
 			smf_putc(o, used, (*tp.pos)->ev.data.sign.beats);
 			smf_putc(o, used, denom);
-			/* XXX: do as other sequencers */
+			/* XXX: metronome: do as other sequencers */
 			smf_putc(o, used, 24);
 			smf_putc(o, used, 8);
 		}

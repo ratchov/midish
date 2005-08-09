@@ -37,7 +37,7 @@
 #include "lex.h"
 #include "str.h"
 #include "textio.h"
-#include "cons.h"	/* for cons_errXXX */
+#include "cons.h"	/* for cons_errxxx */
 
 #define IS_SPACE(c)	((c) == ' ' || (c) == '\r' || (c) == '\t')
 #define IS_PRINTABLE(c)	((c) >= ' ' && (c) <= 0xff)

@@ -29,7 +29,7 @@
  */
 
 /*
- * implements trackXXX built-in functions
+ * implements trackxxx built-in functions
  * available through the interpreter
  */
 
@@ -174,7 +174,8 @@ user_func_trackaddev(struct exec_s *o, struct data_s **r) {
 	pos = track_opfindtic(&user_song->meta, measure);
 	track_optimeinfo(&user_song->meta, pos, &dummy, &bpm, &tpb);
 	
-	if (beat < 0 || beat >= bpm || tic < 0 || tic >= tpb) {
+	if (beat < 0 || (unsigned)beat >= bpm || 
+	    tic  < 0 || (unsigned)tic  >= tpb) {
 		cons_err("beat and tic must fit in the selected measure");
 		return 0;
 	}
@@ -324,7 +325,12 @@ user_func_trackcut(struct exec_s *o, struct data_s **r) {
 	tic = song_measuretotic(user_song, from);
 	len = song_measuretotic(user_song, from + amount) - tic;
 
-	if (tic > quant/2) {
+	if (quant < 0 || (unsigned)quant > user_song->tics_per_unit) {
+		cons_err("quantum must be between 0 and tics_per_unit");
+		return 0;
+	}
+
+	if (tic > (unsigned)quant/2) {
 		tic -= quant/2;
 	}
 
@@ -354,7 +360,12 @@ user_func_trackblank(struct exec_s *o, struct data_s **r) {
 	tic = song_measuretotic(user_song, from);
 	len = song_measuretotic(user_song, from + amount) - tic;
 	
-	if (tic > quant/2) {
+	if (quant < 0 || (unsigned)quant > user_song->tics_per_unit) {
+		cons_err("quantum must be between 0 and tics_per_unit");
+		return 0;
+	}
+
+	if (tic > (unsigned)quant/2) {
 		tic -= quant/2;
 	}
 
@@ -389,7 +400,11 @@ user_func_trackcopy(struct exec_s *o, struct data_s **r) {
 	len  = song_measuretotic(user_song, from + amount) - tic;
 	tic2 = song_measuretotic(user_song, where);
 
-	if (tic > quant/2 && tic > quant/2) {
+	if (quant < 0 || (unsigned)quant > user_song->tics_per_unit) {
+		cons_err("quantum must be between 0 and tics_per_unit");
+		return 0;
+	}
+	if (tic > (unsigned)quant/2 && tic2 > (unsigned)quant/2) {
 		tic -= quant/2;
 		tic2 -= quant/2;
 	}
@@ -432,7 +447,12 @@ user_func_trackinsert(struct exec_s *o, struct data_s **r) {
 	tic = song_measuretotic(user_song, from);
 	len = song_measuretotic(user_song, from + amount) - tic;
 
-	if (tic > quant/2) {
+	if (quant < 0 || (unsigned)quant > user_song->tics_per_unit) {
+		cons_err("quantum must be between 0 and tics_per_unit");
+		return 0;
+	}
+
+	if (tic > (unsigned)quant/2) {
 		tic -= quant/2;
 	}
 
@@ -450,12 +470,12 @@ user_func_trackquant(struct exec_s *o, struct data_s **r) {
 	struct seqptr_s tp;
 	long from, amount;
 	unsigned tic, len, first;
-	long quantum, rate;
+	long quant, rate;
 	
 	if (!exec_lookupname(o, "trackname", &trkname) ||
 	    !exec_lookuplong(o, "from", &from) ||
 	    !exec_lookuplong(o, "amount", &amount) ||
-	    !exec_lookuplong(o, "quantum", &quantum) || 
+	    !exec_lookuplong(o, "quantum", &quant) || 
 	    !exec_lookuplong(o, "rate", &rate)) {
 		return 0;
 	}	
@@ -472,17 +492,22 @@ user_func_trackquant(struct exec_s *o, struct data_s **r) {
 	tic = song_measuretotic(user_song, from);
 	len = song_measuretotic(user_song, from + amount) - tic;
 	
-	if (tic > quantum / 2) {
-		tic -= quantum / 2;
-		first = quantum / 2;
+	if (quant < 0 || (unsigned)quant > user_song->tics_per_unit) {
+		cons_err("quantum must be between 0 and tics_per_unit");
+		return 0;
+	}
+
+	if (tic > (unsigned)quant / 2) {
+		tic -= quant / 2;
+		first = quant / 2;
 	} else {
 		first = 0;
-		len -= quantum / 2;
+		len -= quant / 2;
 	}
 	
 	track_rew(&t->track, &tp);
 	track_seek(&t->track, &tp, tic);
-	track_opquantise(&t->track, &tp, first, len, (unsigned)quantum, (unsigned)rate);
+	track_opquantise(&t->track, &tp, first, len, (unsigned)quant, (unsigned)rate);
 	return 1;
 }
 
