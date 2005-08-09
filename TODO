@@ -3,4 +3,6 @@
   primitives and to let him/her define his/her own info
   functions ?
 
+- make song{play,record,idle} scan tracks for volume changes.
+
 - (difficult) implement undo-stack

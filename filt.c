@@ -119,6 +119,63 @@ unsigned char filt_curve_inv[128] = {
 
 
 void
+rule_dbg(struct rule_s *o) {
+	switch(o->type) {
+	case RULE_DEVDROP:
+		dbg_puts("devdrop");
+		break;
+	case RULE_DEVMAP:
+		dbg_puts("devmap");
+		break;
+	case RULE_CHANDROP:
+		dbg_puts("chandrop");
+		break;
+	case RULE_CHANMAP:
+		dbg_puts("chanmap");
+		break;
+	case RULE_KEYDROP:
+		dbg_puts("keydrop");
+		break;
+	case RULE_KEYMAP:
+		dbg_puts("keymap");
+		break;
+	case RULE_CTLDROP:
+		dbg_puts("ctldrop");
+		break;
+	case RULE_CTLMAP:
+		dbg_puts("ctlmap");
+		break;
+	default:
+		dbg_puts("unknown");
+		break;
+	}
+	dbg_puts(" idev=");
+	dbg_putu(o->idev);	
+	dbg_puts(" odev=");
+	dbg_putu(o->odev);
+	if (o->type != RULE_DEVDROP && o->type != RULE_DEVMAP) {
+		dbg_puts(" ich=");
+		dbg_putu(o->ich);
+		dbg_puts(" och=");
+		dbg_putu(o->och);
+	}
+	if (o->type == RULE_CTLDROP || o->type == RULE_CTLMAP) {
+		dbg_puts(" ictl=");
+		dbg_putu(o->ictl);
+		dbg_puts(" octl=");
+		dbg_putu(o->octl);
+	}
+	if (o->type == RULE_KEYDROP || o->type == RULE_KEYMAP) {
+		dbg_puts(" keyhi=");
+		dbg_putu(o->keyhi);
+		dbg_puts(" keylo=");
+		dbg_putu(o->keylo);
+		dbg_puts(" keyplus=");
+		dbg_putu(o->keyplus);
+	}
+}
+
+void
 rule_swapichan(struct rule_s *o, unsigned olddev, unsigned oldch, 
     unsigned newdev, unsigned newch) {
 	switch(o->type) {
@@ -908,7 +965,7 @@ filt_matchrule(struct filt_s *o, struct rule_s *r, struct ev_s *ev) {
 	switch(r->type) {
 	case RULE_DEVDROP:
 		if (ev->data.voice.dev == r->idev) {
-			return 1;
+			goto matched;
 		}
 		break;	
 	case RULE_DEVMAP:
@@ -916,13 +973,13 @@ filt_matchrule(struct filt_s *o, struct rule_s *r, struct ev_s *ev) {
 			te = *ev;
 			te.data.voice.dev &= r->odev;
 			filt_pass(o, &te);
-			return 1;
+			goto matched;
 		}
 		break;
 	case RULE_CHANDROP:
 		if (ev->data.voice.dev == r->idev &&
 		    ev->data.voice.ch == r->ich) {
-			return 1;
+			goto matched;
 		}
 		break;
 	case RULE_CHANMAP:
@@ -932,7 +989,7 @@ filt_matchrule(struct filt_s *o, struct rule_s *r, struct ev_s *ev) {
 			te.data.voice.dev = r->odev;
 			te.data.voice.ch = r->och;
 			filt_pass(o, &te);
-			return 1;
+			goto matched;
 		}
 		break;
 	case RULE_KEYDROP:
@@ -941,7 +998,7 @@ filt_matchrule(struct filt_s *o, struct rule_s *r, struct ev_s *ev) {
 		    ev->data.voice.ch == r->ich && 
 		    ev->data.voice.b0 >= r->keylo &&
 		    ev->data.voice.b0 <= r->keyhi) {
-			return 1;
+			goto matched;
 		}
 		break;
 	case RULE_KEYMAP:
@@ -957,7 +1014,7 @@ filt_matchrule(struct filt_s *o, struct rule_s *r, struct ev_s *ev) {
 			te.data.voice.b0 &= 0x7f;
 			te.data.voice.b1 = r->curve[te.data.voice.b1];
 			filt_pass(o, &te);
-			return 1;
+			goto matched;
 		}
 		break;
 	case RULE_CTLDROP:
@@ -965,7 +1022,7 @@ filt_matchrule(struct filt_s *o, struct rule_s *r, struct ev_s *ev) {
 		    ev->data.voice.dev == r->idev &&
 		    ev->data.voice.ch == r->ich &&
 		    ev->data.voice.b0 == r->ictl) {
-			return 1;
+			goto matched;
 		}
 		break;
 	case RULE_CTLMAP:
@@ -979,11 +1036,18 @@ filt_matchrule(struct filt_s *o, struct rule_s *r, struct ev_s *ev) {
 			te.data.voice.b0 = r->octl;
 			te.data.voice.b1 = r->curve[te.data.voice.b1];
 			filt_pass(o, &te);
-			return 1;
+			goto matched;
 		}
 		break;
 	}			
 	return 0;
+matched:
+	if (filt_debug) {
+		dbg_puts("filt_matchrule: ");
+		rule_dbg(r);
+		dbg_puts("\n");
+	}
+	return 1;
 }
 
 	/*
@@ -994,14 +1058,14 @@ void
 filt_run(struct filt_s *o, struct ev_s *ev) {
 	struct state_s **p;
 	struct rule_s *i;
-	unsigned ret;
+	unsigned match;
 	
-#ifdef FILT_DEBUG
 	if (filt_debug) {
 		dbg_puts("filt_run: ");
 		ev_dbg(ev);
 		dbg_puts("\n");
 	}
+#ifdef FILT_DEBUG
 	if (o->cb == 0) {
 		dbg_puts("filt_run: cb = 0, bad initialisation\n");
 		dbg_panic();
@@ -1082,19 +1146,19 @@ filt_run(struct filt_s *o, struct ev_s *ev) {
 	 */
 
 pass:
-	ret = 0;
+	match = 0;
 	for (i = o->voice_rules; i != 0; i = i->next) {
-		ret |= filt_matchrule(o, i, ev);
+		match |= filt_matchrule(o, i, ev);
 	}
-	if (!ret) {
+	if (!match) {
 		for (i = o->chan_rules; i != 0; i = i->next) {
-			ret |= filt_matchrule(o, i, ev);
+			match |= filt_matchrule(o, i, ev);
 		}
-		if (!ret) {
+		if (!match) {
 			for (i = o->dev_rules; i != 0; i = i->next) {
-				ret |= filt_matchrule(o, i, ev);
+				match |= filt_matchrule(o, i, ev);
 			}
-			if (!ret) {
+			if (!match) {
 				filt_pass(o, ev);
 			}
 		}

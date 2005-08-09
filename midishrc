@@ -140,6 +140,7 @@ proc l  {
 		}
 		print { $prefix $i ":"}
 	}
+	print { "sysex:" [sysexlist] }
 	songinfo; 
 }
 
@@ -311,15 +312,8 @@ proc timerm amount {
 #
 # turn on general midi (send sysex)
 #
-proc gmon devnum{
+proc gmon devnum {
 	sendraw $devnum { 0xF0 0x7E 0x7F 0x09 0x01 0xF7 }
-}
-
-#
-# turn off general midi (send sysex)
-#
-proc gmoff devnum {
-	sendraw $devnum { 0xF0 0x7E 0x7F 0x09 0x02 0xF7 }
 }
 
 #
@@ -349,31 +343,12 @@ proc xvr chan bank rhythm {
 }
 
 #
-# turn off general midi, put the XV2020 in performance mode
-# select bank msb=85, lsb=65 (ie PST-B) and performance 14
-# and put output_assign->path
-#
-proc xvperf {
-	sendraw 0 { 						\
-		  0xF0 0x7E 0x7F 0x09 0x02 0xF7			\	
-		  0xF0 0x41 0x7F 0x00 0x10 0x12  		\
-		       0x01 0x00 0x00 0x00 0x02 0x7D 0xF7	\
-		  0xBF 0  85   					\
-		  0xBF 32 65					\
-		  0xCF 13 					\
-		  0xF0 0x41 0x7F 0x00 0x10 0x12			\
-		       0x10 0x00 0x20 0x1F   13   36 0xF7	\
-		  0xF0 0x41 0x7F 0x00 0x10 0x12			\
-		       0x02 0x00 0x00 0x1e    2	  94 0xF7	\
-		}
-}
-
-#
-# set parameter on addres (a0,a1,a2,a3) to val
+# generate a sysex message that set parameter on 
+# address (a0,a1,a2,a3) to val
 #
 proc xvparam a0 a1 a2 a3 val {
 	return {  							\
-		0xF0 0x41 0x7F 0x00 0x10 0x12 $a0 $a1 $a2 $a3 $val	\
+		0xf0 0x41 0x7f 0x00 0x10 0x12 $a0 $a1 $a2 $a3 $val	\
 		128 - ($a0 + $a1 + $a2 + $a3 + $val) % 128		\
 		0xf7 }
 }
