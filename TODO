@@ -1,8 +1,13 @@
+- bug with tempo when changing time signature at measure 0
+
 - cleanup/implement {track,chan,filt,sysex,song}info 
   do we need them? isn't it better to give the user
   primitives and to let him/her define his/her own info
   functions ?
 
+- check (one by one) that every function works and
+  that the documetation is accurate. Make a release.
+
 - make song{play,record,idle} scan tracks for volume changes.
 
-- (difficult) implement undo-stack
+- implement undo-stack

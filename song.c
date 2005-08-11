@@ -463,6 +463,7 @@ song_playconf(struct song_s *o) {
 		}
 	}
 	mux_flush();
+	mux_sleep(DEFAULT_CHANWAIT);
 }
 
 
@@ -478,6 +479,7 @@ song_playsysex(struct song_s *o) {
 				mux_sendraw(s->unit, c->data, c->used);
 				mux_flush();
 			}
+			mux_sleep(DEFAULT_SXWAIT);
 		}
 	}
 }

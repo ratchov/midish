@@ -44,6 +44,9 @@
 #define DEFAULT_TPU		96
 #define DEFAULT_TEMPO		120
 
+#define DEFAULT_CHANWAIT	50
+#define DEFAULT_SXWAIT		50
+
 #define TEMPO_TO_USEC24(tempo,tpb) (60L * 24000000L / ((tempo) * (tpb)))
 
 #endif /* DEFAULT_EV_H */

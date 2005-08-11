@@ -48,6 +48,7 @@ struct sysex_s;
 void mux_init(void (*cb)(void *, struct ev_s *), void *addr);
 void mux_done(void);
 void mux_run(void);
+void mux_sleep(unsigned millisecs);
 void mux_flush(void);
 void mux_putev(struct ev_s *);
 void mux_sendraw(unsigned unit, unsigned char *buf, unsigned len);

@@ -185,6 +185,19 @@ mux_run(void) {
 	return;
 }
 
+	/* 
+	 * sleeps for 'millisecs' milliseconds
+	 * useful when sending system exclusive messages
+	 * IMPORTANT : must never be called inside mux_run 
+	 */
+
+void 
+mux_sleep(unsigned millisecs) {
+	if (poll(NULL, (nfds_t)0, millisecs) < 0) {
+		perror("mux_sleep: poll failed");
+		exit(1);
+	}
+}
 
 void
 rmidi_mdep_init(struct rmidi_s *o) {
