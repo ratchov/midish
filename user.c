@@ -399,6 +399,7 @@ data_list2chan(struct data_s *o, unsigned *res_dev, unsigned *res_ch) {
 		if (ch < 0 || ch > EV_MAXCH || 
 		    dev < 0 || dev > EV_MAXDEV) {
 			cons_err("bad dev/midichan ranges");
+			return 0;
 		}
 		*res_dev = dev;
 		*res_ch = ch;
@@ -641,6 +642,7 @@ user_func_sendraw(struct exec_s *o, struct data_s **r) {
 	}
 	if (device < 0 || device >= DEFAULT_MAXNDEVS) {
 		cons_err("sendraw: device out of range");
+		return 0;
 	}
 	for (i = arg->data->val.list; i != 0; i = i->next) {
 		if (i->type != DATA_LONG || i->val.num < 0 || i->val.num > 255) {

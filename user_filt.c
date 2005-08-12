@@ -476,6 +476,7 @@ user_func_filtswapidev(struct exec_s *o, struct data_s **r) {
 	if (olddev < 0 || olddev > EV_MAXDEV || 
 	    newdev < 0 || newdev > EV_MAXDEV) {
 		cons_err("dev numver out of bounds");
+		return 0;
 	}
 	filt_conf_swapidev(&f->filt, olddev, newdev);
 	return 1;
