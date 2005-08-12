@@ -60,6 +60,13 @@ unsigned user_flag_norc = 0;
 
 /* -------------------------------------------------- some tools --- */
 
+	/*
+	 * execute a script from a file in the 'exec' environnement
+	 * the script has acces to the global variables, but
+	 * not to the local variables of the calling proc. Thus
+	 * it can be safely used in a procedure
+	 */
+
 unsigned
 exec_runfile(struct exec_s *exec, char *filename) {
 	struct parse_s *parse;
@@ -87,6 +94,11 @@ exec_runfile(struct exec_s *exec, char *filename) {
 	return res;
 }
 
+	/*
+	 * find the pointer to the songtrk contained in 'var'
+	 * ('var' must be a reference)
+	 */
+
 unsigned
 exec_lookuptrack(struct exec_s *o, char *var, struct songtrk_s **res) {
 	char *name;	
@@ -104,6 +116,12 @@ exec_lookuptrack(struct exec_s *o, char *var, struct songtrk_s **res) {
 }
 
 
+	/*
+	 * find the (dev, ch) couple for the channel referenced by 'var'
+	 * 'var' can be 
+	 *	- a reference to a songchan
+	 *	- a list of two integers (like '{dev chan}')
+	 */
 
 unsigned
 exec_lookupchan_getnum(struct exec_s *o, char *var, 
@@ -120,6 +138,12 @@ exec_lookupchan_getnum(struct exec_s *o, char *var,
 	}
 	return 1;
 }
+
+	/*
+	 * find the pointer to an existing songchan
+	 * that is referenced by 'var'.
+	 * ('var' must be a reference)
+	 */
 
 unsigned
 exec_lookupchan_getref(struct exec_s *o, char *var, struct songchan_s **res) {
@@ -146,6 +170,11 @@ exec_lookupchan_getref(struct exec_s *o, char *var, struct songchan_s **res) {
 }
 
 
+	/*
+	 * find the pointer to the songfilt contained in 'var'
+	 * ('var' must be a reference)
+	 */
+
 unsigned
 exec_lookupfilt(struct exec_s *o, char *var, struct songfilt_s **res) {
 	char *name;	
@@ -162,6 +191,10 @@ exec_lookupfilt(struct exec_s *o, char *var, struct songfilt_s **res) {
 	return 1;
 }
 
+	/*
+	 * find the pointer to the songsx contained in 'var'
+	 * ('var' must be a reference)
+	 */
 
 unsigned
 exec_lookupsx(struct exec_s *o, char *var, struct songsx_s **res) {
@@ -179,6 +212,19 @@ exec_lookupsx(struct exec_s *o, char *var, struct songsx_s **res) {
 	return 1;
 }
 
+	/*
+	 * fill the event with the one referenced by 'var'
+	 * 'var' can be:
+	 * 	- { noff chan xxx yyy }
+	 * 	- { non chan xxx yyy }
+	 * 	- { ctl chan xxx yyy }
+	 * 	- { kat chan xxx yyy }
+	 * 	- { cat chan xxx }
+	 * 	- { pc chan xxx }
+	 * 	- { bend chan xxx }
+	 * where 'chan' is in the same as in lookupchan_getnum
+	 * and 'xxx' and 'yyy' are integers
+	 */
 
 unsigned
 exec_lookupev(struct exec_s *o, char *name, struct ev_s *ev) {
@@ -240,6 +286,13 @@ exec_lookupev(struct exec_s *o, char *name, struct ev_s *ev) {
 	return 1;
 }
 
+	/* 
+	 * fill the evspec with the one referenced by var.
+	 * var is of this form
+	 * 	- { [type [chanrange [xxxrange [yyyrange]]]] }	
+	 * (brackets mean optionnal)
+	 */
+
 unsigned
 exec_lookupevspec(struct exec_s *o, char *name, struct evspec_s *e) {
 	struct var_s *arg;
@@ -263,6 +316,7 @@ exec_lookupevspec(struct exec_s *o, char *name, struct evspec_s *e) {
 
 	d = d->val.list;
 	if (!d) {
+		/* empty list match anything */
 		return 1;
 	}
 	if (d->type != DATA_REF ||
@@ -273,6 +327,10 @@ exec_lookupevspec(struct exec_s *o, char *name, struct evspec_s *e) {
 	
 	d = d->next;
 	if (!d) {
+		/* 
+		 * match events of the given type (or 'any')
+		 * on any channel, with any value(s)
+		 */
 		return 1;
 	}
 	if (d->type == DATA_REF) {
@@ -307,6 +365,8 @@ exec_lookupevspec(struct exec_s *o, char *name, struct evspec_s *e) {
 
 	d = d->next;
 	if (!d) {
+		/* match events of the given type (or 'any' 
+		 * with the given channel range but with any value(s) */ 
 		return 1;
 	}
 	if (e->cmd == EVSPEC_ANY) {
@@ -347,6 +407,9 @@ toomany:
 	return 0;				
 }
 
+	/*
+	 * print a data_s to the user console
+	 */
 
 void
 data_print(struct data_s *d) {
@@ -379,7 +442,12 @@ data_print(struct data_s *d) {
 	}
 }
 
-
+	/*
+	 * convert lists to channels, 'data' can be
+	 * 	- a reference to an existing songchan
+	 *	- a pair of integers '{ dev midichan }'
+	 */
+	 
 unsigned
 data_list2chan(struct data_s *o, unsigned *res_dev, unsigned *res_ch) {
 	struct songchan_s *i;
@@ -419,6 +487,15 @@ data_list2chan(struct data_s *o, unsigned *res_dev, unsigned *res_ch) {
 	}
 }
 
+
+	/*
+	 * convert a data_s to a pair of integers
+	 * data can be:
+	 * 	- a liste of 2 integers
+	 *	- a single integer (then min = max)
+	 */
+	 
+	 
 unsigned
 data_list2range(struct data_s *d, unsigned min, unsigned max, 
     unsigned *lo, unsigned *hi) {
@@ -448,6 +525,11 @@ data_list2range(struct data_s *d, unsigned min, unsigned max,
 	}
 	return 1;
 }
+
+	/*
+	 * check if the pattern in data (list of integers)
+	 * match the beggining of the given sysex
+	 */
 
 unsigned
 data_matchsysex(struct data_s *d, struct sysex_s *sx, unsigned *res) {
@@ -485,6 +567,8 @@ data_matchsysex(struct data_s *d, struct sysex_s *sx, unsigned *res) {
 
 /* ---------------------------------------- interpreter functions --- */
 
+	/* XXX: for testing */
+
 unsigned
 user_func_ev(struct exec_s *o, struct data_s **r) {
 	struct evspec_s ev;
@@ -496,12 +580,14 @@ user_func_ev(struct exec_s *o, struct data_s **r) {
 	return 1;
 }
 
+
 unsigned
 user_func_panic(struct exec_s *o, struct data_s **r) {
 	dbg_panic();
 	/* not reached */
 	return 0;
 }
+
 
 unsigned
 user_func_debug(struct exec_s *o, struct data_s **r) {
