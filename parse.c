@@ -864,6 +864,9 @@ parse_proc(struct parse_s *o, struct node_s **n) {
 
 unsigned
 parse_line(struct parse_s *o, struct node_s **n) {
+	if (!parse_getsym(o)) {
+		return 0;
+	}
 	if (parse_isfirst(o, first_proc)) {
 		parse_ungetsym(o);
 		if (!parse_proc(o, n)) {
@@ -892,6 +895,7 @@ parse_prog(struct parse_s *o, struct node_s **n) {
 		if (o->lex.id == TOK_EOF) {
 			return 1;
 		}
+		parse_ungetsym(o);
 		if (!parse_line(o, n)) {
 			return 0;
 		}

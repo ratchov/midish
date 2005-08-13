@@ -1060,24 +1060,22 @@ user_mainloop(void) {
 	data = 0;
 	for (;;) {
 		textin_setprompt(parse->lex.in, "> ");
+		/* check for lexical error */
 		if (!parse_getsym(parse)) {
 			continue;
 		}
+		/* check for end-of-file (user quit) */
 		if (parse->lex.id == TOK_EOF) {
 			break;
 		}
+		parse_ungetsym(parse);
+		/* parse the line */
 		textin_setprompt(parse->lex.in, "! ");
 		if (parse_line(parse, &root)) {
-			/*node_dbg(root, 0);*/
 			node_exec(root, exec, &data);
 		}
 		node_delete(root);
 		root = 0;
-		/*
-		dbg_puts("mem: ");
-		dbg_putu(mem_counter);
-		dbg_puts("\n");		
-		*/
 	}
 
 	parse_delete(parse);
