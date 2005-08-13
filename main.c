@@ -44,8 +44,6 @@
 #include "sysex.h"
 #include "textio.h"
 
-struct song_s song;
-
 int
 main(int argc, char *argv[]) {
 	int i;
@@ -66,11 +64,9 @@ main(int argc, char *argv[]) {
 	chunk_pool_init(DEFAULT_MAXNCHUNKS);
 	sysex_pool_init(DEFAULT_MAXNSYSEXS);
 	mididev_listinit();
-	song_init(&song);
 		
 	user_mainloop();
 	
-	song_done(&song);
 	mididev_listdone();
 	sysex_pool_done();
 	chunk_pool_done();
