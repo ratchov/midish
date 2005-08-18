@@ -470,7 +470,7 @@ parse_ukline(struct parse_s *o) {
 		} else if (o->lex.id == TOK_IDENT || o->lex.id == TOK_NUM || o->lex.id == TOK_STRING) {
 			/* nothing */
 		} else {
-			parse_error(o, "any line should start with ident or number");
+			lex_err(&o->lex, "any line should start with ident or number");
 			return 0;
 		}
 	}
@@ -484,7 +484,7 @@ parse_ukblock(struct parse_s *o) {
 		return 0;
 	}
 	if (o->lex.id != TOK_LBRACE) {
-		parse_error(o, "'{' expected while parsing block\n");
+		lex_err(&o->lex, "'{' expected while parsing block\n");
 		return 0;
 	}
 	for (;;) {
@@ -507,7 +507,7 @@ parse_nl(struct parse_s *o) {
 		return 0;
 	}
 	if (o->lex.id != TOK_ENDLINE) {
-		parse_error(o, "new line expected\n");
+		lex_err(&o->lex, "new line expected\n");
 		return 0;
 	}
 	return 1;
@@ -519,11 +519,11 @@ parse_long(struct parse_s *o, unsigned long max, unsigned long *data) {
 		return 0;
 	}
 	if (o->lex.id != TOK_NUM) {
-		parse_error(o, "number expected\n");
+		lex_err(&o->lex, "number expected\n");
 		return 0;
 	}
 	if (o->lex.longval > max) {
-		parse_error(o, "number to large\n");
+		lex_err(&o->lex, "number to large\n");
 		return 0;
 	}
 	*data = (unsigned)o->lex.longval;
@@ -536,7 +536,7 @@ parse_delta(struct parse_s *o, unsigned *delta) {
 		return 0;
 	}
 	if (o->lex.id != TOK_NUM) {
-		parse_error(o, "numeric constant expected in event offset\n");
+		lex_err(&o->lex, "numeric constant expected in event offset\n");
 		return 0;
 	}
 	*delta = o->lex.longval;
@@ -562,7 +562,7 @@ parse_chan(struct parse_s *o, unsigned long *dev, unsigned long *ch) {
 			return 0;
 		}
 		if (o->lex.id != TOK_RBRACE) {
-			parse_error(o, "'}' expected in channel spec\n");
+			lex_err(&o->lex, "'}' expected in channel spec\n");
 			return 0;
 		}
 		return 1;
@@ -570,12 +570,12 @@ parse_chan(struct parse_s *o, unsigned long *dev, unsigned long *ch) {
 		*dev = o->lex.longval / (EV_MAXCH + 1);
 		*ch = o->lex.longval % (EV_MAXCH + 1);
 		if (*dev > EV_MAXDEV) {
-			parse_error(o, "dev/chan out of range\n");
+			lex_err(&o->lex, "dev/chan out of range\n");
 			return 0;
 		}
 		return 1;
 	} else {
-		parse_error(o, "bad channel spec\n");
+		lex_err(&o->lex, "bad channel spec\n");
 		return 0;
 	}
 }
@@ -589,7 +589,7 @@ parse_ev(struct parse_s *o, struct ev_s *ev) {
 		return 0;
 	}
 	if (o->lex.id != TOK_IDENT) {
-		parse_error(o, "event name expected\n");
+		lex_err(&o->lex, "event name expected\n");
 		return 0;
 	}
 	if (!ev_str2cmd(ev, o->lex.strval)) {
@@ -626,7 +626,7 @@ parse_ev(struct parse_s *o, struct ev_s *ev) {
 		}
 		ev->data.sign.tics = o->lex.longval;
 	} else {
-ignore:		parse_error(o, "unknown event, ignored\n");
+ignore:		lex_err(&o->lex, "unknown event, ignored\n");
 		parse_ungetsym(o);
 		return parse_ukline(o);
 	}
@@ -648,7 +648,7 @@ parse_track(struct parse_s *o, struct track_s *t) {
 		return 0;
 	}
 	if (o->lex.id != TOK_LBRACE) {
-		parse_error(o, "'{' expected while parsing track\n");
+		lex_err(&o->lex, "'{' expected while parsing track\n");
 		return 0;
 	}
 	track_clear(t, &tp);	
@@ -688,7 +688,7 @@ parse_rule(struct parse_s *o, struct filt_s *f) {
 		return 0;
 	}
 	if (o->lex.id != TOK_IDENT) {
-		parse_error(o, "filter-type identifier expected\n");
+		lex_err(&o->lex, "filter-type identifier expected\n");
 		return 0;
 	}
 	if (str_eq(o->lex.strval, "keydrop")) {
@@ -727,7 +727,7 @@ parse_rule(struct parse_s *o, struct filt_s *f) {
 			return 0;
 		}
 		if (o->lex.id != TOK_IDENT) {
-			parse_error(o, "curve identifier expected\n");
+			lex_err(&o->lex, "curve identifier expected\n");
 			return 0;
 		}	
 		filt_conf_keymap(f, idev, ich, odev, och, keylo, keyhi, keyplus);
@@ -756,7 +756,7 @@ parse_rule(struct parse_s *o, struct filt_s *f) {
 			return 0;
 		}
 		if (o->lex.id != TOK_IDENT) {
-			parse_error(o, "curve identifier expected\n");
+			lex_err(&o->lex, "curve identifier expected\n");
 			return 0;
 		}	
 		filt_conf_ctlmap(f, idev, ich, odev, och, ictl, octl);
@@ -787,7 +787,7 @@ parse_rule(struct parse_s *o, struct filt_s *f) {
 		}
 		filt_conf_devmap(f, idev, odev);
 	} else {
-		parse_error(o, "unknown filter rule, ignored\n");
+		lex_err(&o->lex, "unknown filter rule, ignored\n");
 		parse_ungetsym(o);
 		return parse_ukline(o);
 	}
@@ -803,7 +803,7 @@ parse_filt(struct parse_s *o, struct filt_s *f) {
 		return 0;
 	}
 	if (o->lex.id != TOK_LBRACE) {
-		parse_error(o, "'{' expected while parsing filt\n");
+		lex_err(&o->lex, "'{' expected while parsing filt\n");
 		return 0;
 	}
 	for (;;) {
@@ -833,7 +833,7 @@ parse_sysex(struct parse_s *o, struct sysex_s **res) {
 		return 0;
 	}
 	if (o->lex.id != TOK_LBRACE) {
-		parse_error(o, "'{' expected while parsing sysex\n");
+		lex_err(&o->lex, "'{' expected while parsing sysex\n");
 		return 0;
 	}	
 	sx = sysex_new(0);
@@ -873,7 +873,7 @@ parse_sysex(struct parse_s *o, struct sysex_s **res) {
 			}
 		} else {
 		unknown:
-			parse_error(o, "unknown line format in songchan, ignored\n");
+			lex_err(&o->lex, "unknown line format in songchan, ignored\n");
 			parse_ungetsym(o);
 			if (!parse_ukline(o)) {
 				goto err1;
@@ -895,7 +895,7 @@ parse_songchan(struct parse_s *o, struct song_s *s, struct songchan_s *i) {
 		return 0;
 	}
 	if (o->lex.id != TOK_LBRACE) {
-		parse_error(o, "'{' expected while parsing songchan\n");
+		lex_err(&o->lex, "'{' expected while parsing songchan\n");
 		return 0;
 	}
 	for (;;) {
@@ -929,7 +929,7 @@ parse_songchan(struct parse_s *o, struct song_s *s, struct songchan_s *i) {
 			}
 		} else {
 		unknown:
-			parse_error(o, "unknown line format in songchan, ignored\n");
+			lex_err(&o->lex, "unknown line format in songchan, ignored\n");
 			parse_ungetsym(o);
 			if (!parse_ukline(o)) {
 				return 0;
@@ -950,7 +950,7 @@ parse_songtrk(struct parse_s *o, struct song_s *s, struct songtrk_s *t) {
 		return 0;
 	}
 	if (o->lex.id != TOK_LBRACE) {
-		parse_error(o, "'{' expected while parsing songtrk\n");
+		lex_err(&o->lex, "'{' expected while parsing songtrk\n");
 		return 0;
 	}
 	for (;;) {
@@ -967,7 +967,7 @@ parse_songtrk(struct parse_s *o, struct song_s *s, struct songtrk_s *t) {
 					return 0;
 				}
 				if (o->lex.id != TOK_IDENT) {
-					parse_error(o, "identifier expected after 'curfilt' in songtrk\n");
+					lex_err(&o->lex, "identifier expected after 'curfilt' in songtrk\n");
 					return 0;
 				}
 				f = song_filtlookup(s, o->lex.strval);
@@ -999,7 +999,7 @@ parse_songtrk(struct parse_s *o, struct song_s *s, struct songtrk_s *t) {
 			}
 		} else {
 		unknown:
-			parse_error(o, "unknown line format in songtrk, ignored\n");
+			lex_err(&o->lex, "unknown line format in songtrk, ignored\n");
 			parse_ungetsym(o);
 			if (!parse_ukline(o)) {
 				return 0;
@@ -1020,7 +1020,7 @@ parse_songfilt(struct parse_s *o, struct song_s *s, struct songfilt_s *g) {
 		return 0;
 	}
 	if (o->lex.id != TOK_LBRACE) {
-		parse_error(o, "'{' expected while parsing songfilt\n");
+		lex_err(&o->lex, "'{' expected while parsing songfilt\n");
 		return 0;
 	}
 	for (;;) {
@@ -1041,7 +1041,7 @@ parse_songfilt(struct parse_s *o, struct song_s *s, struct songfilt_s *g) {
 			}
 		} else {
 		unknown:
-			parse_error(o, "unknown line format in songfilt, ignored\n");
+			lex_err(&o->lex, "unknown line format in songfilt, ignored\n");
 			parse_ungetsym(o);
 			if (!parse_ukline(o)) {
 				return 0;
@@ -1061,7 +1061,7 @@ parse_songsx(struct parse_s *o, struct song_s *s, struct songsx_s *g) {
 		return 0;
 	}
 	if (o->lex.id != TOK_LBRACE) {
-		parse_error(o, "'{' expected while parsing songsx\n");
+		lex_err(&o->lex, "'{' expected while parsing songsx\n");
 		return 0;
 	}
 	for (;;) {
@@ -1083,7 +1083,7 @@ parse_songsx(struct parse_s *o, struct song_s *s, struct songsx_s *g) {
 			}
 		} else {
 		unknown:
-			parse_error(o, "unknown line format in songsx, ignored\n");
+			lex_err(&o->lex, "unknown line format in songsx, ignored\n");
 			parse_ungetsym(o);
 			if (!parse_ukline(o)) {
 				return 0;
@@ -1106,7 +1106,7 @@ parse_song(struct parse_s *o, struct song_s *s) {
 		return 0;
 	}
 	if (o->lex.id != TOK_LBRACE) {
-		parse_error(o, "'{' expected while parsing song\n");
+		lex_err(&o->lex, "'{' expected while parsing song\n");
 		return 0;
 	}
 	for (;;) {
@@ -1123,7 +1123,7 @@ parse_song(struct parse_s *o, struct song_s *s) {
 					return 0;
 				}
 				if (o->lex.id != TOK_IDENT) {
-					parse_error(o, "identifier expected after 'songtrk' in song\n");
+					lex_err(&o->lex, "identifier expected after 'songtrk' in song\n");
 					return 0;
 				}
 				t = songtrk_new(o->lex.strval);
@@ -1140,7 +1140,7 @@ parse_song(struct parse_s *o, struct song_s *s) {
 					return 0;
 				}
 				if (o->lex.id != TOK_IDENT) {
-					parse_error(o, "identifier expected after 'songchan' in song\n");
+					lex_err(&o->lex, "identifier expected after 'songchan' in song\n");
 					return 0;
 				}
 				i = songchan_new(o->lex.strval);
@@ -1157,7 +1157,7 @@ parse_song(struct parse_s *o, struct song_s *s) {
 					return 0;
 				}
 				if (o->lex.id != TOK_IDENT) {
-					parse_error(o, "identifier expected after 'songfilt' in song\n");
+					lex_err(&o->lex, "identifier expected after 'songfilt' in song\n");
 					return 0;
 				}
 				g = song_filtlookup(s, o->lex.strval);
@@ -1176,7 +1176,7 @@ parse_song(struct parse_s *o, struct song_s *s) {
 					return 0;
 				}
 				if (o->lex.id != TOK_IDENT) {
-					parse_error(o, "identifier expected after 'songsx' in song\n");
+					lex_err(&o->lex, "identifier expected after 'songsx' in song\n");
 					return 0;
 				}
 				l = song_sxlookup(s, o->lex.strval);
@@ -1202,7 +1202,7 @@ parse_song(struct parse_s *o, struct song_s *s) {
 					return 0;
 				}
 				if ((num % 96) != 0) {
-					parse_error(o, "warning, rounded tic_per_unit to a multiple of 96\n");
+					lex_err(&o->lex, "warning, rounded tic_per_unit to a multiple of 96\n");
 					num = 96 * (num / 96);
 					if (num < 96) {
 						num = 96;
@@ -1217,14 +1217,14 @@ parse_song(struct parse_s *o, struct song_s *s) {
 					return 0;
 				}
 				if (o->lex.id != TOK_IDENT) {
-					parse_error(o, "identifier expected afer 'curtrk' in song\n");
+					lex_err(&o->lex, "identifier expected afer 'curtrk' in song\n");
 					return 0;
 				}
 				t = song_trklookup(s, o->lex.strval);
 				if (t) {
 					s->curtrk = t;
 				} else {
-					parse_error(o, "warning, cant set current track, not such track\n");
+					lex_err(&o->lex, "warning, cant set current track, not such track\n");
 				}
 				if (!parse_nl(o)) {
 					return 0;
@@ -1234,14 +1234,14 @@ parse_song(struct parse_s *o, struct song_s *s) {
 					return 0;
 				}
 				if (o->lex.id != TOK_IDENT) {
-					parse_error(o, "identifier expected afer 'curfilt' in song\n");
+					lex_err(&o->lex, "identifier expected afer 'curfilt' in song\n");
 					return 0;
 				}
 				g = song_filtlookup(s, o->lex.strval);
 				if (g) {
 					s->curfilt = g;
 				} else {
-					parse_error(o, "warning, cant set current filt, not such filt\n");
+					lex_err(&o->lex, "warning, cant set current filt, not such filt\n");
 				}
 				if (!parse_nl(o)) {
 					return 0;
@@ -1251,14 +1251,14 @@ parse_song(struct parse_s *o, struct song_s *s) {
 					return 0;
 				}
 				if (o->lex.id != TOK_IDENT) {
-					parse_error(o, "identifier expected afer 'cursx' in song\n");
+					lex_err(&o->lex, "identifier expected afer 'cursx' in song\n");
 					return 0;
 				}
 				l = song_sxlookup(s, o->lex.strval);
 				if (l) {
 					s->cursx = l;
 				} else {
-					parse_error(o, "warning, cant set current sysex, not such sysex\n");
+					lex_err(&o->lex, "warning, cant set current sysex, not such sysex\n");
 				}
 				if (!parse_nl(o)) {
 					return 0;
@@ -1276,7 +1276,7 @@ parse_song(struct parse_s *o, struct song_s *s) {
 					return 0;
 				}
 				if (num > s->tics_per_unit) {
-					parse_error(o, "warning, truncated curquant because it was too large\n");
+					lex_err(&o->lex, "warning, truncated curquant because it was too large\n");
 					num = s->tics_per_unit;
 				}
 				if (!parse_nl(o)) {
@@ -1288,7 +1288,7 @@ parse_song(struct parse_s *o, struct song_s *s) {
 			}
 		} else {
 		unknown:
-			parse_error(o, "unknown line format in song, ignored\n");
+			lex_err(&o->lex, "unknown line format in song, ignored\n");
 			parse_ungetsym(o);
 			if (!parse_ukline(o)) {
 				return 0;
@@ -1297,34 +1297,6 @@ parse_song(struct parse_s *o, struct song_s *s) {
 	}
 	return 1;
 }
-
-unsigned
-track_load(struct track_s *o, char *filename) {
-	struct parse_s *parse;
-	unsigned res;
-	
-	parse = parse_new(filename);
-	if (!parse) {
-		return 0;
-	}
-	res = parse_track(parse, o);
-	parse_delete(parse);
-	return res;
-}
-
-void
-track_save(struct track_s *o, char *name) {
-	struct textout_s *f;
-	
-	f = textout_new(name);
-	if (f == 0) {
-		return;
-	}
-	track_output(o, f);
-	textout_putstr(f, "\n");
-	textout_delete(f);
-}
-
 
 void
 song_save(struct song_s *o, char *name) {

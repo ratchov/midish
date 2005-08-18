@@ -274,42 +274,6 @@ user_func_trackgetlen(struct exec_s *o, struct data_s **r) {
 
 
 unsigned
-user_func_tracksave(struct exec_s *o, struct data_s **r) {
-	char *trkname, *filename;
-	struct songtrk_s *t;
-	if (!exec_lookupname(o, "trackname", &trkname) ||
-	    !exec_lookupstring(o, "filename", &filename)) {
-		return 0;
-	}
-	t = song_trklookup(user_song, trkname);
-	if (t == 0) {
-		cons_err("tracksave: no such track");
-		return 0;
-	}
-	track_save(&t->track, filename);
-	return 1;
-}
-
-
-unsigned
-user_func_trackload(struct exec_s *o, struct data_s **r) {
-	char *trkname, *filename;
-	struct songtrk_s *t;
-	if (!exec_lookupname(o, "trackname", &trkname) ||  
-	    !exec_lookupstring(o, "filename", &filename)) {
-		return 0;
-	}
-	t = song_trklookup(user_song, trkname);
-	if (t == 0) {
-		cons_err("trackload: no such track");
-		return 0;
-	}
-	track_load(&t->track, filename);
-	return 1;
-}
-
-
-unsigned
 user_func_trackcut(struct exec_s *o, struct data_s **r) {
 	struct songtrk_s *t;
 	long from, amount, quant;

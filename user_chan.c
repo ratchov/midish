@@ -177,6 +177,11 @@ user_func_chanconfev(struct exec_s *o, struct data_s **r) {
 	    !exec_lookupev(o, "event", &ev)) {
 		return 0;
 	}
+	if (ev.data.voice.ch != 0 || ev.data.voice.dev != 0) {
+		cons_err("chanconfev: warning, channel is ignored in event spec (please use {0 0})\n");
+		ev.data.voice.ch = 0;
+		ev.data.voice.dev = 0;
+	}
 	track_rew(&c->conf, &cp);
 	track_evlast(&c->conf, &cp);
 	track_evput(&c->conf, &cp, &ev);

@@ -228,6 +228,7 @@ Without any midi-devices Midish will be probably useless.
 		<TT>sysexadd</TT>, 
 		<TT>songgetcursysex</TT> and
 		<TT>songsetcursysex</TT>.
+	<LI> removed <TT>tracksave</TT> and <TT>trackload</TT>
 	</UL>
 
 <A name="language"></A>
@@ -795,18 +796,6 @@ Without any midi-devices Midish will be probably useless.
 	<PRE>
 	let l = [trackgetlen mytrack];
 	</PRE>
-	</BLOCKQUOTE>
-
-<B><TT>tracksave trackname filename</TT></B>
-	<BLOCKQUOTE>
-	save the events of the track in a file, <TT>filename</TT>
-	is a quoted string.
-	</BLOCKQUOTE>
-
-<B><TT>trackload trackname filename</TT></B>
-	<BLOCKQUOTE>
-	loads the events of a track from a file, <TT>filename</TT>
-	is a quoted string.
 	</BLOCKQUOTE>
 
 <B><TT>trackcut trackname from amount quantum</TT></B>

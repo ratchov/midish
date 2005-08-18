@@ -797,12 +797,6 @@ user_mainloop(void) {
 			name_newarg("trackname", 0));
 	exec_newbuiltin(exec, "trackgetlen", user_func_trackgetlen, 
 			name_newarg("trackname", 0));
-	exec_newbuiltin(exec, "tracksave", user_func_tracksave, 
-			name_newarg("trackname", 
-			name_newarg("filename", 0)));
-	exec_newbuiltin(exec, "trackload", user_func_trackload, 
-			name_newarg("trackname", 
-			name_newarg("filename", 0)));
 	exec_newbuiltin(exec, "trackcut", user_func_trackcut,
 			name_newarg("trackname", 
 			name_newarg("from", 

@@ -76,7 +76,8 @@ void	 lex_dbg(struct lex_s *);
 
 unsigned lex_getchar(struct lex_s *o, int *c);
 void	 lex_ungetchar(struct lex_s *o, int c);
-void	 lex_error(struct lex_s *o, char *msg);
+void	 lex_err(struct lex_s *o, char *msg);
+void	 lex_recover(struct lex_s *o, char *msg);
 unsigned lex_str2long(struct lex_s *o, unsigned base);
 
 #endif /* MIDISH_LEX_H */

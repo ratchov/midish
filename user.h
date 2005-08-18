@@ -84,8 +84,6 @@ unsigned user_func_tracksetcurfilt(struct exec_s *o, struct data_s **r);
 unsigned user_func_trackgetcurfilt(struct exec_s *o, struct data_s **r);
 unsigned user_func_trackcheck(struct exec_s *o, struct data_s **r);
 unsigned user_func_trackgetlen(struct exec_s *o, struct data_s **r);
-unsigned user_func_tracksave(struct exec_s *o, struct data_s **r);
-unsigned user_func_trackload(struct exec_s *o, struct data_s **r);
 unsigned user_func_trackcut(struct exec_s *o, struct data_s **r);
 unsigned user_func_trackblank(struct exec_s *o, struct data_s **r);
 unsigned user_func_trackcopy(struct exec_s *o, struct data_s **r);
