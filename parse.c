@@ -44,19 +44,19 @@
  * 		"(" expr ")"
  * 		"{" [ expr expr ...  expr ] "}"
  * 
- * unary:		"-" unary
+ * unary:	"-" unary
  * 		"~" unary
  * 		"!" unary
  * 		cst
  * 
- * muldiv:		unary "*" unary
+ * muldiv:	unary "*" unary
  * 		unary "/" unary
  * 		unary "%" unary
  * 	
- * addsub:		muldiv "+" muldiv
+ * addsub:	muldiv "+" muldiv
  * 		muldiv "-" muldiv
  * 	
- * shift:		addsub "<<" addsub
+ * shift:	addsub "<<" addsub
  * 		addsub ">>" addsub
  * 	
  * compare:	shift "<" shift

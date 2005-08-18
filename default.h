@@ -106,4 +106,4 @@
 	 */
 #define TEMPO_TO_USEC24(tempo,tpb) (60L * 24000000L / ((tempo) * (tpb)))
 
-#endif /* DEFAULT_EV_H */
+#endif /* MIDISH_DEFAULT_H */

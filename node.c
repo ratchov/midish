@@ -139,6 +139,10 @@ node_exec(struct node_s *o, struct exec_s *x, struct data_s **r) {
 	return result;
 }
 
+	/*
+	 * execute an unary operator ( '-', '!', '~')
+	 */
+
 unsigned
 node_exec_unary(struct node_s *o, struct exec_s *x, struct data_s **r, 
 	unsigned (*func)(struct data_s *)) { 
@@ -150,6 +154,10 @@ node_exec_unary(struct node_s *o, struct exec_s *x, struct data_s **r,
 	}
 	return RESULT_OK;
 }
+
+	/*
+	 * execute a binary operator
+	 */
 
 unsigned
 node_exec_binary(struct node_s *o, struct exec_s *x, struct data_s **r,
@@ -174,6 +182,11 @@ node_exec_binary(struct node_s *o, struct exec_s *x, struct data_s **r,
 
 /* ------------------------------------------------------------------ */
 
+
+	/*
+	 * execute a procedure definition: just check arguments
+	 * and move the tree into a proc_s structure
+	 */
 
 unsigned
 node_exec_proc(struct node_s *o, struct exec_s *x, struct data_s **r) {
@@ -209,6 +222,11 @@ node_exec_alist(struct node_s *o, struct exec_s *x, struct data_s **r) {
 	return RESULT_ERR;
 }
 
+
+	/*
+	 * execute a list of statements
+	 */
+
 unsigned
 node_exec_slist(struct node_s *o, struct exec_s *x, struct data_s **r) {
 	struct node_s *i;
@@ -223,6 +241,11 @@ node_exec_slist(struct node_s *o, struct exec_s *x, struct data_s **r) {
 	return RESULT_OK;
 }
 
+
+	/*
+	 * execute a builtin function
+	 */
+
 unsigned
 node_exec_builtin(struct node_s *o, struct exec_s *x, struct data_s **r) {	
 	if (!((unsigned (*)(struct exec_s *, struct data_s **))
@@ -235,12 +258,20 @@ node_exec_builtin(struct node_s *o, struct exec_s *x, struct data_s **r) {
 	return RESULT_OK;		
 }
 
+	/*
+	 * return a constant 
+	 */
+	 
 unsigned
 node_exec_cst(struct node_s *o, struct exec_s *x, struct data_s **r) {
 	*r = data_newnil();
 	data_assign(*r, o->data);
 	return RESULT_OK;
 }
+
+	/*
+	 * return the value of the variable (in the node)
+	 */
 
 unsigned
 node_exec_var(struct node_s *o, struct exec_s *x, struct data_s **r) {
@@ -256,6 +287,11 @@ node_exec_var(struct node_s *o, struct exec_s *x, struct data_s **r) {
 	return RESULT_OK;
 }
 
+	/*
+	 * ignore the result of the expression
+	 * (used to ignore return values of calls)
+	 */
+
 unsigned
 node_exec_ignore(struct node_s *o, struct exec_s *x, struct data_s **r) {
 	if (node_exec(o->list, x, r) == RESULT_ERR) {
@@ -266,6 +302,9 @@ node_exec_ignore(struct node_s *o, struct exec_s *x, struct data_s **r) {
 	return RESULT_OK;
 }
 
+	/*
+	 * call a procedure
+	 */
 
 unsigned
 node_exec_call(struct node_s *o, struct exec_s *x, struct data_s **r) {
@@ -401,10 +440,18 @@ node_exec_assign(struct node_s *o, struct exec_s *x, struct data_s **r) {
 	return RESULT_OK;
 }
 
+	/* 
+	 * do nothing
+	 */
+
 unsigned
 node_exec_nop(struct node_s *o, struct exec_s *x, struct data_s **r) {
 	return RESULT_OK;
 }
+
+	/* 
+	 * built a list from the expression list
+	 */
 
 unsigned
 node_exec_list(struct node_s *o, struct exec_s *x, struct data_s **r) {
