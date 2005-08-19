@@ -1,4 +1,4 @@
-- when receiving 'STOP' make all notes off; why?
+- receiving 'STOP' make all notes off; why?
 
 - cleanup/implement {track,chan,filt,sysex,song}info 
   do we need them? isn't it better to give the user

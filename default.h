@@ -92,7 +92,7 @@
 	 * number of milliseconds to wait between
 	 * the instrumet config is sent and the playback is stared
 	 */
-#define DEFAULT_CHANWAIT	50
+#define DEFAULT_CHANWAIT	200
 
 	/*
 	 * nmber of milliseconds to wait after 
