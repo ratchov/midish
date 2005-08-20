@@ -320,7 +320,7 @@ proc gmon devnum {
 # configure an instrument for a given general midi patch
 #
 proc gmp chan patch {
-	chanconfev $chan { pc $chan ($patch - 1) }
+	chanconfev $chan { pc {0 0} ($patch - 1) }
 }
 
 
@@ -332,14 +332,14 @@ proc gmp chan patch {
 # patches/rhythmes are counted from 1 to 128
 #
 proc xvp chan bank patch {
-	chanconfev $chan { ctl $chan 0  87 } 
-	chanconfev $chan { ctl $chan 32 (64 + $bank - 1) } 
-	chanconfev $chan { pc  $chan ($patch  - 1) }
+	chanconfev $chan { ctl {0 0} 0  87 } 
+	chanconfev $chan { ctl {0 0} 32 (64 + $bank - 1) } 
+	chanconfev $chan { pc  {0 0} ($patch  - 1) }
 }
 proc xvr chan bank rhythm { 
-	chanconfev $chan { ctl $chan 0  86 } 
-	chanconfev $chan { ctl $chan 32 (64 + $bank - 1) } 
-	chanconfev $chan { pc  $chan ($rhythm - 1) }
+	chanconfev $chan { ctl {0 0} 0  86 } 
+	chanconfev $chan { ctl {0 0} 32 (64 + $bank - 1) } 
+	chanconfev $chan { pc  {0 0} ($rhythm - 1) }
 }
 
 #
@@ -356,13 +356,13 @@ proc xvparam a0 a1 a2 a3 val {
 #
 # controllers config
 #
-proc mod  	chan value { chanconfev $chan {ctl $chan 1  $value}; }
-proc breath  	chan value { chanconfev $chan {ctl $chan 2  $value}; }
-proc vol  	chan value { chanconfev $chan {ctl $chan 7  $value}; }
-proc bal  	chan value { chanconfev $chan {ctl $chan 8  $value}; }
-proc pan  	chan value { chanconfev $chan {ctl $chan 10 $value}; }
-proc reverb	chan value { chanconfev $chan {ctl $chan 91 $value}; }
-proc chorus	chan value { chanconfev $chan {ctl $chan 93 $value}; }
+proc mod  	chan value { chanconfev $chan {ctl {0 0} 1  $value}; }
+proc breath  	chan value { chanconfev $chan {ctl {0 0} 2  $value}; }
+proc vol  	chan value { chanconfev $chan {ctl {0 0} 7  $value}; }
+proc bal  	chan value { chanconfev $chan {ctl {0 0} 8  $value}; }
+proc pan  	chan value { chanconfev $chan {ctl {0 0} 10 $value}; }
+proc reverb	chan value { chanconfev $chan {ctl {0 0} 91 $value}; }
+proc chorus	chan value { chanconfev $chan {ctl {0 0} 93 $value}; }
 
 print "midishrc completed"
 
