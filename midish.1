@@ -1,0 +1,58 @@
+.Dd August 20, 2005
+.Dt MIDISH 1
+.Os
+.Sh NAME
+.Nm midish
+.Nd MIDI sequencer, filter and router
+.Sh SYNOPSIS
+.Nm midish
+.Op Fl norc
+.Sh DESCRIPTION
+Midish is a MIDI sequencer/filter implemented as an interactive
+command-line interpreter. It has the following features:
+.Pp
+.Bl -bullet -compact
+.It
+Multiple MIDI devices handling
+.It
+Synchronisation to external MIDI devices
+.It
+Filtering/routing (controller mapping, keyboard splitting, ...)
+.It
+Track recording, editing, quatisation
+.It
+Import and export of standard MIDI files
+.It
+Tempo and time-signature changes, user configurable metronome
+.It
+System exclusive messages handling
+.El
+.Pp
+The options are as follows:
+.Bl -tag -width "-norc"
+.It Fl norc
+Do not process 
+.Pa "$HOME/.midishrc" 
+file, useful for scripting
+.El
+.Pp
+Once midish started, the interpreter starts prompting for commands.
+Refer to the 
+.Dq Midish user's manual 
+for futher information.
+.Sh FILES
+.Bl -tag -width "$HOME/.midishrc" -compact
+.It Pa "$HOME/.midishrc"
+commands processed on startup
+.It Pa "/dev/rmidiN"
+.Xr midi 1
+devices used by
+.Nm
+.El
+.Sh SEE ALSO
+.Xr midi 4 ,
+.Xr midiplay 1
+.br
+User's manual and tutorial
+.br
+http://caoua.org/midish/

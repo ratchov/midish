@@ -15,6 +15,7 @@ PREFIX = /usr/local
 BIN_DIR = ${PREFIX}/bin
 DOC_DIR = ${PREFIX}/share/doc/midish
 EXAMPLES_DIR = ${PREFIX}/share/examples/midish
+MAN1_DIR = ${PREFIX}/man/man1
 
 
 PROG = midish
@@ -36,13 +37,16 @@ install:	${PROG}
 		mkdir -p ${BIN_DIR}
 		mkdir -p ${DOC_DIR}
 		mkdir -p ${EXAMPLES_DIR}
+		mkdir -p ${MAN1_DIR}
 		cp ${PROG} ${BIN_DIR}
 		cp manual.html tutorial.html ${DOC_DIR}
 		cp midishrc sample.sng ${EXAMPLES_DIR}
+		cp midish.1 ${MAN1_DIR}
 		@echo
 		@echo You can copy manually ${EXAMPLES_DIR}/midishrc
 		@echo into ~/.midishrc
 		@echo
+
 .c.o:
 		${CC} ${CFLAGS} ${READLINE_CFLAGS} ${READLINE_INCLUDE} -c $<
 
