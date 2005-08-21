@@ -33,7 +33,10 @@
 
 void cons_init(void);
 void cons_done(void);
+void cons_mdep_init(void);
+void cons_mdep_done(void);
 int  cons_getc(char *);
+unsigned cons_break(void);
 
 void cons_err(char *mesg);
 void cons_errs(char *s, char *mesg);
@@ -41,5 +44,8 @@ void cons_erru(unsigned long u, char *mesg);
 void cons_errss(char *s0, char *s1, char *mesg);
 void cons_errsu(char *s, unsigned long u, char *mesg);
 void cons_erruu(unsigned long u0, unsigned long u1, char *mesg);
+
+
+extern unsigned cons_breakcnt;
 
 #endif /* MIDISH_CONS_H */

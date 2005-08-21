@@ -46,6 +46,19 @@ unsigned cons_index, cons_interactive;
 char *cons_buf;
 #endif
 
+unsigned cons_breakcnt;
+
+unsigned
+cons_break(void) {
+	if (cons_breakcnt > 0) {
+		cons_breakcnt = 0;
+		cons_err("\n--interrupt--\n");
+		return 1;
+	} else {
+		return 0;
+	}
+}
+
 void
 cons_init(void) {
 #ifdef HAVE_READLINE
@@ -53,10 +66,13 @@ cons_init(void) {
 	cons_buf = 0; 
 	cons_interactive = isatty(STDIN_FILENO) & isatty(STDOUT_FILENO);
 #endif
+	cons_breakcnt = 0;
+	cons_mdep_init();
 }
 
 void
 cons_done(void) {
+	cons_mdep_done();
 #ifdef HAVE_READLINE
 	if (cons_buf) {
 		free(cons_buf);
@@ -71,11 +87,12 @@ cons_getc(char *prompt) {
 	if (cons_interactive) {
 		if (!cons_buf) {
 			cons_buf = readline(prompt);
+			cons_breakcnt = 0;	/* ignore keyboard breaks */
 			if (!cons_buf) {
 				fputs("\n", stdout);
 				return CHAR_EOF;
 			}
-			if (cons_buf != '\0') {
+			if (cons_buf[0] != '\0') {
 				add_history(cons_buf);
 			}
 			cons_index = 0;
@@ -89,10 +106,12 @@ cons_getc(char *prompt) {
 	} else {
 #endif
 		fflush(stdout);
+		fflush(stderr);
 		c = fgetc(stdin);
+		cons_breakcnt = 0;	/* ignore keyboard breaks */
 		if (c < 0) {
 			if (!feof(stdin)) {
-				perror("stdin");
+				perror("cons_getc: stdin");
 			}
 			return CHAR_EOF;
 		}

@@ -37,23 +37,60 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <poll.h>
-#include <termios.h> 		/* for tcflush() in mux_run */
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <errno.h>
 
 #include "default.h"
 #include "mux.h"
 #include "rmidi.h"
+#include "cons.h"
 #include "mdep.h"
-
 #include "user.h"
 #include "exec.h"
+
+#ifdef HAVE_READLINE
+#include <readline/readline.h>
+#include <readline/history.h>
+#endif
 
 #ifndef RC_NAME
 #define RC_NAME		".midishrc"
 #endif
 
 #define MIDI_BUFSIZE	1024
+
+void
+cons_mdep_sighandler(int s) {
+	if (s == SIGINT) {
+		cons_breakcnt++;
+	}
+}
+
+void
+cons_mdep_init(void) {
+	struct sigaction sa;
+
+	sa.sa_handler = cons_mdep_sighandler;
+	sigemptyset(&sa.sa_mask);
+	sa.sa_flags = SA_RESTART;
+	if (sigaction(SIGINT, &sa, NULL) < 0) {
+		perror("cons_mdep_init: sigaction");
+		exit(1);
+	}
+}
+
+void
+cons_mdep_done(void) {
+	struct sigaction sa;
+
+	sa.sa_handler = SIG_DFL;
+	if (sigaction(SIGINT, &sa, NULL) < 0) {
+		perror("cons_mdep_done: sigaction");
+		exit(1);
+	}
+}
 
 
 void
@@ -85,22 +122,13 @@ mux_mdep_done(void) {
 void
 mux_run(void) {
 	nfds_t ifds;
-	int res, consfd;
+	int res;
 	struct timeval tv, tv_last;
-	struct pollfd fds[DEFAULT_MAXNDEVS + 1];
+	struct pollfd fds[DEFAULT_MAXNDEVS];
 	struct mididev_s *dev, *index2dev[DEFAULT_MAXNDEVS];
 	static unsigned char midibuf[MIDI_BUFSIZE];
-	static char conspath[] = "/dev/tty";
-	static char waitmsg[] = "press enter to finish\n";
-	static char stoppedmsg[] = "\r\n";
 	unsigned long delta_usec;
 	unsigned i;
-
-	consfd = open(conspath, O_RDWR);
-	if (consfd < 0) {
-		perror(conspath);
-		goto bad1;
-	}
 
 	ifds = 0;
 	for (dev = mididev_list; dev != 0; dev = dev->next) {
@@ -109,24 +137,20 @@ mux_run(void) {
 		index2dev[ifds] = dev;
 		ifds++;
 	}
-	fds[ifds].fd = consfd;
-	fds[ifds].events = POLLIN;
-	
-	if (write(consfd, waitmsg, sizeof(waitmsg)) < 0) {
-		perror(conspath);
-		goto bad2;
-	}
-	
+		
 	if (gettimeofday(&tv_last, 0) < 0) {
 		perror("mux_run: initial gettimeofday() failed\n");
 		exit(1);
 	}
 
-	for (;;) {
-		res = poll(fds, ifds + 1, 1); 		/* 1ms timeout */
+	while (!cons_break()) {
+		res = poll(fds, ifds, 1); 		/* 1ms timeout */
 		if (res < 0) {
+			if (errno == EINTR) {
+				continue;
+			}
 			perror("mux_run: poll failed");
-			goto bad2;
+			return;
 		}
 		
 		for (i = 0; i < ifds; i++) {
@@ -144,7 +168,7 @@ mux_run(void) {
 		
 		if (gettimeofday(&tv, 0) < 0) {
 			perror("mux_run: gettimeofday failed");
-			goto bad2;
+			return;
 		}
 
 		/*
@@ -159,30 +183,11 @@ mux_run(void) {
 		 * update the current position, 
 		 * (time unit = 24th of microsecond
 		 */
-		mux_timercb(24 * delta_usec);
-
-		if (fds[ifds].revents & POLLIN) {
-			mux_abortcb();
-			if (tcdrain(consfd) < 0) {
-				perror(conspath);
-				goto bad2;
-			}
-			if (tcflush(consfd, TCIOFLUSH) < 0) {
-				perror(conspath);
-				goto bad2;
-			}
-			if (write(consfd, stoppedmsg, sizeof(stoppedmsg)) < 0) {
-				perror(conspath);
-				goto bad2;
-			}
-			close(consfd);
-			return;
+		if (delta_usec) {
+			mux_timercb(24 * delta_usec);
 		}
 	}
-	bad2:
-	close(consfd);
-	bad1:
-	return;
+	mux_abortcb();
 }
 
 	/* 
@@ -212,11 +217,18 @@ rmidi_mdep_done(struct rmidi_s *o) {
 void
 rmidi_flush(struct rmidi_s *o) {
 	int res;
+	unsigned start, stop;
 	if (!RMIDI(o)->mdep.dying) {
-		res = write(o->mdep.fd, o->obuf, o->oused);
-		if (res < 0 || (unsigned)res != o->oused) {
-			perror(RMIDI(o)->mdep.path);
-			RMIDI(o)->mdep.dying = 1;
+		start = 0;
+		stop = o->oused;
+		while (start < stop) {
+			res = write(o->mdep.fd, o->obuf, o->oused);
+			if (res < 0) {
+				perror(RMIDI(o)->mdep.path);
+				RMIDI(o)->mdep.dying = 1;
+				break;
+			}
+			start += res;
 		}
 	}
 	o->oused = 0;

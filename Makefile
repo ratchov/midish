@@ -58,7 +58,7 @@ exec.o:		exec.c dbg.h exec.h name.h str.h data.h node.h cons.h
 filt.o:		filt.c dbg.h ev.h default.h filt.h pool.h
 lex.o:		lex.c dbg.h lex.h str.h textio.h cons.h
 main.o:		main.c dbg.h str.h cons.h ev.h default.h mux.h track.h song.h name.h filt.h sysex.h user.h mididev.h
-mdep.o:		mdep.c default.h mux.h rmidi.h mdep.h mididev.h user.h exec.h name.h str.h
+mdep.o:		mdep.c default.h mux.h rmidi.h cons.h mdep.h mididev.h user.h exec.h name.h str.h
 mididev.o:	mididev.c dbg.h default.h mididev.h data.h cons.h name.h str.h rmidi.h mdep.h pool.h
 mux.o:		mux.c dbg.h ev.h default.h mdep.h mux.h rmidi.h mididev.h sysex.h
 name.o:		name.c dbg.h name.h str.h
