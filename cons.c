@@ -47,6 +47,7 @@ char *cons_buf;
 #endif
 
 unsigned cons_breakcnt;
+unsigned cons_need_prompt=1;
 
 unsigned
 cons_break(void) {
@@ -64,9 +65,10 @@ cons_init(void) {
 #ifdef HAVE_READLINE
 	cons_index = 0;
 	cons_buf = 0; 
-	cons_interactive = isatty(STDIN_FILENO) & isatty(STDOUT_FILENO);
+	cons_interactive = isatty(STDIN_FILENO) && isatty(STDOUT_FILENO);
 #endif
 	cons_breakcnt = 0;
+	cons_need_prompt = 1;
 	cons_mdep_init();
 }
 
@@ -79,6 +81,7 @@ cons_done(void) {
 	}
 #endif
 }
+
 
 int
 cons_getc(char *prompt) {
@@ -105,9 +108,16 @@ cons_getc(char *prompt) {
 		}
 	} else {
 #endif
+		if (cons_need_prompt) {
+			fputs("+ready\n", stdout);
+			cons_need_prompt = 0;
+		}			
 		fflush(stdout);
 		fflush(stderr);
 		c = fgetc(stdin);
+		if (c == '\n') {
+			cons_need_prompt = 1;
+		}
 		cons_breakcnt = 0;	/* ignore keyboard breaks */
 		if (c < 0) {
 			if (!feof(stdin)) {
