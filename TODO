@@ -1,3 +1,5 @@
+- cleanup the 'verbose' mode
+
 - receiving 'STOP' make all notes off; why?
 
 - cleanup/implement {track,chan,filt,sysex,song}info 

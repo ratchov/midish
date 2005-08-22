@@ -1,13 +1,4 @@
 #
-# comment the following if you don't have a working readline(3) library
-# (don't forget to run 'make clean')
-#
-READLINE_CFLAGS = -DHAVE_READLINE
-READLINE_LDFLAGS = -L/usr/local/lib	# path to readline libraries
-READLINE_INCLUDE = -I/usr/local/include # path to readline header files
-READLINE_LIB = -lreadline -ltermcap	# readline libraries
-
-#
 # binaries, documentation, examples and man pages will be installed in 
 # ${BIN_DIR}, ${DOC_DIR}, ${EXAMPLES_DIR}, ${MAN1_DIR}
 #
@@ -16,7 +7,6 @@ BIN_DIR = ${PREFIX}/bin
 DOC_DIR = ${PREFIX}/share/doc/midish
 EXAMPLES_DIR = ${PREFIX}/share/examples/midish
 MAN1_DIR = ${PREFIX}/man/man1
-
 
 PROG = midish
 OBJS = \
@@ -28,7 +18,7 @@ user_trk.o user_chan.o user_filt.o user_sx.o user_song.o user_dev.o
 all:		${PROG}
 
 ${PROG}:	${OBJS}
-		${CC} ${LDFLAGS} ${READLINE_LDFLAGS} ${OBJS} -o ${PROG} ${READLINE_LIB}
+		${CC} ${LDFLAGS} ${OBJS} -o ${PROG}
 
 clean:		
 		rm -f -- ${PROG} *~ *.bak *.o *.s *.out *.core core
@@ -48,7 +38,7 @@ install:	${PROG}
 		@echo
 
 .c.o:
-		${CC} ${CFLAGS} ${READLINE_CFLAGS} ${READLINE_INCLUDE} -c $<
+		${CC} ${CFLAGS} -c $<
 
 cons.o:		cons.c dbg.h textio.h cons.h
 data.o:		data.c dbg.h str.h cons.h data.h
@@ -80,4 +70,4 @@ user_dev.o:	user_dev.c dbg.h default.h node.h exec.h name.h str.h data.h cons.h 
 user_filt.o:	user_filt.c dbg.h default.h node.h exec.h name.h str.h data.h cons.h song.h track.h ev.h filt.h sysex.h user.h saveload.h textio.h
 user_song.o: 	user_song.c dbg.h default.h node.h exec.h name.h str.h data.h cons.h trackop.h song.h track.h ev.h filt.h sysex.h user.h smf.h saveload.h textio.h
 user_sx.o:	user_sx.c dbg.h default.h node.h exec.h name.h str.h data.h cons.h song.h track.h ev.h filt.h sysex.h user.h saveload.h textio.h
-user_trk.o:	user_trk.c dbg.h default.h node.h exec.h name.h str.h data.h cons.h trackop.h track.h ev.h song.h filt.h sysex.h user.h  saveload.h textio.h
+user_trk.o:	user_trk.c dbg.h default.h node.h exec.h name.h str.h data.h cons.h trackop.h track.h ev.h song.h filt.h sysex.h user.h saveload.h textio.h

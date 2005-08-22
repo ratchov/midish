@@ -30,21 +30,10 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#ifdef HAVE_READLINE
-#include <unistd.h>
-#include <fcntl.h>
-#include <readline/readline.h>
-#include <readline/history.h>
-#endif
 
 #include "dbg.h"
 #include "textio.h"
 #include "cons.h"
-
-#ifdef HAVE_READLINE
-unsigned cons_index, cons_interactive;
-char *cons_buf;
-#endif
 
 unsigned cons_breakcnt;
 unsigned cons_need_prompt=1;
@@ -62,11 +51,6 @@ cons_break(void) {
 
 void
 cons_init(void) {
-#ifdef HAVE_READLINE
-	cons_index = 0;
-	cons_buf = 0; 
-	cons_interactive = isatty(STDIN_FILENO) && isatty(STDOUT_FILENO);
-#endif
 	cons_breakcnt = 0;
 	cons_need_prompt = 1;
 	cons_mdep_init();
@@ -75,59 +59,28 @@ cons_init(void) {
 void
 cons_done(void) {
 	cons_mdep_done();
-#ifdef HAVE_READLINE
-	if (cons_buf) {
-		free(cons_buf);
-	}
-#endif
 }
-
 
 int
 cons_getc(char *prompt) {
 	int c;
-#ifdef HAVE_READLINE
-	if (cons_interactive) {
-		if (!cons_buf) {
-			cons_buf = readline(prompt);
-			cons_breakcnt = 0;	/* ignore keyboard breaks */
-			if (!cons_buf) {
-				fputs("\n", stdout);
-				return CHAR_EOF;
-			}
-			if (cons_buf[0] != '\0') {
-				add_history(cons_buf);
-			}
-			cons_index = 0;
-		}
-		c = cons_buf[cons_index++];
-		if (c == '\0') {
-			free(cons_buf);
-			cons_buf = 0;
-			return '\n';
-		}
-	} else {
-#endif
-		if (cons_need_prompt) {
-			fputs("+ready\n", stdout);
-			cons_need_prompt = 0;
-		}			
-		fflush(stdout);
-		fflush(stderr);
-		c = fgetc(stdin);
-		if (c == '\n') {
-			cons_need_prompt = 1;
-		}
-		cons_breakcnt = 0;	/* ignore keyboard breaks */
-		if (c < 0) {
-			if (!feof(stdin)) {
-				perror("cons_getc: stdin");
-			}
-			return CHAR_EOF;
-		}
-#ifdef HAVE_READLINE
+	if (cons_need_prompt) {
+		fputs("+ready\n", stdout);
+		cons_need_prompt = 0;
 	}
-#endif
+	fflush(stdout);
+	fflush(stderr);
+	c = fgetc(stdin);
+	if (c == '\n') {
+		cons_need_prompt = 1;
+	}
+	cons_breakcnt = 0;	/* ignore keyboard breaks */
+	if (c < 0) {
+		if (ferror(stdin)) {
+			perror("cons_getc: stdin");
+		}
+		return CHAR_EOF;
+	}
 	return c;
 }
 
@@ -156,12 +109,7 @@ cons_errsu(char *s, unsigned long u, char *mesg) {
 	fprintf(stderr, "%s: %lu: %s\n", s, u, mesg);
 }
 
-
 void
 cons_erruu(unsigned long u0, unsigned long u1, char *mesg) {
 	fprintf(stderr, "%lu.%lu: %s\n", u0, u1, mesg);
 }
-
-
-
-

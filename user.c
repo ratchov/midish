@@ -57,6 +57,7 @@
 
 struct song_s *user_song;
 unsigned user_flag_norc = 0;
+unsigned user_flag_prompt = 0;
 
 /* -------------------------------------------------- some tools --- */
 
