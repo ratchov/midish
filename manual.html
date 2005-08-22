@@ -155,18 +155,12 @@ Without any midi-devices Midish will be probably useless.
 	<P>
 	Once started, the sequencer reads and executes commands
 	from stdin and writes results (and user non-fatal errors)
-	to stdout. If stdin and stdout are both tty terminals, and if
-	compiled with the readline(3) library an interactive prompt is
-	used.
-
-	Fatal errors and other debugging information is logged
+	to stdout. Fatal errors and other debugging information is logged
 	to stderr.
 
-	While performing real-time functions (playback,
-	recording) the controlling terminal (see tty(1)) is
-	polled. Real-time function is terminated if any key is
-	pressed. Thus the sequencer must have controlling tty
-	for real-time performance.
+	Real-time functions (such as playback, recording) 
+	are blocking; they can be resumed  by sending an interrupt signal 
+	to midish (control-C on its controlling terminal).
 
 	<P>
 	You can try to play the demo song in the source tar-ball
@@ -229,6 +223,7 @@ Without any midi-devices Midish will be probably useless.
 		<TT>songgetcursysex</TT> and
 		<TT>songsetcursysex</TT>.
 	<LI> removed <TT>tracksave</TT> and <TT>trackload</TT>
+	<LI> removed support for gnu readline(3) library
 	</UL>
 
 <A name="language"></A>
@@ -241,7 +236,7 @@ Without any midi-devices Midish will be probably useless.
 	<LI> Identifiers:
 		<BR>
 		an identifier is a sequence of up to 32
-		characters, digits and underscores (<TT>_</TT>).
+		characters, digits and underscores ('<TT>_</TT>').
 		However, an identifier cannot start with a
 		digit. Examples:
 	<PRE>
@@ -296,10 +291,10 @@ Without any midi-devices Midish will be probably useless.
 <H2>Statements</H2>
 
 	<P>
-	The input can be ether a function definition or a
+	Any input line can be ether a function definition or a
 	statement. 
 
-	Most of the statements end with the '<TT>;</TT>'
+	Most statements end with the '<TT>;</TT>'
 	character.  However, in order to improve
 	interactivity, the newline character can be used
 	instead. Thus, the newline character cannot be

@@ -50,11 +50,6 @@
 #include "user.h"
 #include "exec.h"
 
-#ifdef HAVE_READLINE
-#include <readline/readline.h>
-#include <readline/history.h>
-#endif
-
 #ifndef RC_NAME
 #define RC_NAME		".midishrc"
 #endif

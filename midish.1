@@ -39,7 +39,10 @@ file, useful for scripting
 Once midish started, the interpreter starts prompting for commands.
 Refer to the 
 .Dq Midish user's manual 
-for futher information.
+for futher information. Certain commands (such as playback, recording) are
+blocking, they can be resumed by sending interrupt signal to 
+.Nm
+(SIGINT or ^C on ttys).
 .Sh FILES
 .Bl -tag -width "$HOME/.midishrc" -compact
 .It Pa "$HOME/.midishrc"
