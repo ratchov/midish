@@ -18,7 +18,7 @@
 #include <readline/readline.h>
 #include <readline/history.h>
 
-#define MIDISHBIN "./midish"
+#define MIDISHBIN "midish"
 
 int midish_pid;
 FILE *midish_stdout, *midish_stdin;
