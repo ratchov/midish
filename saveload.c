@@ -651,7 +651,7 @@ parse_track(struct parse_s *o, struct track_s *t) {
 		lex_err(&o->lex, "'{' expected while parsing track\n");
 		return 0;
 	}
-	track_clear(t, &tp);	
+	track_rew(t, &tp);	
 	for (;;) {
 		if (!parse_getsym(o)) {
 			return 0;
@@ -873,7 +873,7 @@ parse_sysex(struct parse_s *o, struct sysex_s **res) {
 			}
 		} else {
 		unknown:
-			lex_err(&o->lex, "unknown line format in songchan, ignored\n");
+			lex_err(&o->lex, "unknown line format in sysex, ignored\n");
 			parse_ungetsym(o);
 			if (!parse_ukline(o)) {
 				goto err1;
@@ -1126,12 +1126,14 @@ parse_song(struct parse_s *o, struct song_s *s) {
 					lex_err(&o->lex, "identifier expected after 'songtrk' in song\n");
 					return 0;
 				}
-				t = songtrk_new(o->lex.strval);
+				t = song_trklookup(s, o->lex.strval);
+				if (t == 0) {
+					t = songtrk_new(o->lex.strval);
+					song_trkadd(s, t);
+				}
 				if (!parse_songtrk(o, s, t)) {
-					songtrk_delete(t);
 					return 0;
 				}
-				song_trkadd(s, t);
 				if (!parse_nl(o)) {
 					return 0;
 				}
@@ -1143,12 +1145,14 @@ parse_song(struct parse_s *o, struct song_s *s) {
 					lex_err(&o->lex, "identifier expected after 'songchan' in song\n");
 					return 0;
 				}
-				i = songchan_new(o->lex.strval);
+				i = song_chanlookup(s, o->lex.strval);
+				if (i == 0) {
+					i = songchan_new(o->lex.strval);
+					song_chanadd(s, i);
+				}
 				if (!parse_songchan(o, s, i)) {
-					songchan_delete(i);
 					return 0;
 				}
-				song_chanadd(s, i);
 				if (!parse_nl(o)) {
 					return 0;
 				}
