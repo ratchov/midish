@@ -137,6 +137,7 @@ mux_mdep_run(void) {
 		exit(1);
 	}
 
+	cons_err("press control-C to finish");
 	while (!cons_break()) {
 		res = poll(fds, ifds, 1); 		/* 1ms timeout */
 		if (res < 0) {
