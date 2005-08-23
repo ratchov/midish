@@ -182,7 +182,12 @@ Without any midi-devices Midish will be probably useless.
 	songload "sample.sng"
 	songplay
 	</PRE>
-
+	
+	To stop the playback, hit control-C. All blocking
+	functions (<TT>songplay</TT>, <TT>songrecord</TT>,
+	<TT>songidle</TT>) can be resumed with by sending an
+	interrupt signal (SIGINT) to midish. To leave midish, hit
+	control-D (witch means "end-of-file").
 
 <A name="changes"></A>
 <H1>Changes</H1>
@@ -190,7 +195,7 @@ Without any midi-devices Midish will be probably useless.
 
 	<UL>
 	<LI> added '<TT>device</TT>' parameter to '<TT>sendraw</TT>'
-	<LI> replaced '<TT>filtchangein</TT>' to '<TT>filtswapichan</TT>'
+	<LI> replaced '<TT>filtchangein</TT>' by '<TT>filtswapichan</TT>'
 		and added '<TT>filtswapidev</TT>'
 	<LI> added new filter rules: 
 		<TT>filtdevdrop</TT>, 
@@ -236,9 +241,9 @@ Without any midi-devices Midish will be probably useless.
 		<TT>songgetcursysex</TT> and
 		<TT>songsetcursysex</TT>.
 	<LI> removed <TT>tracksave</TT> and <TT>trackload</TT>
-	<LI> removed support for gnu readline(3) library midish, 
+	<LI> removed support for gnu readline(3) library from midish, 
 	 	and created the <TT>rmidish</TT> utility, a front-end
-		using the readline(3) library.	
+		to midish using the readline(3) library.	
 	</UL>
 
 <A name="language"></A>
@@ -316,7 +321,7 @@ Without any midi-devices Midish will be probably useless.
 	used as a space.
 
 	A statement can be:
-		
+
 	<UL>
 	<LI>
 	A procedure call, example:
@@ -455,21 +460,21 @@ Without any midi-devices Midish will be probably useless.
 	<TR>	<TD><TT>/</TT>
 		<TD>division
 
-	<TR>	<TD><TT>%</TT
+	<TR>	<TD><TT>%</TT>
 		<TD>reminder
 
-	<TR>	<TD><TT>+</TT
+	<TR>	<TD><TT>+</TT>
 		<TD>addition
 		<TD rowspan="2">left to right
 
-	<TR>	<TD><TT>-</TT
+	<TR>	<TD><TT>-</TT>
 		<TD>subtraction
 
-	<TR>	<TD><TT>&lt;&lt;</TT
+	<TR>	<TD><TT>&lt;&lt;</TT>
 		<TD>left shift	
 		<TD rowspan="2">left to right
 
-	<TR>	<TD><TT>&gt;&gt;</TT
+	<TR>	<TD><TT>&gt;&gt;</TT>
 		<TD>right shift
 	
 	<TR>	<TD><TT>&lt;</TT>
@@ -1399,7 +1404,7 @@ Without any midi-devices Midish will be probably useless.
 <HR>
 <SMALL><EM>
 Copyright (c) 2003-2005 Alexandre Ratchov<BR>
-Last updated may 26, 2005 	
+Last updated aug 23, 2005 
 </EM></SMALL>
 
 </BODY>

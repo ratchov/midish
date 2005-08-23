@@ -72,9 +72,15 @@
 
 	To start midish, just type:
 	<PRE>
-	midish
+	rmidish
 	</PRE>
 
+	Actually <TT>rmidish</TT> is a front-end to midish; if it is
+	not installed, you can start <TT>midish</TT> as follows:
+	<PRE>
+	rmidish
+	</PRE>
+	
 	At the prompt you can issue commands, like:
 	<PRE>
 	print "hello world"
@@ -92,9 +98,10 @@
 	<P>
 	In performance mode, midish processes midi input/output
 	in real-time.
-
 	Commands cannot be issued on the command-line.
 	This mode is typically used for playback and record.
+	To stop performance mode, hit control-C (or send an interrupt
+	signal (SIGINT) to midish).	
 
 <A name="dev"></A>
 <H1>Device setup</H1>
@@ -103,13 +110,13 @@
 	Each midi-device has its "slot number". For instance, 
 	suppose	that we have a midi sound module known as
 	<TT>/dev/rmidi3</TT> and a midi keyboard known as
-	<TT>/dev/rmidi2</TT>.
+	<TT>/dev/rmidi4</TT>.
 
 	To configure the module as device number 0 and
 	the keyboard as device number 1, just type:
 	<PRE>
-	devattach 0 "/dev/rmidi3"
-	devattach 1 "/dev/rmidi2"
+	devattach 0 "/dev/rmidi4"
+	devattach 1 "/dev/rmidi3"
 	</PRE>
 	
 	<P>
@@ -128,6 +135,7 @@
 	songplay
 	</PRE>
 
+	(an hit control-C to stop playback).
 	When your configuration is setup, put your "devattach" 
 	commands in your <TT>$HOME/.midishrc</TT>. It will be
 	automatically executed the next time you run midish.
