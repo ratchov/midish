@@ -53,7 +53,7 @@ void user_mainloop(void);
 void user_printstr(char *);
 void user_printlong(long);
 void user_error(char *);
-char *user_rcname(void);
+unsigned user_getopts(int *pargc, char ***pargv);
 
 /* useful convertion functions */
 

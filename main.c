@@ -44,21 +44,14 @@
 #include "sysex.h"
 #include "textio.h"
 
+
 int
-main(int argc, char *argv[]) {
-	int i;
+main(int argc, char **argv) {
 	
-	for (i = 1; i < argc; i++) {
-		if (str_eq(argv[i], "-norc")) {
-			user_flag_norc = 1;
-		} else if (str_eq(argv[i], "-verb")) {
-			user_flag_verb = 1;
-		} else {
-			dbg_puts("usage: midish [-norc]\n");
-			goto err;
-		} 
+	if (!user_getopts(&argc, &argv)) {
+		return 1;
 	}
-	
+
 	cons_init();
 	textio_init();
 	seqev_pool_init(DEFAULT_MAXNSEQEVS);
@@ -76,6 +69,5 @@ main(int argc, char *argv[]) {
 	seqev_pool_done();
 	textio_done();
 	cons_done();
-err:
 	return 0;
 }

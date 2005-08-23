@@ -6,8 +6,7 @@
 .Nd MIDI sequencer and filter
 .Sh SYNOPSIS
 .Nm midish
-.Op Fl norc
-.Op Fl verb
+.Op Fl bv
 .Sh DESCRIPTION
 Midish is a MIDI sequencer/filter implemented as an interactive
 command-line interpreter. Here are some of its features:
@@ -30,12 +29,12 @@ System exclusive messages handling
 .El
 .Pp
 The options are as follows:
-.Bl -tag -width "-norc"
-.It Fl norc
+.Bl -tag -width "-b "
+.It Fl b
 Do not process 
 .Pa "$HOME/.midishrc" 
 file, useful for scripting
-.It Fl verb
+.It Fl v
 Print additionnal info before each line of input, useful to
 front-ends and for dubugging.
 .El

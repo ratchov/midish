@@ -241,3 +241,28 @@ exec_runrcfile(struct exec_s *o) {
 	snprintf(name, PATH_MAX, "%s" "/" RC_NAME, home);
 	return exec_runfile(o, name);
 }
+
+extern char *optarg;
+extern int optind;
+
+unsigned
+user_getopts(int *pargc, char ***pargv) {
+	int ch;
+
+	while ((ch = getopt(*pargc, *pargv, "bv")) != -1) {
+		switch (ch) {
+		case 'b':
+			user_flag_norc = 1;
+			break;
+		case 'v':
+			user_flag_verb = 1;
+			break;
+		default:
+			fputs("usage: midish [-bv]\n", stderr);
+			return 0;
+		}
+	}
+	*pargc -= optind;
+	*pargv += optind;
+	return 1;
+}

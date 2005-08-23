@@ -105,7 +105,7 @@ startmidish(int argc, char **argv) {
 		}
 		close(ipipe[0]);
 		close(opipe[1]);
-		if (execlp(MIDISHBIN, MIDISHBIN, "-verb", (char *)NULL) < 0) {
+		if (execlp(MIDISHBIN, MIDISHBIN, "-v", (char *)NULL) < 0) {
 			perror(MIDISHBIN);
 		}
 		exit(1);
