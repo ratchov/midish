@@ -1,0 +1,49 @@
+.Dd August 22, 2005
+.Dt MIDISH-EDIT 1
+.Os
+.Sh NAME
+.Nm midish-edit
+.Nd front-end to 
+.Xr midish 1 ,
+using the 
+.Xr readline 3
+library
+.Sh SYNOPSIS
+.Nm midish-edit
+.Op Fl x Ar filename
+.Sh DESCRIPTION
+The 
+.Nm 
+utility is a front-end to 
+.Xr midish 1
+that uses the 
+.Xr readline 3
+library.
+It runs
+.Xr midish 1
+in the background, issues an interactive prompt and
+passes user commands to
+.Xr midish 1 .
+The initial purpose of 
+.Nm
+was to illustrate how to use the
+.Fl verb
+option of 
+.Xr midish 1
+to create a front-end, but it can be run instead of 
+.Xr midish 1
+to make the later more user-friendly when used interactively.
+.Pp
+The options are as follows:
+.Bl -tag -width "-x filename"
+.It Fl x Ar filename
+Path to the
+.Xr midish 1
+binary
+.Sh SEE ALSO
+.Xr midish 1 ,
+.Xr readline 3
+.br
+Midish user's manual and tutorial
+.br
+http://caoua.org/midish/

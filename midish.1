@@ -7,6 +7,7 @@
 .Sh SYNOPSIS
 .Nm midish
 .Op Fl norc
+.Op Fl verb
 .Sh DESCRIPTION
 Midish is a MIDI sequencer/filter implemented as an interactive
 command-line interpreter. Here are some of its features:
@@ -36,16 +37,21 @@ Do not process
 file, useful for scripting
 .It Fl verb
 Print additionnal info before each line of input, useful to
-frontends and for dubugging.
+front-ends and for dubugging.
 .El
 .Pp
-Once midish started, the interpreter starts prompting for commands.
-Refer to the 
-.Dq Midish user's manual 
-for futher information. Certain commands (such as playback, recording) are
+Once midish started, the interpreter starts prompting for commands 
+(users wanting to use midish interactively may consider using the
+.Xr midish-edit 1
+utility). 
+Certain commands (such as playback, recording) are
 blocking, they can be resumed by sending interrupt signal to 
 .Nm
 (SIGINT or ^C on ttys).
+For further information about the syntax of 
+.Nm
+refer the 
+.Dq Midish user's manual .
 .Sh FILES
 .Bl -tag -width "$HOME/.midishrc" -compact
 .It Pa "$HOME/.midishrc"
@@ -56,6 +62,7 @@ devices used by
 .Nm
 .El
 .Sh SEE ALSO
+.Xr midish-edit 1 ,
 .Xr midi 4 ,
 .Xr midiplay 1
 .br

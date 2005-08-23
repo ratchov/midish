@@ -13,9 +13,9 @@ READLINE_LIB = -lreadline -ltermcap	# readline libraries
 #
 PREFIX = /usr/local
 BIN_DIR = ${PREFIX}/bin
+MAN1_DIR = ${PREFIX}/man/man1
 DOC_DIR = ${PREFIX}/share/doc/midish
 EXAMPLES_DIR = ${PREFIX}/share/examples/midish
-MAN1_DIR = ${PREFIX}/man/man1
 
 MIDISH_OBJS = \
 cons.o data.o dbg.o ev.o exec.o filt.o lex.o main.o mdep.o mididev.o \
@@ -33,13 +33,13 @@ clean:
 
 install:	midish midish-edit
 		mkdir -p ${BIN_DIR}
+		mkdir -p ${MAN1_DIR}
 		mkdir -p ${DOC_DIR}
 		mkdir -p ${EXAMPLES_DIR}
-		mkdir -p ${MAN1_DIR}
 		cp midish midish-edit ${BIN_DIR}
+		cp midish.1 midish-edit.1 ${MAN1_DIR}
 		cp manual.html tutorial.html ${DOC_DIR}
 		cp midishrc sample.sng ${EXAMPLES_DIR}
-		cp midish.1 ${MAN1_DIR}
 		@echo
 		@echo You can copy manually ${EXAMPLES_DIR}/midishrc
 		@echo into ~/.midishrc
