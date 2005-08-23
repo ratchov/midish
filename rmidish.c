@@ -137,6 +137,18 @@ main(int argc, char **argv) {
 #define PROMPTLENGTH 20
 	char *rl, prompt[PROMPTLENGTH];
 
+	/*
+	 * if stdin or stdout is not a tty, then dont start the front end
+	 * execute midish
+	 */
+
+	if (!isatty(STDIN_FILENO) || !isatty(STDOUT_FILENO)) {
+		if (execlp(MIDISHBIN, MIDISHBIN, (char *)NULL) < 0) {
+			perror(MIDISHBIN);
+		}
+		exit(1);
+	}		
+	
 	startmidish(argc, argv);
 	
 	for (;;) {
