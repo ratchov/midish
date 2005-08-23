@@ -1,6 +1,6 @@
 #
 # parameters for the GNU readline(3) library, used to
-# buid midish-edit (front-end to midish)
+# buid rmidish (front-end to midish)
 #
 READLINE_CFLAGS = 			# readline additionnal flags
 READLINE_LDFLAGS = -L/usr/local/lib	# path to readline libraries
@@ -23,21 +23,21 @@ mux.o name.o node.o parse.o pool.o rmidi.o saveload.o smf.o song.o \
 str.o sysex.o textio.o track.o trackop.o user.o \
 user_trk.o user_chan.o user_filt.o user_sx.o user_song.o user_dev.o 
 
-all:		midish midish-edit
+all:		midish rmidish
 
 midish:		${MIDISH_OBJS}
 		${CC} ${LDFLAGS} ${MIDISH_OBJS} -o $@
 
 clean:		
-		rm -f -- midish midish-edit *~ *.bak *.tmp *.o *.s *.out *.core core
+		rm -f -- midish rmidish *~ *.bak *.tmp *.o *.s *.out *.core core
 
-install:	midish midish-edit
+install:	midish rmidish
 		mkdir -p ${BIN_DIR}
 		mkdir -p ${MAN1_DIR}
 		mkdir -p ${DOC_DIR}
 		mkdir -p ${EXAMPLES_DIR}
-		cp midish midish-edit ${BIN_DIR}
-		cp midish.1 midish-edit.1 ${MAN1_DIR}
+		cp midish rmidish ${BIN_DIR}
+		cp midish.1 rmidish.1 ${MAN1_DIR}
 		cp manual.html tutorial.html ${DOC_DIR}
 		cp midishrc sample.sng ${EXAMPLES_DIR}
 		@echo
@@ -80,6 +80,6 @@ user_song.o: 	user_song.c dbg.h default.h node.h exec.h name.h str.h data.h cons
 user_sx.o:	user_sx.c dbg.h default.h node.h exec.h name.h str.h data.h cons.h song.h track.h ev.h filt.h sysex.h user.h saveload.h textio.h
 user_trk.o:	user_trk.c dbg.h default.h node.h exec.h name.h str.h data.h cons.h trackop.h track.h ev.h song.h filt.h sysex.h user.h saveload.h textio.h
 
-midish-edit:	midish midish-edit.c
+rmidish:	midish rmidish.c
 		${CC} ${CFLAGS} ${READLINE_CFLAGS} ${READLINE_INCLUDE} $< \
-		${READLINE_LDFLAGS} -o midish-edit ${READLINE_LIB}
+		${READLINE_LDFLAGS} -o rmidish ${READLINE_LIB}
