@@ -25,28 +25,30 @@ user_trk.o user_chan.o user_filt.o user_sx.o user_song.o user_dev.o
 
 all:		midish rmidish
 
+install:	install-midish install-rmidish
+
+clean:
+		rm -f -- midish rmidish *~ *.bak *.tmp *.o *.s *.out *.core core
+
+# ---------------------------------------------- dependencies for midish ---
+
 midish:		${MIDISH_OBJS}
 		${CC} ${LDFLAGS} ${MIDISH_OBJS} -o $@
 
-clean:		
-		rm -f -- midish rmidish *~ *.bak *.tmp *.o *.s *.out *.core core
 
-install:	midish rmidish
+install-midish:	midish
 		mkdir -p ${BIN_DIR}
 		mkdir -p ${MAN1_DIR}
 		mkdir -p ${DOC_DIR}
 		mkdir -p ${EXAMPLES_DIR}
-		cp midish rmidish ${BIN_DIR}
-		cp midish.1 rmidish.1 ${MAN1_DIR}
+		cp midish ${BIN_DIR}
+		cp midish.1 ${MAN1_DIR}
 		cp manual.html tutorial.html ${DOC_DIR}
 		cp midishrc sample.sng ${EXAMPLES_DIR}
 		@echo
 		@echo You can copy manually ${EXAMPLES_DIR}/midishrc
 		@echo into ~/.midishrc
 		@echo
-
-.c.o:
-		${CC} ${CFLAGS} -c $<
 
 cons.o:		cons.c dbg.h textio.h cons.h
 data.o:		data.c dbg.h str.h cons.h data.h
@@ -80,6 +82,15 @@ user_song.o: 	user_song.c dbg.h default.h node.h exec.h name.h str.h data.h cons
 user_sx.o:	user_sx.c dbg.h default.h node.h exec.h name.h str.h data.h cons.h song.h track.h ev.h filt.h sysex.h user.h saveload.h textio.h
 user_trk.o:	user_trk.c dbg.h default.h node.h exec.h name.h str.h data.h cons.h trackop.h track.h ev.h song.h filt.h sysex.h user.h saveload.h textio.h
 
-rmidish:	midish rmidish.c
+# --------------------------------------------- dependencies for rmidish ---
+
+rmidish:	rmidish.c
 		${CC} ${CFLAGS} ${READLINE_CFLAGS} ${READLINE_INCLUDE} $< \
-		${READLINE_LDFLAGS} -o rmidish ${READLINE_LIB}
+		${LDFLAGS} ${READLINE_LDFLAGS} -o rmidish ${READLINE_LIB}
+
+install-rmidish:rmidish
+		mkdir -p ${BIN_DIR}
+		mkdir -p ${MAN1_DIR}
+		cp rmidish ${BIN_DIR}
+		cp rmidish.1 ${MAN1_DIR}
+		

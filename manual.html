@@ -77,6 +77,7 @@
 	<LI>	a POSIX unix-like operating system with "raw" midi support.
 		Midish works on OpenBSD (its development platform)
 		and Linux.
+	<LI>	(optional) the readline(3) library
 	</UL>
 
 Without any midi-devices Midish will be probably useless.
@@ -92,17 +93,22 @@ Without any midi-devices Midish will be probably useless.
 	</PRE>
 
 	<LI> 
-	edit Makefile and comment or uncomment readline(3) options in Makefile
+	edit Makefile and change the readline(3) options in Makefile
 
 	<LI> 
-	compile midish, just type '<TT>make all</TT>'
+	compile midish, just type '<TT>make all</TT>', this will build
+	midish and rmidish, the readline(3) front-end to midish.
+	If you don't have the readline(3) library then don't
+	build the 'rmidish' front-end, just type '<TT>make midish</TT>
 
 	<LI>
 	install binaries, documentation and examples by
-	typing '<TT>make install</TT>'. They are copied
-	as follows:
+	typing '<TT>make install</TT>' (if you haven't built the
+	rmidish front-end type '<TT>make install-midish</TT>').
+	They are copied as follows:
 	<UL>
 	<LI> binaries in '<TT>PREFIX/bin</TT>'
+	<LI> manual pages in '<TT>PREFIX/man/man1</TT>'
 	<LI> html documentation in '<TT>PREFIX/share/doc/midish</TT>'
 	<LI> example files in '<TT>PREFIX/share/examples/midish</TT>'
 	</UL>
@@ -135,19 +141,26 @@ Without any midi-devices Midish will be probably useless.
 	</PRE>
 
 	in your shell. On startup, it tries to execute the
-	'<TT>$HOME/.midishrc</TT>' script . If you
+	'<TT>$HOME/.midishrc</TT>' script. If you
 	don't want so, use the '<TT>-norc</TT>' flag. This is
-	useful when you want to use midish in scripts.
+	useful when you want to use midish in scripts. If
+	you have built the readline(3) front-end, you may want
+	use it for interactive sessions instead of '<TT>midish</TT>
+	by typing:
+
+	<PRE>
+	rmidish
+	</PRE>
 
 	You can specify your midi devices
 	by using the '<TT>devattach</TT>' function,  for instance:
 
 	<PRE>
-	devattach 0 "/dev/rmidi3"
-	devattach 1 "/dev/rmidi1"
+	devattach 0 "/dev/rmidi4"
+	devattach 1 "/dev/rmidi3"
 	</PRE>
 
-	will attach '<TT>/dev/rmidi3</TT>' and '<TT>/dev/rmidi1</TT>' 
+	will attach '<TT>/dev/rmidi4</TT>' and '<TT>/dev/rmidi3</TT>' 
 	as devices
 	number 0 and 1. You can put those statements in 
 	your '<TT>$HOME/.midishrc</TT>'
@@ -223,7 +236,9 @@ Without any midi-devices Midish will be probably useless.
 		<TT>songgetcursysex</TT> and
 		<TT>songsetcursysex</TT>.
 	<LI> removed <TT>tracksave</TT> and <TT>trackload</TT>
-	<LI> removed support for gnu readline(3) library
+	<LI> removed support for gnu readline(3) library midish, 
+	 	and created the <TT>rmidish</TT> utility, a front-end
+		using the readline(3) library.	
 	</UL>
 
 <A name="language"></A>
