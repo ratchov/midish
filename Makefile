@@ -33,7 +33,7 @@ clean:
 # ---------------------------------------------- dependencies for midish ---
 
 midish:		${MIDISH_OBJS}
-		${CC} ${LDFLAGS} ${MIDISH_OBJS} -o $@
+		${CC} ${LDFLAGS} ${MIDISH_OBJS} -o midish
 
 
 install-midish:	midish
@@ -85,7 +85,7 @@ user_trk.o:	user_trk.c dbg.h default.h node.h exec.h name.h str.h data.h cons.h 
 # --------------------------------------------- dependencies for rmidish ---
 
 rmidish:	rmidish.c
-		${CC} ${CFLAGS} ${READLINE_CFLAGS} ${READLINE_INCLUDE} $< \
+		${CC} ${CFLAGS} ${READLINE_CFLAGS} ${READLINE_INCLUDE} rmidish.c \
 		${LDFLAGS} ${READLINE_LDFLAGS} -o rmidish ${READLINE_LIB}
 
 install-rmidish:rmidish
