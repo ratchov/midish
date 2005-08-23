@@ -36,7 +36,7 @@
 struct textin_s;
 struct textout_s;
 
-struct textin_s *textin_new(char *filename, char *prompt);
+struct textin_s *textin_new(char *filename);
 void		 textin_delete(struct textin_s *o);
 unsigned	 textin_getchar(struct textin_s *o, int *c);
 void		 textin_getpos(struct textin_s *o, unsigned *line, unsigned *col);

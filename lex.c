@@ -101,7 +101,7 @@ struct tokdef_s lex_kw[] = {
 unsigned
 lex_init(struct lex_s *o, char *filename) {
 	o->lookchar = -1;
-	o->in = textin_new(filename, "> ");
+	o->in = textin_new(filename);
 	if (!o->in) {
 		return 0;
 	}

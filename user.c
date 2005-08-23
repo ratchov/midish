@@ -1054,18 +1054,16 @@ user_mainloop(void) {
 	root = 0;
 	data = 0;
 	for (;;) {
-		textin_setprompt(parse->lex.in, "> ");
-		/* check for lexical error */
+		textout_putstr(tout, "+ready\n");
 		if (!parse_getsym(parse)) {
+			/* recover from lexical error */
 			continue;
 		}
-		/* check for end-of-file (user quit) */
 		if (parse->lex.id == TOK_EOF) {
+			/* end-of-file (user quit) */
 			break;
 		}
 		parse_ungetsym(parse);
-		/* parse the line */
-		textin_setprompt(parse->lex.in, "! ");
 		if (parse_line(parse, &root)) {
 			node_exec(root, exec, &data);
 		}

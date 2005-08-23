@@ -35,7 +35,8 @@ void cons_init(void);
 void cons_done(void);
 void cons_mdep_init(void);
 void cons_mdep_done(void);
-int  cons_getc(char *);
+int  cons_mdep_getc(void);
+int  cons_getc(void);
 unsigned cons_break(void);
 
 void cons_err(char *mesg);

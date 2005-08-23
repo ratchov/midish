@@ -30,7 +30,7 @@
 
 /*
  * textin_s implemets inputs from text files (or stdin)
- * (open/close, prompt etc...). Used by lex_s
+ * (open/close, line numbering, etc...). Used by lex_s
  *
  * textout_s implements outputs into text files (or stdout)
  * (open/close, indentation...)
@@ -47,7 +47,6 @@
 struct textin_s {
 	FILE *file;
 	unsigned isconsole;
-	char *prompt;
 	unsigned line, col;
 };
 
@@ -59,7 +58,7 @@ struct textout_s {
 /* -------------------------------------------------------- input --- */
 
 struct textin_s *
-textin_new(char *filename, char *prompt) {
+textin_new(char *filename) {
 	struct textin_s *o;
 
 	o = (struct textin_s *)mem_alloc(sizeof(struct textin_s));
@@ -75,7 +74,6 @@ textin_new(char *filename, char *prompt) {
 			return 0;
 		}
 	}
-	o->prompt = prompt;
 	o->line = o->col = 0;
 	return o;
 }
@@ -90,20 +88,13 @@ textin_delete(struct textin_s *o) {
 
 unsigned
 textin_getchar(struct textin_s *o, int *c) {
-	if (o->isconsole) {
-		*c = cons_getc(o->prompt);
-		if (*c == CHAR_EOF) {
-			return 1;
+	*c = fgetc(o->file);
+	if (*c < 0) {
+		*c = CHAR_EOF;
+		if (ferror(o->file)) {
+			perror("fgetc");
 		}
-	} else {
-		*c = fgetc(o->file);
-		if (*c < 0) {
-			*c = CHAR_EOF;
-			if (!feof(o->file)) {
-				perror("fgetc");
-			}
-			return 1;
-		}
+		return 1;
 	}
 	if (*c == '\n') {
 		o->col = 0;
@@ -121,11 +112,6 @@ void
 textin_getpos(struct textin_s *o, unsigned *line, unsigned *col) {
 	*line = o->line;
 	*col = o->col;
-}
-
-void
-textin_setprompt(struct textin_s *o, char *prompt) {
-	o->prompt = prompt;
 }
 
 /* ------------------------------------------------------- output --- */
@@ -201,7 +187,7 @@ struct textin_s *tin;
 void
 textio_init(void) {
 	tout = textout_new(0);
-	tin = textin_new(0, 0);
+	tin = textin_new(0);
 }
 
 void

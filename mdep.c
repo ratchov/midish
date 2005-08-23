@@ -87,7 +87,6 @@ cons_mdep_done(void) {
 	}
 }
 
-
 void
 mux_mdep_init(void) {
 	struct mididev_s *i;

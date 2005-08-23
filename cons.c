@@ -36,7 +36,6 @@
 #include "cons.h"
 
 unsigned cons_breakcnt;
-unsigned cons_need_prompt=1;
 
 unsigned
 cons_break(void) {
@@ -52,7 +51,6 @@ cons_break(void) {
 void
 cons_init(void) {
 	cons_breakcnt = 0;
-	cons_need_prompt = 1;
 	cons_mdep_init();
 }
 
@@ -62,18 +60,11 @@ cons_done(void) {
 }
 
 int
-cons_getc(char *prompt) {
+cons_getc(void) {
 	int c;
-	if (cons_need_prompt) {
-		fputs("+ready\n", stdout);
-		cons_need_prompt = 0;
-	}
 	fflush(stdout);
 	fflush(stderr);
 	c = fgetc(stdin);
-	if (c == '\n') {
-		cons_need_prompt = 1;
-	}
 	cons_breakcnt = 0;	/* ignore keyboard breaks */
 	if (c < 0) {
 		if (ferror(stdin)) {

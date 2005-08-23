@@ -1,4 +1,13 @@
 #
+# parameters for the GNU readline(3) library, used to
+# buid midish-edit (front-end to midish)
+#
+READLINE_CFLAGS = 			# readline additionnal flags
+READLINE_LDFLAGS = -L/usr/local/lib	# path to readline libraries
+READLINE_INCLUDE = -I/usr/local/include # path to readline header files
+READLINE_LIB = -lreadline -ltermcap	# readline libraries
+
+#
 # binaries, documentation, examples and man pages will be installed in 
 # ${BIN_DIR}, ${DOC_DIR}, ${EXAMPLES_DIR}, ${MAN1_DIR}
 #
@@ -8,27 +17,26 @@ DOC_DIR = ${PREFIX}/share/doc/midish
 EXAMPLES_DIR = ${PREFIX}/share/examples/midish
 MAN1_DIR = ${PREFIX}/man/man1
 
-PROG = midish
-OBJS = \
+MIDISH_OBJS = \
 cons.o data.o dbg.o ev.o exec.o filt.o lex.o main.o mdep.o mididev.o \
 mux.o name.o node.o parse.o pool.o rmidi.o saveload.o smf.o song.o \
 str.o sysex.o textio.o track.o trackop.o user.o \
 user_trk.o user_chan.o user_filt.o user_sx.o user_song.o user_dev.o 
 
-all:		${PROG}
+all:		midish midish-edit
 
-${PROG}:	${OBJS}
-		${CC} ${LDFLAGS} ${OBJS} -o ${PROG}
+midish:		${MIDISH_OBJS}
+		${CC} ${LDFLAGS} ${MIDISH_OBJS} -o $@
 
 clean:		
-		rm -f -- ${PROG} *~ *.bak *.o *.s *.out *.core core
+		rm -f -- midish midish-edit *~ *.bak *.o *.s *.out *.core core
 
-install:	${PROG}
+install:	midish midish-edit
 		mkdir -p ${BIN_DIR}
 		mkdir -p ${DOC_DIR}
 		mkdir -p ${EXAMPLES_DIR}
 		mkdir -p ${MAN1_DIR}
-		cp ${PROG} ${BIN_DIR}
+		cp midish midish-edit ${BIN_DIR}
 		cp manual.html tutorial.html ${DOC_DIR}
 		cp midishrc sample.sng ${EXAMPLES_DIR}
 		cp midish.1 ${MAN1_DIR}
@@ -71,3 +79,7 @@ user_filt.o:	user_filt.c dbg.h default.h node.h exec.h name.h str.h data.h cons.
 user_song.o: 	user_song.c dbg.h default.h node.h exec.h name.h str.h data.h cons.h trackop.h song.h track.h ev.h filt.h sysex.h user.h smf.h saveload.h textio.h
 user_sx.o:	user_sx.c dbg.h default.h node.h exec.h name.h str.h data.h cons.h song.h track.h ev.h filt.h sysex.h user.h saveload.h textio.h
 user_trk.o:	user_trk.c dbg.h default.h node.h exec.h name.h str.h data.h cons.h trackop.h track.h ev.h song.h filt.h sysex.h user.h saveload.h textio.h
+
+midish-edit:	midish midish-edit.c
+		${CC} ${CFLAGS} ${READLINE_CFLAGS} ${READLINE_INCLUDE} $< \
+		${READLINE_LDFLAGS} -o midish-edit ${READLINE_LIB}
