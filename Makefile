@@ -29,7 +29,7 @@ midish:		${MIDISH_OBJS}
 		${CC} ${LDFLAGS} ${MIDISH_OBJS} -o $@
 
 clean:		
-		rm -f -- midish midish-edit *~ *.bak *.o *.s *.out *.core core
+		rm -f -- midish midish-edit *~ *.bak *.tmp *.o *.s *.out *.core core
 
 install:	midish midish-edit
 		mkdir -p ${BIN_DIR}

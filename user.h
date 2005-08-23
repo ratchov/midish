@@ -47,6 +47,7 @@ extern struct song_s *user_song;
 extern struct exec_s *user_exec;
 extern struct textout_s *user_stdout;
 extern unsigned user_flag_norc;
+extern unsigned user_flag_verb;
 
 void user_mainloop(void);
 void user_printstr(char *);
@@ -57,6 +58,7 @@ char *user_rcname(void);
 /* useful convertion functions */
 
 unsigned exec_runfile(struct exec_s *exec, char *filename);
+unsigned exec_runrcfile(struct exec_s *exec);
 
 unsigned exec_lookuptrack(struct exec_s *o, char *var, struct songtrk_s **res);
 unsigned exec_lookupchan_getnum(struct exec_s *o, char *var, unsigned *dev, unsigned *ch);

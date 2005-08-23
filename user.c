@@ -57,7 +57,7 @@
 
 struct song_s *user_song;
 unsigned user_flag_norc = 0;
-unsigned user_flag_prompt = 0;
+unsigned user_flag_verb = 0;
 
 /* -------------------------------------------------- some tools --- */
 
@@ -1043,7 +1043,7 @@ user_mainloop(void) {
 			name_newarg("unit", 0));
 
 	if (!user_flag_norc) {
-		exec_runfile(exec, user_rcname());	/* parse rc file */
+		exec_runrcfile(exec);
 	}
 
 	parse = parse_new(0);
@@ -1054,7 +1054,6 @@ user_mainloop(void) {
 	root = 0;
 	data = 0;
 	for (;;) {
-		textout_putstr(tout, "+ready\n");
 		if (!parse_getsym(parse)) {
 			/* recover from lexical error */
 			continue;

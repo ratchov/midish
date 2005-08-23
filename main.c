@@ -51,6 +51,8 @@ main(int argc, char *argv[]) {
 	for (i = 1; i < argc; i++) {
 		if (str_eq(argv[i], "-norc")) {
 			user_flag_norc = 1;
+		} else if (str_eq(argv[i], "-verb")) {
+			user_flag_verb = 1;
 		} else {
 			dbg_puts("usage: midish [-norc]\n");
 			goto err;

@@ -34,8 +34,14 @@
 #include "dbg.h"
 #include "textio.h"
 #include "cons.h"
+#include "user.h"
 
-unsigned cons_breakcnt;
+unsigned cons_breakcnt, cons_ready;
+
+	/* 
+	 * if there is a keyboard interrupt (control-C),
+	 * return 1 and clear the interupt flag
+	 */
 
 unsigned
 cons_break(void) {
@@ -50,6 +56,7 @@ cons_break(void) {
 
 void
 cons_init(void) {
+	cons_ready = 1;
 	cons_breakcnt = 0;
 	cons_mdep_init();
 }
@@ -59,21 +66,35 @@ cons_done(void) {
 	cons_mdep_done();
 }
 
+	/*
+	 * same as fgetc(stdin), but if midish is started with
+	 * the verb flag, print "+ready\n" to stdout and flush it/
+	 * this is useful to frontends that open midish in a pair
+	 * of pipes
+	 */
+
 int
 cons_getc(void) {
 	int c;
-	fflush(stdout);
-	fflush(stderr);
-	c = fgetc(stdin);
-	cons_breakcnt = 0;	/* ignore keyboard breaks */
-	if (c < 0) {
-		if (ferror(stdin)) {
-			perror("cons_getc: stdin");
+	if (cons_ready) {
+		if (user_flag_verb) {
+			fprintf(stdout, "+ready\n");
+			fflush(stdout);
 		}
-		return CHAR_EOF;
+		cons_ready = 0;
 	}
+	c = fgetc(stdin);
+	if (c == '\n') {
+		cons_ready = 1;
+	}
+	cons_breakcnt = 0;
 	return c;
 }
+
+	/*
+	 * follows routines that report user non-fatal errors
+	 * please use them instead of dbg_xxx (only for debugging)
+	 */
 
 void
 cons_err(char *mesg) {

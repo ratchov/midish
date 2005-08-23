@@ -360,8 +360,11 @@ mux_evcb(unsigned unit, struct ev_s *ev) {
 
 
 void
-mux_abortcb(void) {
+mux_run(void) {
 	struct ev_s ev;
+	
+	mux_mdep_run();
+	
 	if (!mididev_master) {
 		if (mux_phase > MUX_START && mux_phase < MUX_STOP) {
 			mux_chgphase(MUX_STOP);

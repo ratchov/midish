@@ -114,7 +114,7 @@ mux_mdep_done(void) {
 
 
 void
-mux_run(void) {
+mux_mdep_run(void) {
 	nfds_t ifds;
 	int res;
 	struct timeval tv, tv_last;
@@ -141,6 +141,7 @@ mux_run(void) {
 		res = poll(fds, ifds, 1); 		/* 1ms timeout */
 		if (res < 0) {
 			if (errno == EINTR) {
+				/*perror("mux_run: poll failed, retrying");*/
 				continue;
 			}
 			perror("mux_run: poll failed");
@@ -181,7 +182,6 @@ mux_run(void) {
 			mux_timercb(24 * delta_usec);
 		}
 	}
-	mux_abortcb();
 }
 
 	/* 
@@ -228,11 +228,10 @@ rmidi_flush(struct rmidi_s *o) {
 	o->oused = 0;
 }
 
-
-char *
-user_rcname(void) {
+unsigned
+exec_runrcfile(struct exec_s *o) {
 	char *home;
-	static char name[PATH_MAX];
+	char name[PATH_MAX];
 	
 	home = getenv("HOME");
 	if (home == NULL) {
@@ -240,5 +239,5 @@ user_rcname(void) {
 	}
 	
 	snprintf(name, PATH_MAX, "%s" "/" RC_NAME, home);
-	return name;
+	return exec_runfile(o, name);
 }

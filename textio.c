@@ -88,7 +88,11 @@ textin_delete(struct textin_s *o) {
 
 unsigned
 textin_getchar(struct textin_s *o, int *c) {
-	*c = fgetc(o->file);
+	if (o->isconsole) {
+		*c = cons_getc();	/* because it handles ^C */
+	} else {
+		*c = fgetc(o->file);
+	}
 	if (*c < 0) {
 		*c = CHAR_EOF;
 		if (ferror(o->file)) {

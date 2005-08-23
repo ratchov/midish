@@ -18,14 +18,12 @@
 #include <readline/readline.h>
 #include <readline/history.h>
 
-#define PROMPTLENGTH 100
-#define LINELENGTH 10000
-#define MIDISHBIN "midish"
+#define MIDISHBIN "./midish"
 
 int midish_pid;
 FILE *midish_stdout, *midish_stdin;
 
-char prompt[PROMPTLENGTH + 1];
+#define LINELENGTH 10000
 char linebuf[LINELENGTH + 1];
 unsigned linenum;
 	
@@ -107,7 +105,7 @@ startmidish(int argc, char **argv) {
 		}
 		close(ipipe[0]);
 		close(opipe[1]);
-		if (execvp(MIDISHBIN, argv) < 0) {
+		if (execlp(MIDISHBIN, MIDISHBIN, "-verb", (char *)NULL) < 0) {
 			perror(MIDISHBIN);
 		}
 		exit(1);
@@ -136,24 +134,14 @@ startmidish(int argc, char **argv) {
 
 int
 main(int argc, char **argv) {
-	char *rl, *home;
+#define PROMPTLENGTH 20
+	char *rl, prompt[PROMPTLENGTH];
 
 	startmidish(argc, argv);
 	
-	/*
-	 * execute rc file
-	 */	
-	waitready();
-	home = getenv("HOME");
-	if (home == NULL) {
-		home = ".";
-	}
-	snprintf(linebuf, LINELENGTH, "exec \"%s/.midishrc\"", home);
-	sendline(linebuf);
-	
 	for (;;) {
 		waitready();
-		sprintf(prompt, "%d> ", linenum);
+		snprintf(prompt, PROMPTLENGTH, "%d> ", linenum);
 		rl = readline(prompt);
 		if (rl == 0) {
 			 break;
