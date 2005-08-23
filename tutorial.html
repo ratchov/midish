@@ -1095,21 +1095,21 @@
 	configure a keyboard split:
 		
 	<PRE>
-	> nc bass {0 1}
-	> nc piano {0 2}
-	> gmp bass 33
-	> gmp piano 2
-	> nf split
-	> filtchanmap split {1 0} bass 
-	> filtchanmap split {1 0} piano
-	> filtkeymap split {1 0} bass 0 63 (-12)
-	> filtkeymap split {1 0} piano 64 127 0   
-	> filtinfo split
+	1> nc bass {0 1}
+	2> nc piano {0 2}
+	3> gmp bass 33
+	4> gmp piano 2
+	5> nf split
+	6> filtchanmap split {1 0} bass 
+	7> filtchanmap split {1 0} piano
+	8> filtkeymap split {1 0} bass 0 63 (-12)
+	9> filtkeymap split {1 0} piano 64 127 0   
+	10> filtinfo split
 	keymap {1 0} {0 2} 65 127 0 id
 	keymap {1 0} {0 1} 0 64 116 id
 	chanmap {1 0} {0 2}
 	chanmap {1 0} {0 1}
-	> l
+	11> l
 	tracks:
 	channels:
 	    bass ( dev: 0 chan: 1 )
@@ -1117,19 +1117,19 @@
 	filters:
 	 -> split :
 	tics_per_unit=96, curpos=0, curquant=0
-	> i
-	song_idle: started loop...
-
+	12> i
 	press enter to finish
+	^C
+	-- interrupt --
 
-	> reverb bass 120
-	> vol piano 120
-	> i
-	song_idle: started loop...
-
+	13> reverb bass 120
+	14> vol piano 120
+	15> i
 	press enter to finish
+	^C
+	-- interrupt --
 
-	> save "piano-bass"
+	16> save "piano-bass"
 	</PRE>
 
 	First we define 2 named-channels 
@@ -1150,25 +1150,23 @@
 	The following session show how to
 	record a track:
 	<PRE>
-	> nc drums {0 9}
-	> nf drums
-	> chanmap {1 0} drums
-	> nt dr1
-	> r
-	song_record: started loop, waiting for a start event...
-
+	1> nc drums {0 9}
+	2> nf drums
+	3> chanmap {1 0} drums
+	4> nt dr1
+	5> r
 	press enter to finish
-	song_record: got a start
+	^C
+	-- interrupt --
 
-	> n 16
-	> q 8 75
-	> p
-	song_play: starting loop, waiting for a start event...
-
+	6> n 16
+	7> q 8 75
+	8> p
 	press enter to finish
-	song_play: got a start
+	^C
+	-- interrupt --
 
-	> l 
+	9> l 
 	tracks:
 	 -> dr1 ( record: drums )
 	channels:
@@ -1176,7 +1174,7 @@
 	filters:
 	 -> drums :
 	tics_per_unit=96, curpos=0, curquant=6
-	> save "myrythm"
+	10> save "myrythm"
 	</PRE>
 	first, we define the <TT>drum</TT> channel
 	on device 0, channel 9. Then we create a 
@@ -1192,7 +1190,7 @@
 <HR>
 <SMALL><EM>
 Copyright (c) 2003-2005 Alexandre Ratchov<BR>
-Last updated jun 17, 2005 	
+Last updated aug 23, 2005 	
 </EM></SMALL>
 	
 
