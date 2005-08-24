@@ -46,7 +46,7 @@ struct sysex_s;
 extern struct song_s *user_song;
 extern struct exec_s *user_exec;
 extern struct textout_s *user_stdout;
-extern unsigned user_flag_norc;
+extern unsigned user_flag_batch;
 extern unsigned user_flag_verb;
 
 void user_mainloop(void);

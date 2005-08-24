@@ -321,7 +321,7 @@ smf_putmeta(struct smf_s *o, unsigned *used, struct song_s *s) {
 			smf_putc(o, used, 0x03);
 			smf_put24(o, used, (*tp.pos)->ev.data.tempo.usec24 * s->tics_per_unit / 96);
 		} else if ((*tp.pos)->ev.cmd == EV_TIMESIG) {
-			denom = (*tp.pos)->ev.data.sign.tics / s->tics_per_beat;
+			denom = s->tics_per_unit / (*tp.pos)->ev.data.sign.tics;
 			switch(denom) {
 			case 1:	
 				denom = 0; 
@@ -349,9 +349,10 @@ smf_putmeta(struct smf_s *o, unsigned *used, struct song_s *s) {
 			smf_putc(o, used, 0x04);
 			smf_putc(o, used, (*tp.pos)->ev.data.sign.beats);
 			smf_putc(o, used, denom);
-			/* XXX: metronome: do as other sequencers */
-			smf_putc(o, used, 24);
-			smf_putc(o, used, 8);
+			/* metronome tics per metro beat */
+			smf_putc(o, used, (*tp.pos)->ev.data.sign.tics);
+			/* metronome 1/32 notes per 24 tics */
+			smf_putc(o, used, 8 * s->tics_per_unit / 96);
 		}
 
 		track_evnext(&s->meta, &tp);

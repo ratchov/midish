@@ -56,7 +56,7 @@
 #include "rmidi.h"	/* for rmidi_debug */
 
 struct song_s *user_song;
-unsigned user_flag_norc = 0;
+unsigned user_flag_batch = 0;
 unsigned user_flag_verb = 0;
 
 /* -------------------------------------------------- some tools --- */
@@ -1042,7 +1042,7 @@ user_mainloop(void) {
 	exec_newbuiltin(exec, "devinfo", user_func_devinfo,
 			name_newarg("unit", 0));
 
-	if (!user_flag_norc) {
+	if (!user_flag_batch) {
 		exec_runrcfile(exec);
 	}
 
@@ -1054,20 +1054,29 @@ user_mainloop(void) {
 	root = 0;
 	data = 0;
 	for (;;) {
-		if (!parse_getsym(parse)) {
-			/* recover from lexical error */
-			continue;
+		if (parse_getsym(parse)) {
+			/* at this stage no lexical error */
+			if (parse->lex.id == TOK_EOF) {
+				/* end-of-file (user quit) */
+				break;
+			}
+			parse_ungetsym(parse);
+			if (parse_line(parse, &root)) {
+				/* at this stage no parse error */
+				if (node_exec(root, exec, &data) == RESULT_OK) {
+					/* at this stage no exec error */
+					node_delete(root);
+					root = 0;
+					continue;
+				}
+			}
+			node_delete(root);
+			root = 0;
 		}
-		if (parse->lex.id == TOK_EOF) {
-			/* end-of-file (user quit) */
+		/* error */
+		if (user_flag_batch) {
 			break;
 		}
-		parse_ungetsym(parse);
-		if (parse_line(parse, &root)) {
-			node_exec(root, exec, &data);
-		}
-		node_delete(root);
-		root = 0;
 	}
 
 	parse_delete(parse);

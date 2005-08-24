@@ -253,7 +253,7 @@ user_getopts(int *pargc, char ***pargv) {
 	while ((ch = getopt(*pargc, *pargv, "bv")) != -1) {
 		switch (ch) {
 		case 'b':
-			user_flag_norc = 1;
+			user_flag_batch = 1;
 			break;
 		case 'v':
 			user_flag_verb = 1;

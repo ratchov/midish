@@ -1,3 +1,5 @@
+- make chanconfev match the dev/chan pair of the channel
+
 - receiving 'EV_STOP' make all notes off; why?
 
 - cleanup/implement {track,chan,filt,sysex,song}info 
