@@ -1,0 +1,72 @@
+.Dd August 22, 2005
+.Dt SMFPLAY 1
+.Os
+.Sh NAME
+.Nm smfplay
+.Nd play a standard MIDI file
+.Sh SYNOPSIS
+.Nm smfplay
+.Op -mxy
+.Op -i Ar devname
+.Op -o Ar devname
+midifile
+.Sh DESCRIPTION
+The 
+.Nm 
+utility plays a MIDI file. While playing, it can route events from one 
+.Xr midi 4
+device to another. To stop performace, send an interrupt signal to
+.Nm
+(for instance by pressing control ^C on the terminal).
+
+The options are as follows:
+.Bl -tag -width "-i devname "
+.It Fl m
+Use metronome. The metronome will follow tempo changes and time signature
+changes in the midi file.
+.It Fl x
+Synchronise to an external 
+.Xr midi 4
+device. If the
+.Fl i
+flag is used then playback will be synchronised to the input device
+else it will be synchronised to the output device.
+.It Fl y
+Send midi timing information to the output device. Useful if the
+output device is a slave MIDI sequencer.
+.It Fl o Ar filename
+Output 
+.Xr midi 4
+device on which to play the midi file. If not specified, 
+the content of the 
+.Pa MIDIDEV
+environment variable will be used instead.
+.It Fl i Ar filename
+Input 
+.Xr midi 4
+device. Voice events (notes, controllers, etc) received on the input device
+will be sent as-is to the output device. Without this flag, the output
+device will be used also for input.
+.El
+.Pp
+The 
+.Nm
+utility is an interface to 
+.Xr midish 1 .
+If more specific features are needed, the user may consider using
+.Xr rmidish 1 .
+.Sh EXAMPLES
+The following will play
+.Pa mysong.mid
+on device
+.Pa /dev/rmidi4
+and will use metronome.
+.Bd -literal
+smfplay -m -o /dev/rmidi4 mysong.mid
+.Ed
+.Sh SEE ALSO
+.Xr rmidish 1 ,
+.Xr midish 1 ,
+.Xr midiplay 1 ,
+.Xr midi 4
+
