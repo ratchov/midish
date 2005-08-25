@@ -259,11 +259,15 @@ user_getopts(int *pargc, char ***pargv) {
 			user_flag_verb = 1;
 			break;
 		default:
-			fputs("usage: midish [-bv]\n", stderr);
-			return 0;
+			goto err;
 		}
 	}
 	*pargc -= optind;
 	*pargv += optind;
+	if (*pargc >= 1) {
+	err:
+		fputs("usage: midish [-bv]\n", stderr);
+		return 0;
+	}
 	return 1;
 }
