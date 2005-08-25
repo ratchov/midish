@@ -1,3 +1,7 @@
+- make songplay stop after the EV_STOP is received or
+  create a songperf or whatever. But we need songplay to
+  stop in scripts such as smfplay(1).
+
 - make chanconfev match the dev/chan pair of the channel
 
 - receiving 'EV_STOP' make all notes off; why?

@@ -41,8 +41,8 @@ install-midish:	midish
 		mkdir -p ${MAN1_DIR}
 		mkdir -p ${DOC_DIR}
 		mkdir -p ${EXAMPLES_DIR}
-		cp midish ${BIN_DIR}
-		cp midish.1 ${MAN1_DIR}
+		cp midish smfplay ${BIN_DIR}
+		cp midish.1 smfplay.1 ${MAN1_DIR}
 		cp manual.html tutorial.html ${DOC_DIR}
 		cp midishrc sample.sng ${EXAMPLES_DIR}
 		@echo
