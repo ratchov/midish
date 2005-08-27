@@ -306,7 +306,7 @@ smf_putmeta(struct smf_s *o, unsigned *used, struct song_s *s) {
 	struct seqptr_s tp;
 	unsigned delta, denom;
 	
-	delta = s->tics_per_unit;
+	delta = 0;
 	track_rew(&s->meta, &tp);
 	for (;;) {
 		delta += track_ticlast(&s->meta, &tp);
@@ -370,7 +370,7 @@ smf_puttrk(struct smf_s *o, unsigned *used, struct song_s *s, struct songtrk_s *
 	unsigned status, newstatus, delta, chan;
 	
 	status = 0;
-	delta = s->tics_per_unit;
+	delta = 0;
 	track_rew(&t->track, &tp);
 	for (;;) {
 		delta += track_ticlast(&t->track, &tp);

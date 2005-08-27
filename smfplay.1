@@ -7,15 +7,15 @@
 .Sh SYNOPSIS
 .Nm smfplay
 .Op -mxy
+.Op -d Ar devname
 .Op -i Ar devname
-.Op -o Ar devname
 midifile
 .Sh DESCRIPTION
 The 
 .Nm 
 utility plays a MIDI file. While playing, it can route events from one 
 .Xr midi 4
-device to another. To stop performace, send an interrupt signal to
+device to another. To stop performance, send an interrupt signal to
 .Nm
 (for instance by pressing control ^C on the terminal).
 
@@ -30,23 +30,23 @@ Synchronise to an external
 device. If the
 .Fl i
 flag is used then playback will be synchronised to the input device
-else it will be synchronised to the output device.
+else it will be synchronised to the default device.
 .It Fl y
-Send midi timing information to the output device. Useful if the
+Send midi timing information to the default device. Useful if the
 output device is a slave MIDI sequencer.
-.It Fl o Ar filename
-Output 
+.It Fl d Ar filename
+Default  
 .Xr midi 4
 device on which to play the midi file. If not specified, 
 the content of the 
 .Pa MIDIDEV
 environment variable will be used instead.
 .It Fl i Ar filename
-Input 
+Alternate input 
 .Xr midi 4
 device. Voice events (notes, controllers, etc) received on the input device
-will be sent as-is to the output device. Without this flag, the output
-device will be used also for input.
+will be sent as-is to the default device. Without this flag, the default
+device will be used for input.
 .El
 .Pp
 The 
@@ -62,9 +62,10 @@ on device
 .Pa /dev/rmidi4
 and will use metronome.
 .Bd -literal
-smfplay -m -o /dev/rmidi4 mysong.mid
+smfplay -m -d /dev/rmidi4 mysong.mid
 .Ed
 .Sh SEE ALSO
+.Xr smfrec 1 ,
 .Xr rmidish 1 ,
 .Xr midish 1 ,
 .Xr midiplay 1 ,

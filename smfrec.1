@@ -1,0 +1,72 @@
+.Dd August 27, 2005
+.Dt SMFREC 1
+.Os
+.Sh NAME
+.Nm smfrec
+.Nd record a standard MIDI file
+.Sh SYNOPSIS
+.Nm smfrec
+.Op -amxy
+.Op -d Ar devname
+.Op -i Ar devname
+midifile
+.Sh DESCRIPTION
+The 
+.Nm 
+utility records a MIDI file. It can add recorded events on top of
+an existing midi file. To stop performance, send an interrupt signal to
+.Nm
+(for instance by pressing control ^C on the terminal).
+
+The options are as follows:
+.Bl -tag -width "-i devname "
+.It Fl a
+Append mode. Play the given midi file and append to it a new
+track containing recorded events.
+.It Fl m
+Use metronome. 
+.It Fl x
+Synchronise to the default 
+.Xr midi 4
+device instead of using an internal clock source.
+.It Fl y
+Send midi timing information to the default device.
+Useful if it is a slave MIDI sequencer.
+.It Fl d Ar filename
+Default  
+.Xr midi 4
+device from which to record and on which to send midi events. 
+If not specified, the content of the 
+.Pa MIDIDEV
+environment variable will be used instead.
+.It Fl i Ar filename
+Alternate input 
+.Xr midi 4
+device. Voice events (notes, controllers, etc) received on the input device
+will be recorded and sent as-is to the default device.
+Without this flag, the default device will be used for input.
+.El
+.Pp
+The 
+.Nm
+utility is an interface to 
+.Xr midish 1 .
+If more specific features are needed, the user may consider using
+.Xr rmidish 1 .
+.Sh EXAMPLES
+The following will play 
+.Pa mysong.mid
+and append to it recorded events 
+from device
+.Pa /dev/rmidi4 ;
+metronome will be used.
+.Bd -literal
+smfrec -a -m -d /dev/rmidi4 mysong.mid
+.Ed
+.Sh SEE ALSO
+.Xr smfplay 1 ,
+.Xr rmidish 1 ,
+.Xr midish 1 ,
+.Xr midiplay 1 ,
+.Xr midi 4
+

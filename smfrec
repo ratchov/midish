@@ -1,11 +1,11 @@
 #!/bin/sh
 
 function usage {
-	echo "usage: smfplay [-mxy] [-d device] [-i device] midifile"
+	echo "usage: smfrec [-amxy] [-d device] [-i device] midifile"
 	exit 2
 }
 
-set -- `getopt xymd:i: $* 2>/dev/null`
+set -- `getopt amxyd:i: $* 2>/dev/null`
 if test $? != 0; then
 	usage;
 fi
@@ -16,6 +16,7 @@ input=""
 device=$MIDIDEV
 metronome=0
 tempo=0
+append=0
 
 for i; do
 	case "$i" in
@@ -25,6 +26,8 @@ for i; do
 		sendrt=1; shift;;
 	-m)
 		metronome=1; shift;;
+	-a)
+		append=1; shift;;
 	-d)
 		device=$2; shift; shift;;
 	-i)
@@ -39,7 +42,9 @@ if [ "$#" != "1" -o -z "$1" ]; then
 fi
 
 midish -b << END
-songimportsmf "$1"
+if $append {
+	songimportsmf "$1"
+}
 if "$device" {
 	devattach 0 "$device"
 	if $extclock == 1 {
@@ -56,5 +61,8 @@ if "$input" {
 	songsetcurfilt myfilt
 }
 metroswitch $metronome
-songplay
+tracknew rec
+songsetcurtrack rec
+songrecord
+songexportsmf "$1"
 END
