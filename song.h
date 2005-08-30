@@ -99,6 +99,7 @@ struct song_s {
 	/* defautls */
 	struct songtrk_s *curtrk;
 	struct songfilt_s *curfilt;
+	struct songchan_s *curchan;
 	struct songsx_s *cursx;
 	unsigned curpos;
 	unsigned curquant;

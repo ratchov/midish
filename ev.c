@@ -119,7 +119,9 @@ ev_dbg(struct ev_s *ev) {
 	char *cmdstr;
 	cmdstr = ev_getstr(ev);
 	if (cmdstr == 0) {
-		dbg_puts("unkw");
+		dbg_puts("unkw(");
+		dbg_putu(ev->cmd);
+		dbg_puts(")");
 	} else {
 		dbg_puts(cmdstr);
 		switch(ev->cmd) {

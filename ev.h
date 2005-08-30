@@ -72,6 +72,7 @@
 #define EV_NOFF_DEFAULTVEL	100
 #define EV_BEND_DEFAULTLO	0
 #define EV_BEND_DEFAULTHI	0x40
+#define EV_CAT_DEFAULT		0
 
 struct ev_s {
 	unsigned cmd;

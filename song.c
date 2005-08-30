@@ -181,6 +181,7 @@ song_init(struct song_s *o) {
 	o->curpos = 0;
 	o->curquant = 0;
 	o->cursx = 0;
+	o->curchan = 0;
 }
 
 	/*
@@ -604,11 +605,14 @@ song_inputcb(void *addr, struct ev_s *ev) {
 	struct song_s *o = (struct song_s *)addr;
 	
 	if (!EV_ISVOICE(ev)) {
+		if (o->filt && ev->cmd == EV_TIC) {
+			filt_timercb(o->filt);
+		}
 		o->realtimecb(o, ev);
 		return;
 	}
 	if (o->filt) {
-		filt_run(o->filt, ev);
+		filt_evcb(o->filt, ev);
 	} else {
 		o->realtimecb(o, ev);
 	}

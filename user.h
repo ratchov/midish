@@ -173,6 +173,8 @@ unsigned user_func_songtimerm(struct exec_s *o, struct data_s **r);
 unsigned user_func_songtimeinfo(struct exec_s *o, struct data_s **r);
 unsigned user_func_songsetcursysex(struct exec_s *o, struct data_s **r);
 unsigned user_func_songgetcursysex(struct exec_s *o, struct data_s **r);
+unsigned user_func_songsetcurchan(struct exec_s *o, struct data_s **r);
+unsigned user_func_songgetcurchan(struct exec_s *o, struct data_s **r);
 
 /* device functions */
 

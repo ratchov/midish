@@ -987,6 +987,9 @@ user_mainloop(void) {
 	exec_newbuiltin(exec, "songgetcursysex", user_func_songgetcursysex, 0);
 	exec_newbuiltin(exec, "songsetcursysex", user_func_songsetcursysex, 
 			name_newarg("sysexname", 0));
+	exec_newbuiltin(exec, "songgetcurchan", user_func_songgetcurchan, 0);
+	exec_newbuiltin(exec, "songsetcurchan", user_func_songsetcurchan, 
+			name_newarg("channame", 0));
 	exec_newbuiltin(exec, "songinfo", user_func_songinfo, 0);
 	exec_newbuiltin(exec, "songsave", user_func_songsave, 
 			name_newarg("filename", 0));

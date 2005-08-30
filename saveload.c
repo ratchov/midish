@@ -430,6 +430,12 @@ song_output(struct song_s *o, struct textout_s *f) {
 		textout_putstr(f, o->cursx->name.str);
 		textout_putstr(f, "\n");
 	}
+	if (o->curchan) {
+		textout_indent(f);
+		textout_putstr(f, "curchan ");
+		textout_putstr(f, o->curchan->name.str);
+		textout_putstr(f, "\n");
+	}		
 	textout_indent(f);
 	textout_putstr(f, "curpos ");
 	textout_putlong(f, o->curpos);
@@ -1263,6 +1269,23 @@ parse_song(struct parse_s *o, struct song_s *s) {
 					s->cursx = l;
 				} else {
 					lex_err(&o->lex, "warning, cant set current sysex, not such sysex\n");
+				}
+				if (!parse_nl(o)) {
+					return 0;
+				}
+			} else if (str_eq(o->lex.strval, "curchan")) {
+				if (!parse_getsym(o)) {
+					return 0;
+				}
+				if (o->lex.id != TOK_IDENT) {
+					lex_err(&o->lex, "identifier expected afer 'curchan' in song\n");
+					return 0;
+				}
+				i = song_chanlookup(s, o->lex.strval);
+				if (i) {
+					s->curchan = i;
+				} else {
+					lex_err(&o->lex, "warning, cant set current chan, not such chan\n");
 				}
 				if (!parse_nl(o)) {
 					return 0;

@@ -313,19 +313,11 @@ void
 filt_stop(struct filt_s *o) {
 	o->cb = 0;
 	o->addr = 0;	
-}
-
-
-	/*
-	 * shuts all notes and restores the default values
-	 * of the modified controllers, the bender etc...
-	 */
-
-void
-filt_shut(struct filt_s *o) {
-	while (o->statelist) {
-		filt_stateshut(o, &o->statelist);
+#ifdef FILT_DEBUG
+	if (o->statelist) {
+		dbg_puts("filt_stop: state list isn't empty\n");
 	}
+#endif
 }
 
 
@@ -807,80 +799,219 @@ filt_conf_swapidev(struct filt_s *o, unsigned olddev, unsigned newdev) {
 }
 
 
-
 /* ----------------------------------------------- real-time part --- */
 
+	/* 
+	 * executes the given rule; if event matches the rule then
+	 * pass it and return 1, else retrun 0
+	 */
+	 	
+		
+unsigned
+filt_matchrule(struct filt_s *o, struct rule_s *r, struct ev_s *ev) {
+	struct ev_s te;
+		
+	switch(r->type) {
+	case RULE_DEVDROP:
+		if (ev->data.voice.dev == r->idev) {
+			goto match_drop;
+		}
+		break;	
+	case RULE_DEVMAP:
+		if (ev->data.voice.dev == r->idev) {
+			te = *ev;
+			te.data.voice.dev = r->odev;
+			goto match_pass;
+		}
+		break;
+	case RULE_CHANDROP:
+		if (ev->data.voice.dev == r->idev &&
+		    ev->data.voice.ch == r->ich) {
+			goto match_drop;
+		}
+		break;
+	case RULE_CHANMAP:
+		if (ev->data.voice.dev == r->idev && 
+		    ev->data.voice.ch == r->ich) {
+			te = *ev;
+			te.data.voice.dev = r->odev;
+			te.data.voice.ch = r->och;
+			goto match_pass;
+		}
+		break;
+	case RULE_KEYDROP:
+		if (EV_ISNOTE(ev) && 
+		    ev->data.voice.dev == r->idev && 
+		    ev->data.voice.ch == r->ich && 
+		    ev->data.voice.b0 >= r->keylo &&
+		    ev->data.voice.b0 <= r->keyhi) {
+			goto match_drop;
+		}
+		break;
+	case RULE_KEYMAP:
+		if (EV_ISNOTE(ev) && 
+		    ev->data.voice.dev == r->idev && 
+		    ev->data.voice.ch == r->ich && 
+		    ev->data.voice.b0 >= r->keylo &&
+		    ev->data.voice.b0 <= r->keyhi) {
+			te = *ev;
+			te.data.voice.dev = r->odev;
+			te.data.voice.ch = r->och;
+			te.data.voice.b0 += r->keyplus;
+			te.data.voice.b0 &= 0x7f;
+			te.data.voice.b1 = r->curve[te.data.voice.b1];
+			goto match_pass;
+		}
+		break;
+	case RULE_CTLDROP:
+		if (ev->cmd == EV_CTL &&
+		    ev->data.voice.dev == r->idev &&
+		    ev->data.voice.ch == r->ich &&
+		    ev->data.voice.b0 == r->ictl) {
+			goto match_drop;
+		}
+		break;
+	case RULE_CTLMAP:
+		if (ev->cmd == EV_CTL &&
+		    ev->data.voice.dev == r->idev &&
+		    ev->data.voice.ch == r->ich &&
+		    ev->data.voice.b0 == r->ictl) {
+			te = *ev;
+			te.data.voice.dev = r->odev;
+			te.data.voice.ch = r->och;
+			te.data.voice.b0 = r->octl;
+			te.data.voice.b1 = r->curve[te.data.voice.b1];
+			goto match_pass;
+		}
+		break;
+	}			
+	return 0;
+
+match_pass:
+	if (filt_debug) {
+		dbg_puts("filt_matchrule: ");
+		rule_dbg(r);
+		dbg_puts(" > ");		
+		ev_dbg(&te);
+		dbg_puts("\n");
+	}
+	if (o->cb) {
+		o->cb(o->addr, &te);
+	}
+	return 1;
+match_drop:
+	if (filt_debug) {
+		dbg_puts("filt_matchrule: ");
+		rule_dbg(r);
+		dbg_puts("\n");
+	}
+	return 1;
+}
+
+
 	/*
-	 * when called in realtime, this method passes
-	 * the event to the event handler of the 
-	 * filter owner
+	 * match event against all rules
 	 */
 
 void
-filt_pass(struct filt_s *o, struct ev_s *ev) {
-#ifdef FILT_DEBUG
-	if (filt_debug) {
-		dbg_puts("filt_pass: ");
-		ev_dbg(ev);
-		dbg_puts("\n");
+filt_processev(struct filt_s *o, struct ev_s *ev) {
+	unsigned match;
+	struct rule_s *i;
+
+	match = 0;
+	for (i = o->voice_rules; i != 0; i = i->next) {
+		match |= filt_matchrule(o, i, ev);
 	}
-#endif
-	if (o->cb) {
-		o->cb(o->addr, ev);
+	if (!match) {
+		for (i = o->chan_rules; i != 0; i = i->next) {
+			match |= filt_matchrule(o, i, ev);
+		}
+		if (!match) {
+			for (i = o->dev_rules; i != 0; i = i->next) {
+				match |= filt_matchrule(o, i, ev);
+			}
+			if (!match) {
+				if (filt_debug) {
+					dbg_puts("filt_processev: default > ");
+					ev_dbg(ev);
+					dbg_puts("\n");
+				}
+				if (o->cb) {
+					o->cb(o->addr, ev);
+				}
+			}
+		}
 	}
 }
 
 	/*
-	 * create a state, copy the given event in it
-	 * and insert it into the list of states 
+	 * send state event and delete
+	 * the state if it is no more used
 	 *
-	 * return a poiter to the next-field of
-	 * the previous state in the liste, so
-	 * the return value can be used to delete
-	 * the state without any lookup in the list.
+	 * a pointer to the next runable state in the
+	 * list is returned
 	 */
 
+struct state_s **
+filt_staterun(struct filt_s *o, struct state_s **p) {
+	struct state_s *s = *p;
+	
+	if (s->nevents == 0) {
+		filt_processev(o, &s->ev);
+		if (!s->keep) {
+			*p = s->next;
+#ifdef FILT_DEBUG
+		if (filt_debug) {
+			dbg_puts("filt_staterun: deleting: ");
+			ev_dbg(&s->ev);
+			dbg_puts("\n");
+		}
+#endif
+			state_del(s);
+			return p;
+		}
+	}
+	s->nevents++;
+	return &s->next;
+}
+
+	/*
+	 * create and run a new state and return pointer
+	 * to the next runable state
+	 *
+	 * WARNING: the returned pointer is the next runable state!!!
+	 */
 
 struct state_s **
-filt_statenew(struct filt_s *o, struct ev_s *ev) {
+filt_statecreate(struct filt_s *o, struct ev_s *ev, unsigned keep) {
 	struct state_s *s;
-
+	
 #ifdef FILT_DEBUG
 	if (filt_debug) {
-		dbg_puts("filt_statenew: ");
+		dbg_puts("filt_statecreate: ");
 		ev_dbg(ev);
 		dbg_puts("\n");
 	}
 #endif
 	s = state_new();
 	s->ev = *ev;
+	s->nevents = 0;
+	s->keep = keep;
 	s->next = o->statelist;
 	o->statelist = s;
-	return &o->statelist;
+	return filt_staterun(o, &o->statelist);
 }
 
 	/*
-	 * remove the given state from the list
-	 * and destroy the state.
-	 *
-	 * 'p' is a ponter returned by filt_statenew
-	 * or filt_statelookup
+	 * update the event and the keep-flag of the given state
+	 * try to send it
 	 */
 
-void
-filt_statedel(struct filt_s *o, struct state_s **p) {
-	struct state_s *s;
-
-	s = *p;
-#ifdef FILT_DEBUG
-	if (filt_debug) {
-		dbg_puts("filt_statedel: ");
-		ev_dbg(&s->ev);
-		dbg_puts("\n");
-	}
-#endif
-	*p = s->next;
-	state_del(s);
+struct state_s **
+filt_stateupdate(struct filt_s *o, struct state_s **p, struct ev_s *ev, unsigned keep) {
+	(*p)->ev = *ev;
+	(*p)->keep = keep;
+	return filt_staterun(o, p);
 }
 
 	/*
@@ -890,14 +1021,13 @@ filt_statedel(struct filt_s *o, struct state_s **p) {
 	 * bender etc...
 	 */
 
-
 struct state_s **
 filt_statelookup(struct filt_s *o, struct ev_s *ev) {
 	struct state_s **i;
 	
 	if (EV_ISNOTE(ev)) {
 		for (i = &o->statelist; *i != 0; i = &(*i)->next) {
-			if ((*i)->ev.cmd == EV_NON && 
+			if (EV_ISNOTE(&(*i)->ev) && 
 			    (*i)->ev.data.voice.dev == ev->data.voice.dev && 
 			    (*i)->ev.data.voice.ch == ev->data.voice.ch && 
 			    (*i)->ev.data.voice.b0 == ev->data.voice.b0) {
@@ -912,10 +1042,18 @@ filt_statelookup(struct filt_s *o, struct ev_s *ev) {
 			    (*i)->ev.data.voice.b0 == ev->data.voice.b0) {
 				return i;
 			}
-		}	
+		}
 	} else if (ev->cmd == EV_BEND) {
 		for (i = &o->statelist; *i != 0; i = &(*i)->next) {
 			if ((*i)->ev.cmd == EV_BEND &&
+			    (*i)->ev.data.voice.dev == ev->data.voice.dev && 
+			    (*i)->ev.data.voice.ch == ev->data.voice.ch) {
+				return i;
+			}
+		}	
+	} else if (ev->cmd == EV_CAT) {
+		for (i = &o->statelist; *i != 0; i = &(*i)->next) {
+			if ((*i)->ev.cmd == EV_CAT && 
 			    (*i)->ev.data.voice.dev == ev->data.voice.dev && 
 			    (*i)->ev.data.voice.ch == ev->data.voice.ch) {
 				return i;
@@ -934,131 +1072,64 @@ filt_statelookup(struct filt_s *o, struct ev_s *ev) {
 	 * 	
 	 */
 
-
-void
+struct state_s **
 filt_stateshut(struct filt_s *o, struct state_s **p) {
 	struct ev_s *ev = &(*p)->ev;
-	
-	if (ev->cmd == EV_NON) {
+	struct state_s *s = *p;
+
+	if (s->ev.cmd == EV_NON || s->ev.cmd == EV_KAT) {
 		ev->cmd = EV_NOFF;
+		ev->data.voice.b0 = s->ev.data.voice.b0;
 		ev->data.voice.b1 = EV_NOFF_DEFAULTVEL;
-		filt_pass(o, ev);
-	} else if (ev->cmd == EV_BEND) {
+		s->keep = 0;
+		return filt_staterun(o, p);
+	} else if (s->ev.cmd == EV_BEND) {
 		ev->data.voice.b0 = EV_BEND_DEFAULTLO;
 		ev->data.voice.b1 = EV_BEND_DEFAULTHI;
-		filt_pass(o, ev);
+		s->keep = 0;
+		return filt_staterun(o, p);
+	} else if (s->ev.cmd == EV_CAT) {
+		ev->data.voice.b0 = EV_CAT_DEFAULT;
+		s->keep = 0;
+		return filt_staterun(o, p);
+	} else {
+#ifdef FILT_DEBUG
+		if (filt_debug) {
+			dbg_puts("filt_stateshut: deleting: ");
+			ev_dbg(ev);
+			dbg_puts("\n");
+		}
+		*p = s->next;
+		state_del(s);
+		return p;
+#endif
 	}
-	filt_statedel(o, p);
 }
 
-	/* 
-	 * executes the given rule; if the rule matches
-	 * the event then return 1, else retrun 0
+
+	/*
+	 * shuts all notes and restores the default values
+	 * of the modified controllers, the bender etc...
 	 */
-	 	
-extern void *user_stdout;
-		
-unsigned
-filt_matchrule(struct filt_s *o, struct rule_s *r, struct ev_s *ev) {
-	struct ev_s te;
-		
-	switch(r->type) {
-	case RULE_DEVDROP:
-		if (ev->data.voice.dev == r->idev) {
-			goto matched;
-		}
-		break;	
-	case RULE_DEVMAP:
-		if (ev->data.voice.dev == r->idev) {
-			te = *ev;
-			te.data.voice.dev &= r->odev;
-			filt_pass(o, &te);
-			goto matched;
-		}
-		break;
-	case RULE_CHANDROP:
-		if (ev->data.voice.dev == r->idev &&
-		    ev->data.voice.ch == r->ich) {
-			goto matched;
-		}
-		break;
-	case RULE_CHANMAP:
-		if (ev->data.voice.dev == r->idev && 
-		    ev->data.voice.ch == r->ich) {
-			te = *ev;
-			te.data.voice.dev = r->odev;
-			te.data.voice.ch = r->och;
-			filt_pass(o, &te);
-			goto matched;
-		}
-		break;
-	case RULE_KEYDROP:
-		if (EV_ISNOTE(ev) && 
-		    ev->data.voice.dev == r->idev && 
-		    ev->data.voice.ch == r->ich && 
-		    ev->data.voice.b0 >= r->keylo &&
-		    ev->data.voice.b0 <= r->keyhi) {
-			goto matched;
-		}
-		break;
-	case RULE_KEYMAP:
-		if (EV_ISNOTE(ev) && 
-		    ev->data.voice.dev == r->idev && 
-		    ev->data.voice.ch == r->ich && 
-		    ev->data.voice.b0 >= r->keylo &&
-		    ev->data.voice.b0 <= r->keyhi) {
-			te = *ev;
-			te.data.voice.dev = r->odev;
-			te.data.voice.ch = r->och;
-			te.data.voice.b0 += r->keyplus;
-			te.data.voice.b0 &= 0x7f;
-			te.data.voice.b1 = r->curve[te.data.voice.b1];
-			filt_pass(o, &te);
-			goto matched;
-		}
-		break;
-	case RULE_CTLDROP:
-		if (ev->cmd == EV_CTL &&
-		    ev->data.voice.dev == r->idev &&
-		    ev->data.voice.ch == r->ich &&
-		    ev->data.voice.b0 == r->ictl) {
-			goto matched;
-		}
-		break;
-	case RULE_CTLMAP:
-		if (ev->cmd == EV_CTL &&
-		    ev->data.voice.dev == r->idev &&
-		    ev->data.voice.ch == r->ich &&
-		    ev->data.voice.b0 == r->ictl) {
-			te = *ev;
-			te.data.voice.dev = r->odev;
-			te.data.voice.ch = r->och;
-			te.data.voice.b0 = r->octl;
-			te.data.voice.b1 = r->curve[te.data.voice.b1];
-			filt_pass(o, &te);
-			goto matched;
-		}
-		break;
-	}			
-	return 0;
-matched:
-	if (filt_debug) {
-		dbg_puts("filt_matchrule: ");
-		rule_dbg(r);
-		dbg_puts("\n");
+
+void
+filt_shut(struct filt_s *o) {
+	struct state_s **p;
+	p = &o->statelist;
+	while (*p) {
+		p = filt_stateshut(o, p);
 	}
-	return 1;
 }
+
 
 	/*
 	 * give an event to the filter for processing
 	 */
 
 void
-filt_run(struct filt_s *o, struct ev_s *ev) {
+filt_evcb(struct filt_s *o, struct ev_s *ev) {
 	struct state_s **p;
-	struct rule_s *i;
-	unsigned match;
+	unsigned keep;
 	
 	if (filt_debug) {
 		dbg_puts("filt_run: ");
@@ -1084,86 +1155,84 @@ filt_run(struct filt_s *o, struct ev_s *ev) {
 	if (EV_ISNOTE(ev)) {
 		p = filt_statelookup(o, ev);
 		if (ev->cmd == EV_NON) {
+			if (p) {
+				dbg_puts("noteon: state exists, ignored\n");
+				return;
+			}
 			if (!o->active) {
 				return;
 			}
-			if (p) {
-				dbg_puts("noteon: state exists, removed\n");
-				filt_stateshut(o, p);
-			}
-			p = filt_statenew(o, ev);
-			goto pass;
+			filt_statecreate(o, ev, 1);
 		} else if (ev->cmd == EV_NOFF) {
 			if (p) {
-				filt_statedel(o, p);
-				goto pass;
+				filt_stateupdate(o, p, ev, 0);
 			} else {
 				if (!o->active) {
 					return;
 				}
-				dbg_puts("noteoff: state doesn't exist, dropped\n");
-				goto quit;
+				dbg_puts("noteoff: state doesn't exist, event ignored\n");
 			}
 		} else {
-			if (p) {
-				goto pass;
-			}
-			goto quit;
+			filt_stateupdate(o, p, ev, 1);
 		}
 	} else if (ev->cmd == EV_BEND) {
+		keep = (ev->data.voice.b0 != EV_BEND_DEFAULTLO || 
+			ev->data.voice.b1 != EV_BEND_DEFAULTHI) ? 1 : 0;
 		p = filt_statelookup(o, ev);
-		if (ev->data.voice.b0 == EV_BEND_DEFAULTLO && 
-		    ev->data.voice.b1 == EV_BEND_DEFAULTHI) {
+		if (!p || 
+		    ev->data.voice.b0 != (*p)->ev.data.voice.b0 ||
+		    ev->data.voice.b1 != (*p)->ev.data.voice.b1) {
 			if (p) {
-				filt_statedel(o, p);
-			}
-		} else {
-			if (p) {
-				(*p)->ev.data.voice.b0 = ev->data.voice.b0;
-				(*p)->ev.data.voice.b1 = ev->data.voice.b1;
+				filt_stateupdate(o, p, ev, keep);
 			} else {
 				if (!o->active) {
 					return;
-				}			
-				p = filt_statenew(o, ev);
-			}			
-		}		
-		goto pass;
+				}
+				filt_statecreate(o, ev, keep);
+			}
+		}
 	} else if (ev->cmd == EV_CTL) {
-		if (!o->active) {
-			goto quit;
+		keep = 1;
+		p = filt_statelookup(o, ev);
+		if (!p) {
+			if (!o->active) {
+				return;
+			}
+			filt_statecreate(o, ev, keep);
+		} else if (ev->data.voice.b1 != (*p)->ev.data.voice.b1) {
+			filt_stateupdate(o, p, ev, keep);
 		}
-		goto pass;
 	} else if (ev->cmd == EV_CAT) {
-		if (!o->active) {
-			goto quit;
-		}
-		goto pass;
-	}
-	
-	/* 
-	 * match events agants rules
-	 */
-
-pass:
-	match = 0;
-	for (i = o->voice_rules; i != 0; i = i->next) {
-		match |= filt_matchrule(o, i, ev);
-	}
-	if (!match) {
-		for (i = o->chan_rules; i != 0; i = i->next) {
-			match |= filt_matchrule(o, i, ev);
-		}
-		if (!match) {
-			for (i = o->dev_rules; i != 0; i = i->next) {
-				match |= filt_matchrule(o, i, ev);
+		/* 
+		XXX: not tested => set keep to zero 
+		keep = ev->data.voice.b0 != 0 ? 1 : 0;
+		*/
+		keep = 0;		
+		p = filt_statelookup(o, ev);
+		if (!p) {
+			if (!o->active) {
+				return;
 			}
-			if (!match) {
-				filt_pass(o, ev);
-			}
+			filt_statecreate(o, ev, keep);
+		} else if (ev->data.voice.b0 != (*p)->ev.data.voice.b0) {
+			filt_stateupdate(o, p, ev, keep);
 		}
-	}
-quit:
-	return;
+	}	
 }
 
+void
+filt_timercb(struct filt_s *o) {
+	struct state_s **p;
+	unsigned nevents;
+
+	p = &o->statelist;
+	while (*p) {
+		nevents = (*p)->nevents;
+		(*p)->nevents = 0;
+		if (nevents > 1) {
+			p = filt_staterun(o, p);
+		} else {
+			p = &(*p)->next;
+		}
+	}
+}

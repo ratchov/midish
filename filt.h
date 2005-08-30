@@ -36,8 +36,9 @@
 #include "ev.h"
 
 struct state_s {
-	struct state_s *next;
 	struct ev_s ev;			/* initial event */
+	unsigned nevents, keep;
+	struct state_s *next;
 };
 
 #define RULE_CTLMAP	1
@@ -81,16 +82,19 @@ void filt_reset(struct filt_s *);
 void filt_start(struct filt_s *, void (*)(void *, struct ev_s *), void *);
 void filt_shut(struct filt_s *);
 void filt_stop(struct filt_s *);
-void filt_run(struct filt_s *o, struct ev_s *ev);
+
+void filt_evcb(struct filt_s *o, struct ev_s *ev);
+void filt_timercb(struct filt_s *o);
 
 struct state_s  *state_new(void);
 void             state_del(struct state_s *s);
 
-void             filt_pass(struct filt_s *o, struct ev_s *ev);
-struct state_s **filt_statenew(struct filt_s *o, struct ev_s *ev);
-void             filt_statedel(struct filt_s *o, struct state_s **p);
+void		 filt_processev(struct filt_s *o, struct ev_s *ev);
+
+struct state_s **filt_statecreate(struct filt_s *o, struct ev_s *ev, unsigned keep);
 struct state_s **filt_statelookup(struct filt_s *o, struct ev_s *ev);
-void             filt_stateshut(struct filt_s *o, struct state_s **p);
+struct state_s **filt_stateshut(struct filt_s *o, struct state_s **p);
+struct state_s **filt_stateupdate(struct filt_s *o, struct state_s **p, struct ev_s *ev, unsigned keep);
 
 void filt_conf_devdrop(struct filt_s *o, unsigned idev);
 void filt_conf_nodevdrop(struct filt_s *o, unsigned idev);

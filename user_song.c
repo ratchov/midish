@@ -47,6 +47,40 @@
 #include "saveload.h"
 #include "textio.h"
 
+
+
+unsigned
+user_func_songsetcurchan(struct exec_s *o, struct data_s **r) {
+	struct songchan_s *t;
+	struct var_s *arg;
+	
+	arg = exec_varlookup(o, "channame");
+	if (!arg) {
+		dbg_puts("user_func_songsetcurchan: 'channame': no such param\n");
+		return 0;
+	}
+	if (arg->data->type == DATA_NIL) {
+		user_song->curchan = 0;
+		return 1;
+	} 
+	if (!exec_lookupchan_getref(o, "channame", &t)) {
+		return 0;
+	}
+	user_song->curchan = t;
+	return 1;
+}
+
+
+unsigned
+user_func_songgetcurchan(struct exec_s *o, struct data_s **r) {
+	if (user_song->curchan) {
+		*r = data_newref(user_song->curchan->name.str);
+	} else {
+		*r = data_newnil();
+	}
+	return 1;
+}
+
 unsigned
 user_func_songsetcursysex(struct exec_s *o, struct data_s **r) {
 	struct songsx_s *t;
