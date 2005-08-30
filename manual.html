@@ -244,6 +244,14 @@ Without any midi-devices Midish will be probably useless.
 	<LI> removed support for gnu readline(3) library from midish, 
 	 	and created the <TT>rmidish</TT> utility, a front-end
 		to midish using the readline(3) library.	
+	<LI> added filters the ability to limit midi trafic
+		(one controller, one bender, one aftertouch per tic)
+		
+	<LI> make the filter strip duplicate controlles, pitch bends and
+		aftertouches
+	<LI> added current channel: <TT>songgetcurchan</TT> and
+		<TT>songsetcurchan</TT>
+		
 	</UL>
 
 <A name="language"></A>
@@ -1209,6 +1217,7 @@ Without any midi-devices Midish will be probably useless.
 <B><TT>songgetcurfilt</TT></B>
 	<BLOCKQUOTE>
 	returns the current filter
+	or <TT>'nil'</TT> if none
 	</BLOCKQUOTE>
 
 <B><TT>songsetcursysex sysexname</TT></B>
@@ -1220,6 +1229,18 @@ Without any midi-devices Midish will be probably useless.
 <B><TT>songgetcursysex</TT></B>
 	<BLOCKQUOTE>
 	returns the current sysex bank
+	or <TT>'nil'</TT> if none
+	</BLOCKQUOTE>
+
+<B><TT>songsetcurchan channame</TT></B>
+	<BLOCKQUOTE>
+	set the current (named) channel.
+	</BLOCKQUOTE>
+
+<B><TT>songgetcurchan</TT></B>
+	<BLOCKQUOTE>
+	returns the name of the current channel 
+	or <TT>'nil'</TT> if none
 	</BLOCKQUOTE>
 
 <B><TT>songsetunit tpu</TT></B>
