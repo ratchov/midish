@@ -10,6 +10,7 @@
 proc nf name { 
 	filtnew $name 
 	songsetcurfilt $name
+	filtsetcurchan $name [songgetcurchan]
 }
 
 #
@@ -37,8 +38,9 @@ proc chandrop i {
 proc chanmap i o {
 	filtchanmap [songgetcurfilt] $i $o
 }
+
 proc ctldrop i ic {
-	filtctlmap [songgetcurfilt] $i $ic
+	filtctldrop [songgetcurfilt] $i $ic
 }
 proc ctlmap i o ic oc {
 	filtctlmap [songgetcurfilt] $i $o $ic $oc
@@ -61,8 +63,8 @@ proc ct name {
 	if [songgetcurtrack] {
 		let filt = [trackgetcurfilt $name]
 		songsetcurfilt $filt
-		if $filt && [chanexists $filt] {
-			songsetcurchan $filt
+		if $filt {
+			songsetcurchan [filtgetcurchan $filt]
 		}
 	}
 }
