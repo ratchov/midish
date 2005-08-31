@@ -1,8 +1,8 @@
 #
 # set midi device config
 #
-#devattach 0 "/dev/rmidi3"
-#devattach 1 "/dev/rmidi2"
+#devattach 0 "/dev/rmidi4"
+#devattach 1 "/dev/rmidi3"
 
 #
 # create a new filter 
@@ -17,6 +17,9 @@ proc nf name {
 #
 proc cf name { 
 	songsetcurfilt $name
+	if [chanexists $name] {
+		songsetcurchan $name
+	}
 }
 
 #
@@ -58,6 +61,9 @@ proc ct name {
 	if [songgetcurtrack] {
 		let filt = [trackgetcurfilt $name]
 		songsetcurfilt $filt
+		if $filt && [chanexists $filt] {
+			songsetcurchan $filt
+		}
 	}
 }
 
@@ -74,6 +80,7 @@ proc tf filt {
 #
 proc nc name chan {
 	channew $name $chan
+	songsetcurchan $name
 }
 
 #
@@ -115,20 +122,26 @@ proc l  {
 	let cur = [songgetcurtrack]
 	for i in [tracklist] {
 		if $i == $cur {
-			let prefix = " ->";
+			let prefix = " ->"
 		} else {
-			let prefix = "   ";
+			let prefix = "   "
 		}
 		if [trackgetmute $i] {
-			let mute = ", muted";
+			let mute = ", muted"
 		} else {
-			let mute = "";
+			let mute = ""
 		}
 		print { $prefix $i "( record:" [trackgetcurfilt $i] $mute ")"}
 	}
 	print "channels:"
+	let cur = [songgetcurchan]
 	for i in [chanlist] {
-		print { "   " $i "(" "dev:" [changetdev $i] "chan:" [changetch $i] ")" }
+		if $i == $cur {
+			let prefix = " ->"
+		} else {
+			let prefix = "   "
+		}
+		print { $prefix $i "(" "dev:" [changetdev $i] "chan:" [changetch $i] ")" }
 	}
 	print "filters:"
 	let cur = [songgetcurfilt]

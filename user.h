@@ -145,6 +145,8 @@ unsigned user_func_filtnokeymap(struct exec_s *o, struct data_s **r);
 unsigned user_func_filtreset(struct exec_s *o, struct data_s **r);
 unsigned user_func_filtswapichan(struct exec_s *o, struct data_s **r);
 unsigned user_func_filtswapidev(struct exec_s *o, struct data_s **r);
+unsigned user_func_filtsetcurchan(struct exec_s *o, struct data_s **r);
+unsigned user_func_filtgetcurchan(struct exec_s *o, struct data_s **r);
 
 /* song functions  */
 

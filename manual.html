@@ -249,8 +249,11 @@ Without any midi-devices Midish will be probably useless.
 		
 	<LI> make the filter strip duplicate controlles, pitch bends and
 		aftertouches
-	<LI> added current channel: <TT>songgetcurchan</TT> and
-		<TT>songsetcurchan</TT>
+	<LI> added global and per filter current channel: 
+		<TT>songgetcurchan</TT>,
+		<TT>songsetcurchan</TT>,
+		<TT>filtgetcurchan</TT> and
+		<TT>filtsetcurchan</TT>.
 		
 	</UL>
 
@@ -935,6 +938,17 @@ Without any midi-devices Midish will be probably useless.
 	of the channel.
 	</BLOCKQUOTE>
 
+<B><TT>filtsetcurchan filtname channame</TT></B>
+	<BLOCKQUOTE>
+	sets the default channel of filter
+	<TT>filtname</TT> to <TT>channame</TT>.
+	</BLOCKQUOTE>
+
+<B><TT>filtgetcurchan filtname</TT></B>
+	<BLOCKQUOTE>
+	returns the default channel 
+	of <TT>filtname</TT>, returns <TT>nil</TT> if none
+	</BLOCKQUOTE>
 
 <H2>Filter functions</H2>
 

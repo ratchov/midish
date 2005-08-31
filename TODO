@@ -1,18 +1,12 @@
-- make songplay stop after the EV_STOP is received or
-  create a songperf or whatever. But we need songplay to
-  stop in scripts such as smfplay(1).
-
 - make chanconfev match the dev/chan pair of the channel
   (and update midishrc and docs)
-
-- receiving 'EV_STOP' make all notes off; why?
 
 - cleanup/implement {track,chan,filt,sysex,song}info 
   do we need them? isn't it better to give the user
   primitives and to let him/her define his/her own info
   functions? Try to download a random .mid file from the net
   and to work with it in order to see what is really needed.
-  Of corse we need:
+  Ex:
   	- which channel is used on which track
 	- which notes
 	- on which measures
@@ -23,3 +17,9 @@
 - make song{play,record,idle} scan tracks for volume changes.
 
 - implement undo-stack
+
+- make songplay stop after the EV_STOP is received or
+  create a songperf or whatever. But we need songplay to
+  stop in scripts such as smfplay(1).
+
+- receiving 'EV_STOP' make all notes off; why?

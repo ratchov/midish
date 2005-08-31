@@ -968,6 +968,11 @@ user_mainloop(void) {
 			name_newarg("filtname",
 			name_newarg("olddev", 
 			name_newarg("newdev", 0))));
+	exec_newbuiltin(exec, "filtsetcurchan", user_func_filtsetcurchan, 
+			name_newarg("filtname", 
+			name_newarg("channame", 0)));
+	exec_newbuiltin(exec, "filtgetcurchan", user_func_filtgetcurchan,
+			name_newarg("filtname", 0));
 
 	exec_newbuiltin(exec, "songgetunit", user_func_songgetunit, 0);
 	exec_newbuiltin(exec, "songsetunit", user_func_songsetunit, 

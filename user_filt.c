@@ -482,3 +482,46 @@ user_func_filtswapidev(struct exec_s *o, struct data_s **r) {
 	return 1;
 }
 
+unsigned
+user_func_filtsetcurchan(struct exec_s *o, struct data_s **r) {
+	struct songfilt_s *f;
+	struct songchan_s *c;
+	struct var_s *arg;
+	
+	if (!exec_lookupfilt(o, "filtname", &f)) {
+		return 0;
+	}	
+	arg = exec_varlookup(o, "channame");
+	if (!arg) {
+		dbg_puts("user_func_filtsetcurchan: 'channame': no such param\n");
+		return 0;
+	}
+	if (arg->data->type == DATA_NIL) {
+		f->curchan = 0;
+		return 1;
+	} else if (arg->data->type == DATA_REF) {
+		c = song_chanlookup(user_song, arg->data->val.ref);
+		if (!c) {
+			cons_err("no such chan");
+			return 0;
+		}
+		f->curchan = c;
+		return 1;
+	}
+	return 0;
+}
+
+unsigned
+user_func_filtgetcurchan(struct exec_s *o, struct data_s **r) {
+	struct songfilt_s *f;
+	
+	if (!exec_lookupfilt(o, "filtname", &f)) {
+		return 0;
+	}
+	if (f->curchan) {
+		*r = data_newref(f->curchan->name.str);
+	} else {
+		*r = data_newnil();
+	}		
+	return 1;
+}

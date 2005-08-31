@@ -349,6 +349,13 @@ songfilt_output(struct songfilt_s *o, struct textout_s *f) {
 	textout_putstr(f, "{\n");
 	textout_shiftright(f);
 
+	if (o->curchan) {
+		textout_indent(f);
+		textout_putstr(f, "curchan ");
+		textout_putstr(f, o->curchan->name.str);
+		textout_putstr(f, "\n");
+	}
+
 	textout_indent(f);
 	textout_putstr(f, "filt ");
 	filt_output(&o->filt, f);
@@ -1022,6 +1029,8 @@ parse_songtrk(struct parse_s *o, struct song_s *s, struct songtrk_s *t) {
 
 unsigned
 parse_songfilt(struct parse_s *o, struct song_s *s, struct songfilt_s *g) {
+	struct songchan_s *c;
+	
 	if (!parse_getsym(o)) {
 		return 0;
 	}
@@ -1038,7 +1047,24 @@ parse_songfilt(struct parse_s *o, struct song_s *s, struct songfilt_s *g) {
 		} else if (o->lex.id == TOK_RBRACE) {
 			break;
 		} else if (o->lex.id == TOK_IDENT) {
-			if (str_eq(o->lex.strval, "filt")) {
+			if (str_eq(o->lex.strval, "curchan")) {
+				if (!parse_getsym(o)) {
+					return 0;
+				}
+				if (o->lex.id != TOK_IDENT) {
+					lex_err(&o->lex, "identifier expected after 'curchan' in songfilt\n");
+					return 0;
+				}
+				c = song_chanlookup(s, o->lex.strval);
+				if (!c) {
+					c = songchan_new(o->lex.strval);
+					song_chanadd(s, c);
+				}
+				g->curchan = c; 
+				if (!parse_nl(o)) {
+					return 0;
+				}
+			} else if (str_eq(o->lex.strval, "filt")) {
 				if (!parse_filt(o, &g->filt)) {
 					return 0;
 				}

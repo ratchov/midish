@@ -89,6 +89,7 @@ struct songfilt_s *
 songfilt_new(char *name) {
 	struct songfilt_s *o;
 	o = (struct songfilt_s *)mem_alloc(sizeof(struct songfilt_s));
+	o->curchan = 0;
 	name_init(&o->name, name);
 	filt_init(&o->filt);
 	return o;
@@ -290,6 +291,19 @@ song_chanlookup_bynum(struct song_s *o, unsigned dev, unsigned ch) {
 unsigned
 song_chanrm(struct song_s *o, struct songchan_s *c) {
 	struct songchan_s **i;
+	struct songfilt_s *f;
+
+	if (o->curchan == c) {
+		cons_err("cant delete current chan");
+		return 0;
+	}
+	for (f = o->filtlist; f != 0; f = (struct songfilt_s *)f->name.next) {
+		if (f->curchan == c) {
+			cons_err("cant delete filt current chan");
+			return 0;
+		}		
+	}	
+
 	i = &o->chanlist;
 	while(*i != 0) {
 		if (*i == c) {

@@ -49,6 +49,7 @@ struct songchan_s {
 struct songfilt_s {
 	struct name_s name;
 	struct filt_s filt;
+	struct songchan_s *curchan;
 };
 
 struct songtrk_s {
