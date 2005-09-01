@@ -41,22 +41,22 @@
 <H1>Table of contents</H1>
 <P>
 <UL>
-<LI><A href="#intro">Introduction</A>
-<LI><A href="#dev">Device setup</A>
-<LI><A href="#filt">Filtering/routing</A>
-<LI><A href="#chan">Channels</A>
-<LI><A href="#time">Time structure</A>
-<LI><A href="#track">Tracks</A>
-<LI><A href="#info">Obtaining information</A>
-<LI><A href="#save">Saving and loading songs</A>
-<LI><A href="#export">Import/export standard MIDI files</A>
-<LI><A href="#language">The interpreter's language</A>
-<LI><A href="#example">Example session</A>
+<LI><A href="#intro">1 Introduction</A>
+<LI><A href="#dev">2 Device setup</A>
+<LI><A href="#filt">3 Filtering/routing</A>
+<LI><A href="#chan">4 Channels</A>
+<LI><A href="#time">5 Time structure</A>
+<LI><A href="#track">6 Tracks</A>
+<LI><A href="#info">7 Obtaining information</A>
+<LI><A href="#save">8 Saving and loading songs</A>
+<LI><A href="#export">9 Import/export standard MIDI files</A>
+<LI><A href="#language">10 The interpreter's language</A>
+<LI><A href="#example">11 Example session</A>
 </UL>
 
 
 <A name="intro"></A>
-<H1>Introduction</H1>
+<H1>1 Introduction</H1>
 
 	<P>
 	Midish is a MIDI sequencer/filter driven by a command-line 
@@ -104,7 +104,7 @@
 	signal (SIGINT) to midish).	
 
 <A name="dev"></A>
-<H1>Device setup</H1>
+<H1>2 Device setup</H1>
 
 	In midish, midi-devices are numbered from 0 to 15.
 	Each midi-device has its "slot number". For instance, 
@@ -141,7 +141,7 @@
 	automatically executed the next time you run midish.
 	
 <A name="filt"></A>
-<H1>Filtering/routing</H1>
+<H1>3 Filtering/routing</H1>
 
 	<P>
 	Midish supports midi filtering: you can define <I>a filter</I> to 
@@ -180,7 +180,7 @@
 	Rules can be listed with <TT>filtinfo</TT>. All filtering rules
 	can be removed with <TT>filtreset</TT>.
 		
-<H2>Device redirections</H2>
+<H2>3.1 Device redirections</H2>
 
 	Let us define a filter and use it to route events from
 	device number 1 (the midi keyboard) to device number 0
@@ -200,7 +200,7 @@
 	</PRE>
 	The filter will run until control-C is hit on the console.
 	
-<H2>Channel maps</H2>
+<H2>3.2 Channel maps</H2>
 
 	Let us define a filter that routes events from
 	device 1, channel 0 (first channel of the keyboard) to
@@ -224,7 +224,7 @@
 	Playing on channel 0 of the keyboard will make
 	sound channel 9 of the sound-module.
 
-<H2>Controller maps</H2>
+<H2>3.3 Controller maps</H2>
 
 	Let us continue with the later filter. Now 
 	we will add a new rule that maps the modulation wheel (controller 1)
@@ -248,7 +248,7 @@
 	chanmap {1 0} {0 9}
 	</PRE>
 
-<H2>Transpose</H2>
+<H2>3.4 Transpose</H2>
 
 	Let us create a filter that transposes by 12 half-tones
 	(one octave) notes played on device 1, channel 0 (keyboard) and
@@ -271,7 +271,7 @@
 	and the 6-th argument give the number of half-tones 
 	(12, one octave).
 	
-<H2>Keyboard splits</H2>
+<H2>3.5 Keyboard splits</H2>
 
 	In the same way we can create a keyboard-split with two
 	key-rules and two channel-rules. 
@@ -294,7 +294,7 @@
 	to define procedures that do the same in a very simpler way.
 
 <A name="chan"></A>
-<H1>Channels</H1>
+<H1>4 Channels</H1>
 
 	Because midish handles multiple devices, instead of
 	using midi-channels, it uses device/midi-channel pairs.
@@ -311,7 +311,7 @@
 	this defines a named-channel <TT>mybass</TT> that can
 	be used instead of the <TT>{0 1}</TT> pair.
 	
-<H2>Channel configuration</H2>
+<H2>4.1 Channel configuration</H2>
 
 	Since a channel represents a musical instrument, 
 	midish allow us to attach to the channel definition 
@@ -339,7 +339,7 @@
 	</PRE>
 	
 <A name="time"></A>
-<H1>Time structure</H1>
+<H1>5 Time structure</H1>
 
 	<P>
 	In midish, time is split in <I>measures</I>. Each measure
@@ -360,7 +360,7 @@
 	the time signature is 4/4.
 	
 	
-<H2>Metronome</H2>
+<H2>5.1 Metronome</H2>
 
 	In order to "hear" time, we can use a metronome. It is
 	used only in play and record modes. It produces
@@ -383,7 +383,7 @@
 	device 0, channel 9 and the low-click with note 64, velocity 100
 	on device 0, channel 9.
 
-<H2>Time signature changes</H2>
+<H2>5.2 Time signature changes</H2>
 
 	Time signature changes are achieved by inserting or
 	deleting measures. For instance let us start
@@ -403,7 +403,7 @@
 	songplay		# test it
 	</PRE>
 	
-<H2>Tempo changes</H2>
+<H2>5.3 Tempo changes</H2>
 	
 	Tempo changes are achieved simply by giving the measure
 	number and the tempo value in beats per minute. For
@@ -416,7 +416,7 @@
 	</PRE>
 
 
-<H2>Moving in the song</H2>
+<H2>5.4 Moving in the song</H2>
 
 	We can select the current position in the song to
 	measure number 3 as follows:
@@ -428,7 +428,7 @@
 	number 0.
 	
 <A name="track"></A>
-<H1>Tracks</H1>
+<H1>6 Tracks</H1>
 	
 	<P>
 	A track is a piece of music, namely an ordered in time list 
@@ -446,7 +446,7 @@
 	filter nor song current filter, then midi events
 	from all devices are recorded as-is.
 
-<H2>Recording track without a filter</H2>
+<H2>6.1 Recording track without a filter</H2>
 
 	<P>
 	Let us define a track and record data
@@ -466,7 +466,7 @@
 	sent back to the device number 1 instead of being sent
 	to the sound module (device number 0).
 	
-<H2>Recording track with a filter</H2>
+<H2>6.2 Recording track with a filter</H2>
 
 	Let us create a filter and use it to
 	record to the above track:
@@ -477,7 +477,7 @@
 	trackrecord
 	</PRE>
 	
-<H2>Basic editing of a track</H2>
+<H2>6.3 Basic editing of a track</H2>
 
 	<P>
 	Most track editing functions in midish take at least the
@@ -530,7 +530,7 @@
 	copied (see section "event ranges" in the manual).
 	
 
-<H2>Track quantisation</H2>
+<H2>6.4 Track quantisation</H2>
 
 	In order to make a track sound more "precise", 
 	on can regularise it by rounding note-positions
@@ -546,7 +546,7 @@
 	often sound to regular especially on acoustic patches.
 	
 
-<H2>Checking a track</H2>
+<H2>6.5 Checking a track</H2>
 
 	It is possible that a midi device transmits 
 	bogus midi data. In principle when a filter is
@@ -562,7 +562,7 @@
 
 
 <A name="sysex"></A>
-<H1>Using system exclusive messages</H1>
+<H1>7 Using system exclusive messages</H1>
 
 	Midish can send several system exclusive messages
 	to midi devices before starting performance mode.
@@ -627,7 +627,7 @@
 	</PRE>
 	
 <A name="info"></A>
-<H1>Obtaining information</H1>
+<H1>8 Obtaining information</H1>
 
 	<P>
 	The following functions gives some informations
@@ -679,7 +679,7 @@
 	
 
 <A name="save"></A>
-<H1>Saving and loading songs</H1>
+<H1>9 Saving and loading songs</H1>
 
 	<P>
 	A song can be saved into a file. All channel definitions, 
@@ -700,7 +700,7 @@
 	metronome settings) are not saved. 
 	
 <A name="export"></A>
-<H1>Import/export standard MIDI files</H1>
+<H1>10 Import/export standard MIDI files</H1>
 
 	<P>
 	Standard MIDI files type 0 or 1 can be imported. Each
@@ -734,7 +734,7 @@
 	</PRE>
 	
 <A name="language"></A>
-<H1>The interpreter's language</H1>
+<H1>11 The interpreter's language</H1>
 
 	<P>
 	In order to achieve any simple task with midish, we often have
@@ -743,7 +743,7 @@
 	For more details about the interpreted language, please
 	refer to the <A href="manual.html">manual</A>.
 
-<H2>Global variables</H2>
+<H2>11.1 Global variables</H2>
 
 	<P>
 	Variables can be used to store numbers, strings and
@@ -758,7 +758,7 @@
 	variables and the dollar sign ("<TT>$</TT>") is used
 	to obtain variable values.
 
-<H2>Defining simple procedures</H2>
+<H2>11.2 Defining simple procedures</H2>
 
 	<P>
 	For instance, let
@@ -813,7 +813,7 @@
 	automatically executed the next time you run midish.
 		
 	
-<H2>Sample rc-file</H2>
+<H2>11.3 Sample rc-file</H2>
 	
 	<P>
 	The sample rc file shipped in the source tar-balls
@@ -1088,8 +1088,8 @@
 		</BLOCKQUOTE>
 			
 <A name="example"></A>
-<H1>Example sessions</H1>
-<H2>Example - midi filtering</H2>
+<H1>12 Example sessions</H1>
+<H2>12.1 Example - midi filtering</H2>
 	
 	The following session show how to 
 	configure a keyboard split:
@@ -1145,7 +1145,7 @@
 	and the piano volume to 120.
 
 
-<H2>Example - recording a track</H2>
+<H2>12.2 Example - recording a track</H2>
 
 	The following session show how to
 	record a track:

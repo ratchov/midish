@@ -41,22 +41,22 @@
 <H1>Table of contents</H1>
 <P>
 <UL>
-<LI><A href="#intro">Introduction</A>
-<LI><A href="#install">Installation</A>
-<LI><A href="#changes">Changes</A>
-<LI><A href="#language">Language reference</A>
-<LI><A href="#devices">Devices and channels</A>
-<LI><A href="#events">Events</A>
-<LI><A href="#evrange">Event ranges</A>
-<LI><A href="#filters">Filters</A>
-<LI><A href="#tracks">Tracks</A>
-<LI><A href="#sysex">System exclusive message</A>
-<LI><A href="#functions">Function reference</A>
+<LI><A href="#intro">1. Introduction</A>
+<LI><A href="#install">2. Installation</A>
+<LI><A href="#changes">3. Changes</A>
+<LI><A href="#language">4. Language reference</A>
+<LI><A href="#devices">5. Devices and channels</A>
+<LI><A href="#events">6. Events</A>
+<LI><A href="#evrange">7. Event ranges</A>
+<LI><A href="#filters">8. Filters</A>
+<LI><A href="#tracks">9. Tracks</A>
+<LI><A href="#sysex">10. System exclusive message</A>
+<LI><A href="#functions">11. Function reference</A>
 </UL>
 
 
 <A name="intro"></A>
-<H1>Introduction</H1>
+<H1>1 Introduction</H1>
 
 	<P>
 	Midish is a MIDI sequencing and filtering tool for 
@@ -66,9 +66,9 @@
 	command-line interpreter.
 
 <A name="install"></A>
-<H1>Installation</H1>
+<H1>2 Installation</H1>
 
-<H2>Requirements</H2>
+<H2>2.1 Requirements</H2>
 
 	Requirements:
 	<UL>
@@ -82,7 +82,7 @@
 
 Without any midi-devices Midish will be probably useless.
 
-<H2>Installation</H2>
+<H2>2.2 Installation</H2>
 
 	<UL>
 	<LI> untar and gunzip the tar-ball:
@@ -131,7 +131,7 @@ Without any midi-devices Midish will be probably useless.
 
 	</UL>
 
-<H2>Invocation</H2>
+<H2>2.3 Invocation</H2>
 	<P>
 	when used interactively, midish doesn't need any arguments, 
 	so it's started	by typing:
@@ -190,8 +190,8 @@ Without any midi-devices Midish will be probably useless.
 	control-D (witch means "end-of-file").
 
 <A name="changes"></A>
-<H1>Changes</H1>
-<H2>from release 0.1 to release 0.2</H2>
+<H1>3 Changes</H1>
+<H2>3.1 Changes from release 0.1 to release 0.2</H2>
 
 	<UL>
 	<LI> added '<TT>device</TT>' parameter to '<TT>sendraw</TT>'
@@ -258,8 +258,8 @@ Without any midi-devices Midish will be probably useless.
 	</UL>
 
 <A name="language"></A>
-<H1>Language reference</H1>
-<H2>Lexical structure</H2>
+<H1>4 Language reference</H1>
+<H2>4.1 Lexical structure</H2>
 
 	The input line is split into tokens:
 
@@ -319,7 +319,7 @@ Without any midi-devices Midish will be probably useless.
 	single line. Anything else generates a "bad token" error.
 
 
-<H2>Statements</H2>
+<H2>4.2 Statements</H2>
 
 	<P>
 	Any input line can be ether a function definition or a
@@ -411,7 +411,7 @@ Without any midi-devices Midish will be probably useless.
 	</UL>
 
 
-<H2>Expressions</H2>
+<H2>4.3 Expressions</H2>
 
 	An expression can be an arithmetic expression of constants,
 	expressions, variable values, return values of
@@ -559,7 +559,7 @@ Without any midi-devices Midish will be probably useless.
 	</PRE>
 
 
-<H2>Procedure definition</H2>
+<H2>4.4 Procedure definition</H2>
 
 	A procedure is defined with the keyword
 	<TT>proc</TT> followed by the name of the procedure, 
@@ -573,7 +573,7 @@ Without any midi-devices Midish will be probably useless.
 	}
 	</PRE>
 
-	Argulements and variables defined whithin a procedure 
+	Arguments and variables defined whithin a procedure 
 	are local to that procedure
 	and may shadow a global variable with the same
 	name. The return value is given to the caller
@@ -586,7 +586,7 @@ Without any midi-devices Midish will be probably useless.
 	</PRE>
 
 <A name="devices"></A>
-<H1>Devices and channels</H1>
+<H1>5 Devices and channels</H1>
 
 	<P>
 	Devices are numbered between 0 and 15. They are
@@ -623,7 +623,7 @@ Without any midi-devices Midish will be probably useless.
 	see <TT>channew</TT>, <TT>chanconfev</TT>
 
 <A name="events"></A>
-<H1>Events</H1>
+<H1>6 Events</H1>
 
 	<P>
 	Some functions take events as arguments. An event
@@ -674,7 +674,7 @@ Without any midi-devices Midish will be probably useless.
 
 
 <A name="evrange"></A>
-<H1>Event ranges</H1>
+<H1>7 Event ranges</H1>
 
 	Some track editing functions take an event range as argument. 
 	The event range is specified as a list containing:
@@ -717,7 +717,7 @@ Without any midi-devices Midish will be probably useless.
 	</PRE>	
 
 <A name="filters"></A>
-<H1>Filters</H1>
+<H1>8 Filters</H1>
 
 	<P>
 	Filters are used to route midi events between channels and 
@@ -745,7 +745,7 @@ Without any midi-devices Midish will be probably useless.
 	flooding of output devices.
 
 <A name="tracks"></A>
-<H1>Tracks</H1>
+<H1>9 Tracks</H1>
 
 	<P>
 	A track is a set of events ordered in time. They can be
@@ -757,7 +757,7 @@ Without any midi-devices Midish will be probably useless.
 
 
 <A name="sysex"></A>
-<H1>System exclusive message</H1>
+<H1>10 System exclusive message</H1>
 
 	<P>
 	Midi system exclusive messages can be recorded and
@@ -768,9 +768,9 @@ Without any midi-devices Midish will be probably useless.
 	from all banks are send to their respective devices.
 
 <A name="functs"></A>
-<H1>Function reference</H1>
+<H1>11 Function reference</H1>
 
-<H2>Track functions</H2>
+<H2>11.1 Track functions</H2>
 
 <B><TT>tracklist</TT></B>
 	<BLOCKQUOTE>
@@ -896,7 +896,7 @@ Without any midi-devices Midish will be probably useless.
 	Return 1 if the give track is mutted and 0 otherwise.
 	</BLOCKQUOTE>
 
-<H2>Channel functions</H2>
+<H2>11.2 Channel functions</H2>
 
 <B><TT>channew channelname channelnum</TT></B>
 	<BLOCKQUOTE>
@@ -957,7 +957,7 @@ Without any midi-devices Midish will be probably useless.
 	of <TT>filtname</TT>, returns <TT>nil</TT> if none
 	</BLOCKQUOTE>
 
-<H2>Filter functions</H2>
+<H2>11.3 Filter functions</H2>
 
 <B><TT>filtnew filtname</TT></B>
 	<BLOCKQUOTE>
@@ -1106,7 +1106,7 @@ Without any midi-devices Midish will be probably useless.
 	in the range <TT>keystart..keyend</TT> to channel <TT>outchan</TT>.
 	</BLOCKQUOTE>
 
-<H2>System exclusive messages functions</H2>
+<H2>11.4 System exclusive messages functions</H2>
 
 <B><TT>sysexnew sysexname</TT></B>
 	<BLOCKQUOTE>
@@ -1159,7 +1159,7 @@ Without any midi-devices Midish will be probably useless.
 	print debug info about sysex bank <TT>sysexname</TT>
 	</BLOCKQUOTE>
 
-<H2>Real-time functions</H2>
+<H2>11.5 Real-time functions</H2>
 
 <B><TT>songidle</TT></B>
 	<BLOCKQUOTE>
@@ -1192,7 +1192,7 @@ Without any midi-devices Midish will be probably useless.
 	</PRE>
 	</BLOCKQUOTE>
 
-<H2>Song functions</H2>
+<H2>11.6 Song functions</H2>
 
 <B><TT>songsetcurquant tics</TT></B>
 	<BLOCKQUOTE>
@@ -1344,7 +1344,7 @@ Without any midi-devices Midish will be probably useless.
 	supported.
 	</BLOCKQUOTE>
 
-<H2>Device functions</H2>
+<H2>11.7 Device functions</H2>
 
 <B><TT>devlist</TT></B>
 	<BLOCKQUOTE>
@@ -1399,7 +1399,7 @@ Without any midi-devices Midish will be probably useless.
 	Print some information about the midi device.
 	</BLOCKQUOTE>
 
-<H2>Misc. functions</H2>
+<H2>11.8 Misc. functions</H2>
 
 <B><TT>metroswitch number</TT></B>
 	<BLOCKQUOTE>

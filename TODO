@@ -1,3 +1,6 @@
+- make songrecord record controllers and progchanges that
+  occure before the first tic on the current chan
+
 - make chanconfev match the dev/chan pair of the channel
   (and update midishrc and docs)
 
@@ -14,7 +17,10 @@
 - check (one by one) that every function works and
   that the documetation is accurate. Make a release.
 
-- make song{play,record,idle} scan tracks for volume changes.
+- make song{play,record,idle} scan tracks for controllers,
+  pitch bends, prog changes etc... so that the output
+  will be in the same state as the song were played from the 
+  beggining
 
 - implement undo-stack
 
