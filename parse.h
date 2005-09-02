@@ -33,8 +33,6 @@
 
 #include "lex.h"
 
-extern unsigned parse_debug;
-
 struct node_s;
 
 struct parse_s {

@@ -108,8 +108,6 @@
 
 #include "cons.h"	/* cons_errxxx */
 
-unsigned parse_debug = 0;
-
 /* ------------------------------------------------------------- */
 
 void
@@ -903,4 +901,4 @@ parse_prog(struct parse_s *o, struct node_s **n) {
 	}
 	return 1;
 }
-	
+

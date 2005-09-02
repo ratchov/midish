@@ -599,11 +599,7 @@ user_func_debug(struct exec_s *o, struct data_s **r) {
 	    !exec_lookuplong(o, "value", &value)) {
 		return 0;
 	}
-	if (str_eq(flag, "parse")) {
-		parse_debug = value;
-	} else if (str_eq(flag, "exec")) {
-		exec_debug = value;
-	} else if (str_eq(flag, "rmidi")) {
+	if (str_eq(flag, "rmidi")) {
 		rmidi_debug = value;
 	} else if (str_eq(flag, "filt")) {
 		filt_debug = value;
