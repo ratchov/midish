@@ -40,8 +40,6 @@
 
 #include "cons.h"	/* for cons_errxxx */
 
-unsigned exec_debug = 0;
-
 /* ----------------------------------------------- variable lists --- */
 
 struct var_s *

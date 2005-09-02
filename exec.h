@@ -33,8 +33,6 @@
 
 #include "name.h"
 
-extern unsigned exec_debug;
-
 enum RESULT_ID {
 	RESULT_ERR = 0,
 	RESULT_OK, RESULT_BREAK, RESULT_CONTINUE, RESULT_RETURN
