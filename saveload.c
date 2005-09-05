@@ -927,7 +927,7 @@ parse_songchan(struct parse_s *o, struct song_s *s, struct songchan_s *i) {
 				if (!parse_nl(o)) {
 					return 0;
 				}
-				track_opsetchan(&i->conf, 0, 0);
+				track_opsetchan(&i->conf, i->dev, i->ch);
 			} else if (str_eq(o->lex.strval, "chan")) {
 				if (!parse_chan(o, &val, &val2)) {
 					return 0;
@@ -955,7 +955,6 @@ parse_songchan(struct parse_s *o, struct song_s *s, struct songchan_s *i) {
 
 unsigned
 parse_songtrk(struct parse_s *o, struct song_s *s, struct songtrk_s *t) {
-	struct songchan_s *c = 0;
 	struct songfilt_s *f;
 	unsigned long val;
 	
@@ -1020,9 +1019,6 @@ parse_songtrk(struct parse_s *o, struct song_s *s, struct songtrk_s *t) {
 		}
 	}
 	
-	if (c) {
-		track_opsetchan(&t->track, c->dev, c->ch);
-	}
 	return 1;
 }
 

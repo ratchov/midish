@@ -50,7 +50,7 @@ void track_opcopy(struct track_s *o, struct seqptr_s *p, unsigned len, struct tr
 
 void track_opcut(struct track_s *o, struct seqptr_s *,  unsigned len);
 void track_opinsert(struct track_s *o, struct seqptr_s *, unsigned len);
-void track_opsetchan(struct track_s *o, unsigned chan, unsigned dev);
+void track_opsetchan(struct track_s *o, unsigned dev, unsigned ch);
 unsigned track_opfindtic(struct track_s *o, unsigned m0);
 void track_optimeinfo(struct track_s *o, unsigned pos, unsigned long *usec24, unsigned *bpm, unsigned *tpb);
 

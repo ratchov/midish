@@ -515,7 +515,7 @@ track_opinsert(struct track_s *o, struct seqptr_s *p, unsigned len) {
 	 */
 
 void
-track_opsetchan(struct track_s *o, unsigned ch, unsigned dev) {
+track_opsetchan(struct track_s *o, unsigned dev, unsigned ch) {
 	struct seqptr_s op;
 	track_rew(o, &op);
 	for (;;) {
