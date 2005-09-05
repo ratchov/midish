@@ -1,6 +1,6 @@
 #
 # parameters for the GNU readline(3) library, used to
-# buid rmidish (front-end to midish)
+# build rmidish (front-end to midish)
 #
 READLINE_CFLAGS = 			# readline additionnal flags
 READLINE_LDFLAGS = -L/usr/local/lib	# path to readline libraries

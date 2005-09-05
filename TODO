@@ -1,8 +1,7 @@
+- style: replace '0' -> '(struct machin_s *)0'
+
 - make songrecord record controllers and progchanges that
   occure before the first tic on the current chan
-
-- make chanconfev match the dev/chan pair of the channel
-  (and update midishrc and docs)
 
 - cleanup/implement {track,chan,filt,sysex,song}info 
   do we need them? isn't it better to give the user

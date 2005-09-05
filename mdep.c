@@ -142,7 +142,6 @@ mux_mdep_run(void) {
 		res = poll(fds, ifds, 1); 		/* 1ms timeout */
 		if (res < 0) {
 			if (errno == EINTR) {
-				/*perror("mux_run: poll failed, retrying");*/
 				continue;
 			}
 			perror("mux_run: poll failed");
