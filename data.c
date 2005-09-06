@@ -43,7 +43,7 @@
 struct data_s *
 data_newnil(void) {
 	struct data_s *o;
-	o = mem_alloc(sizeof(struct data_s));
+	o = (struct data_s *)mem_alloc(sizeof(struct data_s));
 	o->type = DATA_NIL;
 	o->next = 0;
 	return o;
