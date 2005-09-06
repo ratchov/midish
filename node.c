@@ -68,7 +68,12 @@ node_dbg(struct node_s *o, unsigned depth) {
 	struct node_s *i;
 	
 	dbg_puts(str);
-	dbg_puts(o->next ? "+-" : "\\-");
+	/* warning 'cond ? val1 : val2' is a 'const char *' in gcc */
+	if (o->next) {
+		dbg_puts("+-");
+	} else {
+	 	dbg_puts("\\-");
+	}
 	if (o == 0) {
 		dbg_puts("<EMPTY>\n");
 		return;
@@ -79,7 +84,12 @@ node_dbg(struct node_s *o, unsigned depth) {
 		data_dbg(o->data);
 		dbg_puts(")");
 	}
-	dbg_puts(depth >= NODE_MAXDEPTH && o->list ? "[...]\n" : "\n");
+	/* warning 'cond ? val1 : val2' is a 'const char *' in gcc */
+	if (depth >= NODE_MAXDEPTH && o->list) { 
+		dbg_puts("[...]\n");
+	} else {
+		dbg_puts("\n");
+	}
 	if (depth < NODE_MAXDEPTH) {
 		str[2 * depth] = o->next ? '|' : ' ';
 		str[2 * depth + 1] = ' ';

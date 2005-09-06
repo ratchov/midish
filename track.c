@@ -109,7 +109,7 @@ seqev_dump(struct seqev_s *i) {
 struct track_s *
 track_new(void) {
 	struct track_s *o;
-	o = mem_alloc(sizeof(struct track_s));
+	o = (struct track_s *)mem_alloc(sizeof(struct track_s));
 	track_init(o);
 	return o;	
 }

@@ -130,7 +130,7 @@ parse_recover(struct parse_s *o, char *msg) {
 struct parse_s *
 parse_new(char *filename) {
 	struct parse_s *o;
-	o = mem_alloc(sizeof(struct parse_s));	
+	o = (struct parse_s *)mem_alloc(sizeof(struct parse_s));	
 	if (!lex_init(&o->lex, filename)) {
 		mem_free(o);
 		return 0;

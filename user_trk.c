@@ -133,6 +133,7 @@ user_func_trackexists(struct exec_s *o, struct data_s **r) {
 unsigned
 user_func_trackinfo(struct exec_s *o, struct data_s **r) {
 	struct songtrk_s *t;
+	char *name;
 	if (!exec_lookuptrack(o, "trackname", &t)) {
 		return 0;
 	}
@@ -141,7 +142,13 @@ user_func_trackinfo(struct exec_s *o, struct data_s **r) {
 	
 	textout_indent(tout);
 	textout_putstr(tout, "curfilt ");
-	textout_putstr(tout, t->curfilt ? t->curfilt->name.str : "nil");
+	/* warning 'cond ? val1 : val2' is a 'const char *' in gcc */
+	if (t->curfilt) {
+		name =  t->curfilt->name.str;
+	} else {
+		name = "nil";
+	}
+	textout_putstr(tout, name);
 	textout_putstr(tout, "\n");
 	if (t->mute) {
 		textout_indent(tout);
