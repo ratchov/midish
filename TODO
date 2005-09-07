@@ -1,5 +1,3 @@
-- style: replace '0' -> '(struct machin_s *)0'
-
 - make songrecord record controllers and progchanges that
   occure before the first tic on the current chan
 

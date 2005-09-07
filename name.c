@@ -39,7 +39,7 @@
 void
 name_init(struct name_s *o, char *name) {
 	o->str = str_new(name);
-	o->next = 0;
+	o->next = NULL;
 }
 
 void
@@ -71,7 +71,7 @@ name_delete(struct name_s *o) {
 
 void
 name_dbg(struct name_s *o) {
-	for (; o != 0; o = o->next) {
+	for (; o != NULL; o = o->next) {
 		str_dbg(o->str);
 		if (o->next) {
 			dbg_puts(".");
@@ -89,10 +89,10 @@ void
 name_add(struct name_s **first, struct name_s *v) {
 	struct name_s **i;
 	i = first;
-	while (*i != 0) {
+	while (*i != NULL) {
 		i = &(*i)->next;
 	}
-	v->next = 0;
+	v->next = NULL;
 	*i = v;
 }
 
@@ -100,10 +100,10 @@ void
 name_remove(struct name_s **first, struct name_s *v) {
 	struct name_s **i;
 	i = first;
-	while (*i != 0) {
+	while (*i != NULL) {
 		if (*i == v) {
 			*i = v->next;
-			v->next = 0;
+			v->next = NULL;
 			return;
 		}
 		i = &(*i)->next;
@@ -115,20 +115,20 @@ name_remove(struct name_s **first, struct name_s *v) {
 void
 name_empty(struct name_s **first) {
 	struct name_s *i, *inext;
-	for (i = *first; i != 0; i = inext) {
+	for (i = *first; i != NULL; i = inext) {
 		inext = i->next;
 		name_delete(i);
 	}
-	*first = 0;
+	*first = NULL;
 }
 
 
 void
 name_cat(struct name_s **dst, struct name_s **src) {
-	while (*dst != 0) {
+	while (*dst != NULL) {
 		dst = &(*dst)->next;
 	}
-	while (*src != 0) {
+	while (*src != NULL) {
 		*dst = name_new((*src)->str);
 		dst = &(*dst)->next;
 		src = &(*src)->next;
@@ -141,9 +141,9 @@ name_eq(struct name_s **first1, struct name_s **first2) {
 	struct name_s *n1 = *first1, *n2 = *first2;
 	
 	for (;;) {
-		if (n1 == 0 && n2 == 0) {
+		if (n1 == NULL && n2 == NULL) {
 			return 1;
-		} else if (n1 == 0 || n2 == 0 || !str_eq(n1->str, n2->str)) {
+		} else if (n1 == NULL || n2 == NULL || !str_eq(n1->str, n2->str)) {
 			return 0;
 		}
 		n1 = n1->next;
@@ -155,8 +155,8 @@ name_eq(struct name_s **first1, struct name_s **first2) {
 struct name_s *
 name_lookup(struct name_s **first, char *str) {
 	struct name_s *i;
-	for (i = *first; i != 0; i = i->next) {
-		if (i->str == 0)
+	for (i = *first; i != NULL; i = i->next) {
+		if (i->str == NULL)
 			continue;
 		if (str_eq(i->str, str))
 			return i;

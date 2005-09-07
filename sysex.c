@@ -52,7 +52,7 @@ struct chunk_s *
 chunk_new(void) {
 	struct chunk_s *o;
 	o = (struct chunk_s *)pool_new(&chunk_pool);
-	o->next = 0;
+	o->next = NULL;
 	o->used = 0;
 	return o;
 }
@@ -79,16 +79,16 @@ struct sysex_s *
 sysex_new(unsigned unit) {
 	struct sysex_s *o;
 	o = (struct sysex_s *)pool_new(&sysex_pool);
-	o->next = 0;
+	o->next = NULL;
 	o->unit = unit;
-	o->first = o->last = 0;
+	o->first = o->last = NULL;
 	return o;
 }
 
 void
 sysex_del(struct sysex_s *o) {
 	struct chunk_s *i, *inext;
-	for (i = o->first; i != 0; i = inext) {
+	for (i = o->first; i != NULL; i = inext) {
 		inext = i->next;
 		chunk_del(i);
 	}
@@ -119,7 +119,7 @@ sysex_dbg(struct sysex_s *o) {
 	dbg_puts("unit = ");
 	dbg_putx(o->unit);
 	dbg_puts(", data = { ");
-	for (ck = o->first; ck != 0; ck = ck->next) {
+	for (ck = o->first; ck != NULL; ck = ck->next) {
 		for (i = 0; i < ck->used; i++) {
 			dbg_putx(ck->data[i]);
 			dbg_puts(" ");
@@ -136,7 +136,7 @@ sysex_check(struct sysex_s *o) {
 	
 	
 	status = 0; 
-	for (ck = o->first; ck != 0; ck = ck->next) {
+	for (ck = o->first; ck != NULL; ck = ck->next) {
 		for (i = 0; i < ck->used; i++) {
 			data = ck->data[i];
 			if (data == 0xf0) { 		/* sysex start */
@@ -169,7 +169,7 @@ sysex_check(struct sysex_s *o) {
 
 void
 sysexlist_init(struct sysexlist_s *o) {
-	o->first = 0;
+	o->first = NULL;
 	o->lastptr = &o->first;
 }
 
@@ -177,17 +177,17 @@ void
 sysexlist_done(struct sysexlist_s *o) {
 	struct sysex_s *i, *inext;
 	
-	for (i = o->first; i != 0; i = inext) {
+	for (i = o->first; i != NULL; i = inext) {
 		inext = i->next;
 		sysex_del(i);
 	}
-	o->first = 0;
+	o->first = NULL;
 	o->lastptr = &o->first;
 }
 
 void
 sysexlist_put(struct sysexlist_s *o, struct sysex_s *e) {
-	e->next = 0;
+	e->next = NULL;
 	*o->lastptr = e;
 	o->lastptr = &e->next;
 }
@@ -198,7 +198,7 @@ sysexlist_get(struct sysexlist_s *o) {
 	if (o->first) {
 		e = o->first;
 		o->first = e->next;
-		if (e->next == 0) {
+		if (e->next == NULL) {
 			o->lastptr = &o->first;
 		}
 		return e;
@@ -211,7 +211,7 @@ sysexlist_dbg(struct sysexlist_s *o) {
 	struct sysex_s *e;
 	unsigned i;
 	dbg_puts("sysex_dbg:\n");
-	for (e = o->first; e != 0; e = e->next) {
+	for (e = o->first; e != NULL; e = e->next) {
 		dbg_puts("unit = ");
 		dbg_putx(e->unit);
 		dbg_puts(", data = { ");

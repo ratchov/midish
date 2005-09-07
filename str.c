@@ -49,7 +49,7 @@ str_new(char *val) {
 	unsigned i, len;
 	char *s;
 
-	if (val == 0) {
+	if (val == NULL) {
 		dbg_puts("str_new: NULL pointer argument\n");
 		dbg_panic();
 	}
@@ -68,7 +68,7 @@ str_new(char *val) {
 
 void
 str_delete(char *s) {
-	if (s == 0) {
+	if (s == NULL) {
 		dbg_puts("str_delete: NULL pointer argument\n");
 		dbg_panic();
 	}
@@ -82,7 +82,7 @@ str_delete(char *s) {
 
 void
 str_dbg(char *s) {
-	if (s == 0) {
+	if (s == NULL) {
 		dbg_puts("<nullstring>");
 	} else {
 		dbg_puts(s);
@@ -97,7 +97,7 @@ str_dbg(char *s) {
 
 unsigned
 str_eq(char *s1, char *s2) {	
-	if (s1 == 0 || s2 == 0) {
+	if (s1 == NULL || s2 == NULL) {
 		dbg_puts("std_id: NULL pointer argument\n");
 		dbg_panic();
 	}

@@ -294,7 +294,7 @@ smf_putheader(struct smf_s *o, char *hdr, unsigned len) {
 	fwrite(hdr, 1, 4, o->file);
 	o->length = 4;
 	o->index = 0;
-	smf_put32(o, 0, len);
+	smf_put32(o, NULL, len);
 	o->length = len;
 	o->index = 0;
 }
@@ -443,7 +443,7 @@ smf_putsysex(struct smf_s *o, unsigned *used, struct sysex_s *sx) {
 	unsigned i, first;
 		
 	first = 1;
-	for (c = sx->first; c != 0; c = c->next) {
+	for (c = sx->first; c != NULL; c = c->next) {
 		for (i = 0; i < c->used; i++) {
 			if (first) {
 				first = 0;
@@ -459,7 +459,7 @@ smf_putsx(struct smf_s *o, unsigned *used, struct song_s *s, struct songsx_s *so
 	unsigned sysexused;
 	struct sysex_s *sx;
 	
-	for (sx = songsx->sx.first; sx != 0; sx = sx->next) {
+	for (sx = songsx->sx.first; sx != NULL; sx = sx->next) {
 		sysexused = 0;
 		smf_putvar(o, used, 0);
 		smf_putc(o, used, 0xf0);
@@ -485,52 +485,52 @@ song_exportsmf(struct song_s *o, char *filename) {
 		return 0;
 	}
 	ntrks = 0;
-	for (t = o->trklist; t != 0; t = (struct songtrk_s *)t->name.next) {
+	for (t = o->trklist; t != NULL; t = (struct songtrk_s *)t->name.next) {
 		ntrks++;
 	}
 	nchan = 0;
-	for (i = o->chanlist; i != 0; i = (struct songchan_s *)i->name.next) {
+	for (i = o->chanlist; i != NULL; i = (struct songchan_s *)i->name.next) {
 		nchan++;
 	}
 	nsx = 0;
-	for (s = o->sxlist; s != 0; s = (struct songsx_s *)s->name.next) {
+	for (s = o->sxlist; s != NULL; s = (struct songsx_s *)s->name.next) {
 		nsx++;
 	}
 
 	/* write the header */
 	smf_putheader(&f, smftype_header, 6);
-	smf_put16(&f, 0, 1);				/* format = 1 */
-	smf_put16(&f, 0, nsx + ntrks + nchan + 1);	/* +1 -> meta track */
-	smf_put16(&f, 0, o->tics_per_unit / 4);		/* tics per quarter */
+	smf_put16(&f, NULL, 1);				/* format = 1 */
+	smf_put16(&f, NULL, nsx + ntrks + nchan + 1);	/* +1 -> meta track */
+	smf_put16(&f, NULL, o->tics_per_unit / 4);		/* tics per quarter */
 
 	/* write the tempo track */
 	used = 0;
 	smf_putmeta(&f, &used, o);
 	smf_putheader(&f, smftype_track, used);
-	smf_putmeta(&f, 0, o);
+	smf_putmeta(&f, NULL, o);
 		
 	/* write each sx */
-	for (s = o->sxlist; s != 0; s = (struct songsx_s *)s->name.next) {
+	for (s = o->sxlist; s != NULL; s = (struct songsx_s *)s->name.next) {
 		used = 0;
 		smf_putsx(&f, &used, o, s);
 		smf_putheader(&f, smftype_track, used);
-		smf_putsx(&f, 0, o, s);
+		smf_putsx(&f, NULL, o, s);
 	}	
 					
 	/* write each chan */
-	for (i = o->chanlist; i != 0; i = (struct songchan_s *)i->name.next) {
+	for (i = o->chanlist; i != NULL; i = (struct songchan_s *)i->name.next) {
 		used = 0;
 		smf_putchan(&f, &used, o, i);
 		smf_putheader(&f, smftype_track, used);
-		smf_putchan(&f, 0, o, i);
+		smf_putchan(&f, NULL, o, i);
 	}
 
 	/* write each track */
-	for (t = o->trklist; t != 0; t = (struct songtrk_s *)t->name.next) {
+	for (t = o->trklist; t != NULL; t = (struct songtrk_s *)t->name.next) {
 		used = 0;
 		smf_puttrk(&f, &used, o, t);
 		smf_putheader(&f, smftype_track, used);
-		smf_puttrk(&f, 0, o, t);
+		smf_puttrk(&f, NULL, o, t);
 	}
 	smf_close(&f);
 	return 1;
@@ -733,7 +733,7 @@ song_fix1(struct song_s *o) {
 	struct songtrk_s *t;
 	unsigned delta;
 		
-	for (t = o->trklist; t != 0; t = (struct songtrk_s *)t->name.next) {
+	for (t = o->trklist; t != NULL; t = (struct songtrk_s *)t->name.next) {
 		/* move meta events into meta track */
 		delta = 0;
 		track_rew(&o->meta, &mp);

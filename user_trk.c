@@ -55,8 +55,8 @@ user_func_tracklist(struct exec_s *o, struct data_s **r) {
 	struct data_s *d, *n;
 	struct songtrk_s *i;
 
-	d = data_newlist(0);
-	for (i = user_song->trklist; i != 0; i = (struct songtrk_s *)i->name.next) {
+	d = data_newlist(NULL);
+	for (i = user_song->trklist; i != NULL; i = (struct songtrk_s *)i->name.next) {
 		n = data_newref(i->name.str);
 		data_listadd(d, n);
 	}
@@ -73,7 +73,7 @@ user_func_tracknew(struct exec_s *o, struct data_s **r) {
 		return 0;
 	}
 	t = song_trklookup(user_song, trkname);
-	if (t != 0) {
+	if (t != NULL) {
 		cons_err("tracknew: track already exists");
 		return 0;
 	}
@@ -125,7 +125,7 @@ user_func_trackexists(struct exec_s *o, struct data_s **r) {
 		return 0;
 	}
 	t = song_trklookup(user_song, name);
-	*r = data_newlong(t != 0 ? 1 : 0);
+	*r = data_newlong(t != NULL ? 1 : 0);
 	return 1;
 }
 
@@ -212,7 +212,7 @@ user_func_tracksetcurfilt(struct exec_s *o, struct data_s **r) {
 		return 0;
 	}
 	if (arg->data->type == DATA_NIL) {
-		t->curfilt = 0;
+		t->curfilt = NULL;
 		return 1;
 	} else if (arg->data->type == DATA_REF) {
 		f = song_filtlookup(user_song, arg->data->val.ref);
@@ -251,7 +251,7 @@ user_func_trackcheck(struct exec_s *o, struct data_s **r) {
 		return 0;
 	}
 	t = song_trklookup(user_song, trkname);
-	if (t == 0) {
+	if (t == NULL) {
 		cons_err("trackcheck: no such track");
 		return 0;
 	}
@@ -270,7 +270,7 @@ user_func_trackgetlen(struct exec_s *o, struct data_s **r) {
 		return 0;
 	}
 	t = song_trklookup(user_song, trkname);
-	if (t == 0) {
+	if (t == NULL) {
 		cons_err("trackgetlen: no such track");
 		return 0;
 	}
@@ -410,7 +410,7 @@ user_func_trackinsert(struct exec_s *o, struct data_s **r) {
 		return 0;
 	}
 	t = song_trklookup(user_song, trkname);
-	if (t == 0) {
+	if (t == NULL) {
 		cons_err("trackinsert: no such track");
 		return 0;
 	}
@@ -451,7 +451,7 @@ user_func_trackquant(struct exec_s *o, struct data_s **r) {
 		return 0;
 	}	
 	t = song_trklookup(user_song, trkname);
-	if (t == 0) {
+	if (t == NULL) {
 		cons_err("trackquant: no such track");
 		return 0;
 	}

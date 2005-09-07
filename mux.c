@@ -87,7 +87,7 @@ mux_init(void (*cb)(void *, struct ev_s *), void *addr) {
 	/*
 	 * reset tic counters of devices 
 	 */
-	for (i = mididev_list; i != 0; i = i->next) {
+	for (i = mididev_list; i != NULL; i = i->next) {
 		i->ticdelta = i->ticrate;
 	}
 
@@ -104,7 +104,7 @@ void
 mux_done(void) {
 	struct mididev_s *i;
 	mux_flush();
-	for (i = mididev_list; i != 0; i = i->next) {
+	for (i = mididev_list; i != NULL; i = i->next) {
 		if (RMIDI(i)->isysex) {
 			dbg_puts("lost incomplete sysex\n");
 			sysex_del(RMIDI(i)->isysex);
@@ -167,7 +167,7 @@ mux_sendtic(void) {
 	struct mididev_s *i;
 
 	ev.cmd = EV_TIC;
-	for (i = mididev_list; i != 0; i = i->next) {
+	for (i = mididev_list; i != NULL; i = i->next) {
 		if (i->sendrt && i != mididev_master) {
 			while (i->ticdelta >= mux_ticrate) {
 				rmidi_putev(RMIDI(i), &ev);
@@ -190,7 +190,7 @@ mux_sendstart(void) {
 
 	tic.cmd = EV_TIC;
 	start.cmd = EV_START;
-	for (i = mididev_list; i != 0; i = i->next) {
+	for (i = mididev_list; i != NULL; i = i->next) {
 		if (i->sendrt && i != mididev_master) {
 			i->ticdelta = i->ticrate;
 			/*
@@ -213,7 +213,7 @@ mux_sendstop(void) {
 	struct mididev_s *i;
 
 	ev.cmd = EV_STOP;
-	for (i = mididev_list; i != 0; i = i->next) {
+	for (i = mididev_list; i != NULL; i = i->next) {
 		if (i->sendrt && i != mididev_master) {
 			rmidi_putev(RMIDI(i), &ev);
 		}
@@ -229,7 +229,7 @@ mux_putev(struct ev_s *ev) {
 		unit = ev->data.voice.dev;
 		if (unit < DEFAULT_MAXNDEVS) {
 			dev = mididev_byunit[unit];
-			if (dev != 0) {
+			if (dev != NULL) {
 				rmidi_putev(RMIDI(dev), ev);
 			}
 		}
@@ -246,7 +246,7 @@ mux_sendraw(unsigned unit, unsigned char *buf, unsigned len) {
 		return;
 	}
 	dev = mididev_byunit[unit];
-	if (dev == 0) {
+	if (dev == NULL) {
 		return;
 	}
 	while(len) {
@@ -404,7 +404,7 @@ mux_getsysex(void) {
 void
 mux_flush(void) {
 	struct mididev_s *dev;
-	for (dev = mididev_list; dev != 0; dev = dev->next) {
+	for (dev = mididev_list; dev != NULL; dev = dev->next) {
 		rmidi_flush(RMIDI(dev));
 	}
 }

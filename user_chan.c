@@ -53,8 +53,8 @@ user_func_chanlist(struct exec_s *o, struct data_s **r) {
 	struct data_s *d, *n;
 	struct songchan_s *i;
 
-	d = data_newlist(0);
-	for (i = user_song->chanlist; i != 0; i = (struct songchan_s *)i->name.next) {
+	d = data_newlist(NULL);
+	for (i = user_song->chanlist; i != NULL; i = (struct songchan_s *)i->name.next) {
 		n = data_newref(i->name.str);
 		data_listadd(d, n);
 	}
@@ -73,7 +73,7 @@ user_func_channew(struct exec_s *o, struct data_s **r) {
 		return 0;
 	}
 	i = song_chanlookup(user_song, name);
-	if (i != 0) {
+	if (i != NULL) {
 		cons_err("channew: chan already exists");
 		return 0;
 	}
@@ -86,7 +86,7 @@ user_func_channew(struct exec_s *o, struct data_s **r) {
 		return 0;
 	}
 	i = song_chanlookup_bynum(user_song, dev, ch);
-	if (i != 0) {
+	if (i != NULL) {
 		cons_errs(i->name.str, "dev/chan number already used");
 		return 0;
 	}
@@ -141,7 +141,7 @@ user_func_chanexists(struct exec_s *o, struct data_s **r) {
 		return 0;
 	}
 	i = song_chanlookup(user_song, name);
-	*r = data_newlong(i != 0 ? 1 : 0);
+	*r = data_newlong(i != NULL ? 1 : 0);
 	return 1;
 }
 

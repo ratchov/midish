@@ -56,7 +56,7 @@ pool_init(struct pool_s *o, char *name, unsigned itemsize, unsigned itemnum) {
 		dbg_puts("): out of memory\n");
 		dbg_panic();
 	}
-	o->first = 0;
+	o->first = NULL;
 	o->itemsize = itemsize;
 	o->itemnum = itemnum;
 	o->name = name;

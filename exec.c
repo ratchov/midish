@@ -53,7 +53,7 @@ var_new(char *name, struct data_s *data) {
 
 void
 var_delete(struct var_s *o) {
-	if (o->data != 0) {
+	if (o->data != NULL) {
 		data_delete(o->data);
 	}
 	name_done(&o->name);
@@ -64,7 +64,7 @@ void
 var_dbg(struct var_s *o) {
 	str_dbg(o->name.str);
 	dbg_puts(" = ");
-	if (o->data != 0)
+	if (o->data != NULL)
 		data_dbg(o->data);
 	else
 		dbg_puts("<null>");
@@ -83,11 +83,11 @@ var_insert(struct var_s **first, struct var_s *i) {
 void
 var_empty(struct var_s **first) {
 	struct var_s *i, *inext;
-	for (i = *first; i != 0; i = inext) {
+	for (i = *first; i != NULL; i = inext) {
 		inext = (struct var_s *)i->name.next;
 		var_delete(i);
 	}
-	*first = 0;
+	*first = NULL;
 }
 
 struct proc_s *
@@ -95,8 +95,8 @@ proc_new(char *name) {
 	struct proc_s *o;
 	o = (struct proc_s *)mem_alloc(sizeof(struct proc_s));
 	name_init(&o->name, name);
-	o->args = 0;
-	o->code = 0;
+	o->args = NULL;
+	o->code = NULL;
 	return o;
 }
 
@@ -116,11 +116,11 @@ proc_lookup(struct proc_s **first, char *name) {
 void
 proc_empty(struct proc_s **first) {
 	struct proc_s *i, *inext;
-	for (i = *first; i != 0; i = inext) {
+	for (i = *first; i != NULL; i = inext) {
 		inext = (struct proc_s *)i->name.next;
 		proc_delete(i);
 	}
-	*first = 0;
+	*first = NULL;
 }
 
 void
@@ -148,8 +148,8 @@ struct exec_s *
 exec_new(void) {
 	struct exec_s *o;
 	o = (struct exec_s *)mem_alloc(sizeof(struct exec_s));
-	o->procs = 0;
-	o->globals = 0;
+	o->procs = NULL;
+	o->globals = NULL;
 	o->locals = &o->globals;
 	o->procname = "top-level";
 	o->depth = 0;
@@ -187,12 +187,12 @@ struct var_s *
 exec_varlookup(struct exec_s *o, char *name) {
 	struct var_s *var;
 	var = (struct var_s *)name_lookup((struct name_s **)o->locals, name);
-	if (var != 0) {
+	if (var != NULL) {
 		return var;
 	}
 	if (o->locals != &o->globals) {
 		var = (struct var_s *)name_lookup((struct name_s **)&o->globals, name);
-		if (var != 0) {
+		if (var != NULL) {
 			return var;
 		}
 	}
@@ -220,10 +220,10 @@ void
 exec_dumpprocs(struct exec_s *o) {
 	struct proc_s *p;
 	struct name_s *n;
-	for (p = o->procs; p != 0; p = (struct proc_s *)p->name.next) {
+	for (p = o->procs; p != NULL; p = (struct proc_s *)p->name.next) {
 		dbg_puts(p->name.str);
 		dbg_puts("(");
-		for (n = p->args; n != 0; n = n->next) {
+		for (n = p->args; n != NULL; n = n->next) {
 			dbg_puts(n->str);
 			if (n->next) {
 				dbg_puts(", ");
@@ -237,7 +237,7 @@ exec_dumpprocs(struct exec_s *o) {
 void
 exec_dumpvars(struct exec_s *o) {
 	struct var_s *v;
-	for (v = o->globals; v != 0; v = (struct var_s *)v->name.next) {
+	for (v = o->globals; v != NULL; v = (struct var_s *)v->name.next) {
 		dbg_puts(v->name.str);
 		dbg_puts(" = ");
 		data_dbg(v->data);
@@ -250,7 +250,7 @@ unsigned
 exec_lookupname(struct exec_s *o, char *name, char **val) {
 	struct var_s *var;
 	var = exec_varlookup(o, name);
-	if (var == 0 || var->data->type != DATA_REF) {
+	if (var == NULL || var->data->type != DATA_REF) {
 		cons_errss(o->procname, name, "no such reference");
 		return 0;
 	}
@@ -263,7 +263,7 @@ unsigned
 exec_lookupstring(struct exec_s *o, char *name, char **val) {
 	struct var_s *var;
 	var = exec_varlookup(o, name);
-	if (var == 0 || var->data->type != DATA_STRING) {
+	if (var == NULL || var->data->type != DATA_STRING) {
 		cons_errss(o->procname, name, "no such string");
 		return 0;
 	}
@@ -276,7 +276,7 @@ unsigned
 exec_lookuplong(struct exec_s *o, char *name, long *val) {
 	struct var_s *var;
 	var = exec_varlookup(o, name);
-	if (var == 0 || var->data->type != DATA_LONG) {
+	if (var == NULL || var->data->type != DATA_LONG) {
 		cons_errss(o->procname, name, "no such long");
 		return 0;
 	}
@@ -288,7 +288,7 @@ unsigned
 exec_lookuplist(struct exec_s *o, char *name, struct data_s **val) {
 	struct var_s *var;
 	var = exec_varlookup(o, name);
-	if (var == 0 || var->data->type != DATA_LIST) {
+	if (var == NULL || var->data->type != DATA_LIST) {
 		cons_errss(o->procname, name, "no such list");
 		return 0;
 	}
@@ -303,7 +303,7 @@ exec_lookupbool(struct exec_s *o, char *name, long *val) {
 	unsigned res;
 	
 	var = exec_varlookup(o, name);
-	if (var == 0) {
+	if (var == NULL) {
 		cons_errss(o->procname, name, "no such bool");
 		return 0;
 	}

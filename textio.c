@@ -62,7 +62,7 @@ textin_new(char *filename) {
 	struct textin_s *o;
 
 	o = (struct textin_s *)mem_alloc(sizeof(struct textin_s));
-	if (filename == 0) {
+	if (filename == NULL) {
 		o->isconsole = 1;
 		o->file = stdin;
 	} else {
@@ -125,7 +125,7 @@ textout_new(char *filename) {
 	struct textout_s *o;
 	
 	o = (struct textout_s *)mem_alloc(sizeof(struct textout_s));
-	if (filename != 0) {
+	if (filename != NULL) {
 		o->file = fopen(filename, "w");
 		if (o->file == NULL) {
 			cons_errs(filename, "filed to open output file");
@@ -190,8 +190,8 @@ struct textin_s *tin;
 
 void
 textio_init(void) {
-	tout = textout_new(0);
-	tin = textin_new(0);
+	tout = textout_new(NULL);
+	tin = textin_new(NULL);
 }
 
 void

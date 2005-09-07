@@ -75,10 +75,10 @@ void
 mididev_listinit(void) {
 	unsigned i;
 	for (i = 0; i < DEFAULT_MAXNDEVS; i++) {
-		mididev_byunit[i] = 0;
+		mididev_byunit[i] = NULL;
 	}
-	mididev_list = 0;
-	mididev_master = 0;	/* no master, use internal clock */
+	mididev_list = NULL;
+	mididev_master = NULL;	/* no master, use internal clock */
 }
 
 void
@@ -88,13 +88,13 @@ mididev_listdone(void) {
 	
 	for (i = 0; i < DEFAULT_MAXNDEVS; i++) {
 		dev = mididev_byunit[i];
-		if (dev != 0) {
+		if (dev != NULL) {
 			rmidi_done(RMIDI(dev));
-			mididev_byunit[i] = 0;
+			mididev_byunit[i] = NULL;
 		}
 	}
-	mididev_master = 0;
-	mididev_list = 0;
+	mididev_master = NULL;
+	mididev_list = NULL;
 }
 
 unsigned
@@ -105,7 +105,7 @@ mididev_attach(unsigned unit, char *path, unsigned in, unsigned out) {
 		cons_err("given unit is too large");
 		return 0;
 	}
-	if (mididev_byunit[unit] != 0) {
+	if (mididev_byunit[unit] != NULL) {
 		cons_err("device already exists");
 		return 0;
 	}
@@ -124,7 +124,7 @@ unsigned
 mididev_detach(unsigned unit) {
 	struct mididev_s **i, *dev;
 	
-	if (unit >= DEFAULT_MAXNDEVS || mididev_byunit[unit] == 0) {
+	if (unit >= DEFAULT_MAXNDEVS || mididev_byunit[unit] == NULL) {
 		cons_err("no such device");
 		return 0;
 	}
@@ -134,13 +134,13 @@ mididev_detach(unsigned unit) {
 		return 0;
 	}
 	
-	for (i = &mididev_list; *i != 0; i = &(*i)->next) {
+	for (i = &mididev_list; *i != NULL; i = &(*i)->next) {
 		dev = *i;
 		if (dev->unit == unit) {
 			*i = dev->next;
 			str_delete(RMIDI(dev)->mdep.path);
 			rmidi_delete(RMIDI(dev));
-			mididev_byunit[unit] = 0;
+			mididev_byunit[unit] = NULL;
 			return 1;
 		}
 	}

@@ -49,7 +49,7 @@ songtrk_new(char *name) {
 	struct songtrk_s *o;
 	o = (struct songtrk_s *)mem_alloc(sizeof(struct songtrk_s));
 	name_init(&o->name, name);
-	o->curfilt = 0;
+	o->curfilt = NULL;
 	track_init(&o->track);
 	track_rew(&o->track, &o->trackptr);
 	o->mute = 0;
@@ -89,7 +89,7 @@ struct songfilt_s *
 songfilt_new(char *name) {
 	struct songfilt_s *o;
 	o = (struct songfilt_s *)mem_alloc(sizeof(struct songfilt_s));
-	o->curchan = 0;
+	o->curchan = NULL;
 	name_init(&o->name, name);
 	filt_init(&o->filt);
 	return o;
@@ -149,17 +149,17 @@ song_delete(struct song_s *o) {
 void
 song_init(struct song_s *o) {
 	/* song parameters */
-	o->trklist = 0;
-	o->chanlist = 0;
-	o->filtlist = 0;
-	o->sxlist = 0;
+	o->trklist = NULL;
+	o->chanlist = NULL;
+	o->filtlist = NULL;
+	o->sxlist = NULL;
 	o->tics_per_unit = DEFAULT_TPU;
 	track_init(&o->meta);
 	track_rew(&o->meta, &o->metaptr);
 	track_init(&o->rec);
 	track_rew(&o->rec, &o->recptr);
 	/* runtime play record parameters */
-	o->filt = 0;
+	o->filt = NULL;
 	o->tics_per_beat = o->tics_per_unit / DEFAULT_BPM;
 	o->beats_per_measure = DEFAULT_BPM;
 	o->tempo = TEMPO_TO_USEC24(DEFAULT_TEMPO, o->tics_per_beat);
@@ -177,12 +177,12 @@ song_init(struct song_s *o) {
 	o->metro_lo.data.voice.b0 = 68;
 	o->metro_lo.data.voice.b1 = 90;
 	/* defaults */
-	o->curtrk = 0;
-	o->curfilt = 0;
+	o->curtrk = NULL;
+	o->curfilt = NULL;
+	o->cursx = NULL;
+	o->curchan = NULL;
 	o->curpos = 0;
 	o->curquant = 0;
-	o->cursx = 0;
-	o->curchan = 0;
 }
 
 	/*
@@ -195,19 +195,19 @@ song_done(struct song_s *o) {
 	struct songchan_s *i, *inext;
 	struct songfilt_s *f, *fnext;
 	struct songsx_s *s, *snext;
-	for (t = o->trklist; t != 0; t = tnext) {
+	for (t = o->trklist; t != NULL; t = tnext) {
 		tnext = (struct songtrk_s *)t->name.next;
 		songtrk_delete(t);
 	}
-	for (i = o->chanlist; i != 0; i = inext) {
+	for (i = o->chanlist; i != NULL; i = inext) {
 		inext = (struct songchan_s *)i->name.next;
 		songchan_delete(i);
 	}
-	for (f = o->filtlist; f != 0; f = fnext) {
+	for (f = o->filtlist; f != NULL; f = fnext) {
 		fnext = (struct songfilt_s *)f->name.next;
 		songfilt_delete(f);
 	}
-	for (s = o->sxlist; s != 0; s = snext) {
+	for (s = o->sxlist; s != NULL; s = snext) {
 		snext = (struct songsx_s *)s->name.next;
 		songsx_delete(s);
 	}
@@ -244,7 +244,7 @@ song_trkrm(struct song_s *o, struct songtrk_s *t) {
 		return 0;
 	}
 	i = &o->trklist;
-	while(*i != 0) {
+	while(*i != NULL) {
 		if (*i == t) {
 			*i = (struct songtrk_s *)t->name.next;
 			break;
@@ -280,7 +280,7 @@ song_chanlookup(struct song_s *o, char *name) {
 struct songchan_s *
 song_chanlookup_bynum(struct song_s *o, unsigned dev, unsigned ch) {
 	struct songchan_s *i;
-	for (i = o->chanlist; i != 0; i = (struct songchan_s *)i->name.next) {
+	for (i = o->chanlist; i != NULL; i = (struct songchan_s *)i->name.next) {
 		if (i->dev == dev && i->ch == ch) {
 			return i;
 		}
@@ -297,7 +297,7 @@ song_chanrm(struct song_s *o, struct songchan_s *c) {
 		cons_err("cant delete current chan");
 		return 0;
 	}
-	for (f = o->filtlist; f != 0; f = (struct songfilt_s *)f->name.next) {
+	for (f = o->filtlist; f != NULL; f = (struct songfilt_s *)f->name.next) {
 		if (f->curchan == c) {
 			cons_err("cant delete filt current chan");
 			return 0;
@@ -305,7 +305,7 @@ song_chanrm(struct song_s *o, struct songchan_s *c) {
 	}	
 
 	i = &o->chanlist;
-	while(*i != 0) {
+	while(*i != NULL) {
 		if (*i == c) {
 			*i = (struct songchan_s *)c->name.next;
 			break;
@@ -346,14 +346,14 @@ song_filtrm(struct song_s *o, struct songfilt_s *f) {
 		cons_err("cant delete current filt");
 		return 0;
 	}
-	for (t = o->trklist; t != 0; t = (struct songtrk_s *)t->name.next) {
+	for (t = o->trklist; t != NULL; t = (struct songtrk_s *)t->name.next) {
 		if (t->curfilt == f) {
 			cons_err("cant delete track current filt");
 			return 0;
 		}		
 	}	
 	i = &o->filtlist;
-	while(*i != 0) {
+	while(*i != NULL) {
 		if (*i == f) {
 			*i = (struct songfilt_s *)f->name.next;
 			break;
@@ -394,7 +394,7 @@ song_sxrm(struct song_s *o, struct songsx_s *f) {
 		return 0;
 	}
 	i = &o->sxlist;
-	while(*i != 0) {
+	while(*i != NULL) {
 		if (*i == f) {
 			*i = (struct songsx_s *)f->name.next;
 			break;
@@ -447,7 +447,7 @@ unsigned
 song_finished(struct song_s *o) {
 	struct songtrk_s *i;
 	
-	for (i = o->trklist; i != 0; i = (struct songtrk_s *)i->name.next) {
+	for (i = o->trklist; i != NULL; i = (struct songtrk_s *)i->name.next) {
 		if (!track_finished(&i->track, &i->trackptr)) {
 			return 0;
 		}
@@ -462,7 +462,7 @@ song_playconf(struct song_s *o) {
 	struct seqptr_s cp;
 	struct ev_s ev;
 	
-	for (i = o->chanlist; i != 0; i = (struct songchan_s *)i->name.next) {
+	for (i = o->chanlist; i != NULL; i = (struct songchan_s *)i->name.next) {
 		track_rew(&i->conf, &cp);
 		while (track_evavail(&i->conf, &cp) ) {
 			track_evget(&i->conf, &cp, &ev);
@@ -488,9 +488,9 @@ song_playsysex(struct song_s *o) {
 	struct sysex_s *s;
 	struct chunk_s *c;
 	
-	for (l = o->sxlist; l != 0; l = (struct songsx_s *)l->name.next) {
-		for (s = l->sx.first; s != 0; s = s->next) {
-			for (c = s->first; c != 0; c = c->next) {
+	for (l = o->sxlist; l != NULL; l = (struct songsx_s *)l->name.next) {
+		for (s = l->sx.first; s != NULL; s = s->next) {
+			for (c = s->first; c != NULL; c = c->next) {
 				mux_sendraw(s->unit, c->data, c->used);
 				mux_flush();
 			}
@@ -532,7 +532,7 @@ song_playtic(struct song_s *o) {
 			track_ticnext(&o->meta, &o->metaptr);
 		}
 		song_nexttic(o);
-		for (i = o->trklist; i != 0; i = (struct songtrk_s *)i->name.next) {
+		for (i = o->trklist; i != NULL; i = (struct songtrk_s *)i->name.next) {
 			if (track_ticavail(&i->track, &i->trackptr)) {
 				track_ticnext(&i->track, &i->trackptr);
 			}
@@ -557,7 +557,7 @@ song_playtic(struct song_s *o) {
 			}
 		}
 		song_metrotic(o);
-		for (i = o->trklist; i != 0; i = (struct songtrk_s *)i->name.next) {
+		for (i = o->trklist; i != NULL; i = (struct songtrk_s *)i->name.next) {
 			while (track_evavail(&i->track, &i->trackptr)) {
 				track_evget(&i->track, &i->trackptr, &ev);
 				if (EV_ISVOICE(&ev)) {
@@ -581,7 +581,7 @@ song_rt_setup(struct song_s *o) {
 	} else if (o->curtrk && o->curtrk->curfilt) {
 			o->filt = &o->curtrk->curfilt->filt;
 	} else {
-		o->filt = 0;
+		o->filt = NULL;
 	}
 }
 
@@ -603,7 +603,7 @@ song_rt_seek(struct song_s *o) {
 	o->beat = 0;
 	o->tic = 0;
 
-	for (i = o->trklist; i != 0; i = (struct songtrk_s *)i->name.next) {
+	for (i = o->trklist; i != NULL; i = (struct songtrk_s *)i->name.next) {
 		track_rew(&i->track, &i->trackptr);
 		track_seek(&i->track, &i->trackptr, tic);
 	}
@@ -676,7 +676,7 @@ song_outputshut(struct song_s *o) {
 	struct ev_s ev;
 	struct mididev_s *dev;
 	
-	for (dev = mididev_list; dev != 0; dev = dev->next) {
+	for (dev = mididev_list; dev != NULL; dev = dev->next) {
 		ev.cmd = EV_CTL;		
 		ev.data.voice.dev = dev->unit;
 		ev.data.voice.b0 = 121;		/* all note off */
@@ -811,7 +811,7 @@ song_recordcb(void *addr, struct ev_s *ev) {
 	case EV_SYSEX:
 		if (o->cursx) {
 			sx = mux_getsysex();
-			if (sx == 0) {
+			if (sx == NULL) {
 				dbg_puts("got null sx\n");
 			} else {
 				sysexlist_put(&o->cursx->sx, sx);

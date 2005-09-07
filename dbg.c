@@ -79,7 +79,7 @@ mem_alloc(unsigned n) {
 	unsigned i, *buf;
 	
 	if (!n) {
-		dbg_puts("mem_alloc: nbytes=0\n");
+		dbg_puts("mem_alloc: nbytes = 0\n");
 		dbg_panic();
 	}
 
@@ -87,7 +87,7 @@ mem_alloc(unsigned n) {
 	
 	buf = (unsigned *)malloc(n * sizeof(unsigned));
 
-	if (buf == 0) {
+	if (buf == NULL) {
 		dbg_puts("mem_alloc: failed to allocate ");
 		dbg_putx(n);
 		dbg_puts(" words\n");

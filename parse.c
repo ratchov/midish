@@ -292,7 +292,7 @@ parse_cst(struct parse_s *o, struct node_s **n) {
 		}
 		return 1;
 	} else if (o->lex.id == TOK_LBRACE) {
-		*n = node_new(&node_vmt_list, 0);
+		*n = node_new(&node_vmt_list, NULL);
 		n = &(*n)->list;
 		for (;;) {
 			if (!parse_getsym(o)) {
@@ -323,19 +323,19 @@ parse_unary(struct parse_s *o, struct node_s **n) {
 		return 0;
 	}
 	if (o->lex.id == TOK_MINUS) {
-		*n = node_new(&node_vmt_neg, 0);
+		*n = node_new(&node_vmt_neg, NULL);
 		if (!parse_unary(o, &(*n)->list)) {
 			return 0;
 		}
 		return 1;
 	} else if (o->lex.id == TOK_EXCLAM) {
-		*n = node_new(&node_vmt_not, 0);
+		*n = node_new(&node_vmt_not, NULL);
 		if (!parse_unary(o, &(*n)->list)) {
 			return 0;
 		}
 		return 1;
 	} else if (o->lex.id == TOK_TILDE) {
-		*n = node_new(&node_vmt_bitnot, 0);
+		*n = node_new(&node_vmt_bitnot, NULL);
 		if (!parse_unary(o, &(*n)->list)) {
 			return 0;
 		}
@@ -357,17 +357,17 @@ parse_muldiv(struct parse_s *o, struct node_s **n) {
 			return 0;
 		}
 		if (o->lex.id == TOK_STAR) {
-			node_replace(n, node_new(&node_vmt_mul, 0));
+			node_replace(n, node_new(&node_vmt_mul, NULL));
 			if (!parse_unary(o, &(*n)->list->next)) {
 				return 0;
 			}
 		} else if (o->lex.id == TOK_SLASH) {
-			node_replace(n, node_new(&node_vmt_div, 0));
+			node_replace(n, node_new(&node_vmt_div, NULL));
 			if (!parse_unary(o, &(*n)->list->next)) {
 				return 0;
 			}
 		} else if (o->lex.id == TOK_PCT) {
-			node_replace(n, node_new(&node_vmt_mod, 0));
+			node_replace(n, node_new(&node_vmt_mod, NULL));
 			if (!parse_unary(o, &(*n)->list->next)) {
 				return 0;
 			}
@@ -390,12 +390,12 @@ parse_addsub(struct parse_s *o, struct node_s **n) {
 			return 0;
 		}
 		if (o->lex.id == TOK_PLUS) {
-			node_replace(n, node_new(&node_vmt_add, 0));
+			node_replace(n, node_new(&node_vmt_add, NULL));
 			if (!parse_muldiv(o, &(*n)->list->next)) {
 				return 0;
 			}
 		} else if (o->lex.id == TOK_MINUS) {
-			node_replace(n, node_new(&node_vmt_sub, 0));
+			node_replace(n, node_new(&node_vmt_sub, NULL));
 			if (!parse_muldiv(o, &(*n)->list->next)) {
 				return 0;
 			}
@@ -418,12 +418,12 @@ parse_shift(struct parse_s *o, struct node_s **n) {
 			return 0;
 		}
 		if (o->lex.id == TOK_LSHIFT) {
-			node_replace(n, node_new(&node_vmt_lshift, 0));
+			node_replace(n, node_new(&node_vmt_lshift, NULL));
 			if (!parse_addsub(o, &(*n)->list->next)) {
 				return 0;
 			}
 		} else if (o->lex.id == TOK_RSHIFT) {
-			node_replace(n, node_new(&node_vmt_rshift, 0));
+			node_replace(n, node_new(&node_vmt_rshift, NULL));
 			if (!parse_addsub(o, &(*n)->list->next)) {
 				return 0;
 			}
@@ -446,22 +446,22 @@ parse_compare(struct parse_s *o, struct node_s **n) {
 			return 0;
 		}
 		if (o->lex.id == TOK_LT) {
-			node_replace(n, node_new(&node_vmt_lt, 0));
+			node_replace(n, node_new(&node_vmt_lt, NULL));
 			if (!parse_shift(o, &(*n)->list->next)) {
 				return 0;
 			}
 		} else if (o->lex.id == TOK_LE) {
-			node_replace(n, node_new(&node_vmt_le, 0));
+			node_replace(n, node_new(&node_vmt_le, NULL));
 			if (!parse_shift(o, &(*n)->list->next)) {
 				return 0;
 			}
 		} else if (o->lex.id == TOK_GT) {
-			node_replace(n, node_new(&node_vmt_gt, 0));
+			node_replace(n, node_new(&node_vmt_gt, NULL));
 			if (!parse_shift(o, &(*n)->list->next)) {
 				return 0;
 			}
 		} else if (o->lex.id == TOK_GE) {
-			node_replace(n, node_new(&node_vmt_ge, 0));
+			node_replace(n, node_new(&node_vmt_ge, NULL));
 			if (!parse_shift(o, &(*n)->list->next)) {
 				return 0;
 			}
@@ -484,12 +484,12 @@ parse_equal(struct parse_s *o, struct node_s **n) {
 			return 0;
 		}
 		if (o->lex.id == TOK_EQ) {
-			node_replace(n, node_new(&node_vmt_eq, 0));
+			node_replace(n, node_new(&node_vmt_eq, NULL));
 			if (!parse_compare(o, &(*n)->list->next)) {
 				return 0;
 			}
 		} else if (o->lex.id == TOK_NEQ) {
-			node_replace(n, node_new(&node_vmt_neq, 0));
+			node_replace(n, node_new(&node_vmt_neq, NULL));
 			if (!parse_compare(o, &(*n)->list->next)) {
 				return 0;
 			}
@@ -512,7 +512,7 @@ parse_bitand(struct parse_s *o, struct node_s **n) {
 			return 0;
 		}
 		if (o->lex.id == TOK_BITAND) {
-			node_replace(n, node_new(&node_vmt_bitand, 0));
+			node_replace(n, node_new(&node_vmt_bitand, NULL));
 			if (!parse_equal(o, &(*n)->list->next)) {
 				return 0;
 			}
@@ -535,7 +535,7 @@ parse_bitxor(struct parse_s *o, struct node_s **n) {
 			return 0;
 		}
 		if (o->lex.id == TOK_BITXOR) {
-			node_replace(n, node_new(&node_vmt_bitxor, 0));
+			node_replace(n, node_new(&node_vmt_bitxor, NULL));
 			if (!parse_bitand(o, &(*n)->list->next)) {
 				return 0;
 			}
@@ -558,7 +558,7 @@ parse_bitor(struct parse_s *o, struct node_s **n) {
 			return 0;
 		}
 		if (o->lex.id == TOK_BITOR) {
-			node_replace(n, node_new(&node_vmt_bitor, 0));
+			node_replace(n, node_new(&node_vmt_bitor, NULL));
 			if (!parse_bitxor(o, &(*n)->list->next)) {
 				return 0;
 			}
@@ -581,7 +581,7 @@ parse_and(struct parse_s *o, struct node_s **n) {
 			return 0;
 		}
 		if (o->lex.id == TOK_AND) {
-			node_replace(n, node_new(&node_vmt_and, 0));
+			node_replace(n, node_new(&node_vmt_and, NULL));
 			if (!parse_bitor(o, &(*n)->list->next)) {
 				return 0;
 			}
@@ -603,7 +603,7 @@ parse_or(struct parse_s *o, struct node_s **n) {
 			return 0;
 		}
 		if (o->lex.id == TOK_OR) {
-			node_replace(n, node_new(&node_vmt_or, 0));
+			node_replace(n, node_new(&node_vmt_or, NULL));
 			if (!parse_and(o, &(*n)->list->next)) {
 				return 0;
 			}
@@ -654,16 +654,16 @@ parse_stmt(struct parse_s *o, struct node_s **n) {
 	}
 	if (parse_isfirst(o, first_call)) {
 		parse_ungetsym(o);
-		*n = node_new(&node_vmt_ignore, 0);
+		*n = node_new(&node_vmt_ignore, NULL);
 		if (!parse_call(o, &(*n)->list)) {
 			return 0;
 		}
-		if (!parse_endl(o, 0)) {
+		if (!parse_endl(o, NULL)) {
 			return 0;
 		}
 		return 1;
 	} else if (o->lex.id == TOK_IF) {
-		*n = node_new(&node_vmt_if, 0);
+		*n = node_new(&node_vmt_if, NULL);
 		if (!parse_getsym(o)) {
 			return 0;
 		}
@@ -688,7 +688,7 @@ parse_stmt(struct parse_s *o, struct node_s **n) {
 		} else {
 			parse_ungetsym(o);
 		}
-		if (!parse_endl(o, 0)) {
+		if (!parse_endl(o, NULL)) {
 			return 0;
 		}
 		return 1;
@@ -714,16 +714,16 @@ parse_stmt(struct parse_s *o, struct node_s **n) {
 		if (!parse_slist(o, &(*n)->list->next)) {
 			return 0;
 		}
-		if (!parse_endl(o, 0)) {
+		if (!parse_endl(o, NULL)) {
 			return 0;
 		}
 		return 1;
 	} else if (o->lex.id == TOK_RETURN) {
-		*n = node_new(&node_vmt_return, 0);
+		*n = node_new(&node_vmt_return, NULL);
 		if (!parse_expr(o, &(*n)->list)) {
 			return 0;
 		}
-		if (!parse_endl(o, 0)) {
+		if (!parse_endl(o, NULL)) {
 			return 0;
 		}
 		return 1;
@@ -754,14 +754,14 @@ parse_stmt(struct parse_s *o, struct node_s **n) {
 		if (!parse_expr(o, &(*n)->list)) {
 			return 0;
 		}
-		if (!parse_endl(o, 0)) {
+		if (!parse_endl(o, NULL)) {
 			return 0;
 		}
 		return 1;
 	} else  if (parse_isfirst(o, first_endl)) {
 		parse_ungetsym(o);
-		*n = node_new(&node_vmt_nop, 0);
-		if (!parse_endl(o, 0)) {
+		*n = node_new(&node_vmt_nop, NULL);
+		if (!parse_endl(o, NULL)) {
 			return 0;
 		}
 		return 1;
@@ -779,7 +779,7 @@ parse_slist(struct parse_s *o, struct node_s **n) {
 		parse_recover(o, "'{' expected");
 		return 0;
 	}
-	*n = node_new(&node_vmt_slist, 0);
+	*n = node_new(&node_vmt_slist, NULL);
 	n = &(*n)->list;
 	for (;;) {
 		if (!parse_getsym(o)) {
@@ -799,7 +799,7 @@ parse_slist(struct parse_s *o, struct node_s **n) {
 
 unsigned
 parse_alist(struct parse_s *o, struct node_s **n) {
-	*n = node_new(&node_vmt_alist, 0);
+	*n = node_new(&node_vmt_alist, NULL);
 	n = &(*n)->list;
 	for(;;) {
 		if (!parse_getsym(o)) {
@@ -833,7 +833,7 @@ parse_proc(struct parse_s *o, struct node_s **n) {
 		return 0;
 	}
 	*n = node_new(&node_vmt_proc, data_newref(o->lex.strval));
-	(*n)->list = node_new(&node_vmt_alist, 0);
+	(*n)->list = node_new(&node_vmt_alist, NULL);
 	a = &(*n)->list->list;
 	for(;;) {
 		if (!parse_getsym(o)) {
@@ -854,7 +854,7 @@ parse_proc(struct parse_s *o, struct node_s **n) {
 	if (!parse_slist(o, &(*n)->list->next)) {
 		return 0;
 	}
-	if (!parse_endl(o, 0)) {
+	if (!parse_endl(o, NULL)) {
 		return 0;
 	}
 	return 1;
@@ -884,7 +884,7 @@ parse_line(struct parse_s *o, struct node_s **n) {
 	
 unsigned
 parse_prog(struct parse_s *o, struct node_s **n) {
-	*n = node_new(&node_vmt_slist, 0);
+	*n = node_new(&node_vmt_slist, NULL);
 	n = &(*n)->list;
 	for (;;) {
 		if (!parse_getsym(o)) {

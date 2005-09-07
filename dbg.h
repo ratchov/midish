@@ -31,6 +31,10 @@
 #ifndef MIDISH_DBG_H
 #define MIDISH_DBG_H
 
+#ifndef NULL
+#define NULL 0
+#endif
+
 void  dbg_puts(char *);
 void  dbg_putx(unsigned long);
 void  dbg_putu(unsigned long);

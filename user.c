@@ -77,8 +77,8 @@ exec_runfile(struct exec_s *exec, char *filename) {
 	unsigned res;
 	
 	res = 0;
-	root = 0;
-	data = 0;
+	root = NULL;
+	data = NULL;
 	parse = parse_new(filename);	
 	if (!parse) {
 		return 0;
@@ -108,7 +108,7 @@ exec_lookuptrack(struct exec_s *o, char *var, struct songtrk_s **res) {
 		return 0;
 	}
 	t = song_trklookup(user_song, name);
-	if (t == 0) {
+	if (t == NULL) {
 		cons_errs(name, "no such track");
 		return 0;
 	}
@@ -162,7 +162,7 @@ exec_lookupchan_getref(struct exec_s *o, char *var, struct songchan_s **res) {
 		cons_err("bad channel name");
 		return 0;
 	}
-	if (i == 0) {
+	if (i == NULL) {
 		cons_errs(arg->data->val.ref, "no such chan");
 		return 0;
 	}
@@ -184,7 +184,7 @@ exec_lookupfilt(struct exec_s *o, char *var, struct songfilt_s **res) {
 		return 0;
 	}
 	f = song_filtlookup(user_song, name);
-	if (f == 0) {
+	if (f == NULL) {
 		cons_errs(name, "no such filt");
 		return 0;
 	}
@@ -205,7 +205,7 @@ exec_lookupsx(struct exec_s *o, char *var, struct songsx_s **res) {
 		return 0;
 	}
 	t = song_sxlookup(user_song, name);
-	if (t == 0) {
+	if (t == NULL) {
 		cons_errs(name, "no such sysex");
 		return 0;
 	}
@@ -336,7 +336,7 @@ exec_lookupevspec(struct exec_s *o, char *name, struct evspec_s *e) {
 	}
 	if (d->type == DATA_REF) {
 		i = song_chanlookup(user_song, d->val.ref);
-		if (i == 0) {
+		if (i == NULL) {
 			cons_err("no such chan name");
 			return 0;
 		}
@@ -430,7 +430,7 @@ data_print(struct data_s *d) {
 		textout_putstr(tout, d->val.ref);
 		break;
 	case DATA_LIST:
-		for (i = d->val.list; i != 0; i = i->next) {
+		for (i = d->val.list; i != NULL; i = i->next) {
 			data_print(i);
 			if (i->next) {
 				textout_putstr(tout, " ");
@@ -475,7 +475,7 @@ data_list2chan(struct data_s *o, unsigned *res_dev, unsigned *res_ch) {
 		return 1;
 	} else if (o->type == DATA_REF) {
 		i = song_chanlookup(user_song, o->val.ref);
-		if (i == 0) {
+		if (i == NULL) {
 			cons_errs(o->val.ref, "no such chan name");
 			return 0;
 		}
@@ -675,9 +675,9 @@ user_func_shut(struct exec_s *o, struct data_s **r) {
 	struct ev_s ev;
 	struct mididev_s *dev;
 
-	mux_init(0, 0);
+	mux_init(NULL, NULL);
 
-	for (dev = mididev_list; dev != 0; dev = dev->next) {
+	for (dev = mididev_list; dev != NULL; dev = dev->next) {
 		for (i = 0; i < EV_MAXCH; i++) {
 			ev.cmd = EV_CTL;
 			ev.data.voice.dev = dev->unit;		
@@ -727,15 +727,15 @@ user_func_sendraw(struct exec_s *o, struct data_s **r) {
 		cons_err("sendraw: device out of range");
 		return 0;
 	}
-	for (i = arg->data->val.list; i != 0; i = i->next) {
+	for (i = arg->data->val.list; i != NULL; i = i->next) {
 		if (i->type != DATA_LONG || i->val.num < 0 || i->val.num > 255) {
 			cons_err("list elements must be integers in 0..255");
 			return 0;
 		}
 	}
 	
-	mux_init(0, 0);
-	for (i = arg->data->val.list; i != 0; i = i->next) {
+	mux_init(NULL, NULL);
+	for (i = arg->data->val.list; i != NULL; i = i->next) {
 		byte = i->val.num;
 		mux_sendraw(device, &byte, 1);
 	}
@@ -756,55 +756,55 @@ user_mainloop(void) {
 	exec = exec_new();
 
 	exec_newbuiltin(exec, "ev", user_func_ev, 
-			name_newarg("ev", 0));
+			name_newarg("ev", NULL));
 	exec_newbuiltin(exec, "print", user_func_print, 
-			name_newarg("value", 0));
+			name_newarg("value", NULL));
 	exec_newbuiltin(exec, "exec", user_func_exec, 
-			name_newarg("filename", 0));
+			name_newarg("filename", NULL));
 	exec_newbuiltin(exec, "debug", user_func_debug,
 			name_newarg("flag", 
-			name_newarg("value", 0)));
-	exec_newbuiltin(exec, "panic", user_func_panic, 0);
-	exec_newbuiltin(exec, "info", user_func_info, 0);
+			name_newarg("value", NULL)));
+	exec_newbuiltin(exec, "panic", user_func_panic, NULL);
+	exec_newbuiltin(exec, "info", user_func_info, NULL);
 		
-	exec_newbuiltin(exec, "tracklist", user_func_tracklist, 0);
+	exec_newbuiltin(exec, "tracklist", user_func_tracklist, NULL);
 	exec_newbuiltin(exec, "tracknew", user_func_tracknew, 
-			name_newarg("trackname", 0));
+			name_newarg("trackname", NULL));
 	exec_newbuiltin(exec, "trackdelete", user_func_trackdelete, 
-			name_newarg("trackname", 0));
+			name_newarg("trackname", NULL));
 	exec_newbuiltin(exec, "trackrename", user_func_trackrename,
 			name_newarg("trackname",
-			name_newarg("newname", 0)));
+			name_newarg("newname", NULL)));
 	exec_newbuiltin(exec, "trackexists", user_func_trackexists, 
-			name_newarg("trackname", 0));
+			name_newarg("trackname", NULL));
 	exec_newbuiltin(exec, "trackinfo", user_func_trackinfo, 
-			name_newarg("trackname", 0));
+			name_newarg("trackname", NULL));
 	exec_newbuiltin(exec, "trackaddev", user_func_trackaddev,
 			name_newarg("trackname", 
 			name_newarg("measure", 
 			name_newarg("beat", 
 			name_newarg("tic", 
-			name_newarg("event", 0))))));
+			name_newarg("event", NULL))))));
 	exec_newbuiltin(exec, "tracksetcurfilt", user_func_tracksetcurfilt, 
 			name_newarg("trackname", 
-			name_newarg("filtname", 0)));
+			name_newarg("filtname", NULL)));
 	exec_newbuiltin(exec, "trackgetcurfilt", user_func_trackgetcurfilt,
-			name_newarg("trackname", 0));
+			name_newarg("trackname", NULL));
 	exec_newbuiltin(exec, "trackcheck", user_func_trackcheck,
-			name_newarg("trackname", 0));
+			name_newarg("trackname", NULL));
 	exec_newbuiltin(exec, "trackgetlen", user_func_trackgetlen, 
-			name_newarg("trackname", 0));
+			name_newarg("trackname", NULL));
 	exec_newbuiltin(exec, "trackcut", user_func_trackcut,
 			name_newarg("trackname", 
 			name_newarg("from", 
 			name_newarg("amount", 
-			name_newarg("quantum", 0)))));
+			name_newarg("quantum", NULL)))));
 	exec_newbuiltin(exec, "trackblank", user_func_trackblank,
 			name_newarg("trackname", 
 			name_newarg("from", 
 			name_newarg("amount", 
 			name_newarg("quantum", 
-			name_newarg("evspec", 0))))));
+			name_newarg("evspec", NULL))))));
 	exec_newbuiltin(exec, "trackcopy", user_func_trackcopy,
 			name_newarg("trackname", 
 			name_newarg("from", 
@@ -812,251 +812,251 @@ user_mainloop(void) {
 			name_newarg("trackname2", 
 			name_newarg("where", 
 			name_newarg("quantum", 
-			name_newarg("evspec",  0))))))));
+			name_newarg("evspec",  NULL))))))));
 	exec_newbuiltin(exec, "trackinsert", user_func_trackinsert,
 			name_newarg("trackname", 
 			name_newarg("from", 
 			name_newarg("amount", 
-			name_newarg("quantum", 0)))));
+			name_newarg("quantum", NULL)))));
 	exec_newbuiltin(exec, "trackquant", user_func_trackquant, 
 			name_newarg("trackname", 
 			name_newarg("from", 
 			name_newarg("amount", 
 			name_newarg("rate", 
-			name_newarg("quantum", 0))))));
+			name_newarg("quantum", NULL))))));
 	exec_newbuiltin(exec, "tracksetmute", user_func_tracksetmute,
 			name_newarg("trackname",
-			name_newarg("muteflag", 0)));
+			name_newarg("muteflag", NULL)));
 	exec_newbuiltin(exec, "trackgetmute", user_func_trackgetmute,
-			name_newarg("trackname", 0));
+			name_newarg("trackname", NULL));
 
-	exec_newbuiltin(exec, "chanlist", user_func_chanlist, 0);
+	exec_newbuiltin(exec, "chanlist", user_func_chanlist, NULL);
 	exec_newbuiltin(exec, "channew", user_func_channew, 
 			name_newarg("channame",
-			name_newarg("channum", 0)));
+			name_newarg("channum", NULL)));
 	exec_newbuiltin(exec, "chandelete", user_func_chandelete, 
-			name_newarg("channame", 0));
+			name_newarg("channame", NULL));
 	exec_newbuiltin(exec, "chanrename", user_func_chanrename,
 			name_newarg("channame",
-			name_newarg("newname", 0)));
+			name_newarg("newname", NULL)));
 	exec_newbuiltin(exec, "chanexists", user_func_chanexists, 
-			name_newarg("channame", 0));
+			name_newarg("channame", NULL));
 	exec_newbuiltin(exec, "chaninfo", user_func_chaninfo, 
-			name_newarg("channame", 0));
+			name_newarg("channame", NULL));
 	exec_newbuiltin(exec, "changetch", user_func_changetch,
-			name_newarg("channame", 0));
+			name_newarg("channame", NULL));
 	exec_newbuiltin(exec, "changetdev", user_func_changetdev,
-			name_newarg("channame", 0));
+			name_newarg("channame", NULL));
 	exec_newbuiltin(exec, "chanconfev", user_func_chanconfev,
 			name_newarg("channame",
-			name_newarg("event", 0)));
+			name_newarg("event", NULL)));
 
-	exec_newbuiltin(exec, "sysexlist", user_func_sysexlist, 0);
+	exec_newbuiltin(exec, "sysexlist", user_func_sysexlist, NULL);
 	exec_newbuiltin(exec, "sysexnew", user_func_sysexnew, 
-			name_newarg("sysexname", 0));
+			name_newarg("sysexname", NULL));
 	exec_newbuiltin(exec, "sysexdelete", user_func_sysexdelete, 
-			name_newarg("sysexname", 0));
+			name_newarg("sysexname", NULL));
 	exec_newbuiltin(exec, "sysexrename", user_func_sysexrename,
 			name_newarg("sysexname",
-			name_newarg("newname", 0)));
+			name_newarg("newname", NULL)));
 	exec_newbuiltin(exec, "sysexexists", user_func_sysexexists, 
-			name_newarg("sysexname", 0));
+			name_newarg("sysexname", NULL));
 	exec_newbuiltin(exec, "sysexinfo", user_func_sysexinfo, 
-			name_newarg("sysexname", 0));
+			name_newarg("sysexname", NULL));
 	exec_newbuiltin(exec, "sysexclear", user_func_sysexclear, 
 			name_newarg("sysexname", 
-			name_newarg("data", 0)));
+			name_newarg("data", NULL)));
 	exec_newbuiltin(exec, "sysexsetunit", user_func_sysexsetunit, 
 			name_newarg("sysexname", 
 			name_newarg("unit", 
-			name_newarg("data", 0))));
+			name_newarg("data", NULL))));
 	exec_newbuiltin(exec, "sysexadd", user_func_sysexadd, 
 			name_newarg("sysexname", 
 			name_newarg("unit",
-			name_newarg("data", 0))));
+			name_newarg("data", NULL))));
 
 
-	exec_newbuiltin(exec, "filtlist", user_func_filtlist, 0);
+	exec_newbuiltin(exec, "filtlist", user_func_filtlist, NULL);
 	exec_newbuiltin(exec, "filtnew", user_func_filtnew, 
-			name_newarg("filtname", 0));
+			name_newarg("filtname", NULL));
 	exec_newbuiltin(exec, "filtdelete", user_func_filtdelete, 
-			name_newarg("filtname", 0));
+			name_newarg("filtname", NULL));
 	exec_newbuiltin(exec, "filtrename", user_func_filtrename,
 			name_newarg("filtname",
-			name_newarg("newname", 0)));
+			name_newarg("newname", NULL)));
 	exec_newbuiltin(exec, "filtinfo", user_func_filtinfo, 
-			name_newarg("filtname", 0));
+			name_newarg("filtname", NULL));
 	exec_newbuiltin(exec, "filtexists", user_func_filtexists, 
-			name_newarg("filtname", 0));
+			name_newarg("filtname", NULL));
 	exec_newbuiltin(exec, "filtreset", user_func_filtreset, 
-			name_newarg("filtname", 0));
+			name_newarg("filtname", NULL));
 	exec_newbuiltin(exec, "filtdevdrop", user_func_filtdevdrop,
 			name_newarg("filtname",
-			name_newarg("indev", 0)));
+			name_newarg("indev", NULL)));
 	exec_newbuiltin(exec, "filtnodevdrop", user_func_filtnodevdrop,
 			name_newarg("filtname",
-			name_newarg("indev", 0)));
+			name_newarg("indev", NULL)));
 	exec_newbuiltin(exec, "filtdevmap", user_func_filtdevmap,
 			name_newarg("filtname",
 			name_newarg("indev", 
-			name_newarg("outdev", 0))));
+			name_newarg("outdev", NULL))));
 	exec_newbuiltin(exec, "filtnodevmap", user_func_filtnodevmap,
 			name_newarg("filtname",
-			name_newarg("outdev", 0)));
+			name_newarg("outdev", NULL)));
 	exec_newbuiltin(exec, "filtchandrop", user_func_filtchandrop,
 			name_newarg("filtname",
-			name_newarg("inchan", 0)));
+			name_newarg("inchan", NULL)));
 	exec_newbuiltin(exec, "filtnochandrop", user_func_filtnochandrop,
 			name_newarg("filtname",
-			name_newarg("inchan", 0)));
+			name_newarg("inchan", NULL)));
 	exec_newbuiltin(exec, "filtchanmap", user_func_filtchanmap,
 			name_newarg("filtname",
 			name_newarg("inchan", 
-			name_newarg("outchan", 0))));
+			name_newarg("outchan", NULL))));
 	exec_newbuiltin(exec, "filtnochanmap", user_func_filtnochanmap,
 			name_newarg("filtname",
-			name_newarg("outchan", 0)));
+			name_newarg("outchan", NULL)));
 	exec_newbuiltin(exec, "filtkeydrop", user_func_filtkeydrop,
 			name_newarg("filtname",
 			name_newarg("inchan", 
 			name_newarg("keystart", 
-			name_newarg("keyend", 0)))));
+			name_newarg("keyend", NULL)))));
 	exec_newbuiltin(exec, "filtnokeydrop", user_func_filtnokeydrop,
 			name_newarg("filtname",
 			name_newarg("inchan", 
 			name_newarg("keystart", 
-			name_newarg("keyend", 0)))));
+			name_newarg("keyend", NULL)))));
 	exec_newbuiltin(exec, "filtkeymap", user_func_filtkeymap,
 			name_newarg("filtname",
 			name_newarg("inchan", 
 			name_newarg("outchan", 
 			name_newarg("keystart", 
 			name_newarg("keyend", 
-			name_newarg("keyplus", 0)))))));
+			name_newarg("keyplus", NULL)))))));
 	exec_newbuiltin(exec, "filtnokeymap", user_func_filtnokeymap,
 			name_newarg("filtname",
 			name_newarg("outchan", 
 			name_newarg("keystart", 
-			name_newarg("keyend", 0)))));
+			name_newarg("keyend", NULL)))));
 	exec_newbuiltin(exec, "filtctldrop", user_func_filtctldrop,
 			name_newarg("filtname",
 			name_newarg("inchan", 
-			name_newarg("inctl", 0))));
+			name_newarg("inctl", NULL))));
 	exec_newbuiltin(exec, "filtnoctldrop", user_func_filtnoctldrop,
 			name_newarg("filtname",
 			name_newarg("inchan", 
-			name_newarg("inctl", 0))));
+			name_newarg("inctl", NULL))));
 	exec_newbuiltin(exec, "filtctlmap", user_func_filtctlmap,
 			name_newarg("filtname",
 			name_newarg("inchan", 
 			name_newarg("outchan", 
 			name_newarg("inctl", 
-			name_newarg("outctl", 0))))));
+			name_newarg("outctl", NULL))))));
 	exec_newbuiltin(exec, "filtnoctlmap", user_func_filtnoctlmap,
 			name_newarg("filtname",
 			name_newarg("outchan", 
-			name_newarg("outctl", 0))));
+			name_newarg("outctl", NULL))));
 	exec_newbuiltin(exec, "filtswapichan", user_func_filtswapichan,
 			name_newarg("filtname",
 			name_newarg("oldchan", 
-			name_newarg("newchan", 0))));
+			name_newarg("newchan", NULL))));
 	exec_newbuiltin(exec, "filtswapidev", user_func_filtswapidev,
 			name_newarg("filtname",
 			name_newarg("olddev", 
-			name_newarg("newdev", 0))));
+			name_newarg("newdev", NULL))));
 	exec_newbuiltin(exec, "filtsetcurchan", user_func_filtsetcurchan, 
 			name_newarg("filtname", 
-			name_newarg("channame", 0)));
+			name_newarg("channame", NULL)));
 	exec_newbuiltin(exec, "filtgetcurchan", user_func_filtgetcurchan,
-			name_newarg("filtname", 0));
+			name_newarg("filtname", NULL));
 
-	exec_newbuiltin(exec, "songgetunit", user_func_songgetunit, 0);
+	exec_newbuiltin(exec, "songgetunit", user_func_songgetunit, NULL);
 	exec_newbuiltin(exec, "songsetunit", user_func_songsetunit, 
-			name_newarg("tics_per_unit", 0));
-	exec_newbuiltin(exec, "songgetcurpos", user_func_songgetcurpos, 0);
+			name_newarg("tics_per_unit", NULL));
+	exec_newbuiltin(exec, "songgetcurpos", user_func_songgetcurpos, NULL);
 	exec_newbuiltin(exec, "songsetcurpos", user_func_songsetcurpos, 
-			name_newarg("measure", 0));
-	exec_newbuiltin(exec, "songgetcurquant", user_func_songgetcurquant, 0);
+			name_newarg("measure", NULL));
+	exec_newbuiltin(exec, "songgetcurquant", user_func_songgetcurquant, NULL);
 	exec_newbuiltin(exec, "songsetcurquant", user_func_songsetcurquant, 
-			name_newarg("quantum", 0));
-	exec_newbuiltin(exec, "songgetcurtrack", user_func_songgetcurtrack, 0);
+			name_newarg("quantum", NULL));
+	exec_newbuiltin(exec, "songgetcurtrack", user_func_songgetcurtrack, NULL);
 	exec_newbuiltin(exec, "songsetcurtrack", user_func_songsetcurtrack, 
-			name_newarg("trackname", 0));
-	exec_newbuiltin(exec, "songgetcurfilt", user_func_songgetcurfilt, 0);
+			name_newarg("trackname", NULL));
+	exec_newbuiltin(exec, "songgetcurfilt", user_func_songgetcurfilt, NULL);
 	exec_newbuiltin(exec, "songsetcurfilt", user_func_songsetcurfilt, 
-			name_newarg("filtname", 0));
-	exec_newbuiltin(exec, "songgetcursysex", user_func_songgetcursysex, 0);
+			name_newarg("filtname", NULL));
+	exec_newbuiltin(exec, "songgetcursysex", user_func_songgetcursysex, NULL);
 	exec_newbuiltin(exec, "songsetcursysex", user_func_songsetcursysex, 
-			name_newarg("sysexname", 0));
-	exec_newbuiltin(exec, "songgetcurchan", user_func_songgetcurchan, 0);
+			name_newarg("sysexname", NULL));
+	exec_newbuiltin(exec, "songgetcurchan", user_func_songgetcurchan, NULL);
 	exec_newbuiltin(exec, "songsetcurchan", user_func_songsetcurchan, 
-			name_newarg("channame", 0));
-	exec_newbuiltin(exec, "songinfo", user_func_songinfo, 0);
+			name_newarg("channame", NULL));
+	exec_newbuiltin(exec, "songinfo", user_func_songinfo, NULL);
 	exec_newbuiltin(exec, "songsave", user_func_songsave, 
-			name_newarg("filename", 0));
+			name_newarg("filename", NULL));
 	exec_newbuiltin(exec, "songload", user_func_songload, 
-			name_newarg("filename", 0));
-	exec_newbuiltin(exec, "songreset", user_func_songreset, 0);
+			name_newarg("filename", NULL));
+	exec_newbuiltin(exec, "songreset", user_func_songreset, NULL);
 	exec_newbuiltin(exec, "songexportsmf", user_func_songexportsmf, 
-			name_newarg("filename", 0));
+			name_newarg("filename", NULL));
 	exec_newbuiltin(exec, "songimportsmf", user_func_songimportsmf, 
-			name_newarg("filename", 0));
-	exec_newbuiltin(exec, "songidle", user_func_songidle, 0);
-	exec_newbuiltin(exec, "songplay", user_func_songplay, 0);
-	exec_newbuiltin(exec, "songrecord", user_func_songrecord, 0);
-	exec_newbuiltin(exec, "songsetunit", user_func_songsetunit, 0);
+			name_newarg("filename", NULL));
+	exec_newbuiltin(exec, "songidle", user_func_songidle, NULL);
+	exec_newbuiltin(exec, "songplay", user_func_songplay, NULL);
+	exec_newbuiltin(exec, "songrecord", user_func_songrecord, NULL);
+	exec_newbuiltin(exec, "songsetunit", user_func_songsetunit, NULL);
 	exec_newbuiltin(exec, "songsettempo", user_func_songsettempo, 
 			name_newarg("measure", 
-			name_newarg("beats_per_minute", 0)));
+			name_newarg("beats_per_minute", NULL)));
 	exec_newbuiltin(exec, "songtimeins", user_func_songtimeins, 
 			name_newarg("from", 
 			name_newarg("amount", 
 			name_newarg("numerator", 
-			name_newarg("denominator", 0)))));
+			name_newarg("denominator", NULL)))));
 	exec_newbuiltin(exec, "songtimerm", user_func_songtimerm, 
 			name_newarg("from", 
-			name_newarg("amount", 0)));
-	exec_newbuiltin(exec, "songtimeinfo", user_func_songtimeinfo, 0);
+			name_newarg("amount", NULL)));
+	exec_newbuiltin(exec, "songtimeinfo", user_func_songtimeinfo, NULL);
 
 	exec_newbuiltin(exec, "metroswitch", user_func_metroswitch, 
-			name_newarg("onoff", 0));
+			name_newarg("onoff", NULL));
 	exec_newbuiltin(exec, "metroconf", user_func_metroconf, 
 			name_newarg("eventhi",
-			name_newarg("eventlo", 0)));
-	exec_newbuiltin(exec, "shut", user_func_shut, 0);
+			name_newarg("eventlo", NULL)));
+	exec_newbuiltin(exec, "shut", user_func_shut, NULL);
 	exec_newbuiltin(exec, "sendraw", user_func_sendraw, 
 			name_newarg("device", 
-			name_newarg("list", 0)));
+			name_newarg("list", NULL)));
 
 	exec_newbuiltin(exec, "devattach", user_func_devattach,
 			name_newarg("unit", 
-			name_newarg("path", 0)));
+			name_newarg("path", NULL)));
 	exec_newbuiltin(exec, "devdetach", user_func_devdetach,
-			name_newarg("unit", 0));
-	exec_newbuiltin(exec, "devlist", user_func_devlist, 0);
+			name_newarg("unit", NULL));
+	exec_newbuiltin(exec, "devlist", user_func_devlist, NULL);
 	exec_newbuiltin(exec, "devsetmaster", user_func_devsetmaster,
-			name_newarg("unit", 0));
-	exec_newbuiltin(exec, "devgetmaster", user_func_devgetmaster, 0);
+			name_newarg("unit", NULL));
+	exec_newbuiltin(exec, "devgetmaster", user_func_devgetmaster, NULL);
 	exec_newbuiltin(exec, "devsendrt", user_func_devsendrt,
 			name_newarg("unit", 
-			name_newarg("sendrt", 0)));
+			name_newarg("sendrt", NULL)));
 	exec_newbuiltin(exec, "devticrate", user_func_devticrate,
 			name_newarg("unit", 
-			name_newarg("tics_per_unit", 0)));
+			name_newarg("tics_per_unit", NULL)));
 	exec_newbuiltin(exec, "devinfo", user_func_devinfo,
-			name_newarg("unit", 0));
+			name_newarg("unit", NULL));
 
 	if (!user_flag_batch) {
 		exec_runrcfile(exec);
 	}
 
-	parse = parse_new(0);
-	if (parse == 0) {
+	parse = parse_new(NULL);
+	if (parse == NULL) {
 		return;
 	}
 
-	root = 0;
-	data = 0;
+	root = NULL;
+	data = NULL;
 	for (;;) {
 		if (parse_getsym(parse)) {
 			/* at this stage no lexical error */
@@ -1070,12 +1070,12 @@ user_mainloop(void) {
 				if (node_exec(root, exec, &data) == RESULT_OK) {
 					/* at this stage no exec error */
 					node_delete(root);
-					root = 0;
+					root = NULL;
 					continue;
 				}
 			}
 			node_delete(root);
-			root = 0;
+			root = NULL;
 		}
 		/* error */
 		if (user_flag_batch) {
@@ -1086,6 +1086,6 @@ user_mainloop(void) {
 	parse_delete(parse);
 	exec_delete(exec);
 	song_delete(user_song);
-	user_song = 0;	
+	user_song = NULL;	
 }
 

@@ -52,8 +52,8 @@ user_func_devlist(struct exec_s *o, struct data_s **r) {
 	struct data_s *d, *n;
 	struct mididev_s *i;
 
-	d = data_newlist(0);
-	for (i = mididev_list; i != 0; i = i->next) {
+	d = data_newlist(NULL);
+	for (i = mididev_list; i != NULL; i = i->next) {
 		n = data_newlong(i->unit);
 		data_listadd(d, n);
 	}
@@ -93,7 +93,7 @@ user_func_devsetmaster(struct exec_s *o, struct data_s **r) {
 		dbg_panic();
 	}
 	if (arg->data->type == DATA_NIL) {
-		mididev_master = 0;
+		mididev_master = NULL;
 		return 0;
 	} else if (arg->data->type == DATA_LONG) {
 		unit = arg->data->val.num;

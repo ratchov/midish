@@ -90,7 +90,7 @@ cons_mdep_done(void) {
 void
 mux_mdep_init(void) {
 	struct mididev_s *i;
-	for (i = mididev_list; i != 0; i = i->next) {
+	for (i = mididev_list; i != NULL; i = i->next) {
 		RMIDI(i)->mdep.fd = open(RMIDI(i)->mdep.path, O_RDWR);
 		if (RMIDI(i)->mdep.fd < 0) {
 			perror(RMIDI(i)->mdep.path);
@@ -105,7 +105,7 @@ mux_mdep_init(void) {
 void
 mux_mdep_done(void) {
 	struct mididev_s *i;
-	for (i = mididev_list; i != 0; i = i->next) {
+	for (i = mididev_list; i != NULL; i = i->next) {
 		if (RMIDI(i)->mdep.fd >= 0) {
 			close(RMIDI(i)->mdep.fd);
 		}
@@ -125,14 +125,14 @@ mux_mdep_run(void) {
 	unsigned i;
 
 	ifds = 0;
-	for (dev = mididev_list; dev != 0; dev = dev->next) {
+	for (dev = mididev_list; dev != NULL; dev = dev->next) {
 		fds[ifds].fd = RMIDI(dev)->mdep.fd;
 		fds[ifds].events = POLLIN;
 		index2dev[ifds] = dev;
 		ifds++;
 	}
 		
-	if (gettimeofday(&tv_last, 0) < 0) {
+	if (gettimeofday(&tv_last, NULL) < 0) {
 		perror("mux_run: initial gettimeofday() failed\n");
 		exit(1);
 	}
@@ -161,7 +161,7 @@ mux_mdep_run(void) {
 			}
 		}
 		
-		if (gettimeofday(&tv, 0) < 0) {
+		if (gettimeofday(&tv, NULL) < 0) {
 			perror("mux_run: gettimeofday failed");
 			return;
 		}

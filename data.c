@@ -45,7 +45,7 @@ data_newnil(void) {
 	struct data_s *o;
 	o = (struct data_s *)mem_alloc(sizeof(struct data_s));
 	o->type = DATA_NIL;
-	o->next = 0;
+	o->next = NULL;
 	return o;
 }
 
@@ -106,7 +106,7 @@ data_numitem(struct data_s *o) {
 
 	n = 1;
 	if (o->type == DATA_LIST) {	
-		for (i = o->val.list; i != 0; i = i->next) {
+		for (i = o->val.list; i != NULL; i = i->next) {
 			n += data_numitem(i);
 		}
 	}
@@ -117,10 +117,10 @@ void
 data_listadd(struct data_s *o, struct data_s *v) {
 	struct data_s **i;
 	i = &o->val.list;
-	while (*i != 0) {
+	while (*i != NULL) {
 		i = &(*i)->next;
 	}
-	v->next = 0;
+	v->next = NULL;
 	*i = v;
 }
 
@@ -129,10 +129,10 @@ void
 data_listremove(struct data_s *o, struct data_s *v) {
 	struct data_s **i;
 	i = &o->val.list;
-        while (*i != 0) {
+        while (*i != NULL) {
 		if (*i == v) {
 	        	*i = v->next;
-	                v->next = 0;
+	                v->next = NULL;
 	                return;
 		}
 		i = &(*i)->next;
@@ -154,7 +154,7 @@ data_clear(struct data_s *o) {
 		str_delete(o->val.ref);
 		break;
 	case DATA_LIST:
-		for (i = o->val.list; i != 0; i = inext) {
+		for (i = o->val.list; i != NULL; i = inext) {
 			inext = i->next;
 			data_delete(i);
 		}
@@ -207,7 +207,7 @@ data_dbg(struct data_s *o) {
 		break;
 	case DATA_LIST:
 		dbg_puts("{");
-		for (i = o->val.list; i != 0; i = i->next) {
+		for (i = o->val.list; i != NULL; i = i->next) {
 			data_dbg(i);
 			if (i->next) {
 				dbg_puts(" ");
@@ -254,13 +254,13 @@ data_assign(struct data_s *dst, struct data_s *src) {
 		break;
 	case DATA_LIST:
 		dst->type = DATA_LIST;
-		dst->val.list = 0; 
-		for (i = src->val.list; i != 0; i = i->next) {
+		dst->val.list = NULL; 
+		for (i = src->val.list; i != NULL; i = i->next) {
 			n = data_newnil();
 			data_assign(n, i);
-			for (j = &dst->val.list; *j != 0; j = &(*j)->next)
+			for (j = &dst->val.list; *j != NULL; j = &(*j)->next)
 				; /* noting */
-			n->next = 0;
+			n->next = NULL;
 			*j = n;
 		}
 		break;
@@ -296,9 +296,9 @@ data_id(struct data_s *op1, struct data_s *op2) {
 		i1 = op1->val.list;
 		i2 = op2->val.list;
 		for (;;) {
-			if (i1 == 0 && i2 == 0) {
+			if (i1 == NULL && i2 == NULL) {
 				return 1;
-			} else if (i1 == 0 || i2 == 0 || !data_id(i1, i2)) {
+			} else if (i1 == NULL || i2 == NULL || !data_id(i1, i2)) {
 				return 0;
 			}
 			i1 = i1->next;
@@ -331,11 +331,11 @@ data_eval(struct data_s *o) {
 	case DATA_LONG:
 		return o->val.num != 0 ? 1 : 0;
 	case DATA_STRING:
-		return *o->val.str != 0 ? 1 : 0;
+		return *o->val.str != '\0' ? 1 : 0;
 	case DATA_REF:
 		return 1;
 	case DATA_LIST:
-		return o->val.list != 0 ? 1 : 0;
+		return o->val.list != NULL ? 1 : 0;
 	default:
 		dbg_puts("data_eval: bad data type\n");
 		dbg_panic();
@@ -474,10 +474,10 @@ data_add(struct data_s *op1, struct data_s *op2) {
 		op1->val.num += op2->val.num;
 		return 1;
 	} else if (op1->type == DATA_LIST && op2->type == DATA_LIST) {
-		for (i = &op1->val.list; *i != 0; i = &(*i)->next)
+		for (i = &op1->val.list; *i != NULL; i = &(*i)->next)
 			; /* nothing */
 		*i = op2->val.list;
-		op2->val.list = 0;
+		op2->val.list = NULL;
 		return 1;
 	}
 	cons_err("bad types in addition");
@@ -494,8 +494,8 @@ data_sub(struct data_s *op1, struct data_s *op2) {
 		return 1;
 	} else if (op1->type == DATA_LIST && op2->type == DATA_LIST) {
 		i = &op1->val.list; 
-		while (*i != 0) {
-			for (j = op2->val.list; j != 0; j = j->next) {
+		while (*i != NULL) {
+			for (j = op2->val.list; j != NULL; j = j->next) {
 				if (data_id(*i, j)) {
 					goto found;
 				}

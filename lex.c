@@ -83,7 +83,7 @@ struct tokdef_s lex_op[] = {
 	{ TOK_AT,		"@"		},
 	{ TOK_DOLLAR,		"$"		},
 	{ TOK_DOT,		"."		},
-	{ 0,			0		}
+	{ 0,			NULL		}
 };
 
 struct tokdef_s lex_kw[] = {
@@ -95,7 +95,7 @@ struct tokdef_s lex_kw[] = {
 	{ TOK_FOR,		"for"		},
 	{ TOK_IN,		"in"		},
 	{ TOK_NIL,		"nil"		},
-	{ 0,		  	0		}
+	{ 0,		  	NULL		}
 };
 
 unsigned
@@ -172,7 +172,7 @@ lex_str2long(struct lex_s *o, unsigned base) {
 #define LOWORD(a)	((a) & ((1L << BITS) - 1))
 #define HIWORD(a)	((a) >> BITS)
 	o->longval = 0;
-	for (p = o->strval; *p != 0; p++) {
+	for (p = o->strval; *p != '\0'; p++) {
 		if (*p >= 'a' && *p <= 'z') {
 			digit = 10 + *p - 'a';
 		} else if (*p >= 'A' && *p <= 'Z') {

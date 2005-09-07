@@ -38,21 +38,21 @@
 
 char *ev_cmdstr[EV_NUMCMD] = { 
 	"nil",		"tic",		"start",	"stop", 
-	"sysex",	0,		0,		0,
+	"sysex",	NULL,		NULL,		NULL,
 	"noff",		"non",		"kat",		"ctl",
-	"pc",		"cat",		"bend",		0,
+	"pc",		"cat",		"bend",		NULL,
 	"tempo",	"timesig"
 };
 
 
 char *evspec_cmdstr[] = {
-	"any", "note", "ctl", "pc", "cat", "bend", 0
+	"any", "note", "ctl", "pc", "cat", "bend", NULL
 };
 
 char *
 ev_getstr(struct ev_s *ev) {
 	if (ev->cmd >= EV_NUMCMD) {
-		return 0;
+		return NULL;
 		/*
 		dbg_puts("ev_getstr: invalid cmd\n");
 		dbg_panic();
@@ -118,7 +118,7 @@ void
 ev_dbg(struct ev_s *ev) {
 	char *cmdstr;
 	cmdstr = ev_getstr(ev);
-	if (cmdstr == 0) {
+	if (cmdstr == NULL) {
 		dbg_puts("unkw(");
 		dbg_putu(ev->cmd);
 		dbg_puts(")");

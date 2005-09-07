@@ -231,14 +231,14 @@ rule_swapidev(struct rule_s *o, unsigned olddev, unsigned newdev) {
 	 
 void
 filt_init(struct filt_s *o) {
-	o->cb = 0;
-	o->addr = 0;
+	o->cb = NULL;
+	o->addr = NULL;
 		
-	o->statelist = 0;
+	o->statelist = NULL;
 	o->active = 1;
-	o->voice_rules = 0;
-	o->chan_rules = 0;
-	o->dev_rules = 0;
+	o->voice_rules = NULL;
+	o->chan_rules = NULL;
+	o->dev_rules = NULL;
 }
 
 	/*
@@ -278,10 +278,10 @@ filt_reset(struct filt_s *o) {
 void
 filt_done(struct filt_s *o) {
 #ifdef FILT_DEBUG
-	if (o->cb != 0 || o->addr != 0) {
+	if (o->cb != NULL) {
 		dbg_puts("filt_done: call filt_stop first.\n");
 	}
-	if (o->statelist != 0) {
+	if (o->statelist != NULL) {
 		dbg_puts("filt_done: statelist not empty\n");
 	}
 #endif
@@ -311,8 +311,8 @@ filt_start(struct filt_s *o, void (*cb)(void *, struct ev_s *), void *addr) {
 
 void
 filt_stop(struct filt_s *o) {
-	o->cb = 0;
-	o->addr = 0;	
+	o->cb = NULL;
+	o->addr = NULL;	
 #ifdef FILT_DEBUG
 	if (o->statelist) {
 		dbg_puts("filt_stop: state list isn't empty\n");
@@ -388,7 +388,7 @@ filt_conf_devmap(struct filt_s *o,
 	struct rule_s **i, *r;
 	
 	i = &o->dev_rules;
-	while (*i != 0) {
+	while (*i != NULL) {
 		if (((*i)->type == RULE_DEVMAP && 
 		     (*i)->odev == odev) ||
 		    ((*i)->type == RULE_DEVDROP && 
@@ -418,7 +418,7 @@ filt_conf_nodevmap(struct filt_s *o, unsigned odev) {
 	struct rule_s **i, *r;
 	
 	i = &o->dev_rules;
-	while (*i != 0) {
+	while (*i != NULL) {
 		if ((*i)->type == RULE_DEVMAP && 
 		    (*i)->odev == odev) {
 			r = *i;
@@ -491,7 +491,7 @@ filt_conf_chanmap(struct filt_s *o, unsigned idev, unsigned ich,
 	struct rule_s **i, *r;
 	
 	i = &o->chan_rules;
-	while (*i != 0) {
+	while (*i != NULL) {
 		if (((*i)->type == RULE_CHANMAP && 
 		     (*i)->odev == odev &&
 		     (*i)->och == och) ||
@@ -520,7 +520,7 @@ filt_conf_nochanmap(struct filt_s *o, unsigned odev, unsigned och ) {
 	struct rule_s **i, *r;
 	
 	i = &o->chan_rules;
-	while (*i != 0) {
+	while (*i != NULL) {
 		if ((*i)->type == RULE_CHANMAP && 
 		    (*i)->odev == odev &&
 		    (*i)->och == och) {
@@ -593,7 +593,7 @@ filt_conf_ctlmap(struct filt_s *o,
 	struct rule_s **i, *r;
 	
 	i = &o->voice_rules;
-	while (*i != 0) {
+	while (*i != NULL) {
 		if (((*i)->type == RULE_CTLMAP && 
 		     (*i)->odev == odev && 
 		     (*i)->och == och && 
@@ -629,7 +629,7 @@ filt_conf_noctlmap(struct filt_s *o,
 	struct rule_s **i, *r;
 	
 	i = &o->voice_rules;
-	while (*i != 0) {
+	while (*i != NULL) {
 		if ((*i)->type == RULE_CTLMAP && 
 		    (*i)->odev == odev && 
 		    (*i)->och == och && 
@@ -774,10 +774,10 @@ filt_conf_swapichan(struct filt_s *o,
     unsigned olddev, unsigned oldch, unsigned newdev, unsigned newch) {
 	struct rule_s *i;
 	
-	for (i = o->voice_rules; i != 0; i = i->next) {
+	for (i = o->voice_rules; i != NULL; i = i->next) {
 		rule_swapichan(i, olddev, oldch, newdev, newch);
 	}
-	for (i = o->chan_rules; i != 0; i = i->next) {
+	for (i = o->chan_rules; i != NULL; i = i->next) {
 		rule_swapichan(i, olddev, oldch, newdev, newch);
 	}
 }
@@ -787,13 +787,13 @@ void
 filt_conf_swapidev(struct filt_s *o, unsigned olddev, unsigned newdev) {
 	struct rule_s *i;
 	
-	for (i = o->voice_rules; i != 0; i = i->next) {
+	for (i = o->voice_rules; i != NULL; i = i->next) {
 		rule_swapidev(i, olddev, newdev);
 	}
-	for (i = o->chan_rules; i != 0; i = i->next) {
+	for (i = o->chan_rules; i != NULL; i = i->next) {
 		rule_swapidev(i, olddev, newdev);
 	}
-	for (i = o->dev_rules; i != 0; i = i->next) {
+	for (i = o->dev_rules; i != NULL; i = i->next) {
 		rule_swapidev(i, olddev, newdev);
 	}
 }
@@ -919,15 +919,15 @@ filt_processev(struct filt_s *o, struct ev_s *ev) {
 	struct rule_s *i;
 
 	match = 0;
-	for (i = o->voice_rules; i != 0; i = i->next) {
+	for (i = o->voice_rules; i != NULL; i = i->next) {
 		match |= filt_matchrule(o, i, ev);
 	}
 	if (!match) {
-		for (i = o->chan_rules; i != 0; i = i->next) {
+		for (i = o->chan_rules; i != NULL; i = i->next) {
 			match |= filt_matchrule(o, i, ev);
 		}
 		if (!match) {
-			for (i = o->dev_rules; i != 0; i = i->next) {
+			for (i = o->dev_rules; i != NULL; i = i->next) {
 				match |= filt_matchrule(o, i, ev);
 			}
 			if (!match) {
@@ -1026,7 +1026,7 @@ filt_statelookup(struct filt_s *o, struct ev_s *ev) {
 	struct state_s **i;
 	
 	if (EV_ISNOTE(ev)) {
-		for (i = &o->statelist; *i != 0; i = &(*i)->next) {
+		for (i = &o->statelist; *i != NULL; i = &(*i)->next) {
 			if (EV_ISNOTE(&(*i)->ev) && 
 			    (*i)->ev.data.voice.dev == ev->data.voice.dev && 
 			    (*i)->ev.data.voice.ch == ev->data.voice.ch && 
@@ -1035,7 +1035,7 @@ filt_statelookup(struct filt_s *o, struct ev_s *ev) {
 			}
 		}	
 	} else if (ev->cmd == EV_CTL) {
-		for (i = &o->statelist; *i != 0; i = &(*i)->next) {
+		for (i = &o->statelist; *i != NULL; i = &(*i)->next) {
 			if ((*i)->ev.cmd == EV_CTL && 
 			    (*i)->ev.data.voice.dev == ev->data.voice.dev && 
 			    (*i)->ev.data.voice.ch == ev->data.voice.ch && 
@@ -1044,7 +1044,7 @@ filt_statelookup(struct filt_s *o, struct ev_s *ev) {
 			}
 		}
 	} else if (ev->cmd == EV_BEND) {
-		for (i = &o->statelist; *i != 0; i = &(*i)->next) {
+		for (i = &o->statelist; *i != NULL; i = &(*i)->next) {
 			if ((*i)->ev.cmd == EV_BEND &&
 			    (*i)->ev.data.voice.dev == ev->data.voice.dev && 
 			    (*i)->ev.data.voice.ch == ev->data.voice.ch) {
@@ -1052,7 +1052,7 @@ filt_statelookup(struct filt_s *o, struct ev_s *ev) {
 			}
 		}	
 	} else if (ev->cmd == EV_CAT) {
-		for (i = &o->statelist; *i != 0; i = &(*i)->next) {
+		for (i = &o->statelist; *i != NULL; i = &(*i)->next) {
 			if ((*i)->ev.cmd == EV_CAT && 
 			    (*i)->ev.data.voice.dev == ev->data.voice.dev && 
 			    (*i)->ev.data.voice.ch == ev->data.voice.ch) {
@@ -1137,12 +1137,12 @@ filt_evcb(struct filt_s *o, struct ev_s *ev) {
 		dbg_puts("\n");
 	}
 #ifdef FILT_DEBUG
-	if (o->cb == 0) {
-		dbg_puts("filt_run: cb = 0, bad initialisation\n");
+	if (o->cb == NULL) {
+		dbg_puts("filt_evcb: cb = NULL, bad initialisation\n");
 		dbg_panic();
 	}
 	if (!EV_ISVOICE(ev)) {
-		dbg_puts("filt_run: only voice events allowed\n");
+		dbg_puts("filt_evcb: only voice events allowed\n");
 		dbg_panic();
 	}
 #endif
@@ -1156,7 +1156,7 @@ filt_evcb(struct filt_s *o, struct ev_s *ev) {
 		p = filt_statelookup(o, ev);
 		if (ev->cmd == EV_NON) {
 			if (p) {
-				dbg_puts("noteon: state exists, ignored\n");
+				dbg_puts("filt_evcb: noteon: state exists, ignored\n");
 				return;
 			}
 			if (!o->active) {
@@ -1170,7 +1170,7 @@ filt_evcb(struct filt_s *o, struct ev_s *ev) {
 				if (!o->active) {
 					return;
 				}
-				dbg_puts("noteoff: state doesn't exist, event ignored\n");
+				dbg_puts("filt_evcb: noteoff: state doesn't exist, event ignored\n");
 			}
 		} else {
 			filt_stateupdate(o, p, ev, 1);

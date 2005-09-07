@@ -131,7 +131,7 @@ track_delete(struct track_s *o) {
 void
 track_init(struct track_s *o) {
 	o->flags = 0;
-	o->eot.next = 0;
+	o->eot.next = NULL;
 	o->eot.delta = 0;
 	o->first = &o->eot;
 	o->eot.ev.cmd = EV_NULL;
@@ -160,7 +160,7 @@ track_dump(struct track_s *o) {
 	struct seqev_s *i;
 	unsigned tic = 0, num = 0;
 	
-	for (i = o->first; i != 0; i = i->next) {
+	for (i = o->first; i != NULL; i = i->next) {
 		tic += i->delta;
 		dbg_putu(num);
 		dbg_puts("\t");
@@ -200,7 +200,7 @@ track_numtic(struct track_s *o) {
 	unsigned ntics;
 	struct seqev_s *i;
 	ntics = 0;
-	for(i = o->first; i != 0; i = i->next) 
+	for(i = o->first; i != NULL; i = i->next) 
 		ntics += i->delta;
 	return ntics;
 }

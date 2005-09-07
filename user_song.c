@@ -60,7 +60,7 @@ user_func_songsetcurchan(struct exec_s *o, struct data_s **r) {
 		return 0;
 	}
 	if (arg->data->type == DATA_NIL) {
-		user_song->curchan = 0;
+		user_song->curchan = NULL;
 		return 1;
 	} 
 	if (!exec_lookupchan_getref(o, "channame", &t)) {
@@ -92,7 +92,7 @@ user_func_songsetcursysex(struct exec_s *o, struct data_s **r) {
 		return 0;
 	}
 	if (arg->data->type == DATA_NIL) {
-		user_song->cursx = 0;
+		user_song->cursx = NULL;
 		return 1;
 	} 
 	if (!exec_lookupsx(o, "sysexname", &t)) {
@@ -197,7 +197,7 @@ user_func_songsetcurtrack(struct exec_s *o, struct data_s **r) {
 		return 0;
 	}
 	if (arg->data->type == DATA_NIL) {
-		user_song->curtrk = 0;
+		user_song->curtrk = NULL;
 		return 1;
 	} 
 	if (!exec_lookuptrack(o, "trackname", &t)) {
@@ -230,7 +230,7 @@ user_func_songsetcurfilt(struct exec_s *o, struct data_s **r) {
 		return 0;
 	}
 	if (arg->data->type == DATA_NIL) {
-		user_song->curfilt = 0;
+		user_song->curfilt = NULL;
 		return 1;
 	} else if (arg->data->type == DATA_REF) {
 		f = song_filtlookup(user_song, arg->data->val.ref);
@@ -318,7 +318,7 @@ user_func_songimportsmf(struct exec_s *o, struct data_s **r) {
 		return 0;
 	}
 	sng = song_importsmf(filename);
-	if (sng == 0) {
+	if (sng == NULL) {
 		return 0;
 	}
 	song_delete(user_song);

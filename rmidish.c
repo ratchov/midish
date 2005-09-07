@@ -155,7 +155,7 @@ main(int argc, char **argv) {
 		waitready();
 		snprintf(prompt, PROMPTLENGTH, "%d> ", linenum);
 		rl = readline(prompt);
-		if (rl == 0) {
+		if (rl == NULL) {
 			 break;
 		}
 		if (rl[0] != '\0') {

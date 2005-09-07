@@ -52,8 +52,8 @@ user_func_sysexlist(struct exec_s *o, struct data_s **r) {
 	struct data_s *d, *n;
 	struct songsx_s *i;
 
-	d = data_newlist(0);
-	for (i = user_song->sxlist; i != 0; i = (struct songsx_s *)i->name.next) {
+	d = data_newlist(NULL);
+	for (i = user_song->sxlist; i != NULL; i = (struct songsx_s *)i->name.next) {
 		n = data_newref(i->name.str);
 		data_listadd(d, n);
 	}
@@ -70,7 +70,7 @@ user_func_sysexnew(struct exec_s *o, struct data_s **r) {
 		return 0;
 	}
 	i = song_sxlookup(user_song, name);
-	if (i != 0) {
+	if (i != NULL) {
 		cons_err("sysexnew: sysex already exists");
 		return 0;
 	}
@@ -118,7 +118,7 @@ user_func_sysexexists(struct exec_s *o, struct data_s **r) {
 		return 0;
 	}
 	i = song_sxlookup(user_song, name);
-	*r = data_newlong(i != 0 ? 1 : 0);
+	*r = data_newlong(i != NULL ? 1 : 0);
 	return 1;
 }
 
@@ -157,7 +157,7 @@ user_func_sysexclear(struct exec_s *o, struct data_s **r) {
 		if (match) {
 			x = *px;
 			*px = x->next;
-			if (*px == 0) {
+			if (*px == NULL) {
 				c->sx.lastptr = px;
 			}
 			sysex_del(x);
@@ -186,7 +186,7 @@ user_func_sysexsetunit(struct exec_s *o, struct data_s **r) {
 		cons_err("sysexsetunit: unit out of range");
 		return 0;
 	}
-	for (x = c->sx.first; x != 0; x = x->next) {
+	for (x = c->sx.first; x != NULL; x = x->next) {
 		if (!x) {
 			break;
 		}

@@ -41,17 +41,17 @@ node_new(struct node_vmt_s *vmt, struct data_s *data) {
 	o = (struct node_s *)mem_alloc(sizeof(struct node_s));
 	o->vmt = vmt;
 	o->data = data;
-	o->list = o->next = 0;
+	o->list = o->next = NULL;
 	return o;
 }
 
 void
 node_delete(struct node_s *o) {
 	struct node_s *i, *inext;
-	if (o == 0) {
+	if (o == NULL) {
 		return;
 	}
-	for (i = o->list; i != 0; i = inext) {
+	for (i = o->list; i != NULL; i = inext) {
 		inext = i->next;
 		node_delete(i);
 	}
@@ -74,7 +74,7 @@ node_dbg(struct node_s *o, unsigned depth) {
 	} else {
 	 	dbg_puts("\\-");
 	}
-	if (o == 0) {
+	if (o == NULL) {
 		dbg_puts("<EMPTY>\n");
 		return;
 	}
@@ -94,7 +94,7 @@ node_dbg(struct node_s *o, unsigned depth) {
 		str[2 * depth] = o->next ? '|' : ' ';
 		str[2 * depth + 1] = ' ';
 		str[2 * depth + 2] = '\0';
-		for (i = o->list; i != 0; i = i->next) {
+		for (i = o->list; i != NULL; i = i->next) {
 			node_dbg(i, depth + 1);
 		}
 		str[2 * depth] = '\0';
@@ -111,13 +111,13 @@ node_insert(struct node_s **n, struct node_s *e) {
 
 void
 node_replace(struct node_s **n, struct node_s *e) {
-	if (e->list != 0) {
-		dbg_puts("node_replace: e->list != 0\n");
+	if (e->list != NULL) {
+		dbg_puts("node_replace: e->list != NULL\n");
 		dbg_panic();
 	}
 	e->list = *n;
 	e->next = (*n)->next;
-	(*n)->next = 0;
+	(*n)->next = NULL;
 	*n = e;
 }
 
@@ -125,9 +125,9 @@ node_replace(struct node_s **n, struct node_s *e) {
 	/*
 	 * run a node.
 	 * the following rule must be respected
-	 * 1) node_exec must be called always with *r == 0
-	 * 2) in statements (slist,...) *r != 0 if and only if RETURN
-	 * 3) in expressions (add, ...) *r == 0 if and only if ERROR
+	 * 1) node_exec must be called always with *r == NULL
+	 * 2) in statements (slist,...) *r != NULL if and only if RETURN
+	 * 3) in expressions (add, ...) *r == NULL if and only if ERROR
 	 */
 
 
@@ -138,13 +138,13 @@ node_exec(struct node_s *o, struct exec_s *x, struct data_s **r) {
 		cons_err("too many nested operations");
 		return RESULT_ERR;
 	}
-	*r = 0;
+	*r = NULL;
 	x->depth++;
 	result = o->vmt->exec(o, x, r);
 	x->depth--;
 	if (result == RESULT_ERR && *r) {
 		data_delete(*r);
-		*r = 0;
+		*r = NULL;
 	}
 	return result;
 }
@@ -177,7 +177,7 @@ node_exec_binary(struct node_s *o, struct exec_s *x, struct data_s **r,
 		return RESULT_ERR;
 	}
 	lhs = *r;
-	*r = 0;
+	*r = NULL;
 	if (node_exec(o->list->next, x, r) == RESULT_ERR) {
 		return RESULT_ERR;
 	}
@@ -204,8 +204,8 @@ node_exec_proc(struct node_s *o, struct exec_s *x, struct data_s **r) {
 	struct node_s *a;
 	struct name_s *args;
 
-	args = 0;
-	for (a = o->list->list; a != 0; a = a->next) {
+	args = NULL;
+	for (a = o->list->list; a != NULL; a = a->next) {
 		if (name_lookup(&args, a->data->val.ref)) {
 			cons_err("duplicate arguments in proc definition");
 			return RESULT_ERR;
@@ -213,7 +213,7 @@ node_exec_proc(struct node_s *o, struct exec_s *x, struct data_s **r) {
 		name_add(&args, name_new(a->data->val.ref));
 	}
 	p = exec_proclookup(x, o->data->val.ref);
-	if (p != 0) {
+	if (p != NULL) {
 		name_empty(&p->args);
 		node_delete(p->code);
 	} else {
@@ -222,7 +222,7 @@ node_exec_proc(struct node_s *o, struct exec_s *x, struct data_s **r) {
 	}
 	p->args = args;
 	p->code = o->list->next;
-	o->list->next = 0;
+	o->list->next = NULL;
 	return RESULT_OK;
 }
 
@@ -242,7 +242,7 @@ node_exec_slist(struct node_s *o, struct exec_s *x, struct data_s **r) {
 	struct node_s *i;
 	unsigned result;
 	
-	for (i = o->list; i != 0; i = i->next) {
+	for (i = o->list; i != NULL; i = i->next) {
 		result = node_exec(i, x, r);
 		if (result != RESULT_OK) {
 			return result;
@@ -288,7 +288,7 @@ node_exec_var(struct node_s *o, struct exec_s *x, struct data_s **r) {
 	struct var_s *v;
 	
 	v = exec_varlookup(x, o->data->val.ref);
-	if (v == 0) {
+	if (v == NULL) {
 		cons_errss(x->procname, o->data->val.ref, "no such variable");
 		return RESULT_ERR;
 	}
@@ -308,7 +308,7 @@ node_exec_ignore(struct node_s *o, struct exec_s *x, struct data_s **r) {
 		return RESULT_ERR;
 	}
 	data_delete(*r);
-	*r = 0;
+	*r = NULL;
 	return RESULT_OK;
 }
 
@@ -325,17 +325,17 @@ node_exec_call(struct node_s *o, struct exec_s *x, struct data_s **r) {
 	char *procname_save;
 	unsigned result;
 	
-	newlocals = 0;
+	newlocals = NULL;
 	result = RESULT_ERR;
 	
 	p = exec_proclookup(x, o->data->val.ref);
-	if (p == 0) {
+	if (p == NULL) {
 		cons_errs(o->data->val.ref, "no such proc");
 		goto finish;
 	}
 	argv = o->list;
-	for (argn = p->args; argn != 0; argn = argn->next) {
-		if (argv == 0) {
+	for (argn = p->args; argn != NULL; argn = argn->next) {
+		if (argv == NULL) {
 			cons_errs(o->data->val.ref, "to few arguments");
 			goto finish;
 		}
@@ -344,9 +344,9 @@ node_exec_call(struct node_s *o, struct exec_s *x, struct data_s **r) {
 		}
 		var_insert(&newlocals, var_new(argn->str, *r));
 		argv = argv->next;
-		*r = 0;
+		*r = NULL;
 	}
-	if (argv != 0) {
+	if (argv != NULL) {
 		cons_errs(o->data->val.ref, "to many arguments");
 		goto finish;
 	}	
@@ -355,7 +355,7 @@ node_exec_call(struct node_s *o, struct exec_s *x, struct data_s **r) {
 	procname_save = x->procname;
 	x->procname = p->name.str;
 	if (node_exec(p->code, x, r) != RESULT_ERR) {
-		if (*r == 0) {			/* always return something */
+		if (*r == NULL) {			/* always return something */
 			*r = data_newnil();
 		}
 		result = RESULT_OK;
@@ -375,7 +375,7 @@ node_exec_if(struct node_s *o, struct exec_s *x, struct data_s **r) {
 	}
 	cond = data_eval(*r);
 	data_delete(*r);
-	*r = 0;
+	*r = NULL;
 	if (cond) {
 		result = node_exec(o->list->next, x, r);
 		if (result != RESULT_OK) {
@@ -403,12 +403,12 @@ node_exec_for(struct node_s *o, struct exec_s *x, struct data_s **r) {
 		return RESULT_ERR;
 	}
 	v = exec_varlookup(x, o->data->val.ref);
-	if (v == 0) {
+	if (v == NULL) {
 		v = var_new(o->data->val.ref, data_newnil());
 		var_insert(x->locals, v);
 	}
 	result = RESULT_OK;
-	for (i = list->val.list; i != 0; i = i->next) {
+	for (i = list->val.list; i != NULL; i = i->next) {
 		data_assign(v->data, i);
 		result = node_exec(o->list->next, x, r);
 		if (result == RESULT_CONTINUE) {
@@ -440,7 +440,7 @@ node_exec_assign(struct node_s *o, struct exec_s *x, struct data_s **r) {
 		return RESULT_ERR;
 	}
 	v = exec_varlookup(x, o->data->val.ref);
-	if (v == 0) {
+	if (v == NULL) {
 		v = var_new(o->data->val.ref, expr);
 		var_insert(x->locals, v);
 	} else {
@@ -468,12 +468,12 @@ node_exec_list(struct node_s *o, struct exec_s *x, struct data_s **r) {
 	struct node_s *arg;
 	struct data_s *d;
 	
-	*r = data_newlist(0);
+	*r = data_newlist(NULL);
 
-	for (arg = o->list; arg != 0; arg = arg->next) {
+	for (arg = o->list; arg != NULL; arg = arg->next) {
 		if (node_exec(arg, x, &d) == RESULT_ERR) {
 			data_delete(*r);
-			*r = 0;
+			*r = NULL;
 			return RESULT_ERR;
 		}
 		data_listadd(*r, d);

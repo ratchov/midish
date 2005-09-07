@@ -73,7 +73,7 @@ void
 rmidi_init(struct rmidi_s *o) {	
 	o->oused = 0;
 	o->istatus = o->ostatus = 0;
-	o->isysex = 0;
+	o->isysex = NULL;
 	mididev_init(&o->mididev);
 	rmidi_mdep_init(o);
 }
@@ -154,14 +154,14 @@ rmidi_inputcb(struct rmidi_s *o, unsigned char *buf, unsigned count) {
 				if (o->isysex) {
 					sysex_add(o->isysex, data);
 					mux_sysexcb(o->mididev.unit, o->isysex);
-					o->isysex = 0;
+					o->isysex = NULL;
 				}
 				break;
 			default:
 				if (o->isysex) {
 					dbg_puts("rmidi_inputcb: lost incomplete sysex\n");
 					sysex_del(o->isysex);
-					o->isysex = 0;
+					o->isysex = NULL;
 				}
 				break;
 			}

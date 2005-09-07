@@ -52,8 +52,8 @@ user_func_filtlist(struct exec_s *o, struct data_s **r) {
 	struct data_s *d, *n;
 	struct songfilt_s *i;
 
-	d = data_newlist(0);
-	for (i = user_song->filtlist; i != 0; i = (struct songfilt_s *)i->name.next) {
+	d = data_newlist(NULL);
+	for (i = user_song->filtlist; i != NULL; i = (struct songfilt_s *)i->name.next) {
 		n = data_newref(i->name.str);
 		data_listadd(d, n);
 	}
@@ -70,7 +70,7 @@ user_func_filtnew(struct exec_s *o, struct data_s **r) {
 		return 0;
 	}	
 	i = song_filtlookup(user_song, name);
-	if (i != 0) {
+	if (i != NULL) {
 		cons_err("filtnew: filt already exists");
 		return 0;
 	}
@@ -118,7 +118,7 @@ user_func_filtexists(struct exec_s *o, struct data_s **r) {
 		return 0;
 	}
 	i = song_filtlookup(user_song, name);
-	*r = data_newlong(i != 0 ? 1 : 0);
+	*r = data_newlong(i != NULL ? 1 : 0);
 	return 1;
 }
 
@@ -497,7 +497,7 @@ user_func_filtsetcurchan(struct exec_s *o, struct data_s **r) {
 		return 0;
 	}
 	if (arg->data->type == DATA_NIL) {
-		f->curchan = 0;
+		f->curchan = NULL;
 		return 1;
 	} else if (arg->data->type == DATA_REF) {
 		c = song_chanlookup(user_song, arg->data->val.ref);

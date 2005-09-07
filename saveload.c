@@ -223,13 +223,13 @@ filt_output(struct filt_s *o, struct textout_s *f) {
 	textout_putstr(f, "{\n");
 	textout_shiftright(f);
 	
-	for (i = o->dev_rules; i != 0; i = i->next) {
+	for (i = o->dev_rules; i != NULL; i = i->next) {
 		rule_output(i, f);
 	}
-	for (i = o->chan_rules; i != 0; i = i->next) {
+	for (i = o->chan_rules; i != NULL; i = i->next) {
 		rule_output(i, f);
 	}
-	for (i = o->voice_rules; i != 0; i = i->next) {
+	for (i = o->voice_rules; i != NULL; i = i->next) {
 		rule_output(i, f);
 	}
 	
@@ -254,10 +254,10 @@ sysex_output(struct sysex_s *o, struct textout_s *f) {
 	textout_putstr(f, "data\t");
 	textout_shiftright(f);
 	col = 0;
-	for (c = o->first; c != 0; c = c->next) {
+	for (c = o->first; c != NULL; c = c->next) {
 		for (i = 0; i < c->used; i++) {
 			textout_putbyte(f, c->data[i]);
-			if (i + 1 < c->used || c->next != 0) {
+			if (i + 1 < c->used || c->next != NULL) {
 				col++;
 				if (col >= 8) {
 					col = 0;
@@ -285,7 +285,7 @@ songsx_output(struct songsx_s *o, struct textout_s *f) {
 	textout_putstr(f, "{\n");
 	textout_shiftright(f);
 	
-	for (i = o->sx.first; i != 0; i = i->next) {
+	for (i = o->sx.first; i != NULL; i = i->next) {
 		textout_indent(f);
 		textout_putstr(f, "sysex ");
 		sysex_output(i, f);
@@ -386,7 +386,7 @@ song_output(struct song_s *o, struct textout_s *f) {
 	track_output(&o->meta, f);
 	textout_putstr(f, "\n");
 
-	for (i = o->chanlist; i != 0; i = (struct songchan_s *)i->name.next) {
+	for (i = o->chanlist; i != NULL; i = (struct songchan_s *)i->name.next) {
 		textout_indent(f);
 		textout_putstr(f, "songchan ");
 		textout_putstr(f, i->name.str);
@@ -394,7 +394,7 @@ song_output(struct song_s *o, struct textout_s *f) {
 		songchan_output(i, f);
 		textout_putstr(f, "\n");
 	}
-	for (g = o->filtlist; g != 0; g = (struct songfilt_s *)g->name.next) {
+	for (g = o->filtlist; g != NULL; g = (struct songfilt_s *)g->name.next) {
 		textout_indent(f);
 		textout_putstr(f, "songfilt ");
 		textout_putstr(f, g->name.str);
@@ -402,7 +402,7 @@ song_output(struct song_s *o, struct textout_s *f) {
 		songfilt_output(g, f);
 		textout_putstr(f, "\n");
 	}
-	for (t = o->trklist; t != 0; t = (struct songtrk_s *)t->name.next) {
+	for (t = o->trklist; t != NULL; t = (struct songtrk_s *)t->name.next) {
 		textout_indent(f);
 		textout_putstr(f, "songtrk ");
 		textout_putstr(f, t->name.str);
@@ -410,7 +410,7 @@ song_output(struct song_s *o, struct textout_s *f) {
 		songtrk_output(t, f);
 		textout_putstr(f, "\n");
 	}
-	for (s = o->sxlist; s != 0; s = (struct songsx_s *)s->name.next) {
+	for (s = o->sxlist; s != NULL; s = (struct songsx_s *)s->name.next) {
 		textout_indent(f);
 		textout_putstr(f, "songsx ");
 		textout_putstr(f, s->name.str);
@@ -1155,7 +1155,7 @@ parse_song(struct parse_s *o, struct song_s *s) {
 					return 0;
 				}
 				t = song_trklookup(s, o->lex.strval);
-				if (t == 0) {
+				if (t == NULL) {
 					t = songtrk_new(o->lex.strval);
 					song_trkadd(s, t);
 				}
@@ -1174,7 +1174,7 @@ parse_song(struct parse_s *o, struct song_s *s) {
 					return 0;
 				}
 				i = song_chanlookup(s, o->lex.strval);
-				if (i == 0) {
+				if (i == NULL) {
 					i = songchan_new(o->lex.strval);
 					song_chanadd(s, i);
 				}
@@ -1352,7 +1352,7 @@ song_save(struct song_s *o, char *name) {
 	struct textout_s *f;
 	
 	f = textout_new(name);
-	if (f == 0) {
+	if (f == NULL) {
 		return;
 	}
 	song_output(o, f);
