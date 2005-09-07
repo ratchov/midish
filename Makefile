@@ -45,10 +45,6 @@ install-midish:	midish
 		cp midish.1 smfplay.1 smfrec.1 ${MAN1_DIR}
 		cp manual.html tutorial.html ${DOC_DIR}
 		cp midishrc sample.sng ${EXAMPLES_DIR}
-		@echo
-		@echo You can copy manually ${EXAMPLES_DIR}/midishrc
-		@echo into ~/.midishrc
-		@echo
 
 cons.o:		cons.c dbg.h textio.h cons.h
 data.o:		data.c dbg.h str.h cons.h data.h
