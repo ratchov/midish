@@ -32,7 +32,7 @@
 #define MIDISH_DBG_H
 
 #ifndef NULL
-#define NULL 0
+#define NULL (0)
 #endif
 
 void  dbg_puts(char *);
