@@ -633,3 +633,28 @@ track_optimeinfo(struct track_s *o, unsigned pos, unsigned long *usec24, unsigne
 	}
 }
 
+void
+track_opchaninfo(struct track_s *o, char *map) {
+	unsigned i, ch, dev;
+	struct seqptr_s p;
+	
+	for (i = 0; i < DEFAULT_MAXNCHANS; i++) {
+		map[i] = 0;
+	}
+	track_rew(o, &p);
+	
+	while (track_seqevavail(o, &p)) {
+		if (EV_ISVOICE(&(*p.pos)->ev)) {
+			dev = (*p.pos)->ev.data.voice.dev;
+			ch = (*p.pos)->ev.data.voice.ch;
+			i = dev * 16 + ch;
+			if (dev >= DEFAULT_MAXNDEVS || ch >= 16) {
+				dbg_puts("track_opchaninfo: bogus dev/ch pair, stopping\n");
+				break;
+			}
+			map[dev * 16 + ch] = 1;
+		}
+		track_seqevnext(o, &p);
+	}
+}
+

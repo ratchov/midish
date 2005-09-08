@@ -418,24 +418,28 @@ data_print(struct data_s *d) {
 	
 	switch(d->type) {
 	case DATA_NIL:
-		textout_putstr(tout, "(nil)");
+		textout_putstr(tout, "nil");
 		break;
 	case DATA_LONG:
 		textout_putlong(tout, d->val.num);
 		break;
 	case DATA_STRING:
+		textout_putstr(tout, "\"");
 		textout_putstr(tout, d->val.str);
+		textout_putstr(tout, "\"");
 		break;
 	case DATA_REF:
 		textout_putstr(tout, d->val.ref);
 		break;
 	case DATA_LIST:
+		textout_putstr(tout, "{");
 		for (i = d->val.list; i != NULL; i = i->next) {
 			data_print(i);
 			if (i->next) {
 				textout_putstr(tout, " ");
 			}
 		}
+		textout_putstr(tout, "}");
 		break;
 	default:
 		dbg_puts("data_print: unknown type\n");
@@ -828,6 +832,8 @@ user_mainloop(void) {
 			name_newarg("trackname",
 			name_newarg("muteflag", NULL)));
 	exec_newbuiltin(exec, "trackgetmute", user_func_trackgetmute,
+			name_newarg("trackname", NULL));
+	exec_newbuiltin(exec, "trackchanlist", user_func_trackchanlist,
 			name_newarg("trackname", NULL));
 
 	exec_newbuiltin(exec, "chanlist", user_func_chanlist, NULL);

@@ -505,3 +505,33 @@ user_func_trackgetmute(struct exec_s *o, struct data_s **r) {
 	*r = data_newlong(t->mute);
 	return 1;
 }
+
+unsigned
+user_func_trackchanlist(struct exec_s *o, struct data_s **r) {
+	struct songtrk_s *t;
+	struct songchan_s *c;
+	struct data_s *num;
+	char map[DEFAULT_MAXNCHANS];
+	unsigned i;
+	
+	if (!exec_lookuptrack(o, "trackname", &t)) {
+		return 0;
+	}
+	*r = data_newlist(NULL);
+	track_opchaninfo(&t->track, map);
+	for (i = 0; i < DEFAULT_MAXNCHANS; i++) {
+		if (map[i]) {
+			c = song_chanlookup_bynum(user_song, i / 16, i % 16);
+			if (c != 0) {
+				data_listadd(*r, data_newref(c->name.str));
+			} else {
+				num = data_newlist(NULL);
+				data_listadd(num, data_newlong(i / 16));
+				data_listadd(num, data_newlong(i % 16));
+				data_listadd(*r, num);				
+			}
+		}
+	}
+	return 1;
+}
+

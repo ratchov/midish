@@ -117,48 +117,11 @@ proc r  {
 }
 
 #
-# print the list of tracks, channels and filters
+# print the list of tracks, channels and filters, etc
 #
 proc l  {
-	print "tracks:"
-	let cur = [songgetcurtrack]
-	for i in [tracklist] {
-		if $i == $cur {
-			let prefix = " ->"
-		} else {
-			let prefix = "   "
-		}
-		if [trackgetmute $i] {
-			let mute = ", muted"
-		} else {
-			let mute = ""
-		}
-		print { $prefix $i "( record:" [trackgetcurfilt $i] $mute ")"}
-	}
-	print "channels:"
-	let cur = [songgetcurchan]
-	for i in [chanlist] {
-		if $i == $cur {
-			let prefix = " ->"
-		} else {
-			let prefix = "   "
-		}
-		print { $prefix $i "(" "dev:" [changetdev $i] "chan:" [changetch $i] ")" }
-	}
-	print "filters:"
-	let cur = [songgetcurfilt]
-	for i in [filtlist] {
-		if $i == $cur {
-			let prefix = " ->";
-		} else {
-			let prefix = "   ";
-		}
-		print { $prefix $i ":"}
-	}
-	print { "sysex:" [sysexlist] }
-	songinfo; 
+	songinfo
 }
-
 
 #
 # change current position
@@ -381,5 +344,4 @@ proc pan    v { let c = [songgetcurchan]; chanconfev $c {ctl $c 10 $v}; }
 proc reverb v { let c = [songgetcurchan]; chanconfev $c {ctl $c 91 $v}; }
 proc chorus v { let c = [songgetcurchan]; chanconfev $c {ctl $c 93 $v}; }
 
-print "midishrc completed"
 

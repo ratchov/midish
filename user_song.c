@@ -257,15 +257,161 @@ user_func_songgetcurfilt(struct exec_s *o, struct data_s **r) {
 
 unsigned
 user_func_songinfo(struct exec_s *o, struct data_s **r) {
-	dbg_puts("tics_per_unit=");
-	dbg_putu(user_song->tics_per_unit);
-	dbg_puts(", ");
-	dbg_puts("curpos=");
-	dbg_putu(user_song->curpos);
-	dbg_puts(", ");
-	dbg_puts("curquant=");
-	dbg_putu(user_song->curquant);
-	dbg_puts("\n");
+	char map[DEFAULT_MAXNCHANS];
+	struct songtrk_s *t;
+	struct songchan_s *c;
+	struct songfilt_s *f;
+	struct songsx_s *s;
+	struct sysex_s *x;
+	unsigned i, count;
+	
+	/* print info about channels */	
+
+	textout_putstr(tout, "chanlist {\n");
+	textout_shiftright(tout);
+	textout_indent(tout);
+	textout_putstr(tout, "# chan_name,  {devicenum, midichan}\n");
+	for (c = user_song->chanlist; c != NULL; c = (struct songchan_s *)c->name.next) {
+		textout_indent(tout);
+		textout_putstr(tout, c->name.str);
+		textout_putstr(tout, "\t");
+		textout_putstr(tout, "{");
+		textout_putlong(tout, c->dev);
+		textout_putstr(tout, " ");
+		textout_putlong(tout, c->ch);
+		textout_putstr(tout, "}");
+		textout_putstr(tout, "\n");
+		
+	}	
+	textout_shiftleft(tout);
+	textout_putstr(tout, "}\n");
+
+	/* print info about filters */	
+
+	textout_putstr(tout, "filtlist {\n");
+	textout_shiftright(tout);
+	textout_indent(tout);
+	textout_putstr(tout, "# filter_name,  default_channel\n");
+	for (f = user_song->filtlist; f != NULL; f = (struct songfilt_s *)f->name.next) {
+		textout_indent(tout);
+		textout_putstr(tout, f->name.str);
+		textout_putstr(tout, "\t");
+		if (f->curchan != NULL) {
+			textout_putstr(tout, f->curchan->name.str);
+		} else {
+			textout_putstr(tout, "nil");
+		}
+		textout_putstr(tout, "\n");
+		
+	}
+	textout_shiftleft(tout);
+	textout_putstr(tout, "}\n");
+
+	/* print info about tracks */
+
+	textout_putstr(tout, "tracklist {\n");
+	textout_shiftright(tout);
+	textout_indent(tout);
+	textout_putstr(tout, "# track_name,  default_filter,  used_channels,  flags\n");
+	for (t = user_song->trklist; t != NULL; t = (struct songtrk_s *)t->name.next) {
+		textout_indent(tout);
+		textout_putstr(tout, t->name.str);
+		textout_putstr(tout, "\t");
+		if (t->curfilt != NULL) {
+			textout_putstr(tout, t->curfilt->name.str);
+		} else {
+			textout_putstr(tout, "nil");
+		}
+		textout_putstr(tout, "\t{");
+		track_opchaninfo(&t->track, map);
+		for (i = 0, count = 0; i < DEFAULT_MAXNCHANS; i++) {
+			if (map[i]) {
+				if (count) {
+					textout_putstr(tout, " ");
+				}
+				c = song_chanlookup_bynum(user_song, i / 16, i % 16);
+				if (c) {
+					textout_putstr(tout, c->name.str);
+				} else {
+					textout_putstr(tout, "{");
+					textout_putlong(tout, i / 16);
+					textout_putstr(tout, " ");
+					textout_putlong(tout, i % 16);
+					textout_putstr(tout, "}");
+				}
+				count++;
+			}
+		}
+		textout_putstr(tout, "}");
+		if (t->mute) {
+			textout_putstr(tout, " mute");
+		}
+		textout_putstr(tout, "\n");
+		
+	}	
+	textout_shiftleft(tout);
+	textout_putstr(tout, "}\n");
+
+	/* print info about sysex banks */	
+
+	textout_putstr(tout, "sysexlist {\n");
+	textout_shiftright(tout);
+	textout_indent(tout);
+	textout_putstr(tout, "# sysex_name,  number_messages\n");
+	for (s = user_song->sxlist; s != NULL; s = (struct songsx_s *)s->name.next) {
+		textout_indent(tout);
+		textout_putstr(tout, s->name.str);
+		textout_putstr(tout, "\t");
+		i = 0;
+		for (x = s->sx.first; x != NULL; x = x->next) {
+			i++;
+		}
+		textout_putlong(tout, i);
+		textout_putstr(tout, "\n");
+		
+	}	
+	textout_shiftleft(tout);
+	textout_putstr(tout, "}\n");
+	
+	/* print current values */
+
+	textout_putstr(tout, "curchan ");
+	if (user_song->curchan) {
+		textout_putstr(tout, user_song->curchan->name.str);
+	} else {
+		textout_putstr(tout, "nil");
+	}
+
+	textout_putstr(tout, "curfilt ");
+	if (user_song->curfilt) {
+		textout_putstr(tout, user_song->curfilt->name.str);
+	} else {
+		textout_putstr(tout, "nil");
+	}
+	textout_putstr(tout, "\n");
+
+	textout_putstr(tout, "curtrack ");
+	if (user_song->curtrk) {
+		textout_putstr(tout, user_song->curtrk->name.str);
+	} else {
+		textout_putstr(tout, "nil");
+	}
+	textout_putstr(tout, "\n");	
+
+	textout_putstr(tout, "cursysex ");
+	if (user_song->cursx) {
+		textout_putstr(tout, user_song->cursx->name.str);
+	} else {
+		textout_putstr(tout, "nil");
+	}
+	textout_putstr(tout, "\n");	
+
+	textout_putstr(tout, "curquant ");
+	textout_putlong(tout, user_song->curquant);
+	textout_putstr(tout, "\n");	
+	textout_putstr(tout, "curpos ");
+	textout_putlong(tout, user_song->curpos);
+	textout_putstr(tout, "\n");	
 	return 1;
 }
 
