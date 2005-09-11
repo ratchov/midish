@@ -14,8 +14,8 @@ Important features:
 	- track quantisation
 	- import and export of standard MIDI files
 	- tempo and time-signature changes
+	- system exclusive messages handling
 
 Contacts:
 
 	http://caoua.org/midish/
-

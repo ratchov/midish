@@ -195,7 +195,7 @@ user_func_chaninfo(struct exec_s *o, struct data_s **r) {
 	if (!exec_lookupchan_getref(o, "channame", &c)) {
 		return 0;
 	}
-	songchan_output(c, tout);
+	track_output(&c->conf, tout);
 	textout_putstr(tout, "\n");
 	return 1;
 }

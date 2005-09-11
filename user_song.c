@@ -381,6 +381,7 @@ user_func_songinfo(struct exec_s *o, struct data_s **r) {
 	} else {
 		textout_putstr(tout, "nil");
 	}
+	textout_putstr(tout, "\n");
 
 	textout_putstr(tout, "curfilt ");
 	if (user_song->curfilt) {

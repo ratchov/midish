@@ -125,12 +125,35 @@ user_func_sysexexists(struct exec_s *o, struct data_s **r) {
 unsigned
 user_func_sysexinfo(struct exec_s *o, struct data_s **r) {
 	struct songsx_s *c;
+	struct sysex_s *e;
+	unsigned i;
 	
 	if (!exec_lookupsx(o, "sysexname", &c)) {
 		return 0;
 	}
-	songsx_output(c, tout);
-	textout_putstr(tout, "\n");
+
+	textout_putstr(tout, "{\n");
+	textout_shiftright(tout);
+
+	for (e = c->sx.first; e != NULL; e = e->next) {
+		textout_indent(tout);
+		textout_putlong(tout, e->unit);
+		textout_putstr(tout, " { ");
+		if (e->first) {
+			for (i = 0; i < e->first->used; i++) {
+				if (i > 10) {
+					textout_putstr(tout, "... ");
+					break;
+				}
+				textout_putbyte(tout, e->first->data[i]);
+				textout_putstr(tout, " ");
+			}
+		}
+		textout_putstr(tout, "}\n");
+	}
+	textout_shiftleft(tout);
+	textout_indent(tout);
+	textout_putstr(tout, "}\n");
 	return 1;
 }
 

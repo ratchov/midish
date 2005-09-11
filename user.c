@@ -781,8 +781,6 @@ user_mainloop(void) {
 			name_newarg("newname", NULL)));
 	exec_newbuiltin(exec, "trackexists", user_func_trackexists, 
 			name_newarg("trackname", NULL));
-	exec_newbuiltin(exec, "trackinfo", user_func_trackinfo, 
-			name_newarg("trackname", NULL));
 	exec_newbuiltin(exec, "trackaddev", user_func_trackaddev,
 			name_newarg("trackname", 
 			name_newarg("measure", 
@@ -835,6 +833,10 @@ user_mainloop(void) {
 			name_newarg("trackname", NULL));
 	exec_newbuiltin(exec, "trackchanlist", user_func_trackchanlist,
 			name_newarg("trackname", NULL));
+	exec_newbuiltin(exec, "trackinfo", user_func_trackinfo, 
+			name_newarg("trackname", 
+			name_newarg("quantum", 
+			name_newarg("evspec", NULL))));
 
 	exec_newbuiltin(exec, "chanlist", user_func_chanlist, NULL);
 	exec_newbuiltin(exec, "channew", user_func_channew, 

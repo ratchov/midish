@@ -129,7 +129,7 @@ user_func_filtinfo(struct exec_s *o, struct data_s **r) {
 	if (!exec_lookupfilt(o, "filtname", &f)) {
 		return 0;
 	}
-	songfilt_output(f, tout);
+	filt_output(&f->filt, tout);
 	textout_putstr(tout, "\n");
 	return 1;
 }

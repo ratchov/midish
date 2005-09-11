@@ -131,37 +131,6 @@ user_func_trackexists(struct exec_s *o, struct data_s **r) {
 
 
 unsigned
-user_func_trackinfo(struct exec_s *o, struct data_s **r) {
-	struct songtrk_s *t;
-	char *name;
-	if (!exec_lookuptrack(o, "trackname", &t)) {
-		return 0;
-	}
-	textout_putstr(tout, "{\n");
-	textout_shiftright(tout);
-	
-	textout_indent(tout);
-	textout_putstr(tout, "curfilt ");
-	/* warning 'cond ? val1 : val2' is a 'const char *' in gcc */
-	if (t->curfilt) {
-		name =  t->curfilt->name.str;
-	} else {
-		name = "nil";
-	}
-	textout_putstr(tout, name);
-	textout_putstr(tout, "\n");
-	if (t->mute) {
-		textout_indent(tout);
-		textout_putstr(tout, "mute\n");
-	}
-	textout_shiftleft(tout);
-	textout_putstr(tout, "}\n");
-	return 1;
-}
-
-
-
-unsigned
 user_func_trackaddev(struct exec_s *o, struct data_s **r) {
 	long measure, beat, tic;
 	struct ev_s ev;
@@ -535,3 +504,67 @@ user_func_trackchanlist(struct exec_s *o, struct data_s **r) {
 	return 1;
 }
 
+
+unsigned
+user_func_trackinfo(struct exec_s *o, struct data_s **r) {
+	struct songtrk_s *t;
+	struct seqptr_s tp;
+	struct evspec_s es;
+	long from, quant;
+	unsigned start, len, tic, count;
+
+	if (!exec_lookuptrack(o, "trackname", &t) ||
+	    !exec_lookuplong(o, "quantum", &quant) ||
+	    !exec_lookupevspec(o, "evspec", &es)) {
+		return 0;
+	}
+
+	if (quant < 0 || (unsigned)quant > user_song->tics_per_unit) {
+		cons_err("quantum must be between 0 and tics_per_unit");
+		return 0;
+	}
+	textout_putstr(tout, "{\n");
+	textout_shiftright(tout);
+	textout_indent(tout);
+	
+	from = 0;
+	for (;;) {
+		start = song_measuretotic(user_song, from);
+		if (start > (unsigned)quant/2) {
+			start -= quant/2;
+		}
+		len = song_measuretotic(user_song, from + 1) - start;
+
+		track_rew(&t->track, &tp);
+		track_seek(&t->track, &tp, start);
+		if (track_finished(&t->track, &tp)) {
+			break;
+		}
+		tic = 0;
+		count = 0;
+		for (;;) {
+			tic += track_ticlast(&t->track, &tp);
+			if (!track_evavail(&t->track, &tp) || tic >= len) {
+				break;
+			}
+			if (evspec_matchev(&es, &(*tp.pos)->ev)) {
+				if (EV_ISNOTE(&(*tp.pos)->ev)) {
+					if ((*tp.pos)->ev.cmd == EV_NON) {
+						count++;
+					}
+				} else {
+					count++;
+				}
+	                }			
+			track_evnext(&t->track, &tp);
+		}
+		textout_putlong(tout, count);
+		textout_putstr(tout, " ");
+		from ++;
+	}
+	textout_putstr(tout, "\n");
+	textout_shiftleft(tout);
+	textout_indent(tout);
+	textout_putstr(tout, "}\n");
+	return 1;
+}
