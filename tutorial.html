@@ -573,12 +573,12 @@
 	<PRE>
 	sysexnew mybank
 	</PRE>
-	Then we can add comme messages:
+	Then we can add messages:
 	<PRE>
 	sysexadd mybank 0 {0xF0 0x7E 0x7F 0x09 0x01 0xF7}
 	</PRE>	
 	This will store the "General-Midi ON" messages into the
-	bank. The sencond argument (here "0") is the device number
+	bank. The second argument (here "0") is the device number
 	to which the message will be sent when performance mode
 	is entered. To send the latter messages to 
 	the corresponding device, just enter performance mode,
@@ -588,7 +588,7 @@
 	</PRE>
 	Sysex messages can be recorded from
 	midi devices, this is useful to save "bulk dumps"
-	from synthtisers. Sysex messages are automatically
+	from synthetisers. Sysex messages are automatically
 	recorded on the <I>current bank</I>. So, to record
 	a sysex:
 	<PRE>
@@ -656,6 +656,7 @@
 	print [songgetcurtrack]		# current track
 	print [songgetcursysex]
 	print [trackgetcurfilt mypiano]	# current filter of track 'mypiano'
+	print [filtgetcurchan mysplit]	# current channel of filter 'mysplit'
 	</PRE>
 
 	<P>
@@ -803,7 +804,7 @@
 	
 	A lot of similar procedures are defined in the
 	sample <TT>midishrc</TT> file, shipped in the source
-	tar-ball. The make midish easy to use, most of
+	tar-ball. To make midish easy to use, most of
 	the usual tasks can be performed with only 2 or
 	three character statements.
 	
@@ -1089,6 +1090,8 @@
 			
 <A name="example"></A>
 <H1>12 Example sessions</H1>
+(XXX: update examples to new functions)
+
 <H2>12.1 Example - midi filtering</H2>
 	
 	The following session show how to 
@@ -1096,19 +1099,21 @@
 		
 	<PRE>
 	1> nc bass {0 1}
-	2> nc piano {0 2}
-	3> gmp bass 33
-	4> gmp piano 2
+	2> gmp 33
+	3> nc piano {0 2}
+	4> gmp 2
 	5> nf split
 	6> filtchanmap split {1 0} bass 
 	7> filtchanmap split {1 0} piano
 	8> filtkeymap split {1 0} bass 0 63 (-12)
 	9> filtkeymap split {1 0} piano 64 127 0   
 	10> filtinfo split
-	keymap {1 0} {0 2} 65 127 0 id
-	keymap {1 0} {0 1} 0 64 116 id
-	chanmap {1 0} {0 2}
-	chanmap {1 0} {0 1}
+	{
+		keymap {1 0} {0 2} 65 127 0 id
+		keymap {1 0} {0 1} 0 64 116 id
+		chanmap {1 0} {0 2}
+		chanmap {1 0} {0 1}
+	}
 	11> l
 	tracks:
 	channels:

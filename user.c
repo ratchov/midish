@@ -262,7 +262,7 @@ exec_lookupev(struct exec_s *o, char *name, struct ev_s *ev) {
 	ev->data.voice.dev = dev;
 	ev->data.voice.ch = ch;
 	d = d->next;
-	if (!d || d->type != DATA_LONG) {
+	if (!d || d->type != DATA_LONG || d->val.num < 0 || d->val.num > 127) {
 		cons_err("bad byte0 in event spec");
 		return 0;
 	}
@@ -273,7 +273,7 @@ exec_lookupev(struct exec_s *o, char *name, struct ev_s *ev) {
 	}		
 	d = d->next;
 	if (ev->cmd != EV_PC && ev->cmd != EV_CAT && ev->cmd != EV_BEND) {
-		if (!d || d->type != DATA_LONG) {
+		if (!d || d->type != DATA_LONG || d->val.num < 0 || d->val.num > 127) {
 			cons_err("bad byte1 in event spec");
 			return 0;
 		}
