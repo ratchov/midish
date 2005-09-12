@@ -42,7 +42,6 @@ struct seqev_s {
 };
 
 struct track_s {
-	unsigned flags;			/* cyclic, ... */
 	struct seqev_s *first;		/* head of the list */
 	struct seqev_s eot;		/* the end-of-track event */
 };

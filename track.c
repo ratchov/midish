@@ -130,7 +130,6 @@ track_delete(struct track_s *o) {
 
 void
 track_init(struct track_s *o) {
-	o->flags = 0;
 	o->eot.next = NULL;
 	o->eot.delta = 0;
 	o->first = &o->eot;
