@@ -538,8 +538,8 @@ user_func_songtimeins(struct exec_s *o, struct data_s **r) {
 	    !exec_lookuplong(o, "denominator", &den)) {
 		return 0;
 	}
-	if (den != 2 && den != 4 && den != 8) {
-		cons_err("only 2, 4 and 8 are supported as denominator");
+	if (den != 1 && den != 2 && den != 4 && den != 8) {
+		cons_err("only 1, 2, 4 and 8 are supported as denominator");
 		return 0;
 	}
 	if (amount == 0) {

@@ -77,7 +77,7 @@
 	<LI>	a POSIX unix-like operating system with "raw" midi support.
 		Midish works on OpenBSD (its development platform)
 		and Linux.
-	<LI>	(optional) the readline(3) library
+	<LI>	the readline(3) library
 	</UL>
 
 Without any midi-devices Midish will be probably useless.
@@ -98,14 +98,10 @@ Without any midi-devices Midish will be probably useless.
 	<LI> 
 	compile midish, just type '<TT>make all</TT>', this will build
 	midish and rmidish, the readline(3) front-end to midish.
-	If you don't have the readline(3) library then don't
-	build the 'rmidish' front-end, just type '<TT>make midish</TT>
 
 	<LI>
 	install binaries, documentation and examples by
-	typing '<TT>make install</TT>' (if you haven't built the
-	rmidish front-end type '<TT>make install-midish</TT>').
-	They are copied as follows:
+	typing '<TT>make install</TT>'. They are copied as follows:
 	<UL>
 	<LI> binaries in '<TT>PREFIX/bin</TT>'
 	<LI> manual pages in '<TT>PREFIX/man/man1</TT>'
