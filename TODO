@@ -13,3 +13,5 @@
   stop in scripts such as smfplay(1).
 
 - receiving 'EV_STOP' in slave-mode make all notes off; why?
+
+- add curves in filt.c
