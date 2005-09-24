@@ -61,9 +61,47 @@
 	<P>
 	Midish is a MIDI sequencing and filtering tool for 
 	unix-like operating systems.
- 
+
 	It's is implemented as a sequencing engine and a 
 	command-line interpreter.
+	
+<P>
+The sequencing engine is organised as follows:
+	<P align="center">
+	<BLOCKQUOTE>
+	<PRE>
+			+--------------+	    
+			| track_1 play |---+
+			+--------------+   |
+					   |
+			     ...        ---+
+					   |
+			+--------------+   |    
+			| track_N play |---+
+			+--------------+   |
+					   |
+					   |	+----------+
++---------+		+------------+     +--->|	   |
+|	  |	        |	     |		| midi out |
+| midi in |-----+------>|   filter   |-----+--->|	   |
+|  	  |	|	|	     |	   |	+----------+
++---------+	|	+------------+     |
+		|			   |	+----------------+
+		|			   +--->| track_X record |
+		|	+--------------+	+----------------+
+		+------>| sysex record |
+			+--------------+
+	</PRE>
+	</BLOCKQUOTE>
+Midi input passes though a filter/router that rewrites the midi stream and
+then is sent to the midi output. Optionally (play and record mode)
+each track is also sent to the output, and in record mode, the output of the
+filter is recorded on the <I>current track</I>.
+
+<P>
+On the other hand, the command-line interpreter is used to configure
+the sequencing engine: create and manage tracks, define filtering rules
+start/stop recording, etc...
 
 <A name="install"></A>
 <H1>2 Installation</H1>
@@ -110,7 +148,7 @@ Without any midi-devices Midish will be probably useless.
 	</UL>
 	where '<TT>PREFIX</TT>' is by default '<TT>/usr/local</TT>'.
 	To change this, set the '<TT>PREFIX</TT>' variable in
-	<TT>Makefile</TT>, for instance: 
+	'<TT>Makefile</TT>', for instance: 
 
 	<PRE>
 	make PREFIX=/usr/local install
@@ -122,7 +160,7 @@ Without any midi-devices Midish will be probably useless.
 
 	<LI>
 	read the documentation and edit your <TT>~/.midishrc</TT> in order 
-	to choose your default midi device by using the <TT>devattach</TT> 
+	to choose your default midi device by using the '<TT>devattach</TT>' 
 	function (example: '<TT>devattach 0 "/dev/rmidi3"</TT>', see next section)
 
 	</UL>
@@ -141,7 +179,7 @@ Without any midi-devices Midish will be probably useless.
 	don't want so, use the '<TT>-b</TT>' flag. This is
 	useful when you want to use midish in scripts. If
 	you have built the readline(3) front-end, you may want
-	use it for interactive sessions instead of '<TT>midish</TT>
+	use it for interactive sessions instead of '<TT>midish</TT>'
 	by typing:
 
 	<PRE>
@@ -768,6 +806,7 @@ Without any midi-devices Midish will be probably useless.
 
 <H2>11.1 Track functions</H2>
 
+<A name="func_tracklist"></A>
 <B><TT>tracklist</TT></B>
 	<BLOCKQUOTE>
 	returns the list of names of the tracks in the song
@@ -777,27 +816,32 @@ Without any midi-devices Midish will be probably useless.
 	</PRE>
 	</BLOCKQUOTE>
 
+<A name="func_tracknew"></A>
 <B><TT>tracknew trackname</TT></B>
 	<BLOCKQUOTE>
 	creates an empty track named <TT>trackname</TT>
 	</BLOCKQUOTE>
 
+<A name="func_trackdelete"></A>
 <B><TT>trackdelete trackname</TT></B>
 	<BLOCKQUOTE>
 	delete existing track '<TT>trackname</TT>'.
 	Current track cannot be deleted.
 	</BLOCKQUOTE>
 
+<A name="func_trackreaname"></A>
 <B><TT>trackrename trackname newname</TT></B>
 	<BLOCKQUOTE>
 	rename track '<TT>trackname</TT>' to '<TT>newname</TT>'
 	</BLOCKQUOTE>
 
+<A name="func_trackexists"></A>
 <B><TT>trackexists trackname</TT></B>
 	<BLOCKQUOTE>
 	returns 1 if <TT>trackname</TT> is a track, 0 otherwise
 	</BLOCKQUOTE>
-
+	
+<A name="func_tracksetcurfilt"></A>
 <B><TT>tracksetcurfilt trackname filtname</TT></B>
 	<BLOCKQUOTE>
 	set the default filter (for recording) of
@@ -805,12 +849,14 @@ Without any midi-devices Midish will be probably useless.
 	be user if there is no current filter.
 	</BLOCKQUOTE>
 
+<A name="func_trackgetcurfilt"></A>
 <B><TT>trackgetcurfilt trackname</TT></B>
 	<BLOCKQUOTE>
 	returns the default filter (for recording) 
 	of <TT>trackname</TT>, returns <TT>nil</TT> if none
 	</BLOCKQUOTE>
 		
+<A name="func_trackcheck"></A>
 <B><TT>trackcheck trackname</TT></B>
 	<BLOCKQUOTE>
 	checks the whole track for orphaned notes,
@@ -818,6 +864,7 @@ Without any midi-devices Midish will be probably useless.
 	removes multiple controllers in the same tic
 	</BLOCKQUOTE>
 
+<A name="func_trackgetlen"></A>
 <B><TT>trackgetlen trackname</TT></B>
 	<BLOCKQUOTE>
 	returns the size in tics of track <TT>trackname</TT>,
@@ -827,12 +874,14 @@ Without any midi-devices Midish will be probably useless.
 	</PRE>
 	</BLOCKQUOTE>
 
+<A name="func_trackcut"></A>
 <B><TT>trackcut trackname from amount quantum</TT></B>
 	<BLOCKQUOTE>
 	cuts <TT>amount</TT> measures of the track <TT>trackname</TT>
 	from measure <TT>from</TT>.
 	</BLOCKQUOTE>
 
+<A name="func_trackblank"></A>
 <B><TT>trackblank trackname from amount quantum evspec</TT></B>
 	<BLOCKQUOTE>
 	clears <TT>amount</TT> measures of the track <TT>trackname</TT>
@@ -841,12 +890,14 @@ Without any midi-devices Midish will be probably useless.
 	<A href="#evrange">ranges</A>)
 	</BLOCKQUOTE>
 
+<A name="func_trackinsert"></A>
 <B><TT>trackinsert trackname from amount</TT></B>
 	<BLOCKQUOTE>
 	inserts <TT>amount</TT> blank measures in track
 	<TT>trackname</TT> just before the measure <TT>from</TT>
 	</BLOCKQUOTE>
 
+<A name="func_trackcopy"></A>
 <B><TT>trackcopy trackname1 from amount trackname2 where quantum evspec</TT></B>
 	<BLOCKQUOTE>
 	copies <TT>amount</TT> measures starting at <TT>from</TT>
@@ -856,6 +907,7 @@ Without any midi-devices Midish will be probably useless.
 	<A href="#evrange">ranges</A>)
 	</BLOCKQUOTE>
 
+<A name="func_trackquant"></A>
 <B><TT>trackquant trackname from amount rate quantum</TT></B>
 	<BLOCKQUOTE>
 	quantises <TT>amount</TT> measures of the track
@@ -865,12 +917,7 @@ Without any midi-devices Midish will be probably useless.
 	100 means full quantisation.
 	</BLOCKQUOTE>
 
-<B><TT>tracksetcurfilt trackname filtname</TT></B>
-	<BLOCKQUOTE>
-	set default filter to use for the next record
-	of this track
-	</BLOCKQUOTE>
-
+<A name="func_trackaddev"></A>
 <B><TT>trackaddev trackname measure beat tic ev</TT></B>
 	<BLOCKQUOTE>
 	puts the event <TT>ev</TT> on track <TT>trackname</TT>
@@ -878,6 +925,7 @@ Without any midi-devices Midish will be probably useless.
 	<TT>beat</TT> and <TT>tic</TT>
 	</BLOCKQUOTE>
 
+<A name="func_tracksetmute"></A>
 <B><TT>tracksetmute trackname muteflag</TT></B>
 	<BLOCKQUOTE>
 	If <TT>muteflag</TT> is equal to 1 the the track
@@ -887,17 +935,20 @@ Without any midi-devices Midish will be probably useless.
 	</BLOCKQUOTE>
 
 
+<A name="func_trackgetmute"></A>
 <B><TT>trackgetmute trackname</TT></B>
 	<BLOCKQUOTE>
 	Return 1 if the give track is mutted and 0 otherwise.
 	</BLOCKQUOTE>
 
+<A name="func_trackchanlist"></A>
 <B><TT>trackchanlist trackname</TT></B>
 	<BLOCKQUOTE>
 	Return the list of channels used by events stored in track 
 	<TT>trackname</TT>.
 	</BLOCKQUOTE>
 
+<A name="func_trackinfo"></A>
 <B><TT>trackinfo trackname quantum evspec</TT></B>
 	<BLOCKQUOTE>
 	displays the number of events that match <TT>evspec</TT>
@@ -906,39 +957,46 @@ Without any midi-devices Midish will be probably useless.
 
 <H2>11.2 Channel functions</H2>
 
+<A name="func_channew"></A>
 <B><TT>channew channelname channelnum</TT></B>
 	<BLOCKQUOTE>
 	creates an new channel named <TT>channelname</TT>
 	and bound to midi channel <TT>channelnum</TT> 
 	</BLOCKQUOTE>
 
+<A name="func_chandelete"></A>
 <B><TT>chandelete channame</TT></B>
 	<BLOCKQUOTE>
 	delete existing channel '<TT>channame</TT>'.
 	</BLOCKQUOTE>
 
+<A name="func_chanrename"></A>
 <B><TT>chanrename channame newname</TT></B>
 	<BLOCKQUOTE>
 	rename channel '<TT>channame</TT>' to '<TT>newname</TT>'
 	</BLOCKQUOTE>
 
+<A name="func_chanexists"></A>
 <B><TT>chanexists channelname</TT></B>
 	<BLOCKQUOTE>
 	returns 1 if <TT>channelname</TT> is a channel, 0 otherwise
 	</BLOCKQUOTE>
 
+<A name="func_changetch"></A>
 <B><TT>changetch channelname</TT></B>
 	<BLOCKQUOTE>
 	returns the midi channel number of channel named
 	<TT>channelname</TT>
 	</BLOCKQUOTE>
 
+<A name="func_changetdev"></A>
 <B><TT>changetdev channelname</TT></B>
 	<BLOCKQUOTE>
 	returns the device number of channel named
 	<TT>channelname</TT>
 	</BLOCKQUOTE>
 
+<A name="func_chanconfev"></A>
 <B><TT>chanconfev channelname event</TT></B>
 	<BLOCKQUOTE>
 	adds the event to the configuration of 
@@ -947,57 +1005,68 @@ Without any midi-devices Midish will be probably useless.
 	of the event is not used.
 	</BLOCKQUOTE>
 
+<A name="func_chaninfo"></A>
 <B><TT>chaninfo channame</TT></B>
 	<BLOCKQUOTE>
 	prints all events on the config
 	of the channel.
 	</BLOCKQUOTE>
 
-<B><TT>filtsetcurchan filtname channame</TT></B>
-	<BLOCKQUOTE>
-	sets the default channel of filter
-	<TT>filtname</TT> to <TT>channame</TT>.
-	</BLOCKQUOTE>
-
-<B><TT>filtgetcurchan filtname</TT></B>
-	<BLOCKQUOTE>
-	returns the default channel 
-	of <TT>filtname</TT>, returns <TT>nil</TT> if none
-	</BLOCKQUOTE>
 
 <H2>11.3 Filter functions</H2>
 
+<A name="func_filtnew"></A>
 <B><TT>filtnew filtname</TT></B>
 	<BLOCKQUOTE>
 	creates an new filter named <TT>filtname</TT>
 	</BLOCKQUOTE>
 
+<A name="func_filtdelete"></A>
 <B><TT>filtdelete filtname</TT></B>
 	<BLOCKQUOTE>
 	delete existing filter '<TT>filtname</TT>'.
 	Current filter and filters used by tracks cannot be deleted.
 	</BLOCKQUOTE>
 
+<A name="func_filtrename"></A>
 <B><TT>filtrename filtname newname</TT></B>
 	<BLOCKQUOTE>
 	rename filter '<TT>filtname</TT>' to '<TT>newname</TT>'
 	</BLOCKQUOTE>
 
+<A name="func_filtexists"></A>
 <B><TT>filtexists filtname</TT></B>
 	<BLOCKQUOTE>
 	returns 1 if <TT>filtname</TT> is a filter, 0 otherwise
 	</BLOCKQUOTE>
 
+<A name="func_filtreset"></A>
 <B><TT>filtreset filtname</TT></B>
 	<BLOCKQUOTE>
 	removes all rules from the filter <TT>filtname</TT>
 	</BLOCKQUOTE>
 
+<A name="func_filtinfo"></A>
 <B><TT>filtinfo filtname</TT></B>
 	<BLOCKQUOTE>
 	lists the rules of the given filter
 	</BLOCKQUOTE>
 
+<A name="func_filtsetcurchan"></A>
+<B><TT>filtsetcurchan filtname channame</TT></B>
+	<BLOCKQUOTE>
+	sets the default channel of filter
+	<TT>filtname</TT> to <TT>channame</TT>.
+	</BLOCKQUOTE>
+
+<A name="func_filtgetcurchan"></A>
+<B><TT>filtgetcurchan filtname</TT></B>
+	<BLOCKQUOTE>
+	returns the default channel 
+	of <TT>filtname</TT>, returns <TT>nil</TT> if none
+	</BLOCKQUOTE>
+
+<A name="func_filtswapichan"></A>
 <B><TT>filtswapichan filtname oldchan newchan</TT></B>
 	<BLOCKQUOTE>
 	changes the input channel of 
@@ -1007,6 +1076,7 @@ Without any midi-devices Midish will be probably useless.
 	to <TT>oldchan</TT>,
 	</BLOCKQUOTE>
 
+<A name="func_filtswapidev"></A>
 <B><TT>filtswapidev filtname olddev newdev</TT></B>
 	<BLOCKQUOTE>
 	changes the input device of 
@@ -1016,16 +1086,19 @@ Without any midi-devices Midish will be probably useless.
 	to <TT>olddev</TT>
 	</BLOCKQUOTE>
 
+<A name="func_filtdevdrop"></A>
 <B><TT>filtdevdrop filtname inputdev</TT></B>
 	<BLOCKQUOTE>
 	make filter drop events from device <TT>inputdev</TT>
 	</BLOCKQUOTE>
 
+<A name="func_filtnodevdrop"></A>
 <B><TT>filtnodevdrop filtname inputdev</TT></B>
 	<BLOCKQUOTE>
 	remove <TT>devdrop</TT> rules that drop events from device <TT>inputdev</TT>
 	</BLOCKQUOTE>
 
+<A name="func_filtdevmap"></A>
 <B><TT>filtdevmap filtname inputdev outputdev</TT></B>
 	<BLOCKQUOTE>
 	route all events from device <TT>inputdev</TT>
@@ -1034,42 +1107,58 @@ Without any midi-devices Midish will be probably useless.
 	duplicated
 	</BLOCKQUOTE>
 
+<A name="func_filtnodevmap"></A>
 <B><TT>filtnodevmap filtname outputdev</TT></B>
 	<BLOCKQUOTE>
 	remove <TT>devmap</TT> rules that route events to 
 	device number <TT>outputdev</TT>. 
 	</BLOCKQUOTE>
 
-
+<A name="func_filtchandrop"></A>
 <B><TT>filtchandrop filtname inputchan</TT></B>
 	<BLOCKQUOTE>
 	make filter drop events from channel <TT>inputchan</TT>
 	</BLOCKQUOTE>
 
-<B><TT>filtchandrop filtname inputchan</TT></B>
+<A name="func_filtnochandrop"></A>
+<B><TT>filtnochandrop filtname inputchan</TT></B>
 	<BLOCKQUOTE>
 	remove <TT>chandrop</TT> rules that 
 	drop events from channel <TT>inputchan</TT>
 	</BLOCKQUOTE>
 
-<B><TT>filtchanmap filtname outputchan</TT></B>
+<A name="func_filtchanmap"></A>
+<B><TT>filtchanmap filtname inputchan outputchan</TT></B>
+	<BLOCKQUOTE>
+	route all events from channel <TT>inputchan</TT> 
+	(ie device/midi-channel pair)
+	to channel <TT>outputchan</TT>. If multiple channel maps are 
+	defined for the same input channle then events are 
+	duplicated
+	</BLOCKQUOTE>
+
+<A name="func_filtnochanmap"></A>
+<B><TT>filtnochanmap filtname outputchan</TT></B>
 	<BLOCKQUOTE>
 	remove channel map rules that route events to channel 
 	<TT>outputchan</TT>. 
 	</BLOCKQUOTE>
 
+<A name="func_filtctldrop"></A>
 <B><TT>filtctldrop filtname inchan inctl</TT></B>
 	<BLOCKQUOTE>
 	make the filter drop controller number <TT>inctl</TT> 
 	on channel <TT>inctl</TT>.
 	</BLOCKQUOTE>
 
+<A name="func_filtnoctldrop"></A>
 <B><TT>filtnoctldrop filtname inchan inctl</TT></B>
 	<BLOCKQUOTE>
 	remove <TT>ctldrop</TT> rules that drop controller number 
 	<TT>inctl</TT> 	on channel <TT>inctl</TT>.
 	</BLOCKQUOTE>
 
+<A name="func_filtctlmap"></A>
 <B><TT>filtctlmap filtname inchan outchan inctl outctl</TT></B>
 	<BLOCKQUOTE>
 	route controller <TT>inctl</TT> from <TT>inchan</TT>
@@ -1078,18 +1167,21 @@ Without any midi-devices Midish will be probably useless.
 	channel and the same input controller then events are duplicated
 	</BLOCKQUOTE>
 
+<A name="func_filtnoctlmap"></A>
 <B><TT>filtnoctlmap filtname outchan outctl</TT></B>
 	<BLOCKQUOTE>
 	remove <TT>ctlmap</TT> rules that route controllers to
 	controller <TT>outctl</TT>, channel <TT>outchan</TT>.
 	</BLOCKQUOTE>
 
+<A name="func_filtkeydrop"></A>
 <B><TT>filtkeydrop filtname inchan keystart keyend</TT></B>
 	<BLOCKQUOTE>
 	drop notes between <TT>keystart</TT> and <TT>keyend</TT>
 	on channel <TT>inchan</TT>.
 	</BLOCKQUOTE>
 
+<A name="func_filtnokeydrop"></A>
 <B><TT>filtnokeydrop filtname inchan keystart keyend</TT></B>
 	<BLOCKQUOTE>
 	remove <TT>keydrop</TT> rule that drop notes between 
@@ -1097,7 +1189,7 @@ Without any midi-devices Midish will be probably useless.
 	on channel <TT>inchan</TT>.
 	</BLOCKQUOTE>
 
-
+<A name="func_filtkeymap"></A>
 <B><TT>filtkeymap filtname inchan outchan keystart keyend keyplus</TT></B>
 	<BLOCKQUOTE>
 	route note events from channel <TT>inchan</TT> and
@@ -1107,7 +1199,7 @@ Without any midi-devices Midish will be probably useless.
 	channel and key-range then events are duplicated
 	</BLOCKQUOTE>
 
-
+<A name="func_filtnokeymap"></A>
 <B><TT>filtnokeymap filtname outchan keystart keyend</TT></B>
 	<BLOCKQUOTE>
 	remove <TT>keymap</TT> rules that route note events 
@@ -1116,27 +1208,32 @@ Without any midi-devices Midish will be probably useless.
 
 <H2>11.4 System exclusive messages functions</H2>
 
+<A name="func_sysexnew"></A>
 <B><TT>sysexnew sysexname</TT></B>
 	<BLOCKQUOTE>
 	create a new bank of sysex messages named <TT>sysexname</TT>
 	</BLOCKQUOTE>
 
+<A name="func_sysexdelete"></A>
 <B><TT>sysexdelete sysexname</TT></B>
 	<BLOCKQUOTE>
 	delete the bank of sysex messages named <TT>sysexname</TT>.
 	Current 'sysex' cannot be deleted.
 	</BLOCKQUOTE>
 
+<A name="func_sysexrename"></A>
 <B><TT>sysexrename sysexname newname</TT></B>
 	<BLOCKQUOTE>
 	rename sysex bank '<TT>sysexname</TT>' to '<TT>newname</TT>'
 	</BLOCKQUOTE>
 
+<A name="func_sysexexists"></A>
 <B><TT>sysexexists sysexname</TT></B>
 	<BLOCKQUOTE>
 	returns 1 if <TT>sysexname</TT> is a sysex bank, 0 otherwise
 	</BLOCKQUOTE>
 
+<A name="func_sysexclear"></A>
 <B><TT>sysexclear sysexname pattern</TT></B>
 	<BLOCKQUOTE>
 	removes all sysex messages starting with <TT>pattern</TT>
@@ -1145,6 +1242,7 @@ Without any midi-devices Midish will be probably useless.
 	sysex message.
 	</BLOCKQUOTE>
 
+<A name="func_sysexsetunit"></A>
 <B><TT>sysexsetunit sysexname newunit pattern</TT></B>
 	<BLOCKQUOTE>
 	set device number to <TT>newunit</TT> 
@@ -1154,6 +1252,7 @@ Without any midi-devices Midish will be probably useless.
 	sysex message.
 	</BLOCKQUOTE>
 
+<A name="func_sysexadd"></A>
 <B><TT>sysexadd sysexname unit data</TT></B>
 	<BLOCKQUOTE>
 	adds to sysex bank <TT>sysexname</TT>
@@ -1162,6 +1261,7 @@ Without any midi-devices Midish will be probably useless.
 	the message will be sent
 	</BLOCKQUOTE>
 
+<A name="func_sysexinfo"></A>
 <B><TT>sysexinfo sysexname</TT></B>
 	<BLOCKQUOTE>
 	print debug info about sysex bank <TT>sysexname</TT>
@@ -1169,6 +1269,7 @@ Without any midi-devices Midish will be probably useless.
 
 <H2>11.5 Real-time functions</H2>
 
+<A name="func_songidle"></A>
 <B><TT>songidle</TT></B>
 	<BLOCKQUOTE>
 	puts midi input to the midi output,
@@ -1176,6 +1277,7 @@ Without any midi-devices Midish will be probably useless.
 	or through the current track's filter (if any).
 	</BLOCKQUOTE>
 
+<A name="func_songplay"></A>
 <B><TT>songplay</TT></B>
 	<BLOCKQUOTE>
 	plays the song from the current position.
@@ -1183,6 +1285,7 @@ Without any midi-devices Midish will be probably useless.
 	or through the current track's filter (if any).
 	</BLOCKQUOTE>
 
+<A name="func_songrecord"></A>
 <B><TT>songrecord</TT></B>
 	<BLOCKQUOTE>
 	plays the song and records the input.
@@ -1190,6 +1293,7 @@ Without any midi-devices Midish will be probably useless.
 	or through the current track's filter (if any).
 	</BLOCKQUOTE>
 
+<A name="func_sendraw"></A>
 <B><TT>sendraw device arrayofbytes</TT></B>
 	<BLOCKQUOTE>
 	sends raw midi data to device number '<TT>device</TT>',
@@ -1202,6 +1306,7 @@ Without any midi-devices Midish will be probably useless.
 
 <H2>11.6 Song functions</H2>
 
+<A name="func_songsetcurquant"></A>
 <B><TT>songsetcurquant tics</TT></B>
 	<BLOCKQUOTE>
 	set the number of tics in the time scale 
@@ -1209,11 +1314,13 @@ Without any midi-devices Midish will be probably useless.
 	Currently this value is not used in real-time.
 	</BLOCKQUOTE>
 
+<A name="func_songgetcurquant"></A>
 <B><TT>songgetcurquant tics</TT></B>
 	<BLOCKQUOTE>
 	get the number of tics in the time scale.
 	</BLOCKQUOTE>
 
+<A name="func_songsetcurpos"></A>
 <B><TT>songsetcurpos measure</TT></B>
 	<BLOCKQUOTE>
 	set the current song position pointer to
@@ -1221,57 +1328,67 @@ Without any midi-devices Midish will be probably useless.
 	will start a that position
 	</BLOCKQUOTE>
 
+<A name="func_songgetcurpos"></A>
 <B><TT>songgetcurpos</TT></B>
 	<BLOCKQUOTE>
 	returns the current measure ie the
 	current song position pointer
 	</BLOCKQUOTE>
 
+<A name="func_songsetcurtrack"></A>
 <B><TT>songsetcurtrack trackname</TT></B>
 	<BLOCKQUOTE>
 	set the current track ie the track to be recorded
 	</BLOCKQUOTE>
 
+<A name="func_songgetcurtrack"></A>
 <B><TT>songgetcurtrack</TT></B>
 	<BLOCKQUOTE>
 	returns the current track (if any) or <TT>nil</TT>
 	</BLOCKQUOTE>
 
+<A name="func_songsetcurfilt"></A>
 <B><TT>songsetcurfilt filtname</TT></B>
 	<BLOCKQUOTE>
 	set the current filter ie the one used (with
 	songplay and songidle).
 	</BLOCKQUOTE>
 
+<A name="func_songgetcurfilt"></A>
 <B><TT>songgetcurfilt</TT></B>
 	<BLOCKQUOTE>
 	returns the current filter
 	or <TT>'nil'</TT> if none
 	</BLOCKQUOTE>
 
+<A name="func_songsetcursysex"></A>
 <B><TT>songsetcursysex sysexname</TT></B>
 	<BLOCKQUOTE>
 	set the current sysex bank, 
 	ie the one that will be recorded
 	</BLOCKQUOTE>
 
+<A name="func_songgetcursysex"></A>
 <B><TT>songgetcursysex</TT></B>
 	<BLOCKQUOTE>
 	returns the current sysex bank
 	or <TT>'nil'</TT> if none
 	</BLOCKQUOTE>
 
+<A name="func_songsetcurchan"></A>
 <B><TT>songsetcurchan channame</TT></B>
 	<BLOCKQUOTE>
 	set the current (named) channel.
 	</BLOCKQUOTE>
 
+<A name="func_songgetcurchan"></A>
 <B><TT>songgetcurchan</TT></B>
 	<BLOCKQUOTE>
 	returns the name of the current channel 
 	or <TT>'nil'</TT> if none
 	</BLOCKQUOTE>
 
+<A name="func_songsetunit"></A>
 <B><TT>songsetunit tpu</TT></B>
 	<BLOCKQUOTE>
 	set the time resolution of the sequencer to <TT>tpu</TT>
@@ -1281,17 +1398,20 @@ Without any midi-devices Midish will be probably useless.
 	default of the midi standard.
 	</BLOCKQUOTE>
 
+<A name="func_songgetunit"></A>
 <B><TT>songgetunit</TT></B>
 	<BLOCKQUOTE>
 	returns the number of tics per unit note
 	</BLOCKQUOTE>
 
+<A name="func_songsettempo"></A>
 <B><TT>songsettempo measure bpm</TT></B>
 	<BLOCKQUOTE>
 	sets the tempo to <TT>bpm</TT> beats per
 	minute at measure <TT>measure</TT>
 	</BLOCKQUOTE>
 
+<A name="func_songtimeins"></A>
 <B><TT>songtimeins from amount numerator denominator</TT></B>
 	<BLOCKQUOTE>
 	inserts <TT>amount</TT> blank measures at measure
@@ -1299,6 +1419,7 @@ Without any midi-devices Midish will be probably useless.
 	by numerator/denominator.
 	</BLOCKQUOTE>
 
+<A name="func_songtimerm"></A>
 <B><TT>songtimerm from amount</TT></B>
 	<BLOCKQUOTE>
 	deletes <TT>amount</TT> measures starting at
@@ -1307,24 +1428,28 @@ Without any midi-devices Midish will be probably useless.
 	<TT>from</TT> measure.
 	</BLOCKQUOTE>
 
+<A name="func_songtimeinfo"></A>
 <B><TT>songtimeinfo</TT></B>
 	<BLOCKQUOTE>
 	print the meta-track (tempo changes, time signature
 	changes
 	</BLOCKQUOTE>
 
+<A name="func_songinfo"></A>
 <B><TT>songinfo</TT></B>
 	<BLOCKQUOTE>
 	display some info about the default values of
 	the song
 	</BLOCKQUOTE>
 
+<A name="func_songsave"></A>
 <B><TT>songsave filename</TT></B>
 	<BLOCKQUOTE>
 	saves the song in a file, <TT>filename</TT>
 	is a quoted string.
 	</BLOCKQUOTE>
 
+<A name="func_songload"></A>
 <B><TT>songload filename</TT></B>
 	<BLOCKQUOTE>
 	load the song from a file named <TT>filename</TT>.
@@ -1332,6 +1457,7 @@ Without any midi-devices Midish will be probably useless.
 	the load command failed
 	</BLOCKQUOTE>
 
+<A name="func_songreset"></A>
 <B><TT>songreset</TT></B>
 	<BLOCKQUOTE>
 	destroy completely the song, useful to
@@ -1339,12 +1465,14 @@ Without any midi-devices Midish will be probably useless.
 	program
 	</BLOCKQUOTE>
 
+<A name="func_songexportsmf"></A>
 <B><TT>songexportsmf filename</TT></B>
 	<BLOCKQUOTE>
 	saves the song into a standard midi file, <TT>filename</TT>
 	is a quoted string.
 	</BLOCKQUOTE>
 
+<A name="func_songimportsmf"></A>
 <B><TT>songimportsmf filename</TT></B>
 	<BLOCKQUOTE>
 	loads the song from a standard midi file, <TT>filename</TT>
@@ -1354,12 +1482,14 @@ Without any midi-devices Midish will be probably useless.
 
 <H2>11.7 Device functions</H2>
 
+<A name="func_devlist"></A>
 <B><TT>devlist</TT></B>
 	<BLOCKQUOTE>
 	returns the list of attached devices
 	(list of numbers)
 	</BLOCKQUOTE>
 
+<A name="func_devattach"></A>
 <B><TT>devattach devnum filename</TT></B>
 	<BLOCKQUOTE>
 	attach midi device <TT>filename</TT> as
@@ -1367,11 +1497,13 @@ Without any midi-devices Midish will be probably useless.
 	is a quoted string.
 	</BLOCKQUOTE>
 
+<A name="func_devdetach"></A>
 <B><TT>devdetach devnum</TT></B>
 	<BLOCKQUOTE>
 	detach device number <TT>devnum</TT>
 	</BLOCKQUOTE>
 
+<A name="func_devmaster"></A>
 <B><TT>devsetmaster devnum</TT></B>
 	<BLOCKQUOTE>
 	set device number <TT>devnum</TT> to be the master clock source.
@@ -1380,12 +1512,14 @@ Without any midi-devices Midish will be probably useless.
 	will act as master device.
 	</BLOCKQUOTE>
 
+<A name="func_devgetmaster"></A>
 <B><TT>devgetmaster devnum</TT></B>
 	<BLOCKQUOTE>
 	return the current master device. If non, <TT>nil</TT> is
 	returned.
 	</BLOCKQUOTE>
 
+<A name="func_devsendrt"></A>
 <B><TT>devsendrt devnum bool</TT></B>
 	<BLOCKQUOTE>
 	If <TT>bool</TT> is true, the real-time information (midi tics, 
@@ -1393,7 +1527,8 @@ Without any midi-devices Midish will be probably useless.
 	number <TT>devnum</TT>. 
 	Overwise no real-time midi events are transmitted.
 	</BLOCKQUOTE>
-		
+	
+<A name="func_devticrate"></A>
 <B><TT>devticrate devnum ticrate</TT></B>
 	<BLOCKQUOTE>
 	set the number of tics per unit note that are transmitted
@@ -1402,6 +1537,7 @@ Without any midi-devices Midish will be probably useless.
 	its not recommended to change it.
 	</BLOCKQUOTE>
 	
+<A name="func_devinfo"></A>
 <B><TT>devinfo devnum</TT></B>
 	<BLOCKQUOTE>
 	Print some information about the midi device.
@@ -1409,43 +1545,50 @@ Without any midi-devices Midish will be probably useless.
 
 <H2>11.8 Misc. functions</H2>
 
+<A name="func_metroswitch"></A>
 <B><TT>metroswitch number</TT></B>
 	<BLOCKQUOTE>
 	if <TT>number</TT> is equal to zero then the metronome is disabled
 	else it is enabled
 	</BLOCKQUOTE>	
 
+<A name="func_metroconf"></A>
 <B><TT>metroconf eventhi eventlo</TT></B>
 	<BLOCKQUOTE>	
 	select the notes that the metronome plays. The
 	pair of events must be note-ons
 	</BLOCKQUOTE>
 	
+<A name="func_info"></A>
 <B><TT>info</TT></B>
 	<BLOCKQUOTE>
 	display the list of built-in and user-defined
 	procedures and global varables
 	</BLOCKQUOTE>
 
+<A name="func_print"></A>
 <B><TT>print expression</TT></B>
 	<BLOCKQUOTE>
 	displays the value of the expression
 	</BLOCKQUOTE>
 
+<A name="func_exec"></A>
 <B><TT>exec filename</TT></B>
 	<BLOCKQUOTE>
 	reads and executes the script from a file, <TT>filename</TT>
 	is a quoted string.
 	</BLOCKQUOTE>
 
+<A name="func_debug"></A>
 <B><TT>debug flag val</TT></B>
 	<BLOCKQUOTE>
-	sets debug-flag <TT>flag</TT> to (integer) value <TT>val</TT>. 
+	set debug-flag <TT>flag</TT> to (integer) value <TT>val</TT>. 
 	If <TT>val=0</TT> the corresponding debug-info are
 	turned off. <TT>flag</TT> can be: <TT>parse</TT>, <TT>exec</TT>, 
 	<TT>rmidi</TT> and <TT>filt</TT>
 	</BLOCKQUOTE>
 
+<A name="func_panic"></A>
 <B><TT>panic</TT></B>
 	<BLOCKQUOTE>
 	causes the sequencer to core-dump
