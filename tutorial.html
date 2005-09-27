@@ -137,7 +137,7 @@ Midish uses the following objects to represent a project:
 </UL>
 
 The above objects are groupped in a ''project'' (a song) and manipulated
-in prompt mode by issuing commands on the prompt.
+in prompt mode by issuing interactively commands.
 
 <P>
 Performance mode is used to play/record the project. When performance
@@ -146,71 +146,69 @@ channel configuration events are sent to them. There are three
 performance modes:
 
 <UL>
-<LI><B>"Idle" mode</B>
+<LI><B>"Idle" mode</B><BR>
 	The midi input passes through the <I>current filter</I>
 	and the result is sent to the midi output. No tracks are
 	played or recorded.
-<PRE>				   	
-+---------+		+------------+     	+----------+
-|	  |	        |	     |		|	   |
-| midi in |------------>|   filter   |--------->| midi out |
-|  	  |		|	     |	   	|	   |
-+---------+		+------------+     	+----------+
-</PRE>
+	<PRE>				   	
+	+---------+		+------------+     	+----------+
+	|	  |	        |	     |		|	   |
+	| midi in |------------>|   filter   |--------->| midi out |
+	|  	  |		|	     |	   	|	   |
+	+---------+		+------------+     	+----------+
+	</PRE>
 
-<LI><B>Play mode</B>
+<LI><B>Play mode</B><BR>
 	The midi input passes through the <I>current filter</I>
 	the result is mixed with the currently played tracks
 	and finally sent to the midi output. No tracks are recorded.
-<PRE>				   	
-			+--------------+	    
-			| track_1 play |---\
-			+--------------+   |
-					   |
-			     ...        ---+
-					   |
-			+--------------+   |    
-			| track_N play |---+
-			+--------------+   |
-					   |
-+---------+		+------------+     |	+----------+
-|	  |	        |	     |	   \--->|	   |
-| midi in |------------>|   filter   |--------->| midi out |
-|  	  |		|	     |	   	|	   |
-+---------+		+------------+     	+----------+
-</PRE>
-	
+	<PRE>				   	
+				+--------------+	    
+				| track_1 play |---\
+				+--------------+   |
+						   |
+				     ...        ---+
+						   |
+				+--------------+   |    
+				| track_N play |---+
+				+--------------+   |
+						   |
+	+---------+		+------------+     |	+----------+
+	|	  |	        |	     |	   \--->|	   |
+	| midi in |------------>|   filter   |--------->| midi out |
+	|  	  |		|	     |	   	|	   |
+	+---------+		+------------+     	+----------+
+	</PRE>
 
-
-<LI><B>Record mode</B>
+<LI><B>Record mode</B><BR>
 	The midi input passes through the <I>current filter</I>
 	and is recorded to th <I>current track</I>. 
 	The result is mixed with the currently played tracks
 	and finally sent to the midi output. System excusive
 	messages are recorded to the <I>current sysex</I> without
 	being passed through the filter.
-<PRE>				   	
-			+--------------+	    
-			| track_1 play |---\
-			+--------------+   |
-					   |
-			     ...        ---+
-					   |
-			+--------------+   |    
-			| track_N play |---+
-			+--------------+   |
-					   |
-+---------+		+------------+     |	+----------+
-|	  |	        |	     |	   \--->|	   |
-| midi in |-----+------>|   filter   |----+---->| midi out |
-|  	  |	|	|	     |	  | 	|	   |
-+---------+	|	+------------+    | 	+----------+
-		|			  |
-		|			  |	+----------------+
-		|	+--------------+  \---->| track_X record |
-		\------>| sysex record |	+----------------+
-			+--------------+
-</PRE>
+	<PRE>				   	
+				+--------------+	    
+				| track_1 play |---\
+				+--------------+   |
+						   |
+				     ...        ---+
+						   |
+				+--------------+   |    
+				| track_N play |---+
+				+--------------+   |
+						   |
+	+---------+		+------------+     |	+----------+
+	|	  |	        |	     |	   \--->|	   |
+	| midi in |-----+------>|   filter   |----+---->| midi out |
+	|  	  |	|	|	     |	  | 	|	   |
+	+---------+	|	+------------+    | 	+----------+
+			|			  |
+			|			  |	+----------------+
+			|	+--------------+  \---->| track_X record |
+			\------>| sysex record |	+----------------+
+				+--------------+
+	</PRE>
 </UL>
 	
 The above performace modes are started respectively with
@@ -239,29 +237,28 @@ the console).
 	<P>
 	<B>Note:</B>
 	To make easier the import/export procedure from systems 
-	with different configurations, I strongly recommend to 
-	attach the main sound module (the one you use mostly)
+	with different configurations, it's strongly recommended to 
+	attach the main sound module (the mostly used one)
 	as device number 0.
 	
 	<P>
 	In order to check that the sound module is properly configured
-	play the demo song: put your module (output midi device) 
-	in "general midi" mode and type:
+	play the demo song:
 	<PRE>
 	songload "sample.sng"
 	songplay
 	</PRE>
-
+	
 	(hit control-C to stop playback).
-	When your configuration is setup, put your "devattach" 
-	commands in your <TT>$HOME/.midishrc</TT>. It will be
-	automatically executed the next time you run midish.
+	When the configuration is setup, put the "devattach" 
+	commands in the user's <TT>$HOME/.midishrc</TT>. It will be
+	automatically executed the next time midish is run.
 	
 <A name="filt"></A>
 <H1>3 Filtering/routing</H1>
 
 	<P>
-	Midish supports midi filtering: you can define <I>a filter</I> to 
+	Midish supports midi filtering: <I>filters</I> 
 	transform input events and send them to the output. 
 	
 	Filters are in general used to:
