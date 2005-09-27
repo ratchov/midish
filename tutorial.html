@@ -57,7 +57,7 @@
 
 <A name="intro"></A>
 <H1>1 Introduction</H1>
-
+<H2>1.1 Invocation</H2>
 	<P>
 	Midish is a MIDI sequencer/filter driven by a command-line 
 	interpreter (like a shell).
@@ -75,12 +75,6 @@
 	rmidish
 	</PRE>
 
-	Actually <TT>rmidish</TT> is a front-end to midish; if it is
-	not installed, you can start <TT>midish</TT> as follows:
-	<PRE>
-	midish
-	</PRE>
-	
 	At the prompt you can issue commands, like:
 	<PRE>
 	print "hello world"
@@ -102,6 +96,129 @@
 	This mode is typically used for playback and record.
 	To stop performance mode, hit control-C (or send an interrupt
 	signal (SIGINT) to midish).	
+
+
+<H2>1.2 How does it work</H2>
+Midish uses the following objects to represent a project:
+
+<UL>
+<LI> <B>Midi devices:</B><BR>
+	these are actual midi devices (keyboards, sound modules,
+	external sequencers...) from which events are received and/or to which
+	they are sent. 
+
+<LI> <B>Filters:</B><BR>
+	a filter a set of rules that says which midi event to discard
+	and how to transform incoming events. The filter also sanitises the
+	input midi stream by removing nested notes, duplicate controllers and
+	other anomalies. 
+
+<LI><B>Channels:</B><BR>
+	a channel is an a output {device midi-channel} pair that
+	represent an instrument. A channel holds some properties like patch
+	number, volume, reverb depth or other controllers. 
+
+<LI><B>Tracks:</B><BR>
+	tracks represent pieces of music: they hold midi voice events
+	(notes, controllers ...). Tracks aren't bound to a particular
+	channel and can contain events from any channel. 
+
+<LI><B>Sysex banks:</B> <BR>
+	a sysex bank is a set of system exclusive messages. They
+	will be sent to midi devices when performance mode is entered. 
+
+<LI><B>The "meta-track":</B><BR> 
+	it is a particular hidden track that contains
+	only special events like tempo changes and time signature changes. 
+
+<LI><B>Song parameters</B>: <BR>
+	these are miscelaneus parameters like the
+	metronome configuration, the current selection... 
+</UL>
+
+The above objects are groupped in a ''project'' (a song) and manipulated
+in prompt mode by issuing commands on the prompt.
+
+<P>
+Performance mode is used to play/record the project. When performance
+mode is entered, midi devices are opened, and all sysex messages and
+channel configuration events are sent to them. There are three
+performance modes:
+
+<UL>
+<LI><B>"Idle" mode</B>
+	The midi input passes through the <I>current filter</I>
+	and the result is sent to the midi output. No tracks are
+	played or recorded.
+<PRE>				   	
++---------+		+------------+     	+----------+
+|	  |	        |	     |		|	   |
+| midi in |------------>|   filter   |--------->| midi out |
+|  	  |		|	     |	   	|	   |
++---------+		+------------+     	+----------+
+</PRE>
+
+<LI><B>Play mode</B>
+	The midi input passes through the <I>current filter</I>
+	the result is mixed with the currently played tracks
+	and finally sent to the midi output. No tracks are recorded.
+<PRE>				   	
+			+--------------+	    
+			| track_1 play |---\
+			+--------------+   |
+					   |
+			     ...        ---+
+					   |
+			+--------------+   |    
+			| track_N play |---+
+			+--------------+   |
+					   |
++---------+		+------------+     |	+----------+
+|	  |	        |	     |	   \--->|	   |
+| midi in |------------>|   filter   |--------->| midi out |
+|  	  |		|	     |	   	|	   |
++---------+		+------------+     	+----------+
+</PRE>
+	
+
+
+<LI><B>Record mode</B>
+	The midi input passes through the <I>current filter</I>
+	and is recorded to th <I>current track</I>. 
+	The result is mixed with the currently played tracks
+	and finally sent to the midi output. System excusive
+	messages are recorded to the <I>current sysex</I> without
+	being passed through the filter.
+<PRE>				   	
+			+--------------+	    
+			| track_1 play |---\
+			+--------------+   |
+					   |
+			     ...        ---+
+					   |
+			+--------------+   |    
+			| track_N play |---+
+			+--------------+   |
+					   |
++---------+		+------------+     |	+----------+
+|	  |	        |	     |	   \--->|	   |
+| midi in |-----+------>|   filter   |----+---->| midi out |
+|  	  |	|	|	     |	  | 	|	   |
++---------+	|	+------------+    | 	+----------+
+		|			  |
+		|			  |	+----------------+
+		|	+--------------+  \---->| track_X record |
+		\------>| sysex record |	+----------------+
+			+--------------+
+</PRE>
+</UL>
+	
+The above performace modes are started respectively with
+<TT>songidle</TT>, <TT>songplay</TT>, <TT>songrecord</TT>. Performance
+mode is blocking (no commands can be issued on the prompt). To return
+again to prompt mode, send a interrupt signal (SIGINT) to midish (hit control-C on
+the console).
+
 
 <A name="dev"></A>
 <H1>2 Device setup</H1>
