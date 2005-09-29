@@ -1584,8 +1584,12 @@ Without any midi-devices Midish will be probably useless.
 	<BLOCKQUOTE>
 	set debug-flag <TT>flag</TT> to (integer) value <TT>val</TT>. 
 	If <TT>val=0</TT> the corresponding debug-info are
-	turned off. <TT>flag</TT> can be: <TT>parse</TT>, <TT>exec</TT>, 
-	<TT>rmidi</TT> and <TT>filt</TT>
+	turned off. <TT>flag</TT> can be: 
+	<UL>
+	<LI><TT>rmidi</TT> - show raw midi trafic on stderr
+	<LI><TT>filt</TT> - show events passing through the current filter 
+	<LI><TT>song</TT> - show start/stop events
+	</UL>
 	</BLOCKQUOTE>
 
 <A name="func_panic"></A>
