@@ -200,3 +200,34 @@ user_func_chaninfo(struct exec_s *o, struct data_s **r) {
 	return 1;
 }
 
+unsigned
+user_func_chansetcurinput(struct exec_s *o, struct data_s **r) {
+	unsigned dev, ch;
+	struct songchan_s *c;
+	struct data_s *l;
+	
+	if (!exec_lookupchan_getref(o, "channame", &c) ||
+	    !exec_lookuplist(o, "inputchan", &l)) {
+		return 0;
+	}
+	if (!data_num2chan(l, &dev, &ch)) {
+		return 0;
+	}
+	c->curinput_dev = dev;
+	c->curinput_ch = ch;
+	return 1;
+}
+
+
+unsigned
+user_func_changetcurinput(struct exec_s *o, struct data_s **r) {
+	struct songchan_s *c;
+	
+	if (!exec_lookupchan_getref(o, "channame", &c)) {
+		return 0;
+	}
+	*r = data_newlist(NULL);
+	data_listadd(*r, data_newlong(c->curinput_dev));
+	data_listadd(*r, data_newlong(c->curinput_ch));
+	return 1;
+}

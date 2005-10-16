@@ -171,7 +171,12 @@ rule_dbg(struct rule_s *o) {
 		dbg_puts(" keylo=");
 		dbg_putu(o->keylo);
 		dbg_puts(" keyplus=");
-		dbg_putu(o->keyplus);
+		if (o->keyplus < 0) {
+			dbg_puts("-");
+			dbg_putu(-o->keyplus);
+		} else {
+			dbg_putu(o->keyplus);
+		}
 	}
 }
 

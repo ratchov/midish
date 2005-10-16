@@ -69,6 +69,7 @@ unsigned exec_lookupev(struct exec_s *o, char *name, struct ev_s *ev);
 unsigned exec_lookupevspec(struct exec_s *o, char *name, struct evspec_s *e);
 
 void	 data_print(struct data_s *d);
+unsigned data_num2chan(struct data_s *o, unsigned *dev, unsigned *ch);
 unsigned data_list2chan(struct data_s *o, unsigned *dev, unsigned *ch);
 unsigned data_list2range(struct data_s *d, unsigned min, unsigned max, unsigned *lo, unsigned *hi);
 unsigned data_matchsysex(struct data_s *d, struct sysex_s *sx, unsigned *res);
@@ -106,6 +107,8 @@ unsigned user_func_changetch(struct exec_s *o, struct data_s **r);
 unsigned user_func_changetdev(struct exec_s *o, struct data_s **r);
 unsigned user_func_chanconfev(struct exec_s *o, struct data_s **r);
 unsigned user_func_chaninfo(struct exec_s *o, struct data_s **r);
+unsigned user_func_changetcurinput(struct exec_s *o, struct data_s **r);
+unsigned user_func_chansetcurinput(struct exec_s *o, struct data_s **r);
  
 /* sysex */
 

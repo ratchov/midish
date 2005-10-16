@@ -71,8 +71,8 @@ songchan_new(char *name) {
 	o = (struct songchan_s *)mem_alloc(sizeof(struct songchan_s));
 	name_init(&o->name, name);
 	track_init(&o->conf);
-	o->dev = 0;
-	o->ch = 0;
+	o->dev = o->curinput_dev = 0;
+	o->ch = o->curinput_ch = 0;
 	return o;
 }
 

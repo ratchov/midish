@@ -250,6 +250,7 @@ exec_runrcfile(struct exec_s *o) {
 	if (stat(ETC_PATH "/" RC_NAME, &st) == 0) {
 		return exec_runfile(o, ETC_PATH "/" RC_NAME);
 	}
+	return 1;
 }
 
 extern char *optarg;

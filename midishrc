@@ -1,5 +1,5 @@
 #
-# set midi device config
+# midi devices config
 #
 #devattach 0 "/dev/rmidi4"
 #devattach 1 "/dev/rmidi3"
@@ -30,7 +30,7 @@ proc devdrop i {
 	filtdevdrop [songgetcurfilt] $i
 }
 proc devmap i o {
-	filtdevmap [songgetcurfilt] $i $o
+	filtdevmap [songgetcurfilt]  $i $o
 }
 proc chandrop i {
 	filtchanmap [songgetcurfilt] $i
@@ -38,12 +38,18 @@ proc chandrop i {
 proc chanmap i o {
 	filtchanmap [songgetcurfilt] $i $o
 }
-
 proc ctldrop i ic {
 	filtctldrop [songgetcurfilt] $i $ic
 }
 proc ctlmap i o ic oc {
-	filtctlmap [songgetcurfilt] $i $o $ic $oc
+	filtctlmap [songgetcurfilt]  $i $o $ic $oc
+}
+proc transpose i o halftones {
+	filtkeymap [songgetcurfilt]  $i $o 0 127 $halftones
+}
+proc split i o1 o2 {
+	filtkeymap [songgetcurfilt]  $i $o1   0  59 0
+	filtkeymap [songgetcurfilt]  $i $o2  60 127 0
 }
 
 #
@@ -344,5 +350,4 @@ proc bal    v { let c = [songgetcurchan]; chanconfev $c {ctl $c 8  $v}; }
 proc pan    v { let c = [songgetcurchan]; chanconfev $c {ctl $c 10 $v}; }
 proc reverb v { let c = [songgetcurchan]; chanconfev $c {ctl $c 91 $v}; }
 proc chorus v { let c = [songgetcurchan]; chanconfev $c {ctl $c 93 $v}; }
-
 

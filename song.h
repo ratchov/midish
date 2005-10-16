@@ -43,7 +43,10 @@
 struct songchan_s {
 	struct name_s name;
 	struct track_s conf;
+	/* device and midichan of the donc chan */
 	unsigned dev, ch;
+	/* default source dev/chan */
+	unsigned curinput_dev, curinput_ch;		
 };
 
 struct songfilt_s {

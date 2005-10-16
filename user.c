@@ -448,6 +448,35 @@ data_print(struct data_s *d) {
 }
 
 	/*
+	 * convert 2 integer lists to channels
+	 */
+	 
+unsigned
+data_num2chan(struct data_s *o, unsigned *res_dev, unsigned *res_ch) {
+	long dev, ch;
+
+	if (o->type == DATA_LIST ||
+	    o == NULL || 
+	    o->next == NULL || 
+	    o->next->next != NULL ||
+	    o->type != DATA_LONG || 
+	    o->next->type != DATA_LONG) {
+		cons_err("bad {dev midichan} in spec");
+		return 0;
+	}
+	dev = o->val.num;
+	ch = o->next->val.num;
+	if (ch < 0 || ch > EV_MAXCH || 
+	    dev < 0 || dev > EV_MAXDEV) {
+		cons_err("bad dev/midichan ranges");
+		return 0;
+	}
+	*res_dev = dev;
+	*res_ch = ch;
+	return 1;
+}
+
+	/*
 	 * convert lists to channels, 'data' can be
 	 * 	- a reference to an existing songchan
 	 *	- a pair of integers '{ dev midichan }'
@@ -456,27 +485,9 @@ data_print(struct data_s *d) {
 unsigned
 data_list2chan(struct data_s *o, unsigned *res_dev, unsigned *res_ch) {
 	struct songchan_s *i;
-	long dev, ch;
 
 	if (o->type == DATA_LIST) {
-		if (!o->val.list || 
-		    !o->val.list->next || 
-		    o->val.list->next->next ||
-		    o->val.list->type != DATA_LONG || 
-		    o->val.list->next->type != DATA_LONG) {
-			cons_err("bad {dev midichan} in spec");
-			return 0;
-		}
-		dev = o->val.list->val.num;
-		ch = o->val.list->next->val.num;
-		if (ch < 0 || ch > EV_MAXCH || 
-		    dev < 0 || dev > EV_MAXDEV) {
-			cons_err("bad dev/midichan ranges");
-			return 0;
-		}
-		*res_dev = dev;
-		*res_ch = ch;
-		return 1;
+		return data_num2chan(o, res_dev, res_ch);
 	} else if (o->type == DATA_REF) {
 		i = song_chanlookup(user_song, o->val.ref);
 		if (i == NULL) {
@@ -858,6 +869,11 @@ user_mainloop(void) {
 	exec_newbuiltin(exec, "chanconfev", user_func_chanconfev,
 			name_newarg("channame",
 			name_newarg("event", NULL)));
+	exec_newbuiltin(exec, "chansetcurinput", user_func_chansetcurinput, 
+			name_newarg("channame", 
+			name_newarg("inputchan", NULL)));
+	exec_newbuiltin(exec, "changetcurinput", user_func_changetcurinput,
+			name_newarg("channame", NULL));
 
 	exec_newbuiltin(exec, "sysexlist", user_func_sysexlist, NULL);
 	exec_newbuiltin(exec, "sysexnew", user_func_sysexnew, 
