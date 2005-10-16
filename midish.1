@@ -66,13 +66,21 @@ The options are as follows:
 .It Fl b
 Do not process 
 .Pa "$HOME/.midishrc" 
+or
+.Pa "/etc/midishrc"
 and stop on the first error on the standard input. Useful for scripting
 .It Fl v
 Print additionnal info before each line of input, useful to
 front-ends and for dubugging.
 .El
 .Pp
-Once midish started, the interpreter starts prompting for commands 
+Once midish started, the interpreter 
+processes the 
+.Pa "$HOME/.midishrc" 
+file (or
+.Pa "/etc/midishrc"
+if the later dosn't exist)
+and starts prompting for commands.
 Certain commands (such as playback, recording) are
 blocking, they can be resumed by sending interrupt signal to 
 .Nm
@@ -84,7 +92,11 @@ refer the
 .Sh FILES
 .Bl -tag -width "$HOME/.midishrc" -compact
 .It Pa "$HOME/.midishrc"
-commands processed on startup
+startup script
+.It Pa "/etc/midishrc"
+startup script (if 
+.Pa "/etc/midishrc"
+doesn't exist)
 .It Pa "/dev/rmidiN"
 .Xr midi 1
 devices used by
