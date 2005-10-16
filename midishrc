@@ -297,7 +297,8 @@ proc gmon devnum {
 #
 # configure an instrument for a given general midi patch
 #
-proc gmp chan patch {
+proc gmp patch {
+	let chan = [songgetcurchan]
 	chanconfev $chan { pc $chan ($patch - 1) }
 }
 

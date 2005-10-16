@@ -34,6 +34,8 @@
  
 #include <sys/param.h>
 #include <sys/time.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <poll.h>
@@ -51,7 +53,11 @@
 #include "exec.h"
 
 #ifndef RC_NAME
-#define RC_NAME		".midishrc"
+#define RC_NAME		"midishrc"
+#endif
+
+#ifndef ETC_PATH
+#define ETC_PATH	"/etc"
 #endif
 
 #define MIDI_BUFSIZE	1024
@@ -232,14 +238,18 @@ unsigned
 exec_runrcfile(struct exec_s *o) {
 	char *home;
 	char name[PATH_MAX];
+	struct stat st;
 	
 	home = getenv("HOME");
-	if (home == NULL) {
-		home = ".";
+	if (home != NULL) {
+		snprintf(name, PATH_MAX, "%s" "/" "." RC_NAME, home);
+		if (stat(name, &st) == 0) {
+			return exec_runfile(o, name);
+		}
+	}		
+	if (stat(ETC_PATH "/" RC_NAME, &st) == 0) {
+		return exec_runfile(o, ETC_PATH "/" RC_NAME);
 	}
-	
-	snprintf(name, PATH_MAX, "%s" "/" RC_NAME, home);
-	return exec_runfile(o, name);
 }
 
 extern char *optarg;
