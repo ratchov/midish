@@ -487,7 +487,7 @@ data_list2chan(struct data_s *o, unsigned *res_dev, unsigned *res_ch) {
 	struct songchan_s *i;
 
 	if (o->type == DATA_LIST) {
-		return data_num2chan(o, res_dev, res_ch);
+		return data_num2chan(o->val.list, res_dev, res_ch);
 	} else if (o->type == DATA_REF) {
 		i = song_chanlookup(user_song, o->val.ref);
 		if (i == NULL) {
