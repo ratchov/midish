@@ -52,6 +52,7 @@
 <LI><A href="#export">Import/export standard MIDI files</A>
 <LI><A href="#interpreter">The interpreter's language</A>
 <LI><A href="#changes">Changes</A>
+<LI><A href="#attributes">Project attributes</A>
 <LI><A href="#ev">Events and event ranges specification</A>
 <LI><A href="#language">Language reference</A>
 <LI><A href="#functs">Function reference</A>
@@ -1011,179 +1012,6 @@ the console).
         songexportsmf "mysong.mid"
         </PRE>
 
-<A name="attributes"></A><H1>Project attributes</H1>
-
-<H2>Device attributes</H2>
-
-	The following table summarises the device attributes:
-	
-	<P align="center">
-	<TABLE border="1">
-	<TR>
-	<TH>attrubute
-	<TH>description
-	<TR>
-	<TD>unit number
-	<TD>integer that is used to reference the device
-	<TR>
-	<TD>ticrate
-	<TD>number of tic per unit note, default is 96, which corresponds
-		to the midi standard
-	<TR>
-	<TD>sendrt flag
-	<TD>boolean; if sendrt = true, the real-time events
-		(like start, stop, tics) are transmitted to the midi device.
-	</TABLE>
-
-
-<H2>Channel attributes</H2>
-
-	The following table summarises the channel attributes:
-	
-	<P align="center">
-	<TABLE border="1">
-	<TR>
-	<TH>attrubute
-	<TH>description
-	<TR>
-	<TD>name
-	<TD>identifier used to reference the channel
-	<TR>
-	<TD>{dev chan}
-	<TD>device and midi channel to which midi events are sent
-	<TR>
-	<TD>conf
-	<TD>events that are sent when performance mode is entered
-	<TR>
-	<TD>curinput
-	<TD>default input {dev&nbsp;chan} pair. This value isn't used in
-		real-time, however it can be uses as default
-		value when adding new values to a filter
-		that uses this channel.
-	</TABLE>
-
-<H2>Filter attributes</H2>
-
-	The following table summarises the filter attributes:
-	
-	<P align="center">
-	<TABLE border="1">
-	<TR>
-	<TH>attrubute
-	<TH>description
-	<TR>
-	<TD>name
-	<TD>identifier used to reference the fitler
-	<TR>
-	<TD>rules set
-	<TD>set of rules that handle midi events
-	<TR>
-	<TD>current channel
-	<TD>default channel. This value isn't used in real-time, 
-		however it can be used as default value when
-		adding new rules to the filter.
-	</TABLE>
-
-
-<H2>Track attributes</H2>
-
-	The following table summarises the track attributes:
-	
-	<P align="center">
-	<TABLE border="1">
-	<TR>
-	<TH>attrubute
-	<TH>description
-	<TR>
-	<TD>name
-	<TD>identifier used to reference the track
-	<TR>
-	<TD>mute flag
-	<TD>if the mute = true, the the track is not played on playback
-	<TR>
-	<TD>current filter
-	<TD>default filter. The track is recorded
-		with this filter. If there is no current filter, 
-		then is is recorded with the song's default fitler.
-	</TABLE>
-
-
-<H2>Sysex attributes</H2>
-
-	The following table summarises the sysex back attributes:
-	
-	<P align="center">
-	<TABLE border="1">
-	<TR>
-	<TH>attrubute
-	<TH>description
-	<TR>
-	<TD>name
-	<TD>identifier used to reference the sysex back
-	<TR>
-	<TD>list of messages
-	<TD>each message in the list contains
-		the actual message and the unit number of the device
-		to which the message has to be sent.
-	</TABLE>
-
-<H2>Song attributes</H2>
-
-	The following table summarises the song attributes:
-	
-	<P align="center">
-	<TABLE border="1">
-	<TR>
-	<TH>attrubute
-	<TH>description
-	<TR>
-	<TD>meta track
-	<TD>a track containing tempo changes and time signature changes
-	<TR>
-	<TD>tics_per_unit
-	<TD>number of midi tics per unit note, the default value is 96
-		 which corresponds to the midi standard.
-	<TR>
-	<TD>metronome flag
-	<TD>if the metronome = true, then the metronome is audible
-	<TR>
-	<TD>metro_hi
-	<TD>a note-on event that is sent on the begining of every measure
-		if the metronome is enabled
-	<TR>
-	<TD>metro_lo
-	<TD>a note-on event that is sent on the begining of every beat
-		if the metronome is enabled
-	<TR>
-	<TD>curtrack
-	<TD>The track that will be recorded
-	<TR>
-	<TD>curfilt
-	<TD>default filter. The filter with which the 
-		default trach is recorded if it hasn't its 
-		default filter.
-	<TR>
-	<TD>curchan
-	<TD>default channel. This value isn't used in real-time, 
-		however it can be used as default value when
-		adding new rules to the filter.
-	<TR>
-	<TD>curpos
-	<TD>current position (in measures) within the song. Playback
-		and record start from this postions.
-	<TR>
-	<TD>curquant
-	<TD>current quatisation step. This value isn't used in real-time, 
-		however it can be used as default value for
-		the track editing functions
-	<TR>
-	<TD>curinput
-	<TD>default input {dev&nbsp;chan} pair. This value isn't used in
-		real-time, however it can be uses as default
-		value when adding new values to a filter
-		that uses this channel.
-	</TABLE>
-
 <A name="interpreter"></A><H1>The interpreter's language</H1>
 
         <P> 
@@ -1320,15 +1148,194 @@ the console).
         <LI> added filters the ability to limit midi traffic
                 (one controller, one bender, one aftertouch per tic)
                 
-        <LI> make the filter strip duplicate controllers, pitch bends and
+        <LI> make the filter drop duplicate controllers, pitch bends and
                 aftertouches
         <LI> added global and per filter current channel: 
                 <TT>songgetcurchan</TT>,
                 <TT>songsetcurchan</TT>,
                 <TT>filtgetcurchan</TT> and
                 <TT>filtsetcurchan</TT>.
+	<LI> added global and per chann current input:
+                <TT>songgetcurinput</TT>,
+                <TT>songsetcurinput</TT>,
+                <TT>changetcurinput</TT> and
+                <TT>chansetcurinput</TT>.
         <LI> added <TT>trackchanlist</TT> and improved <TT>songinfo</TT>        
         </UL>
+
+<A name="attributes"></A><H1>Project attributes</H1>
+
+<H2>Device attributes</H2>
+
+	The following table summarises the device attributes:
+	
+	<P align="center">
+	<TABLE border="1">
+	<TR>
+	<TH>attrubute
+	<TH>description
+	<TR>
+	<TD>unit number
+	<TD>integer that is used to reference the device
+	<TR>
+	<TD>ticrate
+	<TD>number of tic per unit note, default is 96, which corresponds
+		to the midi standard
+	<TR>
+	<TD>sendrt flag
+	<TD>boolean; if sendrt = true, the real-time events
+		(like start, stop, tics) are transmitted to the midi device.
+	</TABLE>
+
+
+<H2>Channel attributes</H2>
+
+	The following table summarises the channel attributes:
+	
+	<P align="center">
+	<TABLE border="1">
+	<TR>
+	<TH>attrubute
+	<TH>description
+	<TR>
+	<TD>name
+	<TD>identifier used to reference the channel
+	<TR>
+	<TD>{dev&nbsp;chan}
+	<TD>device and midi channel to which midi events are sent
+	<TR>
+	<TD>conf
+	<TD>events that are sent when performance mode is entered
+	<TR>
+	<TD>curinput
+	<TD>default input {dev&nbsp;chan} pair. This value isn't used in
+		real-time, however it can be uses as default
+		value when adding new values to a filter
+		that uses this channel.
+	</TABLE>
+
+<H2>Filter attributes</H2>
+
+	The following table summarises the filter attributes:
+	
+	<P align="center">
+	<TABLE border="1">
+	<TR>
+	<TH>attrubute
+	<TH>description
+	<TR>
+	<TD>name
+	<TD>identifier used to reference the fitler
+	<TR>
+	<TD>rules set
+	<TD>set of rules that handle midi events
+	<TR>
+	<TD>current channel
+	<TD>default channel. This value isn't used in real-time, 
+		however it can be used as default value when
+		adding new rules to the filter.
+	</TABLE>
+
+
+<H2>Track attributes</H2>
+
+	The following table summarises the track attributes:
+	
+	<P align="center">
+	<TABLE border="1">
+	<TR>
+	<TH>attrubute
+	<TH>description
+	<TR>
+	<TD>name
+	<TD>identifier used to reference the track
+	<TR>
+	<TD>mute flag
+	<TD>if the mute = true, the the track is not played on playback
+	<TR>
+	<TD>current filter
+	<TD>default filter. The track is recorded
+		with this filter. If there is no current filter, 
+		then is is recorded with the song's default fitler.
+	</TABLE>
+
+
+<H2>Sysex attributes</H2>
+
+	The following table summarises the sysex back attributes:
+	
+	<P align="center">
+	<TABLE border="1">
+	<TR>
+	<TH>attrubute
+	<TH>description
+	<TR>
+	<TD>name
+	<TD>identifier used to reference the sysex back
+	<TR>
+	<TD>list of messages
+	<TD>each message in the list contains
+		the actual message and the unit number of the device
+		to which the message has to be sent.
+	</TABLE>
+
+<H2>Song attributes</H2>
+
+	The following table summarises the song attributes:
+	
+	<P align="center">
+	<TABLE border="1">
+	<TR>
+	<TH>attrubute
+	<TH>description
+	<TR>
+	<TD>meta track
+	<TD>a track containing tempo changes and time signature changes
+	<TR>
+	<TD>tics_per_unit
+	<TD>number of midi tics per unit note, the default value is 96
+		 which corresponds to the midi standard.
+	<TR>
+	<TD>metronome flag
+	<TD>if the metronome = true, then the metronome is audible
+	<TR>
+	<TD>metro_hi
+	<TD>a note-on event that is sent on the begining of every measure
+		if the metronome is enabled
+	<TR>
+	<TD>metro_lo
+	<TD>a note-on event that is sent on the begining of every beat
+		if the metronome is enabled
+	<TR>
+	<TD>curtrack
+	<TD>default track: the track that will be recorded in record mode
+	<TR>
+	<TD>curfilt
+	<TD>default filter. The filter with which the 
+		default trach is recorded if it hasn't its 
+		default filter.
+	<TR>
+	<TD>curchan
+	<TD>default channel. This value isn't used in real-time, 
+		however it can be used as default value when
+		adding new rules to the filter.
+	<TR>
+	<TD>curpos
+	<TD>current position (in measures) within the song. Playback
+		and record start from this postions.
+	<TR>
+	<TD>curquant
+	<TD>current quatisation step in tics. 
+		This value isn't used in real-time, 
+		however it can be used as default value for
+		the track editing functions
+	<TR>
+	<TD>curinput
+	<TD>default input {dev&nbsp;chan} pair. This value isn't used in
+		real-time, however it can be uses as default
+		value when adding new values to a filter
+		that uses this channel.
+	</TABLE>
 
 <A name="ev"></A><H1>Events and event ranges specification</H1>
 <A name="ev_ev"></A><H2>Event specification</H2>
