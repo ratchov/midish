@@ -1,4 +1,4 @@
-- fix manual and midishrc file
+- fix manual to relatee recent midishrc changes
 
 - check (one by one) that every function works and
   that the documetation is accurate. Make a release.

@@ -2608,50 +2608,11 @@ the console).
                 <BLOCKQUOTE>
                 set the current filter to <TT>filtname</TT>
                 </BLOCKQUOTE>
-                
-        <B><TT>devdrop devnum</TT></B>
-                <BLOCKQUOTE>
-                make the current filter drop events from 
-                device number <TT>devnum</TT>
-                </BLOCKQUOTE>
         
-        <B><TT>devmap idevnum odevnum</TT></B>
+        <B><TT>ctldrop ictl</TT></B>
                 <BLOCKQUOTE>
-                make the current filter route events
-                from device number <TT>idevnum</TT>
-                to device <TT>odevnum</TT>
-                </BLOCKQUOTE>
-
-        <B><TT>chandrop chan</TT></B>
-                <BLOCKQUOTE>
-                make the current filter drop events from
-                {channel device} pair <TT>chan</TT>
-                </BLOCKQUOTE>
-        
-        <B><TT>chanmap ichan ochan</TT></B>
-                <BLOCKQUOTE>
-                make the current filter route events
-                from {channel&nbsp;device} pair <TT>ichan</TT>
-                to {channel&nbsp;device} pair <TT>ochan</TT>
-                </BLOCKQUOTE>
-
-        <B><TT>chandrop chan</TT></B>
-                <BLOCKQUOTE>
-                make the current filter drop events from
-                {device&nbsp;channel} pair <TT>chan</TT>
-                </BLOCKQUOTE>
-        
-        <B><TT>chanmap ichan ochan</TT></B>
-                <BLOCKQUOTE>
-                make the current filter route events
-                from {channel&nbsp;device} pair <TT>ichan</TT>
-                to {device&nbsp;channel} pair <TT>ochan</TT>
-                </BLOCKQUOTE>
-        
-        <B><TT>ctldrop ichan ictl</TT></B>
-                <BLOCKQUOTE>
-                make the current filter drop controller number
-                <TT>ictl</TT> on {device&nbsp;channel} pair <TT>ichan</TT>.
+                make the current filter drop controller number <TT>ictl</TT>
+		on the current input
                 </BLOCKQUOTE>
 
         <B><TT>ctlmap ichan ochan ictl octl</TT></B>

@@ -5,62 +5,79 @@
 #devattach 1 "/dev/rmidi3"
 
 #
-# create a new filter 
+# set the current input channel
 #
-proc nf name { 
+proc ci input {
+	songsetcurinput $input
+	let filt = [songgetcurfilt]
+	if $filt {
+		let chan = [filtgetcurchan $filt]
+		if $chan {
+			chansetcurinput $chan $input
+		}
+	}
 	let chan = [songgetcurchan]
-	filtnew $name 
-	songsetcurfilt $name
-	filtsetcurchan $name $chan
 	if $chan {
-		filtchanmap $name [changetcurinput $chan] $chan
+		chansetcurinput $chan $input
+	}
+}
+
+#
+# set the current channel
+#
+proc cc chan {
+	songsetcurchan $chan
+	if $chan {
+		songsetcurinput [changetcurinput $chan]
 	}
 }
 
 #
 # set the current filt
 #
-proc cf name { 
-	songsetcurfilt $name
-	if [chanexists $name] {
-		songsetcurchan $name
+proc cf filt { 
+	songsetcurfilt $filt
+	if $filt {
+		cc [filtgetcurchan $filt]
 	}
 }
 
 #
-# some filter rules
+# set the current track
 #
-proc devdrop i {
-	filtdevdrop [songgetcurfilt] $i
+proc ct track { 
+	songsetcurtrack $track
+	if $track {
+		cf [trackgetcurfilt $track]
+	}
 }
-proc devmap i o {
-	filtdevmap [songgetcurfilt]  $i $o
+
+#
+# create a channel and a filter
+#
+proc nc name chan {
+	channew $name $chan
+	chansetcurinput $name [songgetcurinput]
+	songsetcurchan $name
+	filtnew $name 
+	filtsetcurchan $name $name
+	filtchanmap $name [changetcurinput $name] $name
+	songsetcurfilt $name
 }
-proc chandrop i {
-	filtchanmap [songgetcurfilt] $i
+
+#
+# create a new filter 
+#
+proc nf filt { 
+	filtnew $filt
+	let chan = [songgetcurchan]
+	if $chan {
+		filtsetcurchan $filt $chan
+		filtchanmap $filt [changetcurinput $chan] $chan
+	}
+	songsetcurfilt $filt
 }
-proc chanmap i o {
-	filtchanmap [songgetcurfilt] $i $o
-}
-proc ctldrop ic {
-	let filt =  [songgetcurfilt]
-	let ochan = [filtgetcurchan  $filt]
-	let ichan = [changetcurinput $dest]
-	filtctldrop [songgetcurfilt] $i $ic
-}
-proc ctlmap ic oc {
-	let filt = [songgetcurfilt]
-	let dest = [filtgetcurchan $filt]
-	let source = [changetcurinput $dest]
-	filtctlmap $filt $source $dest $ic $oc
-}
-proc transpose o halftones {
-	filtkeymap [songgetcurfilt]  $i $o 0 127 $halftones
-}
-proc split i o1 o2 {
-	filtkeymap [songgetcurfilt]  $i $o1   0  59 0
-	filtkeymap [songgetcurfilt]  $i $o2  60 127 0
-}
+
 
 #
 # create a new track 
@@ -71,35 +88,29 @@ proc nt name {
 	songsetcurtrack $name
 }
 
-#
-# set the current track
-#
-proc ct name { 
-	songsetcurtrack $name
-	if [songgetcurtrack] {
-		let filt = [trackgetcurfilt $name]
-		songsetcurfilt $filt
-		if $filt {
-			songsetcurchan [filtgetcurchan $filt]
-		}
-	}
-}
 
 #
-# set the track's filter
+# some filter rules
 #
-proc tf filt {
-	let track = [songgetcurtrack]
-	tracksetcurfilt $track $filt
+proc ctldrop ic {
+	let filt =  [songgetcurfilt]
+	let ochan = [filtgetcurchan  $filt]
+	let ichan = [changetcurinput $dest]
+	filtctldrop [songgetcurfilt] $i $ic
+}
+proc ctlmap ic oc {
+	let filt =  [songgetcurfilt]
+	let chan =  [filtgetcurchan $filt]
+	let input = [changetcurinput $chan]
+	filtctlmap $filt $input $chan $ic $oc
+}
+proc transpose o halftones {
+	let filt =  [songgetcurfilt]
+	let chan =  [filtgetcurchan $filt]
+	let input = [changetcurinput $chan]
+	filtkeymap $filt $input $chan  0 127 $halftones
 }
 
-#
-# create a new channel
-#
-proc nc name chan {
-	channew $name $chan
-	songsetcurchan $name
-}
 
 #
 # do nothing, just echo trough the configuration of the current track
