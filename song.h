@@ -107,6 +107,7 @@ struct song_s {
 	struct songsx_s *cursx;
 	unsigned curpos;
 	unsigned curquant;
+	unsigned curinput_dev, curinput_ch;		
 };
 
 struct song_s *song_new(void);

@@ -413,6 +413,13 @@ user_func_songinfo(struct exec_s *o, struct data_s **r) {
 	textout_putstr(tout, "curpos ");
 	textout_putlong(tout, user_song->curpos);
 	textout_putstr(tout, "\n");	
+
+	textout_indent(tout);
+	textout_putstr(tout, "curinput {");
+	textout_putlong(tout, user_song->curinput_dev);
+	textout_putstr(tout, " ");
+	textout_putlong(tout, user_song->curinput_ch);
+	textout_putstr(tout, "}\n");
 	return 1;
 }
 
@@ -626,3 +633,27 @@ user_func_songtimeinfo(struct exec_s *o, struct data_s **r) {
 }
 
 
+unsigned
+user_func_songsetcurinput(struct exec_s *o, struct data_s **r) {
+	unsigned dev, ch;
+	struct data_s *l;
+	
+	if (!exec_lookuplist(o, "inputchan", &l)) {
+		return 0;
+	}
+	if (!data_num2chan(l, &dev, &ch)) {
+		return 0;
+	}
+	user_song->curinput_dev = dev;
+	user_song->curinput_ch = ch;
+	return 1;
+}
+
+
+unsigned
+user_func_songgetcurinput(struct exec_s *o, struct data_s **r) {
+	*r = data_newlist(NULL);
+	data_listadd(*r, data_newlong(user_song->curinput_dev));
+	data_listadd(*r, data_newlong(user_song->curinput_ch));
+	return 1;
+}

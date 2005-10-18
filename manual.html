@@ -204,7 +204,7 @@ Midish uses the following objects to represent a project:
         other anomalies. 
 
 <LI><B>Channels:</B><BR>
-        a channel is an a output {device midi-channel} pair that
+        a channel is an a output {device&nbsp;midi-channel} pair that
         represent an instrument. A channel holds some properties like patch
         number, volume, reverb depth or other controllers. 
 
@@ -344,6 +344,7 @@ the console).
         commands in the user's <TT>$HOME/.midishrc</TT>. It will be
         automatically executed the next time midish is run.
         
+
 <A name="chan"></A><H1>Channels</H1>
 
         Because midish handles multiple devices, instead of
@@ -398,28 +399,7 @@ the console).
         chanconfev mybass { ctl mybass 7 125 }
         </PRE>
 
-<H2>Channel attributes</H2>
-
-	The following table summarises the channel attributes:
 	
-	<TABLE>
-	<TR>
-	<TH>attrubute
-	<TH>description
-	<TR>
-	<TD>name
-	<TD>identifier used to reference the channel
-	<TR>
-	<TD>{dev chan}
-	<TD>device and midi channel to which midi events are sent
-	<TR>
-	<TD>conf
-	<TD>events that are sent when performance mode is entered
-	<TR>
-	<TD>curinput
-	
-
-
 
 <A name="filt"></A><H1>Filtering/routing</H1>
 
@@ -529,6 +509,7 @@ the console).
         <P>
         Rules can be listed with <TT>filtinfo</TT>. 
         All filtering rules can be removed with <TT>filtreset</TT>.
+
 
 <H2>Examples</H2>
                 
@@ -1029,6 +1010,179 @@ the console).
         <PRE>
         songexportsmf "mysong.mid"
         </PRE>
+
+<A name="attributes"></A><H1>Project attributes</H1>
+
+<H2>Device attributes</H2>
+
+	The following table summarises the device attributes:
+	
+	<P align="center">
+	<TABLE border="1">
+	<TR>
+	<TH>attrubute
+	<TH>description
+	<TR>
+	<TD>unit number
+	<TD>integer that is used to reference the device
+	<TR>
+	<TD>ticrate
+	<TD>number of tic per unit note, default is 96, which corresponds
+		to the midi standard
+	<TR>
+	<TD>sendrt flag
+	<TD>boolean; if sendrt = true, the real-time events
+		(like start, stop, tics) are transmitted to the midi device.
+	</TABLE>
+
+
+<H2>Channel attributes</H2>
+
+	The following table summarises the channel attributes:
+	
+	<P align="center">
+	<TABLE border="1">
+	<TR>
+	<TH>attrubute
+	<TH>description
+	<TR>
+	<TD>name
+	<TD>identifier used to reference the channel
+	<TR>
+	<TD>{dev chan}
+	<TD>device and midi channel to which midi events are sent
+	<TR>
+	<TD>conf
+	<TD>events that are sent when performance mode is entered
+	<TR>
+	<TD>curinput
+	<TD>default input {dev&nbsp;chan} pair. This value isn't used in
+		real-time, however it can be uses as default
+		value when adding new values to a filter
+		that uses this channel.
+	</TABLE>
+
+<H2>Filter attributes</H2>
+
+	The following table summarises the filter attributes:
+	
+	<P align="center">
+	<TABLE border="1">
+	<TR>
+	<TH>attrubute
+	<TH>description
+	<TR>
+	<TD>name
+	<TD>identifier used to reference the fitler
+	<TR>
+	<TD>rules set
+	<TD>set of rules that handle midi events
+	<TR>
+	<TD>current channel
+	<TD>default channel. This value isn't used in real-time, 
+		however it can be used as default value when
+		adding new rules to the filter.
+	</TABLE>
+
+
+<H2>Track attributes</H2>
+
+	The following table summarises the track attributes:
+	
+	<P align="center">
+	<TABLE border="1">
+	<TR>
+	<TH>attrubute
+	<TH>description
+	<TR>
+	<TD>name
+	<TD>identifier used to reference the track
+	<TR>
+	<TD>mute flag
+	<TD>if the mute = true, the the track is not played on playback
+	<TR>
+	<TD>current filter
+	<TD>default filter. The track is recorded
+		with this filter. If there is no current filter, 
+		then is is recorded with the song's default fitler.
+	</TABLE>
+
+
+<H2>Sysex attributes</H2>
+
+	The following table summarises the sysex back attributes:
+	
+	<P align="center">
+	<TABLE border="1">
+	<TR>
+	<TH>attrubute
+	<TH>description
+	<TR>
+	<TD>name
+	<TD>identifier used to reference the sysex back
+	<TR>
+	<TD>list of messages
+	<TD>each message in the list contains
+		the actual message and the unit number of the device
+		to which the message has to be sent.
+	</TABLE>
+
+<H2>Song attributes</H2>
+
+	The following table summarises the song attributes:
+	
+	<P align="center">
+	<TABLE border="1">
+	<TR>
+	<TH>attrubute
+	<TH>description
+	<TR>
+	<TD>meta track
+	<TD>a track containing tempo changes and time signature changes
+	<TR>
+	<TD>tics_per_unit
+	<TD>number of midi tics per unit note, the default value is 96
+		 which corresponds to the midi standard.
+	<TR>
+	<TD>metronome flag
+	<TD>if the metronome = true, then the metronome is audible
+	<TR>
+	<TD>metro_hi
+	<TD>a note-on event that is sent on the begining of every measure
+		if the metronome is enabled
+	<TR>
+	<TD>metro_lo
+	<TD>a note-on event that is sent on the begining of every beat
+		if the metronome is enabled
+	<TR>
+	<TD>curtrack
+	<TD>The track that will be recorded
+	<TR>
+	<TD>curfilt
+	<TD>default filter. The filter with which the 
+		default trach is recorded if it hasn't its 
+		default filter.
+	<TR>
+	<TD>curchan
+	<TD>default channel. This value isn't used in real-time, 
+		however it can be used as default value when
+		adding new rules to the filter.
+	<TR>
+	<TD>curpos
+	<TD>current position (in measures) within the song. Playback
+		and record start from this postions.
+	<TR>
+	<TD>curquant
+	<TD>current quatisation step. This value isn't used in real-time, 
+		however it can be used as default value for
+		the track editing functions
+	<TR>
+	<TD>curinput
+	<TD>default input {dev&nbsp;chan} pair. This value isn't used in
+		real-time, however it can be uses as default
+		value when adding new values to a filter
+		that uses this channel.
+	</TABLE>
 
 <A name="interpreter"></A><H1>The interpreter's language</H1>
 
@@ -2204,6 +2358,19 @@ the console).
         or <TT>'nil'</TT> if none
         </BLOCKQUOTE>
 
+<A name="func_chansetcurinput"></A>
+<B><TT>songsetcurinput {dev chan}</TT></B>
+        <BLOCKQUOTE>
+        set the (global) default input <TT>{dev chan}</TT> pair.
+	These values are currently not used in realtime.
+        </BLOCKQUOTE>
+
+<A name="func_changetcurinput"></A>
+<B><TT>changetcurinput channame</TT></B>
+        <BLOCKQUOTE>
+        return the (global) default input <TT>{dev chan}</TT> pair.
+        </BLOCKQUOTE>
+
 <A name="func_songsetunit"></A>
 <B><TT>songsetunit tpu</TT></B>
         <BLOCKQUOTE>
@@ -2457,33 +2624,33 @@ the console).
         <B><TT>chanmap ichan ochan</TT></B>
                 <BLOCKQUOTE>
                 make the current filter route events
-                from {channel device} pair <TT>ichan</TT>
-                to {channel device} pair <TT>ochan</TT>
+                from {channel&nbsp;device} pair <TT>ichan</TT>
+                to {channel&nbsp;device} pair <TT>ochan</TT>
                 </BLOCKQUOTE>
 
         <B><TT>chandrop chan</TT></B>
                 <BLOCKQUOTE>
                 make the current filter drop events from
-                {device channel} pair <TT>chan</TT>
+                {device&nbsp;channel} pair <TT>chan</TT>
                 </BLOCKQUOTE>
         
         <B><TT>chanmap ichan ochan</TT></B>
                 <BLOCKQUOTE>
                 make the current filter route events
-                from {channel device} pair <TT>ichan</TT>
-                to {device channel} pair <TT>ochan</TT>
+                from {channel&nbsp;device} pair <TT>ichan</TT>
+                to {device&nbsp;channel} pair <TT>ochan</TT>
                 </BLOCKQUOTE>
         
         <B><TT>ctldrop ichan ictl</TT></B>
                 <BLOCKQUOTE>
                 make the current filter drop controller number
-                <TT>ictl</TT> on {device channel} pair <TT>ichan</TT>.
+                <TT>ictl</TT> on {device&nbsp;channel} pair <TT>ichan</TT>.
                 </BLOCKQUOTE>
 
         <B><TT>ctlmap ichan ochan ictl octl</TT></B>
                 <BLOCKQUOTE>
                 make the current filter route controller number
-                <TT>ictl</TT> on {device channel} pair <TT>ichan</TT>
+                <TT>ictl</TT> on {device&nbsp;channel} pair <TT>ichan</TT>
                 to conroller <TT>octl</TT> on <TT>ochan</TT>
                 </BLOCKQUOTE>
                 

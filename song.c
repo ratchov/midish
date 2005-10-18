@@ -183,6 +183,8 @@ song_init(struct song_s *o) {
 	o->curchan = NULL;
 	o->curpos = 0;
 	o->curquant = 0;
+	o->curinput_dev = 0;
+	o->curinput_ch = 0;
 }
 
 	/*

@@ -1015,6 +1015,9 @@ user_mainloop(void) {
 	exec_newbuiltin(exec, "songgetcurchan", user_func_songgetcurchan, NULL);
 	exec_newbuiltin(exec, "songsetcurchan", user_func_songsetcurchan, 
 			name_newarg("channame", NULL));
+	exec_newbuiltin(exec, "songgetcurinput", user_func_songgetcurinput, NULL);
+	exec_newbuiltin(exec, "songsetcurinput", user_func_songsetcurinput, 
+			name_newarg("inputchan", NULL));
 	exec_newbuiltin(exec, "songinfo", user_func_songinfo, NULL);
 	exec_newbuiltin(exec, "songsave", user_func_songsave, 
 			name_newarg("filename", NULL));

@@ -133,7 +133,7 @@ startmidish(void) {
 }
 
 int
-main() {
+main(void) {
 #define PROMPTLENGTH 20
 	char *rl, prompt[PROMPTLENGTH];
 
