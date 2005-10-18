@@ -398,6 +398,29 @@ the console).
         chanconfev mybass { ctl mybass 7 125 }
         </PRE>
 
+<H2>Channel attributes</H2>
+
+	The following table summarises the channel attributes:
+	
+	<TABLE>
+	<TR>
+	<TH>attrubute
+	<TH>description
+	<TR>
+	<TD>name
+	<TD>identifier used to reference the channel
+	<TR>
+	<TD>{dev chan}
+	<TD>device and midi channel to which midi events are sent
+	<TR>
+	<TD>conf
+	<TD>events that are sent when performance mode is entered
+	<TR>
+	<TD>curinput
+	
+
+
+
 <A name="filt"></A><H1>Filtering/routing</H1>
 
         <P> 
@@ -1180,7 +1203,7 @@ the console).
         <TR>    <TD><TT>bend</TT>       <TD>pitch bend
         </TABLE>
 
-        <P>
+        <P align="left">
         Examples:
         <BR>
         note-on event on device 2, channel 9, note 64 with velocity 100:

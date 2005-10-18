@@ -43,7 +43,7 @@ install-midish:	midish
 		mkdir -p ${EXAMPLES_DIR}
 		cp midish smfplay smfrec ${BIN_DIR}
 		cp midish.1 smfplay.1 smfrec.1 ${MAN1_DIR}
-		cp manual.html tutorial.html ${DOC_DIR}
+		cp README manual.html ${DOC_DIR}
 		cp midishrc sample.sng ${EXAMPLES_DIR}
 
 cons.o:		cons.c dbg.h textio.h cons.h user.h
@@ -89,4 +89,4 @@ install-rmidish:rmidish
 		mkdir -p ${MAN1_DIR}
 		cp rmidish ${BIN_DIR}
 		cp rmidish.1 ${MAN1_DIR}
-		
+

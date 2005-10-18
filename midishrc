@@ -8,9 +8,13 @@
 # create a new filter 
 #
 proc nf name { 
+	let chan = [songgetcurchan]
 	filtnew $name 
 	songsetcurfilt $name
-	filtsetcurchan $name [songgetcurchan]
+	filtsetcurchan $name $chan
+	if $chan {
+		filtchanmap $name [changetcurinput $chan] $chan
+	}
 }
 
 #
@@ -38,13 +42,19 @@ proc chandrop i {
 proc chanmap i o {
 	filtchanmap [songgetcurfilt] $i $o
 }
-proc ctldrop i ic {
+proc ctldrop ic {
+	let filt =  [songgetcurfilt]
+	let ochan = [filtgetcurchan  $filt]
+	let ichan = [changetcurinput $dest]
 	filtctldrop [songgetcurfilt] $i $ic
 }
-proc ctlmap i o ic oc {
-	filtctlmap [songgetcurfilt]  $i $o $ic $oc
+proc ctlmap ic oc {
+	let filt = [songgetcurfilt]
+	let dest = [filtgetcurchan $filt]
+	let source = [changetcurinput $dest]
+	filtctlmap $filt $source $dest $ic $oc
 }
-proc transpose i o halftones {
+proc transpose o halftones {
 	filtkeymap [songgetcurfilt]  $i $o 0 127 $halftones
 }
 proc split i o1 o2 {
