@@ -33,7 +33,7 @@
 
 struct mididev_s {
 	struct mididev_s *next;
-	unsigned unit, in, out;
+	unsigned unit;
 	unsigned ticrate, ticdelta;
 	unsigned sendrt;
 };
@@ -47,7 +47,7 @@ extern struct mididev_s *mididev_byunit[];
 
 void mididev_listinit(void);
 void mididev_listdone(void);
-unsigned mididev_attach(unsigned unit, char *path, unsigned in, unsigned out);
+unsigned mididev_attach(unsigned unit, char *path);
 unsigned mididev_detach(unsigned unit);
 
 #endif /* MIDISH_MIDIDEV_H */

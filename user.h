@@ -158,6 +158,8 @@ unsigned user_func_songsetunit(struct exec_s *o, struct data_s **r);
 unsigned user_func_songgetunit(struct exec_s *o, struct data_s **r);
 unsigned user_func_songsetcurpos(struct exec_s *o, struct data_s **r);
 unsigned user_func_songgetcurpos(struct exec_s *o, struct data_s **r);
+unsigned user_func_songsetcurlen(struct exec_s *o, struct data_s **r);
+unsigned user_func_songgetcurlen(struct exec_s *o, struct data_s **r);
 unsigned user_func_songsetcurquant(struct exec_s *o, struct data_s **r);
 unsigned user_func_songgetcurquant(struct exec_s *o, struct data_s **r);
 unsigned user_func_songsetcurtrack(struct exec_s *o, struct data_s **r);

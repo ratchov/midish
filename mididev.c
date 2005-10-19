@@ -98,7 +98,7 @@ mididev_listdone(void) {
 }
 
 unsigned
-mididev_attach(unsigned unit, char *path, unsigned in, unsigned out) {
+mididev_attach(unsigned unit, char *path) {
 	struct mididev_s *dev;
 
 	if (unit >= DEFAULT_MAXNDEVS) {
@@ -114,8 +114,6 @@ mididev_attach(unsigned unit, char *path, unsigned in, unsigned out) {
 	dev->next = mididev_list;
 	mididev_list = dev;
 	mididev_byunit[unit] = dev;
-	dev->in = in;
-	dev->out = out;
 	dev->unit = unit;	
 	return 1;
 }

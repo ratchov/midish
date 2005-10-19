@@ -56,8 +56,8 @@
 #define RC_NAME		"midishrc"
 #endif
 
-#ifndef RC_PATH
-#define RC_PATH		"/etc"
+#ifndef RC_DIR
+#define RC_DIR		"/etc"
 #endif
 
 #define MIDI_BUFSIZE	1024
@@ -247,8 +247,8 @@ exec_runrcfile(struct exec_s *o) {
 			return exec_runfile(o, name);
 		}
 	}		
-	if (stat(RC_PATH "/" RC_NAME, &st) == 0) {
-		return exec_runfile(o, RC_PATH "/" RC_NAME);
+	if (stat(RC_DIR "/" RC_NAME, &st) == 0) {
+		return exec_runfile(o, RC_DIR "/" RC_NAME);
 	}
 	return 1;
 }

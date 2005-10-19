@@ -94,9 +94,9 @@ proc nt name {
 #
 proc ctldrop ic {
 	let filt =  [songgetcurfilt]
-	let ochan = [filtgetcurchan  $filt]
-	let ichan = [changetcurinput $dest]
-	filtctldrop [songgetcurfilt] $i $ic
+	let chan =  [filtgetcurchan  $filt]
+	let input = [changetcurinput $chan]
+	filtctldrop $filt $input $ic
 }
 proc ctlmap ic oc {
 	let filt =  [songgetcurfilt]
@@ -104,7 +104,7 @@ proc ctlmap ic oc {
 	let input = [changetcurinput $chan]
 	filtctlmap $filt $input $chan $ic $oc
 }
-proc transpose o halftones {
+proc transpose halftones {
 	let filt =  [songgetcurfilt]
 	let chan =  [filtgetcurchan $filt]
 	let input = [changetcurinput $chan]
@@ -123,9 +123,8 @@ proc i  {
 # play the song
 #
 proc p  {
-	metroswitch 0;
-	songplay;
-	shut;
+	metroswitch 0
+	songplay
 }
 
 #
@@ -133,14 +132,14 @@ proc p  {
 # the current position
 #
 proc r  { 
-	metroswitch 1; 
+	tracksetcurfilt [songgetcurtrack] [songgetcurfilt]
 	let curpos = [songgetcurpos]
 	if ($curpos >= 1) {
 		songsetcurpos $curpos - 1
 	}
-	songrecord;
+	metroswitch 1
+	songrecord
 	songsetcurpos $curpos	
-	shut; 
 }
 
 #
@@ -157,6 +156,14 @@ proc g measure {
 	songsetcurpos $measure
 }
 
+
+#
+# change the current selection's length
+#
+proc sel length {
+	songsetcurlen $length
+}
+
 #
 # set note quantum
 #
@@ -167,46 +174,50 @@ proc n denom {
 #
 # quantise
 #
-proc q amount rate {
-	trackquant [songgetcurtrack] [songgetcurpos] $amount $rate [songgetcurquant]
+proc q rate {
+	trackquant [songgetcurtrack] [songgetcurpos] [songgetcurlen] $rate [songgetcurquant]
 } 
 
 #
-# cut a piece of a track
+# cut the current selection on the current track
 #
-proc cut amount {
-	trackcut [songgetcurtrack] [songgetcurpos] $amount [songgetcurquant]
+proc cut amount {	 
+	trackcut [songgetcurtrack] [songgetcurpos] [songgetcurlen] [songgetcurquant]
+}
+
+#
+# insert measures in a track, and select them
+#
+proc ins amount {
+	trackinsert [songgetcurtrack] [songgetcurpos] $amount [songgetcurquant]
+	songsetcurlen $amount
 }
 
 
 #
 # clear a piece of a track
 #
-proc clr amount {
-	trackblank [songgetcurtrack] [songgetcurpos] $amount [songgetcurquant] {}
+proc clr {
+	trackblank [songgetcurtrack] [songgetcurpos] [songgetcurlen] [songgetcurquant] {}
 }
 
-#
-# insert measures in a track
-#
-proc ins amount {
-	trackinsert [songgetcurtrack] [songgetcurpos] $amount [songgetcurquant]
-}
 
 #
-# copy measures in a track
+# copy current selection 'where' measures forward
 #
-proc copy amount where {
+proc copy where {
 	let track = [songgetcurtrack]
 	let from = [songgetcurpos]
-	trackcopy $track $from $amount $track ($where + $from) [songgetcurquant] {}
+	let len = [songgetcurlen]
+	trackcopy $track $from $len $track ($where + $from) [songgetcurquant] {}
 }
 
 #
 # cut a piece of the song
 #
-proc gcut amount {
+proc gcut  {
 	let pos = [songgetcurpos] 
+	let amount = [songgetcurlen] 
 	for i in [tracklist] {
 		trackcut $i $pos $amount [songgetcurquant]
 	}
@@ -220,13 +231,15 @@ proc gins amount {
 	for i in [tracklist] {
 		trackinsert $i $pos $amount [songgetcurquant]
 	}
+	songsetcurlen $amount
 }
 
 #
-# copy a piece of the song
+# copy a piece of the song 'where' measures forward
 #
-proc gcopy amount where {
+proc gcopy where {
 	let from = [songgetcurpos]
+	let amount = [songgetcurlen] 
 	for track in [tracklist] {
 		trackcopy $track $from $amount $track ($where + $from) [songgetcurquant] {}
 	}

@@ -456,6 +456,12 @@ song_output(struct song_s *o, struct textout_s *f) {
 	textout_putstr(f, "\n");
 	textout_indent(f);
 	
+	textout_indent(f);
+	textout_putstr(f, "curlen ");
+	textout_putlong(f, o->curlen);
+	textout_putstr(f, "\n");
+	textout_indent(f);
+
 	textout_putstr(f, "curquant ");
 	textout_putlong(f, o->curquant);
 	textout_putstr(f, "\n");
@@ -1375,6 +1381,14 @@ parse_song(struct parse_s *o, struct song_s *s) {
 					return 0;
 				}
 				s->curpos = num;
+			} else if (str_eq(o->lex.strval, "curlen")) {
+				if (!parse_long(o, ~1U, &num)) {
+					return 0;
+				}
+				if (!parse_nl(o)) {
+					return 0;
+				}
+				s->curlen = num;
 			} else if (str_eq(o->lex.strval, "curquant")) {
 				if (!parse_long(o, ~1U, &num)) {
 					return 0;

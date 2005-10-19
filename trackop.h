@@ -54,6 +54,6 @@ void track_opsetchan(struct track_s *o, unsigned dev, unsigned ch);
 unsigned track_opfindtic(struct track_s *o, unsigned m0);
 void track_optimeinfo(struct track_s *o, unsigned pos, unsigned long *usec24, unsigned *bpm, unsigned *tpb);
 void track_opchaninfo(struct track_s *o, char *map);
-
+void track_opsortconf(struct track_s *o);
 #endif /* MIDISH_TRACKOP_H */
 

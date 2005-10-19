@@ -70,7 +70,7 @@ user_func_devattach(struct exec_s *o, struct data_s **r) {
 	    !exec_lookupstring(o, "path", &path)) {
 		return 0;
 	}
-	return mididev_attach(unit, path, 1, 1);
+	return mididev_attach(unit, path);
 }
 
 unsigned

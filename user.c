@@ -1000,6 +1000,9 @@ user_mainloop(void) {
 	exec_newbuiltin(exec, "songgetcurpos", user_func_songgetcurpos, NULL);
 	exec_newbuiltin(exec, "songsetcurpos", user_func_songsetcurpos, 
 			name_newarg("measure", NULL));
+	exec_newbuiltin(exec, "songgetcurlen", user_func_songgetcurlen, NULL);
+	exec_newbuiltin(exec, "songsetcurlen", user_func_songsetcurlen, 
+			name_newarg("length", NULL));
 	exec_newbuiltin(exec, "songgetcurquant", user_func_songgetcurquant, NULL);
 	exec_newbuiltin(exec, "songsetcurquant", user_func_songsetcurquant, 
 			name_newarg("quantum", NULL));

@@ -8,8 +8,8 @@ READLINE_INCLUDE = -I/usr/local/include # path to readline header files
 READLINE_LIB = -lreadline -ltermcap	# readline libraries
 
 #
-# binaries, documentation, examples and man pages will be installed in 
-# ${BIN_DIR}, ${DOC_DIR}, ${EXAMPLES_DIR}, ${MAN1_DIR}
+# binaries, documentation, man pages and examples will be installed in 
+# ${BIN_DIR}, ${MAN1_DIR}, ${DOC_DIR} and ${EXAMPLES_DIR}
 #
 PREFIX = /usr/local
 BIN_DIR = ${PREFIX}/bin
@@ -34,7 +34,6 @@ clean:
 
 midish:		${MIDISH_OBJS}
 		${CC} ${LDFLAGS} ${MIDISH_OBJS} -o midish
-
 
 install-midish:	midish
 		mkdir -p ${BIN_DIR}

@@ -932,6 +932,7 @@ the console).
         <PRE>
         print [songgetunit]             # tics per unit note
         print [songgetcurpos]           # print current position
+        print [songgetcurlen]        # print current selection length
         print [songgetcurfilt]          # current filter
         print [songgetcurtrack]         # current track
         print [songgetcursysex]
@@ -1322,7 +1323,14 @@ the console).
 	<TR>
 	<TD>curpos
 	<TD>current position (in measures) within the song. Playback
-		and record start from this postions.
+		and record start from this postions. It is also
+		user as the beginning of the current selection
+	<TR>
+	<TD>curlen
+	<TD>length (in measures) of the current selection. 
+		This value isn't used in real-time, 
+		however it can be used as default value in track
+		editing functions.
 	<TR>
 	<TD>curquant
 	<TD>current quatisation step in tics. 
@@ -2301,16 +2309,32 @@ the console).
 <B><TT>songsetcurpos measure</TT></B>
         <BLOCKQUOTE>
         set the current song position pointer to
-        the measure <TT>measure</TT>. record and playback
-        will start a that position
+        the measure <TT>measure</TT>. Record and playback
+        will start a that position.
+	This corresponds also
+	to the start postition of the current selection.
         </BLOCKQUOTE>
 
 <A name="func_songgetcurpos"></A>
 <B><TT>songgetcurpos</TT></B>
         <BLOCKQUOTE>
         returns the current measure ie the
-        current song position pointer
+        current song position pointer. This corresponds
+	to the start postition of the current selection.
         </BLOCKQUOTE>
+
+<A name="func_songsetcurlen"></A>
+<B><TT>songsetcurpos length</TT></B>
+        <BLOCKQUOTE>
+        set the length of the current selection to '<TT>length</TT>' measures.
+        </BLOCKQUOTE>
+
+<A name="func_songgetcurlen"></A>
+<B><TT>songgetcurpos</TT></B>
+        <BLOCKQUOTE>
+        returns the length (in measures) of the current selection.
+        </BLOCKQUOTE>
+
 
 <A name="func_songsetcurtrack"></A>
 <B><TT>songsetcurtrack trackname</TT></B>

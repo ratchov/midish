@@ -154,10 +154,31 @@ user_func_songsetcurpos(struct exec_s *o, struct data_s **r) {
 	return 1;
 }
 
-
 unsigned
 user_func_songgetcurpos(struct exec_s *o, struct data_s **r) {
 	*r = data_newlong(user_song->curpos);
+	return 1;
+}
+
+unsigned
+user_func_songsetcurlen(struct exec_s *o, struct data_s **r) {
+	long len;
+	
+	if (!exec_lookuplong(o, "length", &len)) {
+		return 0;
+	}
+	if (len < 0) {
+		cons_err("'measures' parameter cant be negative");
+		return 0;
+	}
+	user_song->curlen = len;
+	return 1;
+}
+
+
+unsigned
+user_func_songgetcurlen(struct exec_s *o, struct data_s **r) {
+	*r = data_newlong(user_song->curlen);
 	return 1;
 }
 
@@ -412,6 +433,9 @@ user_func_songinfo(struct exec_s *o, struct data_s **r) {
 	textout_putstr(tout, "\n");	
 	textout_putstr(tout, "curpos ");
 	textout_putlong(tout, user_song->curpos);
+	textout_putstr(tout, "\n");	
+	textout_putstr(tout, "curlen ");
+	textout_putlong(tout, user_song->curlen);
 	textout_putstr(tout, "\n");	
 
 	textout_indent(tout);
