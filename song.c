@@ -226,6 +226,8 @@ song_done(struct song_s *o) {
 void
 song_trkadd(struct song_s *o, struct songtrk_s *t) {
 	name_add((struct name_s **)&o->trklist, (struct name_s *)t);
+	song_getcurfilt(o, &t->curfilt);
+	song_setcurtrk(o, t);
 }
 
 	/*
@@ -242,9 +244,9 @@ song_trklookup(struct song_s *o, char *name) {
 unsigned
 song_trkrm(struct song_s *o, struct songtrk_s *t) {
 	struct songtrk_s **i;
+	
 	if (o->curtrk == t) {
-		cons_err("cant delete current track");
-		return 0;
+		o->curtrk = NULL;
 	}
 	i = &o->trklist;
 	while(*i != NULL) {
@@ -267,6 +269,12 @@ song_trkrm(struct song_s *o, struct songtrk_s *t) {
 void
 song_chanadd(struct song_s *o, struct songchan_s *i) {
 	name_add((struct name_s **)&o->chanlist, (struct name_s *)i);
+	if (o->curtrk && o->curtrk->curfilt) {
+		o->curtrk = NULL;
+	}
+	o->curfilt = NULL;
+	song_getcurinput(o, &i->curinput_dev, &i->curinput_ch);
+	song_setcurchan(o, i);
 }
 
 	/*
@@ -297,14 +305,12 @@ song_chanrm(struct song_s *o, struct songchan_s *c) {
 	struct songfilt_s *f;
 
 	if (o->curchan == c) {
-		cons_err("cant delete current chan");
-		return 0;
+		o->curchan = NULL;
 	}
 	for (f = o->filtlist; f != NULL; f = (struct songfilt_s *)f->name.next) {
 		if (f->curchan == c) {
-			cons_err("cant delete filt current chan");
-			return 0;
-		}		
+			f->curchan = NULL;
+		}
 	}	
 
 	i = &o->chanlist;
@@ -325,8 +331,11 @@ song_chanrm(struct song_s *o, struct songchan_s *c) {
 	 */
 
 void
-song_filtadd(struct song_s *o, struct songfilt_s *i) {
-	name_add((struct name_s **)&o->filtlist, (struct name_s *)i);
+song_filtadd(struct song_s *o, struct songfilt_s *f) {
+	name_add((struct name_s **)&o->filtlist, (struct name_s *)f);
+	o->curtrk = NULL;
+	song_getcurchan(o, &f->curchan);
+	song_setcurfilt(o, f);
 }
 
 	/*
@@ -346,13 +355,11 @@ song_filtrm(struct song_s *o, struct songfilt_s *f) {
 	struct songfilt_s **i;
 
 	if (o->curfilt == f) {
-		cons_err("cant delete current filt");
-		return 0;
+		o->curfilt = NULL;
 	}
 	for (t = o->trklist; t != NULL; t = (struct songtrk_s *)t->name.next) {
 		if (t->curfilt == f) {
-			cons_err("cant delete track current filt");
-			return 0;
+			t->curfilt = NULL;
 		}		
 	}	
 	i = &o->filtlist;
@@ -373,8 +380,9 @@ song_filtrm(struct song_s *o, struct songfilt_s *f) {
 	 */
 
 void
-song_sxadd(struct song_s *o, struct songsx_s *i) {
-	name_add((struct name_s **)&o->sxlist, (struct name_s *)i);
+song_sxadd(struct song_s *o, struct songsx_s *x) {
+	name_add((struct name_s **)&o->sxlist, (struct name_s *)x);
+	song_setcursx(o, x);
 }
 
 	/*
@@ -393,8 +401,7 @@ song_sxrm(struct song_s *o, struct songsx_s *f) {
 	struct songsx_s **i;
 
 	if (o->cursx == f) {
-		cons_err("cant delete current sysex");
-		return 0;
+		o->cursx = NULL;
 	}
 	i = &o->sxlist;
 	while(*i != NULL) {
@@ -407,6 +414,83 @@ song_sxrm(struct song_s *o, struct songsx_s *f) {
 	return 1;
 }
 
+
+/* ------------------------------------------------- {get,set}xxx --- */
+
+void
+song_getcursx(struct song_s *o, struct songsx_s **r) {
+	*r = o->cursx;
+}
+
+void
+song_setcursx(struct song_s *o, struct songsx_s *x) {
+	o->cursx = x;
+}
+
+void
+song_getcurtrk(struct song_s *o, struct songtrk_s **r) {
+	*r = o->curtrk;
+}
+
+void
+song_setcurtrk(struct song_s *o, struct songtrk_s *t) {
+	o->curtrk = t;
+}
+
+void
+song_getcurfilt(struct song_s *o, struct songfilt_s **r) {
+	if (o->curtrk && o->curtrk->curfilt) {
+		*r = o->curtrk->curfilt;
+	} else {
+		*r = o->curfilt;
+	}
+}
+
+void
+song_setcurfilt(struct song_s *o, struct songfilt_s *f) {
+	o->curfilt = f;
+	if (o->curtrk) {
+		o->curtrk->curfilt = f;
+	}
+}
+
+void
+song_getcurchan(struct song_s *o, struct songchan_s **r) {
+	if (o->curtrk && o->curtrk->curfilt && o->curtrk->curfilt->curchan) {
+		*r = o->curtrk->curfilt->curchan;
+	} else {
+		*r = o->curchan;
+	}
+}
+
+void
+song_setcurchan(struct song_s *o, struct songchan_s *c) {
+	o->curchan = c;
+	if (o->curtrk && o->curtrk->curfilt) {
+		o->curtrk->curfilt->curchan = c;
+	}
+}
+
+void
+song_getcurinput(struct song_s *o, unsigned *dev, unsigned *ch) {
+	if (o->curtrk && o->curtrk->curfilt && o->curtrk->curfilt->curchan) {
+		*dev = o->curtrk->curfilt->curchan->curinput_dev;
+		*ch = o->curtrk->curfilt->curchan->curinput_ch;
+	} else {
+		*dev = o->curinput_dev;
+		*ch = o->curinput_ch;
+	}
+}
+
+void
+song_setcurinput(struct song_s *o, unsigned dev, unsigned ch) {
+	o->curinput_dev = dev;
+	o->curinput_ch = ch;
+	if (o->curtrk && o->curtrk->curfilt && o->curtrk->curfilt->curchan) {
+		o->curtrk->curfilt->curchan->curinput_dev = dev;
+		o->curtrk->curfilt->curchan->curinput_ch = ch;
+	}
+}
 
 /* ------------------------------------------------- global stuff --- */
 

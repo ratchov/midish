@@ -132,6 +132,16 @@ void song_sxadd(struct song_s *o, struct songsx_s *t);
 struct songsx_s *song_sxlookup(struct song_s *o, char *name);
 unsigned song_sxrm(struct song_s *o, struct songsx_s *t);
 
+void song_getcursx(struct song_s *o, struct songsx_s **r);
+void song_setcursx(struct song_s *o, struct songsx_s *x);
+void song_getcurtrk(struct song_s *o, struct songtrk_s **r);
+void song_setcurtrk(struct song_s *o, struct songtrk_s *t);
+void song_getcurfilt(struct song_s *o, struct songfilt_s **r);
+void song_setcurfilt(struct song_s *o, struct songfilt_s *f);
+void song_getcurchan(struct song_s *o, struct songchan_s **r);
+void song_setcurchan(struct song_s *o, struct songchan_s *c);
+void song_getcurinput(struct song_s *o, unsigned *dev, unsigned *ch);
+void song_setcurinput(struct song_s *o, unsigned dev, unsigned ch);
 
 unsigned song_measuretotic(struct song_s *o, unsigned);
 

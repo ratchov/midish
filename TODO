@@ -1,7 +1,5 @@
-- fix manual to relatee recent midishrc changes
-
 - check (one by one) that every function works and
-  that the documetation is accurate. Make a release.
+  that the documetation is accurate. Make a relsease.
 
 - make song{play,record,idle} scan tracks for controllers,
   pitch bends, prog changes etc... so that the output
@@ -17,3 +15,4 @@
 - receiving 'EV_STOP' in slave-mode make all notes off; why?
 
 - add curves in filt.c
+

@@ -136,12 +136,12 @@
         </PRE>
         </UL>
         <LI>
-        if you don't have a .midishrc, copy the sample file by
-        typing '<TT>cp midishrc ~/.midishrc</TT>' in your shell
-
+        if there isn't a <TT>/etc/midishrc</TT> file, 
+	then copy the sample file by
+        typing '<TT>cp midishrc /etc</TT>' in your shell.
         <LI>
-        read the documentation and edit your <TT>~/.midishrc</TT> in order 
-        to choose your default midi device by using the '<TT>devattach</TT>' 
+        read the documentation and modify <TT>/etc/midishrc</TT> in order 
+        to choose the default midi device by using the '<TT>devattach</TT>' 
         function (example: '<TT>devattach 0 "/dev/rmidi3"</TT>', see next section)
         </UL>
 
@@ -309,6 +309,63 @@ again to prompt mode, send a interrupt signal (SIGINT) to midish (hit control-C 
 the console).
 
 
+<H2>An example</H2>
+
+	Suppose that there are two devices:
+		<UL>
+		<LI><TT>/dev/rmidi4</TT> - a midi sound module
+		<LI><TT>/dev/rmidi3</TT> - a midi keyboard
+		</UL>
+	Thus, the <TT>/etc/midishrc</TT> file contains the
+	following lines:
+	<PRE>
+	devattach 0 "/dev/rmidi4"	# attach the module as dev number 0
+	devattach 1 "/dev/rmidi3"	# attach the keyboard as dev number 1
+	</PRE>
+	
+	The following session shows how to  record a simple track.
+	First, we define a filter  named '<TT>piano</TT>' that
+	routes events from device 1, channel 0 (input channel of
+	the keyboard) to device 0, channel 5  (output channel of
+	the sound module). Then we create a new track
+	'<TT>pi1</TT>', we start recording and we save the song
+	into a file.
+	<PRE>
+	1> filtnew piano			# create filter 'piano'
+	2> filtchanmap piano {1 0} {0 5}	# dev=1,ch=0 -> dev=0,ch=5
+	3> tracknew pi1				# create track 'pi1'
+	4> songrecord				# start recording
+	press control-C to finish
+
+	--interrupt--
+
+	5> songsave "mysong"			# save the song into a file
+	6>					# EOF (control-D) to quit
+	</PRE>
+	
+	<P>
+	The same task can be achieved in a much easier way
+	by using the simple procedures (or macros) defined in the 
+	default <TT>/etc/midisrc</TT>.
+	<PRE>
+	1> ci {1 0}			# select default input {dev, chan}
+	2> ni piano {0 5}		# create piano on dev=0, chan=5
+	3> nt pi1 			# new track named "pi1"
+	4> r				# start recording
+	press control-C to finish
+
+	--interrupt--
+
+	5> save "mysong"		# save to file "mysong"
+	6>				# EOF (control-D) to quit
+	</PRE>
+	
+	<P>
+	<B>Note:</B>
+	It is strongly recommended to define simple procedures
+	and to use them instead of directly using the built-in functions
+	of midish. 
+	
 <A name="dev"></A><H1>Devices setup</H1>
 
         In midish, midi-devices are numbered from 0 to 15.
@@ -496,7 +553,6 @@ the console).
         Filters are defined as follows:
         <PRE>
         filtnew myfilt                  # define filter 'myfilt'
-        songsetcurfilt myfilt           # make 'myfilt' the current filter
         </PRE>
         initially the filter is empty and will send input to output
         as-is. 
@@ -521,7 +577,6 @@ the console).
         (the sound module).
         <PRE>
         filtnew mydevmap                # define filter 'mydevmap'
-        songsetcurfilt mydevmap         # make 'mydevmap' the current filter
         filtdevmap mydevmap 1 0         # make it route device 1 -> device 0
         </PRE>
         To test the filter, start performance mode:
@@ -538,7 +593,6 @@ the console).
         (default drum channel of the sound module).
         <PRE>
         filtnew mydrums                 # define filter 'mydrums'
-        songsetcurfilt mydrums          # make 'mydevmap' the current filter
         filtchanmap mydrums {1 0} {0 9} # route dev/chan {1 0} to {0 9}
         </PRE>
         The device/channel pair is in braces. The first <TT>{1 0}</TT>
@@ -585,7 +639,6 @@ the console).
         sends them on device 0 channel 2 (sound-module).
         <PRE>
         filtnew mypiano                 # define filter 'mypiano'
-        songsetcurfilt mypiano          # make 'mypiano' the current filter
         filtchanmap mypiano {1 0} {0 2} # route dev/chan {1 0} to {0 9}
         filtkeymap  mypiano {1 0} {0 2} 0 127 12
         </PRE>
@@ -613,7 +666,6 @@ the console).
         filtkeymap mysplit  {1 0} {0 2} 0  63  0
         filtchanmap mysplit {1 0} {0 3}
         filtkeymap mysplit  {1 0} {0 3} 64 127 0
-        songsetcurfilt mysplit
         </PRE>
         <P>
         Defining filters seems quite tedious, however it's possible
@@ -735,7 +787,6 @@ the console).
         as-is from all midi devices:
         <PRE>
         tracknew mytrack
-        songsetcurtrack mytrack
         songrecord
         </PRE>
         tracks are played as follows:
@@ -755,10 +806,10 @@ the console).
         <PRE>
         filtnew mypiano
         filtchanmap mypiano {1 0} {0 0}         # dev1/chan0 -> dev0/chan0
-        tracksetcurfilt mypiano
+        tracknew mytrack
         songrecord
         </PRE>
-        
+       	
 <H2>Basic editing of a track</H2>
 
         <P>
@@ -1064,20 +1115,19 @@ the console).
         
         <P>
         Procedures can take arguments. 
-        For instance, let us define a procedure named <TT>nf</TT> 
-        that creates a new filter and then makes it the current filter:
+        For instance, to define a procedure named <TT>nt</TT> 
+        that creates a new track:
         <PRE>
-        proc nf filtname {
-                filtnew $filtname
-                songsetcurfilt $filtname
-        }
+	proc nt name {
+		tracknew $name
+	}
         </PRE>
         After the name of the procedure follows the argument names list
-        that can be arbitrary identifiers. The value of the arguments
+        that can be arbitrary identifiers. The value of an argument
         is obtained by preceding the variable name by the dollar
-        sign ("$"). We can use the above procedure to create a filter:
+        sign ("$"). We can use the above procedure to create a track:
         <PRE>
-        nf myfilt
+        nt myfilt
         </PRE>
         
         A lot of similar procedures are defined in the
@@ -1088,8 +1138,8 @@ the console).
         
         <P>
         Procedure and variables definitions can be
-        stored in the <TT>~/.midishrc</TT> file. It will be
-        automatically executed the next time you run midish.
+        stored in the <TT>~/.midishrc</TT> file (or <TT>/etc/midishrc</TT>). 
+	It will be automatically executed the next time you run midish.
                 
 
 <A name="changes"></A><H1>Changes</H1>

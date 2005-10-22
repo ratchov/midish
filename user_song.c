@@ -60,21 +60,24 @@ user_func_songsetcurchan(struct exec_s *o, struct data_s **r) {
 		return 0;
 	}
 	if (arg->data->type == DATA_NIL) {
-		user_song->curchan = NULL;
+		song_setcurchan(user_song, NULL);
 		return 1;
 	} 
 	if (!exec_lookupchan_getref(o, "channame", &t)) {
 		return 0;
 	}
-	user_song->curchan = t;
+	song_setcurchan(user_song, t);
 	return 1;
 }
 
 
 unsigned
 user_func_songgetcurchan(struct exec_s *o, struct data_s **r) {
-	if (user_song->curchan) {
-		*r = data_newref(user_song->curchan->name.str);
+	struct songchan_s *cur;
+	
+	song_getcurchan(user_song, &cur);
+	if (cur) {
+		*r = data_newref(cur->name.str);
 	} else {
 		*r = data_newnil();
 	}
@@ -92,21 +95,24 @@ user_func_songsetcursysex(struct exec_s *o, struct data_s **r) {
 		return 0;
 	}
 	if (arg->data->type == DATA_NIL) {
-		user_song->cursx = NULL;
+		song_setcursx(user_song, NULL);
 		return 1;
 	} 
 	if (!exec_lookupsx(o, "sysexname", &t)) {
 		return 0;
 	}
-	user_song->cursx = t;
+	song_setcursx(user_song, t);
 	return 1;
 }
 
 
 unsigned
 user_func_songgetcursysex(struct exec_s *o, struct data_s **r) {
-	if (user_song->cursx) {
-		*r = data_newref(user_song->cursx->name.str);
+	struct songsx_s *cur;
+	
+	song_getcursx(user_song, &cur);
+	if (cur) {
+		*r = data_newref(cur->name.str);
 	} else {
 		*r = data_newnil();
 	}
@@ -218,21 +224,24 @@ user_func_songsetcurtrack(struct exec_s *o, struct data_s **r) {
 		return 0;
 	}
 	if (arg->data->type == DATA_NIL) {
-		user_song->curtrk = NULL;
+		song_setcurtrk(user_song, NULL);
 		return 1;
 	} 
 	if (!exec_lookuptrack(o, "trackname", &t)) {
 		return 0;
 	}
-	user_song->curtrk = t;
+	song_setcurtrk(user_song, t);
 	return 1;
 }
 
 
 unsigned
 user_func_songgetcurtrack(struct exec_s *o, struct data_s **r) {
-	if (user_song->curtrk) {
-		*r = data_newref(user_song->curtrk->name.str);
+	struct songtrk_s *cur;
+	
+	song_getcurtrk(user_song, &cur);
+	if (cur) {
+		*r = data_newref(cur->name.str);
 	} else {
 		*r = data_newnil();
 	}
@@ -251,7 +260,7 @@ user_func_songsetcurfilt(struct exec_s *o, struct data_s **r) {
 		return 0;
 	}
 	if (arg->data->type == DATA_NIL) {
-		user_song->curfilt = NULL;
+		song_setcurfilt(user_song, NULL);
 		return 1;
 	} else if (arg->data->type == DATA_REF) {
 		f = song_filtlookup(user_song, arg->data->val.ref);
@@ -259,7 +268,7 @@ user_func_songsetcurfilt(struct exec_s *o, struct data_s **r) {
 			cons_err("no such filt");
 			return 0;
 		}
-		user_song->curfilt = f;
+		song_setcurfilt(user_song, f);
 		return 1;
 	}
 	return 0;
@@ -268,8 +277,11 @@ user_func_songsetcurfilt(struct exec_s *o, struct data_s **r) {
 
 unsigned
 user_func_songgetcurfilt(struct exec_s *o, struct data_s **r) {
-	if (user_song->curfilt) {
-		*r = data_newref(user_song->curfilt->name.str);
+	struct songfilt_s *cur;
+	
+	song_getcurfilt(user_song, &cur);
+	if (cur) {
+		*r = data_newref(cur->name.str);
 	} else {
 		*r = data_newnil();
 	}	
@@ -285,6 +297,7 @@ user_func_songinfo(struct exec_s *o, struct data_s **r) {
 	struct songsx_s *s;
 	struct sysex_s *x;
 	unsigned i, count;
+	unsigned dev, ch;
 	
 	/* print info about channels */	
 
@@ -397,32 +410,36 @@ user_func_songinfo(struct exec_s *o, struct data_s **r) {
 	/* print current values */
 
 	textout_putstr(tout, "curchan ");
-	if (user_song->curchan) {
-		textout_putstr(tout, user_song->curchan->name.str);
+	song_getcurchan(user_song, &c);
+	if (c) {
+		textout_putstr(tout, c->name.str);
 	} else {
 		textout_putstr(tout, "nil");
 	}
 	textout_putstr(tout, "\n");
 
 	textout_putstr(tout, "curfilt ");
-	if (user_song->curfilt) {
-		textout_putstr(tout, user_song->curfilt->name.str);
+	song_getcurfilt(user_song, &f);
+	if (f) {
+		textout_putstr(tout, f->name.str);
 	} else {
 		textout_putstr(tout, "nil");
 	}
 	textout_putstr(tout, "\n");
 
 	textout_putstr(tout, "curtrack ");
-	if (user_song->curtrk) {
-		textout_putstr(tout, user_song->curtrk->name.str);
+	song_getcurtrk(user_song, &t);
+	if (t) {
+		textout_putstr(tout, t->name.str);
 	} else {
 		textout_putstr(tout, "nil");
 	}
 	textout_putstr(tout, "\n");	
 
 	textout_putstr(tout, "cursysex ");
-	if (user_song->cursx) {
-		textout_putstr(tout, user_song->cursx->name.str);
+	song_getcursx(user_song, &s);
+	if (s) {
+		textout_putstr(tout, s->name.str);
 	} else {
 		textout_putstr(tout, "nil");
 	}
@@ -440,9 +457,10 @@ user_func_songinfo(struct exec_s *o, struct data_s **r) {
 
 	textout_indent(tout);
 	textout_putstr(tout, "curinput {");
-	textout_putlong(tout, user_song->curinput_dev);
+	song_getcurinput(user_song, &dev, &ch);
+	textout_putlong(tout, dev);
 	textout_putstr(tout, " ");
-	textout_putlong(tout, user_song->curinput_ch);
+	textout_putlong(tout, ch);
 	textout_putstr(tout, "}\n");
 	return 1;
 }
