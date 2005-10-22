@@ -304,7 +304,7 @@ user_func_songinfo(struct exec_s *o, struct data_s **r) {
 	textout_putstr(tout, "chanlist {\n");
 	textout_shiftright(tout);
 	textout_indent(tout);
-	textout_putstr(tout, "# chan_name,  {devicenum, midichan}\n");
+	textout_putstr(tout, "# chan_name,  {devicenum, midichan}, default_input\n");
 	for (c = user_song->chanlist; c != NULL; c = (struct songchan_s *)c->name.next) {
 		textout_indent(tout);
 		textout_putstr(tout, c->name.str);
@@ -313,6 +313,12 @@ user_func_songinfo(struct exec_s *o, struct data_s **r) {
 		textout_putlong(tout, c->dev);
 		textout_putstr(tout, " ");
 		textout_putlong(tout, c->ch);
+		textout_putstr(tout, "}");
+		textout_putstr(tout, "\t");
+		textout_putstr(tout, "{");
+		textout_putlong(tout, c->curinput_dev);
+		textout_putstr(tout, " ");
+		textout_putlong(tout, c->curinput_ch);
 		textout_putstr(tout, "}");
 		textout_putstr(tout, "\n");
 		
@@ -686,8 +692,7 @@ user_func_songsetcurinput(struct exec_s *o, struct data_s **r) {
 	if (!data_num2chan(l, &dev, &ch)) {
 		return 0;
 	}
-	user_song->curinput_dev = dev;
-	user_song->curinput_ch = ch;
+	song_setcurinput(user_song, dev, ch);
 	return 1;
 }
 

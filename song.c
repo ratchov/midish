@@ -439,8 +439,10 @@ song_setcurtrk(struct song_s *o, struct songtrk_s *t) {
 
 void
 song_getcurfilt(struct song_s *o, struct songfilt_s **r) {
-	if (o->curtrk && o->curtrk->curfilt) {
-		*r = o->curtrk->curfilt;
+	struct songtrk_s *t;
+	song_getcurtrk(o, &t);
+	if (t) {
+		*r = t->curfilt;
 	} else {
 		*r = o->curfilt;
 	}
@@ -448,16 +450,20 @@ song_getcurfilt(struct song_s *o, struct songfilt_s **r) {
 
 void
 song_setcurfilt(struct song_s *o, struct songfilt_s *f) {
+	struct songtrk_s *t;
 	o->curfilt = f;
-	if (o->curtrk) {
-		o->curtrk->curfilt = f;
+	song_getcurtrk(o, &t);
+	if (t) {
+		t->curfilt = f;
 	}
 }
 
 void
 song_getcurchan(struct song_s *o, struct songchan_s **r) {
-	if (o->curtrk && o->curtrk->curfilt && o->curtrk->curfilt->curchan) {
-		*r = o->curtrk->curfilt->curchan;
+	struct songfilt_s *f;
+	song_getcurfilt(o, &f);
+	if (f) {
+		*r = f->curchan;
 	} else {
 		*r = o->curchan;
 	}
@@ -465,17 +471,21 @@ song_getcurchan(struct song_s *o, struct songchan_s **r) {
 
 void
 song_setcurchan(struct song_s *o, struct songchan_s *c) {
+	struct songfilt_s *f;
 	o->curchan = c;
-	if (o->curtrk && o->curtrk->curfilt) {
-		o->curtrk->curfilt->curchan = c;
+	song_getcurfilt(o, &f);
+	if (f) {
+		f->curchan = c;
 	}
 }
 
 void
 song_getcurinput(struct song_s *o, unsigned *dev, unsigned *ch) {
-	if (o->curtrk && o->curtrk->curfilt && o->curtrk->curfilt->curchan) {
-		*dev = o->curtrk->curfilt->curchan->curinput_dev;
-		*ch = o->curtrk->curfilt->curchan->curinput_ch;
+	struct songchan_s *c;
+	song_getcurchan(o, &c);
+	if (c) {
+		*dev = c->curinput_dev;
+		*ch = c->curinput_ch;
 	} else {
 		*dev = o->curinput_dev;
 		*ch = o->curinput_ch;
@@ -484,11 +494,13 @@ song_getcurinput(struct song_s *o, unsigned *dev, unsigned *ch) {
 
 void
 song_setcurinput(struct song_s *o, unsigned dev, unsigned ch) {
+	struct songchan_s *c;
 	o->curinput_dev = dev;
 	o->curinput_ch = ch;
-	if (o->curtrk && o->curtrk->curfilt && o->curtrk->curfilt->curchan) {
-		o->curtrk->curfilt->curchan->curinput_dev = dev;
-		o->curtrk->curfilt->curchan->curinput_ch = ch;
+	song_getcurchan(o, &c);
+	if (c) {
+		c->curinput_dev = dev;
+		c->curinput_ch = ch;
 	}
 }
 
