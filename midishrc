@@ -36,8 +36,9 @@ proc ct track {
 # create a channel and a filter
 #
 proc ni name chan {
-	channew $name $chan
+	songsetcurtrack nil
 	filtnew $name 
+	channew $name $chan
 	filtchanmap $name [songgetcurinput] $name
 }
 

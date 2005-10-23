@@ -658,3 +658,26 @@ track_opchaninfo(struct track_s *o, char *map) {
 	}
 }
 
+void
+track_opconfev(struct track_s *o, struct ev_s *ev) {
+	struct seqptr_s p;
+	
+	track_rew(o, &p);	
+	while(track_seqevavail(o, &p)) {
+		if (ev_sameclass(&(*p.pos)->ev, ev)) {
+			(*p.pos)->ev = *ev;
+			return;
+		}
+		track_seqevnext(o, &p);
+	}
+
+	track_rew(o, &p);	
+	while(track_seqevavail(o, &p)) {
+		if (ev_ordered(ev, &(*p.pos)->ev)) {
+			track_evput(o, &p, ev);
+			return;
+		}
+		track_seqevnext(o, &p);
+	}
+	track_evput(o, &p, ev);
+}

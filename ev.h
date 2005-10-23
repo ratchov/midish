@@ -111,6 +111,7 @@ struct evspec_s {
 
 void ev_dbg(struct ev_s *ev);
 unsigned ev_sameclass(struct ev_s *ev1, struct ev_s *ev2);
+unsigned ev_ordered(struct ev_s *ev1, struct ev_s *ev2);
 unsigned ev_str2cmd(struct ev_s *ev, char *str);
 
 unsigned evspec_str2cmd(struct evspec_s *ev, char *str);

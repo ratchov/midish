@@ -269,10 +269,6 @@ song_trkrm(struct song_s *o, struct songtrk_s *t) {
 void
 song_chanadd(struct song_s *o, struct songchan_s *i) {
 	name_add((struct name_s **)&o->chanlist, (struct name_s *)i);
-	if (o->curtrk && o->curtrk->curfilt) {
-		o->curtrk = NULL;
-	}
-	o->curfilt = NULL;
 	song_getcurinput(o, &i->curinput_dev, &i->curinput_ch);
 	song_setcurchan(o, i);
 }
@@ -333,7 +329,6 @@ song_chanrm(struct song_s *o, struct songchan_s *c) {
 void
 song_filtadd(struct song_s *o, struct songfilt_s *f) {
 	name_add((struct name_s **)&o->filtlist, (struct name_s *)f);
-	o->curtrk = NULL;
 	song_getcurchan(o, &f->curchan);
 	song_setcurfilt(o, f);
 }
@@ -472,10 +467,11 @@ song_getcurchan(struct song_s *o, struct songchan_s **r) {
 void
 song_setcurchan(struct song_s *o, struct songchan_s *c) {
 	struct songfilt_s *f;
-	o->curchan = c;
 	song_getcurfilt(o, &f);
 	if (f) {
 		f->curchan = c;
+	} else {
+		o->curchan = c;
 	}
 }
 
@@ -495,12 +491,13 @@ song_getcurinput(struct song_s *o, unsigned *dev, unsigned *ch) {
 void
 song_setcurinput(struct song_s *o, unsigned dev, unsigned ch) {
 	struct songchan_s *c;
-	o->curinput_dev = dev;
-	o->curinput_ch = ch;
 	song_getcurchan(o, &c);
 	if (c) {
 		c->curinput_dev = dev;
 		c->curinput_ch = ch;
+	} else {
+		o->curinput_dev = dev;
+		o->curinput_ch = ch;
 	}
 }
 
@@ -675,10 +672,10 @@ song_playtic(struct song_s *o) {
 
 void
 song_rt_setup(struct song_s *o) {
-	if (o->curfilt) {
-		o->filt = &o->curfilt->filt;	
-	} else if (o->curtrk && o->curtrk->curfilt) {
-			o->filt = &o->curtrk->curfilt->filt;
+	struct songfilt_s *f;
+	song_getcurfilt(o, &f);
+	if (f) {
+		o->filt = &f->filt;	
 	} else {
 		o->filt = NULL;
 	}
@@ -932,8 +929,10 @@ void
 song_record(struct song_s *o) {
 	unsigned tic;
 	struct seqptr_s cp;
+	struct songtrk_s *t;
 	
-	if (!o->curtrk || o->curtrk->mute) {
+	song_getcurtrk(o, &t);
+	if (!t || t->mute) {
 		dbg_puts("song_record: no current track or current track is muted\n");
 	}
 	song_rt_setup(o);
@@ -965,7 +964,7 @@ song_record(struct song_s *o) {
 	song_inputstop(o);
 	
 	track_opcheck(&o->rec); 
-	if (o->curtrk) {
+	if (t) {
 		track_rew(&o->curtrk->track, &cp);
 		track_frameins(&o->curtrk->track, &cp, &o->rec);
 	} else {

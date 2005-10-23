@@ -170,7 +170,6 @@ user_func_changetdev(struct exec_s *o, struct data_s **r) {
 unsigned
 user_func_chanconfev(struct exec_s *o, struct data_s **r) {
 	struct songchan_s *c;
-	struct seqptr_s cp;
 	struct ev_s ev;
 	
 	if (!exec_lookupchan_getref(o, "channame", &c) ||
@@ -181,10 +180,7 @@ user_func_chanconfev(struct exec_s *o, struct data_s **r) {
 		cons_err("chanconfev: mismatch dev/chan in event spec");
 		return 0;
 	}
-	track_rew(&c->conf, &cp);
-	track_evlast(&c->conf, &cp);
-	track_evput(&c->conf, &cp, &ev);
-	track_opcheck(&c->conf);
+	track_opconfev(&c->conf, &ev);
 	return 1;
 }
 
