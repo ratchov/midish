@@ -658,6 +658,11 @@ track_opchaninfo(struct track_s *o, char *map) {
 	}
 }
 
+	/*
+	 * add an event to the track (config track)
+	 * in an ordered way
+	 */
+
 void
 track_opconfev(struct track_s *o, struct ev_s *ev) {
 	struct seqptr_s p;

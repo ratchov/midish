@@ -2900,7 +2900,6 @@ the console).
                 </BLOCKQUOTE>
                         
 <A name="example"></A><H1>Example sessions</H1>
-(XXX: update examples to new functions)
 
 <H2>Example - midi filtering</H2>
         
@@ -2908,15 +2907,15 @@ the console).
         configure a keyboard split:
                 
         <PRE>
-        1> nc bass {0 1}
-        2> gmp 33
-        3> nc piano {0 2}
-        4> gmp 2
-        5> nf split
+        1> channew bass {0 5}
+        2> chanconfev bass {pc bass 33}
+        3> channew piano {0 6}
+        4> chanconfev piano {pc piano 2}
+        5> filtnew split
         6> filtchanmap split {1 0} bass 
         7> filtchanmap split {1 0} piano
-        8> filtkeymap split {1 0} bass 0 63 (-12)
-        9> filtkeymap split {1 0} piano 64 127 0   
+        8> filtkeymap  split {1 0} bass   0  63 (-12)
+        9> filtkeymap  split {1 0} piano 64 127 0   
         10> filtinfo split
         {
                 keymap {1 0} {0 2} 65 127 0 id
@@ -2924,83 +2923,62 @@ the console).
                 chanmap {1 0} {0 2}
                 chanmap {1 0} {0 1}
         }
-        11> l
-        tracks:
-        channels:
-            bass ( dev: 0 chan: 1 )
-            piano ( dev: 0 chan: 2 )
-        filters:
-         -> split :
-        tics_per_unit=96, curpos=0, curquant=0
-        12> i
+        11> songidle
         press enter to finish
         ^C
         -- interrupt --
 
-        13> reverb bass 120
-        14> vol piano 120
-        15> i
-        press enter to finish
-        ^C
-        -- interrupt --
-
-        16> save "piano-bass"
+        12> songsave "piano-bass"
+	13>
         </PRE>
 
         First we define 2 named-channels 
-        <TT>bass</TT> on device 0, channel 1
-        and <TT>piano</TT> on device 0 channel 2.
-        Then we assign patches to respective
+        <TT>bass</TT> on device 0, channel 5
+        and <TT>piano</TT> on device 0 channel 6.
+        Then we assign patches to the respective
         channels. After this, we define a new
         filter <TT>split</TT> and we add
-        rules corresponding to keyboard-split
+        rules corresponding to the keyboard-split
         on note number 64 (note E3), the bass is 
-        transposed by -12 haftones (one octave).
-        Finally we set the bass reverb to 120
-        and the piano volume to 120.
-
+        transposed by -12 half-tones (one octave).
 
 <H2>Example - recording a track</H2>
 
         The following session show how to
-        record a track:
+        record a track. It uses the procedures defined
+	in the default <TT>/etc/midishrc</TT>.
         <PRE>
-        1> nc drums {0 9}
-        2> nf drums
-        3> chanmap {1 0} drums
-        4> nt dr1
-        5> r
-        press enter to finish
-        ^C
-        -- interrupt --
+	1> ci {1 0}
+	2> ni drums {0 9}
+	3> nt dr1
+	4> tempo 90
+	5> r
+	press control-C to finish
 
-        6> n 16
-        7> q 8 75
-        8> p
-        press enter to finish
-        ^C
-        -- interrupt --
+	--interrupt--
 
-        9> l 
-        tracks:
-         -> dr1 ( record: drums )
-        channels:
-            drums ( dev: 0 chan: 9 )
-        filters:
-         -> drums :
-        tics_per_unit=96, curpos=0, curquant=6
-        10> save "myrythm"
+	6> n 16
+	7> sel 32
+	8> q 75
+	9> p
+	press control-C to finish
+
+	--interrupt--
+
+	10> save "myrithm"
+	11> 
         </PRE>
-        first, we define the <TT>drum</TT> channel
-        on device 0, channel 9. Then we create a 
-        filter with the same name, that
-        routes events from device 1, channel 0 
-        (the keyboard input channel) to 
-        the drum channel. Then we define 
+        first, we set the default input channel to {1 0}
+	(default channel of the keyboard). Then, we	
+	define the <TT>drum</TT> channel
+        on device 0, channel 9 and the corresponding
+	filter that will route events from the
+	keyboard to the drum channel.  Then we define 
         a new track named <TT>dr1</TT> an we start recording.
-        Finally, we set the quantisation step to 16 
-        (sixteenth note), we quantise 8 measures of 
-        the track and we start playback.
+        Then, we set the quantisation step to 16 
+        (sixteenth note), we select the first 32 measures of 
+        the track and we quantise them. Finally,
+	we start playback and we save the song into a file.
 
 
 <HR>
