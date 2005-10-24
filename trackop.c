@@ -633,6 +633,61 @@ track_optimeinfo(struct track_s *o, unsigned pos, unsigned long *usec24, unsigne
 	}
 }
 
+
+	/*
+	 * determine the (measure, beat, tic)
+	 * corresponding to a absolut tic
+	 * (the whole tic is scanned)
+	 */
+
+void
+track_opgetmeasure(struct track_s *o, unsigned pos,
+    unsigned *measure, unsigned *beat, unsigned *tic) {
+	unsigned delta, abstic, tpb, bpm;
+	struct ev_s ev;
+	struct seqptr_s op;
+	
+	abstic = 0;
+	track_rew(o, &op);
+	
+	/* use default midi settings */
+	tpb = DEFAULT_TPB;
+	bpm = DEFAULT_BPM;
+	*measure = 0;
+	*beat = 0;
+	*tic = 0;
+	
+	for (;;) {
+		delta = track_ticlast(o, &op);
+		if (abstic + delta >= pos) {
+			delta = pos - abstic;
+		}
+		abstic += delta;
+		*tic += delta;
+		*measure += *tic / (tpb * bpm);
+		*tic =      *tic % (tpb * bpm);
+		*beat +=    *tic / tpb;	
+		*tic =      *tic % tpb;
+		*measure += *beat / bpm;
+		*beat =     *beat % bpm;
+		if (abstic >= pos || !track_evavail(o, &op)) {
+			break;
+		}
+		while (track_evavail(o, &op)) {
+			track_evget(o, &op, &ev);
+			switch(ev.cmd) {
+			case EV_TIMESIG:
+				bpm = ev.data.sign.beats;
+				tpb = ev.data.sign.tics;
+				break;
+			default:
+				break;
+			}
+		}
+	}
+}
+
+
 void
 track_opchaninfo(struct track_s *o, char *map) {
 	unsigned i, ch, dev;
