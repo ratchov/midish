@@ -1825,7 +1825,7 @@ the console).
 <A name="func_tracklist"></A>
 <B><TT>tracklist</TT></B>
         <BLOCKQUOTE>
-        returns the list of names of the tracks in the song
+        return the list of names of the tracks in the song
         example:
         <PRE>
         print [tracklist]
@@ -1835,7 +1835,7 @@ the console).
 <A name="func_tracknew"></A>
 <B><TT>tracknew trackname</TT></B>
         <BLOCKQUOTE>
-        creates an empty track named <TT>trackname</TT>
+        create an empty track named <TT>trackname</TT>
         </BLOCKQUOTE>
 
 <A name="func_trackdelete"></A>
@@ -1854,7 +1854,7 @@ the console).
 <A name="func_trackexists"></A>
 <B><TT>trackexists trackname</TT></B>
         <BLOCKQUOTE>
-        returns 1 if <TT>trackname</TT> is a track, 0 otherwise
+        return 1 if <TT>trackname</TT> is a track, 0 otherwise
         </BLOCKQUOTE>
         
 <A name="func_tracksetcurfilt"></A>
@@ -1868,14 +1868,14 @@ the console).
 <A name="func_trackgetcurfilt"></A>
 <B><TT>trackgetcurfilt trackname</TT></B>
         <BLOCKQUOTE>
-        returns the default filter (for recording) 
+        return the default filter (for recording) 
         of <TT>trackname</TT>, returns <TT>nil</TT> if none
         </BLOCKQUOTE>
                 
 <A name="func_trackcheck"></A>
 <B><TT>trackcheck trackname</TT></B>
         <BLOCKQUOTE>
-        checks the whole track for orphaned notes,
+        check the whole track for orphaned notes,
         nested notes and other anomalies; also
         removes multiple controllers in the same tic
         </BLOCKQUOTE>
@@ -1883,7 +1883,7 @@ the console).
 <A name="func_trackgetlen"></A>
 <B><TT>trackgetlen trackname</TT></B>
         <BLOCKQUOTE>
-        returns the size in tics of track <TT>trackname</TT>,
+        return the size in tics of track <TT>trackname</TT>,
         example:
         <PRE>
         let l = [trackgetlen mytrack];
@@ -1893,14 +1893,14 @@ the console).
 <A name="func_trackcut"></A>
 <B><TT>trackcut trackname from amount quantum</TT></B>
         <BLOCKQUOTE>
-        cuts <TT>amount</TT> measures of the track <TT>trackname</TT>
+        cut <TT>amount</TT> measures of the track <TT>trackname</TT>
         from measure <TT>from</TT>.
         </BLOCKQUOTE>
 
 <A name="func_trackblank"></A>
 <B><TT>trackblank trackname from amount quantum evspec</TT></B>
         <BLOCKQUOTE>
-        clears <TT>amount</TT> measures of the track <TT>trackname</TT>
+        clear <TT>amount</TT> measures of the track <TT>trackname</TT>
         from the measure <TT>from</TT>. Only events matching
         the <TT>evspec</TT> argument are removed (see event
         <A href="#ev_evspec">ranges</A>)
@@ -1909,14 +1909,14 @@ the console).
 <A name="func_trackinsert"></A>
 <B><TT>trackinsert trackname from amount</TT></B>
         <BLOCKQUOTE>
-        inserts <TT>amount</TT> blank measures in track
+        insert <TT>amount</TT> blank measures in track
         <TT>trackname</TT> just before the measure <TT>from</TT>
         </BLOCKQUOTE>
 
 <A name="func_trackcopy"></A>
 <B><TT>trackcopy trackname1 from amount trackname2 where quantum evspec</TT></B>
         <BLOCKQUOTE>
-        copies <TT>amount</TT> measures starting at <TT>from</TT>
+        copy <TT>amount</TT> measures starting at <TT>from</TT>
         from track <TT>trackname1</TT> into <TT>trackname2</TT>
         at position <TT>where</TT>. Only events matching
         the <TT>evspec</TT> argument are copied (see event
@@ -1936,7 +1936,7 @@ the console).
 <A name="func_trackaddev"></A>
 <B><TT>trackaddev trackname measure beat tic ev</TT></B>
         <BLOCKQUOTE>
-        puts the event <TT>ev</TT> on track <TT>trackname</TT>
+        put the event <TT>ev</TT> on track <TT>trackname</TT>
         at the position given by <TT>measure</TT>,
         <TT>beat</TT> and <TT>tic</TT>
         </BLOCKQUOTE>
@@ -1967,7 +1967,7 @@ the console).
 <A name="func_trackinfo"></A>
 <B><TT>trackinfo trackname quantum evspec</TT></B>
         <BLOCKQUOTE>
-        displays the number of events that match <TT>evspec</TT>
+        display the number of events that match <TT>evspec</TT>
         for each measure of track <TT>trackname</TT>.
         </BLOCKQUOTE>
 
@@ -1977,7 +1977,7 @@ the console).
 <A name="func_channew"></A>
 <B><TT>channew channelname channelnum</TT></B>
         <BLOCKQUOTE>
-        creates an new channel named <TT>channelname</TT>
+        create an new channel named <TT>channelname</TT>
         and bound to midi channel <TT>channelnum</TT> 
         </BLOCKQUOTE>
 
@@ -1996,27 +1996,27 @@ the console).
 <A name="func_chanexists"></A>
 <B><TT>chanexists channelname</TT></B>
         <BLOCKQUOTE>
-        returns 1 if <TT>channelname</TT> is a channel, 0 otherwise
+        return 1 if <TT>channelname</TT> is a channel, 0 otherwise
         </BLOCKQUOTE>
 
 <A name="func_changetch"></A>
 <B><TT>changetch channelname</TT></B>
         <BLOCKQUOTE>
-        returns the midi channel number of channel named
+        return the midi channel number of channel named
         <TT>channelname</TT>
         </BLOCKQUOTE>
 
 <A name="func_changetdev"></A>
 <B><TT>changetdev channelname</TT></B>
         <BLOCKQUOTE>
-        returns the device number of channel named
+        return the device number of channel named
         <TT>channelname</TT>
         </BLOCKQUOTE>
 
 <A name="func_chanconfev"></A>
 <B><TT>chanconfev channelname event</TT></B>
         <BLOCKQUOTE>
-        adds the event to the configuration of 
+        add the event to the configuration of 
         channel <TT>channelname</TT>, typically used set
         the program, volume, depth etc... The channel
         of the event is not used.
@@ -2025,7 +2025,7 @@ the console).
 <A name="func_chaninfo"></A>
 <B><TT>chaninfo channame</TT></B>
         <BLOCKQUOTE>
-        prints all events on the config
+        print all events on the config
         of the channel.
         </BLOCKQUOTE>
 
@@ -2050,7 +2050,7 @@ the console).
 <A name="func_filtnew"></A>
 <B><TT>filtnew filtname</TT></B>
         <BLOCKQUOTE>
-        creates an new filter named <TT>filtname</TT>
+        create an new filter named <TT>filtname</TT>
         </BLOCKQUOTE>
 
 <A name="func_filtdelete"></A>
@@ -2069,39 +2069,39 @@ the console).
 <A name="func_filtexists"></A>
 <B><TT>filtexists filtname</TT></B>
         <BLOCKQUOTE>
-        returns 1 if <TT>filtname</TT> is a filter, 0 otherwise
+        return 1 if <TT>filtname</TT> is a filter, 0 otherwise
         </BLOCKQUOTE>
 
 <A name="func_filtreset"></A>
 <B><TT>filtreset filtname</TT></B>
         <BLOCKQUOTE>
-        removes all rules from the filter <TT>filtname</TT>
+        remove all rules from the filter <TT>filtname</TT>
         </BLOCKQUOTE>
 
 <A name="func_filtinfo"></A>
 <B><TT>filtinfo filtname</TT></B>
         <BLOCKQUOTE>
-        lists the rules of the given filter
+        list the rules of the given filter
         </BLOCKQUOTE>
 
 <A name="func_filtsetcurchan"></A>
 <B><TT>filtsetcurchan filtname channame</TT></B>
         <BLOCKQUOTE>
-        sets the default channel of filter
+        set the default channel of filter
         <TT>filtname</TT> to <TT>channame</TT>.
         </BLOCKQUOTE>
 
 <A name="func_filtgetcurchan"></A>
 <B><TT>filtgetcurchan filtname</TT></B>
         <BLOCKQUOTE>
-        returns the default channel 
+        return the default channel 
         of <TT>filtname</TT>, returns <TT>nil</TT> if none
         </BLOCKQUOTE>
 
 <A name="func_filtswapichan"></A>
 <B><TT>filtswapichan filtname oldchan newchan</TT></B>
         <BLOCKQUOTE>
-        changes the input channel of 
+        change the input channel of 
         all rules with input channel equal to <TT>oldchan</TT>
         to <TT>newchan</TT>, and the input channel of 
         all rules with input channel equal to <TT>newchan</TT>
@@ -2111,7 +2111,7 @@ the console).
 <A name="func_filtswapidev"></A>
 <B><TT>filtswapidev filtname olddev newdev</TT></B>
         <BLOCKQUOTE>
-        changes the input device of 
+        change the input device of 
         all rules with input device equal to <TT>olddev</TT>
         to <TT>newdev</TT>, and the input device of 
         all rules with input device equal to <TT>newdev</TT>
@@ -2263,13 +2263,13 @@ the console).
 <A name="func_sysexexists"></A>
 <B><TT>sysexexists sysexname</TT></B>
         <BLOCKQUOTE>
-        returns 1 if <TT>sysexname</TT> is a sysex bank, 0 otherwise
+        return 1 if <TT>sysexname</TT> is a sysex bank, 0 otherwise
         </BLOCKQUOTE>
 
 <A name="func_sysexclear"></A>
 <B><TT>sysexclear sysexname pattern</TT></B>
         <BLOCKQUOTE>
-        removes all sysex messages starting with <TT>pattern</TT>
+        remove all sysex messages starting with <TT>pattern</TT>
         from sysex bank <TT>sysexname</TT>. The given pattern
         is a list of bytes; an empty pattern matches any 
         sysex message.
@@ -2288,7 +2288,7 @@ the console).
 <A name="func_sysexadd"></A>
 <B><TT>sysexadd sysexname unit data</TT></B>
         <BLOCKQUOTE>
-        adds to sysex bank <TT>sysexname</TT>
+        add to sysex bank <TT>sysexname</TT>
         an new sysex message. <TT>data</TT> is a list containing the
         midi system exclusive message and <TT>unit</TT> is the device number to which
         the message will be sent
@@ -2306,7 +2306,7 @@ the console).
 <A name="func_songidle"></A>
 <B><TT>songidle</TT></B>
         <BLOCKQUOTE>
-        puts midi input to the midi output,
+        put midi input to the midi output,
         data passes through the current filter (if any)
         or through the current track's filter (if any).
         </BLOCKQUOTE>
@@ -2314,7 +2314,7 @@ the console).
 <A name="func_songplay"></A>
 <B><TT>songplay</TT></B>
         <BLOCKQUOTE>
-        plays the song from the current position.
+        play the song from the current position.
         Input passes through the current filter (if any)
         or through the current track's filter (if any).
         </BLOCKQUOTE>
@@ -2322,15 +2322,17 @@ the console).
 <A name="func_songrecord"></A>
 <B><TT>songrecord</TT></B>
         <BLOCKQUOTE>
-        plays the song and records the input.
+        play the song and record the input.
         Input passes through the current filter (if any)
         or through the current track's filter (if any).
+	<TT>songrecord</TT> always tries to play one measure before
+	the actual position on which recording starts.
         </BLOCKQUOTE>
 
 <A name="func_sendraw"></A>
 <B><TT>sendraw device arrayofbytes</TT></B>
         <BLOCKQUOTE>
-        sends raw midi data to device number '<TT>device</TT>',
+        send raw midi data to device number '<TT>device</TT>',
         can be used to send system exclusive messages,
         example:
         <PRE>
@@ -2368,7 +2370,7 @@ the console).
 <A name="func_songgetcurpos"></A>
 <B><TT>songgetcurpos</TT></B>
         <BLOCKQUOTE>
-        returns the current measure ie the
+        return the current measure ie the
         current song position pointer. This corresponds
 	to the start postition of the current selection.
         </BLOCKQUOTE>
@@ -2382,7 +2384,7 @@ the console).
 <A name="func_songgetcurlen"></A>
 <B><TT>songgetcurpos</TT></B>
         <BLOCKQUOTE>
-        returns the length (in measures) of the current selection.
+        return the length (in measures) of the current selection.
         </BLOCKQUOTE>
 
 
@@ -2395,7 +2397,7 @@ the console).
 <A name="func_songgetcurtrack"></A>
 <B><TT>songgetcurtrack</TT></B>
         <BLOCKQUOTE>
-        returns the current track (if any) or <TT>nil</TT>
+        return the current track (if any) or <TT>nil</TT>
         </BLOCKQUOTE>
 
 <A name="func_songsetcurfilt"></A>
@@ -2408,7 +2410,7 @@ the console).
 <A name="func_songgetcurfilt"></A>
 <B><TT>songgetcurfilt</TT></B>
         <BLOCKQUOTE>
-        returns the current filter
+        return the current filter
         or <TT>'nil'</TT> if none
         </BLOCKQUOTE>
 
@@ -2422,7 +2424,7 @@ the console).
 <A name="func_songgetcursysex"></A>
 <B><TT>songgetcursysex</TT></B>
         <BLOCKQUOTE>
-        returns the current sysex bank
+        return the current sysex bank
         or <TT>'nil'</TT> if none
         </BLOCKQUOTE>
 
@@ -2435,7 +2437,7 @@ the console).
 <A name="func_songgetcurchan"></A>
 <B><TT>songgetcurchan</TT></B>
         <BLOCKQUOTE>
-        returns the name of the current channel 
+        return the name of the current channel 
         or <TT>'nil'</TT> if none
         </BLOCKQUOTE>
 
@@ -2465,20 +2467,20 @@ the console).
 <A name="func_songgetunit"></A>
 <B><TT>songgetunit</TT></B>
         <BLOCKQUOTE>
-        returns the number of tics per unit note
+        return the number of tics per unit note
         </BLOCKQUOTE>
 
 <A name="func_songsettempo"></A>
 <B><TT>songsettempo measure bpm</TT></B>
         <BLOCKQUOTE>
-        sets the tempo to <TT>bpm</TT> beats per
+        set the tempo to <TT>bpm</TT> beats per
         minute at measure <TT>measure</TT>
         </BLOCKQUOTE>
 
 <A name="func_songtimeins"></A>
 <B><TT>songtimeins from amount numerator denominator</TT></B>
         <BLOCKQUOTE>
-        inserts <TT>amount</TT> blank measures at measure
+        insert <TT>amount</TT> blank measures at measure
         <TT>from</TT>. The used time signature is given
         by numerator/denominator.
         </BLOCKQUOTE>
@@ -2486,7 +2488,7 @@ the console).
 <A name="func_songtimerm"></A>
 <B><TT>songtimerm from amount</TT></B>
         <BLOCKQUOTE>
-        deletes <TT>amount</TT> measures starting at
+        delete <TT>amount</TT> measures starting at
         measure <TT>from</TT>. The time signature is
         restored with the value preceding the
         <TT>from</TT> measure.
@@ -2509,7 +2511,7 @@ the console).
 <A name="func_songsave"></A>
 <B><TT>songsave filename</TT></B>
         <BLOCKQUOTE>
-        saves the song in a file, <TT>filename</TT>
+        save the song in a file, <TT>filename</TT>
         is a quoted string.
         </BLOCKQUOTE>
 
@@ -2532,14 +2534,14 @@ the console).
 <A name="func_songexportsmf"></A>
 <B><TT>songexportsmf filename</TT></B>
         <BLOCKQUOTE>
-        saves the song into a standard midi file, <TT>filename</TT>
+        save the song into a standard midi file, <TT>filename</TT>
         is a quoted string.
         </BLOCKQUOTE>
 
 <A name="func_songimportsmf"></A>
 <B><TT>songimportsmf filename</TT></B>
         <BLOCKQUOTE>
-        loads the song from a standard midi file, <TT>filename</TT>
+        load the song from a standard midi file, <TT>filename</TT>
         is a quoted string. Currently only midi file "type 1" is
         supported.
         </BLOCKQUOTE>
@@ -2550,7 +2552,7 @@ the console).
 <A name="func_devlist"></A>
 <B><TT>devlist</TT></B>
         <BLOCKQUOTE>
-        returns the list of attached devices
+        return the list of attached devices
         (list of numbers)
         </BLOCKQUOTE>
 
@@ -2635,13 +2637,13 @@ the console).
 <A name="func_print"></A>
 <B><TT>print expression</TT></B>
         <BLOCKQUOTE>
-        displays the value of the expression
+        display the value of the expression
         </BLOCKQUOTE>
 
 <A name="func_exec"></A>
 <B><TT>exec filename</TT></B>
         <BLOCKQUOTE>
-        reads and executes the script from a file, <TT>filename</TT>
+        read and executes the script from a file, <TT>filename</TT>
         is a quoted string.
         </BLOCKQUOTE>
 
@@ -2661,7 +2663,7 @@ the console).
 <A name="func_panic"></A>
 <B><TT>panic</TT></B>
         <BLOCKQUOTE>
-        causes the sequencer to core-dump
+        cause the sequencer to core-dump
         </BLOCKQUOTE>
 
         

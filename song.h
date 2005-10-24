@@ -155,7 +155,7 @@ void song_play(struct song_s *o);
 void song_idle(struct song_s *o);
 
 void song_rt_setup(struct song_s *o);
-void song_rt_seek(struct song_s *o);
+void song_rt_seek(struct song_s *o, unsigned rewind);
 
 extern unsigned song_debug;
 

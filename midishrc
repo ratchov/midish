@@ -89,13 +89,8 @@ proc p  {
 # the current position
 #
 proc r  { 
-	let curpos = [songgetcurpos]
-	if ($curpos >= 1) {
-		songsetcurpos $curpos - 1
-	}
 	metroswitch 1
 	songrecord
-	songsetcurpos $curpos	
 }
 
 #

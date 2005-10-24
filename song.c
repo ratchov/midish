@@ -638,7 +638,10 @@ song_playtic(struct song_s *o) {
 	if (phase == MUX_NEXT || phase == MUX_FIRST) {
 		/* tempo_track */
 		while (track_evavail(&o->meta, &o->metaptr)) {
-			track_evget(&o->meta, &o->metaptr, &ev);				
+			track_evget(&o->meta, &o->metaptr, &ev);		
+			if (o->measure < o->curpos) {
+				break;
+			}
 			switch(ev.cmd) {
 			case EV_TIMESIG:
 				o->beats_per_measure = ev.data.sign.beats;
@@ -690,22 +693,41 @@ song_rt_setup(struct song_s *o) {
 	 */
 
 void
-song_rt_seek(struct song_s *o) {
+song_rt_seek(struct song_s *o, unsigned rewind) {
 	struct songtrk_s *i;
-	unsigned tic;
+	unsigned tic, tics_per_measure, rew_tics;
 	
 	tic = track_opfindtic(&o->meta, o->curpos);
+	track_optimeinfo(&o->meta, tic, &o->tempo, &o->beats_per_measure, &o->tics_per_beat);
 	o->measure = o->curpos;
 	o->beat = 0;
 	o->tic = 0;
+	
+	if (rewind) {
+		tics_per_measure = o->beats_per_measure * o->tics_per_beat;
 
+		if (tic >= tics_per_measure) {
+			rew_tics = tics_per_measure;
+		} else {
+			rew_tics = tic;
+		}
+	
+		if (rew_tics != 0) {
+			o->measure -= 1;
+			o->beat = (tics_per_measure - rew_tics) / o->tics_per_beat;
+			o->tic =  (tics_per_measure - rew_tics) % o->tics_per_beat;
+			tic -= rew_tics;
+		}
+	}
+	
 	for (i = o->trklist; i != NULL; i = (struct songtrk_s *)i->name.next) {
 		track_rew(&i->track, &i->trackptr);
 		track_seek(&i->track, &i->trackptr, tic);
 	}
-	track_optimeinfo(&o->meta, tic, &o->tempo, &o->beats_per_measure, &o->tics_per_beat);
 	track_rew(&o->meta, &o->metaptr);
 	track_seek(&o->meta, &o->metaptr, tic);
+	track_clear(&o->rec, &o->recptr);
+	track_seekblank(&o->rec, &o->recptr, tic);
 }
 
 /* ---------------------------------------------- input filtering --- */
@@ -845,7 +867,7 @@ song_playcb(void *addr, struct ev_s *ev) {
 void
 song_play(struct song_s *o) {
 	song_rt_setup(o);
-	song_rt_seek(o);
+	song_rt_seek(o, 0);
 
 	song_inputstart(o, song_playcb);
 	mux_init(song_inputcb, o);
@@ -854,7 +876,6 @@ song_play(struct song_s *o) {
 	song_playconf(o);
 	mux_chgtempo(o->tempo);
 	mux_chgticrate(o->tics_per_unit);
-	
 	
 	if (song_debug) {
 		dbg_puts("song_play: starting loop, waiting for a start event...\n");
@@ -927,7 +948,6 @@ song_recordcb(void *addr, struct ev_s *ev) {
 
 void
 song_record(struct song_s *o) {
-	unsigned tic;
 	struct seqptr_s cp;
 	struct songtrk_s *t;
 	
@@ -935,13 +955,9 @@ song_record(struct song_s *o) {
 	if (!t || t->mute) {
 		dbg_puts("song_record: no current track or current track is muted\n");
 	}
+
 	song_rt_setup(o);
-
-	tic = song_measuretotic(o, o->curpos);
-	track_rew(&o->rec, &o->recptr);
-	track_seekblank(&o->rec, &o->recptr, tic);
-
-	song_rt_seek(o);
+	song_rt_seek(o, 1);
 	
 	song_inputstart(o, song_recordcb);
 	mux_init(song_inputcb, o);
@@ -967,6 +983,7 @@ song_record(struct song_s *o) {
 	if (t) {
 		track_rew(&o->curtrk->track, &cp);
 		track_frameins(&o->curtrk->track, &cp, &o->rec);
+		track_opcheck(&o->curtrk->track); 
 	} else {
 		track_clear(&o->rec, &o->recptr);
 	}
@@ -1009,7 +1026,7 @@ song_idlecb(void *addr, struct ev_s *ev) {
 void
 song_idle(struct song_s *o) {
 	song_rt_setup(o);
-	song_rt_seek(o);
+	song_rt_seek(o, 0);
 
 	song_inputstart(o, song_idlecb);
 	mux_init(song_inputcb, o);
