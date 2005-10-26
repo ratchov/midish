@@ -805,8 +805,6 @@ user_mainloop(void) {
 			name_newarg("trackname", NULL));
 	exec_newbuiltin(exec, "trackcheck", user_func_trackcheck,
 			name_newarg("trackname", NULL));
-	exec_newbuiltin(exec, "trackgetlen", user_func_trackgetlen, 
-			name_newarg("trackname", NULL));
 	exec_newbuiltin(exec, "trackcut", user_func_trackcut,
 			name_newarg("trackname", 
 			name_newarg("from", 
@@ -874,31 +872,6 @@ user_mainloop(void) {
 			name_newarg("inputchan", NULL)));
 	exec_newbuiltin(exec, "changetcurinput", user_func_changetcurinput,
 			name_newarg("channame", NULL));
-
-	exec_newbuiltin(exec, "sysexlist", user_func_sysexlist, NULL);
-	exec_newbuiltin(exec, "sysexnew", user_func_sysexnew, 
-			name_newarg("sysexname", NULL));
-	exec_newbuiltin(exec, "sysexdelete", user_func_sysexdelete, 
-			name_newarg("sysexname", NULL));
-	exec_newbuiltin(exec, "sysexrename", user_func_sysexrename,
-			name_newarg("sysexname",
-			name_newarg("newname", NULL)));
-	exec_newbuiltin(exec, "sysexexists", user_func_sysexexists, 
-			name_newarg("sysexname", NULL));
-	exec_newbuiltin(exec, "sysexinfo", user_func_sysexinfo, 
-			name_newarg("sysexname", NULL));
-	exec_newbuiltin(exec, "sysexclear", user_func_sysexclear, 
-			name_newarg("sysexname", 
-			name_newarg("data", NULL)));
-	exec_newbuiltin(exec, "sysexsetunit", user_func_sysexsetunit, 
-			name_newarg("sysexname", 
-			name_newarg("unit", 
-			name_newarg("data", NULL))));
-	exec_newbuiltin(exec, "sysexadd", user_func_sysexadd, 
-			name_newarg("sysexname", 
-			name_newarg("unit",
-			name_newarg("data", NULL))));
-
 
 	exec_newbuiltin(exec, "filtlist", user_func_filtlist, NULL);
 	exec_newbuiltin(exec, "filtnew", user_func_filtnew, 
@@ -980,6 +953,14 @@ user_mainloop(void) {
 			name_newarg("filtname",
 			name_newarg("outchan", 
 			name_newarg("outctl", NULL))));
+	exec_newbuiltin(exec, "filtchgichan", user_func_filtchgichan,
+			name_newarg("filtname",
+			name_newarg("oldchan", 
+			name_newarg("newchan", NULL))));
+	exec_newbuiltin(exec, "filtchgidev", user_func_filtchgidev,
+			name_newarg("filtname",
+			name_newarg("olddev", 
+			name_newarg("newdev", NULL))));
 	exec_newbuiltin(exec, "filtswapichan", user_func_filtswapichan,
 			name_newarg("filtname",
 			name_newarg("oldchan", 

@@ -1147,8 +1147,8 @@ the console).
 
         <UL>
         <LI> added '<TT>device</TT>' parameter to '<TT>sendraw</TT>'
-        <LI> replaced '<TT>filtchangein</TT>' by '<TT>filtswapichan</TT>'
-                and added '<TT>filtswapidev</TT>'
+        <LI> replaced '<TT>filtchangein</TT>' by '<TT>filtchgichan</TT>'
+                and added '<TT>filtchgidev</TT>'
         <LI> added new filter rules: 
                 <TT>filtdevdrop</TT>, 
                 <TT>filtchandrop</TT>,
@@ -1857,6 +1857,14 @@ the console).
         return 1 if <TT>trackname</TT> is a track, 0 otherwise
         </BLOCKQUOTE>
         
+<A name="func_trackaddev"></A>
+<B><TT>trackaddev trackname measure beat tic ev</TT></B>
+        <BLOCKQUOTE>
+        put the event <TT>ev</TT> on track <TT>trackname</TT>
+        at the position given by <TT>measure</TT>,
+        <TT>beat</TT> and <TT>tic</TT>
+        </BLOCKQUOTE>
+
 <A name="func_tracksetcurfilt"></A>
 <B><TT>tracksetcurfilt trackname filtname</TT></B>
         <BLOCKQUOTE>
@@ -1878,16 +1886,6 @@ the console).
         check the whole track for orphaned notes,
         nested notes and other anomalies; also
         removes multiple controllers in the same tic
-        </BLOCKQUOTE>
-
-<A name="func_trackgetlen"></A>
-<B><TT>trackgetlen trackname</TT></B>
-        <BLOCKQUOTE>
-        return the size in tics of track <TT>trackname</TT>,
-        example:
-        <PRE>
-        let l = [trackgetlen mytrack];
-        </PRE>
         </BLOCKQUOTE>
 
 <A name="func_trackcut"></A>
@@ -1933,13 +1931,6 @@ the console).
         100 means full quantisation.
         </BLOCKQUOTE>
 
-<A name="func_trackaddev"></A>
-<B><TT>trackaddev trackname measure beat tic ev</TT></B>
-        <BLOCKQUOTE>
-        put the event <TT>ev</TT> on track <TT>trackname</TT>
-        at the position given by <TT>measure</TT>,
-        <TT>beat</TT> and <TT>tic</TT>
-        </BLOCKQUOTE>
 
 <A name="func_tracksetmute"></A>
 <B><TT>tracksetmute trackname muteflag</TT></B>
@@ -1949,7 +1940,6 @@ the console).
         If <TT>muteflag</TT> is equal to 0 the the track
         is no more muted ie it will be played during record/playback.
         </BLOCKQUOTE>
-
 
 <A name="func_trackgetmute"></A>
 <B><TT>trackgetmute trackname</TT></B>
@@ -2097,6 +2087,23 @@ the console).
         return the default channel 
         of <TT>filtname</TT>, returns <TT>nil</TT> if none
         </BLOCKQUOTE>
+
+<A name="func_filtchgichan"></A>
+<B><TT>filtchgichan filtname oldchan newchan</TT></B>
+        <BLOCKQUOTE>
+        change the input channel of 
+        all rules with input channel equal to <TT>oldchan</TT>
+        to <TT>newchan</TT>
+        </BLOCKQUOTE>
+
+<A name="func_filtchgidev"></A>
+<B><TT>filtchgidev filtname olddev newdev</TT></B>
+        <BLOCKQUOTE>
+        change the input device of 
+        all rules with input device equal to <TT>olddev</TT>
+        to <TT>newdev</TT>
+        </BLOCKQUOTE>
+
 
 <A name="func_filtswapichan"></A>
 <B><TT>filtswapichan filtname oldchan newchan</TT></B>

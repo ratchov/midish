@@ -105,6 +105,16 @@ startmidish(void) {
 		}
 		close(ipipe[0]);
 		close(opipe[1]);
+		/*
+		 * create a new process group, to prevent midish being
+		 * accidently suspended when in performance mode
+		 */		
+		if (setpgid(0, 0) < 0) {
+			perror("setpgid");
+		}
+		/*
+		 * run midish
+		 */
 		if (execlp(MIDISHBIN, MIDISHBIN, "-v", (char *)NULL) < 0) {
 			perror(MIDISHBIN);
 		}
@@ -150,6 +160,7 @@ main(void) {
 	}		
 	
 	startmidish();
+	fprintf(stderr, "send EOF character (control-D) to quit\n");
 	
 	for (;;) {
 		waitready();

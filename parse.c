@@ -142,9 +142,6 @@ parse_new(char *filename) {
 void
 parse_delete(struct parse_s *o) {
 	lex_done(&o->lex);
-	if (o->lookavail) {
-		dbg_puts("parse_done: lookahead token still available\n");
-	}
 	mem_free(o);
 }
 

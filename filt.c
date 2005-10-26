@@ -181,6 +181,52 @@ rule_dbg(struct rule_s *o) {
 }
 
 void
+rule_chgichan(struct rule_s *o, unsigned olddev, unsigned oldch, 
+    unsigned newdev, unsigned newch) {
+	switch(o->type) {
+	case RULE_CHANDROP:
+	case RULE_CHANMAP:
+	case RULE_KEYDROP:
+	case RULE_KEYMAP:
+	case RULE_CTLDROP:
+	case RULE_CTLMAP:
+		if (o->idev == newdev && o->ich == newch) {
+			o->ich = oldch;			
+			o->idev = olddev;			
+		} else if (o->idev == olddev && o->ich == oldch) {
+			o->idev = newdev;
+			o->ich = newch;
+		}
+		break;
+	default:
+		break;
+	}
+}
+
+
+void
+rule_chgidev(struct rule_s *o, unsigned olddev, unsigned newdev) {
+	switch(o->type) {
+	case RULE_CHANDROP:
+	case RULE_CHANMAP:
+	case RULE_KEYDROP:
+	case RULE_KEYMAP:
+	case RULE_CTLDROP:
+	case RULE_CTLMAP:
+	case RULE_DEVDROP:
+	case RULE_DEVMAP:
+		if (o->idev == olddev) {
+			o->idev = newdev;
+		} else if (o->idev == newdev) {
+			o->idev = olddev;
+		}
+		break;
+	default:
+		break;
+	}
+}
+
+void
 rule_swapichan(struct rule_s *o, unsigned olddev, unsigned oldch, 
     unsigned newdev, unsigned newch) {
 	switch(o->type) {
@@ -770,6 +816,36 @@ filt_conf_nokeymap(struct filt_s *o, unsigned odev, unsigned och,
 		} else {
 			i = &(*i)->next;
 		}
+	}
+}
+
+
+void
+filt_conf_chgichan(struct filt_s *o, 
+    unsigned olddev, unsigned oldch, unsigned newdev, unsigned newch) {
+	struct rule_s *i;
+	
+	for (i = o->voice_rules; i != NULL; i = i->next) {
+		rule_chgichan(i, olddev, oldch, newdev, newch);
+	}
+	for (i = o->chan_rules; i != NULL; i = i->next) {
+		rule_chgichan(i, olddev, oldch, newdev, newch);
+	}
+}
+
+
+void
+filt_conf_chgidev(struct filt_s *o, unsigned olddev, unsigned newdev) {
+	struct rule_s *i;
+	
+	for (i = o->voice_rules; i != NULL; i = i->next) {
+		rule_chgidev(i, olddev, newdev);
+	}
+	for (i = o->chan_rules; i != NULL; i = i->next) {
+		rule_chgidev(i, olddev, newdev);
+	}
+	for (i = o->dev_rules; i != NULL; i = i->next) {
+		rule_chgidev(i, olddev, newdev);
 	}
 }
 

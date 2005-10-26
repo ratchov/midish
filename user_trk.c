@@ -230,26 +230,6 @@ user_func_trackcheck(struct exec_s *o, struct data_s **r) {
 
 
 unsigned
-user_func_trackgetlen(struct exec_s *o, struct data_s **r) {
-	char *trkname;
-	struct songtrk_s *t;
-	unsigned len;
-	
-	if (!exec_lookupname(o, "trackname", &trkname)) {
-		return 0;
-	}
-	t = song_trklookup(user_song, trkname);
-	if (t == NULL) {
-		cons_err("trackgetlen: no such track");
-		return 0;
-	}
-	len = track_numtic(&t->track);
-	*r = data_newlong((long)len);
-	return 1;
-}
-
-
-unsigned
 user_func_trackcut(struct exec_s *o, struct data_s **r) {
 	struct songtrk_s *t;
 	long from, amount, quant;

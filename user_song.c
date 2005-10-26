@@ -699,8 +699,10 @@ user_func_songsetcurinput(struct exec_s *o, struct data_s **r) {
 
 unsigned
 user_func_songgetcurinput(struct exec_s *o, struct data_s **r) {
+	unsigned dev, ch;
+	song_getcurinput(user_song, &dev, &ch);  
 	*r = data_newlist(NULL);
-	data_listadd(*r, data_newlong(user_song->curinput_dev));
-	data_listadd(*r, data_newlong(user_song->curinput_ch));
+	data_listadd(*r, data_newlong(dev));
+	data_listadd(*r, data_newlong(ch));
 	return 1;
 }
