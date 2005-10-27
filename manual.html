@@ -1377,7 +1377,7 @@ the console).
 	<TR>
 	<TD>curpos
 	<TD>current position (in measures) within the song. Playback
-		and record start from this postions. It is also
+		and record start from this positions. It is also
 		user as the beginning of the current selection
 	<TR>
 	<TD>curlen
@@ -2729,15 +2729,51 @@ the console).
         contains a lot of examples of procedure definitions.
         
         <P>
-        <B><TT>nf filtname</TT></B>
+	<B><TT>ci { dev chan }</TT></B>
                 <BLOCKQUOTE>
-                create a new filter named <TT>filtname</TT>
-                and make it the current filter
+                set the current input device/channel pair.
+		It will be used as default value
+		when tracks, filters and channels are created.
+                </BLOCKQUOTE>
+
+        
+        <B><TT>cc channame</TT></B>
+                <BLOCKQUOTE>
+                set the current output channel.
+		It will be used as default value
+		when tracks and filters are created.
+		The current input that was used the last time 
+		this channel was the current one is restored.
                 </BLOCKQUOTE>
 
         <B><TT>cf filtname</TT></B>
                 <BLOCKQUOTE>
-                set the current filter to <TT>filtname</TT>
+		set the default filter, that will be used in
+		performance mode. 
+		It will be  used as default
+		value when tracks are created.
+		The value of the default track is reset to 'nil'
+		(no default track).
+		The current channel and the current input 
+		that were used the last time
+		this filter was the current one are restored.
+                </BLOCKQUOTE>
+
+        <B><TT>ct trackname</TT></B>
+                <BLOCKQUOTE>
+		set the current track, that will be recorded in
+		record mode. 
+		The current filter, the current channel and 
+		the current input that were used the last time 
+		this track was the current one are restored.
+                </BLOCKQUOTE>
+
+	<B><TT>ni instrname {device channel}</TT></B>
+                <BLOCKQUOTE>
+		create a new channel and a new filter
+		with the same name in such
+		a way that the current input is routed
+		to this channel.
                 </BLOCKQUOTE>
         
         <B><TT>ctldrop ictl</TT></B>
@@ -2746,37 +2782,25 @@ the console).
 		on the current input
                 </BLOCKQUOTE>
 
-        <B><TT>ctlmap ichan ochan ictl octl</TT></B>
+        <B><TT>ctlmap ictl octl</TT></B>
                 <BLOCKQUOTE>
                 make the current filter route controller number
-                <TT>ictl</TT> on {device&nbsp;channel} pair <TT>ichan</TT>
-                to conroller <TT>octl</TT> on <TT>ochan</TT>
+                <TT>ictl</TT> on the current input
+		to controller <TT>octl</TT> on the current channel
                 </BLOCKQUOTE>
                 
+        <B><TT>transpose halftones</TT></B>
+                <BLOCKQUOTE>
+                make the current filter to transpose
+		all notes from the current input and
+		to route them to the current channel.
+                </BLOCKQUOTE>
+
         <B><TT>nt trackname</TT></B>
                 <BLOCKQUOTE>
-                create a track named <TT>trackname</TT>
-                and set its default filter (for recording) to
-                the current filter and make it the current track
+                create a new track.
                 </BLOCKQUOTE>
-                
-        <B><TT>ct trackname</TT></B>
-                <BLOCKQUOTE>
-                make <TT>trackname</TT> the current track; it
-                if has a default filter, then make it the current
-                filter for the song
-                </BLOCKQUOTE>
-                
-        <B><TT>tf filtname</TT></B>
-                <BLOCKQUOTE>
-                set the current track's filter the <TT>filtname</TT>
-                </BLOCKQUOTE>
-        
-        <B><TT>nc channame {devnum channum}</TT></B>
-                <BLOCKQUOTE>
-                create a new channel named <TT>channame</TT>
-                </BLOCKQUOTE>
-                
+                        
         <B><TT>i</TT></B>
                 <BLOCKQUOTE>
                 go into performance mode and run the current filter
@@ -2809,29 +2833,37 @@ the console).
                 will start at that position
                 </BLOCKQUOTE>
 
+        <B><TT>sel nummeasures</TT></B> 
+                <BLOCKQUOTE>
+                select measures from the current position.
+		Track editing procedures (q, copy, cut, clr ...)
+                will use the current selection.
+                </BLOCKQUOTE>
+
         <B><TT>n denominator</TT></B>
                 <BLOCKQUOTE>
                 set the current note length for quantisation
                 to <TT>denominator</TT>, 4 means quarter-note, 
                 8 means eighth-note, 16 means sixteenth-note etc...
+		This value will be used by track editing functions.
                 </BLOCKQUOTE>
                 
-        <B><TT>q num rate</TT></B>
+        <B><TT>q rate</TT></B>
                 <BLOCKQUOTE>
-                quantise <TT>num</TT> measures
-                of the current track starting at the current position.
+                quantise the current selection of 
+                the current track (rate=100 means full quantisation
+		and rate=0 means no quantisation).
                 </BLOCKQUOTE>
                 
-        <B><TT>cut num</TT></B>
+        <B><TT>cut</TT></B>
                 <BLOCKQUOTE>
-                cuts (removes events and blank space) <TT>num</TT>
-                measures from the current track at the current position
+                cuts the current selection on the current track.
                 </BLOCKQUOTE>
                 
         <B><TT>clr num</TT></B>
                 <BLOCKQUOTE>
-                clears (removes events but not blank space) <TT>num</TT>
-                measures from the current track at the current position
+                clears (removes events but not blank space) 
+		the current selection on the current track.
                 </BLOCKQUOTE>
                 
         <B><TT>ins num</TT></B> 
@@ -2840,14 +2872,13 @@ the console).
                 current track at the current position
                 </BLOCKQUOTE>
                 
-        <B><TT>copy num pos</TT></B> 
+        <B><TT>copy pos</TT></B> 
                 <BLOCKQUOTE>
-                copy <TT>num</TT> measures from the current
-                position at measure number <TT>pos</TT>
-                on the current track
+                copy the current selection <TT>pos</TT> measures
+		forward from the current position.
                 </BLOCKQUOTE>
 
-        <B><TT>gcut num</TT></B> 
+        <B><TT>gcut</TT></B> 
                 <BLOCKQUOTE>
                 same as <TT>cut</TT> but acts on all tracks
                 simultaneously ("g" like global).
@@ -2923,37 +2954,31 @@ the console).
                 send "general midi on" system exclusive message
                 to device number <TT>devnum</TT>
                 </BLOCKQUOTE>
-                
-        <B><TT>gmoff devnum</TT></B>
+                                
+        <B><TT>gmp patch</TT></B> 
                 <BLOCKQUOTE>
-                send "general midi off" system exclusive message
-                to device number <TT>devnum</TT>
-                </BLOCKQUOTE>
-                
-        <B><TT>gmp chan patch</TT></B> 
-                <BLOCKQUOTE>
-                configures named-channel <TT>chan</TT>
+                configures the current channel
                 to use general midi patch number <TT>patch</TT>.
                 (this will send program change event when
                 performance mode is entered).
                 </BLOCKQUOTE>
                 
-        <B><TT>vol chan value</TT></B> 
+        <B><TT>vol value</TT></B> 
                 <BLOCKQUOTE>
                 set volume (controller number 7) of
-                channel <TT>chan</TT> to <TT>value</TT>.
+                the current channel
                 </BLOCKQUOTE>
                 
-        <B><TT>reverb chan value</TT></B> 
+        <B><TT>reverb value</TT></B> 
                 <BLOCKQUOTE>
                 set reverb (controller number 91) of
-                channel <TT>chan</TT> to <TT>value</TT>.
+                the current channel
                 </BLOCKQUOTE>
                 
-        <B><TT>chorus chan value</TT></B> 
+        <B><TT>chorus value</TT></B> 
                 <BLOCKQUOTE>
                 set chorus (controller number 93) of
-                channel <TT>chan</TT> to <TT>value</TT>.
+                the current channel
                 </BLOCKQUOTE>
                         
 <A name="example"></A><H1>Example sessions</H1>
@@ -3041,7 +3066,7 @@ the console).
 <HR>
 <SMALL><EM>
 Copyright (c) 2003-2005 Alexandre Ratchov<BR>
-Last updated oct 23, 2005       
+Last updated oct 27, 2005       
 </EM></SMALL>
         
 
