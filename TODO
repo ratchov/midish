@@ -1,3 +1,5 @@
+- add 'chanset' in user.c and doc
+
 - check (one by one) that every function works and
   that the documetation is accurate. Make a relsease.
 

@@ -112,10 +112,14 @@ void filt_conf_keydrop(struct filt_s *o, unsigned idev, unsigned ich, unsigned k
 void filt_conf_nokeydrop(struct filt_s *o, unsigned idev, unsigned ich, unsigned keylo, unsigned keyhi);
 void filt_conf_keymap(struct filt_s *o, unsigned idev, unsigned ich, unsigned odev, unsigned och, unsigned keylo, unsigned keyhi, int keyplus);
 void filt_conf_nokeymap(struct filt_s *o, unsigned odev, unsigned och, unsigned keylo, unsigned keyhi);
-void filt_conf_chgichan(struct filt_s *o, unsigned olddev, unsigned oldch, unsigned newdev, unsigned newch);
+void filt_conf_chgich(struct filt_s *o, unsigned olddev, unsigned oldch, unsigned newdev, unsigned newch);
 void filt_conf_chgidev(struct filt_s *o, unsigned olddev, unsigned newdev);
-void filt_conf_swapichan(struct filt_s *o, unsigned olddev, unsigned oldch, unsigned newdev, unsigned newch);
+void filt_conf_swapich(struct filt_s *o, unsigned olddev, unsigned oldch, unsigned newdev, unsigned newch);
 void filt_conf_swapidev(struct filt_s *o, unsigned olddev, unsigned newdev);
+void filt_conf_chgoch(struct filt_s *o, unsigned olddev, unsigned oldch, unsigned newdev, unsigned newch);
+void filt_conf_chgodev(struct filt_s *o, unsigned olddev, unsigned newdev);
+void filt_conf_swapoch(struct filt_s *o, unsigned olddev, unsigned oldch, unsigned newdev, unsigned newch);
+void filt_conf_swapodev(struct filt_s *o, unsigned olddev, unsigned newdev);
 
 extern unsigned filt_debug;
 

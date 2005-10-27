@@ -1147,8 +1147,11 @@ the console).
 
         <UL>
         <LI> added '<TT>device</TT>' parameter to '<TT>sendraw</TT>'
-        <LI> replaced '<TT>filtchangein</TT>' by '<TT>filtchgichan</TT>'
-                and added '<TT>filtchgidev</TT>'
+        <LI> removed '<TT>filtchangein</TT>' and added
+		<TT>filtchgich</TT>, <TT>filtchgidev</TT>,
+		<TT>filtswapich</TT>, <TT>filtswapidev</TT>,
+		<TT>filtchgoch</TT>, <TT>filtchgodev</TT>,
+		<TT>filtswapoch</TT>, <TT>filtswapodev</TT>.		
         <LI> added new filter rules: 
                 <TT>filtdevdrop</TT>, 
                 <TT>filtchandrop</TT>,
@@ -1174,7 +1177,8 @@ the console).
                 <TT>trackrename</TT>,
                 <TT>chanrename</TT>, 
                 <TT>filtrename</TT>
-        <LI> renamed <TT>changetnum</TT> into <TT>changetch</TT>
+        <LI> split <TT>changetnum</TT> into <TT>changetdev</TT> and <TT>changetch</TT>,
+	     added <TT>chanset</TT>
         <LI> added "event ranges", and an event range argument to 
                 <TT>trackblank</TT> and
                 <TT>trackcopy</TT>
@@ -1198,7 +1202,6 @@ the console).
                 to midish using the readline(3) library.        
         <LI> added filters the ability to limit midi traffic
                 (one controller, one bender, one aftertouch per tic)
-                
         <LI> make the filter drop duplicate controllers, pitch bends and
                 aftertouches
         <LI> added global and per filter current channel: 
@@ -1206,7 +1209,7 @@ the console).
                 <TT>songsetcurchan</TT>,
                 <TT>filtgetcurchan</TT> and
                 <TT>filtsetcurchan</TT>.
-	<LI> added global and per chann current input:
+	<LI> added global and per channel current input:
                 <TT>songgetcurinput</TT>,
                 <TT>songsetcurinput</TT>,
                 <TT>changetcurinput</TT> and
@@ -1260,8 +1263,8 @@ the console).
 	<TR>
 	<TD>curinput
 	<TD>default input {dev&nbsp;chan} pair. This value isn't used in
-		real-time, however it can be uses as default
-		value when adding new values to a filter
+		real-time, however it can be used as default
+		value when adding new rules to a filter
 		that uses this channel.
 	</TABLE>
 
@@ -1965,10 +1968,17 @@ the console).
 <H2>Channel functions</H2>
 
 <A name="func_channew"></A>
-<B><TT>channew channelname channelnum</TT></B>
+<B><TT>channew channelname { device midichan }</TT></B>
         <BLOCKQUOTE>
         create an new channel named <TT>channelname</TT>
-        and bound to midi channel <TT>channelnum</TT> 
+        and assigned the given device and midi channel.
+        </BLOCKQUOTE>
+
+<A name="func_chanset"></A>
+<B><TT>chanset channelname { dev, midichan }</TT></B>
+        <BLOCKQUOTE>
+        set the device/channel pair of an existing
+	channel named <TT>channelname</TT>.
         </BLOCKQUOTE>
 
 <A name="func_chandelete"></A>
@@ -2088,8 +2098,8 @@ the console).
         of <TT>filtname</TT>, returns <TT>nil</TT> if none
         </BLOCKQUOTE>
 
-<A name="func_filtchgichan"></A>
-<B><TT>filtchgichan filtname oldchan newchan</TT></B>
+<A name="func_filtchgich"></A>
+<B><TT>filtchgich filtname oldchan newchan</TT></B>
         <BLOCKQUOTE>
         change the input channel of 
         all rules with input channel equal to <TT>oldchan</TT>
@@ -2105,8 +2115,8 @@ the console).
         </BLOCKQUOTE>
 
 
-<A name="func_filtswapichan"></A>
-<B><TT>filtswapichan filtname oldchan newchan</TT></B>
+<A name="func_filtswapich"></A>
+<B><TT>filtswapich filtname oldchan newchan</TT></B>
         <BLOCKQUOTE>
         change the input channel of 
         all rules with input channel equal to <TT>oldchan</TT>
@@ -2122,6 +2132,43 @@ the console).
         all rules with input device equal to <TT>olddev</TT>
         to <TT>newdev</TT>, and the input device of 
         all rules with input device equal to <TT>newdev</TT>
+        to <TT>olddev</TT>
+        </BLOCKQUOTE>
+
+<A name="func_filtchgoch"></A>
+<B><TT>filtchgoch filtname oldchan newchan</TT></B>
+        <BLOCKQUOTE>
+        change the output channel of 
+        all rules with output channel equal to <TT>oldchan</TT>
+        to <TT>newchan</TT>
+        </BLOCKQUOTE>
+
+<A name="func_filtchgodev"></A>
+<B><TT>filtchgodev filtname olddev newdev</TT></B>
+        <BLOCKQUOTE>
+        change the output device of 
+        all rules with output device equal to <TT>olddev</TT>
+        to <TT>newdev</TT>
+        </BLOCKQUOTE>
+
+
+<A name="func_filtswapoch"></A>
+<B><TT>filtswapoch filtname oldchan newchan</TT></B>
+        <BLOCKQUOTE>
+        change the output channel of 
+        all rules with output channel equal to <TT>oldchan</TT>
+        to <TT>newchan</TT>, and the output channel of 
+        all rules with output channel equal to <TT>newchan</TT>
+        to <TT>oldchan</TT>,
+        </BLOCKQUOTE>
+
+<A name="func_filtswapodev"></A>
+<B><TT>filtswapodev filtname olddev newdev</TT></B>
+        <BLOCKQUOTE>
+        change the output device of 
+        all rules with output device equal to <TT>olddev</TT>
+        to <TT>newdev</TT>, and the output device of 
+        all rules with output device equal to <TT>newdev</TT>
         to <TT>olddev</TT>
         </BLOCKQUOTE>
 

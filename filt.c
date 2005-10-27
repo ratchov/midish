@@ -181,7 +181,7 @@ rule_dbg(struct rule_s *o) {
 }
 
 void
-rule_chgichan(struct rule_s *o, unsigned olddev, unsigned oldch, 
+rule_chgich(struct rule_s *o, unsigned olddev, unsigned oldch, 
     unsigned newdev, unsigned newch) {
 	switch(o->type) {
 	case RULE_CHANDROP:
@@ -227,7 +227,7 @@ rule_chgidev(struct rule_s *o, unsigned olddev, unsigned newdev) {
 }
 
 void
-rule_swapichan(struct rule_s *o, unsigned olddev, unsigned oldch, 
+rule_swapich(struct rule_s *o, unsigned olddev, unsigned oldch, 
     unsigned newdev, unsigned newch) {
 	switch(o->type) {
 	case RULE_CHANDROP:
@@ -272,6 +272,84 @@ rule_swapidev(struct rule_s *o, unsigned olddev, unsigned newdev) {
 	}
 }
 
+
+void
+rule_chgoch(struct rule_s *o, unsigned olddev, unsigned oldch, 
+    unsigned newdev, unsigned newch) {
+	switch(o->type) {
+	case RULE_CHANMAP:
+	case RULE_KEYMAP:
+	case RULE_CTLMAP:
+		if (o->odev == newdev && o->och == newch) {
+			o->och = oldch;			
+			o->odev = olddev;			
+		} else if (o->odev == olddev && o->och == oldch) {
+			o->odev = newdev;
+			o->och = newch;
+		}
+		break;
+	default:
+		break;
+	}
+}
+
+
+void
+rule_chgodev(struct rule_s *o, unsigned olddev, unsigned newdev) {
+	switch(o->type) {
+	case RULE_CHANMAP:
+	case RULE_KEYMAP:
+	case RULE_CTLMAP:
+	case RULE_DEVMAP:
+		if (o->odev == olddev) {
+			o->odev = newdev;
+		} else if (o->odev == newdev) {
+			o->odev = olddev;
+		}
+		break;
+	default:
+		break;
+	}
+}
+
+void
+rule_swapoch(struct rule_s *o, unsigned olddev, unsigned oldch, 
+    unsigned newdev, unsigned newch) {
+	switch(o->type) {
+	case RULE_CHANMAP:
+	case RULE_KEYMAP:
+	case RULE_CTLMAP:
+		if (o->odev == newdev && o->och == newch) {
+			o->och = oldch;			
+			o->odev = olddev;			
+		} else if (o->odev == olddev && o->och == oldch) {
+			o->odev = newdev;
+			o->och = newch;
+		}
+		break;
+	default:
+		break;
+	}
+}
+
+
+void
+rule_swapodev(struct rule_s *o, unsigned olddev, unsigned newdev) {
+	switch(o->type) {
+	case RULE_CHANMAP:
+	case RULE_KEYMAP:
+	case RULE_CTLMAP:
+	case RULE_DEVMAP:
+		if (o->odev == olddev) {
+			o->odev = newdev;
+		} else if (o->odev == newdev) {
+			o->odev = olddev;
+		}
+		break;
+	default:
+		break;
+	}
+}
 
 /* --------------------------------------------------------------------- */
 
@@ -821,15 +899,15 @@ filt_conf_nokeymap(struct filt_s *o, unsigned odev, unsigned och,
 
 
 void
-filt_conf_chgichan(struct filt_s *o, 
+filt_conf_chgich(struct filt_s *o, 
     unsigned olddev, unsigned oldch, unsigned newdev, unsigned newch) {
 	struct rule_s *i;
 	
 	for (i = o->voice_rules; i != NULL; i = i->next) {
-		rule_chgichan(i, olddev, oldch, newdev, newch);
+		rule_chgich(i, olddev, oldch, newdev, newch);
 	}
 	for (i = o->chan_rules; i != NULL; i = i->next) {
-		rule_chgichan(i, olddev, oldch, newdev, newch);
+		rule_chgich(i, olddev, oldch, newdev, newch);
 	}
 }
 
@@ -851,15 +929,15 @@ filt_conf_chgidev(struct filt_s *o, unsigned olddev, unsigned newdev) {
 
 
 void
-filt_conf_swapichan(struct filt_s *o, 
+filt_conf_swapich(struct filt_s *o, 
     unsigned olddev, unsigned oldch, unsigned newdev, unsigned newch) {
 	struct rule_s *i;
 	
 	for (i = o->voice_rules; i != NULL; i = i->next) {
-		rule_swapichan(i, olddev, oldch, newdev, newch);
+		rule_swapich(i, olddev, oldch, newdev, newch);
 	}
 	for (i = o->chan_rules; i != NULL; i = i->next) {
-		rule_swapichan(i, olddev, oldch, newdev, newch);
+		rule_swapich(i, olddev, oldch, newdev, newch);
 	}
 }
 
@@ -879,6 +957,64 @@ filt_conf_swapidev(struct filt_s *o, unsigned olddev, unsigned newdev) {
 	}
 }
 
+void
+filt_conf_chgoch(struct filt_s *o, 
+    unsigned olddev, unsigned oldch, unsigned newdev, unsigned newch) {
+	struct rule_s *i;
+	
+	for (i = o->voice_rules; i != NULL; i = i->next) {
+		rule_chgoch(i, olddev, oldch, newdev, newch);
+	}
+	for (i = o->chan_rules; i != NULL; i = i->next) {
+		rule_chgoch(i, olddev, oldch, newdev, newch);
+	}
+}
+
+
+void
+filt_conf_chgodev(struct filt_s *o, unsigned olddev, unsigned newdev) {
+	struct rule_s *i;
+	
+	for (i = o->voice_rules; i != NULL; i = i->next) {
+		rule_chgodev(i, olddev, newdev);
+	}
+	for (i = o->chan_rules; i != NULL; i = i->next) {
+		rule_chgodev(i, olddev, newdev);
+	}
+	for (i = o->dev_rules; i != NULL; i = i->next) {
+		rule_chgodev(i, olddev, newdev);
+	}
+}
+
+
+void
+filt_conf_swapoch(struct filt_s *o, 
+    unsigned olddev, unsigned oldch, unsigned newdev, unsigned newch) {
+	struct rule_s *i;
+	
+	for (i = o->voice_rules; i != NULL; i = i->next) {
+		rule_swapoch(i, olddev, oldch, newdev, newch);
+	}
+	for (i = o->chan_rules; i != NULL; i = i->next) {
+		rule_swapoch(i, olddev, oldch, newdev, newch);
+	}
+}
+
+
+void
+filt_conf_swapodev(struct filt_s *o, unsigned olddev, unsigned newdev) {
+	struct rule_s *i;
+	
+	for (i = o->voice_rules; i != NULL; i = i->next) {
+		rule_swapodev(i, olddev, newdev);
+	}
+	for (i = o->chan_rules; i != NULL; i = i->next) {
+		rule_swapodev(i, olddev, newdev);
+	}
+	for (i = o->dev_rules; i != NULL; i = i->next) {
+		rule_swapodev(i, olddev, newdev);
+	}
+}
 
 /* ----------------------------------------------- real-time part --- */
 

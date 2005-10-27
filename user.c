@@ -848,6 +848,9 @@ user_mainloop(void) {
 			name_newarg("evspec", NULL))));
 
 	exec_newbuiltin(exec, "chanlist", user_func_chanlist, NULL);
+	exec_newbuiltin(exec, "chanset", user_func_chanset, 
+			name_newarg("channame",
+			name_newarg("channum", NULL)));
 	exec_newbuiltin(exec, "channew", user_func_channew, 
 			name_newarg("channame",
 			name_newarg("channum", NULL)));
@@ -953,7 +956,7 @@ user_mainloop(void) {
 			name_newarg("filtname",
 			name_newarg("outchan", 
 			name_newarg("outctl", NULL))));
-	exec_newbuiltin(exec, "filtchgichan", user_func_filtchgichan,
+	exec_newbuiltin(exec, "filtchgich", user_func_filtchgich,
 			name_newarg("filtname",
 			name_newarg("oldchan", 
 			name_newarg("newchan", NULL))));
@@ -961,11 +964,27 @@ user_mainloop(void) {
 			name_newarg("filtname",
 			name_newarg("olddev", 
 			name_newarg("newdev", NULL))));
-	exec_newbuiltin(exec, "filtswapichan", user_func_filtswapichan,
+	exec_newbuiltin(exec, "filtswapich", user_func_filtswapich,
 			name_newarg("filtname",
 			name_newarg("oldchan", 
 			name_newarg("newchan", NULL))));
 	exec_newbuiltin(exec, "filtswapidev", user_func_filtswapidev,
+			name_newarg("filtname",
+			name_newarg("olddev", 
+			name_newarg("newdev", NULL))));
+	exec_newbuiltin(exec, "filtchgoch", user_func_filtchgoch,
+			name_newarg("filtname",
+			name_newarg("oldchan", 
+			name_newarg("newchan", NULL))));
+	exec_newbuiltin(exec, "filtchgodev", user_func_filtchgodev,
+			name_newarg("filtname",
+			name_newarg("olddev", 
+			name_newarg("newdev", NULL))));
+	exec_newbuiltin(exec, "filtswapoch", user_func_filtswapoch,
+			name_newarg("filtname",
+			name_newarg("oldchan", 
+			name_newarg("newchan", NULL))));
+	exec_newbuiltin(exec, "filtswapodev", user_func_filtswapodev,
 			name_newarg("filtname",
 			name_newarg("olddev", 
 			name_newarg("newdev", NULL))));
@@ -974,6 +993,30 @@ user_mainloop(void) {
 			name_newarg("channame", NULL)));
 	exec_newbuiltin(exec, "filtgetcurchan", user_func_filtgetcurchan,
 			name_newarg("filtname", NULL));
+
+	exec_newbuiltin(exec, "sysexlist", user_func_sysexlist, NULL);
+	exec_newbuiltin(exec, "sysexnew", user_func_sysexnew, 
+			name_newarg("sysexname", NULL));
+	exec_newbuiltin(exec, "sysexdelete", user_func_sysexdelete, 
+			name_newarg("sysexname", NULL));
+	exec_newbuiltin(exec, "sysexrename", user_func_sysexrename,
+			name_newarg("sysexname",
+			name_newarg("newname", NULL)));
+	exec_newbuiltin(exec, "sysexexists", user_func_sysexexists, 
+			name_newarg("sysexname", NULL));
+	exec_newbuiltin(exec, "sysexinfo", user_func_sysexinfo, 
+			name_newarg("sysexname", NULL));
+	exec_newbuiltin(exec, "sysexclear", user_func_sysexclear, 
+			name_newarg("sysexname", 
+			name_newarg("data", NULL)));
+	exec_newbuiltin(exec, "sysexsetunit", user_func_sysexsetunit, 
+			name_newarg("sysexname", 
+			name_newarg("unit", 
+			name_newarg("data", NULL))));
+	exec_newbuiltin(exec, "sysexadd", user_func_sysexadd, 
+			name_newarg("sysexname", 
+			name_newarg("unit",
+			name_newarg("data", NULL))));
 
 	exec_newbuiltin(exec, "songgetunit", user_func_songgetunit, NULL);
 	exec_newbuiltin(exec, "songsetunit", user_func_songsetunit, 

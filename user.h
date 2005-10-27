@@ -99,6 +99,7 @@ unsigned user_func_trackchanlist(struct exec_s *o, struct data_s **r);
 
 unsigned user_func_chanlist(struct exec_s *o, struct data_s **r);
 unsigned user_func_channew(struct exec_s *o, struct data_s **r);
+unsigned user_func_chanset(struct exec_s *o, struct data_s **r);
 unsigned user_func_chandelete(struct exec_s *o, struct data_s **r);
 unsigned user_func_chanrename(struct exec_s *o, struct data_s **r);
 unsigned user_func_chanexists(struct exec_s *o, struct data_s **r);
@@ -146,10 +147,14 @@ unsigned user_func_filtnokeydrop(struct exec_s *o, struct data_s **r);
 unsigned user_func_filtkeymap(struct exec_s *o, struct data_s **r);
 unsigned user_func_filtnokeymap(struct exec_s *o, struct data_s **r);
 unsigned user_func_filtreset(struct exec_s *o, struct data_s **r);
-unsigned user_func_filtchgichan(struct exec_s *o, struct data_s **r);
+unsigned user_func_filtchgich(struct exec_s *o, struct data_s **r);
 unsigned user_func_filtchgidev(struct exec_s *o, struct data_s **r);
-unsigned user_func_filtswapichan(struct exec_s *o, struct data_s **r);
+unsigned user_func_filtswapich(struct exec_s *o, struct data_s **r);
 unsigned user_func_filtswapidev(struct exec_s *o, struct data_s **r);
+unsigned user_func_filtchgoch(struct exec_s *o, struct data_s **r);
+unsigned user_func_filtchgodev(struct exec_s *o, struct data_s **r);
+unsigned user_func_filtswapoch(struct exec_s *o, struct data_s **r);
+unsigned user_func_filtswapodev(struct exec_s *o, struct data_s **r);
 unsigned user_func_filtsetcurchan(struct exec_s *o, struct data_s **r);
 unsigned user_func_filtgetcurchan(struct exec_s *o, struct data_s **r);
 

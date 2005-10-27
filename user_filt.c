@@ -449,7 +449,7 @@ user_func_filtreset(struct exec_s *o, struct data_s **r) {
 
 
 unsigned
-user_func_filtchgichan(struct exec_s *o, struct data_s **r) {
+user_func_filtchgich(struct exec_s *o, struct data_s **r) {
 	struct songfilt_s *f;
 	unsigned olddev, oldch, newdev, newch;
 	
@@ -458,7 +458,7 @@ user_func_filtchgichan(struct exec_s *o, struct data_s **r) {
 	    !exec_lookupchan_getnum(o, "newchan", &newdev, &newch)) {
 		return 0;
 	}
-	filt_conf_chgichan(&f->filt, olddev, oldch, newdev, newch);
+	filt_conf_chgich(&f->filt, olddev, oldch, newdev, newch);
 	return 1;
 }
 
@@ -483,7 +483,7 @@ user_func_filtchgidev(struct exec_s *o, struct data_s **r) {
 }
 
 unsigned
-user_func_filtswapichan(struct exec_s *o, struct data_s **r) {
+user_func_filtswapich(struct exec_s *o, struct data_s **r) {
 	struct songfilt_s *f;
 	unsigned olddev, oldch, newdev, newch;
 	
@@ -492,7 +492,7 @@ user_func_filtswapichan(struct exec_s *o, struct data_s **r) {
 	    !exec_lookupchan_getnum(o, "newchan", &newdev, &newch)) {
 		return 0;
 	}
-	filt_conf_swapichan(&f->filt, olddev, oldch, newdev, newch);
+	filt_conf_swapich(&f->filt, olddev, oldch, newdev, newch);
 	return 1;
 }
 
@@ -515,6 +515,75 @@ user_func_filtswapidev(struct exec_s *o, struct data_s **r) {
 	filt_conf_swapidev(&f->filt, olddev, newdev);
 	return 1;
 }
+
+unsigned
+user_func_filtchgoch(struct exec_s *o, struct data_s **r) {
+	struct songfilt_s *f;
+	unsigned olddev, oldch, newdev, newch;
+	
+	if (!exec_lookupfilt(o, "filtname", &f) ||
+	    !exec_lookupchan_getnum(o, "oldchan", &olddev, &oldch) ||
+	    !exec_lookupchan_getnum(o, "newchan", &newdev, &newch)) {
+		return 0;
+	}
+	filt_conf_chgoch(&f->filt, olddev, oldch, newdev, newch);
+	return 1;
+}
+
+
+unsigned
+user_func_filtchgodev(struct exec_s *o, struct data_s **r) {
+	struct songfilt_s *f;
+	long olddev, newdev;
+	
+	if (!exec_lookupfilt(o, "filtname", &f) ||
+	    !exec_lookuplong(o, "olddev", &olddev) ||
+	    !exec_lookuplong(o, "newdev", &newdev)) {
+		return 0;
+	}
+	if (olddev < 0 || olddev > EV_MAXDEV || 
+	    newdev < 0 || newdev > EV_MAXDEV) {
+		cons_err("dev numver out of bounds");
+		return 0;
+	}
+	filt_conf_chgodev(&f->filt, olddev, newdev);
+	return 1;
+}
+
+unsigned
+user_func_filtswapoch(struct exec_s *o, struct data_s **r) {
+	struct songfilt_s *f;
+	unsigned olddev, oldch, newdev, newch;
+	
+	if (!exec_lookupfilt(o, "filtname", &f) ||
+	    !exec_lookupchan_getnum(o, "oldchan", &olddev, &oldch) ||
+	    !exec_lookupchan_getnum(o, "newchan", &newdev, &newch)) {
+		return 0;
+	}
+	filt_conf_swapoch(&f->filt, olddev, oldch, newdev, newch);
+	return 1;
+}
+
+
+unsigned
+user_func_filtswapodev(struct exec_s *o, struct data_s **r) {
+	struct songfilt_s *f;
+	long olddev, newdev;
+	
+	if (!exec_lookupfilt(o, "filtname", &f) ||
+	    !exec_lookuplong(o, "olddev", &olddev) ||
+	    !exec_lookuplong(o, "newdev", &newdev)) {
+		return 0;
+	}
+	if (olddev < 0 || olddev > EV_MAXDEV || 
+	    newdev < 0 || newdev > EV_MAXDEV) {
+		cons_err("dev numver out of bounds");
+		return 0;
+	}
+	filt_conf_swapodev(&f->filt, olddev, newdev);
+	return 1;
+}
+
 
 unsigned
 user_func_filtsetcurchan(struct exec_s *o, struct data_s **r) {

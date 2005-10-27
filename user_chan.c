@@ -65,24 +65,16 @@ user_func_chanlist(struct exec_s *o, struct data_s **r) {
 unsigned
 user_func_channew(struct exec_s *o, struct data_s **r) {
 	char *name;
-	struct var_s *arg;
 	struct songchan_s *i;
 	unsigned dev, ch;
 	
-	if (!exec_lookupname(o, "channame", &name)) {
+	if (!exec_lookupname(o, "channame", &name) ||
+	    !exec_lookupchan_getnum(o, "channum", &dev, &ch)) {
 		return 0;
 	}
 	i = song_chanlookup(user_song, name);
 	if (i != NULL) {
 		cons_err("channew: chan already exists");
-		return 0;
-	}
-	arg = exec_varlookup(o, "channum");
-	if (!arg) {
-		dbg_puts("exec_lookupchan: no such var\n");
-		dbg_panic();
-	}
-	if (!data_list2chan(arg->data, &dev, &ch)) {
 		return 0;
 	}
 	i = song_chanlookup_bynum(user_song, dev, ch);
@@ -135,15 +127,49 @@ user_func_chanrename(struct exec_s *o, struct data_s **r) {
 
 unsigned
 user_func_chanexists(struct exec_s *o, struct data_s **r) {
-	char *name;
 	struct songchan_s *i;
-	if (!exec_lookupname(o, "channame", &name)) {
+	unsigned dev, ch;
+	
+	if (!exec_lookupchan_getnum(o, "channame", &dev, &ch)) {
 		return 0;
 	}
-	i = song_chanlookup(user_song, name);
+	i = song_chanlookup_bynum(user_song, dev, ch);
 	*r = data_newlong(i != NULL ? 1 : 0);
 	return 1;
 }
+
+
+unsigned
+user_func_chanset(struct exec_s *o, struct data_s **r) {
+	struct songchan_s *c, *i;
+	unsigned dev, ch;
+	
+	if (!exec_lookupchan_getref(o, "channame", &c) ||
+	    !exec_lookupchan_getnum(o, "channum", &dev, &ch)) {
+		return 0;
+	}
+	i = song_chanlookup_bynum(user_song, dev, ch);
+	if (i != NULL) {
+		cons_errs(i->name.str, "dev/chan number already used");
+		return 0;
+	}
+	c->dev = dev;
+	c->ch = ch;
+	track_opsetchan(&c->conf, dev, ch);
+	return 1;
+}
+
+
+
+
+
+
+
+
+
+
+
+
 
 unsigned
 user_func_changetch(struct exec_s *o, struct data_s **r) {
@@ -166,6 +192,9 @@ user_func_changetdev(struct exec_s *o, struct data_s **r) {
 	*r = data_newlong(i->dev);
 	return 1;
 }
+
+
+
 
 unsigned
 user_func_chanconfev(struct exec_s *o, struct data_s **r) {
