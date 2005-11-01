@@ -44,8 +44,7 @@ install-midish:	midish
 		cp midish.1 smfplay.1 smfrec.1 ${MAN1_DIR}
 		cp README manual.html ${DOC_DIR}
 		cp midishrc sample.sng ${EXAMPLES_DIR}
-		if [ ! -e /etc/midishrc ]; then cp -f midishrc /etc; fi
-
+		
 cons.o:		cons.c dbg.h textio.h cons.h user.h
 data.o:		data.c dbg.h str.h cons.h data.h
 dbg.o:		dbg.c dbg.h

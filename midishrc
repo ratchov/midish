@@ -129,10 +129,11 @@ proc q rate {
 } 
 
 #
-# cut the current selection on the current track
+# cut the given number of measures from the current 
+# position on the current track
 #
 proc cut amount {	 
-	trackcut [songgetcurtrack] [songgetcurpos] [songgetcurlen] [songgetcurquant]
+	trackcut [songgetcurtrack] [songgetcurpos] $amount [songgetcurquant]
 }
 
 #
@@ -163,9 +164,8 @@ proc copy where {
 #
 # cut a piece of the song
 #
-proc gcut  {
+proc gcut amount {
 	let pos = [songgetcurpos] 
-	let amount = [songgetcurlen] 
 	let quant = [songgetcurquant]
 	for i in [tracklist] {
 		trackcut $i $pos $amount $quant
