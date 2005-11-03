@@ -330,8 +330,8 @@ track_opquantise(struct track_s *o, struct seqptr_s *p,
 			break; 	
 		
 		} 
+		track_seekblank(&ctls, &cp, delta);
 		if ((*op.pos)->ev.cmd != EV_NON) {
-			track_seekblank(&ctls, &cp, delta);
 			track_evlast(&ctls, &cp);
 			track_framerm(o, &op, &frame);
 			track_frameins(&ctls, &cp, &frame);
