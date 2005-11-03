@@ -199,6 +199,9 @@ mux_mdep_run(void) {
 void 
 mux_sleep(unsigned millisecs) {
 	if (poll(NULL, (nfds_t)0, millisecs) < 0) {
+		if (errno == EINTR) {
+			continue;
+		}
 		perror("mux_sleep: poll failed");
 		exit(1);
 	}
