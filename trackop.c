@@ -247,6 +247,24 @@ track_framematch(struct track_s *s, struct evspec_s *e) {
 }
 
 
+void
+track_frametransp(struct track_s *o, int halftones) {
+	struct seqptr_s op;
+	
+	track_rew(o, &op);	
+	for (;;) {
+		if (!track_seqevavail(o, &op)) {
+			break;
+		}
+		if (EV_ISNOTE(&(*op.pos)->ev)) {
+			(*op.pos)->ev.data.voice.b0 += halftones;
+			(*op.pos)->ev.data.voice.b0 &= 0x7f;
+		}
+		track_seqevnext(o, &op);
+	}
+}
+
+
 	/*
 	 * suppress orphaned NOTEOFFs and NOTEONs and nested notes
 	 * if the same frame is found twice on the same tic, 
@@ -509,6 +527,45 @@ track_opinsert(struct track_s *o, struct seqptr_s *p, unsigned len) {
 	track_opcheck(o);
 }
 
+void
+track_optransp(struct track_s *o, struct seqptr_s *p, unsigned len, 
+    int halftones, struct evspec_s *es) {
+	struct track_s frame, temp;
+	struct seqptr_s op, tp;
+	unsigned delta, tic;
+	
+	track_init(&temp);
+	track_init(&frame);
+
+	tic = 0;
+	op = *p;
+	track_rew(&temp, &tp);
+		
+	for (;;) {
+		delta = track_framefind(o, &op);
+		track_seekblank(&temp, &tp, delta);
+		track_evlast(&temp, &tp);
+		tic += delta;
+
+		if (!track_evavail(o, &op)) {
+			break;
+		}
+	
+		if (evspec_matchev(es, &(*op.pos)->ev)) {
+			track_framerm(o, &op, &frame);
+			track_frametransp(&frame, halftones);
+			track_frameins(&temp, &tp, &frame);
+		} else {
+			track_evnext(o, &op);
+		}
+	}
+	op = *p;
+	track_frameins(o, &op, &temp);
+	track_done(&frame);
+	track_done(&temp);
+	track_opcheck(o);
+}
+
 	/*
 	 * set the chan (dev/midichan pair) of
 	 * all voice events
@@ -741,3 +798,4 @@ track_opconfev(struct track_s *o, struct ev_s *ev) {
 	}
 	track_evput(o, &p, ev);
 }
+

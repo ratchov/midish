@@ -835,6 +835,13 @@ user_mainloop(void) {
 			name_newarg("amount", 
 			name_newarg("rate", 
 			name_newarg("quantum", NULL))))));
+	exec_newbuiltin(exec, "tracktransp", user_func_tracktransp, 
+			name_newarg("trackname", 
+			name_newarg("from", 
+			name_newarg("amount", 
+			name_newarg("halftones",
+			name_newarg("quantum", 
+			name_newarg("evspec", NULL)))))));
 	exec_newbuiltin(exec, "tracksetmute", user_func_tracksetmute,
 			name_newarg("trackname",
 			name_newarg("muteflag", NULL)));

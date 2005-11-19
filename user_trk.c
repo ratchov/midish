@@ -432,6 +432,43 @@ user_func_trackquant(struct exec_s *o, struct data_s **r) {
 }
 
 unsigned
+user_func_tracktransp(struct exec_s *o, struct data_s **r) {
+	struct songtrk_s *t;
+	struct seqptr_s tp;
+	long from, amount, quant, halftones;
+	unsigned tic, len;
+	struct evspec_s es;
+	
+	if (!exec_lookuptrack(o, "trackname", &t) ||
+	    !exec_lookuplong(o, "from", &from) ||
+	    !exec_lookuplong(o, "amount", &amount) ||
+	    !exec_lookuplong(o, "halftones", &halftones) ||
+	    !exec_lookuplong(o, "quantum", &quant) ||
+	    !exec_lookupevspec(o, "evspec", &es)) {
+		return 0;
+	}
+	tic = song_measuretotic(user_song, from);
+	len = song_measuretotic(user_song, from + amount) - tic;
+	
+	if (quant < 0 || (unsigned)quant > user_song->tics_per_unit) {
+		cons_err("quantum must be between 0 and tics_per_unit");
+		return 0;
+	}
+
+	if (tic > (unsigned)quant/2) {
+		tic -= quant/2;
+	}
+	
+	track_rew(&t->track, &tp);
+	if (track_seek(&t->track, &tp, tic) != 0) {
+		return 1;
+	}
+	track_optransp(&t->track, &tp, len, halftones, &es);
+	return 1;
+}
+
+
+unsigned
 user_func_tracksetmute(struct exec_s *o, struct data_s **r) {
 	struct songtrk_s *t;
 	long flag;

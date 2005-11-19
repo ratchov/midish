@@ -33,7 +33,7 @@
 
 <HTML>
 <HEAD>
-<TITLE>midish 0.2 - tutorial</TITLE>
+<TITLE>midish 0.3 - tutorial</TITLE>
 <META http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
 </HEAD>
 <BODY bgcolor="white" text="black" link="blue" vlink="navy">
@@ -107,9 +107,9 @@
         <LI> Untar and gunzip the tar-ball:
 
         <PRE>
-        gunzip midish-0.2.tar.gz
-        tar -xf midish-0.2.tar
-        cd midish-0.2
+        gunzip midish-0.3.tar.gz
+        tar -xf midish-0.3.tar
+        cd midish-0.3
 	</PRE>
 
         <LI> 
@@ -1218,6 +1218,12 @@ the console).
 	<LI> added a midi file player and recorder: smfplay(1) and smfrec(1)
         </UL>
 
+<A name="changes_03"></A><H2>Changes from release 0.2 to release 0.3</H2>
+
+        <UL>
+        <LI> added <TT>tracktransp</TT>
+	</UL>
+
 <A name="attributes"></A><H1>Project attributes</H1>
 
 <H2>Device attributes</H2>
@@ -1933,6 +1939,15 @@ the console).
         the round in tics (see songsetunit). Rate must be
         between 0 and 100. 0 means no quantisation and
         100 means full quantisation.
+        </BLOCKQUOTE>
+
+<A name="func_tracktransp"></A>
+<B><TT>tracktransp trackname start length halftones quantum evspec</TT></B>
+        <BLOCKQUOTE>
+        transpose note events of measures within the [start; start + len]
+	interval by 'halftones' half tones. Only events matching
+        the <TT>evspec</TT> argument are transposed (see event
+        <A href="#ev_evspec">ranges</A>)
         </BLOCKQUOTE>
 
 

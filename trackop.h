@@ -42,15 +42,17 @@ unsigned track_framefind(struct track_s *o, struct seqptr_s *p);
 void track_frameuniq(struct track_s *o, struct seqptr_s *p, struct track_s *frame);
 void track_framecp(struct track_s *s, struct track_s *d);
 unsigned track_framematch(struct track_s *s, struct evspec_s *e);
+void track_frametransp(struct track_s *o, int halftones);
 
 void track_opcheck(struct track_s *o);
 void track_opquantise(struct track_s *o, struct seqptr_s *, unsigned first, unsigned len, unsigned quantum, unsigned rate);
 void track_opextract(struct track_s *o, struct seqptr_s *, unsigned len, struct track_s *targ, struct evspec_s *es);
 void track_opcopy(struct track_s *o, struct seqptr_s *p, unsigned len, struct track_s *targ);
-
 void track_opcut(struct track_s *o, struct seqptr_s *,  unsigned len);
 void track_opinsert(struct track_s *o, struct seqptr_s *, unsigned len);
 void track_opsetchan(struct track_s *o, unsigned dev, unsigned ch);
+void track_optransp(struct track_s *o, struct seqptr_s *p, unsigned len, int halftones, struct evspec_s *es);
+
 unsigned track_opfindtic(struct track_s *o, unsigned m0);
 void track_optimeinfo(struct track_s *o, unsigned pos, unsigned long *usec24, unsigned *bpm, unsigned *tpb);
 void track_opgetmeasure(struct track_s *o, unsigned pos, unsigned *measure, unsigned *beat, unsigned *tic);

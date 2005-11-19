@@ -91,6 +91,7 @@ unsigned user_func_trackblank(struct exec_s *o, struct data_s **r);
 unsigned user_func_trackcopy(struct exec_s *o, struct data_s **r);
 unsigned user_func_trackinsert(struct exec_s *o, struct data_s **r);
 unsigned user_func_trackquant(struct exec_s *o, struct data_s **r);
+unsigned user_func_tracktransp(struct exec_s *o, struct data_s **r);
 unsigned user_func_tracksetmute(struct exec_s *o, struct data_s **r);
 unsigned user_func_trackgetmute(struct exec_s *o, struct data_s **r);
 unsigned user_func_trackchanlist(struct exec_s *o, struct data_s **r);

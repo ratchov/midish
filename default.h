@@ -31,7 +31,7 @@
 #ifndef MIDISH_DEFAULT_H
 #define MIDISH_DEFAULT_H
 
-#define VERSION "midish version 0.2"
+#define VERSION "midish version 0.3"
 
 	/* 
 	 * maximum number of midi devices supported by midish 
