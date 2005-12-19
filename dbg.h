@@ -41,7 +41,6 @@ void  dbg_putu(unsigned long);
 void  dbg_panic(void);
 void *mem_alloc(unsigned);
 void  mem_free(void *);
-
-extern unsigned mem_counter;
+void  mem_stats(void);
 
 #endif /* MIDISH_DBG_H */

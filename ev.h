@@ -62,11 +62,11 @@
 #define EV_GETNOTE(ev)	((ev)->data.voice.b0)
 #define EV_GETCH(ev)	((ev)->data.voice.ch)
 #define EV_GETDEV(ev)	((ev)->data.voice.dev)
-#define EV_GETBEND(ev)	(0x80 * (ev)->data.voice.b0 + (ev)->data.voice.b1)
+#define EV_GETBEND(ev)	(0x80 * (ev)->data.voice.b1 + (ev)->data.voice.b0)
 #define EV_SETBEND(ev,v)				\
 	do { 						\
-		(ev)->data.voice.b0 = (v) >> 7;		\
-		(ev)->data.voice.b1 = (v) & 0x7f;	\
+		(ev)->data.voice.b0 = (v) & 0x7f;	\
+		(ev)->data.voice.b1 = (v) >> 7;		\
 	} while(0);
 
 #define EV_NOFF_DEFAULTVEL	100
@@ -94,6 +94,11 @@ struct ev_s {
 	} data;
 };
 
+#define EV_PHASE_FIRST		1
+#define EV_PHASE_NEXT		2
+#define EV_PHASE_LAST		4
+
+
 #define EVSPEC_ANY		0
 #define EVSPEC_NOTE		1
 #define EVSPEC_CTL		2
@@ -109,16 +114,36 @@ struct evspec_s {
 	unsigned b1_min, b1_max;
 };
 
-void ev_dbg(struct ev_s *ev);
+void	 ev_dbg(struct ev_s *ev);
 unsigned ev_sameclass(struct ev_s *ev1, struct ev_s *ev2);
 unsigned ev_ordered(struct ev_s *ev1, struct ev_s *ev2);
 unsigned ev_str2cmd(struct ev_s *ev, char *str);
+unsigned ev_phase(struct ev_s *ev);
 
 unsigned evspec_str2cmd(struct evspec_s *ev, char *str);
-void evspec_dbg(struct evspec_s *o);
-void evspec_reset(struct evspec_s *o);
+void	 evspec_dbg(struct evspec_s *o);
+void	 evspec_reset(struct evspec_s *o);
 unsigned evspec_matchev(struct evspec_s *o, struct ev_s *e);
 
+struct evctl_s {
+#define EVCTL_TYPE_UNKNOWN	0
+#define EVCTL_TYPE_CONT		1
+#define EVCTL_TYPE_SWITCH	2
+	unsigned type;
+	char *name;
+	unsigned defval;
+};
+
+#define EVCTL_TYPE(i)		(evctl_tab[(i)].type)
+#define EVCTL_DEFAULT(i)	(evctl_tab[(i)].defval)
+
+extern	struct evctl_s evctl_tab[128];
+
+void	 evctl_conf(unsigned i, unsigned type, unsigned defval, char *name);
+void	 evctl_unconf(unsigned i);
+unsigned evctl_lookup(char *name, unsigned *ret);
+void	 evctl_init(void);
+void	 evctl_done(void);
 
 
 #endif /* MIDISH_EV_H */

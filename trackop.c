@@ -36,6 +36,7 @@
 #include "trackop.h"
 #include "track.h"
 #include "default.h"
+#include "frame.h"
 
 	/*
 	 * removes the frame at the current position from the track.
@@ -44,6 +45,9 @@
 	 */
 void
 track_framerm(struct track_s *o, struct seqptr_s *p, struct track_s *frame) {
+#if 1
+	track_frameget(o,p,frame);
+#else
 	struct seqptr_s op, fp;
 	struct seqev_s *se;
 	unsigned tics;
@@ -119,6 +123,7 @@ track_framerm(struct track_s *o, struct seqptr_s *p, struct track_s *frame) {
 		}
 		track_evnext(o, &op);
 	}
+#endif
 }
 
 	/*

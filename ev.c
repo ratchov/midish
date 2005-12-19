@@ -49,6 +49,8 @@ char *evspec_cmdstr[] = {
 	"any", "note", "ctl", "pc", "cat", "bend", NULL
 };
 
+struct evctl_s evctl_tab[128];
+
 char *
 ev_getstr(struct ev_s *ev) {
 	if (ev->cmd >= EV_NUMCMD) {
@@ -80,15 +82,20 @@ ev_str2cmd(struct ev_s *ev, char *str) {
 
 unsigned
 ev_sameclass(struct ev_s *ev1, struct ev_s *ev2) {
-	if (ev1->cmd != ev2->cmd) {
-		return 0;
-	}
 	switch (ev1->cmd) {
 	case EV_NON:
 	case EV_NOFF:
 	case EV_KAT:
+		if (!EV_ISNOTE(ev2) ||
+		    ev1->data.voice.dev != ev2->data.voice.dev ||
+		    ev1->data.voice.ch != ev2->data.voice.ch ||
+		    ev1->data.voice.b0 != ev2->data.voice.b0) {
+			return 0;
+		}
+		break;		
 	case EV_CTL:
-		if (ev1->data.voice.dev != ev2->data.voice.dev ||
+		if (ev1->cmd != ev2->cmd ||
+		    ev1->data.voice.dev != ev2->data.voice.dev ||
 		    ev1->data.voice.ch != ev2->data.voice.ch ||
 		    ev1->data.voice.b0 != ev2->data.voice.b0) {
 			return 0;
@@ -97,13 +104,17 @@ ev_sameclass(struct ev_s *ev1, struct ev_s *ev2) {
 	case EV_BEND:
 	case EV_CAT:
 	case EV_PC:
-		if (ev1->data.voice.dev != ev2->data.voice.dev ||
+		if (ev1->cmd != ev2->cmd ||
+		    ev1->data.voice.dev != ev2->data.voice.dev ||
 		    ev1->data.voice.ch != ev2->data.voice.ch) {
 			return 0;
 		}
 		break;
 	case EV_TEMPO:
 	case EV_TIMESIG:
+		if (ev1->cmd != ev2->cmd) {
+			return 0;
+		}
 		break;
 	default:
 		dbg_puts("ev_sameclass: bad event type\n");
@@ -156,8 +167,68 @@ ev_ordered(struct ev_s *ev1, struct ev_s *ev2) {
 	return 1;
 }
 
+	/*
+	 * return the phase of the event within 
+	 * a frame:
+	 *	- EV_PHASE_FIRST is set if the given event can be the
+	 * 	  first event in a sequence (example: note-on)
+	 *	- EV_PHASE_NEXT is set if the given event can be the next
+	 * 	  event in a frame after a 'first event' but not the last
+	 * 	  one (example: key after-touch)
+	 *	- EV_PHASE_LAST is set if the given event can be the last
+	 * 	  event in a frame (example: note-off)
+	 */
 
+unsigned
+ev_phase(struct ev_s *ev) {
+	unsigned phase;
 	
+	switch(ev->cmd) {
+	case EV_NOFF:
+		phase = EV_PHASE_LAST;
+		break;
+	case EV_NON:
+		phase = EV_PHASE_FIRST;
+		break;
+	case EV_KAT:
+		phase = EV_PHASE_NEXT;
+		break;
+	case EV_CAT:
+		if (ev->data.voice.b0 != EV_CAT_DEFAULT) {
+			phase = EV_PHASE_FIRST | EV_PHASE_NEXT;
+		} else {
+			phase = EV_PHASE_LAST;
+		}
+		break;
+	case EV_CTL:
+		if (EVCTL_TYPE(ev->data.voice.b0) == EVCTL_TYPE_UNKNOWN) {
+			phase = EV_PHASE_FIRST | EV_PHASE_LAST;
+		} else {
+			if (ev->data.voice.b1 != 
+			    EVCTL_DEFAULT(ev->data.voice.b0)) {
+				phase = EV_PHASE_FIRST | EV_PHASE_NEXT;
+			} else {
+				phase = EV_PHASE_LAST;		
+			}
+		}
+		break;
+	case EV_BEND:
+		if (ev->data.voice.b0 != EV_BEND_DEFAULTLO ||
+		    ev->data.voice.b1 != EV_BEND_DEFAULTHI) {
+			phase = EV_PHASE_FIRST | EV_PHASE_NEXT;
+		} else {
+			phase = EV_PHASE_LAST;		
+		}
+		break;
+	case EV_PC:
+	default:
+		phase = EV_PHASE_FIRST | EV_PHASE_LAST;
+		break;
+	}
+	return phase;
+}
+
+
 void
 ev_dbg(struct ev_s *ev) {
 	char *cmdstr;
@@ -329,5 +400,86 @@ ch:	if (e->data.voice.dev < o->dev_min ||
 		return 0;
 	}
 	return 1;
+}
+
+	/*
+	 * configure a controller (set the typ, name, etc...)
+	 */
+
+void
+evctl_conf(unsigned i, unsigned type, unsigned defval, char *name) {
+	struct evctl_s *o = &evctl_tab[i];
+	if (o->name != NULL) {
+		str_delete(o->name);
+	}
+	o->name = str_new(name);
+	o->type = type;
+	o->defval = defval;
+}
+
+	/*
+	 * unconfigure a controller (clear its name, set
+	 * its type to "unknown")
+	 */
+
+void
+evctl_unconf(unsigned i) {
+	struct evctl_s *o = &evctl_tab[i];
+	if (o->name != NULL) {
+		str_delete(o->name);
+		o->name = NULL;
+	}
+	o->type = EVCTL_TYPE_UNKNOWN;
+	o->defval = 0;
+}
+
+	/*
+	 * find the controller number corresponding the given
+	 * controller name. Return 1 if found, 0 if not
+	 */
+	
+unsigned
+evctl_lookup(char *name, unsigned *ret) {
+	unsigned i;
+	struct evctl_s *ctl;
+	
+	for (i = 0; i < 128; i++) {
+		ctl = &evctl_tab[0];
+		if (ctl->name != NULL && str_eq(ctl->name, name)) {
+			*ret = i;
+			return 1;
+		}
+	}
+	return 0;
+}
+
+	/*
+	 * initialise the controller table
+	 */
+
+void
+evctl_init(void) {
+	unsigned i;
+	
+	for (i = 0; i < 128; i++) {
+		evctl_tab[i].type = EVCTL_TYPE_UNKNOWN;
+		evctl_tab[i].name = NULL;
+		evctl_tab[i].defval = 0;
+	}
+}
+
+	/*
+	 * free the controller table 
+	 */
+
+void
+evctl_done(void) {
+	unsigned i;
+
+	for (i = 0; i < 128; i++) {
+		if (evctl_tab[i].name != NULL) {
+			str_delete(evctl_tab[i].name);
+		}
+	}
 }
 

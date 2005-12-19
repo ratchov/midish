@@ -37,7 +37,7 @@
 #define MAGIC_ALLOC	13942
 #define MAGIC_FREE	59811	
 
-unsigned mem_counter = 0;
+unsigned mem_nalloc = 0, mem_nfree = 0;
 
 void
 dbg_puts(char *msg) {
@@ -62,7 +62,7 @@ dbg_panic(void) {
 	fputs("dbg_panic: failed to send SIGTRAP\n", stderr);
 	exit(1);
 #else
-	fputs("dbg_panic: exciting\n", stderr);
+	fputs("dbg_panic: exiting...\n", stderr);
 	exit(1);
 #endif
 }
@@ -78,7 +78,7 @@ void *
 mem_alloc(unsigned n) {
 	unsigned i, *buf;
 	
-	if (!n) {
+	if (n == 0) {
 		dbg_puts("mem_alloc: nbytes = 0\n");
 		dbg_panic();
 	}
@@ -92,7 +92,7 @@ mem_alloc(unsigned n) {
 		dbg_putx(n);
 		dbg_puts(" words\n");
 		dbg_panic();
-	} 
+	}
 
 	for (i = 0; i < n; i++) {
 		buf[i] = mem_rnd();
@@ -103,7 +103,7 @@ mem_alloc(unsigned n) {
 	buf[2] = mem_rnd();	/* a random number */
 	buf[n - 1] = buf[2];
 	
-	mem_counter++;	
+	mem_nalloc++;	
 	
 	return buf + 3;
 }
@@ -138,6 +138,14 @@ mem_free(void *mem) {
 	buf[0] = MAGIC_FREE;
 
 	free(buf);
-	mem_counter--;
+	mem_nfree++;
 }
 
+void
+mem_stats(void) {
+	dbg_puts("mem_stats: used=");
+	dbg_putu(mem_nalloc - mem_nfree);
+	dbg_puts(", alloc=");
+	dbg_putu(mem_nalloc);
+	dbg_puts("\n");
+}

@@ -28,48 +28,13 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <stdio.h>
-#include "dbg.h"
-#include "str.h"
+#ifndef MIDISH_FRAME_H
+#define MIDISH_FRAME_H
 
-#include "cons.h"
-#include "ev.h"
-#include "mux.h"
-#include "track.h"
-#include "song.h"
-#include "user.h"
-#include "filt.h"
-#include "mididev.h"
-#include "default.h"
-#include "sysex.h"
-#include "textio.h"
+struct track_s;
+struct seqptr_s;
 
+void track_frameget(struct track_s *o, struct seqptr_s *p, struct track_s *frame);
 
-int
-main(int argc, char **argv) {
-	
-	if (!user_getopts(&argc, &argv)) {
-		return 1;
-	}
+#endif /* MIDISH_FRAME_H */
 
-	cons_init();
-	textio_init();
-	evctl_init();
-	seqev_pool_init(DEFAULT_MAXNSEQEVS);
-	state_pool_init(DEFAULT_MAXNSTATES);
-	chunk_pool_init(DEFAULT_MAXNCHUNKS);
-	sysex_pool_init(DEFAULT_MAXNSYSEXS);
-	mididev_listinit();
-		
-	user_mainloop();
-	
-	mididev_listdone();
-	sysex_pool_done();
-	chunk_pool_done();
-	state_pool_done();
-	seqev_pool_done();
-	evctl_done();
-	textio_done();
-	cons_done();
-	return 0;
-}

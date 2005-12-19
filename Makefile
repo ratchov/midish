@@ -18,7 +18,7 @@ DOC_DIR = ${PREFIX}/share/doc/midish
 EXAMPLES_DIR = ${PREFIX}/share/examples/midish
 
 MIDISH_OBJS = \
-cons.o data.o dbg.o ev.o exec.o filt.o lex.o main.o mdep.o mididev.o \
+cons.o data.o dbg.o ev.o exec.o filt.o frame.o lex.o main.o mdep.o mididev.o \
 mux.o name.o node.o parse.o pool.o rmidi.o saveload.o smf.o song.o \
 str.o sysex.o textio.o track.o trackop.o user.o \
 user_trk.o user_chan.o user_filt.o user_sx.o user_song.o user_dev.o 
@@ -36,7 +36,6 @@ midish:		${MIDISH_OBJS}
 		${CC} ${LDFLAGS} ${MIDISH_OBJS} -o midish
 
 install-midish:	midish
-		strip midish
 		mkdir -p ${BIN_DIR}
 		mkdir -p ${MAN1_DIR}
 		mkdir -p ${DOC_DIR}
@@ -52,6 +51,7 @@ dbg.o:		dbg.c dbg.h
 ev.o:		ev.c dbg.h ev.h default.h str.h
 exec.o:		exec.c dbg.h exec.h name.h str.h data.h node.h cons.h
 filt.o:		filt.c dbg.h ev.h default.h filt.h pool.h
+frame.o:	frame.c dbg.h track.h ev.h default.h
 lex.o:		lex.c dbg.h lex.h str.h textio.h cons.h
 main.o:		main.c dbg.h str.h cons.h ev.h default.h mux.h track.h song.h name.h filt.h sysex.h user.h mididev.h textio.h
 mdep.o:		mdep.c default.h mux.h rmidi.h mdep.h mididev.h cons.h user.h exec.h name.h str.h
@@ -69,7 +69,7 @@ str.o:		str.c dbg.h str.h
 sysex.o:	sysex.c dbg.h sysex.h default.h pool.h
 textio.o:	textio.c dbg.h textio.h cons.h
 track.o:	track.c dbg.h pool.h track.h ev.h default.h
-trackop.o:	trackop.c dbg.h trackop.h track.h ev.h default.h
+trackop.o:	trackop.c dbg.h trackop.h track.h ev.h default.h frame.h
 user.o:		user.c dbg.h default.h node.h exec.h name.h str.h data.h cons.h textio.h lex.h parse.h mux.h mididev.h trackop.h track.h ev.h song.h filt.h sysex.h user.h smf.h saveload.h rmidi.h mdep.h
 user_chan.o:	user_chan.c dbg.h default.h node.h exec.h name.h str.h data.h cons.h trackop.h track.h ev.h song.h filt.h sysex.h user.h saveload.h textio.h
 user_dev.o:	user_dev.c dbg.h default.h node.h exec.h name.h str.h data.h cons.h mididev.h song.h track.h ev.h filt.h sysex.h user.h textio.h
@@ -85,7 +85,6 @@ rmidish:	rmidish.c
 		${LDFLAGS} ${READLINE_LDFLAGS} -o rmidish ${READLINE_LIB}
 
 install-rmidish:rmidish
-		strip rmidish
 		mkdir -p ${BIN_DIR}
 		mkdir -p ${MAN1_DIR}
 		cp rmidish ${BIN_DIR}
