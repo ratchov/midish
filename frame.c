@@ -37,6 +37,7 @@
 #include "dbg.h"
 #include "track.h"
 #include "default.h"
+#include "frame.h"
 
 	/*
 	 * extract the frame at the current position from the given track.
@@ -53,7 +54,7 @@ track_frameget(struct track_s *o, struct seqptr_s *p, struct track_s *frame) {
 	op = *p;
 	track_clear(frame, &fp);
 	tics = 0;
-s
+
 	if (!track_evavail(o, &op)) {
 		dbg_puts("track_frameget: bad position\n");
 		dbg_panic();
@@ -94,7 +95,7 @@ s
 		state = &(*op.pos)->ev;
 		phase = ev_phase(state);
 		if (!(phase & EV_PHASE_NEXT || phase & EV_PHASE_LAST)) {
-			dbg_puts("track_framerm: nested frames, skiped: ");
+			dbg_puts("track_frameget: nested frames, skiped: ");
 			ev_dbg(&(*op.pos)->ev);
 			dbg_puts("\n");
 			track_evdel(o, &op);
@@ -111,3 +112,119 @@ s
 	}
 }
 
+
+	/*
+	 * merges the given frame into the track
+	 *
+	 * Warning 1: there is no checking for
+	 * 	nested notes.
+	 *
+	 * Warning 2: 
+	 *	currently frameput just copies events one-by one
+	 *	without considering the frame structure. If you
+	 *	change this behaviour in the future, please verify
+	 *	that frameput isn't used elsewhere for copying
+	 *	tracks (ex: in song_record)
+	 */
+
+void
+track_frameput(struct track_s *o, struct seqptr_s *p, struct track_s *frame) {
+	struct seqptr_s op, fp;
+	struct seqev_s *se;
+	unsigned tics;
+	
+	op = *p;
+	track_rew(frame, &fp);
+
+	for (;;) {
+		tics = track_ticlast(frame, &fp);
+		track_seekblank(o, &op, tics);
+		
+		if (!track_evavail(frame, &fp)) {
+			break;
+		}
+		/* move to the last ev. in the current position */
+		track_evlast(o, &op);
+		/* move the event */ 
+		se = track_seqevrm(frame, &fp);
+		track_seqevins(o, &op, se);
+		track_seqevnext(o, &op);
+	}
+	track_clear(frame, &fp);
+}
+
+
+	/*
+	 * cut a portion of the given frame (events and blank space)
+	 * the frame must not start after the start of the
+	 * position to cut.
+	 */
+void
+track_framecut(struct track_s *o, unsigned tic, unsigned start, unsigned len) {
+	struct seqptr_s op;
+	struct ev_s st1, st2;	
+	
+	if (tic > start) {
+		dbg_puts("track_framecut: missed the start tic\n");
+		dbg_panic();
+	}
+
+	dbg_puts("track_framecut: ev=(");
+	ev_dbg(&o->first->ev);
+	dbg_puts("), tic=");
+	dbg_putu(tic);
+	dbg_puts(", start=");
+	dbg_putu(start);
+	dbg_puts(", len=");
+	dbg_putu(len);
+	dbg_puts("\n");
+
+	/*
+	 * go to the beggining of the frame
+	 */
+	track_rew(o, &op);
+	
+	/*
+	 * move to the begging of the start position
+	 */	
+	for (;;) {
+		tic += track_ticskipmax(o, &op, start - tic);
+		if (tic == start) {
+			break;
+		}
+		if (!track_evavail(o, &op)) {
+			return;
+		}
+		while(track_evavail(o, &op)) {
+			st1 = (*op.pos)->ev;
+			track_evnext(o, &op);
+		}
+	}
+
+	/*
+	 * delete time and events during next 'len' tics
+	 */		
+	for (;;) {
+		len -= track_ticdelmax(o, &op, len);
+		if (len == 0) {
+			break;
+		}
+		if (!track_evavail(o, &op)) {
+			goto restore;
+		}
+		while(track_evavail(o, &op)) {
+			st2 = (*op.pos)->ev;
+			track_evdel(o, &op);
+		}
+	}
+	/*
+	 * if there is no event availble, restore the state
+	 */
+	if (track_ticavail(o, &op) || !track_evavail(o, &op)) {
+	restore:
+		if ((st2.cmd != EV_NULL) && 
+		    (st1.cmd != EV_NULL || st1.cmd != st2.cmd)) {
+			track_evput(o, &op, &st2);
+		}
+	}
+}

@@ -40,6 +40,7 @@
 #include "data.h"
 #include "cons.h"
 
+#include "frame.h"
 #include "trackop.h"
 #include "track.h"
 #include "song.h"
@@ -234,7 +235,6 @@ user_func_trackcut(struct exec_s *o, struct data_s **r) {
 	struct songtrk_s *t;
 	long from, amount, quant;
 	unsigned tic, len;
-	struct seqptr_s op;
 	
 	if (!exec_lookuptrack(o, "trackname", &t) ||
 	    !exec_lookuplong(o, "from", &from) ||
@@ -254,9 +254,7 @@ user_func_trackcut(struct exec_s *o, struct data_s **r) {
 		tic -= quant/2;
 	}
 
-	track_rew(&t->track, &op);
-	track_seek(&t->track, &op, tic);
-	track_opcut(&t->track, &op, len);
+	track_opcut(&t->track, tic, len);
 	return 1;
 }
 
@@ -337,8 +335,8 @@ user_func_trackcopy(struct exec_s *o, struct data_s **r) {
 	track_seekblank(&t2->track, &tp2, tic2);
 	track_opextract(&t->track, &tp, len, &null, &es);
 	track_framecp(&null, &null2);
-	track_frameins(&t->track, &tp, &null);
-	track_frameins(&t2->track, &tp2, &null2);
+	track_frameput(&t->track, &tp, &null);
+	track_frameput(&t2->track, &tp2, &null2);
 	track_done(&null);
 	return 1;
 }

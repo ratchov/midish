@@ -51,7 +51,7 @@ dbg.o:		dbg.c dbg.h
 ev.o:		ev.c dbg.h ev.h default.h str.h
 exec.o:		exec.c dbg.h exec.h name.h str.h data.h node.h cons.h
 filt.o:		filt.c dbg.h ev.h default.h filt.h pool.h
-frame.o:	frame.c dbg.h track.h ev.h default.h
+frame.o:	frame.c dbg.h frame.h track.h ev.h default.h
 lex.o:		lex.c dbg.h lex.h str.h textio.h cons.h
 main.o:		main.c dbg.h str.h cons.h ev.h default.h mux.h track.h song.h name.h filt.h sysex.h user.h mididev.h textio.h
 mdep.o:		mdep.c default.h mux.h rmidi.h mdep.h mididev.h cons.h user.h exec.h name.h str.h
@@ -76,7 +76,7 @@ user_dev.o:	user_dev.c dbg.h default.h node.h exec.h name.h str.h data.h cons.h 
 user_filt.o:	user_filt.c dbg.h default.h node.h exec.h name.h str.h data.h cons.h song.h track.h ev.h filt.h sysex.h user.h saveload.h textio.h
 user_song.o:	user_song.c dbg.h default.h node.h exec.h name.h str.h data.h cons.h trackop.h song.h track.h ev.h filt.h sysex.h user.h smf.h saveload.h textio.h
 user_sx.o:	user_sx.c dbg.h default.h node.h exec.h name.h str.h data.h cons.h song.h track.h ev.h filt.h sysex.h user.h saveload.h textio.h
-user_trk.o:	user_trk.c dbg.h default.h node.h exec.h name.h str.h data.h cons.h trackop.h track.h ev.h song.h filt.h sysex.h user.h saveload.h textio.h
+user_trk.o:	user_trk.c dbg.h default.h node.h exec.h name.h str.h data.h cons.h frame.h trackop.h track.h ev.h song.h filt.h sysex.h user.h saveload.h textio.h
 
 # --------------------------------------------- dependencies for rmidish ---
 

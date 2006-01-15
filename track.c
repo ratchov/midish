@@ -503,8 +503,8 @@ track_ticnext(struct track_s *o, struct seqptr_s *p) {
 	/*
 	 * moves the cursor to the following event in the track,
 	 * returns the number of skiped tics
-	 */
-	
+	 */	
+
 unsigned
 track_ticlast(struct track_s *o, struct seqptr_s *p) {
 	unsigned ntics;
@@ -518,6 +518,53 @@ track_ticlast(struct track_s *o, struct seqptr_s *p) {
 #endif
 	ntics = (*p->pos)->delta - p->delta;
 	p->delta += ntics;
+	return ntics;
+}
+	/*
+	 * try to move to the next event, but never move
+	 * more than 'max' tics. Retrun the number of skipped tics
+	 */
+
+unsigned
+track_ticskipmax(struct track_s *o, struct seqptr_s *p, unsigned max) {
+	unsigned ntics;
+	
+#ifdef TRACK_DEBUG
+	if (p->delta > (*p->pos)->delta) {
+		dbg_puts("track_ticskipmax: sync. error\n");
+		track_dump(o);
+		dbg_panic();
+	}
+#endif
+	ntics = (*p->pos)->delta - p->delta;
+	if (ntics > max) {
+		ntics = max;
+	}
+	p->delta += ntics;
+	return ntics;
+}
+
+	/*
+	 * delete tics until the next event, but never move
+	 * more than 'max' tics. Retrun the number of deletes tics
+	 */
+
+unsigned
+track_ticdelmax(struct track_s *o, struct seqptr_s *p, unsigned max) {
+	unsigned ntics;
+	
+#ifdef TRACK_DEBUG
+	if (p->delta > (*p->pos)->delta) {
+		dbg_puts("track_ticdelmax: sync. error\n");
+		track_dump(o);
+		dbg_panic();
+	}
+#endif
+	ntics = (*p->pos)->delta - p->delta;
+	if (ntics > max) {
+		ntics = max;
+	}
+	(*p->pos)->delta -= ntics;
 	return ntics;
 }
 
@@ -646,4 +693,5 @@ track_seekblank(struct track_s *o, struct seqptr_s *p, unsigned ntics) {
 		p->delta += ntics;
 	}
 }
+
 

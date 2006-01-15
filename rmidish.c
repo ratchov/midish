@@ -18,10 +18,11 @@
 #include <readline/readline.h>
 #include <readline/history.h>
 
-#define MIDISHBIN "midish"
+#define MIDISH_PATH "midish"
 
 int midish_pid;
 FILE *midish_stdout, *midish_stdin;
+char *midish_path;
 
 #define LINELENGTH 10000
 char linebuf[LINELENGTH + 1];
@@ -115,8 +116,8 @@ startmidish(void) {
 		/*
 		 * run midish
 		 */
-		if (execlp(MIDISHBIN, MIDISHBIN, "-v", (char *)NULL) < 0) {
-			perror(MIDISHBIN);
+		if (execlp(midish_path, midish_path, "-v", (char *)NULL) < 0) {
+			perror(midish_path);
 		}
 		exit(1);
 	}
@@ -148,13 +149,22 @@ main(void) {
 	char *rl, prompt[PROMPTLENGTH];
 
 	/*
+	 * get the MIDISHBIN environment variable, if
+	 * it isn't set then, set midish_bit to its default value
+	 */
+	midish_path = getenv("MIDISH");
+	if (midish_path == NULL) {
+		midish_path = MIDISH_PATH;
+	}
+
+	/*
 	 * if stdin or stdout is not a tty, then dont start the front end
 	 * execute midish
 	 */
 
 	if (!isatty(STDIN_FILENO) || !isatty(STDOUT_FILENO)) {
-		if (execlp(MIDISHBIN, MIDISHBIN, (char *)NULL) < 0) {
-			perror(MIDISHBIN);
+		if (execlp(midish_path, midish_path, (char *)NULL) < 0) {
+			perror(midish_path);
 		}
 		exit(1);
 	}		

@@ -982,7 +982,7 @@ song_record(struct song_s *o) {
 	track_opcheck(&o->rec); 	
 	if (t) {
 		track_rew(&o->curtrk->track, &cp);
-		track_frameins(&o->curtrk->track, &cp, &o->rec);
+		track_frameput(&o->curtrk->track, &cp, &o->rec);
 		track_opcheck(&o->curtrk->track); 
 	} else {
 		track_clear(&o->rec, &o->recptr);

@@ -81,6 +81,8 @@ void		track_evinsat(struct track_s *o, struct seqptr_s *p, struct ev_s *ev, unsi
 unsigned	track_ticavail(struct track_s *o, struct seqptr_s *p);
 void		track_ticnext(struct track_s *o, struct seqptr_s *p);
 unsigned	track_ticlast(struct track_s *o, struct seqptr_s *p);
+unsigned	track_ticskipmax(struct track_s *o, struct seqptr_s *p, unsigned max);
+unsigned	track_ticdelmax(struct track_s *o, struct seqptr_s *p, unsigned max);
 void		track_ticdel(struct track_s *o, struct seqptr_s *p);
 void		track_ticins(struct track_s *o, struct seqptr_s *p);
 

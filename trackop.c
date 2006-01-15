@@ -39,126 +39,6 @@
 #include "frame.h"
 
 	/*
-	 * removes the frame at the current position from the track.
-	 * If the frame is incomplete, the returned
-	 * frame is empty.
-	 */
-void
-track_framerm(struct track_s *o, struct seqptr_s *p, struct track_s *frame) {
-#if 1
-	track_frameget(o,p,frame);
-#else
-	struct seqptr_s op, fp;
-	struct seqev_s *se;
-	unsigned tics;
-	unsigned key, ch, dev;
-	
-	op = *p;
-	track_clear(frame, &fp);
-	tics = 0;
-	
-	if (!track_evavail(o, &op)) {
-		dbg_puts("track_framerm: bad position\n");
-		dbg_panic();
-	}
-	
-	if (!EV_ISNOTE(&(*op.pos)->ev)) {
-		se = track_seqevrm(o, &op);
-		track_seqevins(frame, &fp, se);
-		return;
-	}
-	
-	if ((*op.pos)->ev.cmd != EV_NON) {
-		dbg_puts("track_framerm: not a noteon\n");
-		dbg_panic();
-	}
-	
-	/* move the NOTEON */
-	se = track_seqevrm(o, &op);
-	track_seqevins(frame, &fp, se);
-	track_seqevnext(frame, &fp);
-	key = EV_GETNOTE(&se->ev);
-	ch = EV_GETCH(&se->ev);
-	dev = EV_GETDEV(&se->ev);
-
-	/* move all related note events */
-	for (;;) {
-		tics += track_ticlast(o, &op);
-		
-		/* check for end of track */
-		if (!track_evavail(o, &op)) {
-			dbg_puts("track_framerm: orphaned noteon, ignored\n");
-			track_clear(frame, &fp);
-			break;
-
-		/* check for nested NOTEON */
-		} else if ((*op.pos)->ev.cmd == EV_NON &&
-		    EV_GETNOTE(&(*op.pos)->ev) == key &&
-		    EV_GETCH(&(*op.pos)->ev) == ch &&
-		    EV_GETDEV(&(*op.pos)->ev) == dev) {
-			dbg_puts("track_framerm: nested noteon, skiped\n");
-			track_evdel(o, &op);
-			continue;
-		
-		/* is it a note event of the frame */
-		} else if (EV_ISNOTE(&(*op.pos)->ev) && 
-		    EV_GETNOTE(&(*op.pos)->ev) == key &&
-		    EV_GETCH(&(*op.pos)->ev) == ch &&
-		    EV_GETDEV(&(*op.pos)->ev) == dev) {
-			/* found the corresponding NOTE event */
-			track_seekblank(frame, &fp, tics);
-			track_evlast(frame, &fp);
-
-			/* move the event */ 
-			se = track_seqevrm(o, &op);
-			track_seqevins(frame, &fp, se);
-			track_seqevnext(frame, &fp);
-			
-			/* stop if it is the last event */
-			if (se->ev.cmd == EV_NOFF)
-				break;
-				
-			tics = 0;
-			continue;
-		}
-		track_evnext(o, &op);
-	}
-#endif
-}
-
-	/*
-	 * merges the given frame into the track
-	 * WARNING: there is no checking for
-	 * nested notes.
-	 */
-
-void
-track_frameins(struct track_s *o, struct seqptr_s *p, struct track_s *frame) {
-	struct seqptr_s op, fp;
-	struct seqev_s *se;
-	unsigned tics;
-	
-	op = *p;
-	track_rew(frame, &fp);
-
-	for (;;) {
-		tics = track_ticlast(frame, &fp);
-		track_seekblank(o, &op, tics);
-		
-		if (!track_evavail(frame, &fp)) {
-			break;
-		}
-		/* move to the last ev. in the current position */
-		track_evlast(o, &op);
-		/* move the event */ 
-		se = track_seqevrm(frame, &fp);
-		track_seqevins(o, &op, se);
-		track_seqevnext(o, &op);
-	}
-	track_clear(frame, &fp);
-}
-
-	/*
 	 * set the current position to the
 	 * following frame. if no frame is available
 	 * the current position is 'o->eot'
@@ -180,10 +60,10 @@ track_framefind(struct track_s *o, struct seqptr_s *p) {
 }
 
 	/*
-	 * same as track_framerm, but 
+	 * same as track_frameget, but 
 	 * if the same type of frame is found several times
 	 * in the same tic, only the latest one is kept.
-	 */	 
+	 */
 
 void
 track_frameuniq(struct track_s *o, struct seqptr_s *p, struct track_s *frame) {	
@@ -191,7 +71,7 @@ track_frameuniq(struct track_s *o, struct seqptr_s *p, struct track_s *frame) {
 	unsigned delta;
 	struct ev_s ev;	
 	
-	track_framerm(o, p, frame);
+	track_frameget(o, p, frame);
 	op = *p;
 	track_rew(frame, &fp);
 	if (!track_evavail(frame, &fp)) {
@@ -204,7 +84,7 @@ track_frameuniq(struct track_s *o, struct seqptr_s *p, struct track_s *frame) {
 			break;
 		}
 		if (ev_sameclass(&ev,  &(*op.pos)->ev)) {
-			track_framerm(o, &op, frame);
+			track_frameget(o, &op, frame);
 		} else {
 			track_evnext(o, &op);
 		}
@@ -297,7 +177,7 @@ track_opcheck(struct track_s *o) {
 			break;
 		}
 		track_frameuniq(o, &op, &frame);
-		track_frameins(&temp, &tp, &frame);
+		track_frameput(&temp, &tp, &frame);
 	}
 	
 	/*
@@ -305,7 +185,7 @@ track_opcheck(struct track_s *o) {
 	track_dump(o);
 	*/
 	track_clear(o, &op);
-	track_frameins(o, &op, &temp);
+	track_frameput(o, &op, &temp);
 
 	track_done(&temp);
 	track_done(&frame);
@@ -356,8 +236,8 @@ track_opquantise(struct track_s *o, struct seqptr_s *p,
 		track_seekblank(&ctls, &cp, delta);
 		if ((*op.pos)->ev.cmd != EV_NON) {
 			track_evlast(&ctls, &cp);
-			track_framerm(o, &op, &frame);
-			track_frameins(&ctls, &cp, &frame);
+			track_frameget(o, &op, &frame);
+			track_frameput(&ctls, &cp, &frame);
 		} else {
 			track_evnext(o, &op);
 		}
@@ -395,11 +275,11 @@ track_opquantise(struct track_s *o, struct seqptr_s *p,
 		}
 		track_seekblank(&ctls, &cp, delta + ofs);
 		track_evlast(&ctls, &cp);
-		track_framerm(o, &op, &frame);
-		track_frameins(&ctls, &cp, &frame);
+		track_frameget(o, &op, &frame);
+		track_frameput(&ctls, &cp, &frame);
 	}
 	op = *p;
-	track_frameins(o, &op, &ctls);
+	track_frameput(o, &op, &ctls);
 	track_opcheck(o);
 	track_done(&ctls);
 }
@@ -433,8 +313,8 @@ track_opextract(struct track_s *o, struct seqptr_s *p,
 		}
 		
 		if (evspec_matchev(es, &(*op.pos)->ev)) {
-			track_framerm(o, &op, &frame);
-			track_frameins(targ, &tp, &frame);
+			track_frameget(o, &op, &frame);
+			track_frameput(targ, &tp, &frame);
 		} else {
 			track_evnext(o, &op);
 		}
@@ -449,7 +329,7 @@ track_opextract(struct track_s *o, struct seqptr_s *p,
 	
 
 void
-track_opcut(struct track_s *o, struct seqptr_s *p, unsigned len) {
+track_opcut(struct track_s *o, unsigned start, unsigned len) {
 	struct track_s frame, temp;
 	struct seqptr_s op, fp, tp;
 	unsigned delta, tic;
@@ -458,37 +338,54 @@ track_opcut(struct track_s *o, struct seqptr_s *p, unsigned len) {
 	track_init(&temp);
 	
 	tic = 0;
-	op = *p;
+	track_rew(o, &op);
 	track_rew(&frame, &fp);
 	track_rew(&temp, &tp);
 	
 	for (;;) {
-		delta = track_framefind(o, &op);
-		
-		if (tic + delta >= len) {
-			if (tic < len) {
-				track_seekblank(&temp, &tp, tic + delta - len);
-			} else {
-				track_seekblank(&temp, &tp, delta);
-			}
-		}
-		track_evlast(&temp, &tp);
+		delta = track_ticskipmax(o, &op, start - tic);
+		track_seekblank(&temp, &tp, delta);
+				
 		tic += delta;
-		
-		if (!track_evavail(o, &op)) {
+		if (tic == start) {
 			break;
 		}
-
-		if (tic >= len) {
-			track_framerm(o, &op, &frame);
-			track_frameins(&temp, &tp, &frame);
-		} else {
-			track_framerm(o, &op, &frame);
-			track_clear(&frame, &fp);
+		if (!track_evavail(o, &op)) {
+			goto end;
 		}
-	}	
-	op = *p;
-	track_frameins(o, &op, &temp);
+		track_frameget(o, &op, &frame);
+		track_framecut(&frame, tic, start, len);
+		track_frameput(&temp, &tp, &frame);
+	}
+	
+	for (;;) {
+		len -= track_ticdelmax(o, &op, len);
+		if (len == 0) {
+			break;
+		}
+		if (!track_evavail(o, &op)) {
+			goto end;
+		}
+		track_frameget(o, &op, &frame);
+		track_framecut(&frame, tic, start, len);
+		track_frameput(&temp, &tp, &frame);
+	}
+	
+	for (;;) {
+		delta = track_ticlast(o, &op);
+		track_seekblank(&temp, &tp, delta);
+		
+		tic += delta;
+		if (!track_evavail(o, &op)) {
+			goto end;
+		}
+		track_frameget(o, &op, &frame);
+		track_frameput(&temp, &tp, &frame);
+	}
+	
+end:
+	track_rew(o, &op);
+	track_frameput(o, &op, &temp);
 	track_done(&frame);
 	track_done(&temp);
 	track_opcheck(o);
@@ -522,11 +419,11 @@ track_opinsert(struct track_s *o, struct seqptr_s *p, unsigned len) {
 			break;
 		}
 	
-		track_framerm(o, &op, &frame);
-		track_frameins(&temp, &tp, &frame);
+		track_frameget(o, &op, &frame);
+		track_frameput(&temp, &tp, &frame);
 	}
 	op = *p;
-	track_frameins(o, &op, &temp);
+	track_frameput(o, &op, &temp);
 	track_done(&frame);
 	track_done(&temp);
 	track_opcheck(o);
@@ -557,15 +454,15 @@ track_optransp(struct track_s *o, struct seqptr_s *p, unsigned len,
 		}
 	
 		if (evspec_matchev(es, &(*op.pos)->ev)) {
-			track_framerm(o, &op, &frame);
+			track_frameget(o, &op, &frame);
 			track_frametransp(&frame, halftones);
-			track_frameins(&temp, &tp, &frame);
+			track_frameput(&temp, &tp, &frame);
 		} else {
 			track_evnext(o, &op);
 		}
 	}
 	op = *p;
-	track_frameins(o, &op, &temp);
+	track_frameput(o, &op, &temp);
 	track_done(&frame);
 	track_done(&temp);
 	track_opcheck(o);
@@ -803,4 +700,3 @@ track_opconfev(struct track_s *o, struct ev_s *ev) {
 	}
 	track_evput(o, &p, ev);
 }
-

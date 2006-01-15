@@ -35,6 +35,8 @@ struct track_s;
 struct seqptr_s;
 
 void track_frameget(struct track_s *o, struct seqptr_s *p, struct track_s *frame);
+void track_frameput(struct track_s *o, struct seqptr_s *p, struct track_s *frame);
+void track_framecut(struct track_s *o, unsigned tic, unsigned start, unsigned len);
 
 #endif /* MIDISH_FRAME_H */
 
