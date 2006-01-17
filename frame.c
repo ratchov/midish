@@ -168,10 +168,22 @@ track_framecut(struct track_s *o, unsigned tic, unsigned start, unsigned len) {
 		dbg_puts("track_framecut: missed the start tic\n");
 		dbg_panic();
 	}
+
+	/*
+	 * if the frame is a NOTE, then just drop it if 
+	 * we are in the window to cut, otherwise let it as-is
+	 */
+	if (o->first->ev.cmd == EV_NON) {
+		if (tic == start) {
+			track_clear(o, &op);
+		}
+		return;
+	}
+	 	
 	st1.cmd = EV_NULL;
 	st2.cmd = EV_NULL;
 	track_rew(o, &op);
-	
+
 	/*
 	 * move to the begging of the start position
 	 */	
