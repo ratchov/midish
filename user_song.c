@@ -647,12 +647,8 @@ user_func_songtimerm(struct exec_s *o, struct data_s **r) {
 	pos = track_opfindtic(&user_song->meta, from);
 	tics = track_opfindtic(&user_song->meta, from + amount) - pos;
 	track_optimeinfo(&user_song->meta, pos, &save_usec24, &save_bpm, &save_tpb);
-		
-	track_rew(&user_song->meta, &mp);
-	if (track_seek(&user_song->meta, &mp, pos)) {
-		return 1;
-	}
-	track_opcut(&user_song->meta, &mp, tics);
+	
+	track_opcut(&user_song->meta, pos, tics);
 	track_optimeinfo(&user_song->meta, pos, &usec24, &bpm, &tpb);
 	
 	if (bpm != save_bpm || tpb != save_tpb) {
@@ -660,7 +656,7 @@ user_func_songtimerm(struct exec_s *o, struct data_s **r) {
 		ev.data.sign.beats = save_bpm;
 		ev.data.sign.tics = save_tpb;
 		track_rew(&user_song->meta, &mp);
-		track_seek(&user_song->meta, &mp, pos);
+		track_seekblank(&user_song->meta, &mp, pos);
 		track_evput(&user_song->meta, &mp, &ev);
 	}
 	/* 

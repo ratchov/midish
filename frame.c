@@ -168,20 +168,8 @@ track_framecut(struct track_s *o, unsigned tic, unsigned start, unsigned len) {
 		dbg_puts("track_framecut: missed the start tic\n");
 		dbg_panic();
 	}
-
-	dbg_puts("track_framecut: ev=(");
-	ev_dbg(&o->first->ev);
-	dbg_puts("), tic=");
-	dbg_putu(tic);
-	dbg_puts(", start=");
-	dbg_putu(start);
-	dbg_puts(", len=");
-	dbg_putu(len);
-	dbg_puts("\n");
-
-	/*
-	 * go to the beggining of the frame
-	 */
+	st1.cmd = EV_NULL;
+	st2.cmd = EV_NULL;
 	track_rew(o, &op);
 	
 	/*
@@ -217,8 +205,9 @@ track_framecut(struct track_s *o, unsigned tic, unsigned start, unsigned len) {
 			track_evdel(o, &op);
 		}
 	}
+	
 	/*
-	 * if there is no event availble, restore the state
+	 * if there is no event available, restore the state
 	 */
 	if (track_ticavail(o, &op) || !track_evavail(o, &op)) {
 	restore:

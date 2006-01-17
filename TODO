@@ -1,3 +1,5 @@
+- fix bug in frameget() (see XXX in source code)
+
 - add 'chanset' in user.c and doc
 
 - check (one by one) that every function works and
