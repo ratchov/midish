@@ -11,18 +11,20 @@
  */
 
 
+#define MIDISH "midish"
+
+#include <limits.h>
 #include <signal.h>
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <readline/readline.h>
 #include <readline/history.h>
 
-#define MIDISH_PATH "midish"
-
 int midish_pid;
 FILE *midish_stdout, *midish_stdin;
-char *midish_path;
+char midish_path[PATH_MAX + 1];
 
 #define LINELENGTH 10000
 char linebuf[LINELENGTH + 1];
@@ -144,24 +146,27 @@ startmidish(void) {
 }
 
 int
-main(void) {
+main(int argc, char *argv[]) {
 #define PROMPTLENGTH 20
 	char *rl, prompt[PROMPTLENGTH];
-
+	unsigned dirlen;
+	
 	/*
-	 * get the MIDISHBIN environment variable, if
-	 * it isn't set then, set midish_bit to its default value
+	 * determine the complete path of the midish executable
 	 */
-	midish_path = getenv("MIDISH");
-	if (midish_path == NULL) {
-		midish_path = MIDISH_PATH;
+	if (argc > 0) {
+		dirlen = strlen(argv[0]);
+		while(dirlen > 0 && argv[0][dirlen - 1] != '/') dirlen--;
+		memcpy(midish_path, argv[0], dirlen);
+	} else {
+		dirlen = 0;
 	}
-
+	strcpy(midish_path + dirlen, MIDISH);
+	
 	/*
-	 * if stdin or stdout is not a tty, then dont start the front end
-	 * execute midish
+	 * if stdin or stdout is not a tty, then dont start the front end,
+	 * just execute midish
 	 */
-
 	if (!isatty(STDIN_FILENO) || !isatty(STDOUT_FILENO)) {
 		if (execlp(midish_path, midish_path, (char *)NULL) < 0) {
 			perror(midish_path);

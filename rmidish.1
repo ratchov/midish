@@ -61,14 +61,6 @@ option of
 to create a front-end, but it can be run instead of 
 .Xr midish 1
 to make the later more user-friendly when used interactively.
-By default, the 
-.Pa PATH
-environment variable is searched for the
-.Xr midish 1
-binary, however an alternate binary can be specified
-by setting the
-.Pa MIDISH
-environment variable to the path of another binary.
 .Sh SEE ALSO
 .Xr midish 1 ,
 .Xr readline 3
@@ -76,3 +68,9 @@ environment variable to the path of another binary.
 Midish user's manual and tutorial
 .br
 http://caoua.org/midish/
+.Sh BUGS
+The
+.Xr midish 1
+executable must be in the same directory as the
+.Nm
+executable.
