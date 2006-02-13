@@ -191,8 +191,6 @@ track_opcheck(struct track_s *o) {
 	track_done(&frame);
 }
 
-
-
 	/*
 	 * quantise and (suppress orphaned NOTEOFFs and NOTEONs)
 	 * arguments
@@ -326,7 +324,6 @@ track_opextract(struct track_s *o, struct seqptr_s *p,
 	/* 
 	 * cut a piece of the track (events and blank space)
 	 */
-	
 
 void
 track_opcut(struct track_s *o, unsigned start, unsigned len) {
@@ -388,7 +385,49 @@ end:
 	track_frameput(o, &op, &temp);
 	track_done(&frame);
 	track_done(&temp);
-	track_opcheck(o);
+}
+
+	/* 
+	 * blank a piece of the track (remove events but not blank space)
+	 */
+	 
+void
+track_opblank(struct track_s *o, unsigned start, unsigned len, 
+   struct evspec_s *es) {
+	struct track_s frame, temp;
+	struct seqptr_s op, fp, tp;
+	unsigned delta, tic;
+	
+	track_init(&frame);
+	track_init(&temp);
+	
+	tic = 0;
+	track_rew(o, &op);
+	track_rew(&frame, &fp);
+	track_rew(&temp, &tp);
+	
+	for (;;) {
+		delta = track_ticlast(o, &op);
+		track_seekblank(&temp, &tp, delta);
+				
+		tic += delta;
+		if (!track_evavail(o, &op)) {
+			break;
+		}
+		if (evspec_matchev(es, &(*op.pos)->ev)) {
+			track_frameget(o, &op, &frame);
+			track_frameblank(&frame, tic, start, len);
+			track_frameput(&temp, &tp, &frame);
+		} else {
+			track_evnext(o, &op);
+		}
+	}
+
+	track_rew(o, &op);
+	track_frameput(o, &op, &temp);
+	track_done(&frame);
+	track_done(&temp);
+	/*track_opcheck(o);*/
 }
 
 	/*
@@ -428,6 +467,7 @@ track_opinsert(struct track_s *o, struct seqptr_s *p, unsigned len) {
 	track_done(&temp);
 	track_opcheck(o);
 }
+
 
 void
 track_optransp(struct track_s *o, struct seqptr_s *p, unsigned len, 

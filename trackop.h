@@ -49,6 +49,7 @@ void track_opquantise(struct track_s *o, struct seqptr_s *, unsigned first, unsi
 void track_opextract(struct track_s *o, struct seqptr_s *, unsigned len, struct track_s *targ, struct evspec_s *es);
 void track_opcopy(struct track_s *o, struct seqptr_s *p, unsigned len, struct track_s *targ);
 void track_opcut(struct track_s *o, unsigned start, unsigned len);
+void track_opblank(struct track_s *o, unsigned start, unsigned len, struct evspec_s *es);
 void track_opinsert(struct track_s *o, struct seqptr_s *, unsigned len);
 void track_opsetchan(struct track_s *o, unsigned dev, unsigned ch);
 void track_optransp(struct track_s *o, struct seqptr_s *p, unsigned len, int halftones, struct evspec_s *es);

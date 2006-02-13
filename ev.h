@@ -115,10 +115,12 @@ struct evspec_s {
 };
 
 void	 ev_dbg(struct ev_s *ev);
+unsigned ev_eq(struct ev_s *ev1, struct ev_s *ev2);
 unsigned ev_sameclass(struct ev_s *ev1, struct ev_s *ev2);
 unsigned ev_ordered(struct ev_s *ev1, struct ev_s *ev2);
 unsigned ev_str2cmd(struct ev_s *ev, char *str);
 unsigned ev_phase(struct ev_s *ev);
+unsigned ev_cancel(struct ev_s *ev, struct ev_s *ca);
 
 unsigned evspec_str2cmd(struct evspec_s *ev, char *str);
 void	 evspec_dbg(struct evspec_s *o);

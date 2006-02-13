@@ -711,7 +711,16 @@ song_rt_seek(struct song_s *o, unsigned rewind) {
 		} else {
 			rew_tics = tic;
 		}
-	
+		
+		/* 
+		 * XXX: make multi-measure countdown possible
+		 *	rew_meas = (rew + tpm - 1) / tpm;
+		 *	rew_beat = ((tic % tpm) + tpb - 1) / tpb
+		 *	rew_tic  = (tic % tpb)
+		 *	meas -= rew_meas
+		 *	beat  = (beat + bpm - rew_beat) % bpm;
+		 *	tic   = (tic + tpb - rew_tic) % tpb;
+		 */	
 		if (rew_tics != 0) {
 			o->measure -= 1;
 			o->beat = (tics_per_measure - rew_tics) / o->tics_per_beat;

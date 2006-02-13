@@ -156,8 +156,8 @@ track_frameput(struct track_s *o, struct seqptr_s *p, struct track_s *frame) {
 
 	/*
 	 * cut a portion of the given frame (events and blank space)
-	 * the frame must not start after the start of the
-	 * position to cut.
+	 * the frame must not start after the begging of the
+	 * window to cut.
 	 */
 void
 track_framecut(struct track_s *o, unsigned tic, unsigned start, unsigned len) {
@@ -170,8 +170,8 @@ track_framecut(struct track_s *o, unsigned tic, unsigned start, unsigned len) {
 	}
 
 	/*
-	 * if the frame is a NOTE, then just drop it if 
-	 * we are in the window to cut, otherwise let it as-is
+	 * if the frame is a NOTE starting in the window 
+	 * we want to cut then drop it, else let it as-is
 	 */
 	if (o->first->ev.cmd == EV_NON) {
 		if (tic == start) {
@@ -179,8 +179,8 @@ track_framecut(struct track_s *o, unsigned tic, unsigned start, unsigned len) {
 		}
 		return;
 	}
-	 	
-	st1.cmd = EV_NULL;
+	
+	st1.cmd = EV_NULL;	/* EV_NULL means that st1 isn't set */
 	st2.cmd = EV_NULL;
 	track_rew(o, &op);
 
@@ -219,13 +219,125 @@ track_framecut(struct track_s *o, unsigned tic, unsigned start, unsigned len) {
 	}
 	
 	/*
+	 * remove events from tic = start + len
+	 */
+	while(track_evavail(o, &op)) {
+		st2 = (*op.pos)->ev;
+		track_evdel(o, &op);
+	}
+
+	/*
 	 * if there is no event available, restore the state
 	 */
-	if (track_ticavail(o, &op) || !track_evavail(o, &op)) {
+	if (track_ticavail(o, &op)) {
 	restore:
-		if ((st2.cmd != EV_NULL) && 
-		    (st1.cmd != EV_NULL || st1.cmd != st2.cmd)) {
+		if (st2.cmd != EV_NULL && 
+		    (st1.cmd == EV_NULL || !ev_eq(&st1, &st2))) {
 			track_evput(o, &op, &st2);
 		}
 	}
 }
+
+	/*
+	 * blank (erase events but not time) a window in a frame
+	 *
+	 * Note: this function very similar to track_framecut(), so if
+	 *	 you make changes here, check also track_framecut()
+	 */
+
+void
+track_frameblank(struct track_s *o, unsigned tic, unsigned start, unsigned len) {
+	struct seqptr_s op;
+	struct ev_s st1, st2, ca;	
+
+	/*
+	 * adjust start/len parameters so that the frame doesn't 
+	 * begin after the start position; also, check that the 
+	 * frame is inside the window to blank
+	 */
+	do {
+		if (tic >= start + len) {
+			return;
+		}
+		if (tic > start) {
+			len -= tic - start;
+			start = tic;
+			continue;
+		}
+	} while(0);
+
+	/*
+	 * if the frame is a NOTE starting in the window 
+	 * we want to cut the drop it, else let it as-is
+	 */
+	if (o->first->ev.cmd == EV_NON) {
+		if (tic >= start && tic < start + len) {
+			track_clear(o, &op);
+		}
+		return;
+	}
+	 	
+	st1.cmd = EV_NULL;	/* EV_NULL means that st1 isn't set */
+	st2.cmd = EV_NULL;
+	track_rew(o, &op);
+
+	/*
+	 * move to the begging of the start position
+	 */	
+	for (;;) {
+		tic += track_ticskipmax(o, &op, start - tic);
+		if (tic == start) {
+			break;
+		}
+		if (!track_evavail(o, &op)) {
+			return;
+		}
+		while(track_evavail(o, &op)) {
+			st1 = (*op.pos)->ev;
+			track_evnext(o, &op);
+		}
+	}
+
+	/*
+	 * terminate the frame at the start position of the window
+	 */
+	if (st1.cmd != EV_NULL && ev_cancel(&st1, &ca)) {
+		track_evput(o, &op, &ca);
+	}
+
+	/*
+	 * delete events during next 'len' tics
+	 */		
+	for (;;) {
+		tic += track_ticskipmax(o, &op, start + len - tic);
+		if (tic == start + len) {
+			break;
+		}
+		if (!track_evavail(o, &op)) {
+			return;
+		}
+		while(track_evavail(o, &op)) {
+			st2 = (*op.pos)->ev;
+			track_evdel(o, &op);
+		}
+	}
+	
+	/*
+	 * remove events from tic = start + len
+	 */
+	while(track_evavail(o, &op)) {
+		st2 = (*op.pos)->ev;
+		track_evdel(o, &op);
+	}
+
+	/*
+	 * if there is no event available, restore the state
+	 */
+	if (track_ticavail(o, &op)) {
+		if (st2.cmd != EV_NULL && 
+		    (st1.cmd == EV_NULL || !ev_eq(&st1, &st2))) {
+			track_evput(o, &op, &st2);
+		}
+	}
+}
+

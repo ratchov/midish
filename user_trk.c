@@ -262,8 +262,6 @@ user_func_trackcut(struct exec_s *o, struct data_s **r) {
 unsigned
 user_func_trackblank(struct exec_s *o, struct data_s **r) {
 	struct songtrk_s *t;
-	struct track_s null;
-	struct seqptr_s tp;
 	struct evspec_s es;
 	long from, amount, quant;
 	unsigned tic, len;
@@ -287,11 +285,7 @@ user_func_trackblank(struct exec_s *o, struct data_s **r) {
 		tic -= quant/2;
 	}
 
-	track_init(&null);
-	track_rew(&t->track, &tp);
-	track_seek(&t->track, &tp, tic);
-	track_opextract(&t->track, &tp, len, &null, &es);
-	track_done(&null);
+	track_opblank(&t->track, tic, len, &es);
 	return 1;
 }
 

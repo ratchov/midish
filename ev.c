@@ -76,6 +76,32 @@ ev_str2cmd(struct ev_s *ev, char *str) {
 }
 
 	/*
+	 * return 1 if the pair of events identical
+	 * 0 otherwise
+	 */
+
+unsigned
+ev_eq(struct ev_s *ev1, struct ev_s *ev2) {
+	if (ev1->cmd != ev2->cmd) {
+		return 0;
+	}
+	if (EV_ISVOICE(ev1)) {
+		if (ev1->data.voice.dev != ev2->data.voice.dev ||
+		    ev1->data.voice.ch != ev2->data.voice.ch ||
+		    ev1->data.voice.b0 != ev2->data.voice.b0 ||
+		    ((ev1->cmd != EV_CAT && ev1->cmd != EV_PC) &&
+		    ev1->data.voice.b1 != ev2->data.voice.b1)) {
+			return 0;
+		}
+	} else {
+		dbg_puts("ev_eq: not defined\n");
+		dbg_panic();
+	}
+	return 1;
+}
+
+
+	/*
 	 * return 1 if the pair of events are of the same
 	 * type (same note or same controller or both are tempos etc...)
 	 */
@@ -126,7 +152,7 @@ ev_sameclass(struct ev_s *ev1, struct ev_s *ev2) {
 
 
 	/*
-	 * return 1 if the first event has higher priority
+	 * return 1 if the first event has higher "priority"
 	 * than the socond one.
 	 */
 
@@ -227,6 +253,65 @@ ev_phase(struct ev_s *ev) {
 	}
 	return phase;
 }
+
+	/*
+	 * determine the event that will cancel the givent event,
+	 * example a note-off cancels a note-off. If the given
+	 * event cannot (on need not to) be cancelled, then 0 is returned.
+	 * example: program change cannot be cancelled,
+	 * note-off cannot be canceled.
+	 */
+
+unsigned
+ev_cancel(struct ev_s *ev, struct ev_s *ca) {
+	if (!EV_ISVOICE(ev)) {
+		dbg_puts("ev_cancel: must be called with voice argument\n");
+		dbg_panic();
+	}
+	switch(ev->cmd) {
+	case EV_NON:
+	case EV_KAT:
+		ca->cmd = EV_NOFF;
+		ca->data.voice.b0  = ev->data.voice.b0;
+		ca->data.voice.b1  = EV_NOFF_DEFAULTVEL;
+		break;
+	case EV_CAT:
+		if (ev->data.voice.b0 == EV_CAT_DEFAULT) {
+			return 0;
+		}
+		ca->cmd = EV_CAT;
+		ca->data.voice.b0  = EV_CAT_DEFAULT;
+		break;
+	case EV_CTL:
+		if (EVCTL_TYPE(ev->data.voice.b0) == EVCTL_TYPE_UNKNOWN ||
+		    ev->data.voice.b1 == EVCTL_DEFAULT(ev->data.voice.b0)) {
+			return 0;
+		}
+		ca->cmd = EV_CTL;
+		ca->data.voice.b0  = ev->data.voice.b0;
+		ca->data.voice.b1 = EVCTL_DEFAULT(ev->data.voice.b0);
+		break;
+	case EV_BEND:
+		if (ev->data.voice.b0 == EV_BEND_DEFAULTLO &&
+		    ev->data.voice.b1 == EV_BEND_DEFAULTHI) {
+		    	return 0;
+		}
+		ca->cmd = EV_BEND;
+		ca->data.voice.b0 = EV_BEND_DEFAULTLO;
+		ca->data.voice.b1 = EV_BEND_DEFAULTHI;
+		break;
+	case EV_NOFF:
+	case EV_PC:
+		return 0;
+	default:
+		dbg_puts("ev_cancel: unknown event type\n");
+		dbg_panic();
+	}
+	ca->data.voice.dev = ev->data.voice.dev;
+	ca->data.voice.ch  = ev->data.voice.ch;
+	return 1;
+}
+
 
 
 void

@@ -1,9 +1,27 @@
-- fix bug in frameget() (see XXX in source code)
+- bug to fix: on the following track,  'trackblank 2 1 0 {}' and 
+  'trackcut 1 1 0' do not work:
 
-- add 'chanset' in user.c and doc
+                track {
+                        96
+                        bend {0 0} 0 65
+                        48
+                        bend {0 0} 0 66
+                        48
+                        bend {0 0} 0 64
+                }
 
-- check (one by one) that every function works and
-  that the documetation is accurate. Make a relsease.
+
+- make multi-measure countdown possible; in song_rt_seek(), put
+
+	rew_meas = (rew + tpm - 1) / tpm;
+	rew_beat = ((tic % tpm) + tpb - 1) / tpb
+	rew_tic  = (tic % tpb)
+	meas -= rew_meas
+	beat  = (beat + bpm - rew_beat) % bpm;
+	tic   = (tic + tpb - rew_tic) % tpb;
+
+- input filter will not work if the clock isn't running: don't do trafic
+  limiting before start and/or add timeout...
 
 - make song{play,record,idle} scan tracks for controllers,
   pitch bends, prog changes etc... so that the output
