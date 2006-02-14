@@ -1,3 +1,4 @@
+/* $Id$ */
 /*
  * This program gives an example on
  * how to create a front-end to midish

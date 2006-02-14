@@ -1,3 +1,4 @@
+/* $Id$ */
 /*
  * Copyright (c) 2003-2005 Alexandre Ratchov
  * All rights reserved.
