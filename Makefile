@@ -1,3 +1,4 @@
+# $Id$
 #
 # parameters for the GNU readline(3) library, used to
 # build rmidish (front-end to midish)
