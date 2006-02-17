@@ -1,4 +1,4 @@
-/* $Id$ */
+/* $Id: filt.c,v 1.26 2006/02/14 12:21:40 alex Exp $ */
 /*
  * Copyright (c) 2003-2005 Alexandre Ratchov
  * All rights reserved.
@@ -1435,7 +1435,9 @@ filt_evcb(struct filt_s *o, struct ev_s *ev) {
 		} else if (ev->data.voice.b0 != (*p)->ev.data.voice.b0) {
 			filt_stateupdate(o, p, ev, keep);
 		}
-	}	
+	} else {
+		filt_processev(o, ev);
+	}
 }
 
 void

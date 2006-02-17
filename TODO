@@ -1,24 +1,22 @@
-- bug to fix: on the following track,  'trackblank 2 1 0 {}' and 
-  'trackcut 1 1 0' do not work:
+- metronome click length should be tunable (or at least > 0) in order
+  to make the metronome usable without drum kits
 
-                track {
-                        96
-                        bend {0 0} 0 65
-                        48
-                        bend {0 0} 0 66
-                        48
-                        bend {0 0} 0 64
-                }
+- tempo change cleanup is not made in this situation:
 
+	measure 0:	tempo 100
+	measure 2:	tempo 50
+
+  inserting tempo=50 at measure 1 should clean the tempo change
+  at measure 2
 
 - make multi-measure countdown possible; in song_rt_seek(), put
 
-	rew_meas = (rew + tpm - 1) / tpm;
-	rew_beat = ((tic % tpm) + tpb - 1) / tpb
-	rew_tic  = (tic % tpb)
-	meas -= rew_meas
-	beat  = (beat + bpm - rew_beat) % bpm;
-	tic   = (tic + tpb - rew_tic) % tpb;
+	rew_measure = (rew + tpm - 1) / tpm;
+	rew_beat = ((tic % tpm) + tpb - 1) / tpb;
+	rew_tic = (tic % tpb);
+	measure -= rew_measure;
+	beat = (beat + bpm - rew_beat) % bpm;
+	tic = (tic + tpb - rew_tic) % tpb;
 
 - input filter will not work if the clock isn't running: don't do trafic
   limiting before start and/or add timeout...
