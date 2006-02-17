@@ -1,6 +1,6 @@
-/* $Id: filt.c,v 1.26 2006/02/14 12:21:40 alex Exp $ */
+/* $Id: filt.c,v 1.27 2006/02/17 00:40:10 alex Exp $ */
 /*
- * Copyright (c) 2003-2005 Alexandre Ratchov
+ * Copyright (c) 2003-2006 Alexandre Ratchov
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without 

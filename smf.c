@@ -1,6 +1,6 @@
-/* $Id$ */
+/* $Id: smf.c,v 1.18 2006/02/14 12:21:41 alex Exp $ */
 /*
- * Copyright (c) 2003-2005 Alexandre Ratchov
+ * Copyright (c) 2003-2006 Alexandre Ratchov
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without 
