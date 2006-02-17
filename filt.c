@@ -1434,6 +1434,8 @@ filt_evcb(struct filt_s *o, struct ev_s *ev) {
 		} else if (ev->data.voice.b0 != (*p)->ev.data.voice.b0) {
 			filt_stateupdate(o, p, ev, keep);
 		}
+	} else {
+		filt_processev(o, ev);
 	}	
 }
 
