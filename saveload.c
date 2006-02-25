@@ -1,4 +1,4 @@
-/* $Id: saveload.c,v 1.28 2006/02/14 12:21:41 alex Exp $ */
+/* $Id: saveload.c,v 1.29 2006/02/17 13:18:05 alex Exp $ */
 /*
  * Copyright (c) 2003-2006 Alexandre Ratchov
  * All rights reserved.
@@ -93,6 +93,7 @@ ev_output(struct ev_s *e, struct textout_s *f) {
 			textout_putstr(f, "\n");
 			break;			
 		default:
+			textout_putstr(f, "# ignored event\n");
 			dbg_puts("ignoring event: ");
 			ev_dbg(e);
 			dbg_puts("\n");
@@ -455,14 +456,13 @@ song_output(struct song_s *o, struct textout_s *f) {
 	textout_putstr(f, "curpos ");
 	textout_putlong(f, o->curpos);
 	textout_putstr(f, "\n");
-	textout_indent(f);
 	
 	textout_indent(f);
 	textout_putstr(f, "curlen ");
 	textout_putlong(f, o->curlen);
 	textout_putstr(f, "\n");
+	
 	textout_indent(f);
-
 	textout_putstr(f, "curquant ");
 	textout_putlong(f, o->curquant);
 	textout_putstr(f, "\n");

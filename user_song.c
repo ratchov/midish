@@ -1,4 +1,4 @@
-/* $Id: user_song.c,v 1.14 2006/02/14 12:21:41 alex Exp $ */
+/* $Id: user_song.c,v 1.15 2006/02/17 13:18:06 alex Exp $ */
 /*
  * Copyright (c) 2003-2006 Alexandre Ratchov
  * All rights reserved.
@@ -613,7 +613,7 @@ user_func_songtimeins(struct exec_s *o, struct data_s **r) {
 	
 	track_rew(&user_song->meta, &mp);
 	track_seekblank(&user_song->meta, &mp, pos);
-	track_opinsert(&user_song->meta, &mp, tics);
+	track_ticinsmax(&user_song->meta, &mp, tics);
 	
 	if (ev.data.sign.beats != save_bpm || ev.data.sign.tics != save_tpb) {
 		track_rew(&user_song->meta, &mp);

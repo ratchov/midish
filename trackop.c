@@ -1,4 +1,4 @@
-/* $Id: trackop.c,v 1.19 2006/02/14 12:21:41 alex Exp $ */
+/* $Id: trackop.c,v 1.20 2006/02/17 13:18:06 alex Exp $ */
 /*
  * Copyright (c) 2003-2006 Alexandre Ratchov
  * All rights reserved.
@@ -436,21 +436,40 @@ track_opblank(struct track_s *o, unsigned start, unsigned len,
 	 */
 
 void
-track_opinsert(struct track_s *o, struct seqptr_s *p, unsigned len) {
+track_opinsert(struct track_s *o, unsigned start, unsigned len) {
 	struct track_s frame, temp;
-	struct seqptr_s op, tp;
+	struct seqptr_s op, tp, fp;
 	unsigned delta, tic;
 	
 	track_init(&temp);
 	track_init(&frame);
-
+	
 	tic = 0;
-	op = *p;
+	track_rew(o, &op);
+	track_rew(&frame, &fp);
 	track_rew(&temp, &tp);
+		
+	for (;;) {
+		delta = track_ticskipmax(o, &op, start - tic);
+		track_seekblank(&temp, &tp, delta);
+				
+		tic += delta;
+		if (tic == start) {
+			break;
+		}
+		if (!track_evavail(o, &op)) {
+			goto end;
+		}
+		track_frameget(o, &op, &frame);
+		track_frameins(&frame, tic, start, len);
+		track_frameput(&temp, &tp, &frame);
+	}
+		
+	tic += len;
 	track_seekblank(&temp, &tp, len);
 		
 	for (;;) {
-		delta = track_framefind(o, &op);
+		delta = track_ticlast(o, &op);
 		track_seekblank(&temp, &tp, delta);
 		track_evlast(&temp, &tp);
 		tic += delta;
@@ -462,11 +481,12 @@ track_opinsert(struct track_s *o, struct seqptr_s *p, unsigned len) {
 		track_frameget(o, &op, &frame);
 		track_frameput(&temp, &tp, &frame);
 	}
-	op = *p;
+	
+end:	
+	track_rew(o, &op);
 	track_frameput(o, &op, &temp);
 	track_done(&frame);
 	track_done(&temp);
-	track_opcheck(o);
 }
 
 

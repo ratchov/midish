@@ -1,4 +1,4 @@
-/* $Id: track.h,v 1.8 2006/02/14 12:21:41 alex Exp $ */
+/* $Id: track.h,v 1.9 2006/02/17 13:18:06 alex Exp $ */
 /*
  * Copyright (c) 2003-2006 Alexandre Ratchov
  * All rights reserved.
@@ -84,6 +84,7 @@ void		track_ticnext(struct track_s *o, struct seqptr_s *p);
 unsigned	track_ticlast(struct track_s *o, struct seqptr_s *p);
 unsigned	track_ticskipmax(struct track_s *o, struct seqptr_s *p, unsigned max);
 unsigned	track_ticdelmax(struct track_s *o, struct seqptr_s *p, unsigned max);
+void	        track_ticinsmax(struct track_s *o, struct seqptr_s *p, unsigned max);
 void		track_ticdel(struct track_s *o, struct seqptr_s *p);
 void		track_ticins(struct track_s *o, struct seqptr_s *p);
 

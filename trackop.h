@@ -1,4 +1,4 @@
-/* $Id: trackop.h,v 1.15 2006/02/14 12:21:41 alex Exp $ */
+/* $Id: trackop.h,v 1.16 2006/02/17 13:18:06 alex Exp $ */
 /*
  * Copyright (c) 2003-2006 Alexandre Ratchov
  * All rights reserved.
@@ -51,7 +51,7 @@ void track_opextract(struct track_s *o, struct seqptr_s *, unsigned len, struct 
 void track_opcopy(struct track_s *o, struct seqptr_s *p, unsigned len, struct track_s *targ);
 void track_opcut(struct track_s *o, unsigned start, unsigned len);
 void track_opblank(struct track_s *o, unsigned start, unsigned len, struct evspec_s *es);
-void track_opinsert(struct track_s *o, struct seqptr_s *, unsigned len);
+void track_opinsert(struct track_s *o, unsigned start, unsigned len);
 void track_opsetchan(struct track_s *o, unsigned dev, unsigned ch);
 void track_optransp(struct track_s *o, struct seqptr_s *p, unsigned len, int halftones, struct evspec_s *es);
 

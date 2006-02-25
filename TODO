@@ -1,3 +1,4 @@
+- check that timeins is still working with the new track_opinsert()
 - create per channel banks for RPNs and NRPNs, smothing similar
   to the sysex banks
 

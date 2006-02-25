@@ -1,4 +1,4 @@
-/* $Id: user_trk.c,v 1.12 2006/02/14 12:21:41 alex Exp $ */
+/* $Id: user_trk.c,v 1.13 2006/02/17 13:18:06 alex Exp $ */
 /*
  * Copyright (c) 2003-2006 Alexandre Ratchov
  * All rights reserved.
@@ -341,7 +341,6 @@ unsigned
 user_func_trackinsert(struct exec_s *o, struct data_s **r) {
 	char *trkname;
 	struct songtrk_s *t;
-	struct seqptr_s tp;
 	long from, amount, quant;
 	unsigned tic, len;
 	
@@ -369,9 +368,7 @@ user_func_trackinsert(struct exec_s *o, struct data_s **r) {
 		tic -= quant/2;
 	}
 
-	track_rew(&t->track, &tp);
-	track_seekblank(&t->track, &tp, tic);
-	track_opinsert(&t->track, &tp, len);
+	track_opinsert(&t->track, tic, len);
 	return 1;
 }
 

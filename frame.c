@@ -1,4 +1,4 @@
-/* $Id: frame.c,v 1.6 2006/02/14 12:21:40 alex Exp $ */
+/* $Id: frame.c,v 1.7 2006/02/17 13:18:05 alex Exp $ */
 /*
  * Copyright (c) 2003-2006 Alexandre Ratchov
  * All rights reserved.
@@ -269,7 +269,7 @@ track_frameblank(struct track_s *o, unsigned tic, unsigned start, unsigned len) 
 
 	/*
 	 * if the frame is a NOTE starting in the window 
-	 * we want to cut the drop it, else let it as-is
+	 * we want to drop it, else let it as-is
 	 */
 	if (o->first->ev.cmd == EV_NON) {
 		if (tic >= start && tic < start + len) {
@@ -338,6 +338,86 @@ track_frameblank(struct track_s *o, unsigned tic, unsigned start, unsigned len) 
 		if (st2.cmd != EV_NULL && 
 		    (st1.cmd == EV_NULL || !ev_eq(&st1, &st2))) {
 			track_evput(o, &op, &st2);
+		}
+	}
+}
+
+
+
+	/*
+	 * insert blank space in the middle of the given frame
+	 */
+
+void
+track_frameins(struct track_s *o, unsigned tic, unsigned start, unsigned len) {
+	struct seqptr_s op;
+	struct ev_s st1, st2, ca;	
+
+	if (tic > start) {
+		dbg_puts("track_frameins: missed the start tic\n");
+		dbg_panic();
+	}
+
+	/*
+	 * don't change note lengths
+	 */
+	if (o->first->ev.cmd == EV_NON) {
+		track_ticinsmax(o, &op, len);
+		return;
+	}
+	
+	st1.cmd = EV_NULL;	/* EV_NULL means that st1 isn't set */
+	st2.cmd = EV_NULL;
+	track_rew(o, &op);
+
+	/*
+	 * move to the begging of the start position
+	 */	
+	for (;;) {
+		tic += track_ticskipmax(o, &op, start - tic);
+		if (tic == start) {
+			break;
+		}
+		if (!track_evavail(o, &op)) {
+			return;
+		}
+		while(track_evavail(o, &op)) {
+			st1 = (*op.pos)->ev;
+			track_evnext(o, &op);
+		}
+	}
+	
+	/*
+	 * terminate the frame at the start position
+	 */
+	if (st1.cmd != EV_NULL && ev_cancel(&st1, &ca)) {
+		track_evput(o, &op, &ca);
+	}
+	
+	/*
+	 * insert some blank space
+	 */
+	track_ticinsmax(o, &op, len);
+	track_ticskipmax(o, &op, len);
+	tic += len;
+		
+	/*
+	 * remove events at tic = start + len
+	 */
+	while(track_evavail(o, &op)) {
+		st2 = (*op.pos)->ev;
+		track_evdel(o, &op);
+	}
+
+	/*
+	 * if there is no event available, restore the state
+	 */
+	if (track_ticavail(o, &op)) {
+		if (st2.cmd != EV_NULL && 
+		    (st1.cmd == EV_NULL || !ev_eq(&st1, &st2))) {
+			track_evput(o, &op, &st2);
+		} else if (st1.cmd != EV_NULL) {
+			track_evput(o, &op, &st1);
 		}
 	}
 }

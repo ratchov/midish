@@ -1,4 +1,4 @@
-/* $Id: track.c,v 1.9 2006/02/14 12:21:41 alex Exp $ */
+/* $Id: track.c,v 1.10 2006/02/17 13:18:06 alex Exp $ */
 /*
  * Copyright (c) 2003-2006 Alexandre Ratchov
  * All rights reserved.
@@ -567,6 +567,15 @@ track_ticdelmax(struct track_s *o, struct seqptr_s *p, unsigned max) {
 	}
 	(*p->pos)->delta -= ntics;
 	return ntics;
+}
+
+	/*
+	 * insert 'max' tics on the current position
+	 */
+
+void
+track_ticinsmax(struct track_s *o, struct seqptr_s *p, unsigned max) {
+	(*p->pos)->delta += max;
 }
 
 	/*

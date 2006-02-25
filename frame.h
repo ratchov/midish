@@ -1,4 +1,4 @@
-/* $Id: frame.h,v 1.4 2006/02/14 12:21:40 alex Exp $ */
+/* $Id: frame.h,v 1.5 2006/02/17 13:18:05 alex Exp $ */
 /*
  * Copyright (c) 2003-2006 Alexandre Ratchov
  * All rights reserved.
@@ -39,6 +39,7 @@ void track_frameget(struct track_s *o, struct seqptr_s *p, struct track_s *frame
 void track_frameput(struct track_s *o, struct seqptr_s *p, struct track_s *frame);
 void track_framecut(struct track_s *o, unsigned tic, unsigned start, unsigned len);
 void track_frameblank(struct track_s *o, unsigned tic, unsigned start, unsigned len);
+void track_frameins(struct track_s *o, unsigned tic, unsigned start, unsigned len);
 
 #endif /* MIDISH_FRAME_H */
 
