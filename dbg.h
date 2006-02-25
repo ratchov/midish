@@ -1,4 +1,4 @@
-/* $Id: dbg.h,v 1.9 2006/02/14 12:21:40 alex Exp $ */
+/* $Id: dbg.h,v 1.10 2006/02/17 13:18:05 alex Exp $ */
 /*
  * Copyright (c) 2003-2006 Alexandre Ratchov
  * All rights reserved.
@@ -43,5 +43,7 @@ void  dbg_panic(void);
 void *mem_alloc(unsigned);
 void  mem_free(void *);
 void  mem_stats(void);
+
+extern unsigned mem_debug;
 
 #endif /* MIDISH_DBG_H */

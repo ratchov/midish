@@ -1,4 +1,4 @@
-/* $Id: dbg.c,v 1.9 2006/02/14 12:21:40 alex Exp $ */
+/* $Id: dbg.c,v 1.10 2006/02/17 13:18:05 alex Exp $ */
 /*
  * Copyright (c) 2003-2006 Alexandre Ratchov
  * All rights reserved.
@@ -38,7 +38,7 @@
 #define MAGIC_ALLOC	13942
 #define MAGIC_FREE	59811	
 
-unsigned mem_nalloc = 0, mem_nfree = 0;
+unsigned mem_nalloc = 0, mem_nfree = 0, mem_debug = 0;
 
 void
 dbg_puts(char *msg) {
@@ -144,9 +144,11 @@ mem_free(void *mem) {
 
 void
 mem_stats(void) {
-	dbg_puts("mem_stats: used=");
-	dbg_putu(mem_nalloc - mem_nfree);
-	dbg_puts(", alloc=");
-	dbg_putu(mem_nalloc);
-	dbg_puts("\n");
+	if (mem_debug) {
+		dbg_puts("mem_stats: used=");
+		dbg_putu(mem_nalloc - mem_nfree);
+		dbg_puts(", alloc=");
+		dbg_putu(mem_nalloc);
+		dbg_puts("\n");
+	}
 }

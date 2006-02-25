@@ -1,4 +1,4 @@
-/* $Id$ */
+/* $Id: rmidish.c,v 1.11 2006/02/14 12:21:41 alex Exp $ */
 /*
  * This program gives an example on
  * how to create a front-end to midish
@@ -11,9 +11,6 @@
  * standart output (trough the second pipe).
  */
 
-
-#define MIDISH "midish"
-
 #include <limits.h>
 #include <signal.h>
 #include <unistd.h>
@@ -24,8 +21,9 @@
 #include <readline/history.h>
 
 int midish_pid;
+char midish_basename[] = "midish";
 FILE *midish_stdout, *midish_stdin;
-char midish_path[PATH_MAX + 1];
+char midish_path[PATH_MAX + sizeof(midish_basename)];
 
 #define LINELENGTH 10000
 char linebuf[LINELENGTH + 1];
@@ -162,7 +160,7 @@ main(int argc, char *argv[]) {
 	} else {
 		dirlen = 0;
 	}
-	strcpy(midish_path + dirlen, MIDISH);
+	strcpy(midish_path + dirlen, midish_basename);
 	
 	/*
 	 * if stdin or stdout is not a tty, then dont start the front end,

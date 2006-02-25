@@ -1,4 +1,4 @@
-/* $Id: user.c,v 1.58 2006/02/14 12:21:41 alex Exp $ */
+/* $Id: user.c,v 1.59 2006/02/17 13:18:06 alex Exp $ */
 /*
  * Copyright (c) 2003-2006 Alexandre Ratchov
  * All rights reserved.
@@ -621,6 +621,8 @@ user_func_debug(struct exec_s *o, struct data_s **r) {
 		filt_debug = value;
 	} else if (str_eq(flag, "song")) {
 		song_debug = value;
+	} else if (str_eq(flag, "mem")) {
+		mem_debug = value;
 	} else {
 		cons_err("debug: unknuwn debug-flag");
 		return 0;
@@ -1120,6 +1122,7 @@ user_mainloop(void) {
 	root = NULL;
 	data = NULL;
 	for (;;) {
+		mem_stats();
 		if (parse_getsym(parse)) {
 			/* at this stage no lexical error */
 			if (parse->lex.id == TOK_EOF) {

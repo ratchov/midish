@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.14 2006/02/14 12:21:40 alex Exp $ */
+/* $Id: main.c,v 1.15 2006/02/17 13:18:05 alex Exp $ */
 /*
  * Copyright (c) 2003-2006 Alexandre Ratchov
  * All rights reserved.
@@ -72,5 +72,7 @@ main(int argc, char **argv) {
 	evctl_done();
 	textio_done();
 	cons_done();
+	
+	mem_stats();
 	return 0;
 }

@@ -1,4 +1,4 @@
-/* $Id: node.c,v 1.9 2006/02/14 12:21:41 alex Exp $ */
+/* $Id: node.c,v 1.10 2006/02/17 13:18:05 alex Exp $ */
 /*
  * Copyright (c) 2003-2006 Alexandre Ratchov
  * All rights reserved.
@@ -69,12 +69,7 @@ node_dbg(struct node_s *o, unsigned depth) {
 	struct node_s *i;
 	
 	dbg_puts(str);
-	/* warning 'cond ? val1 : val2' is a 'const char *' in gcc */
-	if (o->next) {
-		dbg_puts("+-");
-	} else {
-	 	dbg_puts("\\-");
-	}
+	dbg_puts(o != NULL && o->next != NULL ? "+-" : "\\-");
 	if (o == NULL) {
 		dbg_puts("<EMPTY>\n");
 		return;
@@ -85,12 +80,7 @@ node_dbg(struct node_s *o, unsigned depth) {
 		data_dbg(o->data);
 		dbg_puts(")");
 	}
-	/* warning 'cond ? val1 : val2' is a 'const char *' in gcc */
-	if (depth >= NODE_MAXDEPTH && o->list) { 
-		dbg_puts("[...]\n");
-	} else {
-		dbg_puts("\n");
-	}
+	dbg_puts(depth >= NODE_MAXDEPTH && o->list ? "[...]\n" : "\n");
 	if (depth < NODE_MAXDEPTH) {
 		str[2 * depth] = o->next ? '|' : ' ';
 		str[2 * depth + 1] = ' ';
@@ -180,9 +170,11 @@ node_exec_binary(struct node_s *o, struct exec_s *x, struct data_s **r,
 	lhs = *r;
 	*r = NULL;
 	if (node_exec(o->list->next, x, r) == RESULT_ERR) {
+		data_delete(lhs);
 		return RESULT_ERR;
 	}
 	if (!func(lhs, *r)) {
+		data_delete(lhs);
 		return RESULT_ERR;
 	}
 	data_delete(*r);
@@ -209,6 +201,7 @@ node_exec_proc(struct node_s *o, struct exec_s *x, struct data_s **r) {
 	for (a = o->list->list; a != NULL; a = a->next) {
 		if (name_lookup(&args, a->data->val.ref)) {
 			cons_err("duplicate arguments in proc definition");
+			name_empty(&args);
 			return RESULT_ERR;
 		}
 		name_add(&args, name_new(a->data->val.ref));
@@ -255,6 +248,7 @@ node_exec_slist(struct node_s *o, struct exec_s *x, struct data_s **r) {
 
 	/*
 	 * execute a builtin function
+	 * if the function didn't set 'r', then set it to 'nil'
 	 */
 
 unsigned
