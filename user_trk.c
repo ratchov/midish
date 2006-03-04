@@ -1,4 +1,4 @@
-/* $Id: user_trk.c,v 1.13 2006/02/17 13:18:06 alex Exp $ */
+/* $Id: user_trk.c,v 1.14 2006/02/25 20:57:36 alex Exp $ */
 /*
  * Copyright (c) 2003-2006 Alexandre Ratchov
  * All rights reserved.
@@ -294,8 +294,8 @@ user_func_trackblank(struct exec_s *o, struct data_s **r) {
 unsigned
 user_func_trackcopy(struct exec_s *o, struct data_s **r) {
 	struct songtrk_s *t, *t2;
-	struct track_s null, null2;
-	struct seqptr_s tp, tp2;
+	struct track_s copy;
+	struct seqptr_s tp2;
 	struct evspec_s es;
 	long from, where, amount, quant;
 	unsigned tic, tic2, len;
@@ -322,17 +322,17 @@ user_func_trackcopy(struct exec_s *o, struct data_s **r) {
 		tic2 -= quant/2;
 	}
 
-	track_init(&null);
-	track_init(&null2);
-	track_rew(&t->track, &tp);
-	track_seek(&t->track, &tp, tic);
+	track_init(&copy);
+	track_opcopy(&t->track, tic, len, &es, &copy);
+	
+	/*
+	 * XXX: we shoud merge, not just copy
+	 */
 	track_rew(&t2->track, &tp2);
 	track_seekblank(&t2->track, &tp2, tic2);
-	track_opextract(&t->track, &tp, len, &null, &es);
-	track_framecp(&null, &null2);
-	track_frameput(&t->track, &tp, &null);
-	track_frameput(&t2->track, &tp2, &null2);
-	track_done(&null);
+	track_frameput(&t2->track, &tp2, &copy);
+
+	track_done(&copy);
 	return 1;
 }
 

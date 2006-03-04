@@ -1,4 +1,4 @@
-/* $Id: trackop.c,v 1.20 2006/02/17 13:18:06 alex Exp $ */
+/* $Id: trackop.c,v 1.21 2006/02/25 20:57:36 alex Exp $ */
 /*
  * Copyright (c) 2003-2006 Alexandre Ratchov
  * All rights reserved.
@@ -39,116 +39,6 @@
 #include "default.h"
 #include "frame.h"
 
-	/*
-	 * set the current position to the
-	 * following frame. if no frame is available
-	 * the current position is 'o->eot'
-	 */
-
-unsigned
-track_framefind(struct track_s *o, struct seqptr_s *p) {
-	unsigned tics;
-	tics = 0;
-	for (;;) {
-		tics += track_ticlast(o, p);
-		if ((*p->pos)->ev.cmd == EV_NON ||
-		    !EV_ISNOTE(&(*p->pos)->ev)) {
-		    	break;
-		}
-		track_evnext(o, p);
-	}
-	return tics;
-}
-
-	/*
-	 * same as track_frameget, but 
-	 * if the same type of frame is found several times
-	 * in the same tic, only the latest one is kept.
-	 */
-
-void
-track_frameuniq(struct track_s *o, struct seqptr_s *p, struct track_s *frame) {	
-	struct seqptr_s op, fp;
-	unsigned delta;
-	struct ev_s ev;	
-	
-	track_frameget(o, p, frame);
-	op = *p;
-	track_rew(frame, &fp);
-	if (!track_evavail(frame, &fp)) {
-		return;
-	}
-	track_evget(frame, &fp, &ev);
-	for (;;) {
-		delta = track_framefind(o, &op);
-		if (delta != 0 || !track_evavail(o, &op)) {
-			break;
-		}
-		if (ev_sameclass(&ev,  &(*op.pos)->ev)) {
-			track_frameget(o, &op, frame);
-		} else {
-			track_evnext(o, &op);
-		}
-	}
-}
-
-
-void
-track_framecp(struct track_s *s, struct track_s *d) {
-	struct seqptr_s sp, dp;
-	struct ev_s ev;
-	unsigned tics;
-	track_rew(s, &sp);
-	track_rew(d, &dp);
-	for (;;) {
-		tics = track_ticlast(s, &sp);
-		track_seekblank(d, &dp, tics);
-		if (!track_evavail(s, &sp)) {
-			break;
-		}
-		track_evget(s, &sp, &ev);
-		track_evput(d, &dp, &ev);
-	}
-}
-
-	/*
-	 * retrun 1 if all avents match the givent event range
-	 * and zero otherwise
-	 */
-
-unsigned
-track_framematch(struct track_s *s, struct evspec_s *e) {
-	struct seqptr_s sp;
-	track_rew(s, &sp);
-	for (;;) {
-		if (!track_seqevavail(s, &sp)) {
-			break;
-		}
-		if (!evspec_matchev(e, &(*sp.pos)->ev)) {
-			return 0;
-		}
-		track_seqevnext(s, &sp);
-	}
-	return 1;
-}
-
-
-void
-track_frametransp(struct track_s *o, int halftones) {
-	struct seqptr_s op;
-	
-	track_rew(o, &op);	
-	for (;;) {
-		if (!track_seqevavail(o, &op)) {
-			break;
-		}
-		if (EV_ISNOTE(&(*op.pos)->ev)) {
-			(*op.pos)->ev.data.voice.b0 += halftones;
-			(*op.pos)->ev.data.voice.b0 &= 0x7f;
-		}
-		track_seqevnext(o, &op);
-	}
-}
 
 
 	/*
@@ -171,7 +61,7 @@ track_opcheck(struct track_s *o) {
 	track_rew(&frame, &fp);
 
 	for (;;) {
-		delta = track_framefind(o, &op);
+		delta = track_ticlast(o, &op);
 		track_seekblank(&temp, &tp, delta);
 		
 		if (!track_evavail(o, &op)) {
@@ -226,7 +116,7 @@ track_opquantise(struct track_s *o, struct seqptr_s *p,
 	
 	/* first, move all non-quantizable frames to &ctls */	
 	for (;;) {
-		delta = track_framefind(o, &op);
+		delta = track_ticlast(o, &op);
 		tic += delta;
 		if (!track_evavail(o, &op) || tic >= len) {
 			break; 	
@@ -249,7 +139,7 @@ track_opquantise(struct track_s *o, struct seqptr_s *p,
 	/* now we can start */
 
 	for (;;) {
-		delta = track_framefind(o, &op);
+		delta = track_ticlast(o, &op);
 		tic += delta;
 		delta -= ofs;
 		ofs = 0;
@@ -283,45 +173,6 @@ track_opquantise(struct track_s *o, struct seqptr_s *p,
 	track_done(&ctls);
 }
 
-	/*
-	 * extract all frames from a track
-	 * begging at the current position during
-	 * 'len' tics.
-	 */
-
-void
-track_opextract(struct track_s *o, struct seqptr_s *p, 
-    unsigned len, struct track_s *targ, struct evspec_s *es) {
-	struct track_s frame;
-	struct seqptr_s op, tp;
-	unsigned delta, tic;
-	
-	tic = 0;
-	op = *p;
-	track_init(&frame);
-	track_clear(targ, &tp);
-	
-	for (;;) {
-		delta = track_framefind(o, &op);
-		track_seekblank(targ, &tp, delta);
-		track_evlast(targ, &tp);
-		tic += delta;
-
-		if (!track_evavail(o, &op) || tic >= len) {
-			break;
-		}
-		
-		if (evspec_matchev(es, &(*op.pos)->ev)) {
-			track_frameget(o, &op, &frame);
-			track_frameput(targ, &tp, &frame);
-		} else {
-			track_evnext(o, &op);
-		}
-	}	
-	track_done(&frame);
-}
-
-
 	/* 
 	 * cut a piece of the track (events and blank space)
 	 */
@@ -352,7 +203,7 @@ track_opcut(struct track_s *o, unsigned start, unsigned len) {
 			goto end;
 		}
 		track_frameget(o, &op, &frame);
-		track_framecut(&frame, tic, start, len);
+		track_framecut(&frame, start - tic, len);
 		track_frameput(&temp, &tp, &frame);
 	}
 	
@@ -365,7 +216,7 @@ track_opcut(struct track_s *o, unsigned start, unsigned len) {
 			goto end;
 		}
 		track_frameget(o, &op, &frame);
-		track_framecut(&frame, tic, start, len);
+		track_framecut(&frame, start - tic, len);
 		track_frameput(&temp, &tp, &frame);
 	}
 	
@@ -386,49 +237,6 @@ end:
 	track_frameput(o, &op, &temp);
 	track_done(&frame);
 	track_done(&temp);
-}
-
-	/* 
-	 * blank a piece of the track (remove events but not blank space)
-	 */
-	 
-void
-track_opblank(struct track_s *o, unsigned start, unsigned len, 
-   struct evspec_s *es) {
-	struct track_s frame, temp;
-	struct seqptr_s op, fp, tp;
-	unsigned delta, tic;
-	
-	track_init(&frame);
-	track_init(&temp);
-	
-	tic = 0;
-	track_rew(o, &op);
-	track_rew(&frame, &fp);
-	track_rew(&temp, &tp);
-	
-	for (;;) {
-		delta = track_ticlast(o, &op);
-		track_seekblank(&temp, &tp, delta);
-				
-		tic += delta;
-		if (!track_evavail(o, &op)) {
-			break;
-		}
-		if (evspec_matchev(es, &(*op.pos)->ev)) {
-			track_frameget(o, &op, &frame);
-			track_frameblank(&frame, tic, start, len);
-			track_frameput(&temp, &tp, &frame);
-		} else {
-			track_evnext(o, &op);
-		}
-	}
-
-	track_rew(o, &op);
-	track_frameput(o, &op, &temp);
-	track_done(&frame);
-	track_done(&temp);
-	/*track_opcheck(o);*/
 }
 
 	/*
@@ -461,13 +269,13 @@ track_opinsert(struct track_s *o, unsigned start, unsigned len) {
 			goto end;
 		}
 		track_frameget(o, &op, &frame);
-		track_frameins(&frame, tic, start, len);
+		track_frameins(&frame, start - tic, len);
 		track_frameput(&temp, &tp, &frame);
 	}
 		
 	tic += len;
 	track_seekblank(&temp, &tp, len);
-		
+
 	for (;;) {
 		delta = track_ticlast(o, &op);
 		track_seekblank(&temp, &tp, delta);
@@ -489,6 +297,137 @@ end:
 	track_done(&temp);
 }
 
+	/* 
+	 * blank a piece of the track (remove events but not blank space)
+	 */
+	 
+void
+track_opblank(struct track_s *o, unsigned start, unsigned len, 
+   struct evspec_s *es) {
+	struct track_s frame, backup;
+	struct seqptr_s op, bp;
+	unsigned delta, tic;
+	
+	track_init(&frame);
+	track_init(&backup);
+	
+	tic = 0;
+	track_rew(o, &op);
+	track_rew(&backup, &bp);
+		
+	for (;;) {
+		delta = track_ticskipmax(o, &op, start - tic);
+		track_seekblank(&backup, &bp, delta);
+
+		tic += delta;
+		if (tic == start) {
+			break;
+		}
+		if (!track_evavail(o, &op)) {
+			goto end;
+		}
+		track_frameget(o, &op, &frame);
+		if (track_framematch(&frame, es)) {
+			track_frameblank(&frame, start - tic, len);
+		}
+		track_frameput(&backup, &bp, &frame);
+	}
+		
+	for (;;) {
+		delta = track_ticskipmax(o, &op, len);
+		track_seekblank(&backup, &bp, delta);
+		
+		tic   += delta;
+		start += delta;
+		len   -= delta;
+		if (len == 0) {
+			break;
+		}
+		if (!track_evavail(o, &op)) {
+			goto end;
+		}
+		track_frameget(o, &op, &frame);
+		if (track_framematch(&frame, es)) {
+			track_frameblank(&frame, start - tic, len);
+		}
+		track_frameput(&backup, &bp, &frame);
+	}
+
+end:	track_rew(o, &op);
+	track_frameput(o, &op, &backup);
+	track_done(&frame);
+}
+
+
+	/* 
+	 * copy a piece of the track into another track
+	 */
+	 
+void
+track_opcopy(struct track_s *o, unsigned start, unsigned len, 
+   struct evspec_s *es, struct track_s *targ) {
+	struct track_s frame, backup, copy;
+	struct seqptr_s op, bp, tp;
+	unsigned delta, tic;
+	
+	track_init(&frame);
+	track_init(&backup);
+	track_init(&copy);
+	
+	tic = 0;
+	track_rew(o, &op);
+	track_rew(&backup, &bp);
+	track_clear(targ, &tp);
+		
+	for (;;) {
+		delta = track_ticskipmax(o, &op, start - tic);
+		track_seekblank(&backup, &bp, delta);
+
+		tic += delta;
+		if (tic == start) {
+			break;
+		}
+		if (!track_evavail(o, &op)) {
+			goto end;
+		}
+		track_frameget(o, &op, &frame);
+		if (track_framematch(&frame, es)) {
+			track_framecopy(&frame, start - tic, len, &copy);
+			track_frameput(targ, &tp, &copy);	
+		}
+		track_frameput(&backup, &bp, &frame);
+	}
+		
+	for (;;) {
+		delta = track_ticskipmax(o, &op, len);
+		track_seekblank(&backup, &bp, delta);
+		track_seekblank(targ, &tp, delta);
+
+		tic   += delta;
+		start += delta;
+		len   -= delta;
+		if (len == 0) {
+			break;
+		}
+		if (!track_evavail(o, &op)) {
+			goto end;
+		}
+		track_frameget(o, &op, &frame);
+		if (track_framematch(&frame, es)) {
+			track_framecopy(&frame, start - tic, len, &copy);
+			track_frameput(targ, &tp, &copy);	
+		}
+		track_frameput(&backup, &bp, &frame);
+	}
+
+end:	track_rew(o, &op);
+	track_frameput(o, &op, &backup);
+
+	track_done(&frame);
+	track_done(&copy);
+}
+
+
 
 void
 track_optransp(struct track_s *o, struct seqptr_s *p, unsigned len, 
@@ -505,7 +444,7 @@ track_optransp(struct track_s *o, struct seqptr_s *p, unsigned len,
 	track_rew(&temp, &tp);
 		
 	for (;;) {
-		delta = track_framefind(o, &op);
+		delta = track_ticlast(o, &op);
 		track_seekblank(&temp, &tp, delta);
 		track_evlast(&temp, &tp);
 		tic += delta;

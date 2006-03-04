@@ -1,4 +1,4 @@
-/* $Id: ev.c,v 1.14 2006/02/14 12:21:40 alex Exp $ */
+/* $Id: ev.c,v 1.15 2006/02/17 13:18:05 alex Exp $ */
 /*
  * Copyright (c) 2003-2006 Alexandre Ratchov
  * All rights reserved.
@@ -198,10 +198,11 @@ ev_ordered(struct ev_s *ev1, struct ev_s *ev2) {
 	 * return the phase of the event within 
 	 * a frame:
 	 *	- EV_PHASE_FIRST is set if the given event can be the
-	 * 	  first event in a sequence (example: note-on)
+	 * 	  first event in a sequence (example: note-on,  
+	 *	  bender != 0x4000)
 	 *	- EV_PHASE_NEXT is set if the given event can be the next
 	 * 	  event in a frame after a 'first event' but not the last
-	 * 	  one (example: key after-touch)
+	 * 	  one (example: key after-touch, beder != 0x4000)
 	 *	- EV_PHASE_LAST is set if the given event can be the last
 	 * 	  event in a frame (example: note-off)
 	 */

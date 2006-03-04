@@ -1,4 +1,4 @@
-/* $Id: mdep.c,v 1.29 2006/02/14 12:21:40 alex Exp $ */
+/* $Id: mdep.c,v 1.30 2006/02/17 13:18:05 alex Exp $ */
 /*
  * Copyright (c) 2003-2006 Alexandre Ratchov
  * All rights reserved.
@@ -128,7 +128,7 @@ mux_mdep_run(void) {
 	struct pollfd fds[DEFAULT_MAXNDEVS];
 	struct mididev_s *dev, *index2dev[DEFAULT_MAXNDEVS];
 	static unsigned char midibuf[MIDI_BUFSIZE];
-	unsigned long delta_usec;
+	long delta_usec;
 	unsigned i;
 
 	ifds = 0;
@@ -175,17 +175,18 @@ mux_mdep_run(void) {
 
 		/*
 		 * number of micro-seconds between now
-		 * and the last timeout of poll()
+		 * and the last timeout we called poll(). 
+		 * Warning: because of system clock changes this value
+		 * can be negative.
 		 */
-		delta_usec = 1000000 * (tv.tv_sec - tv_last.tv_sec);
+		delta_usec = 1000000L * (tv.tv_sec - tv_last.tv_sec);
 		delta_usec += tv.tv_usec - tv_last.tv_usec;
-		tv_last = tv;
-
-		/*
-		 * update the current position, 
-		 * (time unit = 24th of microsecond
-		 */
-		if (delta_usec) {
+		if (delta_usec > 0) {
+			tv_last = tv;
+			/*
+			 * update the current position, 
+			 * (time unit = 24th of microsecond
+			 */
 			mux_timercb(24 * delta_usec);
 		}
 	}
@@ -250,7 +251,7 @@ exec_runrcfile(struct exec_s *o) {
 		if (stat(name, &st) == 0) {
 			return exec_runfile(o, name);
 		}
-	}		
+	}
 	if (stat(RC_DIR "/" RC_NAME, &st) == 0) {
 		return exec_runfile(o, RC_DIR "/" RC_NAME);
 	}

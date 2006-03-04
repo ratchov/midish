@@ -1,4 +1,4 @@
-/* $Id: frame.h,v 1.5 2006/02/17 13:18:05 alex Exp $ */
+/* $Id: frame.h,v 1.6 2006/02/25 20:57:35 alex Exp $ */
 /*
  * Copyright (c) 2003-2006 Alexandre Ratchov
  * All rights reserved.
@@ -34,12 +34,18 @@
 
 struct track_s;
 struct seqptr_s;
+struct evspec_s;
 
 void track_frameget(struct track_s *o, struct seqptr_s *p, struct track_s *frame);
 void track_frameput(struct track_s *o, struct seqptr_s *p, struct track_s *frame);
-void track_framecut(struct track_s *o, unsigned tic, unsigned start, unsigned len);
-void track_frameblank(struct track_s *o, unsigned tic, unsigned start, unsigned len);
-void track_frameins(struct track_s *o, unsigned tic, unsigned start, unsigned len);
+void track_frameuniq(struct track_s *o, struct seqptr_s *p, struct track_s *frame);
+void track_framedup(struct track_s *s, struct track_s *d);
+void track_framecut(struct track_s *o, unsigned start, unsigned len);
+void track_frameins(struct track_s *o, unsigned start, unsigned len);
+void track_frameblank(struct track_s *o, unsigned start, unsigned len);
+void track_framecopy(struct track_s *o, unsigned start, unsigned len, struct track_s *frame);
+unsigned track_framematch(struct track_s *s, struct evspec_s *e);
+void track_frametransp(struct track_s *o, int halftones);
 
 #endif /* MIDISH_FRAME_H */
 

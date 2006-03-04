@@ -1,4 +1,4 @@
-/* $Id: frame.c,v 1.7 2006/02/17 13:18:05 alex Exp $ */
+/* $Id: frame.c,v 1.8 2006/02/25 20:57:35 alex Exp $ */
 /*
  * Copyright (c) 2003-2006 Alexandre Ratchov
  * All rights reserved.
@@ -83,7 +83,7 @@ track_frameget(struct track_s *o, struct seqptr_s *p, struct track_s *frame) {
 			tics += track_ticlast(o, &op);
 			/* check for end of track */
 			if (!track_evavail(o, &op)) {
-				dbg_puts("track_frameget: truncated frame, ignored\n");
+				dbg_puts("track_frameget: truncated frame\n");
 				track_clear(frame, &fp);
 				return;
 			}
@@ -154,28 +154,80 @@ track_frameput(struct track_s *o, struct seqptr_s *p, struct track_s *frame) {
 	track_clear(frame, &fp);
 }
 
+	/*
+	 * same as track_frameget, but 
+	 * if the same type of frame is found several times
+	 * in the same tic, only the latest one is kept.
+	 */
+
+void
+track_frameuniq(struct track_s *o, struct seqptr_s *p, struct track_s *frame) {	
+	struct seqptr_s op, fp;
+	unsigned delta;
+	struct ev_s ev;	
+	
+	track_frameget(o, p, frame);
+	op = *p;
+	track_rew(frame, &fp);
+	if (!track_evavail(frame, &fp)) {
+		return;
+	}
+	track_evget(frame, &fp, &ev);
+	for (;;) {
+		delta = track_ticlast(o, &op);
+		if (delta != 0 || !track_evavail(o, &op)) {
+			break;
+		}
+		if (ev_sameclass(&ev,  &(*op.pos)->ev)) {
+			track_frameget(o, &op, frame);
+		} else {
+			track_evnext(o, &op);
+		}
+	}
+}
+
+
+	/*
+	 * make a verbatim copy of a frame
+	 */
+
+void
+track_framedup(struct track_s *s, struct track_s *d) {
+	struct seqptr_s sp, dp;
+	struct ev_s ev;
+	unsigned tics;
+		
+	track_rew(s, &sp);
+	track_rew(d, &dp);
+	for (;;) {
+		tics = track_ticlast(s, &sp);
+		track_seekblank(d, &dp, tics);
+		if (!track_evavail(s, &sp)) {
+			break;
+		}
+		track_evget(s, &sp, &ev);
+		track_evput(d, &dp, &ev);
+	}
+}
 
 	/*
 	 * cut a portion of the given frame (events and blank space)
-	 * the frame must not start after the begging of the
-	 * window to cut.
 	 */
 void
-track_framecut(struct track_s *o, unsigned tic, unsigned start, unsigned len) {
+track_framecut(struct track_s *o, unsigned start, unsigned len) {
 	struct seqptr_s op;
-	struct ev_s st1, st2;	
+	struct ev_s st1, st2;
+	unsigned tic, phase;
 	
-	if (tic > start) {
-		dbg_puts("track_framecut: missed the start tic\n");
-		dbg_panic();
-	}
+	tic = 0;
+	track_rew(o, &op);
 
 	/*
-	 * if the frame is a NOTE starting in the window 
-	 * we want to cut then drop it, else let it as-is
+	 * if the frame is a NOTE and the first tic is to be deleted
+	 * then we delete de whole note frame, else let it as-is
 	 */
-	if (o->first->ev.cmd == EV_NON) {
-		if (tic == start) {
+	if ((*op.pos)->ev.cmd == EV_NON) {
+		if (start == 0) {
 			track_clear(o, &op);
 		}
 		return;
@@ -183,7 +235,6 @@ track_framecut(struct track_s *o, unsigned tic, unsigned start, unsigned len) {
 	
 	st1.cmd = EV_NULL;	/* EV_NULL means that st1 isn't set */
 	st2.cmd = EV_NULL;
-	track_rew(o, &op);
 
 	/*
 	 * move to the begging of the start position
@@ -203,7 +254,18 @@ track_framecut(struct track_s *o, unsigned tic, unsigned start, unsigned len) {
 	}
 
 	/*
-	 * delete time and events during next 'len' tics
+	 * if the next event is the last event of a multi-event frame, 
+	 * then leave it as-is because, it is necessary to close the frame.
+	 */
+	if (st1.cmd != EV_NULL && track_evavail(o, &op)) {
+		phase = ev_phase(&(*op.pos)->ev);
+		if (phase & EV_PHASE_LAST) {
+			return;
+		}
+	}
+	
+	/*
+	 * delete time and events during the next 'len' tics
 	 */		
 	for (;;) {
 		len -= track_ticdelmax(o, &op, len);
@@ -211,7 +273,10 @@ track_framecut(struct track_s *o, unsigned tic, unsigned start, unsigned len) {
 			break;
 		}
 		if (!track_evavail(o, &op)) {
-			goto restore;
+			if (st1.cmd != NULL && st2.cmd != EV_NULL) {
+				track_evput(o, &op, &st2);
+			}
+			return;
 		}
 		while(track_evavail(o, &op)) {
 			st2 = (*op.pos)->ev;
@@ -219,60 +284,125 @@ track_framecut(struct track_s *o, unsigned tic, unsigned start, unsigned len) {
 		}
 	}
 	
-	/*
-	 * remove events from tic = start + len
-	 */
-	while(track_evavail(o, &op)) {
-		st2 = (*op.pos)->ev;
-		track_evdel(o, &op);
+	if (track_ticavail(o, &op)) {
+		/* 
+		 * if we deleted events from a multi-event frame, 
+		 * then restore the state, so it can continue properly
+		 */
+		if (st2.cmd != EV_NULL && (st1.cmd == EV_NULL || 
+		    !ev_eq(&st1, &st2))) {
+			track_evput(o, &op, &st2);
+		}
+	} else if (track_evavail(o, &op)) {
+		/*
+		 * if the next event (at end position) is the last
+		 * event of an entierly deleted frame, then delete if
+		 */
+		if (st1.cmd == EV_NULL) {
+			phase = ev_phase(&(*op.pos)->ev);
+			if (phase & EV_PHASE_LAST) {
+				track_evdel(o, &op);
+			}
+		}
 	}
+}
 
+
+	/*
+	 * insert blank space in the middle of the given frame
+	 */
+
+void
+track_frameins(struct track_s *o, unsigned start, unsigned len) {
+	struct seqptr_s op;
+	struct ev_s st1, st2, ca;	
+	unsigned tic, phase;
+	
+	tic = 0;
+	track_rew(o, &op);
+
+	/*
+	 * don't change note lengths
+	 */
+	if ((*op.pos)->ev.cmd == EV_NON) {
+		if (start == 0) {
+			track_ticinsmax(o, &op, len);
+		}
+		return;
+	}
+	
+	st1.cmd = EV_NULL;	/* EV_NULL means that st1 isn't set */
+	st2.cmd = EV_NULL;
+
+	/*
+	 * move to the begging of the 'start' position
+	 */	
+	for (;;) {
+		tic += track_ticskipmax(o, &op, start - tic);
+		if (tic == start) {
+			break;
+		}
+		if (!track_evavail(o, &op)) {
+			return;
+		}
+		while(track_evavail(o, &op)) {
+			st1 = (*op.pos)->ev;
+			track_evnext(o, &op);
+		}
+	}
+	
+	/*
+	 * if the last event of a multi-event frame follows, 
+	 * then leave it as-is and return
+	 */
+	if (st1.cmd != EV_NULL && track_evavail(o, &op)) {
+		phase = ev_phase(&(*op.pos)->ev);
+		if (phase & EV_PHASE_LAST) {
+			return;
+		}
+	}
+	
+	/*
+	 * terminate the frame at the start position
+	 * and insert some blank space
+	 */
+	if (st1.cmd != EV_NULL && ev_cancel(&st1, &ca)) {
+		track_evput(o, &op, &ca);
+	}
+	track_ticinsmax(o, &op, len);
+	track_ticskipmax(o, &op, len);
+	tic += len;
+		
 	/*
 	 * if there is no event available, restore the state
 	 */
-	if (track_ticavail(o, &op)) {
-	restore:
-		if (st2.cmd != EV_NULL && 
-		    (st1.cmd == EV_NULL || !ev_eq(&st1, &st2))) {
-			track_evput(o, &op, &st2);
-		}
+	if (track_ticavail(o, &op) && st1.cmd != EV_NULL) {
+		track_evput(o, &op, &st1);
 	}
 }
 
 	/*
 	 * blank (erase events but not time) a window in a frame
 	 *
-	 * Note: this function very similar to track_framecut(), so if
-	 *	 you make changes here, check also track_framecut()
+	 * Note: this function very similar to track_frameins(), so if
+	 *	 you make changes here, check also track_frameins()
 	 */
 
 void
-track_frameblank(struct track_s *o, unsigned tic, unsigned start, unsigned len) {
+track_frameblank(struct track_s *o, unsigned start, unsigned len) {
 	struct seqptr_s op;
 	struct ev_s st1, st2, ca;	
+	unsigned tic, phase;
+
+	tic = 0;
+	track_rew(o, &op);
 
 	/*
-	 * adjust start/len parameters so that the frame doesn't 
-	 * begin after the start position; also, check that the 
-	 * frame is inside the window to blank
+	 * if the frame is a NOTE and the first tic is to be deleted
+	 * then we delete de whole note frame, else we let it as-is
 	 */
-	do {
-		if (tic >= start + len) {
-			return;
-		}
-		if (tic > start) {
-			len -= tic - start;
-			start = tic;
-			continue;
-		}
-	} while(0);
-
-	/*
-	 * if the frame is a NOTE starting in the window 
-	 * we want to drop it, else let it as-is
-	 */
-	if (o->first->ev.cmd == EV_NON) {
-		if (tic >= start && tic < start + len) {
+	if ((*op.pos)->ev.cmd == EV_NON) {
+		if (start == 0) {
 			track_clear(o, &op);
 		}
 		return;
@@ -280,7 +410,6 @@ track_frameblank(struct track_s *o, unsigned tic, unsigned start, unsigned len) 
 	 	
 	st1.cmd = EV_NULL;	/* EV_NULL means that st1 isn't set */
 	st2.cmd = EV_NULL;
-	track_rew(o, &op);
 
 	/*
 	 * move to the begging of the start position
@@ -296,6 +425,17 @@ track_frameblank(struct track_s *o, unsigned tic, unsigned start, unsigned len) 
 		while(track_evavail(o, &op)) {
 			st1 = (*op.pos)->ev;
 			track_evnext(o, &op);
+		}
+	}
+
+	/*
+	 * if the last event of a multi-event frame follows, 
+	 * then leave it as-is and return
+	 */
+	if (st1.cmd != EV_NULL && track_evavail(o, &op)) {
+		phase = ev_phase(&(*op.pos)->ev);
+		if (phase & EV_PHASE_LAST) {
+			return;
 		}
 	}
 
@@ -323,52 +463,61 @@ track_frameblank(struct track_s *o, unsigned tic, unsigned start, unsigned len) 
 		}
 	}
 	
-	/*
-	 * remove events from tic = start + len
-	 */
-	while(track_evavail(o, &op)) {
-		st2 = (*op.pos)->ev;
-		track_evdel(o, &op);
-	}
-
-	/*
-	 * if there is no event available, restore the state
-	 */
 	if (track_ticavail(o, &op)) {
-		if (st2.cmd != EV_NULL && 
-		    (st1.cmd == EV_NULL || !ev_eq(&st1, &st2))) {
+		/* 
+		 * if we deleted events from a multi-event frame, 
+		 * then restore the state, so it can continue properly
+		 */
+		if (st2.cmd != EV_NULL) {
 			track_evput(o, &op, &st2);
+		} else if (st1.cmd != EV_NULL) {
+			track_evput(o, &op, &st1);
+		}
+	} else if (track_evavail(o, &op)) {
+		/*
+		 * if the next event (at end position) is the last
+		 * event of an a partially deleted frame, then delete it
+		 */
+		if (st1.cmd == EV_NULL) {
+			phase = ev_phase(&(*op.pos)->ev);
+			if (phase & EV_PHASE_LAST) {
+				track_evdel(o, &op);
+			}
 		}
 	}
 }
 
-
-
 	/*
-	 * insert blank space in the middle of the given frame
+	 * partialy copy a frame
+	 *
+	 * Note: this function very similar to track_frameblank(), so if
+	 *	 you make changes here, check also track_frameblank()
 	 */
 
 void
-track_frameins(struct track_s *o, unsigned tic, unsigned start, unsigned len) {
-	struct seqptr_s op;
+track_framecopy(struct track_s *o, unsigned start, unsigned len, struct track_s *frame) {
+	struct seqptr_s op, fp;
 	struct ev_s st1, st2, ca;	
+	unsigned tic, delta, phase;
 
-	if (tic > start) {
-		dbg_puts("track_frameins: missed the start tic\n");
-		dbg_panic();
-	}
-
+	tic = 0;
+	track_rew(o, &op);
+	track_clear(frame, &fp);
+	
 	/*
-	 * don't change note lengths
+	 * if the frame is a NOTE and the first tic is to be copied
+	 * then copy the whole note frame, else do nothing
 	 */
-	if (o->first->ev.cmd == EV_NON) {
-		track_ticinsmax(o, &op, len);
+	if ((*op.pos)->ev.cmd == EV_NON) {
+		if (start == 0) {			
+			track_framedup(o, frame);
+		}
 		return;
 	}
-	
+
+	 	
 	st1.cmd = EV_NULL;	/* EV_NULL means that st1 isn't set */
 	st2.cmd = EV_NULL;
-	track_rew(o, &op);
 
 	/*
 	 * move to the begging of the start position
@@ -386,39 +535,93 @@ track_frameins(struct track_s *o, unsigned tic, unsigned start, unsigned len) {
 			track_evnext(o, &op);
 		}
 	}
-	
+
 	/*
-	 * terminate the frame at the start position
+	 * if the last event of a multi-event frame follows, 
+	 * then leave it as-is and return
 	 */
-	if (st1.cmd != EV_NULL && ev_cancel(&st1, &ca)) {
-		track_evput(o, &op, &ca);
-	}
-	
-	/*
-	 * insert some blank space
-	 */
-	track_ticinsmax(o, &op, len);
-	track_ticskipmax(o, &op, len);
-	tic += len;
-		
-	/*
-	 * remove events at tic = start + len
-	 */
-	while(track_evavail(o, &op)) {
-		st2 = (*op.pos)->ev;
-		track_evdel(o, &op);
+	if (st1.cmd != EV_NULL && track_evavail(o, &op)) {
+		phase = ev_phase(&(*op.pos)->ev);
+		if (phase & EV_PHASE_LAST) {
+			return;
+		}
 	}
 
 	/*
-	 * if there is no event available, restore the state
+	 * open the new frame at the start position
 	 */
-	if (track_ticavail(o, &op)) {
-		if (st2.cmd != EV_NULL && 
-		    (st1.cmd == EV_NULL || !ev_eq(&st1, &st2))) {
-			track_evput(o, &op, &st2);
-		} else if (st1.cmd != EV_NULL) {
-			track_evput(o, &op, &st1);
+	if (st1.cmd != EV_NULL) {
+		track_evput(frame, &fp, &st1);
+	}
+
+	/*
+	 * delete events during next 'len' tics
+	 */		
+	for (;;) {
+		delta = track_ticskipmax(o, &op, start + len - tic);
+		track_seekblank(frame, &fp, delta);
+		tic += delta;
+		if (tic == start + len) {
+			break;
+		}
+		if (!track_evavail(o, &op)) {
+			return;
+		}
+		while(track_evavail(o, &op)) {
+			track_evget(o, &op, &st2);
+			track_evput(frame, &fp, &st2);
+		}
+	}
+	
+	/*
+	 * close the event
+	 */
+	if (st2.cmd != EV_NULL) {
+		if (ev_cancel(&st2, &ca)) {
+			track_evput(frame, &fp, &ca);
+		}
+	} else if (st1.cmd != EV_NULL) {
+		if (ev_cancel(&st1, &ca)) {
+			track_evput(frame, &fp, &ca);
 		}
 	}
 }
 
+	/*
+	 * retrun 1 if at least one event match the given event range
+	 * and zero otherwise
+	 */
+
+unsigned
+track_framematch(struct track_s *s, struct evspec_s *e) {
+	struct seqptr_s sp;
+	track_rew(s, &sp);
+	for (;;) {
+		if (!track_seqevavail(s, &sp)) {
+			break;
+		}
+		if (evspec_matchev(e, &(*sp.pos)->ev)) {
+			return 1;
+		}
+		track_seqevnext(s, &sp);
+	}
+	return 0;
+}
+
+
+void
+track_frametransp(struct track_s *o, int halftones) {
+	struct seqptr_s op;
+	
+	track_rew(o, &op);	
+	for (;;) {
+		if (!track_seqevavail(o, &op)) {
+			break;
+		}
+		if (EV_ISNOTE(&(*op.pos)->ev)) {
+			(*op.pos)->ev.data.voice.b0 += halftones;
+			(*op.pos)->ev.data.voice.b0 &= 0x7f;
+		}
+		track_seqevnext(o, &op);
+	}
+}
