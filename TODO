@@ -1,5 +1,13 @@
+- implement track_framemerge() that merges 2 frames and
+  puts the corresponding frame (if any) on a track
+
+- document new track{cut,insert,blank,copy}
+
+- add trackcrop
+
 - check that timeins is still working with the new track_opinsert()
-- create per channel banks for RPNs and NRPNs, smothing similar
+
+- create per-channel banks for RPNs and NRPNs, smothing similar
   to the sysex banks
 
 - metronome click length should be tunable (or at least > 0) in order

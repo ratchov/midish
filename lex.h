@@ -1,4 +1,4 @@
-/* $Id: lex.h,v 1.8 2006/02/14 12:21:40 alex Exp $ */
+/* $Id: lex.h,v 1.9 2006/02/17 13:18:05 alex Exp $ */
 /*
  * Copyright (c) 2003-2006 Alexandre Ratchov
  * All rights reserved.
@@ -49,7 +49,7 @@ enum SYM_ID {
 	TOK_IF, TOK_ELSE, TOK_WHILE, TOK_DO, TOK_FOR, TOK_IN,
 	TOK_PROC, TOK_LET, TOK_RETURN, TOK_NIL,
 	/* data */
-	TOK_IDENT, TOK_NUM, TOK_STRING,
+	TOK_IDENT, TOK_NUM, TOK_STRING
 };
 
 struct tokdef_s {

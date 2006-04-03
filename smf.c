@@ -1,4 +1,4 @@
-/* $Id: smf.c,v 1.18 2006/02/14 12:21:41 alex Exp $ */
+/* $Id: smf.c,v 1.19 2006/02/17 13:18:05 alex Exp $ */
 /*
  * Copyright (c) 2003-2006 Alexandre Ratchov
  * All rights reserved.
@@ -720,7 +720,7 @@ smf_gettrack(struct smf_s *o, struct song_s *s, struct songtrk_s *t) {
 			return 0;
 		}
 	}
-	return 1;
+	/* not reached */
 }
 
 	/*

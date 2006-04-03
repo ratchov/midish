@@ -1,4 +1,4 @@
-# $Id$
+# $Id: Makefile,v 1.51 2006/02/14 12:18:41 alex Exp $
 #
 # parameters for the GNU readline(3) library, used to
 # build rmidish (front-end to midish)
@@ -37,10 +37,7 @@ midish:		${MIDISH_OBJS}
 		${CC} ${LDFLAGS} ${MIDISH_OBJS} -o midish
 
 install-midish:	midish
-		mkdir -p ${BIN_DIR}
-		mkdir -p ${MAN1_DIR}
-		mkdir -p ${DOC_DIR}
-		mkdir -p ${EXAMPLES_DIR}
+		mkdir -p ${BIN_DIR} ${MAN1_DIR} ${DOC_DIR} ${EXAMPLES_DIR}
 		cp midish smfplay smfrec ${BIN_DIR}
 		cp midish.1 smfplay.1 smfrec.1 ${MAN1_DIR}
 		cp README manual.html ${DOC_DIR}
@@ -81,13 +78,12 @@ user_trk.o:	user_trk.c dbg.h default.h node.h exec.h name.h str.h data.h cons.h 
 
 # --------------------------------------------- dependencies for rmidish ---
 
-rmidish:	rmidish.c
+rmidish:	midish rmidish.c
 		${CC} ${CFLAGS} ${READLINE_CFLAGS} ${READLINE_INCLUDE} rmidish.c \
 		${LDFLAGS} ${READLINE_LDFLAGS} -o rmidish ${READLINE_LIB}
 
 install-rmidish:rmidish
-		mkdir -p ${BIN_DIR}
-		mkdir -p ${MAN1_DIR}
+		mkdir -p ${BIN_DIR} ${MAN1_DIR}
 		cp rmidish ${BIN_DIR}
 		cp rmidish.1 ${MAN1_DIR}
 

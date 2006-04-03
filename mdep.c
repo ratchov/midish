@@ -1,4 +1,4 @@
-/* $Id: mdep.c,v 1.30 2006/02/17 13:18:05 alex Exp $ */
+/* $Id: mdep.c,v 1.31 2006/03/04 23:46:45 alex Exp $ */
 /*
  * Copyright (c) 2003-2006 Alexandre Ratchov
  * All rights reserved.
@@ -114,7 +114,13 @@ mux_mdep_done(void) {
 	struct mididev_s *i;
 	for (i = mididev_list; i != NULL; i = i->next) {
 		if (RMIDI(i)->mdep.fd >= 0) {
-			close(RMIDI(i)->mdep.fd);
+			do {
+				if (close(RMIDI(i)->mdep.fd) < 0 &&
+				    errno == EINTR) {
+					continue;
+				}
+				perror(RMIDI(i)->mdep.path);
+			} while(0);
 		}
 	}
 }

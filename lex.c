@@ -1,4 +1,4 @@
-/* $Id: lex.c,v 1.12 2006/02/14 12:21:40 alex Exp $ */
+/* $Id: lex.c,v 1.13 2006/02/17 13:18:05 alex Exp $ */
 /*
  * Copyright (c) 2003-2006 Alexandre Ratchov
  * All rights reserved.
@@ -376,7 +376,7 @@ lex_scan(struct lex_s *o) {
 		lex_recover(o, "bad token");
 		return 0;
 	}
-	return 0;
+	/* not reached */
 }
 
 void

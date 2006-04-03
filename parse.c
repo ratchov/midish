@@ -1,4 +1,4 @@
-/* $Id: parse.c,v 1.15 2006/02/14 12:21:41 alex Exp $ */
+/* $Id: parse.c,v 1.16 2006/02/17 13:18:05 alex Exp $ */
 /*
  * Copyright (c) 2003-2006 Alexandre Ratchov
  * All rights reserved.
@@ -642,7 +642,7 @@ parse_call(struct parse_s *o, struct node_s **n) {
 		}
 		n = &(*n)->next;
 	}
-	return 0; /* aviod compiler warning */
+	/* not reached */
 }
 
 unsigned
@@ -897,6 +897,6 @@ parse_prog(struct parse_s *o, struct node_s **n) {
 		}
 		n = &(*n)->next;
 	}
-	return 1;
+	/* not reached */
 }
 
