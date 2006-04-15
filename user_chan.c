@@ -1,4 +1,4 @@
-/* $Id: user_chan.c,v 1.10 2006/02/14 12:21:41 alex Exp $ */
+/* $Id: user_chan.c,v 1.11 2006/02/17 13:18:06 alex Exp $ */
 /*
  * Copyright (c) 2003-2006 Alexandre Ratchov
  * All rights reserved.
@@ -50,12 +50,12 @@
 #include "textio.h"
 
 unsigned
-user_func_chanlist(struct exec_s *o, struct data_s **r) {
-	struct data_s *d, *n;
-	struct songchan_s *i;
+user_func_chanlist(struct exec *o, struct data **r) {
+	struct data *d, *n;
+	struct songchan *i;
 
 	d = data_newlist(NULL);
-	for (i = user_song->chanlist; i != NULL; i = (struct songchan_s *)i->name.next) {
+	for (i = user_song->chanlist; i != NULL; i = (struct songchan *)i->name.next) {
 		n = data_newref(i->name.str);
 		data_listadd(d, n);
 	}
@@ -64,9 +64,9 @@ user_func_chanlist(struct exec_s *o, struct data_s **r) {
 }
 
 unsigned
-user_func_channew(struct exec_s *o, struct data_s **r) {
+user_func_channew(struct exec *o, struct data **r) {
 	char *name;
-	struct songchan_s *i;
+	struct songchan *i;
 	unsigned dev, ch;
 	
 	if (!exec_lookupname(o, "channame", &name) ||
@@ -96,8 +96,8 @@ user_func_channew(struct exec_s *o, struct data_s **r) {
 }
 
 unsigned
-user_func_chandelete(struct exec_s *o, struct data_s **r) {
-	struct songchan_s *c;
+user_func_chandelete(struct exec *o, struct data **r) {
+	struct songchan *c;
 	if (!exec_lookupchan_getref(o, "channame", &c)) {
 		return 0;
 	}
@@ -109,8 +109,8 @@ user_func_chandelete(struct exec_s *o, struct data_s **r) {
 }
 
 unsigned
-user_func_chanrename(struct exec_s *o, struct data_s **r) {
-	struct songchan_s *c;
+user_func_chanrename(struct exec *o, struct data **r) {
+	struct songchan *c;
 	char *name;
 	
 	if (!exec_lookupchan_getref(o, "channame", &c) ||
@@ -127,8 +127,8 @@ user_func_chanrename(struct exec_s *o, struct data_s **r) {
 }
 
 unsigned
-user_func_chanexists(struct exec_s *o, struct data_s **r) {
-	struct songchan_s *i;
+user_func_chanexists(struct exec *o, struct data **r) {
+	struct songchan *i;
 	unsigned dev, ch;
 	
 	if (!exec_lookupchan_getnum(o, "channame", &dev, &ch)) {
@@ -141,8 +141,8 @@ user_func_chanexists(struct exec_s *o, struct data_s **r) {
 
 
 unsigned
-user_func_chanset(struct exec_s *o, struct data_s **r) {
-	struct songchan_s *c, *i;
+user_func_chanset(struct exec *o, struct data **r) {
+	struct songchan *c, *i;
 	unsigned dev, ch;
 	
 	if (!exec_lookupchan_getref(o, "channame", &c) ||
@@ -173,8 +173,8 @@ user_func_chanset(struct exec_s *o, struct data_s **r) {
 
 
 unsigned
-user_func_changetch(struct exec_s *o, struct data_s **r) {
-	struct songchan_s *i;
+user_func_changetch(struct exec *o, struct data **r) {
+	struct songchan *i;
 	
 	if (!exec_lookupchan_getref(o, "channame", &i)) {
 		return 0;
@@ -184,8 +184,8 @@ user_func_changetch(struct exec_s *o, struct data_s **r) {
 }
 
 unsigned
-user_func_changetdev(struct exec_s *o, struct data_s **r) {
-	struct songchan_s *i;
+user_func_changetdev(struct exec *o, struct data **r) {
+	struct songchan *i;
 	
 	if (!exec_lookupchan_getref(o, "channame", &i)) {
 		return 0;
@@ -198,9 +198,9 @@ user_func_changetdev(struct exec_s *o, struct data_s **r) {
 
 
 unsigned
-user_func_chanconfev(struct exec_s *o, struct data_s **r) {
-	struct songchan_s *c;
-	struct ev_s ev;
+user_func_chanconfev(struct exec *o, struct data **r) {
+	struct songchan *c;
+	struct ev ev;
 	
 	if (!exec_lookupchan_getref(o, "channame", &c) ||
 	    !exec_lookupev(o, "event", &ev)) {
@@ -215,8 +215,8 @@ user_func_chanconfev(struct exec_s *o, struct data_s **r) {
 }
 
 unsigned
-user_func_chaninfo(struct exec_s *o, struct data_s **r) {
-	struct songchan_s *c;
+user_func_chaninfo(struct exec *o, struct data **r) {
+	struct songchan *c;
 	
 	if (!exec_lookupchan_getref(o, "channame", &c)) {
 		return 0;
@@ -227,10 +227,10 @@ user_func_chaninfo(struct exec_s *o, struct data_s **r) {
 }
 
 unsigned
-user_func_chansetcurinput(struct exec_s *o, struct data_s **r) {
+user_func_chansetcurinput(struct exec *o, struct data **r) {
 	unsigned dev, ch;
-	struct songchan_s *c;
-	struct data_s *l;
+	struct songchan *c;
+	struct data *l;
 	
 	if (!exec_lookupchan_getref(o, "channame", &c) ||
 	    !exec_lookuplist(o, "inputchan", &l)) {
@@ -246,8 +246,8 @@ user_func_chansetcurinput(struct exec_s *o, struct data_s **r) {
 
 
 unsigned
-user_func_changetcurinput(struct exec_s *o, struct data_s **r) {
-	struct songchan_s *c;
+user_func_changetcurinput(struct exec *o, struct data **r) {
+	struct songchan *c;
 	
 	if (!exec_lookupchan_getref(o, "channame", &c)) {
 		return 0;

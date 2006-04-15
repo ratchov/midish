@@ -1,4 +1,4 @@
-/* $Id: song.h,v 1.17 2006/02/14 12:21:41 alex Exp $ */
+/* $Id: song.h,v 1.18 2006/02/17 13:18:06 alex Exp $ */
 /*
  * Copyright (c) 2003-2006 Alexandre Ratchov
  * All rights reserved.
@@ -41,122 +41,122 @@
 #include "filt.h"
 #include "sysex.h"
 
-struct songchan_s {
-	struct name_s name;
-	struct track_s conf;
+struct songchan {
+	struct name name;
+	struct track conf;
 	/* device and midichan of the donc chan */
 	unsigned dev, ch;
 	/* default source dev/chan */
 	unsigned curinput_dev, curinput_ch;		
 };
 
-struct songfilt_s {
-	struct name_s name;
-	struct filt_s filt;
-	struct songchan_s *curchan;
+struct songfilt {
+	struct name name;
+	struct filt filt;
+	struct songchan *curchan;
 };
 
-struct songtrk_s {
-	struct name_s name;			/* identifier + list entry */
-	struct track_s track;			/* actual data */
-	struct seqptr_s trackptr;		/* track pointer for RT */
-	struct songfilt_s *curfilt;		/* source and dest. channel */
+struct songtrk {
+	struct name name;			/* identifier + list entry */
+	struct track track;			/* actual data */
+	struct seqptr trackptr;		/* track pointer for RT */
+	struct songfilt *curfilt;		/* source and dest. channel */
 	unsigned mute;
 };
 
-struct songsx_s {
-	struct name_s name;
-	struct sysexlist_s sx;
+struct songsx {
+	struct name name;
+	struct sysexlist sx;
 };
 
-struct songtrk_s *songtrk_new(char *);
-void songtrk_delete(struct songtrk_s *);
+struct songtrk *songtrk_new(char *);
+void songtrk_delete(struct songtrk *);
 
-struct songchan_s *songchan_new(char *);
-void songchan_delete(struct songchan_s *o);
+struct songchan *songchan_new(char *);
+void songchan_delete(struct songchan *o);
 
-struct songfilt_s *songfilt_new(char *);
-void songfilt_delete(struct songfilt_s *o);
+struct songfilt *songfilt_new(char *);
+void songfilt_delete(struct songfilt *o);
 
-struct songsx_s *songsx_new(char *);
-void songsx_delete(struct songsx_s *o);
+struct songsx *songsx_new(char *);
+void songsx_delete(struct songsx *o);
 
-struct song_s {
+struct song {
 	/* music-related fields, should be saved */
-	struct track_s meta;			/* tempo track */
-	struct seqptr_s metaptr;
-	struct songtrk_s *trklist;
-	struct songchan_s *chanlist;
-	struct songfilt_s *filtlist;
-	struct songsx_s *sxlist;
+	struct track meta;			/* tempo track */
+	struct seqptr metaptr;
+	struct songtrk *trklist;
+	struct songchan *chanlist;
+	struct songfilt *filtlist;
+	struct songsx *sxlist;
 	unsigned tics_per_unit;			/* global time resulution */
 	/* real-time parameters */
 	unsigned long tempo;			/* 24th of usec per tic */
 	unsigned beats_per_measure, tics_per_beat;
-	struct track_s rec;
-	struct seqptr_s recptr;
-	struct filt_s *filt;
-	void (*realtimecb)(void *addr, struct ev_s *ev);
+	struct track rec;
+	struct seqptr recptr;
+	struct filt *filt;
+	void (*realtimecb)(void *addr, struct ev *ev);
 	/* metronome stuff */
 	unsigned tic, beat, measure;
 	unsigned metro_enabled;
-	struct ev_s metro_hi, metro_lo;
+	struct ev metro_hi, metro_lo;
 	/* defautls */
-	struct songtrk_s *curtrk;
-	struct songfilt_s *curfilt;
-	struct songchan_s *curchan;
-	struct songsx_s *cursx;
+	struct songtrk *curtrk;
+	struct songfilt *curfilt;
+	struct songchan *curchan;
+	struct songsx *cursx;
 	unsigned curpos;
 	unsigned curquant, curlen;
 	unsigned curinput_dev, curinput_ch;		
 };
 
-struct song_s *song_new(void);
-void song_delete(struct song_s *o);
-void song_init(struct song_s *o);
-void song_done(struct song_s *o);
+struct song *song_new(void);
+void song_delete(struct song *o);
+void song_init(struct song *o);
+void song_done(struct song *o);
 
-void song_trkadd(struct song_s *o, struct songtrk_s *t);
-struct songtrk_s *song_trklookup(struct song_s *o, char *name);
-unsigned song_trkrm(struct song_s *o, struct songtrk_s *t);
+void song_trkadd(struct song *o, struct songtrk *t);
+struct songtrk *song_trklookup(struct song *o, char *name);
+unsigned song_trkrm(struct song *o, struct songtrk *t);
 
-void song_chanadd(struct song_s *o, struct songchan_s *);
-struct songchan_s *song_chanlookup(struct song_s *o, char *name);
-struct songchan_s *song_chanlookup_bynum(struct song_s *o, unsigned dev, unsigned ch);
-unsigned song_chanrm(struct song_s *o, struct songchan_s *c);
+void song_chanadd(struct song *o, struct songchan *);
+struct songchan *song_chanlookup(struct song *o, char *name);
+struct songchan *song_chanlookup_bynum(struct song *o, unsigned dev, unsigned ch);
+unsigned song_chanrm(struct song *o, struct songchan *c);
 
-void song_filtadd(struct song_s *o, struct songfilt_s *i);
-struct songfilt_s *song_filtlookup(struct song_s *o, char *name);
-unsigned song_filtrm(struct song_s *o, struct songfilt_s *f);
+void song_filtadd(struct song *o, struct songfilt *i);
+struct songfilt *song_filtlookup(struct song *o, char *name);
+unsigned song_filtrm(struct song *o, struct songfilt *f);
 
-void song_sxadd(struct song_s *o, struct songsx_s *t);
-struct songsx_s *song_sxlookup(struct song_s *o, char *name);
-unsigned song_sxrm(struct song_s *o, struct songsx_s *t);
+void song_sxadd(struct song *o, struct songsx *t);
+struct songsx *song_sxlookup(struct song *o, char *name);
+unsigned song_sxrm(struct song *o, struct songsx *t);
 
-void song_getcursx(struct song_s *o, struct songsx_s **r);
-void song_setcursx(struct song_s *o, struct songsx_s *x);
-void song_getcurtrk(struct song_s *o, struct songtrk_s **r);
-void song_setcurtrk(struct song_s *o, struct songtrk_s *t);
-void song_getcurfilt(struct song_s *o, struct songfilt_s **r);
-void song_setcurfilt(struct song_s *o, struct songfilt_s *f);
-void song_getcurchan(struct song_s *o, struct songchan_s **r);
-void song_setcurchan(struct song_s *o, struct songchan_s *c);
-void song_getcurinput(struct song_s *o, unsigned *dev, unsigned *ch);
-void song_setcurinput(struct song_s *o, unsigned dev, unsigned ch);
+void song_getcursx(struct song *o, struct songsx **r);
+void song_setcursx(struct song *o, struct songsx *x);
+void song_getcurtrk(struct song *o, struct songtrk **r);
+void song_setcurtrk(struct song *o, struct songtrk *t);
+void song_getcurfilt(struct song *o, struct songfilt **r);
+void song_setcurfilt(struct song *o, struct songfilt *f);
+void song_getcurchan(struct song *o, struct songchan **r);
+void song_setcurchan(struct song *o, struct songchan *c);
+void song_getcurinput(struct song *o, unsigned *dev, unsigned *ch);
+void song_setcurinput(struct song *o, unsigned dev, unsigned ch);
 
-unsigned song_measuretotic(struct song_s *o, unsigned);
+unsigned song_measuretotic(struct song *o, unsigned);
 
-void song_metrotic(struct song_s *o);
-void song_playconf(struct song_s *o);
-void song_nexttic(struct song_s *o);
-void song_playtic(struct song_s *o);
-unsigned song_finished(struct song_s *o);
-void song_record(struct song_s *o);
-void song_play(struct song_s *o);
-void song_idle(struct song_s *o);
+void song_metrotic(struct song *o);
+void song_playconf(struct song *o);
+void song_nexttic(struct song *o);
+void song_playtic(struct song *o);
+unsigned song_finished(struct song *o);
+void song_record(struct song *o);
+void song_play(struct song *o);
+void song_idle(struct song *o);
 
-void song_rt_setup(struct song_s *o);
-void song_rt_seek(struct song_s *o, unsigned rewind);
+void song_rt_setup(struct song *o);
+void song_rt_seek(struct song *o, unsigned rewind);
 
 extern unsigned song_debug;
 

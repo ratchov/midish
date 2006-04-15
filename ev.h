@@ -1,4 +1,4 @@
-/* $Id: ev.h,v 1.17 2006/02/14 12:21:40 alex Exp $ */
+/* $Id: ev.h,v 1.18 2006/02/17 13:18:05 alex Exp $ */
 /*
  * Copyright (c) 2003-2006 Alexandre Ratchov
  * All rights reserved.
@@ -75,7 +75,7 @@
 #define EV_BEND_DEFAULTHI	0x40
 #define EV_CAT_DEFAULT		0
 
-struct ev_s {
+struct ev {
 	unsigned cmd;
 	union {
 		struct {
@@ -84,7 +84,7 @@ struct ev_s {
 		struct {
 			unsigned short beats, tics;
 		} sign;
-		struct voice_s {
+		struct voice {
 #define EV_MAXDEV	(DEFAULT_MAXNDEVS - 1)
 #define EV_MAXCH	15
 #define EV_MAXB0	0x7f
@@ -107,7 +107,7 @@ struct ev_s {
 #define EVSPEC_CAT		4
 #define EVSPEC_BEND		5
 
-struct evspec_s {
+struct evspec {
 	unsigned cmd;
 	unsigned dev_min, dev_max;
 	unsigned ch_min, ch_max;
@@ -115,20 +115,20 @@ struct evspec_s {
 	unsigned b1_min, b1_max;
 };
 
-void	 ev_dbg(struct ev_s *ev);
-unsigned ev_eq(struct ev_s *ev1, struct ev_s *ev2);
-unsigned ev_sameclass(struct ev_s *ev1, struct ev_s *ev2);
-unsigned ev_ordered(struct ev_s *ev1, struct ev_s *ev2);
-unsigned ev_str2cmd(struct ev_s *ev, char *str);
-unsigned ev_phase(struct ev_s *ev);
-unsigned ev_cancel(struct ev_s *ev, struct ev_s *ca);
+void	 ev_dbg(struct ev *ev);
+unsigned ev_eq(struct ev *ev1, struct ev *ev2);
+unsigned ev_sameclass(struct ev *ev1, struct ev *ev2);
+unsigned ev_ordered(struct ev *ev1, struct ev *ev2);
+unsigned ev_str2cmd(struct ev *ev, char *str);
+unsigned ev_phase(struct ev *ev);
+unsigned ev_cancel(struct ev *ev, struct ev *ca);
 
-unsigned evspec_str2cmd(struct evspec_s *ev, char *str);
-void	 evspec_dbg(struct evspec_s *o);
-void	 evspec_reset(struct evspec_s *o);
-unsigned evspec_matchev(struct evspec_s *o, struct ev_s *e);
+unsigned evspec_str2cmd(struct evspec *ev, char *str);
+void	 evspec_dbg(struct evspec *o);
+void	 evspec_reset(struct evspec *o);
+unsigned evspec_matchev(struct evspec *o, struct ev *e);
 
-struct evctl_s {
+struct evctl {
 #define EVCTL_TYPE_UNKNOWN	0
 #define EVCTL_TYPE_CONT		1
 #define EVCTL_TYPE_SWITCH	2
@@ -140,7 +140,7 @@ struct evctl_s {
 #define EVCTL_TYPE(i)		(evctl_tab[(i)].type)
 #define EVCTL_DEFAULT(i)	(evctl_tab[(i)].defval)
 
-extern	struct evctl_s evctl_tab[128];
+extern	struct evctl evctl_tab[128];
 
 void	 evctl_conf(unsigned i, unsigned type, unsigned defval, char *name);
 void	 evctl_unconf(unsigned i);

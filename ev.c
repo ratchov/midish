@@ -1,4 +1,4 @@
-/* $Id: ev.c,v 1.15 2006/02/17 13:18:05 alex Exp $ */
+/* $Id: ev.c,v 1.16 2006/03/04 23:46:45 alex Exp $ */
 /*
  * Copyright (c) 2003-2006 Alexandre Ratchov
  * All rights reserved.
@@ -30,7 +30,7 @@
  */
 
 /*
- * ev_s is an "extended" midi event
+ * ev is an "extended" midi event
  */
 
 #include "dbg.h"
@@ -50,10 +50,10 @@ char *evspec_cmdstr[] = {
 	"any", "note", "ctl", "pc", "cat", "bend", NULL
 };
 
-struct evctl_s evctl_tab[128];
+struct evctl evctl_tab[128];
 
 char *
-ev_getstr(struct ev_s *ev) {
+ev_getstr(struct ev *ev) {
 	if (ev->cmd >= EV_NUMCMD) {
 		return NULL;
 		/*
@@ -65,7 +65,7 @@ ev_getstr(struct ev_s *ev) {
 }
 
 unsigned
-ev_str2cmd(struct ev_s *ev, char *str) {
+ev_str2cmd(struct ev *ev, char *str) {
 	unsigned i;
 	for (i = 0; i < EV_NUMCMD; i++) {
 		if (ev_cmdstr[i] && str_eq(ev_cmdstr[i], str)) {
@@ -82,7 +82,7 @@ ev_str2cmd(struct ev_s *ev, char *str) {
 	 */
 
 unsigned
-ev_eq(struct ev_s *ev1, struct ev_s *ev2) {
+ev_eq(struct ev *ev1, struct ev *ev2) {
 	if (ev1->cmd != ev2->cmd) {
 		return 0;
 	}
@@ -108,7 +108,7 @@ ev_eq(struct ev_s *ev1, struct ev_s *ev2) {
 	 */
 
 unsigned
-ev_sameclass(struct ev_s *ev1, struct ev_s *ev2) {
+ev_sameclass(struct ev *ev1, struct ev *ev2) {
 	switch (ev1->cmd) {
 	case EV_NON:
 	case EV_NOFF:
@@ -158,7 +158,7 @@ ev_sameclass(struct ev_s *ev1, struct ev_s *ev2) {
 	 */
 
 unsigned
-ev_ordered(struct ev_s *ev1, struct ev_s *ev2) {
+ev_ordered(struct ev *ev1, struct ev *ev2) {
 	if (!EV_ISVOICE(ev1) || !EV_ISVOICE(ev2)) {
 		return 1;
 	}
@@ -208,7 +208,7 @@ ev_ordered(struct ev_s *ev1, struct ev_s *ev2) {
 	 */
 
 unsigned
-ev_phase(struct ev_s *ev) {
+ev_phase(struct ev *ev) {
 	unsigned phase;
 	
 	switch(ev->cmd) {
@@ -265,7 +265,7 @@ ev_phase(struct ev_s *ev) {
 	 */
 
 unsigned
-ev_cancel(struct ev_s *ev, struct ev_s *ca) {
+ev_cancel(struct ev *ev, struct ev *ca) {
 	if (!EV_ISVOICE(ev)) {
 		dbg_puts("ev_cancel: must be called with voice argument\n");
 		dbg_panic();
@@ -317,7 +317,7 @@ ev_cancel(struct ev_s *ev, struct ev_s *ca) {
 
 
 void
-ev_dbg(struct ev_s *ev) {
+ev_dbg(struct ev *ev) {
 	char *cmdstr;
 	cmdstr = ev_getstr(ev);
 	if (cmdstr == NULL) {
@@ -369,7 +369,7 @@ ev_dbg(struct ev_s *ev) {
 
 
 unsigned
-evspec_str2cmd(struct evspec_s *ev, char *str) {
+evspec_str2cmd(struct evspec *ev, char *str) {
 	unsigned i;
 
 	for (i = 0; evspec_cmdstr[i]; i++) {
@@ -382,7 +382,7 @@ evspec_str2cmd(struct evspec_s *ev, char *str) {
 }
 
 void
-evspec_reset(struct evspec_s *o) {
+evspec_reset(struct evspec *o) {
 	o->cmd = EVSPEC_ANY;
 	o->dev_min = 0;
 	o->dev_max = EV_MAXDEV;
@@ -395,7 +395,7 @@ evspec_reset(struct evspec_s *o) {
 }
 
 void
-evspec_dbg(struct evspec_s *o) {
+evspec_dbg(struct evspec *o) {
 	unsigned i;
 	
 	i = 0;
@@ -438,7 +438,7 @@ evspec_dbg(struct evspec_s *o) {
 }
 
 unsigned
-evspec_matchev(struct evspec_s *o, struct ev_s *e) {
+evspec_matchev(struct evspec *o, struct ev *e) {
 	switch(o->cmd) {
 	case EVSPEC_ANY:
 		goto ch;
@@ -495,7 +495,7 @@ ch:	if (e->data.voice.dev < o->dev_min ||
 
 void
 evctl_conf(unsigned i, unsigned type, unsigned defval, char *name) {
-	struct evctl_s *o = &evctl_tab[i];
+	struct evctl *o = &evctl_tab[i];
 	if (o->name != NULL) {
 		str_delete(o->name);
 	}
@@ -511,7 +511,7 @@ evctl_conf(unsigned i, unsigned type, unsigned defval, char *name) {
 
 void
 evctl_unconf(unsigned i) {
-	struct evctl_s *o = &evctl_tab[i];
+	struct evctl *o = &evctl_tab[i];
 	if (o->name != NULL) {
 		str_delete(o->name);
 		o->name = NULL;
@@ -528,7 +528,7 @@ evctl_unconf(unsigned i) {
 unsigned
 evctl_lookup(char *name, unsigned *ret) {
 	unsigned i;
-	struct evctl_s *ctl;
+	struct evctl *ctl;
 	
 	for (i = 0; i < 128; i++) {
 		ctl = &evctl_tab[0];

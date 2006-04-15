@@ -1,4 +1,4 @@
-/* $Id: rmidi.c,v 1.13 2006/02/14 12:21:41 alex Exp $ */
+/* $Id: rmidi.c,v 1.14 2006/02/17 13:18:05 alex Exp $ */
 /*
  * Copyright (c) 2003-2006 Alexandre Ratchov
  * All rights reserved.
@@ -30,11 +30,11 @@
  */
 
 /*
- * rmidi_s extends mididev_s and implements
+ * rmidi extends mididev and implements
  * raw midi devices (à la BSD/Linux OSS-compatible devices)
  *
  * converts midi bytes (ie 'unsigned char') 
- * to midi events (struct ev_s) and calls mux_evcb on the input
+ * to midi events (struct ev) and calls mux_evcb on the input
  *
  * converts midi events into bytes and sends them on the wire
  */
@@ -56,22 +56,22 @@
 
 unsigned rmidi_debug = 0;
 
-struct rmidi_s *
+struct rmidi *
 rmidi_new(void) {
-	struct rmidi_s *o;
-	o = (struct rmidi_s *)mem_alloc(sizeof(struct rmidi_s));
+	struct rmidi *o;
+	o = (struct rmidi *)mem_alloc(sizeof(struct rmidi));
 	rmidi_init(o);
 	return o;
 }
 
 void
-rmidi_delete(struct rmidi_s *o) {
+rmidi_delete(struct rmidi *o) {
 	rmidi_done(o);
 	mem_free(o);
 }
 
 void 
-rmidi_init(struct rmidi_s *o) {	
+rmidi_init(struct rmidi *o) {	
 	o->oused = 0;
 	o->istatus = o->ostatus = 0;
 	o->isysex = NULL;
@@ -80,7 +80,7 @@ rmidi_init(struct rmidi_s *o) {
 }
 
 void 
-rmidi_done(struct rmidi_s *o) {
+rmidi_done(struct rmidi *o) {
 	if (o->oused != 0) {
 		dbg_puts("rmidi_done: output buffer is not empty, continuing...\n");
 	}
@@ -98,8 +98,8 @@ unsigned rmidi_evlen[] = { 2, 2, 2, 2, 1, 1, 2, 0 };
 	 */
 
 void
-rmidi_inputcb(struct rmidi_s *o, unsigned char *buf, unsigned count) {
-	struct ev_s ev;
+rmidi_inputcb(struct rmidi *o, unsigned char *buf, unsigned count) {
+	struct ev ev;
 	unsigned data;
 
 	while (count != 0) {
@@ -194,7 +194,7 @@ rmidi_inputcb(struct rmidi_s *o, unsigned char *buf, unsigned count) {
 	 */
 
 void
-rmidi_out(struct rmidi_s *o, unsigned data) {
+rmidi_out(struct rmidi *o, unsigned data) {
 	if (rmidi_debug) {
 		dbg_putu(o->mididev.unit);
 		dbg_puts(" -> ");
@@ -214,7 +214,7 @@ rmidi_out(struct rmidi_s *o, unsigned data) {
 	 */
 
 void
-rmidi_putev(struct rmidi_s *o, struct ev_s *ev) {
+rmidi_putev(struct rmidi *o, struct ev *ev) {
 	unsigned s;
 	
 	switch (ev->cmd) {

@@ -1,4 +1,4 @@
-/* $Id: sysex.c,v 1.4 2006/02/14 12:21:41 alex Exp $ */
+/* $Id: sysex.c,v 1.5 2006/02/17 13:18:06 alex Exp $ */
 /*
  * Copyright (c) 2003-2006 Alexandre Ratchov
  * All rights reserved.
@@ -36,11 +36,11 @@
 
 /* --------------------------------------------- sysex management --- */
 
-struct pool_s chunk_pool;
+struct pool chunk_pool;
 
 void
 chunk_pool_init(unsigned size) {
-	pool_init(&chunk_pool, "chunk", sizeof(struct chunk_s), size);
+	pool_init(&chunk_pool, "chunk", sizeof(struct chunk), size);
 }
 
 void
@@ -49,26 +49,26 @@ chunk_pool_done(void) {
 }
 
 
-struct chunk_s *
+struct chunk *
 chunk_new(void) {
-	struct chunk_s *o;
-	o = (struct chunk_s *)pool_new(&chunk_pool);
+	struct chunk *o;
+	o = (struct chunk *)pool_new(&chunk_pool);
 	o->next = NULL;
 	o->used = 0;
 	return o;
 }
 
 void
-chunk_del(struct chunk_s *o) {
+chunk_del(struct chunk *o) {
 	pool_del(&chunk_pool, o);
 }
 
 
-struct pool_s sysex_pool;
+struct pool sysex_pool;
 
 void
 sysex_pool_init(unsigned size) {
-	pool_init(&sysex_pool, "sysex", sizeof(struct sysex_s), size);
+	pool_init(&sysex_pool, "sysex", sizeof(struct sysex), size);
 }
 
 void
@@ -76,10 +76,10 @@ sysex_pool_done(void) {
 	pool_done(&sysex_pool);
 }
 
-struct sysex_s *
+struct sysex *
 sysex_new(unsigned unit) {
-	struct sysex_s *o;
-	o = (struct sysex_s *)pool_new(&sysex_pool);
+	struct sysex *o;
+	o = (struct sysex *)pool_new(&sysex_pool);
 	o->next = NULL;
 	o->unit = unit;
 	o->first = o->last = NULL;
@@ -87,8 +87,8 @@ sysex_new(unsigned unit) {
 }
 
 void
-sysex_del(struct sysex_s *o) {
-	struct chunk_s *i, *inext;
+sysex_del(struct sysex *o) {
+	struct chunk *i, *inext;
 	for (i = o->first; i != NULL; i = inext) {
 		inext = i->next;
 		chunk_del(i);
@@ -98,8 +98,8 @@ sysex_del(struct sysex_s *o) {
 
 
 void
-sysex_add(struct sysex_s *o, unsigned data) {
-	struct chunk_s *ck;
+sysex_add(struct sysex *o, unsigned data) {
+	struct chunk *ck;
 		
 	ck = o->last;
 	if (!ck) {
@@ -114,8 +114,8 @@ sysex_add(struct sysex_s *o, unsigned data) {
 }
 
 void
-sysex_dbg(struct sysex_s *o) {
-	struct chunk_s *ck;
+sysex_dbg(struct sysex *o) {
+	struct chunk *ck;
 	unsigned i;
 	dbg_puts("unit = ");
 	dbg_putx(o->unit);
@@ -130,9 +130,9 @@ sysex_dbg(struct sysex_s *o) {
 }
 
 unsigned
-sysex_check(struct sysex_s *o) {
+sysex_check(struct sysex *o) {
 	unsigned status, data;	
-	struct chunk_s *ck;
+	struct chunk *ck;
 	unsigned i;
 	
 	
@@ -169,14 +169,14 @@ sysex_check(struct sysex_s *o) {
 
 
 void
-sysexlist_init(struct sysexlist_s *o) {
+sysexlist_init(struct sysexlist *o) {
 	o->first = NULL;
 	o->lastptr = &o->first;
 }
 
 void
-sysexlist_done(struct sysexlist_s *o) {
-	struct sysex_s *i, *inext;
+sysexlist_done(struct sysexlist *o) {
+	struct sysex *i, *inext;
 	
 	for (i = o->first; i != NULL; i = inext) {
 		inext = i->next;
@@ -187,15 +187,15 @@ sysexlist_done(struct sysexlist_s *o) {
 }
 
 void
-sysexlist_put(struct sysexlist_s *o, struct sysex_s *e) {
+sysexlist_put(struct sysexlist *o, struct sysex *e) {
 	e->next = NULL;
 	*o->lastptr = e;
 	o->lastptr = &e->next;
 }
 
-struct sysex_s *
-sysexlist_get(struct sysexlist_s *o) {
-	struct sysex_s *e;
+struct sysex *
+sysexlist_get(struct sysexlist *o) {
+	struct sysex *e;
 	if (o->first) {
 		e = o->first;
 		o->first = e->next;
@@ -208,8 +208,8 @@ sysexlist_get(struct sysexlist_s *o) {
 }
 
 void
-sysexlist_dbg(struct sysexlist_s *o) {
-	struct sysex_s *e;
+sysexlist_dbg(struct sysexlist *o) {
+	struct sysex *e;
 	unsigned i;
 	dbg_puts("sysex_dbg:\n");
 	for (e = o->first; e != NULL; e = e->next) {

@@ -1,4 +1,4 @@
-/* $Id: trackop.c,v 1.21 2006/02/25 20:57:36 alex Exp $ */
+/* $Id: trackop.c,v 1.22 2006/03/04 23:46:45 alex Exp $ */
 /*
  * Copyright (c) 2003-2006 Alexandre Ratchov
  * All rights reserved.
@@ -48,9 +48,9 @@
 	 */
 
 void
-track_opcheck(struct track_s *o) {
-	struct track_s temp, frame;
-	struct seqptr_s op, tp, fp;
+track_opcheck(struct track *o) {
+	struct track temp, frame;
+	struct seqptr op, tp, fp;
 	unsigned delta;
 	
 	track_init(&temp);
@@ -92,10 +92,10 @@ track_opcheck(struct track_s *o) {
 	 */
 
 void
-track_opquantise(struct track_s *o, struct seqptr_s *p, 
+track_opquantise(struct track *o, struct seqptr *p, 
     unsigned first, unsigned len, unsigned quantum, unsigned rate) {
-	struct track_s ctls, frame;
-	struct seqptr_s op, cp, fp;
+	struct track ctls, frame;
+	struct seqptr op, cp, fp;
 	unsigned tic, delta;
 	unsigned remaind;
 	int ofs;
@@ -178,9 +178,9 @@ track_opquantise(struct track_s *o, struct seqptr_s *p,
 	 */
 
 void
-track_opcut(struct track_s *o, unsigned start, unsigned len) {
-	struct track_s frame, temp;
-	struct seqptr_s op, fp, tp;
+track_opcut(struct track *o, unsigned start, unsigned len) {
+	struct track frame, temp;
+	struct seqptr op, fp, tp;
 	unsigned delta, tic;
 	
 	track_init(&frame);
@@ -244,9 +244,9 @@ end:
 	 */
 
 void
-track_opinsert(struct track_s *o, unsigned start, unsigned len) {
-	struct track_s frame, temp;
-	struct seqptr_s op, tp, fp;
+track_opinsert(struct track *o, unsigned start, unsigned len) {
+	struct track frame, temp;
+	struct seqptr op, tp, fp;
 	unsigned delta, tic;
 	
 	track_init(&temp);
@@ -302,10 +302,10 @@ end:
 	 */
 	 
 void
-track_opblank(struct track_s *o, unsigned start, unsigned len, 
-   struct evspec_s *es) {
-	struct track_s frame, backup;
-	struct seqptr_s op, bp;
+track_opblank(struct track *o, unsigned start, unsigned len, 
+   struct evspec *es) {
+	struct track frame, backup;
+	struct seqptr op, bp;
 	unsigned delta, tic;
 	
 	track_init(&frame);
@@ -364,10 +364,10 @@ end:	track_rew(o, &op);
 	 */
 	 
 void
-track_opcopy(struct track_s *o, unsigned start, unsigned len, 
-   struct evspec_s *es, struct track_s *targ) {
-	struct track_s frame, backup, copy;
-	struct seqptr_s op, bp, tp;
+track_opcopy(struct track *o, unsigned start, unsigned len, 
+   struct evspec *es, struct track *targ) {
+	struct track frame, backup, copy;
+	struct seqptr op, bp, tp;
 	unsigned delta, tic;
 	
 	track_init(&frame);
@@ -430,10 +430,10 @@ end:	track_rew(o, &op);
 
 
 void
-track_optransp(struct track_s *o, struct seqptr_s *p, unsigned len, 
-    int halftones, struct evspec_s *es) {
-	struct track_s frame, temp;
-	struct seqptr_s op, tp;
+track_optransp(struct track *o, struct seqptr *p, unsigned len, 
+    int halftones, struct evspec *es) {
+	struct track frame, temp;
+	struct seqptr op, tp;
 	unsigned delta, tic;
 	
 	track_init(&temp);
@@ -474,8 +474,8 @@ track_optransp(struct track_s *o, struct seqptr_s *p, unsigned len,
 	 */
 
 void
-track_opsetchan(struct track_s *o, unsigned dev, unsigned ch) {
-	struct seqptr_s op;
+track_opsetchan(struct track *o, unsigned dev, unsigned ch) {
+	struct seqptr op;
 	track_rew(o, &op);
 	for (;;) {
 		if (!track_seqevavail(o, &op)) {
@@ -496,10 +496,10 @@ track_opsetchan(struct track_s *o, unsigned dev, unsigned ch) {
 
 
 unsigned
-track_opfindtic(struct track_s *o, unsigned m0) {
-	struct seqptr_s op;
+track_opfindtic(struct track *o, unsigned m0) {
+	struct seqptr op;
 	unsigned m, dm, tpb, bpm, pos, delta;
-	struct ev_s ev;
+	struct ev ev;
 	
 	/* default to 24 tics per beat, 4 beats per measure */
 	tpb = DEFAULT_TPB;
@@ -557,10 +557,10 @@ track_opfindtic(struct track_s *o, unsigned m0) {
 	 */
 
 void
-track_optimeinfo(struct track_s *o, unsigned pos, unsigned long *usec24, unsigned *bpm, unsigned *tpb) {
+track_optimeinfo(struct track *o, unsigned pos, unsigned long *usec24, unsigned *bpm, unsigned *tpb) {
 	unsigned tic;
-	struct ev_s ev;
-	struct seqptr_s op;
+	struct ev ev;
+	struct seqptr op;
 	
 	tic = 0;
 	track_rew(o, &op);
@@ -600,11 +600,11 @@ track_optimeinfo(struct track_s *o, unsigned pos, unsigned long *usec24, unsigne
 	 */
 
 void
-track_opgetmeasure(struct track_s *o, unsigned pos,
+track_opgetmeasure(struct track *o, unsigned pos,
     unsigned *measure, unsigned *beat, unsigned *tic) {
 	unsigned delta, abstic, tpb, bpm;
-	struct ev_s ev;
-	struct seqptr_s op;
+	struct ev ev;
+	struct seqptr op;
 	
 	abstic = 0;
 	track_rew(o, &op);
@@ -648,9 +648,9 @@ track_opgetmeasure(struct track_s *o, unsigned pos,
 
 
 void
-track_opchaninfo(struct track_s *o, char *map) {
+track_opchaninfo(struct track *o, char *map) {
 	unsigned i, ch, dev;
-	struct seqptr_s p;
+	struct seqptr p;
 	
 	for (i = 0; i < DEFAULT_MAXNCHANS; i++) {
 		map[i] = 0;
@@ -678,8 +678,8 @@ track_opchaninfo(struct track_s *o, char *map) {
 	 */
 
 void
-track_opconfev(struct track_s *o, struct ev_s *ev) {
-	struct seqptr_s p;
+track_opconfev(struct track *o, struct ev *ev) {
+	struct seqptr p;
 	
 	track_rew(o, &p);	
 	while(track_seqevavail(o, &p)) {

@@ -1,4 +1,4 @@
-/* $Id: name.h,v 1.5 2006/02/14 12:21:41 alex Exp $ */
+/* $Id: name.h,v 1.6 2006/02/17 13:18:05 alex Exp $ */
 /*
  * Copyright (c) 2003-2006 Alexandre Ratchov
  * All rights reserved.
@@ -39,24 +39,24 @@
 	 * the string buffer is owned by the name
 	 */
 
-struct name_s {
+struct name {
 	char *str;
-	struct name_s *next;
+	struct name *next;
 };
 
-void	       name_init(struct name_s *o, char *name);
-void	       name_done(struct name_s *o);
-struct name_s *name_new(char *name);
-struct name_s *name_newarg(char *name, struct name_s *next);
-void	       name_dbg(struct name_s *);
-void	       name_delete(struct name_s *o);
-void	       name_insert(struct name_s **first, struct name_s *i);
-void	       name_add(struct name_s **first, struct name_s *v);
-void	       name_remove(struct name_s **first, struct name_s *v);
-void	       name_empty(struct name_s **first);
-void           name_cat(struct name_s **dst, struct name_s **src); 
-unsigned       name_eq(struct name_s **first1, struct name_s **first2);
+void	       name_init(struct name *o, char *name);
+void	       name_done(struct name *o);
+struct name *name_new(char *name);
+struct name *name_newarg(char *name, struct name *next);
+void	       name_dbg(struct name *);
+void	       name_delete(struct name *o);
+void	       name_insert(struct name **first, struct name *i);
+void	       name_add(struct name **first, struct name *v);
+void	       name_remove(struct name **first, struct name *v);
+void	       name_empty(struct name **first);
+void           name_cat(struct name **dst, struct name **src); 
+unsigned       name_eq(struct name **first1, struct name **first2);
 
-struct name_s *name_lookup(struct name_s **first, char *str);
+struct name *name_lookup(struct name **first, char *str);
 
 #endif /* MIDISH_NAME_H */

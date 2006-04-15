@@ -1,4 +1,4 @@
-/* $Id: pool.h,v 1.7 2006/02/14 12:21:41 alex Exp $ */
+/* $Id: pool.h,v 1.8 2006/02/17 13:18:05 alex Exp $ */
 /*
  * Copyright (c) 2003-2006 Alexandre Ratchov
  * All rights reserved.
@@ -34,13 +34,13 @@
 
 #undef POOL_DEBUG
 
-struct poolentry_s {
-	struct poolentry_s *next;
+struct poolentry {
+	struct poolentry *next;
 };
 
-struct pool_s {
+struct pool {
 	unsigned char *data;
-	struct poolentry_s *first;
+	struct poolentry *first;
 #ifdef POOL_DEBUG
 	unsigned maxused, used, newcnt;
 #endif
@@ -48,10 +48,10 @@ struct pool_s {
 	char *name;
 };
 
-void  pool_init(struct pool_s *, char *, unsigned, unsigned);
-void  pool_done(struct pool_s *);
+void  pool_init(struct pool *, char *, unsigned, unsigned);
+void  pool_done(struct pool *);
 
-void *pool_new(struct pool_s *);
-void  pool_del(struct pool_s *, void *);	
+void *pool_new(struct pool *);
+void  pool_del(struct pool *, void *);	
 
 #endif /* MIDISH_POOL_H */

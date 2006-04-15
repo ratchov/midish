@@ -1,4 +1,4 @@
-/* $Id: trackop.h,v 1.17 2006/02/25 20:57:36 alex Exp $ */
+/* $Id: trackop.h,v 1.18 2006/03/04 23:46:45 alex Exp $ */
 /*
  * Copyright (c) 2003-2006 Alexandre Ratchov
  * All rights reserved.
@@ -32,25 +32,25 @@
 #ifndef MIDISH_TRACKOP_H
 #define MIDISH_TRACKOP_H
 
-struct ev_s;
-struct evspec_s;
-struct track_s;
-struct seqptr_s;
+struct ev;
+struct evspec;
+struct track;
+struct seqptr;
 
 
-void track_opcheck(struct track_s *o);
-void track_opquantise(struct track_s *o, struct seqptr_s *, unsigned first, unsigned len, unsigned quantum, unsigned rate);
-void track_opcut(struct track_s *o, unsigned start, unsigned len);
-void track_opinsert(struct track_s *o, unsigned start, unsigned len);
-void track_opblank(struct track_s *o, unsigned start, unsigned len, struct evspec_s *es);
-void track_opcopy(struct track_s *o, unsigned start, unsigned len, struct evspec_s *es, struct track_s *trag);
-void track_opsetchan(struct track_s *o, unsigned dev, unsigned ch);
-void track_optransp(struct track_s *o, struct seqptr_s *p, unsigned len, int halftones, struct evspec_s *es);
+void track_opcheck(struct track *o);
+void track_opquantise(struct track *o, struct seqptr *, unsigned first, unsigned len, unsigned quantum, unsigned rate);
+void track_opcut(struct track *o, unsigned start, unsigned len);
+void track_opinsert(struct track *o, unsigned start, unsigned len);
+void track_opblank(struct track *o, unsigned start, unsigned len, struct evspec *es);
+void track_opcopy(struct track *o, unsigned start, unsigned len, struct evspec *es, struct track *trag);
+void track_opsetchan(struct track *o, unsigned dev, unsigned ch);
+void track_optransp(struct track *o, struct seqptr *p, unsigned len, int halftones, struct evspec *es);
 
-unsigned track_opfindtic(struct track_s *o, unsigned m0);
-void track_optimeinfo(struct track_s *o, unsigned pos, unsigned long *usec24, unsigned *bpm, unsigned *tpb);
-void track_opgetmeasure(struct track_s *o, unsigned pos, unsigned *measure, unsigned *beat, unsigned *tic);
-void track_opchaninfo(struct track_s *o, char *map);
-void track_opconfev(struct track_s *o, struct ev_s *ev);
+unsigned track_opfindtic(struct track *o, unsigned m0);
+void track_optimeinfo(struct track *o, unsigned pos, unsigned long *usec24, unsigned *bpm, unsigned *tpb);
+void track_opgetmeasure(struct track *o, unsigned pos, unsigned *measure, unsigned *beat, unsigned *tic);
+void track_opchaninfo(struct track *o, char *map);
+void track_opconfev(struct track *o, struct ev *ev);
 #endif /* MIDISH_TRACKOP_H */
 

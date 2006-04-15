@@ -1,4 +1,4 @@
-/* $Id: textio.c,v 1.10 2006/02/14 12:21:41 alex Exp $ */
+/* $Id: textio.c,v 1.11 2006/02/17 13:18:06 alex Exp $ */
 /*
  * Copyright (c) 2003-2006 Alexandre Ratchov
  * All rights reserved.
@@ -30,10 +30,10 @@
  */
 
 /*
- * textin_s implemets inputs from text files (or stdin)
- * (open/close, line numbering, etc...). Used by lex_s
+ * textin implemets inputs from text files (or stdin)
+ * (open/close, line numbering, etc...). Used by lex
  *
- * textout_s implements outputs into text files (or stdout)
+ * textout implements outputs into text files (or stdout)
  * (open/close, indentation...)
  *
  */
@@ -45,24 +45,24 @@
 #include "textio.h"
 #include "cons.h"
 
-struct textin_s {
+struct textin {
 	FILE *file;
 	unsigned isconsole;
 	unsigned line, col;
 };
 
-struct textout_s {
+struct textout {
 	FILE *file;
 	unsigned indent, isconsole;
 };
 
 /* -------------------------------------------------------- input --- */
 
-struct textin_s *
+struct textin *
 textin_new(char *filename) {
-	struct textin_s *o;
+	struct textin *o;
 
-	o = (struct textin_s *)mem_alloc(sizeof(struct textin_s));
+	o = (struct textin *)mem_alloc(sizeof(struct textin));
 	if (filename == NULL) {
 		o->isconsole = 1;
 		o->file = stdin;
@@ -80,7 +80,7 @@ textin_new(char *filename) {
 }
 
 void
-textin_delete(struct textin_s *o) {
+textin_delete(struct textin *o) {
 	if (!o->isconsole) {
 		fclose(o->file);
 	}
@@ -88,7 +88,7 @@ textin_delete(struct textin_s *o) {
 }
 
 unsigned
-textin_getchar(struct textin_s *o, int *c) {
+textin_getchar(struct textin *o, int *c) {
 	if (o->isconsole) {
 		*c = cons_getc();	/* because it handles ^C */
 	} else {
@@ -114,18 +114,18 @@ textin_getchar(struct textin_s *o, int *c) {
 }
 
 void
-textin_getpos(struct textin_s *o, unsigned *line, unsigned *col) {
+textin_getpos(struct textin *o, unsigned *line, unsigned *col) {
 	*line = o->line;
 	*col = o->col;
 }
 
 /* ------------------------------------------------------- output --- */
 
-struct textout_s *
+struct textout *
 textout_new(char *filename) {
-	struct textout_s *o;
+	struct textout *o;
 	
-	o = (struct textout_s *)mem_alloc(sizeof(struct textout_s));
+	o = (struct textout *)mem_alloc(sizeof(struct textout));
 	if (filename != NULL) {
 		o->file = fopen(filename, "w");
 		if (o->file == NULL) {
@@ -143,7 +143,7 @@ textout_new(char *filename) {
 }
 
 void
-textout_delete(struct textout_s *o) {
+textout_delete(struct textout *o) {
 	if (!o->isconsole) {
 		fclose(o->file);
 	}
@@ -151,7 +151,7 @@ textout_delete(struct textout_s *o) {
 }
 
 void
-textout_indent(struct textout_s *o) {
+textout_indent(struct textout *o) {
 	unsigned i;
 	for (i = 0; i < o->indent; i++) {
 		fputc('\t', o->file);
@@ -159,35 +159,35 @@ textout_indent(struct textout_s *o) {
 }
 
 void
-textout_shiftleft(struct textout_s *o) {
+textout_shiftleft(struct textout *o) {
 	o->indent--;
 }
 
 void
-textout_shiftright(struct textout_s *o) {
+textout_shiftright(struct textout *o) {
 	o->indent++;
 }
 
 void
-textout_putstr(struct textout_s *o, char *str) {
+textout_putstr(struct textout *o, char *str) {
 	fputs(str, o->file);
 }
 
 void
-textout_putlong(struct textout_s *o, unsigned long val) {
+textout_putlong(struct textout *o, unsigned long val) {
 	fprintf(o->file, "%lu", val);
 }
 
 void
-textout_putbyte(struct textout_s *o, unsigned val) {
+textout_putbyte(struct textout *o, unsigned val) {
 	fprintf(o->file, "0x%02x", val & 0xff);
 }
 
 /* ------------------------------------------------------------------ */
 
 
-struct textout_s *tout;
-struct textin_s *tin;
+struct textout *tout;
+struct textin *tin;
 
 void
 textio_init(void) {

@@ -1,4 +1,4 @@
-/* $Id: pool.c,v 1.9 2006/02/14 12:21:41 alex Exp $ */
+/* $Id: pool.c,v 1.10 2006/02/17 13:18:05 alex Exp $ */
 /*
  * Copyright (c) 2003-2006 Alexandre Ratchov
  * All rights reserved.
@@ -38,14 +38,14 @@
 	 */
 
 void
-pool_init(struct pool_s *o, char *name, unsigned itemsize, unsigned itemnum) {
+pool_init(struct pool *o, char *name, unsigned itemsize, unsigned itemnum) {
 	unsigned i;
 	unsigned char *p;
 	
 	/* round item size */
 	
-	if (itemsize < sizeof(struct poolentry_s)) {
-		itemsize = sizeof(struct poolentry_s);
+	if (itemsize < sizeof(struct poolentry)) {
+		itemsize = sizeof(struct poolentry);
 	}
 	itemsize += sizeof(unsigned) - 1;
 	itemsize &= ~(sizeof(unsigned) - 1);
@@ -73,8 +73,8 @@ pool_init(struct pool_s *o, char *name, unsigned itemsize, unsigned itemnum) {
 #endif	
 	p = o->data;
 	for (i = itemnum; i != 0; i--) {
-		((struct poolentry_s *)p)->next = o->first;
-		o->first = (struct poolentry_s *)p;
+		((struct poolentry *)p)->next = o->first;
+		o->first = (struct poolentry *)p;
 		p += itemsize;
 		o->itemnum++;		
 	}
@@ -86,7 +86,7 @@ pool_init(struct pool_s *o, char *name, unsigned itemsize, unsigned itemnum) {
 	 */
 
 void
-pool_done(struct pool_s *o) {
+pool_done(struct pool *o) {
 	mem_free(o->data);
 #ifdef POOL_DEBUG
 	if (o->used != 0) {
@@ -112,8 +112,8 @@ pool_done(struct pool_s *o) {
 	 */
 
 void *
-pool_new(struct pool_s *o) {	
-	struct poolentry_s *i;
+pool_new(struct pool *o) {	
+	struct poolentry *i;
 	
 	if (!o->first) {
 		dbg_puts("pool_new(");
@@ -139,8 +139,8 @@ pool_new(struct pool_s *o) {
 	 */
 
 void
-pool_del(struct pool_s *o, void *p) {
-	struct poolentry_s *i = (struct poolentry_s *)p;
+pool_del(struct pool *o, void *p) {
+	struct poolentry *i = (struct poolentry *)p;
 	
 	i->next = o->first;
 	o->first = i;

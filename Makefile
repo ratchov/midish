@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.51 2006/02/14 12:18:41 alex Exp $
+# $Id: Makefile,v 1.52 2006/04/03 16:38:28 alex Exp $
 #
 # parameters for the GNU readline(3) library, used to
 # build rmidish (front-end to midish)
@@ -29,7 +29,8 @@ all:		midish rmidish
 install:	install-midish install-rmidish
 
 clean:
-		rm -f -- midish rmidish *~ *.bak *.tmp *.o *.s *.out *.core core
+		rm -f -- midish rmidish *~ *.bak *.tmp *.o *.ln *.s *.out \
+		*.core core
 
 # ---------------------------------------------- dependencies for midish ---
 

@@ -1,4 +1,4 @@
-/* $Id: data.h,v 1.6 2006/02/14 12:21:40 alex Exp $ */
+/* $Id: data.h,v 1.7 2006/02/17 13:18:05 alex Exp $ */
 /*
  * Copyright (c) 2003-2006 Alexandre Ratchov
  * All rights reserved.
@@ -41,58 +41,58 @@
 
 #define DATA_MAXNITEMS	4096
 
-struct name_s;
+struct name;
 
-struct data_s {
+struct data {
 	unsigned type;
 	union {
 		char *str;
 		long num;
-		struct data_s *list;
+		struct data *list;
 		char *ref;
 		void *user;
 	} val;
-	struct data_s *next;
+	struct data *next;
 };
 
-struct data_s *data_newnil(void);
-struct data_s *data_newlong(long);
-struct data_s *data_newstring(char *);
-struct data_s *data_newref(char *);
-struct data_s *data_newlist(struct data_s *);
-struct data_s *data_newuser(void *);
-void	       data_delete(struct data_s *o);
-void	       data_setfield(struct data_s *dst, char *field);
-void	       data_dbg(struct data_s *);
+struct data *data_newnil(void);
+struct data *data_newlong(long);
+struct data *data_newstring(char *);
+struct data *data_newref(char *);
+struct data *data_newlist(struct data *);
+struct data *data_newuser(void *);
+void	       data_delete(struct data *o);
+void	       data_setfield(struct data *dst, char *field);
+void	       data_dbg(struct data *);
 
-void	       data_listadd(struct data_s *, struct data_s *);
-void	       data_listremove(struct data_s *o, struct data_s *v);
-struct data_s *data_listlookup(struct data_s *o, struct name_s *ref);
+void	       data_listadd(struct data *, struct data *);
+void	       data_listremove(struct data *o, struct data *v);
+struct data *data_listlookup(struct data *o, struct name *ref);
 
-void	 data_assign(struct data_s *dst, struct data_s *src);
-unsigned data_eval(struct data_s *o);
-unsigned data_id(struct data_s *op1, struct data_s *op2);
+void	 data_assign(struct data *dst, struct data *src);
+unsigned data_eval(struct data *o);
+unsigned data_id(struct data *op1, struct data *op2);
 
-unsigned data_not(struct data_s *op1);
-unsigned data_and(struct data_s *op1, struct data_s *op2);
-unsigned data_or(struct data_s *op1, struct data_s *op2);
-unsigned data_eq(struct data_s *op1, struct data_s *op2);
-unsigned data_neq(struct data_s *op1, struct data_s *op2);
-unsigned data_lt(struct data_s *op1, struct data_s *op2);
-unsigned data_le(struct data_s *op1, struct data_s *op2);
-unsigned data_gt(struct data_s *op1, struct data_s *op2);
-unsigned data_ge(struct data_s *op1, struct data_s *op2);
-unsigned data_add(struct data_s *op1, struct data_s *op2);
-unsigned data_sub(struct data_s *op1, struct data_s *op2);
-unsigned data_neg(struct data_s *op1);
-unsigned data_mul(struct data_s *op1, struct data_s *op2);
-unsigned data_div(struct data_s *op1, struct data_s *op2);
-unsigned data_mod(struct data_s *op1, struct data_s *op2);
-unsigned data_lshift(struct data_s *op1, struct data_s *op2);
-unsigned data_rshift(struct data_s *op1, struct data_s *op2);
-unsigned data_bitand(struct data_s *op1, struct data_s *op2);
-unsigned data_bitor(struct data_s *op1, struct data_s *op2);
-unsigned data_bitxor(struct data_s *op1, struct data_s *op2);
-unsigned data_bitnot(struct data_s *op1);
+unsigned data_not(struct data *op1);
+unsigned data_and(struct data *op1, struct data *op2);
+unsigned data_or(struct data *op1, struct data *op2);
+unsigned data_eq(struct data *op1, struct data *op2);
+unsigned data_neq(struct data *op1, struct data *op2);
+unsigned data_lt(struct data *op1, struct data *op2);
+unsigned data_le(struct data *op1, struct data *op2);
+unsigned data_gt(struct data *op1, struct data *op2);
+unsigned data_ge(struct data *op1, struct data *op2);
+unsigned data_add(struct data *op1, struct data *op2);
+unsigned data_sub(struct data *op1, struct data *op2);
+unsigned data_neg(struct data *op1);
+unsigned data_mul(struct data *op1, struct data *op2);
+unsigned data_div(struct data *op1, struct data *op2);
+unsigned data_mod(struct data *op1, struct data *op2);
+unsigned data_lshift(struct data *op1, struct data *op2);
+unsigned data_rshift(struct data *op1, struct data *op2);
+unsigned data_bitand(struct data *op1, struct data *op2);
+unsigned data_bitor(struct data *op1, struct data *op2);
+unsigned data_bitxor(struct data *op1, struct data *op2);
+unsigned data_bitnot(struct data *op1);
 
 #endif /* MIDISH_DATA_H */

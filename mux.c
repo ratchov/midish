@@ -1,4 +1,4 @@
-/* $Id: mux.c,v 1.16 2006/02/14 12:21:41 alex Exp $ */
+/* $Id: mux.c,v 1.17 2006/02/17 13:18:05 alex Exp $ */
 /*
  * Copyright (c) 2003-2006 Alexandre Ratchov
  * All rights reserved.
@@ -63,16 +63,16 @@ unsigned mux_ticrate;
 unsigned long mux_ticlength, mux_curpos, mux_nextpos;
 unsigned mux_curtic;
 unsigned mux_phase;
-struct sysexlist_s mux_sysexlist;
-void (*mux_cb)(void *, struct ev_s *);
+struct sysexlist mux_sysexlist;
+void (*mux_cb)(void *, struct ev *);
 void *mux_addr;
 
 void mux_dbgphase(unsigned phase);
 void mux_chgphase(unsigned phase);
 
 void
-mux_init(void (*cb)(void *, struct ev_s *), void *addr) {
-	struct mididev_s *i;
+mux_init(void (*cb)(void *, struct ev *), void *addr) {
+	struct mididev *i;
 	/* 
 	 * default tempo is 120 beats per minutes
 	 * with 24 tics per beat
@@ -103,7 +103,7 @@ mux_init(void (*cb)(void *, struct ev_s *), void *addr) {
 
 void
 mux_done(void) {
-	struct mididev_s *i;
+	struct mididev *i;
 	mux_flush();
 	for (i = mididev_list; i != NULL; i = i->next) {
 		if (RMIDI(i)->isysex) {
@@ -164,8 +164,8 @@ mux_chgphase(unsigned phase) {
 
 void
 mux_sendtic(void) {
-	struct ev_s ev;
-	struct mididev_s *i;
+	struct ev ev;
+	struct mididev *i;
 
 	ev.cmd = EV_TIC;
 	for (i = mididev_list; i != NULL; i = i->next) {
@@ -186,8 +186,8 @@ mux_sendtic(void) {
 
 void
 mux_sendstart(void) {
-	struct ev_s tic, start;
-	struct mididev_s *i;
+	struct ev tic, start;
+	struct mididev *i;
 
 	tic.cmd = EV_TIC;
 	start.cmd = EV_START;
@@ -210,8 +210,8 @@ mux_sendstart(void) {
 
 void
 mux_sendstop(void) {
-	struct ev_s ev;
-	struct mididev_s *i;
+	struct ev ev;
+	struct mididev *i;
 
 	ev.cmd = EV_STOP;
 	for (i = mididev_list; i != NULL; i = i->next) {
@@ -222,9 +222,9 @@ mux_sendstop(void) {
 }
 
 void
-mux_putev(struct ev_s *ev) {
+mux_putev(struct ev *ev) {
 	unsigned unit;
-	struct mididev_s *dev;
+	struct mididev *dev;
 	
 	if (EV_ISVOICE(ev)) {
 		unit = ev->data.voice.dev;
@@ -242,7 +242,7 @@ mux_putev(struct ev_s *ev) {
 
 void
 mux_sendraw(unsigned unit, unsigned char *buf, unsigned len) {
-	struct mididev_s *dev;
+	struct mididev *dev;
 	if (unit >= DEFAULT_MAXNDEVS) {
 		return;
 	}
@@ -259,7 +259,7 @@ mux_sendraw(unsigned unit, unsigned char *buf, unsigned len) {
 
 void
 mux_timercb(unsigned long delta) {
-	struct ev_s ev;
+	struct ev ev;
 	mux_curpos += delta;
 
 	if (!mididev_master) {	/* if internal clock source (no master) */
@@ -309,7 +309,7 @@ mux_timercb(unsigned long delta) {
 }
 
 void
-mux_evcb(unsigned unit, struct ev_s *ev) {
+mux_evcb(unsigned unit, struct ev *ev) {
 	switch(ev->cmd) {
 	case EV_TIC:
 		if (mididev_master && 				/* if external clock */
@@ -362,7 +362,7 @@ mux_evcb(unsigned unit, struct ev_s *ev) {
 
 void
 mux_run(void) {
-	struct ev_s ev;
+	struct ev ev;
 	
 	mux_mdep_run();
 	
@@ -385,8 +385,8 @@ mux_run(void) {
 	 */
 
 void
-mux_sysexcb(unsigned unit, struct sysex_s *sysex) {
-	struct ev_s ev;
+mux_sysexcb(unsigned unit, struct sysex *sysex) {
+	struct ev ev;
 	sysexlist_put(&mux_sysexlist, sysex);
 	if (mux_cb) {
 		ev.cmd = EV_SYSEX;
@@ -397,14 +397,14 @@ mux_sysexcb(unsigned unit, struct sysex_s *sysex) {
 
 /* -------------------------------------- user "public" functions --- */
 
-struct sysex_s *
+struct sysex *
 mux_getsysex(void) {
 	return sysexlist_get(&mux_sysexlist);
 }
 
 void
 mux_flush(void) {
-	struct mididev_s *dev;
+	struct mididev *dev;
 	for (dev = mididev_list; dev != NULL; dev = dev->next) {
 		rmidi_flush(RMIDI(dev));
 	}

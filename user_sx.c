@@ -1,4 +1,4 @@
-/* $Id: user_sx.c,v 1.5 2006/02/14 12:21:41 alex Exp $ */
+/* $Id: user_sx.c,v 1.6 2006/02/17 13:18:06 alex Exp $ */
 /*
  * Copyright (c) 2003-2006 Alexandre Ratchov
  * All rights reserved.
@@ -49,12 +49,12 @@
 
 
 unsigned
-user_func_sysexlist(struct exec_s *o, struct data_s **r) {
-	struct data_s *d, *n;
-	struct songsx_s *i;
+user_func_sysexlist(struct exec *o, struct data **r) {
+	struct data *d, *n;
+	struct songsx *i;
 
 	d = data_newlist(NULL);
-	for (i = user_song->sxlist; i != NULL; i = (struct songsx_s *)i->name.next) {
+	for (i = user_song->sxlist; i != NULL; i = (struct songsx *)i->name.next) {
 		n = data_newref(i->name.str);
 		data_listadd(d, n);
 	}
@@ -63,9 +63,9 @@ user_func_sysexlist(struct exec_s *o, struct data_s **r) {
 }
 
 unsigned
-user_func_sysexnew(struct exec_s *o, struct data_s **r) {
+user_func_sysexnew(struct exec *o, struct data **r) {
 	char *name;
-	struct songsx_s *i;
+	struct songsx *i;
 	
 	if (!exec_lookupname(o, "sysexname", &name)) {
 		return 0;
@@ -81,8 +81,8 @@ user_func_sysexnew(struct exec_s *o, struct data_s **r) {
 }
 
 unsigned
-user_func_sysexdelete(struct exec_s *o, struct data_s **r) {
-	struct songsx_s *c;
+user_func_sysexdelete(struct exec *o, struct data **r) {
+	struct songsx *c;
 	if (!exec_lookupsx(o, "sysexname", &c)) {
 		return 0;
 	}
@@ -94,8 +94,8 @@ user_func_sysexdelete(struct exec_s *o, struct data_s **r) {
 }
 
 unsigned
-user_func_sysexrename(struct exec_s *o, struct data_s **r) {
-	struct songsx_s *c;
+user_func_sysexrename(struct exec *o, struct data **r) {
+	struct songsx *c;
 	char *name;
 	
 	if (!exec_lookupsx(o, "sysexname", &c) ||
@@ -112,9 +112,9 @@ user_func_sysexrename(struct exec_s *o, struct data_s **r) {
 }
 
 unsigned
-user_func_sysexexists(struct exec_s *o, struct data_s **r) {
+user_func_sysexexists(struct exec *o, struct data **r) {
 	char *name;
-	struct songsx_s *i;
+	struct songsx *i;
 	if (!exec_lookupname(o, "sysexname", &name)) {
 		return 0;
 	}
@@ -124,9 +124,9 @@ user_func_sysexexists(struct exec_s *o, struct data_s **r) {
 }
 
 unsigned
-user_func_sysexinfo(struct exec_s *o, struct data_s **r) {
-	struct songsx_s *c;
-	struct sysex_s *e;
+user_func_sysexinfo(struct exec *o, struct data **r) {
+	struct songsx *c;
+	struct sysex *e;
 	unsigned i;
 	
 	if (!exec_lookupsx(o, "sysexname", &c)) {
@@ -160,10 +160,10 @@ user_func_sysexinfo(struct exec_s *o, struct data_s **r) {
 
 
 unsigned
-user_func_sysexclear(struct exec_s *o, struct data_s **r) {
-	struct songsx_s *c;
-	struct sysex_s *x, **px;
-	struct data_s *d;
+user_func_sysexclear(struct exec *o, struct data **r) {
+	struct songsx *c;
+	struct sysex *x, **px;
+	struct data *d;
 	unsigned match;
 	
 	if (!exec_lookupsx(o, "sysexname", &c) ||
@@ -194,10 +194,10 @@ user_func_sysexclear(struct exec_s *o, struct data_s **r) {
 
 
 unsigned
-user_func_sysexsetunit(struct exec_s *o, struct data_s **r) {
-	struct songsx_s *c;
-	struct sysex_s *x;
-	struct data_s *d;
+user_func_sysexsetunit(struct exec *o, struct data **r) {
+	struct songsx *c;
+	struct sysex *x;
+	struct data *d;
 	unsigned match;
 	long unit;
 	
@@ -225,11 +225,11 @@ user_func_sysexsetunit(struct exec_s *o, struct data_s **r) {
 }
 
 unsigned
-user_func_sysexadd(struct exec_s *o, struct data_s **r) {
-	struct songsx_s *c;
-	struct sysex_s *x;
-	struct data_s *byte;
-	struct var_s *arg;
+user_func_sysexadd(struct exec *o, struct data **r) {
+	struct songsx *c;
+	struct sysex *x;
+	struct data *byte;
+	struct var *arg;
 	long unit;
 	
 	if (!exec_lookupsx(o, "sysexname", &c) || 

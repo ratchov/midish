@@ -1,4 +1,4 @@
-/* $Id: user_song.c,v 1.15 2006/02/17 13:18:06 alex Exp $ */
+/* $Id: user_song.c,v 1.16 2006/02/25 20:57:36 alex Exp $ */
 /*
  * Copyright (c) 2003-2006 Alexandre Ratchov
  * All rights reserved.
@@ -51,9 +51,9 @@
 
 
 unsigned
-user_func_songsetcurchan(struct exec_s *o, struct data_s **r) {
-	struct songchan_s *t;
-	struct var_s *arg;
+user_func_songsetcurchan(struct exec *o, struct data **r) {
+	struct songchan *t;
+	struct var *arg;
 	
 	arg = exec_varlookup(o, "channame");
 	if (!arg) {
@@ -73,8 +73,8 @@ user_func_songsetcurchan(struct exec_s *o, struct data_s **r) {
 
 
 unsigned
-user_func_songgetcurchan(struct exec_s *o, struct data_s **r) {
-	struct songchan_s *cur;
+user_func_songgetcurchan(struct exec *o, struct data **r) {
+	struct songchan *cur;
 	
 	song_getcurchan(user_song, &cur);
 	if (cur) {
@@ -86,9 +86,9 @@ user_func_songgetcurchan(struct exec_s *o, struct data_s **r) {
 }
 
 unsigned
-user_func_songsetcursysex(struct exec_s *o, struct data_s **r) {
-	struct songsx_s *t;
-	struct var_s *arg;
+user_func_songsetcursysex(struct exec *o, struct data **r) {
+	struct songsx *t;
+	struct var *arg;
 	
 	arg = exec_varlookup(o, "sysexname");
 	if (!arg) {
@@ -108,8 +108,8 @@ user_func_songsetcursysex(struct exec_s *o, struct data_s **r) {
 
 
 unsigned
-user_func_songgetcursysex(struct exec_s *o, struct data_s **r) {
-	struct songsx_s *cur;
+user_func_songgetcursysex(struct exec *o, struct data **r) {
+	struct songsx *cur;
 	
 	song_getcursx(user_song, &cur);
 	if (cur) {
@@ -122,7 +122,7 @@ user_func_songgetcursysex(struct exec_s *o, struct data_s **r) {
 
 
 unsigned
-user_func_songsetunit(struct exec_s *o, struct data_s **r) {	/* tics per unit note */
+user_func_songsetunit(struct exec *o, struct data **r) {	/* tics per unit note */
 	long tpu;
 	if (!exec_lookuplong(o, "tics_per_unit", &tpu)) {
 		return 0;
@@ -140,14 +140,14 @@ user_func_songsetunit(struct exec_s *o, struct data_s **r) {	/* tics per unit no
 }
 
 unsigned
-user_func_songgetunit(struct exec_s *o, struct data_s **r) {	/* tics per unit note */
+user_func_songgetunit(struct exec *o, struct data **r) {	/* tics per unit note */
 	*r = data_newlong(user_song->tics_per_unit);
 	return 1;
 }
 
 
 unsigned
-user_func_songsetcurpos(struct exec_s *o, struct data_s **r) {
+user_func_songsetcurpos(struct exec *o, struct data **r) {
 	long measure;
 	
 	if (!exec_lookuplong(o, "measure", &measure)) {
@@ -162,13 +162,13 @@ user_func_songsetcurpos(struct exec_s *o, struct data_s **r) {
 }
 
 unsigned
-user_func_songgetcurpos(struct exec_s *o, struct data_s **r) {
+user_func_songgetcurpos(struct exec *o, struct data **r) {
 	*r = data_newlong(user_song->curpos);
 	return 1;
 }
 
 unsigned
-user_func_songsetcurlen(struct exec_s *o, struct data_s **r) {
+user_func_songsetcurlen(struct exec *o, struct data **r) {
 	long len;
 	
 	if (!exec_lookuplong(o, "length", &len)) {
@@ -184,14 +184,14 @@ user_func_songsetcurlen(struct exec_s *o, struct data_s **r) {
 
 
 unsigned
-user_func_songgetcurlen(struct exec_s *o, struct data_s **r) {
+user_func_songgetcurlen(struct exec *o, struct data **r) {
 	*r = data_newlong(user_song->curlen);
 	return 1;
 }
 
 
 unsigned
-user_func_songsetcurquant(struct exec_s *o, struct data_s **r) {
+user_func_songsetcurquant(struct exec *o, struct data **r) {
 	long quantum;
 	
 	if (!exec_lookuplong(o, "quantum", &quantum)) {
@@ -207,7 +207,7 @@ user_func_songsetcurquant(struct exec_s *o, struct data_s **r) {
 
 
 unsigned
-user_func_songgetcurquant(struct exec_s *o, struct data_s **r) {
+user_func_songgetcurquant(struct exec *o, struct data **r) {
 	*r = data_newlong(user_song->curquant);
 	return 1;
 }
@@ -215,9 +215,9 @@ user_func_songgetcurquant(struct exec_s *o, struct data_s **r) {
 
 
 unsigned
-user_func_songsetcurtrack(struct exec_s *o, struct data_s **r) {
-	struct songtrk_s *t;
-	struct var_s *arg;
+user_func_songsetcurtrack(struct exec *o, struct data **r) {
+	struct songtrk *t;
+	struct var *arg;
 	
 	arg = exec_varlookup(o, "trackname");
 	if (!arg) {
@@ -237,8 +237,8 @@ user_func_songsetcurtrack(struct exec_s *o, struct data_s **r) {
 
 
 unsigned
-user_func_songgetcurtrack(struct exec_s *o, struct data_s **r) {
-	struct songtrk_s *cur;
+user_func_songgetcurtrack(struct exec *o, struct data **r) {
+	struct songtrk *cur;
 	
 	song_getcurtrk(user_song, &cur);
 	if (cur) {
@@ -251,9 +251,9 @@ user_func_songgetcurtrack(struct exec_s *o, struct data_s **r) {
 
 
 unsigned
-user_func_songsetcurfilt(struct exec_s *o, struct data_s **r) {
-	struct songfilt_s *f;
-	struct var_s *arg;
+user_func_songsetcurfilt(struct exec *o, struct data **r) {
+	struct songfilt *f;
+	struct var *arg;
 	
 	arg = exec_varlookup(o, "filtname");
 	if (!arg) {
@@ -277,8 +277,8 @@ user_func_songsetcurfilt(struct exec_s *o, struct data_s **r) {
 
 
 unsigned
-user_func_songgetcurfilt(struct exec_s *o, struct data_s **r) {
-	struct songfilt_s *cur;
+user_func_songgetcurfilt(struct exec *o, struct data **r) {
+	struct songfilt *cur;
 	
 	song_getcurfilt(user_song, &cur);
 	if (cur) {
@@ -290,13 +290,13 @@ user_func_songgetcurfilt(struct exec_s *o, struct data_s **r) {
 }
 
 unsigned
-user_func_songinfo(struct exec_s *o, struct data_s **r) {
+user_func_songinfo(struct exec *o, struct data **r) {
 	char map[DEFAULT_MAXNCHANS];
-	struct songtrk_s *t;
-	struct songchan_s *c;
-	struct songfilt_s *f;
-	struct songsx_s *s;
-	struct sysex_s *x;
+	struct songtrk *t;
+	struct songchan *c;
+	struct songfilt *f;
+	struct songsx *s;
+	struct sysex *x;
 	unsigned i, count;
 	unsigned dev, ch;
 	
@@ -306,7 +306,7 @@ user_func_songinfo(struct exec_s *o, struct data_s **r) {
 	textout_shiftright(tout);
 	textout_indent(tout);
 	textout_putstr(tout, "# chan_name,  {devicenum, midichan}, default_input\n");
-	for (c = user_song->chanlist; c != NULL; c = (struct songchan_s *)c->name.next) {
+	for (c = user_song->chanlist; c != NULL; c = (struct songchan *)c->name.next) {
 		textout_indent(tout);
 		textout_putstr(tout, c->name.str);
 		textout_putstr(tout, "\t");
@@ -333,7 +333,7 @@ user_func_songinfo(struct exec_s *o, struct data_s **r) {
 	textout_shiftright(tout);
 	textout_indent(tout);
 	textout_putstr(tout, "# filter_name,  default_channel\n");
-	for (f = user_song->filtlist; f != NULL; f = (struct songfilt_s *)f->name.next) {
+	for (f = user_song->filtlist; f != NULL; f = (struct songfilt *)f->name.next) {
 		textout_indent(tout);
 		textout_putstr(tout, f->name.str);
 		textout_putstr(tout, "\t");
@@ -354,7 +354,7 @@ user_func_songinfo(struct exec_s *o, struct data_s **r) {
 	textout_shiftright(tout);
 	textout_indent(tout);
 	textout_putstr(tout, "# track_name,  default_filter,  used_channels,  flags\n");
-	for (t = user_song->trklist; t != NULL; t = (struct songtrk_s *)t->name.next) {
+	for (t = user_song->trklist; t != NULL; t = (struct songtrk *)t->name.next) {
 		textout_indent(tout);
 		textout_putstr(tout, t->name.str);
 		textout_putstr(tout, "\t");
@@ -399,7 +399,7 @@ user_func_songinfo(struct exec_s *o, struct data_s **r) {
 	textout_shiftright(tout);
 	textout_indent(tout);
 	textout_putstr(tout, "# sysex_name,  number_messages\n");
-	for (s = user_song->sxlist; s != NULL; s = (struct songsx_s *)s->name.next) {
+	for (s = user_song->sxlist; s != NULL; s = (struct songsx *)s->name.next) {
 		textout_indent(tout);
 		textout_putstr(tout, s->name.str);
 		textout_putstr(tout, "\t");
@@ -473,7 +473,7 @@ user_func_songinfo(struct exec_s *o, struct data_s **r) {
 }
 
 unsigned
-user_func_songsave(struct exec_s *o, struct data_s **r) {
+user_func_songsave(struct exec *o, struct data **r) {
 	char *filename;	
 	if (!exec_lookupstring(o, "filename", &filename)) {
 		return 0;
@@ -483,7 +483,7 @@ user_func_songsave(struct exec_s *o, struct data_s **r) {
 }
 
 unsigned
-user_func_songload(struct exec_s *o, struct data_s **r) {
+user_func_songload(struct exec *o, struct data **r) {
 	char *filename;		
 	if (!exec_lookupstring(o, "filename", &filename)) {
 		return 0;
@@ -495,7 +495,7 @@ user_func_songload(struct exec_s *o, struct data_s **r) {
 
 
 unsigned
-user_func_songreset(struct exec_s *o, struct data_s **r) {
+user_func_songreset(struct exec *o, struct data **r) {
 	song_done(user_song);
 	song_init(user_song);
 	return 1;
@@ -504,7 +504,7 @@ user_func_songreset(struct exec_s *o, struct data_s **r) {
 
 
 unsigned
-user_func_songexportsmf(struct exec_s *o, struct data_s **r) {
+user_func_songexportsmf(struct exec *o, struct data **r) {
 	char *filename;
 	if (!exec_lookupstring(o, "filename", &filename)) {
 		return 0;
@@ -514,9 +514,9 @@ user_func_songexportsmf(struct exec_s *o, struct data_s **r) {
 
 
 unsigned
-user_func_songimportsmf(struct exec_s *o, struct data_s **r) {
+user_func_songimportsmf(struct exec *o, struct data **r) {
 	char *filename;
-	struct song_s *sng;
+	struct song *sng;
 	if (!exec_lookupstring(o, "filename", &filename)) {
 		return 0;
 	}
@@ -531,28 +531,28 @@ user_func_songimportsmf(struct exec_s *o, struct data_s **r) {
 
 
 unsigned
-user_func_songidle(struct exec_s *o, struct data_s **r) {
+user_func_songidle(struct exec *o, struct data **r) {
 	song_idle(user_song);
 	return 1;
 }
 		
 unsigned
-user_func_songplay(struct exec_s *o, struct data_s **r) {
+user_func_songplay(struct exec *o, struct data **r) {
 	song_play(user_song);
 	return 1;
 }
 
 unsigned
-user_func_songrecord(struct exec_s *o, struct data_s **r) {
+user_func_songrecord(struct exec *o, struct data **r) {
 	song_record(user_song);
 	return 1;
 }
 
 unsigned
-user_func_songsettempo(struct exec_s *o, struct data_s **r) {	/* beat per minute*/
+user_func_songsettempo(struct exec *o, struct data **r) {	/* beat per minute*/
 	long tempo, measure;
-	struct ev_s ev;
-	struct seqptr_s mp;
+	struct ev ev;
+	struct seqptr mp;
 	unsigned bpm, tpb;
 	unsigned long dummy;
 	unsigned pos;
@@ -581,10 +581,10 @@ user_func_songsettempo(struct exec_s *o, struct data_s **r) {	/* beat per minute
 }
 
 unsigned
-user_func_songtimeins(struct exec_s *o, struct data_s **r) {
+user_func_songtimeins(struct exec *o, struct data **r) {
 	long num, den, amount, from;
-	struct ev_s ev;
-	struct seqptr_s mp;
+	struct ev ev;
+	struct seqptr mp;
 	unsigned pos, tics, save_bpm, save_tpb;
 	unsigned long dummy_usec24;
 	
@@ -630,10 +630,10 @@ user_func_songtimeins(struct exec_s *o, struct data_s **r) {
 }
 
 unsigned
-user_func_songtimerm(struct exec_s *o, struct data_s **r) {
+user_func_songtimerm(struct exec *o, struct data **r) {
 	long amount, from;
-	struct ev_s ev;
-	struct seqptr_s mp;
+	struct ev ev;
+	struct seqptr mp;
 	unsigned pos, tics, save_bpm, save_tpb, bpm, tpb;
 	unsigned long save_usec24, usec24;
 	
@@ -671,7 +671,7 @@ user_func_songtimerm(struct exec_s *o, struct data_s **r) {
 
 
 unsigned
-user_func_songtimeinfo(struct exec_s *o, struct data_s **r) {
+user_func_songtimeinfo(struct exec *o, struct data **r) {
 	track_output(&user_song->meta, tout);
 	textout_putstr(tout, "\n");
 	return 1;
@@ -679,9 +679,9 @@ user_func_songtimeinfo(struct exec_s *o, struct data_s **r) {
 
 
 unsigned
-user_func_songsetcurinput(struct exec_s *o, struct data_s **r) {
+user_func_songsetcurinput(struct exec *o, struct data **r) {
 	unsigned dev, ch;
-	struct data_s *l;
+	struct data *l;
 	
 	if (!exec_lookuplist(o, "inputchan", &l)) {
 		return 0;
@@ -695,7 +695,7 @@ user_func_songsetcurinput(struct exec_s *o, struct data_s **r) {
 
 
 unsigned
-user_func_songgetcurinput(struct exec_s *o, struct data_s **r) {
+user_func_songgetcurinput(struct exec *o, struct data **r) {
 	unsigned dev, ch;
 	song_getcurinput(user_song, &dev, &ch);  
 	*r = data_newlist(NULL);

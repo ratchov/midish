@@ -1,4 +1,4 @@
-/* $Id: mididev.h,v 1.8 2006/02/14 12:21:40 alex Exp $ */
+/* $Id: mididev.h,v 1.9 2006/02/17 13:18:05 alex Exp $ */
 /*
  * Copyright (c) 2003-2006 Alexandre Ratchov
  * All rights reserved.
@@ -32,19 +32,19 @@
 #ifndef MIDISH_MIDIDEV_H
 #define MIDISH_MIDIDEV_H
 
-struct mididev_s {
-	struct mididev_s *next;
+struct mididev {
+	struct mididev *next;
 	unsigned unit;
 	unsigned ticrate, ticdelta;
 	unsigned sendrt;
 };
 
-void mididev_init(struct mididev_s *o);
-void mididev_done(struct mididev_s *o);
+void mididev_init(struct mididev *o);
+void mididev_done(struct mididev *o);
 
-extern struct mididev_s *mididev_list;
-extern struct mididev_s *mididev_master;
-extern struct mididev_s *mididev_byunit[];
+extern struct mididev *mididev_list;
+extern struct mididev *mididev_master;
+extern struct mididev *mididev_byunit[];
 
 void mididev_listinit(void);
 void mididev_listdone(void);

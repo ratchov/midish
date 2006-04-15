@@ -1,4 +1,4 @@
-/* $Id: parse.h,v 1.7 2006/02/14 12:21:41 alex Exp $ */
+/* $Id: parse.h,v 1.8 2006/02/17 13:18:05 alex Exp $ */
 /*
  * Copyright (c) 2003-2006 Alexandre Ratchov
  * All rights reserved.
@@ -34,33 +34,33 @@
 
 #include "lex.h"
 
-struct node_s;
+struct node;
 
-struct parse_s {
-	struct lex_s lex;
+struct parse {
+	struct lex lex;
 	unsigned lookavail;
 };
 
-struct parse_s *parse_new(char *);
-void		parse_delete(struct parse_s *);
+struct parse *parse_new(char *);
+void		parse_delete(struct parse *);
 
-void		parse_error(struct parse_s *, char *);
+void		parse_error(struct parse *, char *);
 
-unsigned	parse_getsym(struct parse_s *);
-void		parse_ungetsym(struct parse_s *);
+unsigned	parse_getsym(struct parse *);
+void		parse_ungetsym(struct parse *);
 
-unsigned	parse_end(struct parse_s *, struct node_s **);
-unsigned	parse_call(struct parse_s *, struct node_s **);
-unsigned	parse_expr(struct parse_s *, struct node_s **);
-unsigned	parse_addsub(struct parse_s *, struct node_s **);
-unsigned	parse_muldiv(struct parse_s *, struct node_s **);
-unsigned	parse_neg(struct parse_s *, struct node_s **);
-unsigned	parse_const(struct parse_s *, struct node_s **);
-unsigned	parse_assign(struct parse_s *, struct node_s **);
-unsigned	parse_stmt(struct parse_s *, struct node_s **);
-unsigned	parse_slist(struct parse_s *, struct node_s **);
-unsigned	parse_proc(struct parse_s *, struct node_s **);
-unsigned	parse_line(struct parse_s *o, struct node_s **n);
-unsigned	parse_prog(struct parse_s *o, struct node_s **n);
+unsigned	parse_end(struct parse *, struct node **);
+unsigned	parse_call(struct parse *, struct node **);
+unsigned	parse_expr(struct parse *, struct node **);
+unsigned	parse_addsub(struct parse *, struct node **);
+unsigned	parse_muldiv(struct parse *, struct node **);
+unsigned	parse_neg(struct parse *, struct node **);
+unsigned	parse_const(struct parse *, struct node **);
+unsigned	parse_assign(struct parse *, struct node **);
+unsigned	parse_stmt(struct parse *, struct node **);
+unsigned	parse_slist(struct parse *, struct node **);
+unsigned	parse_proc(struct parse *, struct node **);
+unsigned	parse_line(struct parse *o, struct node **n);
+unsigned	parse_prog(struct parse *o, struct node **n);
 
 #endif /* MIDISH_PARSE_H */

@@ -1,4 +1,4 @@
-/* $Id: user.c,v 1.59 2006/02/17 13:18:06 alex Exp $ */
+/* $Id: user.c,v 1.60 2006/02/25 12:21:26 alex Exp $ */
 /*
  * Copyright (c) 2003-2006 Alexandre Ratchov
  * All rights reserved.
@@ -56,7 +56,7 @@
 #include "saveload.h"
 #include "rmidi.h"	/* for rmidi_debug */
 
-struct song_s *user_song;
+struct song *user_song;
 unsigned user_flag_batch = 0;
 unsigned user_flag_verb = 0;
 
@@ -70,11 +70,11 @@ unsigned user_flag_verb = 0;
 	 */
 
 unsigned
-exec_runfile(struct exec_s *exec, char *filename) {
-	struct parse_s *parse;
-	struct var_s **locals;
-	struct node_s *root;
-	struct data_s *data;
+exec_runfile(struct exec *exec, char *filename) {
+	struct parse *parse;
+	struct var **locals;
+	struct node *root;
+	struct data *data;
 	unsigned res;
 	
 	res = 0;
@@ -102,9 +102,9 @@ exec_runfile(struct exec_s *exec, char *filename) {
 	 */
 
 unsigned
-exec_lookuptrack(struct exec_s *o, char *var, struct songtrk_s **res) {
+exec_lookuptrack(struct exec *o, char *var, struct songtrk **res) {
 	char *name;	
-	struct songtrk_s *t;
+	struct songtrk *t;
 	if (!exec_lookupname(o, var, &name)) {
 		return 0;
 	}
@@ -126,9 +126,9 @@ exec_lookuptrack(struct exec_s *o, char *var, struct songtrk_s **res) {
 	 */
 
 unsigned
-exec_lookupchan_getnum(struct exec_s *o, char *var, 
+exec_lookupchan_getnum(struct exec *o, char *var, 
     unsigned *dev, unsigned *ch) {
-	struct var_s *arg;
+	struct var *arg;
 	
 	arg = exec_varlookup(o, var);
 	if (!arg) {
@@ -148,9 +148,9 @@ exec_lookupchan_getnum(struct exec_s *o, char *var,
 	 */
 
 unsigned
-exec_lookupchan_getref(struct exec_s *o, char *var, struct songchan_s **res) {
-	struct var_s *arg;
-	struct songchan_s *i;
+exec_lookupchan_getref(struct exec *o, char *var, struct songchan **res) {
+	struct var *arg;
+	struct songchan *i;
 	
 	arg = exec_varlookup(o, var);
 	if (!arg) {
@@ -178,9 +178,9 @@ exec_lookupchan_getref(struct exec_s *o, char *var, struct songchan_s **res) {
 	 */
 
 unsigned
-exec_lookupfilt(struct exec_s *o, char *var, struct songfilt_s **res) {
+exec_lookupfilt(struct exec *o, char *var, struct songfilt **res) {
 	char *name;	
-	struct songfilt_s *f;
+	struct songfilt *f;
 	if (!exec_lookupname(o, var, &name)) {
 		return 0;
 	}
@@ -199,9 +199,9 @@ exec_lookupfilt(struct exec_s *o, char *var, struct songfilt_s **res) {
 	 */
 
 unsigned
-exec_lookupsx(struct exec_s *o, char *var, struct songsx_s **res) {
+exec_lookupsx(struct exec *o, char *var, struct songsx **res) {
 	char *name;	
-	struct songsx_s *t;
+	struct songsx *t;
 	if (!exec_lookupname(o, var, &name)) {
 		return 0;
 	}
@@ -229,9 +229,9 @@ exec_lookupsx(struct exec_s *o, char *var, struct songsx_s **res) {
 	 */
 
 unsigned
-exec_lookupev(struct exec_s *o, char *name, struct ev_s *ev) {
-	struct var_s *arg;
-	struct data_s *d;
+exec_lookupev(struct exec *o, char *name, struct ev *ev) {
+	struct var *arg;
+	struct data *d;
 	unsigned dev, ch;
 
 	arg = exec_varlookup(o, name);
@@ -296,10 +296,10 @@ exec_lookupev(struct exec_s *o, char *name, struct ev_s *ev) {
 	 */
 
 unsigned
-exec_lookupevspec(struct exec_s *o, char *name, struct evspec_s *e) {
-	struct var_s *arg;
-	struct data_s *d;
-	struct songchan_s *i;
+exec_lookupevspec(struct exec *o, char *name, struct evspec *e) {
+	struct var *arg;
+	struct data *d;
+	struct songchan *i;
 	unsigned lo, hi;
 
 	arg = exec_varlookup(o, name);
@@ -410,19 +410,24 @@ toomany:
 }
 
 	/*
-	 * print a data_s to the user console
+	 * print a data to the user console
 	 */
 
 void
-data_print(struct data_s *d) {
-	struct data_s *i;
+data_print(struct data *d) {
+	struct data *i;
 	
 	switch(d->type) {
 	case DATA_NIL:
 		textout_putstr(tout, "nil");
 		break;
 	case DATA_LONG:
-		textout_putlong(tout, d->val.num);
+		if (d->val.num < 0) {
+			textout_putstr(tout, "-");
+			textout_putlong(tout, -d->val.num);
+		} else {
+			textout_putlong(tout, d->val.num);
+		}
 		break;
 	case DATA_STRING:
 		textout_putstr(tout, "\"");
@@ -453,7 +458,7 @@ data_print(struct data_s *d) {
 	 */
 	 
 unsigned
-data_num2chan(struct data_s *o, unsigned *res_dev, unsigned *res_ch) {
+data_num2chan(struct data *o, unsigned *res_dev, unsigned *res_ch) {
 	long dev, ch;
 
 	if (o->type == DATA_LIST ||
@@ -484,8 +489,8 @@ data_num2chan(struct data_s *o, unsigned *res_dev, unsigned *res_ch) {
 	 */
 	 
 unsigned
-data_list2chan(struct data_s *o, unsigned *res_dev, unsigned *res_ch) {
-	struct songchan_s *i;
+data_list2chan(struct data *o, unsigned *res_dev, unsigned *res_ch) {
+	struct songchan *i;
 
 	if (o->type == DATA_LIST) {
 		return data_num2chan(o->val.list, res_dev, res_ch);
@@ -506,7 +511,7 @@ data_list2chan(struct data_s *o, unsigned *res_dev, unsigned *res_ch) {
 
 
 	/*
-	 * convert a data_s to a pair of integers
+	 * convert a data to a pair of integers
 	 * data can be:
 	 * 	- a liste of 2 integers
 	 *	- a single integer (then min = max)
@@ -514,7 +519,7 @@ data_list2chan(struct data_s *o, unsigned *res_dev, unsigned *res_ch) {
 	 
 	 
 unsigned
-data_list2range(struct data_s *d, unsigned min, unsigned max, 
+data_list2range(struct data *d, unsigned min, unsigned max, 
     unsigned *lo, unsigned *hi) {
     	if (d->type == DATA_LONG) {
 		*lo = *hi = d->val.num;
@@ -549,9 +554,9 @@ data_list2range(struct data_s *d, unsigned min, unsigned max,
 	 */
 
 unsigned
-data_matchsysex(struct data_s *d, struct sysex_s *sx, unsigned *res) {
+data_matchsysex(struct data *d, struct sysex *sx, unsigned *res) {
 	unsigned i;
-	struct chunk_s *ck;
+	struct chunk *ck;
 	
 	i = 0;
 	ck = sx->first;
@@ -587,8 +592,8 @@ data_matchsysex(struct data_s *d, struct sysex_s *sx, unsigned *res) {
 	/* XXX: for testing */
 
 unsigned
-user_func_ev(struct exec_s *o, struct data_s **r) {
-	struct evspec_s ev;
+user_func_ev(struct exec *o, struct data **r) {
+	struct evspec ev;
 	if (!exec_lookupevspec(o, "ev", &ev)) {
 		return 0;
 	}
@@ -599,7 +604,7 @@ user_func_ev(struct exec_s *o, struct data_s **r) {
 
 
 unsigned
-user_func_panic(struct exec_s *o, struct data_s **r) {
+user_func_panic(struct exec *o, struct data **r) {
 	dbg_panic();
 	/* not reached */
 	return 0;
@@ -607,7 +612,7 @@ user_func_panic(struct exec_s *o, struct data_s **r) {
 
 
 unsigned
-user_func_debug(struct exec_s *o, struct data_s **r) {
+user_func_debug(struct exec *o, struct data **r) {
 	char *flag;
 	long value;
 	
@@ -631,7 +636,7 @@ user_func_debug(struct exec_s *o, struct data_s **r) {
 }
 
 unsigned
-user_func_exec(struct exec_s *o, struct data_s **r) {
+user_func_exec(struct exec *o, struct data **r) {
 	char *filename;		
 	if (!exec_lookupstring(o, "filename", &filename)) {
 		return 0;
@@ -641,8 +646,8 @@ user_func_exec(struct exec_s *o, struct data_s **r) {
 
 
 unsigned
-user_func_print(struct exec_s *o, struct data_s **r) {
-	struct var_s *arg;
+user_func_print(struct exec *o, struct data **r) {
+	struct var *arg;
 	arg = exec_varlookup(o, "value");
 	if (!arg) {
 		dbg_puts("user_func_print: 'value': no such param\n");
@@ -655,14 +660,14 @@ user_func_print(struct exec_s *o, struct data_s **r) {
 }
 
 unsigned
-user_func_info(struct exec_s *o, struct data_s **r) {
+user_func_info(struct exec *o, struct data **r) {
 	exec_dumpprocs(o);
 	exec_dumpvars(o);
 	return 1;
 }
 
 unsigned
-user_func_metroswitch(struct exec_s *o, struct data_s **r) {
+user_func_metroswitch(struct exec *o, struct data **r) {
 	long onoff;
 	if (!exec_lookuplong(o, "onoff", &onoff)) {
 		return 0;
@@ -672,8 +677,8 @@ user_func_metroswitch(struct exec_s *o, struct data_s **r) {
 }
 
 unsigned
-user_func_metroconf(struct exec_s *o, struct data_s **r) {
-	struct ev_s evhi, evlo;
+user_func_metroconf(struct exec *o, struct data **r) {
+	struct ev evhi, evlo;
 	if (!exec_lookupev(o, "eventhi", &evhi) ||
 	    !exec_lookupev(o, "eventlo", &evlo)) {
 		return 0;
@@ -688,10 +693,10 @@ user_func_metroconf(struct exec_s *o, struct data_s **r) {
 }
 
 unsigned
-user_func_shut(struct exec_s *o, struct data_s **r) {
+user_func_shut(struct exec *o, struct data **r) {
 	unsigned i;
-	struct ev_s ev;
-	struct mididev_s *dev;
+	struct ev ev;
+	struct mididev *dev;
 
 	mux_init(NULL, NULL);
 
@@ -723,9 +728,9 @@ user_func_shut(struct exec_s *o, struct data_s **r) {
 }
 
 unsigned
-user_func_sendraw(struct exec_s *o, struct data_s **r) {
-	struct var_s *arg;
-	struct data_s *i;
+user_func_sendraw(struct exec *o, struct data **r) {
+	struct var *arg;
+	struct data *i;
 	unsigned char byte;
 	long device;
 	
@@ -765,10 +770,10 @@ user_func_sendraw(struct exec_s *o, struct data_s **r) {
 
 void
 user_mainloop(void) {
-	struct parse_s *parse;
-	struct exec_s *exec;
-	struct node_s *root;
-	struct data_s *data;
+	struct parse *parse;
+	struct exec *exec;
+	struct node *root;
+	struct data *data;
 	
 	user_song = song_new();
 	exec = exec_new();

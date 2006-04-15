@@ -1,4 +1,4 @@
-/* $Id: saveload.h,v 1.6 2006/02/14 12:21:41 alex Exp $ */
+/* $Id: saveload.h,v 1.7 2006/02/17 13:18:05 alex Exp $ */
 /*
  * Copyright (c) 2003-2006 Alexandre Ratchov
  * All rights reserved.
@@ -32,33 +32,33 @@
 #ifndef MIDISH_SAVELOAD_H
 #define MIDISH_SAVELOAD_H
 
-struct textout_s;
-struct ev_s;
-struct track_s;
-struct filt_s;
-struct rule_s;
-struct songchan_s;
-struct songtrk_s;
-struct songfilt_s;
-struct songsx_s;
-struct song_s;
+struct textout;
+struct ev;
+struct track;
+struct filt;
+struct rule;
+struct songchan;
+struct songtrk;
+struct songfilt;
+struct songsx;
+struct song;
 
-void ev_output(struct ev_s *e, struct textout_s *f);
-void track_output(struct track_s *t, struct textout_s *f);
-void rule_output(struct rule_s *o, struct textout_s *f);
-void filt_output(struct filt_s *o, struct textout_s *f);
-void songtrk_output(struct songtrk_s *o, struct textout_s *f);
-void songchan_output(struct songchan_s *o, struct textout_s *f);
-void songfilt_output(struct songfilt_s *o, struct textout_s *f);
-void songsx_output(struct songsx_s *o, struct textout_s *f);
-void song_output(struct song_s *o, struct textout_s *f);
+void ev_output(struct ev *e, struct textout *f);
+void track_output(struct track *t, struct textout *f);
+void rule_output(struct rule *o, struct textout *f);
+void filt_output(struct filt *o, struct textout *f);
+void songtrk_output(struct songtrk *o, struct textout *f);
+void songchan_output(struct songchan *o, struct textout *f);
+void songfilt_output(struct songfilt *o, struct textout *f);
+void songsx_output(struct songsx *o, struct textout *f);
+void song_output(struct song *o, struct textout *f);
 
 
-void track_save(struct track_s *o, char *name);
-unsigned track_load(struct track_s *o, char *name);
+void track_save(struct track *o, char *name);
+unsigned track_load(struct track *o, char *name);
 
-void song_save(struct song_s *o, char *name);
-unsigned song_load(struct song_s *o, char *filename);
+void song_save(struct song *o, char *name);
+unsigned song_load(struct song *o, char *filename);
 
 
 #endif /* MIDISH_SAVELOAD_H */

@@ -1,4 +1,4 @@
-/* $Id: smf.h,v 1.5 2006/02/14 12:21:41 alex Exp $ */
+/* $Id: smf.h,v 1.6 2006/02/17 13:18:05 alex Exp $ */
 /*
  * Copyright (c) 2003-2006 Alexandre Ratchov
  * All rights reserved.
@@ -32,9 +32,9 @@
 #ifndef MIDISH_SMF_H
 #define MIDISH_SMF_H
 
-struct song_s;
+struct song;
 
-unsigned song_exportsmf(struct song_s *o, char *filename);
-struct song_s *song_importsmf(char *filename);
+unsigned song_exportsmf(struct song *o, char *filename);
+struct song *song_importsmf(char *filename);
 
 #endif /* MIDISH_SMF_H */

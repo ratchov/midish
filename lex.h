@@ -1,4 +1,4 @@
-/* $Id: lex.h,v 1.9 2006/02/17 13:18:05 alex Exp $ */
+/* $Id: lex.h,v 1.10 2006/04/03 16:38:28 alex Exp $ */
 /*
  * Copyright (c) 2003-2006 Alexandre Ratchov
  * All rights reserved.
@@ -52,33 +52,33 @@ enum SYM_ID {
 	TOK_IDENT, TOK_NUM, TOK_STRING
 };
 
-struct tokdef_s {
+struct tokdef {
 	unsigned id;				/* token id */
 	char *str;				/* corresponding string */
 };
 
-struct lex_s {
-	/*struct tokdef_s *op, *kw;*/
+struct lex {
+	/*struct tokdef *op, *kw;*/
 	unsigned id;
 	char strval[TOK_MAXLEN + 1];
 	unsigned long longval;	
 	/* input */
-	struct textin_s *in;
+	struct textin *in;
 	/* used by ungetchar */
 	int lookchar;
 	/* for error reporting */
 	unsigned line, col;
 };
 
-unsigned lex_init(struct lex_s *, char *);
-void     lex_done(struct lex_s *);
-unsigned lex_scan(struct lex_s *);
-void	 lex_dbg(struct lex_s *);
+unsigned lex_init(struct lex *, char *);
+void     lex_done(struct lex *);
+unsigned lex_scan(struct lex *);
+void	 lex_dbg(struct lex *);
 
-unsigned lex_getchar(struct lex_s *o, int *c);
-void	 lex_ungetchar(struct lex_s *o, int c);
-void	 lex_err(struct lex_s *o, char *msg);
-void	 lex_recover(struct lex_s *o, char *msg);
-unsigned lex_str2long(struct lex_s *o, unsigned base);
+unsigned lex_getchar(struct lex *o, int *c);
+void	 lex_ungetchar(struct lex *o, int c);
+void	 lex_err(struct lex *o, char *msg);
+void	 lex_recover(struct lex *o, char *msg);
+unsigned lex_str2long(struct lex *o, unsigned base);
 
 #endif /* MIDISH_LEX_H */

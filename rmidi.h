@@ -1,4 +1,4 @@
-/* $Id: rmidi.h,v 1.7 2006/02/14 12:21:41 alex Exp $ */
+/* $Id: rmidi.h,v 1.8 2006/02/17 13:18:05 alex Exp $ */
 /*
  * Copyright (c) 2003-2006 Alexandre Ratchov
  * All rights reserved.
@@ -38,33 +38,33 @@
 #include "mdep.h"
 #include "mididev.h"
 
-struct ev_s;
+struct ev;
 
-struct	rmidi_s {
-	struct mididev_s    mididev;		/* generic mididev */
-	struct rmidi_mdep_s mdep;		/* os-specific stuff */
+struct	rmidi {
+	struct mididev    mididev;		/* generic mididev */
+	struct rmidi_mdep mdep;		/* os-specific stuff */
 	unsigned	    istatus;		/* input stuff */
 	unsigned 	    icount;
 	unsigned char	    idata[2];
 	unsigned 	    oused, ostatus;	/* output stuff */
 	unsigned char	    obuf[RMIDI_BUFLEN];
-	struct sysex_s	   *isysex;
+	struct sysex	   *isysex;
 };
 
-#define RMIDI(o) ((struct rmidi_s *)(o))
+#define RMIDI(o) ((struct rmidi *)(o))
 
-struct rmidi_s *rmidi_new(void);
-void rmidi_delete(struct rmidi_s *o);
-void rmidi_init(struct rmidi_s *);
-void rmidi_done(struct rmidi_s *);
-void rmidi_out(struct rmidi_s *, unsigned);
-void rmidi_flush(struct rmidi_s *);
-void rmidi_putev(struct rmidi_s *, struct ev_s *);
+struct rmidi *rmidi_new(void);
+void rmidi_delete(struct rmidi *o);
+void rmidi_init(struct rmidi *);
+void rmidi_done(struct rmidi *);
+void rmidi_out(struct rmidi *, unsigned);
+void rmidi_flush(struct rmidi *);
+void rmidi_putev(struct rmidi *, struct ev *);
 
-void rmidi_mdep_init(struct rmidi_s *);
-void rmidi_mdep_done(struct rmidi_s *);
+void rmidi_mdep_init(struct rmidi *);
+void rmidi_mdep_done(struct rmidi *);
 
-void rmidi_inputcb(struct rmidi_s *, unsigned char *, unsigned);
+void rmidi_inputcb(struct rmidi *, unsigned char *, unsigned);
 
 extern unsigned rmidi_debug;
 

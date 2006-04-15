@@ -1,4 +1,4 @@
-/* $Id: sysex.h,v 1.4 2006/02/14 12:21:41 alex Exp $ */
+/* $Id: sysex.h,v 1.5 2006/02/17 13:18:06 alex Exp $ */
 /*
  * Copyright (c) 2003-2006 Alexandre Ratchov
  * All rights reserved.
@@ -32,40 +32,40 @@
 #ifndef MIDISH_SYSEX_H
 #define MIDISH_SYSEX_H
 
-struct chunk_s {
-	struct chunk_s *next;
+struct chunk {
+	struct chunk *next;
 	unsigned used;
 #define CHUNK_SIZE	0x100
 	unsigned char data[CHUNK_SIZE];
 };
 
-struct sysex_s {
-	struct sysex_s *next;
+struct sysex {
+	struct sysex *next;
 	unsigned unit;
-	struct chunk_s *first, *last;
+	struct chunk *first, *last;
 };
 
-struct sysexlist_s {
-	struct sysex_s *first, **lastptr;
+struct sysexlist {
+	struct sysex *first, **lastptr;
 };
 
 void 		chunk_pool_init(unsigned size);
 void 		chunk_pool_done(void);
-struct chunk_s *chunk_new(void);
-void		chunk_del(struct chunk_s *o);
+struct chunk *chunk_new(void);
+void		chunk_del(struct chunk *o);
 
 void		sysex_pool_init(unsigned size);
 void		sysex_pool_done(void);
-struct sysex_s *sysex_new(unsigned unit);
-void		sysex_del(struct sysex_s *o);
-void		sysex_add(struct sysex_s *o, unsigned data);
-void		sysex_dbg(struct sysex_s *o);
-unsigned	sysex_check(struct sysex_s *o);
+struct sysex *sysex_new(unsigned unit);
+void		sysex_del(struct sysex *o);
+void		sysex_add(struct sysex *o, unsigned data);
+void		sysex_dbg(struct sysex *o);
+unsigned	sysex_check(struct sysex *o);
 
-void 		sysexlist_init(struct sysexlist_s *o);
-void		sysexlist_done(struct sysexlist_s *o);
-void		sysexlist_put(struct sysexlist_s *o, struct sysex_s *e);
-struct sysex_s *sysexlist_get(struct sysexlist_s *o);
-void		sysexlist_dbg(struct sysexlist_s *o);
+void 		sysexlist_init(struct sysexlist *o);
+void		sysexlist_done(struct sysexlist *o);
+void		sysexlist_put(struct sysexlist *o, struct sysex *e);
+struct sysex *sysexlist_get(struct sysexlist *o);
+void		sysexlist_dbg(struct sysexlist *o);
 
 #endif /* MIDISH_SYSEX_H */

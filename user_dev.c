@@ -1,4 +1,4 @@
-/* $Id: user_dev.c,v 1.5 2006/02/14 12:21:41 alex Exp $ */
+/* $Id: user_dev.c,v 1.6 2006/02/17 13:18:06 alex Exp $ */
 /*
  * Copyright (c) 2003-2006 Alexandre Ratchov
  * All rights reserved.
@@ -49,9 +49,9 @@
 
 
 unsigned
-user_func_devlist(struct exec_s *o, struct data_s **r) {
-	struct data_s *d, *n;
-	struct mididev_s *i;
+user_func_devlist(struct exec *o, struct data **r) {
+	struct data *d, *n;
+	struct mididev *i;
 
 	d = data_newlist(NULL);
 	for (i = mididev_list; i != NULL; i = i->next) {
@@ -64,7 +64,7 @@ user_func_devlist(struct exec_s *o, struct data_s **r) {
 
 
 unsigned
-user_func_devattach(struct exec_s *o, struct data_s **r) {
+user_func_devattach(struct exec *o, struct data **r) {
 	long unit;
 	char *path;
 	if (!exec_lookuplong(o, "unit", &unit) || 
@@ -75,7 +75,7 @@ user_func_devattach(struct exec_s *o, struct data_s **r) {
 }
 
 unsigned
-user_func_devdetach(struct exec_s *o, struct data_s **r) {
+user_func_devdetach(struct exec *o, struct data **r) {
 	long unit;
 	if (!exec_lookuplong(o, "unit", &unit)) {
 		return 0;
@@ -84,8 +84,8 @@ user_func_devdetach(struct exec_s *o, struct data_s **r) {
 }
 
 unsigned
-user_func_devsetmaster(struct exec_s *o, struct data_s **r) {
-	struct var_s *arg;
+user_func_devsetmaster(struct exec *o, struct data **r) {
+	struct var *arg;
 	long unit;
 	
 	arg = exec_varlookup(o, "unit");
@@ -112,7 +112,7 @@ user_func_devsetmaster(struct exec_s *o, struct data_s **r) {
 
 
 unsigned
-user_func_devgetmaster(struct exec_s *o, struct data_s **r) {
+user_func_devgetmaster(struct exec *o, struct data **r) {
 	if (mididev_master) {
 		*r = data_newlong(mididev_master->unit);
 	} else {
@@ -122,7 +122,7 @@ user_func_devgetmaster(struct exec_s *o, struct data_s **r) {
 }
 
 unsigned
-user_func_devsendrt(struct exec_s *o, struct data_s **r) {
+user_func_devsendrt(struct exec *o, struct data **r) {
 	long unit, sendrt;
 
 	if (!exec_lookuplong(o, "unit", &unit) || 
@@ -139,7 +139,7 @@ user_func_devsendrt(struct exec_s *o, struct data_s **r) {
 
 
 unsigned
-user_func_devticrate(struct exec_s *o, struct data_s **r) {
+user_func_devticrate(struct exec *o, struct data **r) {
 	long unit, tpu;
 	
 	if (!exec_lookuplong(o, "unit", &unit) || 
@@ -160,7 +160,7 @@ user_func_devticrate(struct exec_s *o, struct data_s **r) {
 
 
 unsigned
-user_func_devinfo(struct exec_s *o, struct data_s **r) {
+user_func_devinfo(struct exec *o, struct data **r) {
 	long unit;
 	
 	if (!exec_lookuplong(o, "unit", &unit)) {

@@ -1,4 +1,4 @@
-/* $Id: mux.h,v 1.12 2006/02/14 12:21:41 alex Exp $ */
+/* $Id: mux.h,v 1.13 2006/02/17 13:18:05 alex Exp $ */
 /*
  * Copyright (c) 2003-2006 Alexandre Ratchov
  * All rights reserved.
@@ -43,18 +43,18 @@
 
 #define MUX_LINESIZE		1024
 
-struct ev_s;
-struct sysex_s;
+struct ev;
+struct sysex;
 
-void mux_init(void (*cb)(void *, struct ev_s *), void *addr);
+void mux_init(void (*cb)(void *, struct ev *), void *addr);
 void mux_done(void);
 void mux_run(void);
 void mux_sleep(unsigned millisecs);
 void mux_flush(void);
-void mux_putev(struct ev_s *);
+void mux_putev(struct ev *);
 void mux_sendraw(unsigned unit, unsigned char *buf, unsigned len);
 unsigned mux_getphase(void);
-struct sysex_s *mux_getsysex(void);
+struct sysex *mux_getsysex(void);
 void mux_chgtempo(unsigned long tmr_ticlength);
 void mux_chgticrate(unsigned tpu);
 void mux_startwait(void);
@@ -65,8 +65,8 @@ void mux_mdep_done(void);
 void mux_mdep_run(void);
 
 void mux_timercb(unsigned long delta);
-void mux_evcb(unsigned, struct ev_s *ev);
-void mux_sysexcb(unsigned unit, struct sysex_s *);
+void mux_evcb(unsigned, struct ev *ev);
+void mux_sysexcb(unsigned unit, struct sysex *);
 
 extern unsigned mux_ticsperunit;
 

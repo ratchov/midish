@@ -1,4 +1,4 @@
-/* $Id: data.c,v 1.9 2006/02/14 12:21:40 alex Exp $ */
+/* $Id: data.c,v 1.10 2006/02/17 13:18:05 alex Exp $ */
 /*
  * Copyright (c) 2003-2006 Alexandre Ratchov
  * All rights reserved.
@@ -30,10 +30,10 @@
  */
 
 /*
- * data_s is used to store values of the user variable
+ * data is used to store values of the user variable
  * and contants and implements basig arithmetic
  *
- * a data_s can contain a "nil", a long, a string or a list
+ * a data can contain a "nil", a long, a string or a list
  */
 	 
 #include "dbg.h"
@@ -41,19 +41,19 @@
 #include "cons.h"
 #include "data.h"
 
-struct data_s *
+struct data *
 data_newnil(void) {
-	struct data_s *o;
-	o = (struct data_s *)mem_alloc(sizeof(struct data_s));
+	struct data *o;
+	o = (struct data *)mem_alloc(sizeof(struct data));
 	o->type = DATA_NIL;
 	o->next = NULL;
 	return o;
 }
 
 
-struct data_s *
+struct data *
 data_newlong(long val) {
-	struct data_s *o;
+	struct data *o;
 	o = data_newnil();
 	o->val.num = val;
 	o->type = DATA_LONG;
@@ -61,9 +61,9 @@ data_newlong(long val) {
 }
 
 
-struct data_s *
+struct data *
 data_newstring(char *val) {
-	struct data_s *o;
+	struct data *o;
 	o = data_newnil();
 	o->val.str = str_new(val);
 	o->type = DATA_STRING;
@@ -71,9 +71,9 @@ data_newstring(char *val) {
 }
 
 
-struct data_s *
+struct data *
 data_newref(char *val) {
-	struct data_s *o;
+	struct data *o;
 	o = data_newnil();
 	o->val.ref = str_new(val);
 	o->type = DATA_REF;
@@ -81,18 +81,18 @@ data_newref(char *val) {
 }
 
 
-struct data_s *
-data_newlist(struct data_s *list) {
-	struct data_s *o;
+struct data *
+data_newlist(struct data *list) {
+	struct data *o;
 	o = data_newnil();
 	o->val.list = list;
 	o->type = DATA_LIST;
 	return o;
 }
 
-struct data_s *
+struct data *
 data_newuser(void *addr) {
-	struct data_s *o;
+	struct data *o;
 	o = data_newnil();
 	o->type = DATA_USER;
 	o->val.user = addr;
@@ -101,8 +101,8 @@ data_newuser(void *addr) {
 
 
 unsigned
-data_numitem(struct data_s *o) {
-	struct data_s *i;
+data_numitem(struct data *o) {
+	struct data *i;
 	unsigned n;
 
 	n = 1;
@@ -115,8 +115,8 @@ data_numitem(struct data_s *o) {
 }
 
 void
-data_listadd(struct data_s *o, struct data_s *v) {
-	struct data_s **i;
+data_listadd(struct data *o, struct data *v) {
+	struct data **i;
 	i = &o->val.list;
 	while (*i != NULL) {
 		i = &(*i)->next;
@@ -127,8 +127,8 @@ data_listadd(struct data_s *o, struct data_s *v) {
 
 
 void
-data_listremove(struct data_s *o, struct data_s *v) {
-	struct data_s **i;
+data_listremove(struct data *o, struct data *v) {
+	struct data **i;
 	i = &o->val.list;
         while (*i != NULL) {
 		if (*i == v) {
@@ -145,8 +145,8 @@ data_listremove(struct data_s *o, struct data_s *v) {
 
 
 void
-data_clear(struct data_s *o) {
-	struct data_s *i, *inext;
+data_clear(struct data *o) {
+	struct data *i, *inext;
 	switch(o->type) {
 	case DATA_STRING:
 		str_delete(o->val.str);
@@ -173,14 +173,14 @@ data_clear(struct data_s *o) {
 }
 
 void
-data_delete(struct data_s *o) {
+data_delete(struct data *o) {
 	data_clear(o);
 	mem_free(o);
 }
 
 void
-data_dbg(struct data_s *o) {
-	struct data_s *i;
+data_dbg(struct data *o) {
+	struct data *i;
 	
 	switch(o->type) {
 	case DATA_NIL:
@@ -231,8 +231,8 @@ data_dbg(struct data_s *o) {
 	 */
 
 void
-data_assign(struct data_s *dst, struct data_s *src) {
-	struct data_s *n, *i, **j;
+data_assign(struct data *dst, struct data *src) {
+	struct data *n, *i, **j;
 	if (dst == src) {
 		dbg_puts("data_assign: src and dst are the same\n");
 		dbg_panic();
@@ -279,8 +279,8 @@ data_assign(struct data_s *dst, struct data_s *src) {
 
 
 unsigned
-data_id(struct data_s *op1, struct data_s *op2) {
-	struct data_s *i1, *i2;
+data_id(struct data *op1, struct data *op2) {
+	struct data *i1, *i2;
 	if (op1->type != op2->type) {
 		return 0;
 	}
@@ -325,7 +325,7 @@ data_id(struct data_s *op1, struct data_s *op2) {
 
 
 unsigned
-data_eval(struct data_s *o) {
+data_eval(struct data *o) {
 	switch(o->type) {
 	case DATA_NIL:
 		return 0;
@@ -348,7 +348,7 @@ data_eval(struct data_s *o) {
 /* ----------------------------------------------------- relations --- */
 			
 unsigned
-data_not(struct data_s *op1) {
+data_not(struct data *op1) {
 	if (data_eval(op1)) {
 		data_clear(op1);
 		op1->type = DATA_LONG;
@@ -363,7 +363,7 @@ data_not(struct data_s *op1) {
 
 
 unsigned
-data_and(struct data_s *op1, struct data_s *op2) {
+data_and(struct data *op1, struct data *op2) {
 	if (data_eval(op1) && data_eval(op2)) {
 		data_clear(op1);
 		op1->type = DATA_LONG;
@@ -378,7 +378,7 @@ data_and(struct data_s *op1, struct data_s *op2) {
 
 
 unsigned
-data_or(struct data_s *op1, struct data_s *op2) {
+data_or(struct data *op1, struct data *op2) {
 	if (data_eval(op1) || data_eval(op2)) {
 		data_clear(op1);
 		op1->type = DATA_LONG;
@@ -393,7 +393,7 @@ data_or(struct data_s *op1, struct data_s *op2) {
 
 
 unsigned
-data_eq(struct data_s *op1, struct data_s *op2) {
+data_eq(struct data *op1, struct data *op2) {
 	if (data_id(op1, op2)) {
 		data_clear(op1);
 		op1->type = DATA_LONG;
@@ -408,7 +408,7 @@ data_eq(struct data_s *op1, struct data_s *op2) {
 
 
 unsigned
-data_neq(struct data_s *op1, struct data_s *op2) {
+data_neq(struct data *op1, struct data *op2) {
 	if (data_id(op1, op2)) {
 		data_clear(op1);
 		op1->type = DATA_LONG;
@@ -422,7 +422,7 @@ data_neq(struct data_s *op1, struct data_s *op2) {
 }
 
 unsigned
-data_lt(struct data_s *op1, struct data_s *op2) {
+data_lt(struct data *op1, struct data *op2) {
 	if (op1->type != DATA_LONG || op2->type != DATA_LONG) {
 		cons_err("bad types in '<'");
 		return 0;
@@ -433,7 +433,7 @@ data_lt(struct data_s *op1, struct data_s *op2) {
 
 
 unsigned
-data_le(struct data_s *op1, struct data_s *op2) {
+data_le(struct data *op1, struct data *op2) {
 	if (op1->type != DATA_LONG || op2->type != DATA_LONG) {
 		cons_err("bad types in '<='");
 		return 0;
@@ -444,7 +444,7 @@ data_le(struct data_s *op1, struct data_s *op2) {
 
 
 unsigned
-data_gt(struct data_s *op1, struct data_s *op2) {
+data_gt(struct data *op1, struct data *op2) {
 	if (op1->type != DATA_LONG || op2->type != DATA_LONG) {
 		cons_err("bad types in '>'");
 		return 0;
@@ -455,7 +455,7 @@ data_gt(struct data_s *op1, struct data_s *op2) {
 
 
 unsigned
-data_ge(struct data_s *op1, struct data_s *op2) {
+data_ge(struct data *op1, struct data *op2) {
 	if (op1->type != DATA_LONG || op2->type != DATA_LONG) {
 		cons_err("bad types in '>='");
 		return 0;
@@ -468,8 +468,8 @@ data_ge(struct data_s *op1, struct data_s *op2) {
 /* ---------------------------------------------------- arithmetic --- */
 
 unsigned 
-data_add(struct data_s *op1, struct data_s *op2) {
-	struct data_s **i;
+data_add(struct data *op1, struct data *op2) {
+	struct data **i;
 	
 	if (op1->type == DATA_LONG && op2->type == DATA_LONG) {
 		op1->val.num += op2->val.num;
@@ -487,8 +487,8 @@ data_add(struct data_s *op1, struct data_s *op2) {
 
 
 unsigned
-data_sub(struct data_s *op1, struct data_s *op2) {
-	struct data_s **i, *j;
+data_sub(struct data *op1, struct data *op2) {
+	struct data **i, *j;
 
 	if (op1->type == DATA_LONG && op2->type == DATA_LONG) {
 		op1->val.num -= op2->val.num;
@@ -517,7 +517,7 @@ data_sub(struct data_s *op1, struct data_s *op2) {
 
 
 unsigned
-data_neg(struct data_s *op1) {
+data_neg(struct data *op1) {
 	if (op1->type == DATA_LONG) {
 		op1->val.num = - op1->val.num;
 		return 1;
@@ -528,7 +528,7 @@ data_neg(struct data_s *op1) {
 
 
 unsigned
-data_mul(struct data_s *op1, struct data_s *op2) {
+data_mul(struct data *op1, struct data *op2) {
 	if (op1->type == DATA_LONG && op2->type == DATA_LONG) {
 		op1->val.num *= op2->val.num;
 		return 1;
@@ -539,7 +539,7 @@ data_mul(struct data_s *op1, struct data_s *op2) {
 
 
 unsigned
-data_div(struct data_s *op1, struct data_s *op2) {
+data_div(struct data *op1, struct data *op2) {
 	if (op1->type == DATA_LONG && op2->type == DATA_LONG) {
 		if (op2->val.num == 0) {
 			cons_err("division by zero");
@@ -554,7 +554,7 @@ data_div(struct data_s *op1, struct data_s *op2) {
 
 
 unsigned
-data_mod(struct data_s *op1, struct data_s *op2) {
+data_mod(struct data *op1, struct data *op2) {
 	if (op1->type == DATA_LONG && op2->type == DATA_LONG) {
 		if (op2->val.num == 0) {
 			cons_err("division by zero");
@@ -569,7 +569,7 @@ data_mod(struct data_s *op1, struct data_s *op2) {
 
 
 unsigned
-data_lshift(struct data_s *op1, struct data_s *op2) {
+data_lshift(struct data *op1, struct data *op2) {
 	if (op1->type == DATA_LONG && op2->type == DATA_LONG) {
 		op1->val.num <<= op2->val.num;
 		return 1;
@@ -580,7 +580,7 @@ data_lshift(struct data_s *op1, struct data_s *op2) {
 
 
 unsigned
-data_rshift(struct data_s *op1, struct data_s *op2) {
+data_rshift(struct data *op1, struct data *op2) {
 	if (op1->type == DATA_LONG && op2->type == DATA_LONG) {
 		op1->val.num >>= op2->val.num;
 		return 1;
@@ -591,7 +591,7 @@ data_rshift(struct data_s *op1, struct data_s *op2) {
 
 
 unsigned
-data_bitor(struct data_s *op1, struct data_s *op2) {
+data_bitor(struct data *op1, struct data *op2) {
 	if (op1->type == DATA_LONG && op2->type == DATA_LONG) {
 		op1->val.num |= op2->val.num;
 		return 1;
@@ -602,7 +602,7 @@ data_bitor(struct data_s *op1, struct data_s *op2) {
 
 
 unsigned
-data_bitand(struct data_s *op1, struct data_s *op2) {
+data_bitand(struct data *op1, struct data *op2) {
 	if (op1->type == DATA_LONG && op2->type == DATA_LONG) {
 		op1->val.num &= op2->val.num;
 		return 1;
@@ -613,7 +613,7 @@ data_bitand(struct data_s *op1, struct data_s *op2) {
 
 
 unsigned
-data_bitxor(struct data_s *op1, struct data_s *op2) {
+data_bitxor(struct data *op1, struct data *op2) {
 	if (op1->type == DATA_LONG && op2->type == DATA_LONG) {
 		op1->val.num ^= op2->val.num;
 		return 1;
@@ -624,7 +624,7 @@ data_bitxor(struct data_s *op1, struct data_s *op2) {
 
 
 unsigned
-data_bitnot(struct data_s *op1) {
+data_bitnot(struct data *op1) {
 	if (op1->type == DATA_LONG) {
 		op1->val.num = ~ op1->val.num;
 		return 1;

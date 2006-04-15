@@ -1,4 +1,4 @@
-/* $Id: frame.h,v 1.6 2006/02/25 20:57:35 alex Exp $ */
+/* $Id: frame.h,v 1.7 2006/03/04 23:46:45 alex Exp $ */
 /*
  * Copyright (c) 2003-2006 Alexandre Ratchov
  * All rights reserved.
@@ -32,20 +32,20 @@
 #ifndef MIDISH_FRAME_H
 #define MIDISH_FRAME_H
 
-struct track_s;
-struct seqptr_s;
-struct evspec_s;
+struct track;
+struct seqptr;
+struct evspec;
 
-void track_frameget(struct track_s *o, struct seqptr_s *p, struct track_s *frame);
-void track_frameput(struct track_s *o, struct seqptr_s *p, struct track_s *frame);
-void track_frameuniq(struct track_s *o, struct seqptr_s *p, struct track_s *frame);
-void track_framedup(struct track_s *s, struct track_s *d);
-void track_framecut(struct track_s *o, unsigned start, unsigned len);
-void track_frameins(struct track_s *o, unsigned start, unsigned len);
-void track_frameblank(struct track_s *o, unsigned start, unsigned len);
-void track_framecopy(struct track_s *o, unsigned start, unsigned len, struct track_s *frame);
-unsigned track_framematch(struct track_s *s, struct evspec_s *e);
-void track_frametransp(struct track_s *o, int halftones);
+void track_frameget(struct track *o, struct seqptr *p, struct track *frame);
+void track_frameput(struct track *o, struct seqptr *p, struct track *frame);
+void track_frameuniq(struct track *o, struct seqptr *p, struct track *frame);
+void track_framedup(struct track *s, struct track *d);
+void track_framecut(struct track *o, unsigned start, unsigned len);
+void track_frameins(struct track *o, unsigned start, unsigned len);
+void track_frameblank(struct track *o, unsigned start, unsigned len);
+void track_framecopy(struct track *o, unsigned start, unsigned len, struct track *frame);
+unsigned track_framematch(struct track *s, struct evspec *e);
+void track_frametransp(struct track *o, int halftones);
 
 #endif /* MIDISH_FRAME_H */
 

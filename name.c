@@ -1,4 +1,4 @@
-/* $Id: name.c,v 1.5 2006/02/14 12:21:41 alex Exp $ */
+/* $Id: name.c,v 1.6 2006/02/17 13:18:05 alex Exp $ */
 /*
  * Copyright (c) 2003-2006 Alexandre Ratchov
  * All rights reserved.
@@ -30,7 +30,7 @@
  */
 
 /*
- * name_s is a simply linked list of strings
+ * name is a simply linked list of strings
  */
 
 
@@ -38,40 +38,40 @@
 #include "name.h"
 
 void
-name_init(struct name_s *o, char *name) {
+name_init(struct name *o, char *name) {
 	o->str = str_new(name);
 	o->next = NULL;
 }
 
 void
-name_done(struct name_s *o) {
+name_done(struct name *o) {
 	str_delete(o->str);
 }
 
-struct name_s *
+struct name *
 name_new(char *name) {
-	struct name_s *o;
-	o = (struct name_s *)mem_alloc(sizeof(struct name_s));
+	struct name *o;
+	o = (struct name *)mem_alloc(sizeof(struct name));
 	name_init(o, name);
 	return o;
 }
 
-struct name_s *
-name_newarg(char *name, struct name_s *next) {
-	struct name_s *o;
+struct name *
+name_newarg(char *name, struct name *next) {
+	struct name *o;
 	o = name_new(name);
 	o->next = next;
 	return o;
 }
 
 void
-name_delete(struct name_s *o) {
+name_delete(struct name *o) {
 	name_done(o);
 	mem_free(o);
 }
 
 void
-name_dbg(struct name_s *o) {
+name_dbg(struct name *o) {
 	for (; o != NULL; o = o->next) {
 		str_dbg(o->str);
 		if (o->next) {
@@ -81,14 +81,14 @@ name_dbg(struct name_s *o) {
 }
 
 void
-name_insert(struct name_s **first, struct name_s *i) {
+name_insert(struct name **first, struct name *i) {
 	i->next = *first;
 	*first = i;
 }
 
 void
-name_add(struct name_s **first, struct name_s *v) {
-	struct name_s **i;
+name_add(struct name **first, struct name *v) {
+	struct name **i;
 	i = first;
 	while (*i != NULL) {
 		i = &(*i)->next;
@@ -98,8 +98,8 @@ name_add(struct name_s **first, struct name_s *v) {
 }
 
 void
-name_remove(struct name_s **first, struct name_s *v) {
-	struct name_s **i;
+name_remove(struct name **first, struct name *v) {
+	struct name **i;
 	i = first;
 	while (*i != NULL) {
 		if (*i == v) {
@@ -114,8 +114,8 @@ name_remove(struct name_s **first, struct name_s *v) {
 }
 
 void
-name_empty(struct name_s **first) {
-	struct name_s *i, *inext;
+name_empty(struct name **first) {
+	struct name *i, *inext;
 	for (i = *first; i != NULL; i = inext) {
 		inext = i->next;
 		name_delete(i);
@@ -125,7 +125,7 @@ name_empty(struct name_s **first) {
 
 
 void
-name_cat(struct name_s **dst, struct name_s **src) {
+name_cat(struct name **dst, struct name **src) {
 	while (*dst != NULL) {
 		dst = &(*dst)->next;
 	}
@@ -138,8 +138,8 @@ name_cat(struct name_s **dst, struct name_s **src) {
 
 
 unsigned
-name_eq(struct name_s **first1, struct name_s **first2) {
-	struct name_s *n1 = *first1, *n2 = *first2;
+name_eq(struct name **first1, struct name **first2) {
+	struct name *n1 = *first1, *n2 = *first2;
 	
 	for (;;) {
 		if (n1 == NULL && n2 == NULL) {
@@ -153,9 +153,9 @@ name_eq(struct name_s **first1, struct name_s **first2) {
 }
 
 
-struct name_s *
-name_lookup(struct name_s **first, char *str) {
-	struct name_s *i;
+struct name *
+name_lookup(struct name **first, char *str) {
+	struct name *i;
 	for (i = *first; i != NULL; i = i->next) {
 		if (i->str == NULL)
 			continue;

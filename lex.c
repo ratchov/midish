@@ -1,4 +1,4 @@
-/* $Id: lex.c,v 1.13 2006/02/17 13:18:05 alex Exp $ */
+/* $Id: lex.c,v 1.14 2006/04/03 16:38:28 alex Exp $ */
 /*
  * Copyright (c) 2003-2006 Alexandre Ratchov
  * All rights reserved.
@@ -50,7 +50,7 @@
 
 /* ----------------------------------------------------- tokdefs --- */
 
-struct tokdef_s lex_op[] = {
+struct tokdef lex_op[] = {
 	{ TOK_EQ, 		"=="		},
 	{ TOK_NEQ, 		"!="		},
 	{ TOK_GE, 		">="		},
@@ -87,7 +87,7 @@ struct tokdef_s lex_op[] = {
 	{ 0,			NULL		}
 };
 
-struct tokdef_s lex_kw[] = {
+struct tokdef lex_kw[] = {
 	{ TOK_IF,		"if" 		},
 	{ TOK_ELSE,		"else" 		},
 	{ TOK_PROC,		"proc"		},
@@ -100,7 +100,7 @@ struct tokdef_s lex_kw[] = {
 };
 
 unsigned
-lex_init(struct lex_s *o, char *filename) {
+lex_init(struct lex *o, char *filename) {
 	o->lookchar = -1;
 	o->in = textin_new(filename);
 	if (!o->in) {
@@ -110,12 +110,12 @@ lex_init(struct lex_s *o, char *filename) {
 }
 
 void
-lex_done(struct lex_s *o) {
+lex_done(struct lex *o) {
 	textin_delete(o->in);
 }
 
 unsigned
-lex_getchar(struct lex_s *o, int *c) {
+lex_getchar(struct lex *o, int *c) {
 	if (o->lookchar < 0) {
 		textin_getpos(o->in, &o->line, &o->col);
 		if (!textin_getchar(o->in, c)) {
@@ -129,7 +129,7 @@ lex_getchar(struct lex_s *o, int *c) {
 }
 
 void
-lex_ungetchar(struct lex_s *o, int c) {
+lex_ungetchar(struct lex *o, int c) {
 	if (o->lookchar >= 0) {
 		dbg_puts("lex_ungetchar: lookchar already set\n");
 		dbg_panic();
@@ -138,12 +138,12 @@ lex_ungetchar(struct lex_s *o, int c) {
 }
 
 void
-lex_err(struct lex_s *o, char *msg) {
+lex_err(struct lex *o, char *msg) {
 	cons_erruu(o->line + 1, o->col + 1, msg);
 }
 
 void
-lex_recover(struct lex_s *o, char *msg) {
+lex_recover(struct lex *o, char *msg) {
 	int c;
 	
 	lex_err(o, msg);
@@ -165,7 +165,7 @@ lex_recover(struct lex_s *o, char *msg) {
 	 */
 
 unsigned
-lex_str2long(struct lex_s *o, unsigned base) {
+lex_str2long(struct lex *o, unsigned base) {
 	char *p;
 	unsigned digit;
 	unsigned long hi, lo;
@@ -200,7 +200,7 @@ lex_str2long(struct lex_s *o, unsigned base) {
 }
 
 unsigned
-lex_scan(struct lex_s *o) {
+lex_scan(struct lex *o) {
 	int c, cn;
 	unsigned i, base;
 	
@@ -380,8 +380,8 @@ lex_scan(struct lex_s *o) {
 }
 
 void
-lex_dbg(struct lex_s *o) {
-	struct tokdef_s *t;
+lex_dbg(struct lex *o) {
+	struct tokdef *t;
 	
 	if (o->id == 0) {
 		dbg_puts("NULL");

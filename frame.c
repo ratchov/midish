@@ -1,4 +1,4 @@
-/* $Id: frame.c,v 1.8 2006/02/25 20:57:35 alex Exp $ */
+/* $Id: frame.c,v 1.9 2006/03/04 23:46:45 alex Exp $ */
 /*
  * Copyright (c) 2003-2006 Alexandre Ratchov
  * All rights reserved.
@@ -45,10 +45,10 @@
 	 * If the frame is incomplete, the returned frame is empty.
 	 */
 void
-track_frameget(struct track_s *o, struct seqptr_s *p, struct track_s *frame) {
-	struct seqptr_s op, fp;
-	struct seqev_s *se;
-	struct ev_s *state;
+track_frameget(struct track *o, struct seqptr *p, struct track *frame) {
+	struct seqptr op, fp;
+	struct seqev *se;
+	struct ev *state;
 	unsigned tics;
 	unsigned phase;
 	
@@ -129,9 +129,9 @@ track_frameget(struct track_s *o, struct seqptr_s *p, struct track_s *frame) {
 	 */
 
 void
-track_frameput(struct track_s *o, struct seqptr_s *p, struct track_s *frame) {
-	struct seqptr_s op, fp;
-	struct seqev_s *se;
+track_frameput(struct track *o, struct seqptr *p, struct track *frame) {
+	struct seqptr op, fp;
+	struct seqev *se;
 	unsigned tics;
 	
 	op = *p;
@@ -161,10 +161,10 @@ track_frameput(struct track_s *o, struct seqptr_s *p, struct track_s *frame) {
 	 */
 
 void
-track_frameuniq(struct track_s *o, struct seqptr_s *p, struct track_s *frame) {	
-	struct seqptr_s op, fp;
+track_frameuniq(struct track *o, struct seqptr *p, struct track *frame) {	
+	struct seqptr op, fp;
 	unsigned delta;
-	struct ev_s ev;	
+	struct ev ev;	
 	
 	track_frameget(o, p, frame);
 	op = *p;
@@ -192,9 +192,9 @@ track_frameuniq(struct track_s *o, struct seqptr_s *p, struct track_s *frame) {
 	 */
 
 void
-track_framedup(struct track_s *s, struct track_s *d) {
-	struct seqptr_s sp, dp;
-	struct ev_s ev;
+track_framedup(struct track *s, struct track *d) {
+	struct seqptr sp, dp;
+	struct ev ev;
 	unsigned tics;
 		
 	track_rew(s, &sp);
@@ -214,9 +214,9 @@ track_framedup(struct track_s *s, struct track_s *d) {
 	 * cut a portion of the given frame (events and blank space)
 	 */
 void
-track_framecut(struct track_s *o, unsigned start, unsigned len) {
-	struct seqptr_s op;
-	struct ev_s st1, st2;
+track_framecut(struct track *o, unsigned start, unsigned len) {
+	struct seqptr op;
+	struct ev st1, st2;
 	unsigned tic, phase;
 	
 	tic = 0;
@@ -313,9 +313,9 @@ track_framecut(struct track_s *o, unsigned start, unsigned len) {
 	 */
 
 void
-track_frameins(struct track_s *o, unsigned start, unsigned len) {
-	struct seqptr_s op;
-	struct ev_s st1, st2, ca;	
+track_frameins(struct track *o, unsigned start, unsigned len) {
+	struct seqptr op;
+	struct ev st1, st2, ca;	
 	unsigned tic, phase;
 	
 	tic = 0;
@@ -389,9 +389,9 @@ track_frameins(struct track_s *o, unsigned start, unsigned len) {
 	 */
 
 void
-track_frameblank(struct track_s *o, unsigned start, unsigned len) {
-	struct seqptr_s op;
-	struct ev_s st1, st2, ca;	
+track_frameblank(struct track *o, unsigned start, unsigned len) {
+	struct seqptr op;
+	struct ev st1, st2, ca;	
 	unsigned tic, phase;
 
 	tic = 0;
@@ -495,9 +495,9 @@ track_frameblank(struct track_s *o, unsigned start, unsigned len) {
 	 */
 
 void
-track_framecopy(struct track_s *o, unsigned start, unsigned len, struct track_s *frame) {
-	struct seqptr_s op, fp;
-	struct ev_s st1, st2, ca;	
+track_framecopy(struct track *o, unsigned start, unsigned len, struct track *frame) {
+	struct seqptr op, fp;
+	struct ev st1, st2, ca;	
 	unsigned tic, delta, phase;
 
 	tic = 0;
@@ -593,8 +593,8 @@ track_framecopy(struct track_s *o, unsigned start, unsigned len, struct track_s 
 	 */
 
 unsigned
-track_framematch(struct track_s *s, struct evspec_s *e) {
-	struct seqptr_s sp;
+track_framematch(struct track *s, struct evspec *e) {
+	struct seqptr sp;
 	track_rew(s, &sp);
 	for (;;) {
 		if (!track_seqevavail(s, &sp)) {
@@ -610,8 +610,8 @@ track_framematch(struct track_s *s, struct evspec_s *e) {
 
 
 void
-track_frametransp(struct track_s *o, int halftones) {
-	struct seqptr_s op;
+track_frametransp(struct track *o, int halftones) {
+	struct seqptr op;
 	
 	track_rew(o, &op);	
 	for (;;) {

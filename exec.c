@@ -1,4 +1,4 @@
-/* $Id: exec.c,v 1.9 2006/02/14 12:21:40 alex Exp $ */
+/* $Id: exec.c,v 1.10 2006/02/17 13:18:05 alex Exp $ */
 /*
  * Copyright (c) 2003-2006 Alexandre Ratchov
  * All rights reserved.
@@ -43,17 +43,17 @@
 
 /* ----------------------------------------------- variable lists --- */
 
-struct var_s *
-var_new(char *name, struct data_s *data) {
-	struct var_s *o;
-	o = (struct var_s *)mem_alloc(sizeof(struct var_s));
+struct var *
+var_new(char *name, struct data *data) {
+	struct var *o;
+	o = (struct var *)mem_alloc(sizeof(struct var));
 	name_init(&o->name, name);
 	o->data = data;
 	return o;
 }
 
 void
-var_delete(struct var_s *o) {
+var_delete(struct var *o) {
 	if (o->data != NULL) {
 		data_delete(o->data);
 	}
@@ -62,7 +62,7 @@ var_delete(struct var_s *o) {
 }
 
 void
-var_dbg(struct var_s *o) {
+var_dbg(struct var *o) {
 	str_dbg(o->name.str);
 	dbg_puts(" = ");
 	if (o->data != NULL)
@@ -71,30 +71,30 @@ var_dbg(struct var_s *o) {
 		dbg_puts("<null>");
 }
 
-struct var_s *
-var_lookup(struct var_s **first, char *name) {
-	return (struct var_s *)name_lookup((struct name_s **)first, name);
+struct var *
+var_lookup(struct var **first, char *name) {
+	return (struct var *)name_lookup((struct name **)first, name);
 }
 
 void
-var_insert(struct var_s **first, struct var_s *i) {
-	name_insert((struct name_s **)first, (struct name_s *)i);
+var_insert(struct var **first, struct var *i) {
+	name_insert((struct name **)first, (struct name *)i);
 }
 
 void
-var_empty(struct var_s **first) {
-	struct var_s *i, *inext;
+var_empty(struct var **first) {
+	struct var *i, *inext;
 	for (i = *first; i != NULL; i = inext) {
-		inext = (struct var_s *)i->name.next;
+		inext = (struct var *)i->name.next;
 		var_delete(i);
 	}
 	*first = NULL;
 }
 
-struct proc_s *
+struct proc *
 proc_new(char *name) {
-	struct proc_s *o;
-	o = (struct proc_s *)mem_alloc(sizeof(struct proc_s));
+	struct proc *o;
+	o = (struct proc *)mem_alloc(sizeof(struct proc));
 	name_init(&o->name, name);
 	o->args = NULL;
 	o->code = NULL;
@@ -102,31 +102,31 @@ proc_new(char *name) {
 }
 
 void
-proc_delete(struct proc_s *o) {
+proc_delete(struct proc *o) {
 	node_delete(o->code);
 	name_empty(&o->args);
 	name_done(&o->name);
 	mem_free(o);
 }
 
-struct proc_s *
-proc_lookup(struct proc_s **first, char *name) {
-	return (struct proc_s *)name_lookup((struct name_s **)first, name);
+struct proc *
+proc_lookup(struct proc **first, char *name) {
+	return (struct proc *)name_lookup((struct name **)first, name);
 }
 
 void
-proc_empty(struct proc_s **first) {
-	struct proc_s *i, *inext;
+proc_empty(struct proc **first) {
+	struct proc *i, *inext;
 	for (i = *first; i != NULL; i = inext) {
-		inext = (struct proc_s *)i->name.next;
+		inext = (struct proc *)i->name.next;
 		proc_delete(i);
 	}
 	*first = NULL;
 }
 
 void
-proc_dbg(struct proc_s *o) {
-	struct name_s *i;
+proc_dbg(struct proc *o) {
+	struct name *i;
 	str_dbg(o->name.str);
 	dbg_puts("(");
 	if (o->args) {
@@ -145,10 +145,10 @@ proc_dbg(struct proc_s *o) {
 }
 		
 
-struct exec_s *
+struct exec *
 exec_new(void) {
-	struct exec_s *o;
-	o = (struct exec_s *)mem_alloc(sizeof(struct exec_s));
+	struct exec *o;
+	o = (struct exec *)mem_alloc(sizeof(struct exec));
 	o->procs = NULL;
 	o->globals = NULL;
 	o->locals = &o->globals;
@@ -159,7 +159,7 @@ exec_new(void) {
 
 
 void
-exec_delete(struct exec_s *o) {
+exec_delete(struct exec *o) {
 	if (o->depth != 0) {
 		dbg_puts("exec_done: depth != 0\n");
 		dbg_panic();
@@ -170,29 +170,29 @@ exec_delete(struct exec_s *o) {
 }
 
 void
-exec_err(struct exec_s *o, char *mesg) {
+exec_err(struct exec *o, char *mesg) {
 	cons_errs(o->procname, mesg);
 }
 
 void
-exec_errs(struct exec_s *o, char *s, char *mesg) {
+exec_errs(struct exec *o, char *s, char *mesg) {
 	cons_errss(o->procname, s, mesg);
 }
 
-struct proc_s *
-exec_proclookup(struct exec_s *o, char *name) {
-	return (struct proc_s *)name_lookup((struct name_s **)&o->procs, name);
+struct proc *
+exec_proclookup(struct exec *o, char *name) {
+	return (struct proc *)name_lookup((struct name **)&o->procs, name);
 }
 
-struct var_s *
-exec_varlookup(struct exec_s *o, char *name) {
-	struct var_s *var;
-	var = (struct var_s *)name_lookup((struct name_s **)o->locals, name);
+struct var *
+exec_varlookup(struct exec *o, char *name) {
+	struct var *var;
+	var = (struct var *)name_lookup((struct name **)o->locals, name);
 	if (var != NULL) {
 		return var;
 	}
 	if (o->locals != &o->globals) {
-		var = (struct var_s *)name_lookup((struct name_s **)&o->globals, name);
+		var = (struct var *)name_lookup((struct name **)&o->globals, name);
 		if (var != NULL) {
 			return var;
 		}
@@ -201,27 +201,27 @@ exec_varlookup(struct exec_s *o, char *name) {
 }
 
 void
-exec_newbuiltin(struct exec_s *o, char *name,
-    unsigned func(struct exec_s *, struct data_s **), struct name_s *args) {
-	struct proc_s *newp;
+exec_newbuiltin(struct exec *o, char *name,
+    unsigned func(struct exec *, struct data **), struct name *args) {
+	struct proc *newp;
 	
 	newp = proc_new(name);
 	newp->args = args;
 	newp->code = node_new(&node_vmt_builtin, data_newuser((void *)func));
-	name_add((struct name_s **)&o->procs, (struct name_s *)newp);
+	name_add((struct name **)&o->procs, (struct name *)newp);
 }
 
 void
-exec_newvar(struct exec_s *o, char *name, struct data_s *val) {
-	name_insert((struct name_s **)&o->globals,
-		    (struct name_s *)var_new(name, val));
+exec_newvar(struct exec *o, char *name, struct data *val) {
+	name_insert((struct name **)&o->globals,
+		    (struct name *)var_new(name, val));
 }
 
 void
-exec_dumpprocs(struct exec_s *o) {
-	struct proc_s *p;
-	struct name_s *n;
-	for (p = o->procs; p != NULL; p = (struct proc_s *)p->name.next) {
+exec_dumpprocs(struct exec *o) {
+	struct proc *p;
+	struct name *n;
+	for (p = o->procs; p != NULL; p = (struct proc *)p->name.next) {
 		dbg_puts(p->name.str);
 		dbg_puts("(");
 		for (n = p->args; n != NULL; n = n->next) {
@@ -236,9 +236,9 @@ exec_dumpprocs(struct exec_s *o) {
 
 
 void
-exec_dumpvars(struct exec_s *o) {
-	struct var_s *v;
-	for (v = o->globals; v != NULL; v = (struct var_s *)v->name.next) {
+exec_dumpvars(struct exec *o) {
+	struct var *v;
+	for (v = o->globals; v != NULL; v = (struct var *)v->name.next) {
 		dbg_puts(v->name.str);
 		dbg_puts(" = ");
 		data_dbg(v->data);
@@ -248,8 +248,8 @@ exec_dumpvars(struct exec_s *o) {
 
 
 unsigned 
-exec_lookupname(struct exec_s *o, char *name, char **val) {
-	struct var_s *var;
+exec_lookupname(struct exec *o, char *name, char **val) {
+	struct var *var;
 	var = exec_varlookup(o, name);
 	if (var == NULL || var->data->type != DATA_REF) {
 		cons_errss(o->procname, name, "no such reference");
@@ -261,8 +261,8 @@ exec_lookupname(struct exec_s *o, char *name, char **val) {
 
 
 unsigned
-exec_lookupstring(struct exec_s *o, char *name, char **val) {
-	struct var_s *var;
+exec_lookupstring(struct exec *o, char *name, char **val) {
+	struct var *var;
 	var = exec_varlookup(o, name);
 	if (var == NULL || var->data->type != DATA_STRING) {
 		cons_errss(o->procname, name, "no such string");
@@ -274,8 +274,8 @@ exec_lookupstring(struct exec_s *o, char *name, char **val) {
 
 
 unsigned
-exec_lookuplong(struct exec_s *o, char *name, long *val) {
-	struct var_s *var;
+exec_lookuplong(struct exec *o, char *name, long *val) {
+	struct var *var;
 	var = exec_varlookup(o, name);
 	if (var == NULL || var->data->type != DATA_LONG) {
 		cons_errss(o->procname, name, "no such long");
@@ -286,8 +286,8 @@ exec_lookuplong(struct exec_s *o, char *name, long *val) {
 }
 
 unsigned
-exec_lookuplist(struct exec_s *o, char *name, struct data_s **val) {
-	struct var_s *var;
+exec_lookuplist(struct exec *o, char *name, struct data **val) {
+	struct var *var;
 	var = exec_varlookup(o, name);
 	if (var == NULL || var->data->type != DATA_LIST) {
 		cons_errss(o->procname, name, "no such list");
@@ -299,8 +299,8 @@ exec_lookuplist(struct exec_s *o, char *name, struct data_s **val) {
 
 
 unsigned
-exec_lookupbool(struct exec_s *o, char *name, long *val) {
-	struct var_s *var;
+exec_lookupbool(struct exec *o, char *name, long *val) {
+	struct var *var;
 	unsigned res;
 	
 	var = exec_varlookup(o, name);

@@ -1,4 +1,4 @@
-/* $Id: user_trk.c,v 1.14 2006/02/25 20:57:36 alex Exp $ */
+/* $Id: user_trk.c,v 1.15 2006/03/04 23:46:45 alex Exp $ */
 /*
  * Copyright (c) 2003-2006 Alexandre Ratchov
  * All rights reserved.
@@ -53,12 +53,12 @@
 
 
 unsigned
-user_func_tracklist(struct exec_s *o, struct data_s **r) {
-	struct data_s *d, *n;
-	struct songtrk_s *i;
+user_func_tracklist(struct exec *o, struct data **r) {
+	struct data *d, *n;
+	struct songtrk *i;
 
 	d = data_newlist(NULL);
-	for (i = user_song->trklist; i != NULL; i = (struct songtrk_s *)i->name.next) {
+	for (i = user_song->trklist; i != NULL; i = (struct songtrk *)i->name.next) {
 		n = data_newref(i->name.str);
 		data_listadd(d, n);
 	}
@@ -67,9 +67,9 @@ user_func_tracklist(struct exec_s *o, struct data_s **r) {
 }
 
 unsigned
-user_func_tracknew(struct exec_s *o, struct data_s **r) {
+user_func_tracknew(struct exec *o, struct data **r) {
 	char *trkname;
-	struct songtrk_s *t;
+	struct songtrk *t;
 	
 	if (!exec_lookupname(o, "trackname", &trkname)) {
 		return 0;
@@ -86,8 +86,8 @@ user_func_tracknew(struct exec_s *o, struct data_s **r) {
 
 
 unsigned
-user_func_trackdelete(struct exec_s *o, struct data_s **r) {
-	struct songtrk_s *t;
+user_func_trackdelete(struct exec *o, struct data **r) {
+	struct songtrk *t;
 	if (!exec_lookuptrack(o, "trackname", &t)) {
 		return 0;
 	}
@@ -100,8 +100,8 @@ user_func_trackdelete(struct exec_s *o, struct data_s **r) {
 
 
 unsigned
-user_func_trackrename(struct exec_s *o, struct data_s **r) {
-	struct songtrk_s *t;
+user_func_trackrename(struct exec *o, struct data **r) {
+	struct songtrk *t;
 	char *name;
 	
 	if (!exec_lookuptrack(o, "trackname", &t) ||
@@ -119,9 +119,9 @@ user_func_trackrename(struct exec_s *o, struct data_s **r) {
 
 
 unsigned
-user_func_trackexists(struct exec_s *o, struct data_s **r) {
+user_func_trackexists(struct exec *o, struct data **r) {
 	char *name;
-	struct songtrk_s *t;
+	struct songtrk *t;
 	
 	if (!exec_lookupname(o, "trackname", &name)) {
 		return 0;
@@ -133,11 +133,11 @@ user_func_trackexists(struct exec_s *o, struct data_s **r) {
 
 
 unsigned
-user_func_trackaddev(struct exec_s *o, struct data_s **r) {
+user_func_trackaddev(struct exec *o, struct data **r) {
 	long measure, beat, tic;
-	struct ev_s ev;
-	struct seqptr_s tp;
-	struct songtrk_s *t;
+	struct ev ev;
+	struct seqptr tp;
+	struct songtrk *t;
 	unsigned pos, bpm, tpb;
 	unsigned long dummy;
 
@@ -169,10 +169,10 @@ user_func_trackaddev(struct exec_s *o, struct data_s **r) {
 
 
 unsigned
-user_func_tracksetcurfilt(struct exec_s *o, struct data_s **r) {
-	struct songtrk_s *t;
-	struct songfilt_s *f;
-	struct var_s *arg;
+user_func_tracksetcurfilt(struct exec *o, struct data **r) {
+	struct songtrk *t;
+	struct songfilt *f;
+	struct var *arg;
 	
 	if (!exec_lookuptrack(o, "trackname", &t)) {
 		return 0;
@@ -198,8 +198,8 @@ user_func_tracksetcurfilt(struct exec_s *o, struct data_s **r) {
 }
 
 unsigned
-user_func_trackgetcurfilt(struct exec_s *o, struct data_s **r) {
-	struct songtrk_s *t;
+user_func_trackgetcurfilt(struct exec *o, struct data **r) {
+	struct songtrk *t;
 	
 	if (!exec_lookuptrack(o, "trackname", &t)) {
 		return 0;
@@ -214,9 +214,9 @@ user_func_trackgetcurfilt(struct exec_s *o, struct data_s **r) {
 
 
 unsigned
-user_func_trackcheck(struct exec_s *o, struct data_s **r) {
+user_func_trackcheck(struct exec *o, struct data **r) {
 	char *trkname;
-	struct songtrk_s *t;
+	struct songtrk *t;
 	
 	if (!exec_lookupname(o, "trackname", &trkname)) {
 		return 0;
@@ -232,8 +232,8 @@ user_func_trackcheck(struct exec_s *o, struct data_s **r) {
 
 
 unsigned
-user_func_trackcut(struct exec_s *o, struct data_s **r) {
-	struct songtrk_s *t;
+user_func_trackcut(struct exec *o, struct data **r) {
+	struct songtrk *t;
 	long from, amount, quant;
 	unsigned tic, len;
 	
@@ -261,9 +261,9 @@ user_func_trackcut(struct exec_s *o, struct data_s **r) {
 
 
 unsigned
-user_func_trackblank(struct exec_s *o, struct data_s **r) {
-	struct songtrk_s *t;
-	struct evspec_s es;
+user_func_trackblank(struct exec *o, struct data **r) {
+	struct songtrk *t;
+	struct evspec es;
 	long from, amount, quant;
 	unsigned tic, len;
 	
@@ -292,11 +292,11 @@ user_func_trackblank(struct exec_s *o, struct data_s **r) {
 
 
 unsigned
-user_func_trackcopy(struct exec_s *o, struct data_s **r) {
-	struct songtrk_s *t, *t2;
-	struct track_s copy;
-	struct seqptr_s tp2;
-	struct evspec_s es;
+user_func_trackcopy(struct exec *o, struct data **r) {
+	struct songtrk *t, *t2;
+	struct track copy;
+	struct seqptr tp2;
+	struct evspec es;
 	long from, where, amount, quant;
 	unsigned tic, tic2, len;
 	
@@ -338,9 +338,9 @@ user_func_trackcopy(struct exec_s *o, struct data_s **r) {
 
 
 unsigned
-user_func_trackinsert(struct exec_s *o, struct data_s **r) {
+user_func_trackinsert(struct exec *o, struct data **r) {
 	char *trkname;
-	struct songtrk_s *t;
+	struct songtrk *t;
 	long from, amount, quant;
 	unsigned tic, len;
 	
@@ -374,10 +374,10 @@ user_func_trackinsert(struct exec_s *o, struct data_s **r) {
 
 
 unsigned
-user_func_trackquant(struct exec_s *o, struct data_s **r) {
+user_func_trackquant(struct exec *o, struct data **r) {
 	char *trkname;
-	struct songtrk_s *t;
-	struct seqptr_s tp;
+	struct songtrk *t;
+	struct seqptr tp;
 	long from, amount;
 	unsigned tic, len, first;
 	long quant, rate;
@@ -422,12 +422,12 @@ user_func_trackquant(struct exec_s *o, struct data_s **r) {
 }
 
 unsigned
-user_func_tracktransp(struct exec_s *o, struct data_s **r) {
-	struct songtrk_s *t;
-	struct seqptr_s tp;
+user_func_tracktransp(struct exec *o, struct data **r) {
+	struct songtrk *t;
+	struct seqptr tp;
 	long from, amount, quant, halftones;
 	unsigned tic, len;
-	struct evspec_s es;
+	struct evspec es;
 	
 	if (!exec_lookuptrack(o, "trackname", &t) ||
 	    !exec_lookuplong(o, "from", &from) ||
@@ -459,8 +459,8 @@ user_func_tracktransp(struct exec_s *o, struct data_s **r) {
 
 
 unsigned
-user_func_tracksetmute(struct exec_s *o, struct data_s **r) {
-	struct songtrk_s *t;
+user_func_tracksetmute(struct exec *o, struct data **r) {
+	struct songtrk *t;
 	long flag;
 	
 	if (!exec_lookuptrack(o, "trackname", &t) ||
@@ -472,8 +472,8 @@ user_func_tracksetmute(struct exec_s *o, struct data_s **r) {
 }
 
 unsigned
-user_func_trackgetmute(struct exec_s *o, struct data_s **r) {
-	struct songtrk_s *t;
+user_func_trackgetmute(struct exec *o, struct data **r) {
+	struct songtrk *t;
 	
 	if (!exec_lookuptrack(o, "trackname", &t)) {
 		return 0;
@@ -483,10 +483,10 @@ user_func_trackgetmute(struct exec_s *o, struct data_s **r) {
 }
 
 unsigned
-user_func_trackchanlist(struct exec_s *o, struct data_s **r) {
-	struct songtrk_s *t;
-	struct songchan_s *c;
-	struct data_s *num;
+user_func_trackchanlist(struct exec *o, struct data **r) {
+	struct songtrk *t;
+	struct songchan *c;
+	struct data *num;
 	char map[DEFAULT_MAXNCHANS];
 	unsigned i;
 	
@@ -513,10 +513,10 @@ user_func_trackchanlist(struct exec_s *o, struct data_s **r) {
 
 
 unsigned
-user_func_trackinfo(struct exec_s *o, struct data_s **r) {
-	struct songtrk_s *t;
-	struct seqptr_s tp;
-	struct evspec_s es;
+user_func_trackinfo(struct exec *o, struct data **r) {
+	struct songtrk *t;
+	struct seqptr tp;
+	struct evspec es;
 	long from, quant;
 	unsigned start, len, tic, count;
 

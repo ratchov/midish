@@ -1,4 +1,4 @@
-/* $Id: textio.h,v 1.8 2006/02/14 12:21:41 alex Exp $ */
+/* $Id: textio.h,v 1.9 2006/02/17 13:18:06 alex Exp $ */
 /*
  * Copyright (c) 2003-2006 Alexandre Ratchov
  * All rights reserved.
@@ -34,30 +34,30 @@
 
 #define CHAR_EOF (~0)
 
-struct textin_s;
-struct textout_s;
+struct textin;
+struct textout;
 
-struct textin_s *textin_new(char *filename);
-void		 textin_delete(struct textin_s *o);
-unsigned	 textin_getchar(struct textin_s *o, int *c);
-void		 textin_getpos(struct textin_s *o, unsigned *line, unsigned *col);
-void		 textin_setprompt(struct textin_s *o, char *prompt);
+struct textin *textin_new(char *filename);
+void		 textin_delete(struct textin *o);
+unsigned	 textin_getchar(struct textin *o, int *c);
+void		 textin_getpos(struct textin *o, unsigned *line, unsigned *col);
+void		 textin_setprompt(struct textin *o, char *prompt);
 
-struct textout_s *textout_new(char *filename);
-void		  textout_delete(struct textout_s *o);
+struct textout *textout_new(char *filename);
+void		  textout_delete(struct textout *o);
 
-void		  textout_indent(struct textout_s *o);
-void		  textout_shiftleft(struct textout_s *o);
-void		  textout_shiftright(struct textout_s *o);
+void		  textout_indent(struct textout *o);
+void		  textout_shiftleft(struct textout *o);
+void		  textout_shiftright(struct textout *o);
 
-void		  textout_putstr(struct textout_s *o, char *str);
-void		  textout_putlong(struct textout_s *o, unsigned long val);
-void		  textout_putbyte(struct textout_s *o, unsigned val);
+void		  textout_putstr(struct textout *o, char *str);
+void		  textout_putlong(struct textout *o, unsigned long val);
+void		  textout_putbyte(struct textout *o, unsigned val);
 
 /* ------------------------------------------------- stdin/stdout --- */
 
-extern struct textout_s *tout;
-extern struct textin_s *tin;
+extern struct textout *tout;
+extern struct textin *tin;
 
 void textio_init(void);
 void textio_done(void);

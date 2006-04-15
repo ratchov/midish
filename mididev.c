@@ -1,4 +1,4 @@
-/* $Id: mididev.c,v 1.12 2006/02/14 12:21:40 alex Exp $ */
+/* $Id: mididev.c,v 1.13 2006/02/17 13:18:05 alex Exp $ */
 /*
  * Copyright (c) 2003-2006 Alexandre Ratchov
  * All rights reserved.
@@ -30,7 +30,7 @@
  */
 
 /* 
- * mididev_s is a generic midi device structure
+ * mididev is a generic midi device structure
  * it doesn't containt any device-specific fields
  * and shoud be extended by other structures
  *
@@ -53,7 +53,7 @@
 unsigned mididev_ticrate;	/* global dics per unit */
 
 void
-mididev_init(struct mididev_s *o) {
+mididev_init(struct mididev *o) {
 	/* 
 	 * by default we don't transmit realtime information 
 	 * (midi_tic, midi_start, midi_stop etc...)
@@ -64,13 +64,13 @@ mididev_init(struct mididev_s *o) {
 }
 
 void
-mididev_done(struct mididev_s *o) {
+mididev_done(struct mididev *o) {
 }
 
 /* -------------------------------------------- device list stuff --- */
 
-struct mididev_s *mididev_list, *mididev_master;
-struct mididev_s *mididev_byunit[DEFAULT_MAXNDEVS];
+struct mididev *mididev_list, *mididev_master;
+struct mididev *mididev_byunit[DEFAULT_MAXNDEVS];
 
 void
 mididev_listinit(void) {
@@ -85,7 +85,7 @@ mididev_listinit(void) {
 void
 mididev_listdone(void) {
 	unsigned i;
-	struct mididev_s *dev;
+	struct mididev *dev;
 	
 	for (i = 0; i < DEFAULT_MAXNDEVS; i++) {
 		dev = mididev_byunit[i];
@@ -100,7 +100,7 @@ mididev_listdone(void) {
 
 unsigned
 mididev_attach(unsigned unit, char *path) {
-	struct mididev_s *dev;
+	struct mididev *dev;
 
 	if (unit >= DEFAULT_MAXNDEVS) {
 		cons_err("given unit is too large");
@@ -110,7 +110,7 @@ mididev_attach(unsigned unit, char *path) {
 		cons_err("device already exists");
 		return 0;
 	}
-	dev = (struct mididev_s *)rmidi_new();
+	dev = (struct mididev *)rmidi_new();
 	RMIDI(dev)->mdep.path = str_new(path);
 	dev->next = mididev_list;
 	mididev_list = dev;
@@ -121,7 +121,7 @@ mididev_attach(unsigned unit, char *path) {
 
 unsigned
 mididev_detach(unsigned unit) {
-	struct mididev_s **i, *dev;
+	struct mididev **i, *dev;
 	
 	if (unit >= DEFAULT_MAXNDEVS || mididev_byunit[unit] == NULL) {
 		cons_err("no such device");

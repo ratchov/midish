@@ -1,4 +1,4 @@
-/* $Id: mdep.c,v 1.32 2006/04/03 16:38:28 alex Exp $ */
+/* $Id: mdep.c,v 1.33 2006/04/07 17:10:17 alex Exp $ */
 /*
  * Copyright (c) 2003-2006 Alexandre Ratchov
  * All rights reserved.
@@ -96,7 +96,7 @@ cons_mdep_done(void) {
 
 void
 mux_mdep_init(void) {
-	struct mididev_s *i;
+	struct mididev *i;
 	for (i = mididev_list; i != NULL; i = i->next) {
 		RMIDI(i)->mdep.fd = open(RMIDI(i)->mdep.path, O_RDWR);
 		if (RMIDI(i)->mdep.fd < 0) {
@@ -111,7 +111,7 @@ mux_mdep_init(void) {
 
 void
 mux_mdep_done(void) {
-	struct mididev_s *i;
+	struct mididev *i;
 	for (i = mididev_list; i != NULL; i = i->next) {
 		if (RMIDI(i)->mdep.fd < 0) {
 			continue;
@@ -132,7 +132,7 @@ mux_mdep_run(void) {
 	int res;
 	struct timeval tv, tv_last;
 	struct pollfd fds[DEFAULT_MAXNDEVS];
-	struct mididev_s *dev, *index2dev[DEFAULT_MAXNDEVS];
+	struct mididev *dev, *index2dev[DEFAULT_MAXNDEVS];
 	static unsigned char midibuf[MIDI_BUFSIZE];
 	long delta_usec;
 	unsigned i;
@@ -216,17 +216,17 @@ mux_sleep(unsigned millisecs) {
 }
 
 void
-rmidi_mdep_init(struct rmidi_s *o) {
+rmidi_mdep_init(struct rmidi *o) {
 }
 
 
 void
-rmidi_mdep_done(struct rmidi_s *o) {
+rmidi_mdep_done(struct rmidi *o) {
 }
 
 
 void
-rmidi_flush(struct rmidi_s *o) {
+rmidi_flush(struct rmidi *o) {
 	int res;
 	unsigned start, stop;
 	if (!RMIDI(o)->mdep.dying) {
@@ -246,7 +246,7 @@ rmidi_flush(struct rmidi_s *o) {
 }
 
 unsigned
-exec_runrcfile(struct exec_s *o) {
+exec_runrcfile(struct exec *o) {
 	char *home;
 	char name[PATH_MAX];
 	struct stat st;

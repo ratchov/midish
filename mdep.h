@@ -1,4 +1,4 @@
-/* $Id: mdep.h,v 1.5 2006/02/14 12:21:40 alex Exp $ */
+/* $Id: mdep.h,v 1.6 2006/02/17 13:18:05 alex Exp $ */
 /*
  * Copyright (c) 2003-2006 Alexandre Ratchov
  * All rights reserved.
@@ -32,7 +32,7 @@
 #ifndef MIDISH_MDEP_H
 #define MIDISH_MDEP_H
 
-struct rmidi_mdep_s {
+struct rmidi_mdep {
 	char *path;
 	int fd;
 	unsigned dying;

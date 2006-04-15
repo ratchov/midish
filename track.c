@@ -1,4 +1,4 @@
-/* $Id: track.c,v 1.10 2006/02/17 13:18:06 alex Exp $ */
+/* $Id: track.c,v 1.11 2006/02/25 20:57:36 alex Exp $ */
 /*
  * Copyright (c) 2003-2006 Alexandre Ratchov
  * All rights reserved.
@@ -30,9 +30,9 @@
  */
 
 /*
- * a track (struct track_s *o) is a singly linked list of
- * events. Each event (struct seqev_s) is made by 
- *	- a midi event (struct ev_s)
+ * a track (struct track *o) is a singly linked list of
+ * events. Each event (struct seqev) is made by 
+ *	- a midi event (struct ev)
  *	- the number of tics before the event is to be played
  *
  * Since a track can contain an amount of blank space
@@ -40,7 +40,7 @@
  * in the list.
  *
  *	- each clock tic marks the begining of a delta
- *	- each event (struct ev_s) is played after delta tics
+ *	- each event (struct ev) is played after delta tics
  *
  * a seqptr represents the position of a cursor on the track
  * In play mode, the field 'o->pos' points to a pointer to the event
@@ -73,11 +73,11 @@
 #include "pool.h"
 #include "track.h"
 
-struct pool_s seqev_pool;
+struct pool seqev_pool;
 
 void
 seqev_pool_init(unsigned size) {
-	pool_init(&seqev_pool, "seqev", sizeof(struct seqev_s), size);
+	pool_init(&seqev_pool, "seqev", sizeof(struct seqev), size);
 }
 
 void
@@ -86,31 +86,31 @@ seqev_pool_done(void) {
 }
 
 
-struct seqev_s *
+struct seqev *
 seqev_new(void) {
-	return (struct seqev_s *)pool_new(&seqev_pool);
+	return (struct seqev *)pool_new(&seqev_pool);
 }
 
 void
-seqev_del(struct seqev_s *se) {
+seqev_del(struct seqev *se) {
 	pool_del(&seqev_pool, se);
 }
 
 void
-seqev_dump(struct seqev_s *i) {
+seqev_dump(struct seqev *i) {
 	dbg_putu(i->delta);
 	dbg_puts("\t");
 	ev_dbg(&i->ev);
 }
 
 	/*
-	 * allocates and initialises a track_s structure
+	 * allocates and initialises a track structure
 	 */
 
-struct track_s *
+struct track *
 track_new(void) {
-	struct track_s *o;
-	o = (struct track_s *)mem_alloc(sizeof(struct track_s));
+	struct track *o;
+	o = (struct track *)mem_alloc(sizeof(struct track));
 	track_init(o);
 	return o;	
 }
@@ -120,7 +120,7 @@ track_new(void) {
 	 */
 	 
 void
-track_delete(struct track_s *o) {
+track_delete(struct track *o) {
 	track_done(o);
 	mem_free(o);
 }
@@ -130,7 +130,7 @@ track_delete(struct track_s *o) {
 	 */
 
 void
-track_init(struct track_s *o) {
+track_init(struct track *o) {
 	o->eot.next = NULL;
 	o->eot.delta = 0;
 	o->first = &o->eot;
@@ -142,8 +142,8 @@ track_init(struct track_s *o) {
 	 */
 
 void
-track_done(struct track_s *o) {
-	struct seqev_s *i, *inext;
+track_done(struct track *o) {
+	struct seqev *i, *inext;
 	
 	for (i = o->first;  i != &o->eot;  i = inext) {
 		inext = i->next;
@@ -156,8 +156,8 @@ track_done(struct track_s *o) {
 	 */
 
 void
-track_dump(struct track_s *o) {
-	struct seqev_s *i;
+track_dump(struct track *o) {
+	struct seqev *i;
 	unsigned tic = 0, num = 0;
 	
 	for (i = o->first; i != NULL; i = i->next) {
@@ -179,9 +179,9 @@ track_dump(struct track_s *o) {
 	 */
 	
 unsigned
-track_numev(struct track_s *o) {
+track_numev(struct track *o) {
 	unsigned n;
-	struct seqev_s *i;
+	struct seqev *i;
 	
 	n = 0;
 	for(i = o->first; i != &o->eot; i = i->next) n++;
@@ -196,9 +196,9 @@ track_numev(struct track_s *o) {
 	 */
 	
 unsigned
-track_numtic(struct track_s *o) {
+track_numtic(struct track *o) {
 	unsigned ntics;
-	struct seqev_s *i;
+	struct seqev *i;
 	ntics = 0;
 	for(i = o->first; i != NULL; i = i->next) 
 		ntics += i->delta;
@@ -214,20 +214,20 @@ track_numtic(struct track_s *o) {
 	 */
 	
 unsigned
-track_seqevavail(struct track_s *o, struct seqptr_s *p) {
+track_seqevavail(struct track *o, struct seqptr *p) {
 	return ((*p->pos) != &o->eot);
 }
 
 	/*
 	 * inserts an event (stored in an already allocated
-	 * seqev_s structure). The delta field of the
+	 * seqev structure). The delta field of the
 	 * structure will be stored as blank time
 	 * before the event. Thus, in normal usage 
 	 * se->delta will be nearly always zero.
 	 */
 
 void
-track_seqevins(struct track_s *o, struct seqptr_s *p, struct seqev_s *se) {
+track_seqevins(struct track *o, struct seqptr *p, struct seqev *se) {
 #ifdef TRACK_DEBUG
 	if (p->delta > (*p->pos)->delta) {
 		dbg_puts("track_seqevput: sync. error\n");
@@ -248,9 +248,9 @@ track_seqevins(struct track_s *o, struct seqptr_s *p, struct seqev_s *se) {
 	 * to the removed blank space.
 	 */
 
-struct seqev_s *
-track_seqevrm(struct track_s *o, struct seqptr_s *p) {
-	struct seqev_s *se;
+struct seqev *
+track_seqevrm(struct track *o, struct seqptr *p) {
+	struct seqev *se;
 #ifdef TRACK_DEBUG
 	if ((*p->pos) == &o->eot) {
 		dbg_puts("track_seqevrm: unexpected end of track\n");
@@ -276,7 +276,7 @@ track_seqevrm(struct track_s *o, struct seqptr_s *p) {
 	 */
 
 unsigned
-track_seqevnext(struct track_s *o, struct seqptr_s *p) {
+track_seqevnext(struct track *o, struct seqptr *p) {
 	unsigned tics;
 #ifdef TRACK_DEBUG
 	if ((*p->pos) == &o->eot) {
@@ -304,7 +304,7 @@ track_seqevnext(struct track_s *o, struct seqptr_s *p) {
 	 */
 	
 unsigned
-track_evavail(struct track_s *o, struct seqptr_s *p) {
+track_evavail(struct track *o, struct seqptr *p) {
 	return ((*p->pos) != &o->eot && p->delta == (*p->pos)->delta);
 }
 
@@ -315,7 +315,7 @@ track_evavail(struct track_s *o, struct seqptr_s *p) {
 	 */
 
 void
-track_evnext(struct track_s *o, struct seqptr_s *p) {
+track_evnext(struct track *o, struct seqptr *p) {
 #ifdef TRACK_DEBUG
 	if ((*p->pos) == &o->eot) {
 		dbg_puts("track_evnext: unexpected end of track\n");
@@ -337,7 +337,7 @@ track_evnext(struct track_s *o, struct seqptr_s *p) {
 	 */
 	
 void
-track_evlast(struct track_s *o, struct seqptr_s *p) {
+track_evlast(struct track *o, struct seqptr *p) {
 #ifdef TRACK_DEBUG
 	if (p->delta > (*p->pos)->delta) {
 		dbg_puts("track_evlast: sync. error\n");
@@ -358,7 +358,7 @@ track_evlast(struct track_s *o, struct seqptr_s *p) {
 	 */
 
 void
-track_evget(struct track_s *o, struct seqptr_s *p, struct ev_s *ev) {
+track_evget(struct track *o, struct seqptr *p, struct ev *ev) {
 #ifdef TRACK_DEBUG
 	if ((*p->pos) == &o->eot) {
 		dbg_puts("track_evget: unexpected end of track\n");
@@ -381,8 +381,8 @@ track_evget(struct track_s *o, struct seqptr_s *p, struct ev_s *ev) {
 	 */
 
 void
-track_evput(struct track_s *o, struct seqptr_s *p, struct ev_s *ev) {
-	struct seqev_s *se;
+track_evput(struct track *o, struct seqptr *p, struct ev *ev) {
+	struct seqev *se;
 #ifdef TRACK_DEBUG
 	if (p->delta > (*p->pos)->delta) {
 		dbg_puts("track_evput: sync. error\n");
@@ -406,8 +406,8 @@ track_evput(struct track_s *o, struct seqptr_s *p, struct ev_s *ev) {
 	 */
 
 void
-track_evdel(struct track_s *o, struct seqptr_s *p) {
-	struct seqev_s *next;
+track_evdel(struct track *o, struct seqptr *p) {
+	struct seqev *next;
 #ifdef TRACK_DEBUG
 	if ((*p->pos) == &o->eot) {
 		dbg_puts("track_evdel: unexpected end of track\n");
@@ -437,8 +437,8 @@ track_evdel(struct track_s *o, struct seqptr_s *p) {
 
 
 void
-track_evinsat(struct track_s *o, struct seqptr_s *p, struct ev_s *ev, unsigned ntics) {
-	struct seqev_s **pos = p->pos, *targ;
+track_evinsat(struct track *o, struct seqptr *p, struct ev *ev, unsigned ntics) {
+	struct seqev **pos = p->pos, *targ;
 	unsigned delta = p->delta, amount;
 	
 #ifdef TRACK_DEBUG
@@ -480,7 +480,7 @@ track_evinsat(struct track_s *o, struct seqptr_s *p, struct ev_s *ev, unsigned n
 	 */
 
 unsigned
-track_ticavail(struct track_s *o, struct seqptr_s *p) {
+track_ticavail(struct track *o, struct seqptr *p) {
 	return (p->delta < (*p->pos)->delta);
 }
 
@@ -491,7 +491,7 @@ track_ticavail(struct track_s *o, struct seqptr_s *p) {
 	 */
 
 void
-track_ticnext(struct track_s *o, struct seqptr_s *p) {
+track_ticnext(struct track *o, struct seqptr *p) {
 #ifdef TRACK_DEBUG
 	if (p->delta >= (*p->pos)->delta) {
 		dbg_puts("track_ticnext: sync. error\n");
@@ -507,7 +507,7 @@ track_ticnext(struct track_s *o, struct seqptr_s *p) {
 	 */	
 
 unsigned
-track_ticlast(struct track_s *o, struct seqptr_s *p) {
+track_ticlast(struct track *o, struct seqptr *p) {
 	unsigned ntics;
 	
 #ifdef TRACK_DEBUG
@@ -527,7 +527,7 @@ track_ticlast(struct track_s *o, struct seqptr_s *p) {
 	 */
 
 unsigned
-track_ticskipmax(struct track_s *o, struct seqptr_s *p, unsigned max) {
+track_ticskipmax(struct track *o, struct seqptr *p, unsigned max) {
 	unsigned ntics;
 	
 #ifdef TRACK_DEBUG
@@ -551,7 +551,7 @@ track_ticskipmax(struct track_s *o, struct seqptr_s *p, unsigned max) {
 	 */
 
 unsigned
-track_ticdelmax(struct track_s *o, struct seqptr_s *p, unsigned max) {
+track_ticdelmax(struct track *o, struct seqptr *p, unsigned max) {
 	unsigned ntics;
 	
 #ifdef TRACK_DEBUG
@@ -574,7 +574,7 @@ track_ticdelmax(struct track_s *o, struct seqptr_s *p, unsigned max) {
 	 */
 
 void
-track_ticinsmax(struct track_s *o, struct seqptr_s *p, unsigned max) {
+track_ticinsmax(struct track *o, struct seqptr *p, unsigned max) {
 	(*p->pos)->delta += max;
 }
 
@@ -584,7 +584,7 @@ track_ticinsmax(struct track_s *o, struct seqptr_s *p, unsigned max) {
 	 */
 
 void
-track_ticdel(struct track_s *o, struct seqptr_s *p) {
+track_ticdel(struct track *o, struct seqptr *p) {
 #ifdef TRACK_DEBUG
 	if (p->delta >= (*p->pos)->delta) {
 		dbg_puts("track_ticrm: sync. error\n");
@@ -600,7 +600,7 @@ track_ticdel(struct track_s *o, struct seqptr_s *p) {
 	 */
 	
 void
-track_ticins(struct track_s *o, struct seqptr_s *p) {
+track_ticins(struct track *o, struct seqptr *p) {
 	(*p->pos)->delta++;
 }
 
@@ -613,8 +613,8 @@ track_ticins(struct track_s *o, struct seqptr_s *p) {
 	 */
 
 void
-track_clear(struct track_s *o, struct seqptr_s *p) {
-	struct seqev_s *i, *inext;
+track_clear(struct track *o, struct seqptr *p) {
+	struct seqev *i, *inext;
 	
 	for (i = o->first;  i != &o->eot;  i = inext) {
 		inext = i->next;
@@ -632,7 +632,7 @@ track_clear(struct track_s *o, struct seqptr_s *p) {
 	 */
 
 void
-track_rew(struct track_s *o, struct seqptr_s *p) {
+track_rew(struct track *o, struct seqptr *p) {
 	p->pos = &o->first;
 	p->delta = 0;
 }
@@ -643,7 +643,7 @@ track_rew(struct track_s *o, struct seqptr_s *p) {
 	 */
 
 unsigned 
-track_finished(struct track_s *o, struct seqptr_s *p) {
+track_finished(struct track *o, struct seqptr *p) {
 	return (*p->pos) == &o->eot  &&  p->delta == o->eot.delta;
 }
 
@@ -654,8 +654,8 @@ track_finished(struct track_s *o, struct seqptr_s *p) {
 	 */
 
 unsigned
-track_seek(struct track_s *o, struct seqptr_s *p, unsigned ntics) {
-	struct seqev_s **pos = p->pos;
+track_seek(struct track *o, struct seqptr *p, unsigned ntics) {
+	struct seqev **pos = p->pos;
 	unsigned delta = p->delta, amount;
 	
 #ifdef TRACK_DEBUG
@@ -696,7 +696,7 @@ track_seek(struct track_s *o, struct seqptr_s *p, unsigned ntics) {
 	 */
 
 void
-track_seekblank(struct track_s *o, struct seqptr_s *p, unsigned ntics) {
+track_seekblank(struct track *o, struct seqptr *p, unsigned ntics) {
 	ntics = track_seek(o, p, ntics);
 	if (ntics > 0) {
 		o->eot.delta += ntics;

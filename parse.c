@@ -1,4 +1,4 @@
-/* $Id: parse.c,v 1.16 2006/02/17 13:18:05 alex Exp $ */
+/* $Id: parse.c,v 1.17 2006/04/03 16:38:28 alex Exp $ */
 /*
  * Copyright (c) 2003-2006 Alexandre Ratchov
  * All rights reserved.
@@ -112,7 +112,7 @@
 /* ------------------------------------------------------------- */
 
 void
-parse_recover(struct parse_s *o, char *msg) {
+parse_recover(struct parse *o, char *msg) {
 	lex_err(&o->lex, msg);
 	for (;;) {
 		if (o->lex.id == TOK_EOF) {
@@ -128,10 +128,10 @@ parse_recover(struct parse_s *o, char *msg) {
 	}
 }
 
-struct parse_s *
+struct parse *
 parse_new(char *filename) {
-	struct parse_s *o;
-	o = (struct parse_s *)mem_alloc(sizeof(struct parse_s));	
+	struct parse *o;
+	o = (struct parse *)mem_alloc(sizeof(struct parse));	
 	if (!lex_init(&o->lex, filename)) {
 		mem_free(o);
 		return 0;
@@ -141,13 +141,13 @@ parse_new(char *filename) {
 }
 
 void
-parse_delete(struct parse_s *o) {
+parse_delete(struct parse *o) {
 	lex_done(&o->lex);
 	mem_free(o);
 }
 
 unsigned
-parse_getsym(struct parse_s *o) {
+parse_getsym(struct parse *o) {
 	if (o->lookavail) {
 		o->lookavail = 0;
 		return 1;
@@ -156,7 +156,7 @@ parse_getsym(struct parse_s *o) {
 }
 
 void
-parse_ungetsym(struct parse_s *o) {
+parse_ungetsym(struct parse *o) {
 	if (o->lookavail) {
 		dbg_puts("parse_ungetsym: looksym already set\n");
 		dbg_panic();
@@ -165,7 +165,7 @@ parse_ungetsym(struct parse_s *o) {
 }
 
 unsigned
-parse_isfirst(struct parse_s *o, unsigned *first) {
+parse_isfirst(struct parse *o, unsigned *first) {
 	while (*first != 0) {
 		if (*first == o->lex.id) {
 			return 1;
@@ -205,7 +205,7 @@ unsigned first_stmt[] = {
 };
 	 
 unsigned
-parse_endl(struct parse_s *o, struct node_s **n) {
+parse_endl(struct parse *o, struct node **n) {
 	if (!parse_getsym(o)) {
 		return 0;
 	}
@@ -217,8 +217,8 @@ parse_endl(struct parse_s *o, struct node_s **n) {
 }
 
 unsigned
-parse_cst(struct parse_s *o, struct node_s **n) {
-	struct data_s *data;
+parse_cst(struct parse *o, struct node **n) {
+	struct data *data;
 		
 	if (!parse_getsym(o)) {
 		return 0;
@@ -316,7 +316,7 @@ parse_cst(struct parse_s *o, struct node_s **n) {
 
 
 unsigned
-parse_unary(struct parse_s *o, struct node_s **n) {
+parse_unary(struct parse *o, struct node **n) {
 	if (!parse_getsym(o)) {
 		return 0;
 	}
@@ -346,7 +346,7 @@ parse_unary(struct parse_s *o, struct node_s **n) {
 
 
 unsigned
-parse_muldiv(struct parse_s *o, struct node_s **n) {
+parse_muldiv(struct parse *o, struct node **n) {
 	if (!parse_unary(o, n)) {
 		return 0;
 	}	
@@ -379,7 +379,7 @@ parse_muldiv(struct parse_s *o, struct node_s **n) {
 
 
 unsigned
-parse_addsub(struct parse_s *o, struct node_s **n) {
+parse_addsub(struct parse *o, struct node **n) {
 	if (!parse_muldiv(o, n)) {
 		return 0;
 	}
@@ -407,7 +407,7 @@ parse_addsub(struct parse_s *o, struct node_s **n) {
 
 
 unsigned
-parse_shift(struct parse_s *o, struct node_s **n) {
+parse_shift(struct parse *o, struct node **n) {
 	if (!parse_addsub(o, n)) {
 		return 0;
 	}
@@ -435,7 +435,7 @@ parse_shift(struct parse_s *o, struct node_s **n) {
 
 
 unsigned
-parse_compare(struct parse_s *o, struct node_s **n) {
+parse_compare(struct parse *o, struct node **n) {
 	if (!parse_shift(o, n)) {
 		return 0;
 	}
@@ -473,7 +473,7 @@ parse_compare(struct parse_s *o, struct node_s **n) {
 
 
 unsigned
-parse_equal(struct parse_s *o, struct node_s **n) {
+parse_equal(struct parse *o, struct node **n) {
 	if (!parse_compare(o, n)) {
 		return 0;
 	}
@@ -501,7 +501,7 @@ parse_equal(struct parse_s *o, struct node_s **n) {
 
 
 unsigned
-parse_bitand(struct parse_s *o, struct node_s **n) {
+parse_bitand(struct parse *o, struct node **n) {
 	if (!parse_equal(o, n)) {
 		return 0;
 	}
@@ -524,7 +524,7 @@ parse_bitand(struct parse_s *o, struct node_s **n) {
 
 
 unsigned
-parse_bitxor(struct parse_s *o, struct node_s **n) {
+parse_bitxor(struct parse *o, struct node **n) {
 	if (!parse_bitand(o, n)) {
 		return 0;
 	}
@@ -547,7 +547,7 @@ parse_bitxor(struct parse_s *o, struct node_s **n) {
 
 
 unsigned
-parse_bitor(struct parse_s *o, struct node_s **n) {
+parse_bitor(struct parse *o, struct node **n) {
 	if (!parse_bitxor(o, n)) {
 		return 0;
 	}
@@ -570,7 +570,7 @@ parse_bitor(struct parse_s *o, struct node_s **n) {
 
 
 unsigned
-parse_and(struct parse_s *o, struct node_s **n) {
+parse_and(struct parse *o, struct node **n) {
 	if (!parse_bitor(o, n)) {
 		return 0;
 	}
@@ -592,7 +592,7 @@ parse_and(struct parse_s *o, struct node_s **n) {
 }
 
 unsigned
-parse_or(struct parse_s *o, struct node_s **n) {
+parse_or(struct parse *o, struct node **n) {
 	if (!parse_and(o, n)) {
 		return 0;
 	}
@@ -614,12 +614,12 @@ parse_or(struct parse_s *o, struct node_s **n) {
 }
 
 unsigned
-parse_expr(struct parse_s *o, struct node_s **n) {
+parse_expr(struct parse *o, struct node **n) {
 	return parse_or(o, n);
 }
 
 unsigned
-parse_call(struct parse_s *o, struct node_s **n) {
+parse_call(struct parse *o, struct node **n) {
 	if (!parse_getsym(o)) {
 		return 0;
 	} 
@@ -646,7 +646,7 @@ parse_call(struct parse_s *o, struct node_s **n) {
 }
 
 unsigned
-parse_stmt(struct parse_s *o, struct node_s **n) {
+parse_stmt(struct parse *o, struct node **n) {
 	if (!parse_getsym(o)) {
 		return 0;
 	}
@@ -769,7 +769,7 @@ parse_stmt(struct parse_s *o, struct node_s **n) {
 }
 
 unsigned
-parse_slist(struct parse_s *o, struct node_s **n) {
+parse_slist(struct parse *o, struct node **n) {
 	if (!parse_getsym(o)) {
 		return 0;
 	}
@@ -796,7 +796,7 @@ parse_slist(struct parse_s *o, struct node_s **n) {
 }
 
 unsigned
-parse_alist(struct parse_s *o, struct node_s **n) {
+parse_alist(struct parse *o, struct node **n) {
 	*n = node_new(&node_vmt_alist, NULL);
 	n = &(*n)->list;
 	for(;;) {
@@ -814,8 +814,8 @@ parse_alist(struct parse_s *o, struct node_s **n) {
 }
 
 unsigned
-parse_proc(struct parse_s *o, struct node_s **n) {	
-	struct node_s **a;
+parse_proc(struct parse *o, struct node **n) {	
+	struct node **a;
 	if (!parse_getsym(o)) {
 		return 0;
 	}
@@ -859,7 +859,7 @@ parse_proc(struct parse_s *o, struct node_s **n) {
 }	
 
 unsigned
-parse_line(struct parse_s *o, struct node_s **n) {
+parse_line(struct parse *o, struct node **n) {
 	if (!parse_getsym(o)) {
 		return 0;
 	}
@@ -881,7 +881,7 @@ parse_line(struct parse_s *o, struct node_s **n) {
 }
 	
 unsigned
-parse_prog(struct parse_s *o, struct node_s **n) {
+parse_prog(struct parse *o, struct node **n) {
 	*n = node_new(&node_vmt_slist, NULL);
 	n = &(*n)->list;
 	for (;;) {

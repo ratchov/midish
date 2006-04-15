@@ -1,4 +1,4 @@
-/* $Id: node.h,v 1.2 2006/02/14 12:21:41 alex Exp $ */
+/* $Id: node.h,v 1.3 2006/02/17 13:18:05 alex Exp $ */
 /*
  * Copyright (c) 2003-2006 Alexandre Ratchov
  * All rights reserved.
@@ -32,30 +32,30 @@
 #ifndef MIDISH_NODE_H
 #define MIDISH_NODE_H
 
-struct node_s;
-struct node_vmt_s;
-struct exec_s;
+struct node;
+struct node_vmt;
+struct exec;
 
-struct node_s {
-	struct node_vmt_s *vmt;
-	struct data_s *data;
-	struct node_s *next, *list;
+struct node {
+	struct node_vmt *vmt;
+	struct data *data;
+	struct node *next, *list;
 };
 
-struct node_vmt_s {
+struct node_vmt {
 	char *name;
-	unsigned (*exec)(struct node_s *, struct exec_s *, struct data_s **);
+	unsigned (*exec)(struct node *, struct exec *, struct data **);
 };
 
-struct node_s *node_new(struct node_vmt_s *vmt, struct data_s *data);
-void 	       node_delete(struct node_s *o);
-void	       node_dbg(struct node_s *o, unsigned depth);
-void	       node_insert(struct node_s **n, struct node_s *e);
-void	       node_replace(struct node_s **n, struct node_s *e);
-unsigned       node_exec(struct node_s *, struct exec_s *, struct data_s **);
+struct node *node_new(struct node_vmt *vmt, struct data *data);
+void 	       node_delete(struct node *o);
+void	       node_dbg(struct node *o, unsigned depth);
+void	       node_insert(struct node **n, struct node *e);
+void	       node_replace(struct node **n, struct node *e);
+unsigned       node_exec(struct node *, struct exec *, struct data **);
 
 
-extern struct node_vmt_s 
+extern struct node_vmt 
 node_vmt_proc, node_vmt_alist, node_vmt_slist,
 node_vmt_call, node_vmt_elist, node_vmt_builtin,
 node_vmt_cst, node_vmt_var, node_vmt_list,

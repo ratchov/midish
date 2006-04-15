@@ -1,4 +1,4 @@
-/* $Id: filt.c,v 1.27 2006/02/17 00:40:10 alex Exp $ */
+/* $Id: filt.c,v 1.28 2006/02/17 13:18:05 alex Exp $ */
 /*
  * Copyright (c) 2003-2006 Alexandre Ratchov
  * All rights reserved.
@@ -56,11 +56,11 @@ unsigned filt_debug = 0;
 	 *
 	 */
 
-struct pool_s state_pool;
+struct pool state_pool;
 
 void
 state_pool_init(unsigned size) {
-	pool_init(&state_pool, "state", sizeof(struct state_s), size);
+	pool_init(&state_pool, "state", sizeof(struct state), size);
 }
 
 void
@@ -68,13 +68,13 @@ state_pool_done(void) {
 	pool_done(&state_pool);
 }
 
-struct state_s *
+struct state *
 state_new(void) {
-	return (struct state_s *)pool_new(&state_pool);
+	return (struct state *)pool_new(&state_pool);
 }
 
 void
-state_del(struct state_s *s) {
+state_del(struct state *s) {
 	pool_del(&state_pool, s);
 }
 
@@ -120,7 +120,7 @@ unsigned char filt_curve_inv[128] = {
 
 
 void
-rule_dbg(struct rule_s *o) {
+rule_dbg(struct rule *o) {
 	switch(o->type) {
 	case RULE_DEVDROP:
 		dbg_puts("devdrop");
@@ -182,7 +182,7 @@ rule_dbg(struct rule_s *o) {
 }
 
 void
-rule_chgich(struct rule_s *o, unsigned olddev, unsigned oldch, 
+rule_chgich(struct rule *o, unsigned olddev, unsigned oldch, 
     unsigned newdev, unsigned newch) {
 	switch(o->type) {
 	case RULE_CHANDROP:
@@ -206,7 +206,7 @@ rule_chgich(struct rule_s *o, unsigned olddev, unsigned oldch,
 
 
 void
-rule_chgidev(struct rule_s *o, unsigned olddev, unsigned newdev) {
+rule_chgidev(struct rule *o, unsigned olddev, unsigned newdev) {
 	switch(o->type) {
 	case RULE_CHANDROP:
 	case RULE_CHANMAP:
@@ -228,7 +228,7 @@ rule_chgidev(struct rule_s *o, unsigned olddev, unsigned newdev) {
 }
 
 void
-rule_swapich(struct rule_s *o, unsigned olddev, unsigned oldch, 
+rule_swapich(struct rule *o, unsigned olddev, unsigned oldch, 
     unsigned newdev, unsigned newch) {
 	switch(o->type) {
 	case RULE_CHANDROP:
@@ -252,7 +252,7 @@ rule_swapich(struct rule_s *o, unsigned olddev, unsigned oldch,
 
 
 void
-rule_swapidev(struct rule_s *o, unsigned olddev, unsigned newdev) {
+rule_swapidev(struct rule *o, unsigned olddev, unsigned newdev) {
 	switch(o->type) {
 	case RULE_CHANDROP:
 	case RULE_CHANMAP:
@@ -275,7 +275,7 @@ rule_swapidev(struct rule_s *o, unsigned olddev, unsigned newdev) {
 
 
 void
-rule_chgoch(struct rule_s *o, unsigned olddev, unsigned oldch, 
+rule_chgoch(struct rule *o, unsigned olddev, unsigned oldch, 
     unsigned newdev, unsigned newch) {
 	switch(o->type) {
 	case RULE_CHANMAP:
@@ -296,7 +296,7 @@ rule_chgoch(struct rule_s *o, unsigned olddev, unsigned oldch,
 
 
 void
-rule_chgodev(struct rule_s *o, unsigned olddev, unsigned newdev) {
+rule_chgodev(struct rule *o, unsigned olddev, unsigned newdev) {
 	switch(o->type) {
 	case RULE_CHANMAP:
 	case RULE_KEYMAP:
@@ -314,7 +314,7 @@ rule_chgodev(struct rule_s *o, unsigned olddev, unsigned newdev) {
 }
 
 void
-rule_swapoch(struct rule_s *o, unsigned olddev, unsigned oldch, 
+rule_swapoch(struct rule *o, unsigned olddev, unsigned oldch, 
     unsigned newdev, unsigned newch) {
 	switch(o->type) {
 	case RULE_CHANMAP:
@@ -335,7 +335,7 @@ rule_swapoch(struct rule_s *o, unsigned olddev, unsigned oldch,
 
 
 void
-rule_swapodev(struct rule_s *o, unsigned olddev, unsigned newdev) {
+rule_swapodev(struct rule *o, unsigned olddev, unsigned newdev) {
 	switch(o->type) {
 	case RULE_CHANMAP:
 	case RULE_KEYMAP:
@@ -360,7 +360,7 @@ rule_swapodev(struct rule_s *o, unsigned olddev, unsigned newdev) {
 	 */
 	 
 void
-filt_init(struct filt_s *o) {
+filt_init(struct filt *o) {
 	o->cb = NULL;
 	o->addr = NULL;
 		
@@ -376,9 +376,9 @@ filt_init(struct filt_s *o) {
 	 */
 
 void
-filt_reset(struct filt_s *o) {
-	struct state_s *i;
-	struct rule_s *r;
+filt_reset(struct filt *o) {
+	struct state *i;
+	struct rule *r;
 	while (o->voice_rules) {
 		r = o->voice_rules;
 		o->voice_rules = r->next;
@@ -406,7 +406,7 @@ filt_reset(struct filt_s *o) {
 	 */
 
 void
-filt_done(struct filt_s *o) {
+filt_done(struct filt *o) {
 #ifdef FILT_DEBUG
 	if (o->cb != NULL) {
 		dbg_puts("filt_done: call filt_stop first.\n");
@@ -425,7 +425,7 @@ filt_done(struct filt_s *o) {
 	 */
 
 void
-filt_start(struct filt_s *o, void (*cb)(void *, struct ev_s *), void *addr) {
+filt_start(struct filt *o, void (*cb)(void *, struct ev *), void *addr) {
 	/*
 	XXX: why ?
 	o->active = 0; 
@@ -440,7 +440,7 @@ filt_start(struct filt_s *o, void (*cb)(void *, struct ev_s *), void *addr) {
 	 */
 
 void
-filt_stop(struct filt_s *o) {
+filt_stop(struct filt *o) {
 	o->cb = NULL;
 	o->addr = NULL;	
 #ifdef FILT_DEBUG
@@ -461,8 +461,8 @@ filt_stop(struct filt_s *o) {
 	 */
 	 
 void
-filt_conf_devdrop(struct filt_s *o, unsigned idev) {
-	struct rule_s **i, *r;
+filt_conf_devdrop(struct filt *o, unsigned idev) {
+	struct rule **i, *r;
 	
 	i = &o->dev_rules;
 	while (*i) {
@@ -476,7 +476,7 @@ filt_conf_devdrop(struct filt_s *o, unsigned idev) {
 			i = &(*i)->next;
 		}
 	}
-	r = (struct rule_s *)mem_alloc(sizeof(struct rule_s));
+	r = (struct rule *)mem_alloc(sizeof(struct rule));
 	r->type = RULE_DEVDROP;
 	r->idev = idev;
 	r->next = o->dev_rules;
@@ -489,8 +489,8 @@ filt_conf_devdrop(struct filt_s *o, unsigned idev) {
 	 */ 
 
 void
-filt_conf_nodevdrop(struct filt_s *o, unsigned idev) {
-	struct rule_s **i, *r;
+filt_conf_nodevdrop(struct filt *o, unsigned idev) {
+	struct rule **i, *r;
 	
 	i = &o->dev_rules;
 	while (*i) {
@@ -513,9 +513,9 @@ filt_conf_nodevdrop(struct filt_s *o, unsigned idev) {
 	 */
 
 void
-filt_conf_devmap(struct filt_s *o,
+filt_conf_devmap(struct filt *o,
     unsigned idev, unsigned odev) {
-	struct rule_s **i, *r;
+	struct rule **i, *r;
 	
 	i = &o->dev_rules;
 	while (*i != NULL) {
@@ -530,7 +530,7 @@ filt_conf_devmap(struct filt_s *o,
 			i = &(*i)->next;
 		}
 	}
-	r = (struct rule_s *)mem_alloc(sizeof(struct rule_s));
+	r = (struct rule *)mem_alloc(sizeof(struct rule));
 	r->type = RULE_DEVMAP;
 	r->idev = idev;
 	r->odev = odev;
@@ -544,8 +544,8 @@ filt_conf_devmap(struct filt_s *o,
 	 */
 
 void
-filt_conf_nodevmap(struct filt_s *o, unsigned odev) {
-	struct rule_s **i, *r;
+filt_conf_nodevmap(struct filt *o, unsigned odev) {
+	struct rule **i, *r;
 	
 	i = &o->dev_rules;
 	while (*i != NULL) {
@@ -566,8 +566,8 @@ filt_conf_nodevmap(struct filt_s *o, unsigned odev) {
 	 */
 
 void
-filt_conf_chandrop(struct filt_s *o, unsigned idev, unsigned ich) {
-	struct rule_s **i, *r;
+filt_conf_chandrop(struct filt *o, unsigned idev, unsigned ich) {
+	struct rule **i, *r;
 	
 	i = &o->chan_rules;
 	while (*i) {
@@ -584,7 +584,7 @@ filt_conf_chandrop(struct filt_s *o, unsigned idev, unsigned ich) {
 			i = &(*i)->next;
 		}
 	}
-	r = (struct rule_s *)mem_alloc(sizeof(struct rule_s));
+	r = (struct rule *)mem_alloc(sizeof(struct rule));
 	r->type = RULE_CHANDROP;
 	r->idev = idev;
 	r->ich = ich;
@@ -598,8 +598,8 @@ filt_conf_chandrop(struct filt_s *o, unsigned idev, unsigned ich) {
 	 */
 	 
 void
-filt_conf_nochandrop(struct filt_s *o, unsigned idev, unsigned ich) {
-	struct rule_s **i, *r;
+filt_conf_nochandrop(struct filt *o, unsigned idev, unsigned ich) {
+	struct rule **i, *r;
 	
 	i = &o->chan_rules;
 	while (*i) {
@@ -616,9 +616,9 @@ filt_conf_nochandrop(struct filt_s *o, unsigned idev, unsigned ich) {
 }
 
 void
-filt_conf_chanmap(struct filt_s *o, unsigned idev, unsigned ich,
+filt_conf_chanmap(struct filt *o, unsigned idev, unsigned ich,
     unsigned odev, unsigned och) {
-	struct rule_s **i, *r;
+	struct rule **i, *r;
 	
 	i = &o->chan_rules;
 	while (*i != NULL) {
@@ -635,7 +635,7 @@ filt_conf_chanmap(struct filt_s *o, unsigned idev, unsigned ich,
 			i = &(*i)->next;
 		}
 	}
-	r = (struct rule_s *)mem_alloc(sizeof(struct rule_s));
+	r = (struct rule *)mem_alloc(sizeof(struct rule));
 	r->type = RULE_CHANMAP;
 	r->idev = idev;
 	r->ich = ich;
@@ -646,8 +646,8 @@ filt_conf_chanmap(struct filt_s *o, unsigned idev, unsigned ich,
 }
 
 void
-filt_conf_nochanmap(struct filt_s *o, unsigned odev, unsigned och ) {
-	struct rule_s **i, *r;
+filt_conf_nochanmap(struct filt *o, unsigned odev, unsigned och ) {
+	struct rule **i, *r;
 	
 	i = &o->chan_rules;
 	while (*i != NULL) {
@@ -665,9 +665,9 @@ filt_conf_nochanmap(struct filt_s *o, unsigned odev, unsigned och ) {
 
 
 void
-filt_conf_ctldrop(struct filt_s *o, 
+filt_conf_ctldrop(struct filt *o, 
     unsigned idev, unsigned ich, unsigned ictl) {
-	struct rule_s **i, *r;
+	struct rule **i, *r;
 	
 	i = &o->voice_rules;
 	while (*i) {
@@ -687,7 +687,7 @@ filt_conf_ctldrop(struct filt_s *o,
 			i = &(*i)->next;
 		}
 	}
-	r = (struct rule_s *)mem_alloc(sizeof(struct rule_s));
+	r = (struct rule *)mem_alloc(sizeof(struct rule));
 	r->type = RULE_CTLDROP;
 	r->idev = idev;
 	r->ich = ich;
@@ -697,9 +697,9 @@ filt_conf_ctldrop(struct filt_s *o,
 }
 
 void
-filt_conf_noctldrop(struct filt_s *o, 
+filt_conf_noctldrop(struct filt *o, 
     unsigned idev, unsigned ich, unsigned ictl) {
-	struct rule_s **i, *r;
+	struct rule **i, *r;
 	
 	i = &o->voice_rules;
 	while (*i) {
@@ -717,10 +717,10 @@ filt_conf_noctldrop(struct filt_s *o,
 }
 
 void
-filt_conf_ctlmap(struct filt_s *o, 
+filt_conf_ctlmap(struct filt *o, 
     unsigned idev, unsigned ich, unsigned odev, unsigned och, 
     unsigned ictl, unsigned octl) {
-	struct rule_s **i, *r;
+	struct rule **i, *r;
 	
 	i = &o->voice_rules;
 	while (*i != NULL) {
@@ -740,7 +740,7 @@ filt_conf_ctlmap(struct filt_s *o,
 			i = &(*i)->next;
 		}
 	}
-	r = (struct rule_s *)mem_alloc(sizeof(struct rule_s));
+	r = (struct rule *)mem_alloc(sizeof(struct rule));
 	r->type = RULE_CTLMAP;
 	r->idev = idev;
 	r->ich = ich;
@@ -754,9 +754,9 @@ filt_conf_ctlmap(struct filt_s *o,
 }
 
 void
-filt_conf_noctlmap(struct filt_s *o, 
+filt_conf_noctlmap(struct filt *o, 
     unsigned odev, unsigned och, unsigned octl) {
-	struct rule_s **i, *r;
+	struct rule **i, *r;
 	
 	i = &o->voice_rules;
 	while (*i != NULL) {
@@ -774,9 +774,9 @@ filt_conf_noctlmap(struct filt_s *o,
 }
 
 void
-filt_conf_keydrop(struct filt_s *o, unsigned idev, unsigned ich, 
+filt_conf_keydrop(struct filt *o, unsigned idev, unsigned ich, 
     unsigned keylo, unsigned keyhi) {
-	struct rule_s **i, *r;
+	struct rule **i, *r;
 	
 	i = &o->voice_rules;
 	while (*i) {
@@ -798,7 +798,7 @@ filt_conf_keydrop(struct filt_s *o, unsigned idev, unsigned ich,
 			i = &(*i)->next;
 		}
 	}
-	r = (struct rule_s *)mem_alloc(sizeof(struct rule_s));
+	r = (struct rule *)mem_alloc(sizeof(struct rule));
 	r->type = RULE_KEYDROP;
 	r->idev = idev;
 	r->ich = ich;
@@ -815,9 +815,9 @@ filt_conf_keydrop(struct filt_s *o, unsigned idev, unsigned ich,
 	 */
 
 void
-filt_conf_nokeydrop(struct filt_s *o, unsigned idev, unsigned ich, 
+filt_conf_nokeydrop(struct filt *o, unsigned idev, unsigned ich, 
     unsigned keylo, unsigned keyhi) {
-	struct rule_s **i, *r;
+	struct rule **i, *r;
 	
 	i = &o->voice_rules;
 	while (*i) {
@@ -837,10 +837,10 @@ filt_conf_nokeydrop(struct filt_s *o, unsigned idev, unsigned ich,
 
 
 void
-filt_conf_keymap(struct filt_s *o, 
+filt_conf_keymap(struct filt *o, 
     unsigned idev, unsigned ich, unsigned odev, unsigned och, 
     unsigned keylo, unsigned keyhi, int keyplus) {
-	struct rule_s **i, *r;
+	struct rule **i, *r;
 	
 	i = &o->voice_rules;
 	while (*i) {
@@ -862,7 +862,7 @@ filt_conf_keymap(struct filt_s *o,
 			i = &(*i)->next;
 		}
 	}
-	r = (struct rule_s *)mem_alloc(sizeof(struct rule_s));
+	r = (struct rule *)mem_alloc(sizeof(struct rule));
 	r->type = RULE_KEYMAP;
 	r->idev = idev;
 	r->ich = ich;
@@ -878,9 +878,9 @@ filt_conf_keymap(struct filt_s *o,
 
 
 void
-filt_conf_nokeymap(struct filt_s *o, unsigned odev, unsigned och, 
+filt_conf_nokeymap(struct filt *o, unsigned odev, unsigned och, 
     unsigned keylo, unsigned keyhi) {
-	struct rule_s **i, *r;
+	struct rule **i, *r;
 	
 	i = &o->voice_rules;
 	while (*i) {
@@ -900,9 +900,9 @@ filt_conf_nokeymap(struct filt_s *o, unsigned odev, unsigned och,
 
 
 void
-filt_conf_chgich(struct filt_s *o, 
+filt_conf_chgich(struct filt *o, 
     unsigned olddev, unsigned oldch, unsigned newdev, unsigned newch) {
-	struct rule_s *i;
+	struct rule *i;
 	
 	for (i = o->voice_rules; i != NULL; i = i->next) {
 		rule_chgich(i, olddev, oldch, newdev, newch);
@@ -914,8 +914,8 @@ filt_conf_chgich(struct filt_s *o,
 
 
 void
-filt_conf_chgidev(struct filt_s *o, unsigned olddev, unsigned newdev) {
-	struct rule_s *i;
+filt_conf_chgidev(struct filt *o, unsigned olddev, unsigned newdev) {
+	struct rule *i;
 	
 	for (i = o->voice_rules; i != NULL; i = i->next) {
 		rule_chgidev(i, olddev, newdev);
@@ -930,9 +930,9 @@ filt_conf_chgidev(struct filt_s *o, unsigned olddev, unsigned newdev) {
 
 
 void
-filt_conf_swapich(struct filt_s *o, 
+filt_conf_swapich(struct filt *o, 
     unsigned olddev, unsigned oldch, unsigned newdev, unsigned newch) {
-	struct rule_s *i;
+	struct rule *i;
 	
 	for (i = o->voice_rules; i != NULL; i = i->next) {
 		rule_swapich(i, olddev, oldch, newdev, newch);
@@ -944,8 +944,8 @@ filt_conf_swapich(struct filt_s *o,
 
 
 void
-filt_conf_swapidev(struct filt_s *o, unsigned olddev, unsigned newdev) {
-	struct rule_s *i;
+filt_conf_swapidev(struct filt *o, unsigned olddev, unsigned newdev) {
+	struct rule *i;
 	
 	for (i = o->voice_rules; i != NULL; i = i->next) {
 		rule_swapidev(i, olddev, newdev);
@@ -959,9 +959,9 @@ filt_conf_swapidev(struct filt_s *o, unsigned olddev, unsigned newdev) {
 }
 
 void
-filt_conf_chgoch(struct filt_s *o, 
+filt_conf_chgoch(struct filt *o, 
     unsigned olddev, unsigned oldch, unsigned newdev, unsigned newch) {
-	struct rule_s *i;
+	struct rule *i;
 	
 	for (i = o->voice_rules; i != NULL; i = i->next) {
 		rule_chgoch(i, olddev, oldch, newdev, newch);
@@ -973,8 +973,8 @@ filt_conf_chgoch(struct filt_s *o,
 
 
 void
-filt_conf_chgodev(struct filt_s *o, unsigned olddev, unsigned newdev) {
-	struct rule_s *i;
+filt_conf_chgodev(struct filt *o, unsigned olddev, unsigned newdev) {
+	struct rule *i;
 	
 	for (i = o->voice_rules; i != NULL; i = i->next) {
 		rule_chgodev(i, olddev, newdev);
@@ -989,9 +989,9 @@ filt_conf_chgodev(struct filt_s *o, unsigned olddev, unsigned newdev) {
 
 
 void
-filt_conf_swapoch(struct filt_s *o, 
+filt_conf_swapoch(struct filt *o, 
     unsigned olddev, unsigned oldch, unsigned newdev, unsigned newch) {
-	struct rule_s *i;
+	struct rule *i;
 	
 	for (i = o->voice_rules; i != NULL; i = i->next) {
 		rule_swapoch(i, olddev, oldch, newdev, newch);
@@ -1003,8 +1003,8 @@ filt_conf_swapoch(struct filt_s *o,
 
 
 void
-filt_conf_swapodev(struct filt_s *o, unsigned olddev, unsigned newdev) {
-	struct rule_s *i;
+filt_conf_swapodev(struct filt *o, unsigned olddev, unsigned newdev) {
+	struct rule *i;
 	
 	for (i = o->voice_rules; i != NULL; i = i->next) {
 		rule_swapodev(i, olddev, newdev);
@@ -1026,8 +1026,8 @@ filt_conf_swapodev(struct filt_s *o, unsigned olddev, unsigned newdev) {
 	 	
 		
 unsigned
-filt_matchrule(struct filt_s *o, struct rule_s *r, struct ev_s *ev) {
-	struct ev_s te;
+filt_matchrule(struct filt *o, struct rule *r, struct ev *ev) {
+	struct ev te;
 		
 	switch(r->type) {
 	case RULE_DEVDROP:
@@ -1132,9 +1132,9 @@ match_drop:
 	 */
 
 void
-filt_processev(struct filt_s *o, struct ev_s *ev) {
+filt_processev(struct filt *o, struct ev *ev) {
 	unsigned match;
-	struct rule_s *i;
+	struct rule *i;
 
 	match = 0;
 	for (i = o->voice_rules; i != NULL; i = i->next) {
@@ -1170,9 +1170,9 @@ filt_processev(struct filt_s *o, struct ev_s *ev) {
 	 * list is returned
 	 */
 
-struct state_s **
-filt_staterun(struct filt_s *o, struct state_s **p) {
-	struct state_s *s = *p;
+struct state **
+filt_staterun(struct filt *o, struct state **p) {
+	struct state *s = *p;
 	
 	if (s->nevents == 0) {
 		filt_processev(o, &s->ev);
@@ -1200,9 +1200,9 @@ filt_staterun(struct filt_s *o, struct state_s **p) {
 	 * WARNING: the returned pointer is the next runable state!!!
 	 */
 
-struct state_s **
-filt_statecreate(struct filt_s *o, struct ev_s *ev, unsigned keep) {
-	struct state_s *s;
+struct state **
+filt_statecreate(struct filt *o, struct ev *ev, unsigned keep) {
+	struct state *s;
 	
 #ifdef FILT_DEBUG
 	if (filt_debug) {
@@ -1225,8 +1225,8 @@ filt_statecreate(struct filt_s *o, struct ev_s *ev, unsigned keep) {
 	 * try to send it
 	 */
 
-struct state_s **
-filt_stateupdate(struct filt_s *o, struct state_s **p, struct ev_s *ev, unsigned keep) {
+struct state **
+filt_stateupdate(struct filt *o, struct state **p, struct ev *ev, unsigned keep) {
 	(*p)->ev = *ev;
 	(*p)->keep = keep;
 	return filt_staterun(o, p);
@@ -1239,9 +1239,9 @@ filt_stateupdate(struct filt_s *o, struct state_s **p, struct ev_s *ev, unsigned
 	 * bender etc...
 	 */
 
-struct state_s **
-filt_statelookup(struct filt_s *o, struct ev_s *ev) {
-	struct state_s **i;
+struct state **
+filt_statelookup(struct filt *o, struct ev *ev) {
+	struct state **i;
 	
 	if (EV_ISNOTE(ev)) {
 		for (i = &o->statelist; *i != NULL; i = &(*i)->next) {
@@ -1290,10 +1290,10 @@ filt_statelookup(struct filt_s *o, struct ev_s *ev) {
 	 * 	
 	 */
 
-struct state_s **
-filt_stateshut(struct filt_s *o, struct state_s **p) {
-	struct ev_s *ev = &(*p)->ev;
-	struct state_s *s = *p;
+struct state **
+filt_stateshut(struct filt *o, struct state **p) {
+	struct ev *ev = &(*p)->ev;
+	struct state *s = *p;
 
 	if (s->ev.cmd == EV_NON || s->ev.cmd == EV_KAT) {
 		ev->cmd = EV_NOFF;
@@ -1331,8 +1331,8 @@ filt_stateshut(struct filt_s *o, struct state_s **p) {
 	 */
 
 void
-filt_shut(struct filt_s *o) {
-	struct state_s **p;
+filt_shut(struct filt *o) {
+	struct state **p;
 	p = &o->statelist;
 	while (*p) {
 		p = filt_stateshut(o, p);
@@ -1345,8 +1345,8 @@ filt_shut(struct filt_s *o) {
 	 */
 
 void
-filt_evcb(struct filt_s *o, struct ev_s *ev) {
-	struct state_s **p;
+filt_evcb(struct filt *o, struct ev *ev) {
+	struct state **p;
 	unsigned keep;
 	
 	if (filt_debug) {
@@ -1441,8 +1441,8 @@ filt_evcb(struct filt_s *o, struct ev_s *ev) {
 }
 
 void
-filt_timercb(struct filt_s *o) {
-	struct state_s **p;
+filt_timercb(struct filt *o) {
+	struct state **p;
 	unsigned nevents;
 
 	p = &o->statelist;

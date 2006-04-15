@@ -1,4 +1,4 @@
-/* $Id: track.h,v 1.9 2006/02/17 13:18:06 alex Exp $ */
+/* $Id: track.h,v 1.10 2006/02/25 20:57:36 alex Exp $ */
 /*
  * Copyright (c) 2003-2006 Alexandre Ratchov
  * All rights reserved.
@@ -36,64 +36,64 @@
 
 #include "ev.h"
 
-struct seqev_s {
+struct seqev {
 	unsigned delta;
-	struct ev_s ev;
-	struct seqev_s *next;
+	struct ev ev;
+	struct seqev *next;
 };
 
-struct track_s {
-	struct seqev_s *first;		/* head of the list */
-	struct seqev_s eot;		/* the end-of-track event */
+struct track {
+	struct seqev *first;		/* head of the list */
+	struct seqev eot;		/* the end-of-track event */
 };
 
-struct seqptr_s {
-	struct seqev_s **pos;		/* ptr to a ptr to the next event */
+struct seqptr {
+	struct seqev **pos;		/* ptr to a ptr to the next event */
 	unsigned delta;
 };
 
 void		seqev_pool_init(unsigned size);
 void		seqev_pool_done(void);
-struct seqev_s *seqev_new(void);
-void		seqev_del(struct seqev_s *p);	
-void		seqev_dump(struct seqev_s *i);
+struct seqev *seqev_new(void);
+void		seqev_del(struct seqev *p);	
+void		seqev_dump(struct seqev *i);
 
-struct track_s *track_new(void);
-void		track_delete(struct track_s *o);
-void		track_init(struct track_s *o);
-void		track_done(struct track_s *o);
-void		track_dump(struct track_s *o);
-unsigned	track_numev(struct track_s *o);
-unsigned	track_numtic(struct track_s *o);
+struct track *track_new(void);
+void		track_delete(struct track *o);
+void		track_init(struct track *o);
+void		track_done(struct track *o);
+void		track_dump(struct track *o);
+unsigned	track_numev(struct track *o);
+unsigned	track_numtic(struct track *o);
 
-void		track_seqevins(struct track_s *o, struct seqptr_s *p, struct seqev_s *se);
-struct seqev_s *track_seqevrm(struct track_s *o, struct seqptr_s *p);
-unsigned	track_seqevnext(struct track_s *o, struct seqptr_s *p);
-unsigned	track_seqevavail(struct track_s *o, struct seqptr_s *p);
+void		track_seqevins(struct track *o, struct seqptr *p, struct seqev *se);
+struct seqev *track_seqevrm(struct track *o, struct seqptr *p);
+unsigned	track_seqevnext(struct track *o, struct seqptr *p);
+unsigned	track_seqevavail(struct track *o, struct seqptr *p);
 
-unsigned	track_evavail(struct track_s *o, struct seqptr_s *p);
-void		track_evnext(struct track_s *o, struct seqptr_s *p);
-void		track_evlast(struct track_s *o, struct seqptr_s *p);
-void		track_evget(struct track_s *o, struct seqptr_s *p, struct ev_s *ev);
-void		track_evput(struct track_s *o, struct seqptr_s *p, struct ev_s *ev);
-void		track_evdel(struct track_s *o, struct seqptr_s *p);
-void		track_evinsat(struct track_s *o, struct seqptr_s *p, struct ev_s *ev, unsigned ntics);
+unsigned	track_evavail(struct track *o, struct seqptr *p);
+void		track_evnext(struct track *o, struct seqptr *p);
+void		track_evlast(struct track *o, struct seqptr *p);
+void		track_evget(struct track *o, struct seqptr *p, struct ev *ev);
+void		track_evput(struct track *o, struct seqptr *p, struct ev *ev);
+void		track_evdel(struct track *o, struct seqptr *p);
+void		track_evinsat(struct track *o, struct seqptr *p, struct ev *ev, unsigned ntics);
 
-unsigned	track_ticavail(struct track_s *o, struct seqptr_s *p);
-void		track_ticnext(struct track_s *o, struct seqptr_s *p);
-unsigned	track_ticlast(struct track_s *o, struct seqptr_s *p);
-unsigned	track_ticskipmax(struct track_s *o, struct seqptr_s *p, unsigned max);
-unsigned	track_ticdelmax(struct track_s *o, struct seqptr_s *p, unsigned max);
-void	        track_ticinsmax(struct track_s *o, struct seqptr_s *p, unsigned max);
-void		track_ticdel(struct track_s *o, struct seqptr_s *p);
-void		track_ticins(struct track_s *o, struct seqptr_s *p);
+unsigned	track_ticavail(struct track *o, struct seqptr *p);
+void		track_ticnext(struct track *o, struct seqptr *p);
+unsigned	track_ticlast(struct track *o, struct seqptr *p);
+unsigned	track_ticskipmax(struct track *o, struct seqptr *p, unsigned max);
+unsigned	track_ticdelmax(struct track *o, struct seqptr *p, unsigned max);
+void	        track_ticinsmax(struct track *o, struct seqptr *p, unsigned max);
+void		track_ticdel(struct track *o, struct seqptr *p);
+void		track_ticins(struct track *o, struct seqptr *p);
 
-void		track_clear(struct track_s *o, struct seqptr_s *p);
-void		track_rew(struct track_s *o, struct seqptr_s *p);
-unsigned	track_finished(struct track_s *o, struct seqptr_s *p);
-unsigned	track_seek(struct track_s *o, struct seqptr_s *p, unsigned ntics);
-void		track_seekblank(struct track_s *o, struct seqptr_s *p, unsigned ntics);
-unsigned	track_filt(struct track_s *o, struct seqptr_s *p, unsigned ntics,
-			unsigned (*func)(void *, struct ev_s *), void *addr);
+void		track_clear(struct track *o, struct seqptr *p);
+void		track_rew(struct track *o, struct seqptr *p);
+unsigned	track_finished(struct track *o, struct seqptr *p);
+unsigned	track_seek(struct track *o, struct seqptr *p, unsigned ntics);
+void		track_seekblank(struct track *o, struct seqptr *p, unsigned ntics);
+unsigned	track_filt(struct track *o, struct seqptr *p, unsigned ntics,
+			unsigned (*func)(void *, struct ev *), void *addr);
 
 #endif /* MIDISH_TRACK_H */

@@ -1,4 +1,4 @@
-/* $Id: exec.h,v 1.5 2006/02/14 12:21:40 alex Exp $ */
+/* $Id: exec.h,v 1.6 2006/02/17 13:18:05 alex Exp $ */
 /*
  * Copyright (c) 2003-2006 Alexandre Ratchov
  * All rights reserved.
@@ -39,20 +39,20 @@ enum RESULT_ID {
 	RESULT_OK, RESULT_BREAK, RESULT_CONTINUE, RESULT_RETURN
 };
 
-struct data_s;
-struct var_s;
-struct proc_s;
-struct node_s;
-struct tree_s;
-struct exec_s;
+struct data;
+struct var;
+struct proc;
+struct node;
+struct tree;
+struct exec;
 
 	/*
 	 * a variable is a name with appended data
 	 */
 
-struct var_s {
-	struct name_s name;
-	struct data_s *data;
+struct var {
+	struct name name;
+	struct data *data;
 };
 
 	/*
@@ -60,54 +60,54 @@ struct var_s {
 	 * and a tree (the code)
 	 */
 
-struct proc_s {
-	struct name_s name;
-	struct name_s *args;
-	struct node_s *code;
+struct proc {
+	struct name name;
+	struct name *args;
+	struct node *code;
 };
 
 	/*
 	 * exec is the state of the interpreter
 	 */
 	 
-struct exec_s {
-	struct var_s *globals;	/* list of global variables */
-	struct var_s **locals;	/* pinter to list of local variables */
-	struct proc_s *procs;	/* list of user an built-in procs */
+struct exec {
+	struct var *globals;	/* list of global variables */
+	struct var **locals;	/* pinter to list of local variables */
+	struct proc *procs;	/* list of user an built-in procs */
 	char *procname;		/* current proc name, for err messages */
 #define EXEC_MAXDEPTH	40
 	unsigned depth;		/* call depth */
 };
 
-struct var_s *var_new(char *name, struct data_s *data);
-void          var_delete(struct var_s *i);
-void	      var_dbg(struct var_s *i);
-struct var_s *var_lookup(struct var_s **first, char *name);
-void	      var_insert(struct var_s **first, struct var_s *i);
-void	      var_empty(struct var_s **first);
+struct var *var_new(char *name, struct data *data);
+void          var_delete(struct var *i);
+void	      var_dbg(struct var *i);
+struct var *var_lookup(struct var **first, char *name);
+void	      var_insert(struct var **first, struct var *i);
+void	      var_empty(struct var **first);
 
-struct exec_s *exec_new(void);
-void	       exec_delete(struct exec_s *o);
-void	       exec_err(struct exec_s *o, char *mesg);
-void	       exec_errs(struct exec_s *o, char *s, char *mesg);
-struct proc_s *exec_proclookup(struct exec_s *o, char *name);
-struct var_s  *exec_varlookup(struct exec_s *o, char *name);
-void	       exec_error(struct exec_s *o, char *msg);
+struct exec *exec_new(void);
+void	       exec_delete(struct exec *o);
+void	       exec_err(struct exec *o, char *mesg);
+void	       exec_errs(struct exec *o, char *s, char *mesg);
+struct proc *exec_proclookup(struct exec *o, char *name);
+struct var  *exec_varlookup(struct exec *o, char *name);
+void	       exec_error(struct exec *o, char *msg);
 
-void exec_newbuiltin(struct exec_s *o, char *name, unsigned func(struct exec_s *, struct data_s **), struct name_s *args);
-void exec_dumpprocs(struct exec_s *o);
-void exec_dumpvars(struct exec_s *o);
-unsigned exec_lookupname(struct exec_s *exec, char *name, char **val);
-unsigned exec_lookupstring(struct exec_s *exec, char *name, char **val);
-unsigned exec_lookuplong(struct exec_s *exec, char *name, long *val);
-unsigned exec_lookupbool(struct exec_s *exec, char *name, long *val);
-unsigned exec_lookuplist(struct exec_s *exec, char *name, struct data_s **val);
-void     exec_newvar(struct exec_s *o, char *name, struct data_s *val);
+void exec_newbuiltin(struct exec *o, char *name, unsigned func(struct exec *, struct data **), struct name *args);
+void exec_dumpprocs(struct exec *o);
+void exec_dumpvars(struct exec *o);
+unsigned exec_lookupname(struct exec *exec, char *name, char **val);
+unsigned exec_lookupstring(struct exec *exec, char *name, char **val);
+unsigned exec_lookuplong(struct exec *exec, char *name, long *val);
+unsigned exec_lookupbool(struct exec *exec, char *name, long *val);
+unsigned exec_lookuplist(struct exec *exec, char *name, struct data **val);
+void     exec_newvar(struct exec *o, char *name, struct data *val);
 
-struct proc_s *proc_new(char *name);
-void 	       proc_delete(struct proc_s *o);
-struct proc_s *proc_lookup(struct proc_s **first, char *name);
-void	       proc_empty(struct proc_s **first);
-void 	       proc_dbg(struct proc_s *o);
+struct proc *proc_new(char *name);
+void 	       proc_delete(struct proc *o);
+struct proc *proc_lookup(struct proc **first, char *name);
+void	       proc_empty(struct proc **first);
+void 	       proc_dbg(struct proc *o);
 
 #endif /* MIDISH_EXEC_H */
