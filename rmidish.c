@@ -1,4 +1,4 @@
-/* $Id: rmidish.c,v 1.11 2006/02/14 12:21:41 alex Exp $ */
+/* $Id: rmidish.c,v 1.12 2006/02/25 12:21:26 alex Exp $ */
 /*
  * This program gives an example on
  * how to create a front-end to midish
@@ -108,13 +108,6 @@ startmidish(void) {
 		close(ipipe[0]);
 		close(opipe[1]);
 		/*
-		 * create a new process group, to prevent midish being
-		 * accidently suspended when in performance mode
-		 */		
-		if (setpgid(0, 0) < 0) {
-			perror("setpgid");
-		}
-		/*
 		 * run midish
 		 */
 		if (execlp(midish_path, midish_path, "-v", (char *)NULL) < 0) {
@@ -171,7 +164,7 @@ main(int argc, char *argv[]) {
 			perror(midish_path);
 		}
 		exit(1);
-	}		
+	}
 	
 	startmidish();
 	fprintf(stderr, "send EOF character (control-D) to quit\n");
