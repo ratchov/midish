@@ -1,4 +1,4 @@
-/* $Id: trackop.h,v 1.18 2006/03/04 23:46:45 alex Exp $ */
+/* $Id: trackop.h,v 1.20 2006/04/18 18:41:57 alex Exp $ */
 /*
  * Copyright (c) 2003-2006 Alexandre Ratchov
  * All rights reserved.
@@ -39,7 +39,7 @@ struct seqptr;
 
 
 void track_opcheck(struct track *o);
-void track_opquantise(struct track *o, struct seqptr *, unsigned first, unsigned len, unsigned quantum, unsigned rate);
+void track_opquantise(struct track *o, unsigned start, unsigned len, unsigned offset, unsigned quantum, unsigned rate);
 void track_opcut(struct track *o, unsigned start, unsigned len);
 void track_opinsert(struct track *o, unsigned start, unsigned len);
 void track_opblank(struct track *o, unsigned start, unsigned len, struct evspec *es);

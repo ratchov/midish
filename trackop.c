@@ -1,4 +1,4 @@
-/* $Id: trackop.c,v 1.22 2006/03/04 23:46:45 alex Exp $ */
+/* $Id: trackop.c,v 1.24 2006/04/18 18:41:57 alex Exp $ */
 /*
  * Copyright (c) 2003-2006 Alexandre Ratchov
  * All rights reserved.
@@ -92,8 +92,8 @@ track_opcheck(struct track *o) {
 	 */
 
 void
-track_opquantise(struct track *o, struct seqptr *p, 
-    unsigned first, unsigned len, unsigned quantum, unsigned rate) {
+track_opquantise(struct track *o, unsigned start, unsigned len, 
+    unsigned offset, unsigned quantum, unsigned rate) {
 	struct track ctls, frame;
 	struct seqptr op, cp, fp;
 	unsigned tic, delta;
@@ -104,26 +104,24 @@ track_opquantise(struct track *o, struct seqptr *p,
 		dbg_puts("track_quantise: rate > 100\n");
 	}
 
-	len += first;
 	track_init(&ctls);
 	track_init(&frame);
-	op = *p;
 	track_rew(&ctls, &cp);
 	track_rew(&frame, &fp);
+	track_rew(o, &op);
 	delta = ofs = 0;
-	tic = first;
-	
-	
-	/* first, move all non-quantizable frames to &ctls */	
+	tic = 0;
+
+	/* first, move all non-quantizable frames to &ctls */
 	for (;;) {
 		delta = track_ticlast(o, &op);
 		tic += delta;
-		if (!track_evavail(o, &op) || tic >= len) {
-			break; 	
-		
-		} 
+		if (!track_evavail(o, &op)) {
+			break;
+		}
 		track_seekblank(&ctls, &cp, delta);
-		if ((*op.pos)->ev.cmd != EV_NON) {
+		if (!EV_ISNOTE(&(*op.pos)->ev) ||  
+		    tic < start || tic >= start + len) {
 			track_evlast(&ctls, &cp);
 			track_frameget(o, &op, &frame);
 			track_frameput(&ctls, &cp, &frame);
@@ -131,10 +129,12 @@ track_opquantise(struct track *o, struct seqptr *p,
 			track_evnext(o, &op);
 		}
 	}
-	op = *p;
-	track_rew(&ctls, &cp);	
-	delta = ofs = 0;	
-	tic = first;
+
+	track_rew(o, &op);
+	track_rew(&ctls, &cp);
+	track_seekblank(&ctls, &cp, start);
+	tic = track_seek(o, &op, start);
+	delta = ofs = 0;
 	
 	/* now we can start */
 
@@ -144,12 +144,13 @@ track_opquantise(struct track *o, struct seqptr *p,
 		delta -= ofs;
 		ofs = 0;
 		
-		if (!track_evavail(o, &op) || tic >= len) {	/* no more notes? */
+		if (!track_evavail(o, &op) || tic >= start + len) {
+			/* no more notes */
 			break;
-		} 
-			
+		}
+
 		if (quantum != 0) {
-			remaind = tic % quantum;
+			remaind = (tic + offset) % quantum;
 		} else {
 			remaind = 0;
 		}
@@ -158,7 +159,7 @@ track_opquantise(struct track *o, struct seqptr *p,
 		} else {
 			ofs = ((quantum - remaind) * rate + 99) / 100;
 		}
-		if (ofs < 0 && delta < (unsigned)(-ofs)) { 
+		if (ofs < 0 && delta < (unsigned)(-ofs)) {
 			dbg_puts("track_opquantise: delta < ofs\n");
 			dbg_panic();
 		}
@@ -167,7 +168,7 @@ track_opquantise(struct track *o, struct seqptr *p,
 		track_frameget(o, &op, &frame);
 		track_frameput(&ctls, &cp, &frame);
 	}
-	op = *p;
+	track_rew(o, &op);
 	track_frameput(o, &op, &ctls);
 	track_opcheck(o);
 	track_done(&ctls);

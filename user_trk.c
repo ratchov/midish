@@ -1,4 +1,4 @@
-/* $Id: user_trk.c,v 1.15 2006/03/04 23:46:45 alex Exp $ */
+/* $Id: user_trk.c,v 1.17 2006/04/18 18:41:57 alex Exp $ */
 /*
  * Copyright (c) 2003-2006 Alexandre Ratchov
  * All rights reserved.
@@ -377,9 +377,8 @@ unsigned
 user_func_trackquant(struct exec *o, struct data **r) {
 	char *trkname;
 	struct songtrk *t;
-	struct seqptr tp;
 	long from, amount;
-	unsigned tic, len, first;
+	unsigned start, len, offset;
 	long quant, rate;
 	
 	if (!exec_lookupname(o, "trackname", &trkname) ||
@@ -399,25 +398,21 @@ user_func_trackquant(struct exec *o, struct data **r) {
 		return 0;
 	}
 
-	tic = song_measuretotic(user_song, from);
-	len = song_measuretotic(user_song, from + amount) - tic;
+	start = song_measuretotic(user_song, from);
+	len = song_measuretotic(user_song, from + amount) - start;
 	
 	if (quant < 0 || (unsigned)quant > user_song->tics_per_unit) {
 		cons_err("quantum must be between 0 and tics_per_unit");
 		return 0;
 	}
-
-	if (tic > (unsigned)quant / 2) {
-		tic -= quant / 2;
-		first = quant / 2;
+	if (start > (unsigned)quant / 2) {
+		start -= quant / 2;
+		offset = quant / 2;
 	} else {
-		first = 0;
+		offset = 0;
 		len -= quant / 2;
 	}
-	
-	track_rew(&t->track, &tp);
-	track_seek(&t->track, &tp, tic);
-	track_opquantise(&t->track, &tp, first, len, (unsigned)quant, (unsigned)rate);
+	track_opquantise(&t->track, start, len, offset, (unsigned)quant, (unsigned)rate);
 	return 1;
 }
 
