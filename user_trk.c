@@ -1,4 +1,3 @@
-/* $Id: user_trk.c,v 1.17 2006/04/18 18:41:57 alex Exp $ */
 /*
  * Copyright (c) 2003-2006 Alexandre Ratchov
  * All rights reserved.

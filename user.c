@@ -1,4 +1,3 @@
-/* $Id: user.c,v 1.60 2006/02/25 12:21:26 alex Exp $ */
 /*
  * Copyright (c) 2003-2006 Alexandre Ratchov
  * All rights reserved.

@@ -1,4 +1,3 @@
-/* $Id: textio.h,v 1.9 2006/02/17 13:18:06 alex Exp $ */
 /*
  * Copyright (c) 2003-2006 Alexandre Ratchov
  * All rights reserved.

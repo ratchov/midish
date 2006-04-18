@@ -1,4 +1,3 @@
-/* $Id: user_song.c,v 1.16 2006/02/25 20:57:36 alex Exp $ */
 /*
  * Copyright (c) 2003-2006 Alexandre Ratchov
  * All rights reserved.

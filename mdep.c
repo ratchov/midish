@@ -1,4 +1,3 @@
-/* $Id: mdep.c,v 1.33 2006/04/07 17:10:17 alex Exp $ */
 /*
  * Copyright (c) 2003-2006 Alexandre Ratchov
  * All rights reserved.

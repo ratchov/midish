@@ -1,4 +1,3 @@
-/* $Id: str.h,v 1.6 2006/02/14 12:21:41 alex Exp $ */
 /*
  * Copyright (c) 2003-2006 Alexandre Ratchov
  * All rights reserved.

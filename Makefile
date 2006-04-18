@@ -1,4 +1,3 @@
-# $Id: Makefile,v 1.52 2006/04/03 16:38:28 alex Exp $
 #
 # parameters for the GNU readline(3) library, used to
 # build rmidish (front-end to midish)

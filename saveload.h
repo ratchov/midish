@@ -1,4 +1,3 @@
-/* $Id: saveload.h,v 1.7 2006/02/17 13:18:05 alex Exp $ */
 /*
  * Copyright (c) 2003-2006 Alexandre Ratchov
  * All rights reserved.

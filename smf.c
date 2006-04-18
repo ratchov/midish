@@ -1,4 +1,3 @@
-/* $Id: smf.c,v 1.20 2006/04/03 16:38:28 alex Exp $ */
 /*
  * Copyright (c) 2003-2006 Alexandre Ratchov
  * All rights reserved.

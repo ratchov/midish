@@ -1,4 +1,3 @@
-/* $Id: cons.c,v 1.12 2006/02/14 12:21:40 alex Exp $ */
 /*
  * Copyright (c) 2003-2006 Alexandre Ratchov
  * All rights reserved.

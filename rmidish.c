@@ -1,4 +1,3 @@
-/* $Id: rmidish.c,v 1.12 2006/02/25 12:21:26 alex Exp $ */
 /*
  * This program gives an example on
  * how to create a front-end to midish
