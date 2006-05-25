@@ -32,6 +32,7 @@
 #include "mididev.h"
 #include "mux.h"
 #include "track.h"
+#include "frame.h"
 #include "trackop.h"
 #include "filt.h"
 #include "song.h"
