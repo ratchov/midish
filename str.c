@@ -32,7 +32,7 @@
  * simple string manupulation functions. A NULL pointer
  * is considered as a "non-sense" string, and cannot be used
  * with str_new() and str_delete(). Non-sense strings
- * cannot be compared and have not length
+ * cannot be compared and have no length
  */
  
 #include "dbg.h"
@@ -46,24 +46,24 @@
 
 char *
 str_new(char *val) {
-	unsigned i, len;
-	char *s;
+	unsigned cnt;
+	char *s, *buf;
 
 	if (val == NULL) {
 		dbg_puts("str_new: NULL pointer argument\n");
 		dbg_panic();
 	}
-	len = str_len(val) + 1;
-	s = (char *)mem_alloc(len);
-	for (i = 0; i < len; i++) {
-		s[i] = val[i];
+	cnt = str_len(val) + 1;
+	buf = (char *)mem_alloc(cnt);
+	for (s = buf; cnt > 0; cnt--) {
+		*s++ = *val++;
 	}
-	return s;
+	return buf;
 }
 
 	/*
 	 * free a string allocated with str_new()
-	 * can't be used a NULL pointer
+	 * can't be used on NULL pointer
 	 */
 
 void
@@ -92,7 +92,7 @@ str_dbg(char *s) {
 	/*
 	 * return 1 if the two strings are identical
 	 * and 0 otherwise. Two zero-length strings are
-	 * identical. 
+	 * considered identical.
 	 */
 
 unsigned
@@ -102,7 +102,7 @@ str_eq(char *s1, char *s2) {
 		dbg_panic();
 	}
 	for (;;) {
-		if (*s1 == '\0'  &&  *s2 == '\0') {
+		if (*s1 == '\0' && *s2 == '\0') {
 			return 1; 
 		} else if (*s1 == '\0' || *s2 == '\0' || *s1 != *s2) {
 			return 0;
@@ -111,6 +111,10 @@ str_eq(char *s1, char *s2) {
 		s2++;
 	}
 }
+
+	/*
+	 * return the length of the given string
+	 */
 
 unsigned
 str_len(char *s) {

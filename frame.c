@@ -29,9 +29,29 @@
  */
 
 /*
- * implements single frame track operations. A frame is
- * a set of events (ie a "subtrack") with a relation between them.
- * Example a sequence of non/noff, a bender curve etc...
+ * this module implements single frame track operations. A frame is
+ * a set of events (ie a "subtrack") with a relation between them. For
+ * instance: a sequence of non/noff, a bender curve etc...
+ */
+
+/*
+ * TODO:
+ * 	- make track_frameget() skip duplicate events within the
+ *	  same tick. For instance, save the "state" and don't
+ *	  put the event into the frame until the end of the tic.
+ *
+ *	- make track_frameget() merge adjacent frames togother,
+ *	  for instance, save the "state" and dont put the event
+ *	  into the frame until the end of the tic. If the tic
+ *	  contains the beginning of a new frame after the last 
+ *	  event of the first frame, then just update the saved
+ *	  state and continue.
+ *
+ *	- create a new function: track_frameget2(), that does
+ *	  the same thing that track_frameget(), be takes 2 input
+ *	  tracks. If there is a conflict between the events of
+ *	  the couple of tracks, then merge them and return a
+ *	  single frame.
  */
 
 #include "dbg.h"

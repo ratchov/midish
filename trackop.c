@@ -494,7 +494,6 @@ track_opsetchan(struct track *o, unsigned dev, unsigned ch) {
 	 * takes a measure and returns the corresponding tic
 	 */
 
-
 unsigned
 track_opfindtic(struct track *o, unsigned m0) {
 	struct seqptr op;

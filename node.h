@@ -47,11 +47,11 @@ struct node_vmt {
 };
 
 struct node *node_new(struct node_vmt *vmt, struct data *data);
-void 	       node_delete(struct node *o);
-void	       node_dbg(struct node *o, unsigned depth);
-void	       node_insert(struct node **n, struct node *e);
-void	       node_replace(struct node **n, struct node *e);
-unsigned       node_exec(struct node *, struct exec *, struct data **);
+void	     node_delete(struct node *o);
+void	     node_dbg(struct node *o, unsigned depth);
+void	     node_insert(struct node **n, struct node *e);
+void	     node_replace(struct node **n, struct node *e);
+unsigned     node_exec(struct node *, struct exec *, struct data **);
 
 
 extern struct node_vmt 

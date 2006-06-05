@@ -28,6 +28,11 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * this module implements the tree containing interpreter code. Each
+ * node of the tree represents one instruction.
+ */
+ 
 #include "dbg.h"
 #include "str.h"
 #include "data.h"
