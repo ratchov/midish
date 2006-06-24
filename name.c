@@ -29,7 +29,7 @@
  */
 
 /*
- * name is a simply linked list of strings
+ * name is a singly-linked list of strings
  */
 
 

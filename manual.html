@@ -38,30 +38,32 @@
 </HEAD>
 <BODY bgcolor="white" text="black" link="blue" vlink="navy">
 
+<!-- toc_begin - automatically generated, don't modify -->
 <H1>Table of contents</H1>
 <UL>
-<LI><A href="#intro">Introduction</A>
-<LI><A href="#dev">Devices setup</A>
-<LI><A href="#chan">Channels</A>
-<LI><A href="#filt">Filtering/routing</A>
-<LI><A href="#time">Time structure</A>
-<LI><A href="#track">Tracks</A>
-<LI><A href="#sysex">System exclusive messages</A>
-<LI><A href="#info">Obtaining information</A>
-<LI><A href="#save">Saving and loading songs</A>
-<LI><A href="#export">Import/export standard MIDI files</A>
-<LI><A href="#interpreter">The interpreter's language</A>
-<LI><A href="#changes">Changes</A>
-<LI><A href="#attributes">Project attributes</A>
-<LI><A href="#ev">Events and event ranges specification</A>
-<LI><A href="#language">Language reference</A>
-<LI><A href="#functs">Function reference</A>
-<LI><A href="#midishrc">Sample midishrc-file</A>
-<LI><A href="#example">Example sessions</A>
+	<LI><A href="#intro">1 Introduction</A>
+	<LI><A href="#dev">2 Devices setup</A>
+	<LI><A href="#chan">3 Channels</A>
+	<LI><A href="#filt">4 Filtering/routing</A>
+	<LI><A href="#time">5 Time structure</A>
+	<LI><A href="#track">6 Tracks</A>
+	<LI><A href="#sysex">7 System exclusive messages</A>
+	<LI><A href="#info">8 Obtaining information</A>
+	<LI><A href="#save">9 Saving and loading songs</A>
+	<LI><A href="#export">10 Import/export standard MIDI files</A>
+	<LI><A href="#interpreter">11 The interpreter's language</A>
+	<LI><A href="#changes">12 Changes</A>
+	<LI><A href="#attributes">13 Project attributes</A>
+	<LI><A href="#ev">14 Events and event ranges specification</A>
+	<LI><A href="#language">15 Language reference</A>
+	<LI><A href="#functs">16 Function reference</A>
+	<LI><A href="#midishrc">17 Sample midishrc-file</A>
+	<LI><A href="#example">18 Example sessions</A>
 </UL>
+<!-- toc_end -->
 
-<A name="intro"></A><H1>Introduction</H1>
-<H2>What is midish?</H2>
+<A name="intro"></A><H1>1 Introduction</H1>
+<H2>1.1 What is midish?</H2>
 
         Midish is an open-source MIDI sequencer/filter for 
         Unix-like operating systems (tested on OpenBSD and Linux).
@@ -87,7 +89,7 @@
         Midish is open-source software distributed under
         a 2-clause BSD-style license.
 
-<A name="install"></A><H2>Installation</H2>
+<A name="install"></A><H2>1.2 Installation</H2>
 
         Requirements:
         <UL>
@@ -146,7 +148,7 @@
         </OL>
 
 
-<H2>Invocation</H2>
+<H2>1.3 Invocation</H2>
         <P>
         Midish is a MIDI sequencer/filter driven by a command-line 
         interpreter (like a shell).
@@ -189,16 +191,16 @@
         signal (SIGINT) to midish).     
 
 
-<H2>How does it work</H2>
+<H2>1.4 How does it work</H2>
 Midish uses the following objects to represent a project:
 
 <UL>
-<LI> <B>Midi devices:</B><BR>
+<LI><B>Midi devices:</B><BR>
         these are actual midi devices (keyboards, sound modules,
         external sequencers...) from which events are received and/or to which
         they are sent. 
 
-<LI> <B>Filters:</B><BR>
+<LI><B>Filters:</B><BR>
         a filter is a set of rules that says which midi event to discard
         and how to transform incoming events. The filter also "sanitises" the
         input midi stream by removing nested notes, duplicate controllers and
@@ -309,7 +311,7 @@ again to prompt mode, send a interrupt signal (SIGINT) to midish (hit control-C 
 the console).
 
 
-<H2>An example</H2>
+<H2>1.5 An example</H2>
 
 	Suppose that there are two devices:
 		<UL>
@@ -366,7 +368,7 @@ the console).
 	and to use them instead of directly using the built-in functions
 	of midish. 
 	
-<A name="dev"></A><H1>Devices setup</H1>
+<A name="dev"></A><H1>2 Devices setup</H1>
 
         In midish, midi-devices are numbered from 0 to 15.
         Each midi-device has its "slot number". For instance, 
@@ -403,7 +405,7 @@ the console).
         automatically executed the next time midish is run.
         
 
-<A name="chan"></A><H1>Channels</H1>
+<A name="chan"></A><H1>3 Channels</H1>
 
         Because midish handles multiple devices, instead of
         using midi-channels, it uses device/midi-channel pairs
@@ -422,7 +424,7 @@ the console).
         this defines a named-channel <TT>mybass</TT> that can
         be used instead of the <TT>{0 1}</TT> pair.
         
-<H2>Channel configuration</H2>
+<H2>3.1 Channel configuration</H2>
 
         A channel represents one musical instrument; 
         midish allows to attach to the channel definition 
@@ -459,7 +461,7 @@ the console).
 
 	
 
-<A name="filt"></A><H1>Filtering/routing</H1>
+<A name="filt"></A><H1>4 Filtering/routing</H1>
 
         <P> 
         Midish supports midi filtering: a <I>filter</I> 
@@ -483,7 +485,7 @@ the console).
         </UL>
 
 
-<H2>About filters</H2>
+<H2>4.1 About filters</H2>
         <P>
         Multiple filters can be defined, however only the
         <I>current filter</I> will run in performance
@@ -568,9 +570,9 @@ the console).
         All filtering rules can be removed with <TT>filtreset</TT>.
 
 
-<H2>Examples</H2>
+<H2>4.2 Examples</H2>
                 
-<H3>Device redirections</H3>
+<H3>4.2.1 Device redirections</H3>
 
         The following example defines a filter that routes events from
         device number 1 (the midi keyboard) to device number 0
@@ -585,7 +587,7 @@ the console).
         </PRE>
         (hit control-C to stop performance mode).
         
-<H3>Channel maps</H3>
+<H3>4.2.2 Channel maps</H3>
 
         The following example defines a filter 
         that routes events from device 1, channel 0 
@@ -605,7 +607,7 @@ the console).
         Playing on channel 0 of the keyboard will make
         sound channel 9 of the sound-module.
 
-<H3>Controller maps</H3>
+<H3>4.2.3 Controller maps</H3>
 
         The following example add a new rule to the above filter
         that maps the modulation wheel (controller 1) of 
@@ -632,7 +634,7 @@ the console).
         }
         </PRE>
 
-<H3>Transpose</H3>
+<H3>4.2.4 Transpose</H3>
 
         The following example transposes by 12 half-tones
         (one octave) notes on device 1, channel 0 (keyboard) and
@@ -650,7 +652,7 @@ the console).
         and the 6-th argument gives the number of half-tones 
         (12, one octave) to transpose.
         
-<H3>Keyboard splits</H3>
+<H3>4.2.5 Keyboard splits</H3>
 
         In the same way it is possible to create a keyboard-split with two
         key-rules and two channel-rules. 
@@ -674,7 +676,7 @@ the console).
         for more details.
 
         
-<A name="time"></A><H1>Time structure</H1>
+<A name="time"></A><H1>5 Time structure</H1>
 
         <P>
         In midish, time is split in <I>measures</I>. Each measure
@@ -695,7 +697,7 @@ the console).
         the time signature is 4/4.
         
         
-<H2>Metronome</H2>
+<H2>5.1 Metronome</H2>
 
         In order to "hear" time, a metronome can be used. It is
         used only in play and record modes. It produces
@@ -718,7 +720,7 @@ the console).
         device 0, channel 9 and the low-click with note 64, velocity 100
         on device 0, channel 9.
 
-<H2>Time signature changes</H2>
+<H2>5.2 Time signature changes</H2>
 
         Time signature changes are achieved by inserting or
         deleting measures. The following starts
@@ -738,7 +740,7 @@ the console).
         songplay                # test it
         </PRE>
         
-<H2>Tempo changes</H2>
+<H2>5.3 Tempo changes</H2>
         
         Tempo changes are achieved simply by giving the measure
         number and the tempo value in beats per minute. For
@@ -751,7 +753,7 @@ the console).
         </PRE>
 
 
-<H2>Moving within the song</H2>
+<H2>5.4 Moving within the song</H2>
 
         The following selects the current position in the song to
         measure number 3:
@@ -762,7 +764,7 @@ the console).
         start at this particular position instead of measure
         number 0.
         
-<A name="track"></A><H1>Tracks</H1>
+<A name="track"></A><H1>6 Tracks</H1>
         
         <P>
         A track is a piece of music, namely an ordered in time list 
@@ -780,7 +782,7 @@ the console).
         filter nor song current filter, then midi events
         from all devices are recorded as-is.
 
-<H2>Recording a track without a filter</H2>
+<H2>6.1 Recording a track without a filter</H2>
 
         <P>
         The following defines a track and record events
@@ -799,7 +801,7 @@ the console).
         sent back to the device number 1 instead of being sent
         to the sound module (device number 0).
         
-<H2>Recording a track with a filter</H2>
+<H2>6.2 Recording a track with a filter</H2>
 
         The following creates a filter and uses it to
         record to the above track:
@@ -810,7 +812,7 @@ the console).
         songrecord
         </PRE>
        	
-<H2>Basic editing of a track</H2>
+<H2>6.3 Basic editing of a track</H2>
 
         <P>
         Most track editing functions in midish take at least the
@@ -863,7 +865,7 @@ the console).
         copied (see section <A href="#ev_evspec">event ranges</A>).
         
 
-<H2>Track quantisation</H2>
+<H2>6.4 Track quantisation</H2>
 
         A track can be quantised by rounding note-positions
         to the nearest exact position. The following
@@ -878,7 +880,7 @@ the console).
         often sound to regular especially on acoustic patches.
         
 
-<H2>Checking a track</H2>
+<H2>6.5 Checking a track</H2>
 
         It is possible that a midi device transmits 
         bogus midi data. The following scans the track 
@@ -891,7 +893,7 @@ the console).
         nested notes when a track is recorded twice (or more) 
         without being erased.
 
-<A name="sysex"></A><H1>System exclusive messages</H1>
+<A name="sysex"></A><H1>7 System exclusive messages</H1>
 
         Midish can send system exclusive messages
         to midi devices before starting performance mode.
@@ -955,7 +957,7 @@ the console).
         sysexsetunit mybank 1 {0xF0 0x7E 0x7F}
         </PRE>
         
-<A name="info"></A><H1>Obtaining information</H1>
+<A name="info"></A><H1>8 Obtaining information</H1>
 
         <P>
         The following functions gives some information
@@ -1011,7 +1013,7 @@ the console).
         and 0 otherwise.
         
 
-<A name="save"></A><H1>Saving and loading songs</H1>
+<A name="save"></A><H1>9 Saving and loading songs</H1>
 
         <P>
         A song can be saved into a file. All channel definitions, 
@@ -1031,7 +1033,7 @@ the console).
         Note that the "local settings" (like device configuration,
         metronome settings) are not saved. 
         
-<A name="export"></A><H1>Import/export standard MIDI files</H1>
+<A name="export"></A><H1>10 Import/export standard MIDI files</H1>
 
         <P>
         Standard MIDI files type 0 or 1 can be imported. Each
@@ -1064,7 +1066,7 @@ the console).
         songexportsmf "mysong.mid"
         </PRE>
 
-<A name="interpreter"></A><H1>The interpreter's language</H1>
+<A name="interpreter"></A><H1>11 The interpreter's language</H1>
 
         <P> 
         
@@ -1073,7 +1075,7 @@ the console).
         make midish more usable, it suggested to use variables
         and/or to define procedures, as follows.
 
-<H2>Global variables</H2>
+<H2>11.1 Global variables</H2>
 
         <P>
         Variables can be used to store numbers, strings and
@@ -1088,7 +1090,7 @@ the console).
         variables and the dollar sign ("<TT>$</TT>") is used
         to obtain variable values.
 
-<H2>Defining simple procedures</H2>
+<H2>11.2 Defining simple procedures</H2>
 
         <P>
         For instance, let
@@ -1142,8 +1144,8 @@ the console).
 	It will be automatically executed the next time you run midish.
                 
 
-<A name="changes"></A><H1>Changes</H1>
-<A name="changes_02"></A><H2>Changes from release 0.1 to release 0.2</H2>
+<A name="changes"></A><H1>12 Changes</H1>
+<A name="changes_02"></A><H2>12.1 Changes from release 0.1 to release 0.2</H2>
 
         <UL>
         <LI> added '<TT>device</TT>' parameter to '<TT>sendraw</TT>'
@@ -1218,7 +1220,7 @@ the console).
 	<LI> added a midi file player and recorder: smfplay(1) and smfrec(1)
         </UL>
 
-<A name="changes_03"></A><H2>Changes from release 0.2 to release 0.3</H2>
+<A name="changes_03"></A><H2>12.2 Changes from release 0.2 to release 0.3</H2>
 
         <UL>
         <LI> added <TT>tracktransp</TT>
@@ -1226,9 +1228,9 @@ the console).
 	     rmidish is located.
 	</UL>
 
-<A name="attributes"></A><H1>Project attributes</H1>
+<A name="attributes"></A><H1>13 Project attributes</H1>
 
-<H2>Device attributes</H2>
+<H2>13.1 Device attributes</H2>
 
 	The following table summarises the device attributes:
 	
@@ -1251,7 +1253,7 @@ the console).
 	</TABLE>
 
 
-<H2>Channel attributes</H2>
+<H2>13.2 Channel attributes</H2>
 
 	The following table summarises the channel attributes:
 	
@@ -1277,7 +1279,7 @@ the console).
 		that uses this channel.
 	</TABLE>
 
-<H2>Filter attributes</H2>
+<H2>13.3 Filter attributes</H2>
 
 	The following table summarises the filter attributes:
 	
@@ -1300,7 +1302,7 @@ the console).
 	</TABLE>
 
 
-<H2>Track attributes</H2>
+<H2>13.4 Track attributes</H2>
 
 	The following table summarises the track attributes:
 	
@@ -1323,7 +1325,7 @@ the console).
 	</TABLE>
 
 
-<H2>Sysex attributes</H2>
+<H2>13.5 Sysex attributes</H2>
 
 	The following table summarises the sysex back attributes:
 	
@@ -1342,7 +1344,7 @@ the console).
 		to which the message has to be sent.
 	</TABLE>
 
-<H2>Song attributes</H2>
+<H2>13.6 Song attributes</H2>
 
 	The following table summarises the song attributes:
 	
@@ -1407,8 +1409,8 @@ the console).
 		that uses this channel.
 	</TABLE>
 
-<A name="ev"></A><H1>Events and event ranges specification</H1>
-<A name="ev_ev"></A><H2>Event specification</H2>
+<A name="ev"></A><H1>14 Events and event ranges specification</H1>
+<A name="ev_ev"></A><H2>14.1 Event specification</H2>
         <P>
         Some functions take events as arguments. An event
         is specified as a list containing:
@@ -1456,7 +1458,7 @@ the console).
         { ctl drums 7 99 }
         </PRE>
 
-<A name="ev_evspec"></A><H2>Event ranges specification</H2>
+<A name="ev_evspec"></A><H2>14.2 Event ranges specification</H2>
 
         Some track editing functions take an event range as argument. 
         The event range is specified as a list containing:
@@ -1499,8 +1501,8 @@ the console).
         </PRE>  
 
 
-<A name="language"></A><H1>Language reference</H1>
-<H2>Lexical structure</H2>
+<A name="language"></A><H1>15 Language reference</H1>
+<H2>15.1 Lexical structure</H2>
 
         The input line is split into tokens:
 
@@ -1560,7 +1562,7 @@ the console).
         single line. Anything else generates a "bad token" error.
 
 
-<H2>Statements</H2>
+<H2>15.2 Statements</H2>
 
         <P>
         Any input line can be ether a function definition or a
@@ -1652,7 +1654,7 @@ the console).
         </UL>
 
 
-<H2>Expressions</H2>
+<H2>15.3 Expressions</H2>
 
         An expression can be an arithmetic expression of constants,
         expressions, variable values, return values of
@@ -1800,7 +1802,7 @@ the console).
         </PRE>
 
 
-<H2>Procedure definition</H2>
+<H2>15.4 Procedure definition</H2>
 
         A procedure is defined with the keyword
         <TT>proc</TT> followed by the name of the procedure, 
@@ -1829,10 +1831,10 @@ the console).
 
 
         
-<A name="functs"></A><H1>Function reference</H1>
+<A name="functs"></A><H1>16 Function reference</H1>
 
 <A name="func_track"></A>
-<H2>Track functions</H2>
+<H2>16.1 Track functions</H2>
 
 <A name="func_tracklist"></A>
 <B><TT>tracklist</TT></B>
@@ -1983,7 +1985,7 @@ the console).
         </BLOCKQUOTE>
 
 <A name="func_chan"></A>
-<H2>Channel functions</H2>
+<H2>16.2 Channel functions</H2>
 
 <A name="func_channew"></A>
 <B><TT>channew channelname { device midichan }</TT></B>
@@ -2063,7 +2065,7 @@ the console).
         </BLOCKQUOTE>
 
 <A name="func_filt"></A>
-<H2>Filter functions</H2>
+<H2>16.3 Filter functions</H2>
 
 <A name="func_filtnew"></A>
 <B><TT>filtnew filtname</TT></B>
@@ -2311,7 +2313,7 @@ the console).
         </BLOCKQUOTE>
 
 <A name="func_sysex"></A>
-<H2>System exclusive messages functions</H2>
+<H2>16.4 System exclusive messages functions</H2>
 
 <A name="func_sysexnew"></A>
 <B><TT>sysexnew sysexname</TT></B>
@@ -2373,7 +2375,7 @@ the console).
         </BLOCKQUOTE>
 
 <A name="func_rt"></A>
-<H2>Real-time functions</H2>
+<H2>16.5 Real-time functions</H2>
 
 <A name="func_songidle"></A>
 <B><TT>songidle</TT></B>
@@ -2413,7 +2415,7 @@ the console).
         </BLOCKQUOTE>
 
 <A name="func_song"></A>
-<H2>Song functions</H2>
+<H2>16.6 Song functions</H2>
 
 <A name="func_songsetcurquant"></A>
 <B><TT>songsetcurquant tics</TT></B>
@@ -2619,7 +2621,7 @@ the console).
         </BLOCKQUOTE>
 
 <A name="func_dev"></A>
-<H2>Device functions</H2>
+<H2>16.7 Device functions</H2>
 
 <A name="func_devlist"></A>
 <B><TT>devlist</TT></B>
@@ -2683,7 +2685,7 @@ the console).
         </BLOCKQUOTE>
 
 <A name="func_misc"></A>
-<H2>Misc. functions</H2>
+<H2>16.8 Misc. functions</H2>
 
 <A name="func_metroswitch"></A>
 <B><TT>metroswitch number</TT></B>
@@ -2739,7 +2741,7 @@ the console).
         </BLOCKQUOTE>
 
         
-<A name="midishrc"></A><H1>Sample midishrc-file</H1>
+<A name="midishrc"></A><H1>17 Sample midishrc-file</H1>
         
         <P>
         The sample midishrc file shipped in the source tar-balls
@@ -2999,9 +3001,9 @@ the console).
                 the current channel
                 </BLOCKQUOTE>
                         
-<A name="example"></A><H1>Example sessions</H1>
+<A name="example"></A><H1>18 Example sessions</H1>
 
-<H2>Example - midi filtering</H2>
+<H2>18.1 Example - midi filtering</H2>
         
         The following session show how to 
         configure a keyboard split:
@@ -3042,7 +3044,7 @@ the console).
         on note number 64 (note E3), the bass is 
         transposed by -12 half-tones (one octave).
 
-<H2>Example - recording a track</H2>
+<H2>18.2 Example - recording a track</H2>
 
         The following session show how to
         record a track. It uses the procedures defined
@@ -3084,9 +3086,8 @@ the console).
 <HR>
 <SMALL><EM>
 Copyright (c) 2003-2006 Alexandre Ratchov<BR>
-Last updated feb 12, 2006
+Last updated jun 24, 2006
 </EM></SMALL>
-        
 
 </BODY>
 </HTML>

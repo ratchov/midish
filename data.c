@@ -29,10 +29,18 @@
  */
 
 /*
- * data is used to store values of the user variable
- * and contants and implements basig arithmetic
+ * the data structure is used to store values of user variables,
+ * (used by the interpreter, see node.c). This module implements
+ * basic methods to manipulate data structures and the arithmetic
+ * primitives used by the interpreter.
  *
- * a data can contain a "nil", a long, a string or a list
+ * currently allowed data types are
+ *	- 'nil' (ie no value)
+ *	- long signed integer
+ *	- string 
+ *	- reference, ie an identifier (function name, track name...)
+ *	- an user type 'void *addr' pointer
+ *	- a list of values
  */
 	 
 #include "dbg.h"
@@ -40,6 +48,10 @@
 #include "cons.h"
 #include "data.h"
 
+	/*
+	 * allocate a new data structure and
+	 * initialise it as 'nil'
+	 */
 struct data *
 data_newnil(void) {
 	struct data *o;
@@ -49,7 +61,10 @@ data_newnil(void) {
 	return o;
 }
 
-
+	/*
+	 * allocate a new data structure and
+	 * initialise with the given long integer
+	 */
 struct data *
 data_newlong(long val) {
 	struct data *o;
@@ -59,7 +74,10 @@ data_newlong(long val) {
 	return o;
 }
 
-
+	/*
+	 * allocate a new data structure and
+	 * initialise with (a copy of) the given string
+	 */
 struct data *
 data_newstring(char *val) {
 	struct data *o;
@@ -69,7 +87,10 @@ data_newstring(char *val) {
 	return o;
 }
 
-
+	/*
+	 * allocate a new data structure and
+	 * initialise with (a copy of) the given reference
+	 */
 struct data *
 data_newref(char *val) {
 	struct data *o;
@@ -80,6 +101,12 @@ data_newref(char *val) {
 }
 
 
+	/*
+	 * allocate a new data structure and
+	 * initialise with the given list (not copied).
+	 * The list argument is the first item of a linked
+	 * list of data structures
+	 */
 struct data *
 data_newlist(struct data *list) {
 	struct data *o;
@@ -89,6 +116,10 @@ data_newlist(struct data *list) {
 	return o;
 }
 
+	/*
+	 * allocate a new data structure and
+	 * initialise with the given user type
+	 */
 struct data *
 data_newuser(void *addr) {
 	struct data *o;
@@ -98,7 +129,10 @@ data_newuser(void *addr) {
 	return o;
 }
 
-
+	/*
+	 * return the number of data structures contained
+	 * in the given data structure
+	 */
 unsigned
 data_numitem(struct data *o) {
 	struct data *i;
@@ -113,6 +147,11 @@ data_numitem(struct data *o) {
 	return n;
 }
 
+	/*
+	 * add to the end of given 'o' data structure (must be of
+	 * type DATA_LIST) the given data structure
+	 * (can be of any type)
+	 */
 void
 data_listadd(struct data *o, struct data *v) {
 	struct data **i;
@@ -124,7 +163,10 @@ data_listadd(struct data *o, struct data *v) {
 	*i = v;
 }
 
-
+	/*
+	 * remove the given data struct from the
+	 * given list
+	 */
 void
 data_listremove(struct data *o, struct data *v) {
 	struct data **i;
@@ -141,8 +183,10 @@ data_listremove(struct data *o, struct data *v) {
 	dbg_panic();
 }
 
-
-
+	/*
+	 * clear a data structure and set it
+	 * to by of type 'DATA_NIL'
+	 */
 void
 data_clear(struct data *o) {
 	struct data *i, *inext;
@@ -276,7 +320,6 @@ data_assign(struct data *dst, struct data *src) {
 	 * 0 overwise
 	 */
 
-
 unsigned
 data_id(struct data *op1, struct data *op2) {
 	struct data *i1, *i2;
@@ -344,8 +387,33 @@ data_eval(struct data *o) {
 	return 0;	
 }
 
-/* ----------------------------------------------------- relations --- */
-			
+/* ---------------------------------------------- unary operators --- */
+
+	/*
+	 * Each of the following routines appies an unary operator
+	 * to the first argument. Returs 1 on success, 0 on failure
+	 */
+
+unsigned
+data_neg(struct data *op1) {
+	if (op1->type == DATA_LONG) {
+		op1->val.num = - op1->val.num;
+		return 1;
+	}
+	cons_err("bad types in unary minus");
+	return 0;
+}
+
+unsigned
+data_bitnot(struct data *op1) {
+	if (op1->type == DATA_LONG) {
+		op1->val.num = ~ op1->val.num;
+		return 1;
+	}
+	cons_err("bad type in bitwise not ('~')");
+	return 0;
+}
+
 unsigned
 data_not(struct data *op1) {
 	if (data_eval(op1)) {
@@ -361,35 +429,157 @@ data_not(struct data *op1) {
 }
 
 
+/* --------------------------------------------- binary operators --- */
+
+	/*
+	 * Each of the following routines calculates the 
+	 * result of a binary oprator applied to the couple
+	 * of arguments and stores the result in the first argument.
+	 * Returs 1 on success, 0 on failure
+	 */
+
+unsigned 
+data_add(struct data *op1, struct data *op2) {
+	struct data **i;
+	
+	if (op1->type == DATA_LONG && op2->type == DATA_LONG) {
+		op1->val.num += op2->val.num;
+		return 1;
+	} else if (op1->type == DATA_LIST && op2->type == DATA_LIST) {
+		/* 
+		 * concatenate 2 lists
+		 */
+		for (i = &op1->val.list; *i != NULL; i = &(*i)->next)
+			; /* nothing */
+		*i = op2->val.list;
+		op2->val.list = NULL;
+		return 1;
+	}
+	cons_err("bad types in addition");
+	return 0;
+}
+
 unsigned
-data_and(struct data *op1, struct data *op2) {
-	if (data_eval(op1) && data_eval(op2)) {
-		data_clear(op1);
-		op1->type = DATA_LONG;
-		op1->val.num = 1;
-	} else {
-		data_clear(op1);
-		op1->type = DATA_LONG;
-		op1->val.num = 0;
-	}	
-	return 1;
+data_sub(struct data *op1, struct data *op2) {
+	struct data **i, *j;
+
+	if (op1->type == DATA_LONG && op2->type == DATA_LONG) {
+		op1->val.num -= op2->val.num;
+		return 1;
+	} else if (op1->type == DATA_LIST && op2->type == DATA_LIST) {
+		/*
+		 * remove from the first list all elements
+		 * that are present in the second list
+		 */
+		i = &op1->val.list; 
+		while (*i != NULL) {
+			for (j = op2->val.list; j != NULL; j = j->next) {
+				if (data_id(*i, j)) {
+					goto found;
+				}
+			}
+			i = &(*i)->next;
+			continue;
+		found:
+			j = *i;
+			*i = j->next;
+			data_delete(j);
+			continue;
+		}
+		return 1;
+	}
+	cons_err("bad types in substraction");
+	return 0;
+}
+
+unsigned
+data_mul(struct data *op1, struct data *op2) {
+	if (op1->type == DATA_LONG && op2->type == DATA_LONG) {
+		op1->val.num *= op2->val.num;
+		return 1;
+	}
+	cons_err("bad types in multiplication ('*')");
+	return 0;
+}
+
+unsigned
+data_div(struct data *op1, struct data *op2) {
+	if (op1->type == DATA_LONG && op2->type == DATA_LONG) {
+		if (op2->val.num == 0) {
+			cons_err("division by zero");
+			return 0;
+		}
+		op1->val.num /= op2->val.num;
+		return 1;
+	}
+	cons_err("bad types in division ('/') ");
+	return 0;
+}
+
+unsigned
+data_mod(struct data *op1, struct data *op2) {
+	if (op1->type == DATA_LONG && op2->type == DATA_LONG) {
+		if (op2->val.num == 0) {
+			cons_err("division by zero");
+			return 0;
+		}
+		op1->val.num %= op2->val.num;
+		return 1;
+	}
+	cons_err("bad types in division ('%')");
+	return 0;
+}
+
+unsigned
+data_lshift(struct data *op1, struct data *op2) {
+	if (op1->type == DATA_LONG && op2->type == DATA_LONG) {
+		op1->val.num <<= op2->val.num;
+		return 1;
+	}
+	cons_err("bad types in left shift ('<<')");
+	return 0;
+}
+
+unsigned
+data_rshift(struct data *op1, struct data *op2) {
+	if (op1->type == DATA_LONG && op2->type == DATA_LONG) {
+		op1->val.num >>= op2->val.num;
+		return 1;
+	}
+	cons_err("bad types in right shift ('>>')");
+	return 0;
+}
+
+unsigned
+data_bitor(struct data *op1, struct data *op2) {
+	if (op1->type == DATA_LONG && op2->type == DATA_LONG) {
+		op1->val.num |= op2->val.num;
+		return 1;
+	}
+	cons_err("bad types in bitwise or ('|')");
+	return 0;
+}
+
+unsigned
+data_bitand(struct data *op1, struct data *op2) {
+	if (op1->type == DATA_LONG && op2->type == DATA_LONG) {
+		op1->val.num &= op2->val.num;
+		return 1;
+	}
+	cons_err("bad types in bitwise and ('&')");
+	return 0;
 }
 
 
 unsigned
-data_or(struct data *op1, struct data *op2) {
-	if (data_eval(op1) || data_eval(op2)) {
-		data_clear(op1);
-		op1->type = DATA_LONG;
-		op1->val.num = 1;
-	} else {
-		data_clear(op1);
-		op1->type = DATA_LONG;
-		op1->val.num = 0;
-	}	
-	return 1;
+data_bitxor(struct data *op1, struct data *op2) {
+	if (op1->type == DATA_LONG && op2->type == DATA_LONG) {
+		op1->val.num ^= op2->val.num;
+		return 1;
+	}
+	cons_err("bad types in bitwise xor ('^')");
+	return 0;
 }
-
 
 unsigned
 data_eq(struct data *op1, struct data *op2) {
@@ -404,7 +594,6 @@ data_eq(struct data *op1, struct data *op2) {
 	}	
 	return 1;
 }
-
 
 unsigned
 data_neq(struct data *op1, struct data *op2) {
@@ -430,7 +619,6 @@ data_lt(struct data *op1, struct data *op2) {
 	return 1;
 }
 
-
 unsigned
 data_le(struct data *op1, struct data *op2) {
 	if (op1->type != DATA_LONG || op2->type != DATA_LONG) {
@@ -440,7 +628,6 @@ data_le(struct data *op1, struct data *op2) {
 	op1->val.num = op1->val.num <= op2->val.num ? 1 : 0;
 	return 1;
 }
-
 
 unsigned
 data_gt(struct data *op1, struct data *op2) {
@@ -452,7 +639,6 @@ data_gt(struct data *op1, struct data *op2) {
 	return 1;
 }
 
-
 unsigned
 data_ge(struct data *op1, struct data *op2) {
 	if (op1->type != DATA_LONG || op2->type != DATA_LONG) {
@@ -463,172 +649,31 @@ data_ge(struct data *op1, struct data *op2) {
 	return 1;
 }
 
-
-/* ---------------------------------------------------- arithmetic --- */
-
-unsigned 
-data_add(struct data *op1, struct data *op2) {
-	struct data **i;
-	
-	if (op1->type == DATA_LONG && op2->type == DATA_LONG) {
-		op1->val.num += op2->val.num;
-		return 1;
-	} else if (op1->type == DATA_LIST && op2->type == DATA_LIST) {
-		for (i = &op1->val.list; *i != NULL; i = &(*i)->next)
-			; /* nothing */
-		*i = op2->val.list;
-		op2->val.list = NULL;
-		return 1;
-	}
-	cons_err("bad types in addition");
-	return 0;
+unsigned
+data_and(struct data *op1, struct data *op2) {
+	if (data_eval(op1) && data_eval(op2)) {
+		data_clear(op1);
+		op1->type = DATA_LONG;
+		op1->val.num = 1;
+	} else {
+		data_clear(op1);
+		op1->type = DATA_LONG;
+		op1->val.num = 0;
+	}	
+	return 1;
 }
 
-
 unsigned
-data_sub(struct data *op1, struct data *op2) {
-	struct data **i, *j;
-
-	if (op1->type == DATA_LONG && op2->type == DATA_LONG) {
-		op1->val.num -= op2->val.num;
-		return 1;
-	} else if (op1->type == DATA_LIST && op2->type == DATA_LIST) {
-		i = &op1->val.list; 
-		while (*i != NULL) {
-			for (j = op2->val.list; j != NULL; j = j->next) {
-				if (data_id(*i, j)) {
-					goto found;
-				}
-			}
-			i = &(*i)->next;
-			continue;
-		found:
-			j = *i;
-			*i = j->next;
-			data_delete(j);
-			continue;
-		}
-		return 1;
-	}
-	cons_err("bad types in substraction");
-	return 0;
-}
-
-
-unsigned
-data_neg(struct data *op1) {
-	if (op1->type == DATA_LONG) {
-		op1->val.num = - op1->val.num;
-		return 1;
-	}
-	cons_err("bad types in unary minus");
-	return 0;
-}
-
-
-unsigned
-data_mul(struct data *op1, struct data *op2) {
-	if (op1->type == DATA_LONG && op2->type == DATA_LONG) {
-		op1->val.num *= op2->val.num;
-		return 1;
-	}
-	cons_err("bad types in multiplication ('*')");
-	return 0;
-}
-
-
-unsigned
-data_div(struct data *op1, struct data *op2) {
-	if (op1->type == DATA_LONG && op2->type == DATA_LONG) {
-		if (op2->val.num == 0) {
-			cons_err("division by zero");
-			return 0;
-		}
-		op1->val.num /= op2->val.num;
-		return 1;
-	}
-	cons_err("bad types in division ('/') ");
-	return 0;
-}
-
-
-unsigned
-data_mod(struct data *op1, struct data *op2) {
-	if (op1->type == DATA_LONG && op2->type == DATA_LONG) {
-		if (op2->val.num == 0) {
-			cons_err("division by zero");
-			return 0;
-		}
-		op1->val.num %= op2->val.num;
-		return 1;
-	}
-	cons_err("bad types in division ('%')");
-	return 0;
-}
-
-
-unsigned
-data_lshift(struct data *op1, struct data *op2) {
-	if (op1->type == DATA_LONG && op2->type == DATA_LONG) {
-		op1->val.num <<= op2->val.num;
-		return 1;
-	}
-	cons_err("bad types in left shift ('<<')");
-	return 0;
-}
-
-
-unsigned
-data_rshift(struct data *op1, struct data *op2) {
-	if (op1->type == DATA_LONG && op2->type == DATA_LONG) {
-		op1->val.num >>= op2->val.num;
-		return 1;
-	}
-	cons_err("bad types in right shift ('>>')");
-	return 0;
-}
-
-
-unsigned
-data_bitor(struct data *op1, struct data *op2) {
-	if (op1->type == DATA_LONG && op2->type == DATA_LONG) {
-		op1->val.num |= op2->val.num;
-		return 1;
-	}
-	cons_err("bad types in bitwise or ('|')");
-	return 0;
-}
-
-
-unsigned
-data_bitand(struct data *op1, struct data *op2) {
-	if (op1->type == DATA_LONG && op2->type == DATA_LONG) {
-		op1->val.num &= op2->val.num;
-		return 1;
-	}
-	cons_err("bad types in bitwise and ('&')");
-	return 0;
-}
-
-
-unsigned
-data_bitxor(struct data *op1, struct data *op2) {
-	if (op1->type == DATA_LONG && op2->type == DATA_LONG) {
-		op1->val.num ^= op2->val.num;
-		return 1;
-	}
-	cons_err("bad types in bitwise xor ('^')");
-	return 0;
-}
-
-
-unsigned
-data_bitnot(struct data *op1) {
-	if (op1->type == DATA_LONG) {
-		op1->val.num = ~ op1->val.num;
-		return 1;
-	}
-	cons_err("bad type in bitwise not ('~')");
-	return 0;
+data_or(struct data *op1, struct data *op2) {
+	if (data_eval(op1) || data_eval(op2)) {
+		data_clear(op1);
+		op1->type = DATA_LONG;
+		op1->val.num = 1;
+	} else {
+		data_clear(op1);
+		op1->type = DATA_LONG;
+		op1->val.num = 0;
+	}	
+	return 1;
 }
 
