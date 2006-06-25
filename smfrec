@@ -20,14 +20,14 @@ append=0
 
 for i; do
 	case "$i" in
+	-a)
+		append=1; shift;;
+	-m)
+		metronome=1; shift;;
 	-x)
 		extclock=1; shift;;
 	-y)
 		sendrt=1; shift;;
-	-m)
-		metronome=1; shift;;
-	-a)
-		append=1; shift;;
 	-d)
 		device=$2; shift; shift;;
 	-i)
@@ -41,7 +41,7 @@ if [ "$#" != "1" -o -z "$1" ]; then
 	usage;
 fi
 
-midish -b << END
+exec midish -b << END
 if $append {
 	songimportsmf "$1"
 }
