@@ -33,8 +33,9 @@
 
 <HTML>
 <HEAD>
-<TITLE>midish 0.3 - user's manual and tutorial</TITLE>
+<TITLE>midish 0.3 - User's manual and tutorial</TITLE>
 <META http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<META name="language" content="en">
 </HEAD>
 <BODY bgcolor="white" text="black" link="blue" vlink="navy">
 
@@ -1316,7 +1317,7 @@ the console).
 	<TD>identifier used to reference the track
 	<TR>
 	<TD>mute flag
-	<TD>if the mute = true, the the track is not played on playback
+	<TD>if true then the track is not played on by songplay/songrecord
 	<TR>
 	<TD>current filter
 	<TD>default filter. The track is recorded
@@ -1427,6 +1428,7 @@ the console).
         midi events:
         <P align="center">
         <TABLE border="1">
+	<TR>	<TH>ref. name		<TH>midi event
         <TR>    <TD><TT>noff</TT>       <TD>note off
         <TR>    <TD><TT>non</TT>        <TD>note off
         <TR>    <TD><TT>kat</TT>        <TD>key after-touch (poly)
@@ -1527,6 +1529,7 @@ the console).
                 
                 <P align="center">
                 <TABLE border="1">
+		<TR>	<TH>token		<TH>value
                 <TR>    <TD><TT>123</TT>        <TD>123 in decimal
                 <TR>    <TD><TT>0x100</TT>      <TD>256 in hex
                 <TR>    <TD><TT>0xF0</TT>       <TD>240 in hex
@@ -1622,6 +1625,7 @@ the console).
 
         <P align="center">
         <TABLE border="1">
+	<TR>	<TH>expression		<TH>bool. value
         <TR>    <TD>non-zero integer    <TD>true
         <TR>    <TD>zero integer        <TD>false
         <TR>    <TD>non-empty list      <TD>true
@@ -1664,6 +1668,7 @@ the console).
 
         <P align="center">
         <TABLE border="1">
+	<TR>	<TH>token				<TH> type
         <TR>    <TD><TT>"this is a string"</TT>         <TD> a string
         <TR>    <TD><TT>12345</TT>                      <TD> a number
         <TR>    <TD><TT>mytrack</TT>                    <TD> a reference
