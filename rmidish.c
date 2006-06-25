@@ -22,7 +22,7 @@
 int midish_pid;
 char midish_basename[] = "midish";
 FILE *midish_stdout, *midish_stdin;
-char midish_path[PATH_MAX + sizeof(midish_basename)];
+char midish_path[PATH_MAX];
 
 #define LINELENGTH 10000
 char linebuf[LINELENGTH + 1];
@@ -140,7 +140,7 @@ int
 main(int argc, char *argv[]) {
 #define PROMPTLENGTH 20
 	char *rl, prompt[PROMPTLENGTH];
-	unsigned dirlen;
+	unsigned dirlen, filelen;
 	
 	/*
 	 * determine the complete path of the midish executable
@@ -152,7 +152,12 @@ main(int argc, char *argv[]) {
 	} else {
 		dirlen = 0;
 	}
-	strcpy(midish_path + dirlen, midish_basename);
+	filelen = strlen(midish_basename);
+	if (dirlen + filelen >= PATH_MAX) {
+		fprintf(stderr, "midish file name too long\n");
+		exit(1);
+	}
+	memcpy(midish_path + dirlen, midish_basename, filelen);
 	
 	/*
 	 * if stdin or stdout is not a tty, then dont start the front end,

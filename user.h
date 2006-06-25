@@ -49,7 +49,7 @@ extern struct textout *user_stdout;
 extern unsigned user_flag_batch;
 extern unsigned user_flag_verb;
 
-void user_mainloop(void);
+unsigned user_mainloop(void);
 void user_printstr(char *);
 void user_printlong(long);
 void user_error(char *);

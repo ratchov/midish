@@ -200,7 +200,7 @@ unsigned first_expr[] = {
 
 unsigned first_stmt[] = {
 	TOK_SEMICOLON, TOK_ENDLINE, 
-	TOK_IF, TOK_FOR, TOK_IDENT, TOK_LET, TOK_RETURN, 0
+	TOK_IF, TOK_FOR, TOK_IDENT, TOK_LET, TOK_RETURN, TOK_EXIT, 0
 };
 	 
 unsigned
@@ -751,6 +751,12 @@ parse_stmt(struct parse *o, struct node **n) {
 		if (!parse_expr(o, &(*n)->list)) {
 			return 0;
 		}
+		if (!parse_endl(o, NULL)) {
+			return 0;
+		}
+		return 1;
+	} else if (o->lex.id == TOK_EXIT) {
+		*n = node_new(&node_vmt_exit, NULL);
 		if (!parse_endl(o, NULL)) {
 			return 0;
 		}

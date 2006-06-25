@@ -242,7 +242,8 @@ node_exec_slist(struct node *o, struct exec *x, struct data **r) {
 	
 	for (i = o->list; i != NULL; i = i->next) {
 		result = node_exec(i, x, r);
-		if (result != RESULT_OK) {
+		if (result != RESULT_OK) {		
+			/* stop on ERR, BREAK, CONTINUE, RETURN, EXIT */
 			return result;
 		}
 	}
@@ -303,8 +304,11 @@ node_exec_var(struct node *o, struct exec *x, struct data **r) {
 
 unsigned
 node_exec_ignore(struct node *o, struct exec *x, struct data **r) {
-	if (node_exec(o->list, x, r) == RESULT_ERR) {
-		return RESULT_ERR;
+	unsigned result;
+	
+	result = node_exec(o->list, x, r);
+	if (result == RESULT_ERR || result == RESULT_EXIT) {
+		return result;
 	}
 	data_delete(*r);
 	*r = NULL;
@@ -353,11 +357,14 @@ node_exec_call(struct node *o, struct exec *x, struct data **r) {
 	x->locals = &newlocals;
 	procname_save = x->procname;
 	x->procname = p->name.str;
-	if (node_exec(p->code, x, r) != RESULT_ERR) {
-		if (*r == NULL) {			/* always return something */
+	result = node_exec(p->code, x, r);
+	if (result != RESULT_ERR) {
+		if (*r == NULL) {			/* we always return something */
 			*r = data_newnil();
 		}
-		result = RESULT_OK;
+		if (result != RESULT_EXIT) {
+			result = RESULT_OK;
+		}
 	}
 	x->locals = oldlocals;
 	x->procname = procname_save;
@@ -428,6 +435,11 @@ node_exec_return(struct node *o, struct exec *x, struct data **r) {
 		return RESULT_ERR;
 	}
 	return RESULT_RETURN;
+}
+
+unsigned 
+node_exec_exit(struct node *o, struct exec *x, struct data **r) {
+	return RESULT_EXIT;
 }
 
 unsigned
@@ -598,6 +610,7 @@ node_vmt_builtin = { "builtin", node_exec_builtin },
 node_vmt_if = { "if", node_exec_if },
 node_vmt_for = { "for", node_exec_for },
 node_vmt_return = { "return", node_exec_return },
+node_vmt_exit = { "exit", node_exec_exit },
 node_vmt_assign = { "assign", node_exec_assign },
 node_vmt_nop = { "nop", node_exec_nop },
 node_vmt_list = { "list", node_exec_list},

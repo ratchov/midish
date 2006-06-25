@@ -47,6 +47,7 @@
 
 int
 main(int argc, char **argv) {
+	unsigned exitcode;
 	
 	if (!user_getopts(&argc, &argv)) {
 		return 1;
@@ -61,7 +62,7 @@ main(int argc, char **argv) {
 	sysex_pool_init(DEFAULT_MAXNSYSEXS);
 	mididev_listinit();
 		
-	user_mainloop();
+	exitcode = user_mainloop();
 	
 	mididev_listdone();
 	sysex_pool_done();
@@ -73,5 +74,5 @@ main(int argc, char **argv) {
 	cons_done();
 	
 	mem_stats();
-	return 0;
+	return exitcode ? 0 : 1;
 }

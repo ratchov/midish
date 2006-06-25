@@ -92,6 +92,7 @@ struct tokdef lex_kw[] = {
 	{ TOK_PROC,		"proc"		},
 	{ TOK_LET,		"let"		},
 	{ TOK_RETURN,		"return"	},
+	{ TOK_EXIT,		"exit"		},
 	{ TOK_FOR,		"for"		},
 	{ TOK_IN,		"in"		},
 	{ TOK_NIL,		"nil"		},

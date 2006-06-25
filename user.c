@@ -86,7 +86,6 @@ exec_runfile(struct exec *exec, char *filename) {
 	locals = exec->locals;
 	exec->locals = &exec->globals;
 	if (parse_prog(parse, &root)) {
-		/*node_dbg(root, 0);*/
 		res = node_exec(root, exec, &data);
 	}
 	exec->locals = locals;
@@ -767,12 +766,13 @@ user_func_sendraw(struct exec *o, struct data **r) {
 }
 
 
-void
+unsigned
 user_mainloop(void) {
 	struct parse *parse;
 	struct exec *exec;
 	struct node *root;
 	struct data *data;
+	unsigned result, exitcode;
 	
 	user_song = song_new();
 	exec = exec_new();
@@ -1120,34 +1120,42 @@ user_mainloop(void) {
 
 	parse = parse_new(NULL);
 	if (parse == NULL) {
-		return;
+		return 0;
 	}
 
 	root = NULL;
 	data = NULL;
 	for (;;) {
 		mem_stats();
-		if (parse_getsym(parse)) {
-			/* at this stage no lexical error */
-			if (parse->lex.id == TOK_EOF) {
-				/* end-of-file (user quit) */
-				break;
-			}
-			parse_ungetsym(parse);
-			if (parse_line(parse, &root)) {
-				/* at this stage no parse error */
-				if (node_exec(root, exec, &data) == RESULT_OK) {
-					/* at this stage no exec error */
-					node_delete(root);
-					root = NULL;
-					continue;
-				}
-			}
+		if (!parse_getsym(parse)) {
+			goto err;
+		}
+		if (parse->lex.id == TOK_EOF) {
+			/* end-of-file (user quit) */
+			exitcode = 1;
+			break;
+		}
+		parse_ungetsym(parse);
+		if (!parse_line(parse, &root)) {
 			node_delete(root);
 			root = NULL;
+			goto err;
 		}
-		/* error */
-		if (user_flag_batch) {
+		
+		/* at this stage no parse error */
+		result = node_exec(root, exec, &data);
+		node_delete(root);
+		root = NULL;
+		if (result == RESULT_OK) {
+			continue;
+		}
+		if (result == RESULT_EXIT) {
+			exitcode = 1;
+			break;
+		}
+
+	err:	if (user_flag_batch) {
+			exitcode = 0;
 			break;
 		}
 	}
@@ -1156,5 +1164,6 @@ user_mainloop(void) {
 	exec_delete(exec);
 	song_delete(user_song);
 	user_song = NULL;	
+	return exitcode;
 }
 
