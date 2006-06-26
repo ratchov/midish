@@ -1,8 +1,8 @@
 #
 # midi devices config
 #
-#devattach 0 "/dev/rmidi4"
-#devattach 1 "/dev/rmidi3"
+#devattach 0 "/dev/rmidi4" rw
+#devattach 1 "/dev/rmidi3" rw
 
 #
 # set the current input channel

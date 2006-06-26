@@ -65,12 +65,25 @@ user_func_devlist(struct exec *o, struct data **r) {
 unsigned
 user_func_devattach(struct exec *o, struct data **r) {
 	long unit;
-	char *path;
+	char *path, *modename;
+	unsigned mode;
+	
 	if (!exec_lookuplong(o, "unit", &unit) || 
-	    !exec_lookupstring(o, "path", &path)) {
+	    !exec_lookupstring(o, "path", &path) ||
+	    !exec_lookupname(o, "mode", &modename)) {
 		return 0;
 	}
-	return mididev_attach(unit, path);
+	if (str_eq(modename, "ro")) {
+		mode = MIDIDEV_MODE_IN;
+	} else if (str_eq(modename, "wo")) {
+		mode = MIDIDEV_MODE_OUT;
+	} else if (str_eq(modename, "rw")) {
+		mode = MIDIDEV_MODE_IN | MIDIDEV_MODE_OUT;
+	} else {
+		cons_errs("bad mode (allowed: ro, wo, rw)", modename);
+		return 0;
+	}
+	return mididev_attach(unit, path, mode);
 }
 
 unsigned

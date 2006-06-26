@@ -31,14 +31,25 @@
 #ifndef MIDISH_MIDIDEV_H
 #define MIDISH_MIDIDEV_H
 
+/*
+ * timeouts for active sensing
+ * (as usual units are 24th of microsecond)
+ */
+#define MIDIDEV_OSENSTO		(250 * 24 * 1000)
+#define MIDIDEV_ISENSTO		(350 * 24 * 1000)
+#define MIDIDEV_MODE_IN		1
+#define MIDIDEV_MODE_OUT	2
+
 struct mididev {
 	struct mididev *next;
-	unsigned unit;
-	unsigned ticrate, ticdelta;
-	unsigned sendrt;
+	unsigned unit;			/* index in the mididev table */
+	unsigned ticrate, ticdelta;	/* tick rate (default 96) */
+	unsigned sendrt;		/* send timing information */
+	unsigned isensto, osensto;	/* active sensing timeouts */
+	unsigned mode;			/* read, write */
 };
 
-void mididev_init(struct mididev *o);
+void mididev_init(struct mididev *o, unsigned mode);
 void mididev_done(struct mididev *o);
 
 extern struct mididev *mididev_list;
@@ -47,7 +58,7 @@ extern struct mididev *mididev_byunit[];
 
 void mididev_listinit(void);
 void mididev_listdone(void);
-unsigned mididev_attach(unsigned unit, char *path);
+unsigned mididev_attach(unsigned unit, char *path, unsigned mode);
 unsigned mididev_detach(unsigned unit);
 
 #endif /* MIDISH_MIDIDEV_H */

@@ -51,6 +51,7 @@
 #include "mdep.h"
 #include "user.h"
 #include "exec.h"
+#include "dbg.h"
 
 #ifndef RC_NAME
 #define RC_NAME		"midishrc"
@@ -95,9 +96,28 @@ cons_mdep_done(void) {
 
 void
 mux_mdep_init(void) {
+	struct sigaction sa;
 	struct mididev *i;
+	int mode;
+
+	sa.sa_handler = SIG_IGN;
+	if (sigaction(SIGPIPE, &sa, NULL) < 0) {
+		perror("mux_mdep_init: sigaction");
+		exit(1);
+	}
+	
 	for (i = mididev_list; i != NULL; i = i->next) {
-		RMIDI(i)->mdep.fd = open(RMIDI(i)->mdep.path, O_RDWR);
+		if (i->mode == MIDIDEV_MODE_IN) {
+			mode = O_RDONLY;
+		} else if (i->mode == MIDIDEV_MODE_OUT) {
+			mode = O_WRONLY;
+		} else if (i->mode == (MIDIDEV_MODE_IN | MIDIDEV_MODE_OUT)) {
+			mode = O_RDWR;
+		} else {
+			dbg_puts("mux_mdep_init: not allowed mode\n");
+			dbg_panic();
+		}
+		RMIDI(i)->mdep.fd = open(RMIDI(i)->mdep.path, mode, 0666);
 		if (RMIDI(i)->mdep.fd < 0) {
 			perror(RMIDI(i)->mdep.path);
 			RMIDI(i)->mdep.dying = 1;
@@ -110,7 +130,9 @@ mux_mdep_init(void) {
 
 void
 mux_mdep_done(void) {
+	struct sigaction sa;
 	struct mididev *i;
+
 	for (i = mididev_list; i != NULL; i = i->next) {
 		if (RMIDI(i)->mdep.fd < 0) {
 			continue;
@@ -121,6 +143,12 @@ mux_mdep_done(void) {
 				break;
 			}
 		}
+	}
+
+	sa.sa_handler = SIG_DFL;
+	if (sigaction(SIGPIPE, &sa, NULL) < 0) {
+		perror("mux_mdep_done: sigaction");
+		exit(1);
 	}
 }
 
@@ -138,6 +166,9 @@ mux_mdep_run(void) {
 
 	ifds = 0;
 	for (dev = mididev_list; dev != NULL; dev = dev->next) {
+		if (!(dev->mode & MIDIDEV_MODE_IN)) {
+			continue;
+		}
 		fds[ifds].fd = RMIDI(dev)->mdep.fd;
 		fds[ifds].events = POLLIN;
 		index2dev[ifds] = dev;
@@ -167,8 +198,11 @@ mux_mdep_run(void) {
 				if (res < 0) {
 					perror(RMIDI(dev)->mdep.path);
 					RMIDI(dev)->mdep.dying = 1;
-				} else {
-					rmidi_inputcb(RMIDI(dev), midibuf, res);
+					continue;
+				}
+				rmidi_inputcb(RMIDI(dev), midibuf, res);
+				if (dev->isensto > 0) {
+					dev->isensto = MIDIDEV_ISENSTO;
 				}
 			}
 		}
@@ -218,11 +252,9 @@ void
 rmidi_mdep_init(struct rmidi *o) {
 }
 
-
 void
 rmidi_mdep_done(struct rmidi *o) {
 }
-
 
 void
 rmidi_flush(struct rmidi *o) {
@@ -239,6 +271,9 @@ rmidi_flush(struct rmidi *o) {
 				break;
 			}
 			start += res;
+		}
+		if (o->oused) {
+			o->mididev.osensto = MIDIDEV_OSENSTO;
 		}
 	}
 	o->oused = 0;

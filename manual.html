@@ -145,7 +145,7 @@
         <LI>
         Read the documentation and modify <TT>/etc/midishrc</TT> in order 
         to choose the default midi device by using the '<TT>devattach</TT>' 
-        function (example: '<TT>devattach 0 "/dev/rmidi3"</TT>', see next section)
+        function (example: '<TT>devattach 0 "/dev/rmidi3" rw</TT>', see next section)
         </OL>
 
 
@@ -322,10 +322,12 @@ the console).
 	Thus, the <TT>/etc/midishrc</TT> file contains the
 	following lines:
 	<PRE>
-	devattach 0 "/dev/rmidi4"	# attach the module as dev number 0
-	devattach 1 "/dev/rmidi3"	# attach the keyboard as dev number 1
+	devattach 0 "/dev/rmidi4" rw	# attach the module as dev number 0
+	devattach 1 "/dev/rmidi3" rw	# attach the keyboard as dev number 1
 	</PRE>
 	
+	the 'rw' means that the device will be opened in
+	read-write mode. 
 	The following session shows how to  record a simple track.
 	First, we define a filter  named '<TT>piano</TT>' that
 	routes events from device 1, channel 0 (input channel of
@@ -381,8 +383,8 @@ the console).
         device number 0 and
         the keyboard as device number 1:
         <PRE>
-        devattach 0 "/dev/rmidi4"
-        devattach 1 "/dev/rmidi3"
+        devattach 0 "/dev/rmidi4" rw
+        devattach 1 "/dev/rmidi3" rw
         </PRE>
         
         <P>
@@ -1232,6 +1234,10 @@ the console).
 	     bender in a neutral state.
 	<LI> improved <TT>trackcheck</TT>
 	<LI> added <TT>exit</TT> keyword
+	<LI> Added a 'mode' argument to <TT>devattach</TT> function. 
+	     Now devices can be used in read-only or write-only mode (allowing
+	     to use named pipes as midi devices).
+	<LI> added basic support for the MIDI "Active Sensing" feature
 	</UL>
 
 <A name="attributes"></A><H1>13 Project attributes</H1>
@@ -2649,11 +2655,17 @@ the console).
         </BLOCKQUOTE>
 
 <A name="func_devattach"></A>
-<B><TT>devattach devnum filename</TT></B>
+<B><TT>devattach devnum filename mode</TT></B>
         <BLOCKQUOTE>
         attach midi device <TT>filename</TT> as
         device number <TT>devnum</TT>; <TT>filename</TT>
-        is a quoted string.
+        is a quoted string. The <TT>mode</TT> argument
+	is the name of the mode, it can be on if the following:
+		<UL>
+		<LI> <TT>ro</TT> - read-only, for input only devices
+		<LI> <TT>ro</TT> - write-only, for output only devices
+		<LI> <TT>rw</TT> - read and write.
+		</UL>
         </BLOCKQUOTE>
 
 <A name="func_devdetach"></A>

@@ -38,6 +38,7 @@
 #define EV_START	0x2
 #define EV_STOP		0x3
 #define EV_SYSEX	0x4
+#define EV_ACTSENS	0x5
 
 #define EV_NOFF		0x8
 #define EV_NON		0x9

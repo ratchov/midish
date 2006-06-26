@@ -1098,7 +1098,8 @@ user_mainloop(void) {
 
 	exec_newbuiltin(exec, "devattach", user_func_devattach,
 			name_newarg("unit", 
-			name_newarg("path", NULL)));
+			name_newarg("path", 
+			name_newarg("mode", NULL))));
 	exec_newbuiltin(exec, "devdetach", user_func_devdetach,
 			name_newarg("unit", NULL));
 	exec_newbuiltin(exec, "devlist", user_func_devlist, NULL);

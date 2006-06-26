@@ -56,10 +56,10 @@
 unsigned rmidi_debug = 0;
 
 struct rmidi *
-rmidi_new(void) {
+rmidi_new(unsigned mode) {
 	struct rmidi *o;
 	o = (struct rmidi *)mem_alloc(sizeof(struct rmidi));
-	rmidi_init(o);
+	rmidi_init(o, mode);
 	return o;
 }
 
@@ -70,11 +70,11 @@ rmidi_delete(struct rmidi *o) {
 }
 
 void 
-rmidi_init(struct rmidi *o) {	
+rmidi_init(struct rmidi *o, unsigned mode) {	
 	o->oused = 0;
 	o->istatus = o->ostatus = 0;
 	o->isysex = NULL;
-	mididev_init(&o->mididev);
+	mididev_init(&o->mididev, mode);
 	rmidi_mdep_init(o);
 }
 
@@ -101,6 +101,10 @@ rmidi_inputcb(struct rmidi *o, unsigned char *buf, unsigned count) {
 	struct ev ev;
 	unsigned data;
 
+	if (!(o->mididev.mode & MIDIDEV_MODE_IN)) {
+		dbg_puts("received data from output only device\n");
+		return;
+	}
 	while (count != 0) {
 		data = *buf;
 		count--;
@@ -128,7 +132,8 @@ rmidi_inputcb(struct rmidi *o, unsigned char *buf, unsigned count) {
 				mux_evcb(o->mididev.unit, &ev);
 				break;
 			case MIDI_ACK:
-				/* for now, ignore midi ACKs */
+				ev.cmd = EV_ACTSENS;
+				mux_evcb(o->mididev.unit, &ev);
 				break;
 			default:
 				if (rmidi_debug) {
@@ -194,6 +199,9 @@ rmidi_inputcb(struct rmidi *o, unsigned char *buf, unsigned count) {
 
 void
 rmidi_out(struct rmidi *o, unsigned data) {
+	if (!(o->mididev.mode & MIDIDEV_MODE_OUT)) {
+		return;
+	}
 	if (rmidi_debug) {
 		dbg_putu(o->mididev.unit);
 		dbg_puts(" -> ");
@@ -225,6 +233,9 @@ rmidi_putev(struct rmidi *o, struct ev *ev) {
 		break;
 	case EV_STOP:
 		rmidi_out(o, MIDI_STOP);
+		break;	
+	case EV_ACTSENS:
+		rmidi_out(o, MIDI_ACK);
 		break;	
 	default:
 		if (ev->cmd == EV_NOFF) {

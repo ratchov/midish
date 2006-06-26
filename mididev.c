@@ -52,7 +52,7 @@
 unsigned mididev_ticrate;	/* global dics per unit */
 
 void
-mididev_init(struct mididev *o) {
+mididev_init(struct mididev *o, unsigned mode) {
 	/* 
 	 * by default we don't transmit realtime information 
 	 * (midi_tic, midi_start, midi_stop etc...)
@@ -60,6 +60,7 @@ mididev_init(struct mididev *o) {
 	o->sendrt = 0;
 	o->ticrate = DEFAULT_TPU;
 	o->ticdelta = 0xdeadbeef;
+	o->mode = mode;
 }
 
 void
@@ -98,7 +99,7 @@ mididev_listdone(void) {
 }
 
 unsigned
-mididev_attach(unsigned unit, char *path) {
+mididev_attach(unsigned unit, char *path, unsigned mode) {
 	struct mididev *dev;
 
 	if (unit >= DEFAULT_MAXNDEVS) {
@@ -109,7 +110,7 @@ mididev_attach(unsigned unit, char *path) {
 		cons_err("device already exists");
 		return 0;
 	}
-	dev = (struct mididev *)rmidi_new();
+	dev = (struct mididev *)rmidi_new(mode);
 	RMIDI(dev)->mdep.path = str_new(path);
 	dev->next = mididev_list;
 	mididev_list = dev;

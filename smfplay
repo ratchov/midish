@@ -41,7 +41,11 @@ fi
 exec midish -b << END
 songimportsmf "$1"
 if "$device" {
-	devattach 0 "$device"
+	if "$input" {
+		devattach 0 "$device" wo
+	} else {
+		devattach 0 "$device" rw
+	}
 	if $extclock == 1 {
 		devsetmaster 0
 	}
@@ -50,7 +54,7 @@ if "$device" {
 	}
 }
 if "$input" {
-	devattach 1 "$input"
+	devattach 1 "$input" ro
 	filtnew myfilt
 	filtdevmap myfilt 1 0
 	songsetcurfilt myfilt
