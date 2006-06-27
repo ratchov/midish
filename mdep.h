@@ -34,7 +34,7 @@
 struct rmidi_mdep {
 	char *path;
 	int fd;
-	unsigned dying;
+	unsigned idying, odying;
 };
 
 #endif /* MIDISH_MDEP_H */

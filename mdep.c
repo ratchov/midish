@@ -120,9 +120,11 @@ mux_mdep_init(void) {
 		RMIDI(i)->mdep.fd = open(RMIDI(i)->mdep.path, mode, 0666);
 		if (RMIDI(i)->mdep.fd < 0) {
 			perror(RMIDI(i)->mdep.path);
-			RMIDI(i)->mdep.dying = 1;
+			RMIDI(i)->mdep.idying = 1;
+			RMIDI(i)->mdep.odying = 1;
 		} else {
-			RMIDI(i)->mdep.dying = 0;
+			RMIDI(i)->mdep.idying = 0;
+			RMIDI(i)->mdep.odying = 0;
 		}		
 	}
 }
@@ -197,7 +199,7 @@ mux_mdep_run(void) {
 				res = read(fds[i].fd, midibuf, MIDI_BUFSIZE);
 				if (res < 0) {
 					perror(RMIDI(dev)->mdep.path);
-					RMIDI(dev)->mdep.dying = 1;
+					RMIDI(dev)->mdep.idying = 1;
 					mux_errorcb(dev->unit);
 					continue;
 				}
@@ -205,9 +207,6 @@ mux_mdep_run(void) {
 					dev->isensto = MIDIDEV_ISENSTO;
 				}
 				rmidi_inputcb(RMIDI(dev), midibuf, res);
-				if (RMIDI(dev)->mdep.dying) {
-					mux_errorcb(dev->unit);
-				}
 			}
 		}
 		
@@ -265,14 +264,14 @@ rmidi_flush(struct rmidi *o) {
 	int res;
 	unsigned start, stop;
 	
-	if (!RMIDI(o)->mdep.dying) {
+	if (!RMIDI(o)->mdep.odying) {
 		start = 0;
 		stop = o->oused;
 		while (start < stop) {
 			res = write(o->mdep.fd, o->obuf, o->oused);
 			if (res < 0) {
 				perror(RMIDI(o)->mdep.path);
-				RMIDI(o)->mdep.dying = 1;
+				RMIDI(o)->mdep.odying = 1;
 				break;
 			}
 			start += res;
