@@ -247,15 +247,14 @@ mux_sendraw(unsigned unit, unsigned char *buf, unsigned len) {
 	if (unit >= DEFAULT_MAXNDEVS) {
 		return;
 	}
+	if (len == 0) {
+		return;
+	}
 	dev = mididev_byunit[unit];
 	if (dev == NULL) {
 		return;
 	}
-	while(len) {
-		rmidi_out(RMIDI(dev), *buf);
-		buf++;
-		len--;
-	}
+	rmidi_sendraw(RMIDI(dev), buf, len);
 }
 
 void
@@ -263,7 +262,6 @@ mux_timercb(unsigned long delta) {
 	struct ev ev;
 	struct mididev *dev;
 	mux_curpos += delta;
-	unsigned i;
 
 	/*
 	 * handle active sensing
@@ -274,28 +272,6 @@ mux_timercb(unsigned long delta) {
 				dev->isensto = 0;
 				dbg_putu(dev->unit);
 				dbg_puts(": sensing timeout, disabled\n");
-				/* 
-				 * send all notes off and ctls reset
-				 * XXX: we'd better define EV_ERROR 
-				 * and tweak the filter 
-				 */
-				ev.cmd = EV_CTL;
-				ev.data.voice.dev = dev->unit;
-				ev.data.voice.b0 = 121;		/* all note off */
-				ev.data.voice.b1 = 0;
-				for (i = 0; i <= EV_MAXCH; i++) {
-					ev.data.voice.ch = i;
-					if (mux_cb)
-						mux_cb(mux_addr, &ev);
-				}
-				ev.data.voice.b0 = 123;		/* all ctl reset */
-				ev.data.voice.b1 = 0;
-				for (i = 0; i <= EV_MAXCH; i++) {
-					ev.data.voice.ch = i;
-					if (mux_cb)
-						mux_cb(mux_addr, &ev);
-				}
-				mux_flush();
 			} else {
 				dev->isensto -= delta;
 			}
@@ -419,6 +395,41 @@ mux_evcb(unsigned unit, struct ev *ev) {
 	}
 }
 
+	/*
+	 * called if an error is detected.
+	 * currently we send an all note off and all ctls reset
+	 *
+	 * XXX: these controllers should be handled by the filter
+	 *	they should shutdown recorded states following filtering
+	 *	rules.
+	 */
+
+void
+mux_errorcb(unsigned unit) {
+	unsigned i;
+	struct ev ev;
+	
+	/* 
+	 * send all sound off and ctls reset
+	 */
+	ev.cmd = EV_CTL;
+	ev.data.voice.dev = unit;
+	ev.data.voice.b0 = 120;		/* all sound off */
+	ev.data.voice.b1 = 0;
+	for (i = 0; i <= EV_MAXCH; i++) {
+		ev.data.voice.ch = i;
+		if (mux_cb)
+			mux_cb(mux_addr, &ev);
+	}
+	ev.data.voice.b0 = 121;		/* all ctl reset */
+	ev.data.voice.b1 = 0;
+	for (i = 0; i <= EV_MAXCH; i++) {
+		ev.data.voice.ch = i;
+		if (mux_cb)
+			mux_cb(mux_addr, &ev);
+	}
+	mux_flush();
+}
 
 void
 mux_run(void) {

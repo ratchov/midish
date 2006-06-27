@@ -198,11 +198,15 @@ mux_mdep_run(void) {
 				if (res < 0) {
 					perror(RMIDI(dev)->mdep.path);
 					RMIDI(dev)->mdep.dying = 1;
+					mux_errorcb(dev->unit);
 					continue;
 				}
-				rmidi_inputcb(RMIDI(dev), midibuf, res);
 				if (dev->isensto > 0) {
 					dev->isensto = MIDIDEV_ISENSTO;
+				}
+				rmidi_inputcb(RMIDI(dev), midibuf, res);
+				if (RMIDI(dev)->mdep.dying) {
+					mux_errorcb(dev->unit);
 				}
 			}
 		}
@@ -260,6 +264,7 @@ void
 rmidi_flush(struct rmidi *o) {
 	int res;
 	unsigned start, stop;
+	
 	if (!RMIDI(o)->mdep.dying) {
 		start = 0;
 		stop = o->oused;

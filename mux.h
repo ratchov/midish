@@ -66,6 +66,7 @@ void mux_mdep_run(void);
 void mux_timercb(unsigned long delta);
 void mux_evcb(unsigned, struct ev *ev);
 void mux_sysexcb(unsigned unit, struct sysex *);
+void mux_errorcb(unsigned unit);
 
 extern unsigned mux_ticsperunit;
 

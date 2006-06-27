@@ -139,17 +139,28 @@ rmidi_inputcb(struct rmidi *o, unsigned char *buf, unsigned count) {
 				if (rmidi_debug) {
 					dbg_puts("rmidi_inputcb: ");
 					dbg_putx(data);
-					dbg_puts(" : unimplemented midi status, skipped\n");
+					dbg_puts(" : skipped unimplemented message\n");
 				}
 				break;
 			}
 		} else if (data >= 0x80) {
+			if (rmidi_debug && 
+			    o->istatus >= 0x80 &&  o->icount > 0 &&
+			    o->icount < RMIDI_EVLEN(o->istatus)) {
+				/*
+				 * midi spec says messages can be aborted
+				 * by status byte, so don't trigger an error
+				 */
+				dbg_puts("rmidi_inputcb: ");
+				dbg_putx(o->istatus);
+				dbg_puts(": skipped aborted message\n");
+			}
 			o->istatus = data;
 			o->icount = 0;
 			switch(data) {
 			case MIDI_SYSEXSTART:
 				if (o->isysex) {
-					dbg_puts("rmidi_inputcb: sysex restart\n");
+					dbg_puts("rmidi_inputcb: previous sysex aborted\n");
 					sysex_del(o->isysex);
 				}
 				o->isysex = sysex_new(o->mididev.unit);
@@ -161,10 +172,15 @@ rmidi_inputcb(struct rmidi *o, unsigned char *buf, unsigned count) {
 					mux_sysexcb(o->mididev.unit, o->isysex);
 					o->isysex = NULL;
 				}
+				o->istatus = 0;
 				break;
 			default:
+				/*
+				 * sysex message without the stop byte is considered
+				 * aborted.
+				 */
 				if (o->isysex) {
-					dbg_puts("rmidi_inputcb: lost incomplete sysex\n");
+					dbg_puts("rmidi_inputcb: current sysex aborted\n");
 					sysex_del(o->isysex);
 					o->isysex = NULL;
 				}
@@ -188,15 +204,21 @@ rmidi_inputcb(struct rmidi *o, unsigned char *buf, unsigned count) {
 				mux_evcb(o->mididev.unit, &ev);
 			}
 		} else if (o->istatus == MIDI_SYSEXSTART) {
+			/*
+			 * NOTE: we use running status only for voice events
+			 *	 so, if you add new system common messages
+			 *       here don't forget to reset the running status
+			 */
 			sysex_add(o->isysex, data);
 		}
 	}
 }
 
 	/*
-	 * write a midi byte to the output buffer, non-blocking
+	 * write a single midi byte to the output buffer, if
+	 * it is full, flush it.
 	 */
-
+	 
 void
 rmidi_out(struct rmidi *o, unsigned data) {
 	if (!(o->mididev.mode & MIDIDEV_MODE_OUT)) {
@@ -209,15 +231,15 @@ rmidi_out(struct rmidi *o, unsigned data) {
 		dbg_puts("\n");
 	}
 	if (o->oused == RMIDI_BUFLEN) {
-		dbg_puts("rmidi_out: buffer overflow\n");
-		dbg_panic();
+		rmidi_flush(o);
 	}
 	o->obuf[o->oused] = (unsigned char)data;
 	o->oused++;
 }
 
 	/*
-	 * store an event in the output buffer
+	 * convert an event to bytes stream and queue
+	 * it for sending
 	 */
 
 void
@@ -250,7 +272,6 @@ rmidi_putev(struct rmidi *o, struct ev *ev) {
 			o->ostatus = s;
 			rmidi_out(o, s);
 		}
-
 		rmidi_out(o, ev->data.voice.b0);
 		if (RMIDI_EVLEN(s) == 2) {
 			rmidi_out(o, ev->data.voice.b1);
@@ -258,3 +279,28 @@ rmidi_putev(struct rmidi *o, struct ev *ev) {
 		break;
 	}
 }
+
+	/*
+	 * queue raw data for sending
+	 */
+
+void
+rmidi_sendraw(struct rmidi *o, unsigned char *buf, unsigned len) {
+	if (!(o->mididev.mode & MIDIDEV_MODE_OUT)) {
+		return;
+	}
+	while (len > 0) {
+		if (o->oused == RMIDI_BUFLEN) {
+			rmidi_flush(o);
+		}
+		o->obuf[o->oused] = *buf;
+		o->oused++;
+		len--;
+		buf++;
+	}
+	/*
+	 * since we don't parse the buffer, reset running status
+	 */
+	o->ostatus = 0;
+}
+
