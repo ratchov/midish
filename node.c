@@ -179,9 +179,11 @@ node_exec_binary(struct node_s *o, struct exec_s *x, struct data_s **r,
 	lhs = *r;
 	*r = NULL;
 	if (node_exec(o->list->next, x, r) == RESULT_ERR) {
+		data_delete(lhs);
 		return RESULT_ERR;
 	}
 	if (!func(lhs, *r)) {
+		data_delete(lhs);
 		return RESULT_ERR;
 	}
 	data_delete(*r);
@@ -208,6 +210,7 @@ node_exec_proc(struct node_s *o, struct exec_s *x, struct data_s **r) {
 	for (a = o->list->list; a != NULL; a = a->next) {
 		if (name_lookup(&args, a->data->val.ref)) {
 			cons_err("duplicate arguments in proc definition");
+			name_empty(&args);
 			return RESULT_ERR;
 		}
 		name_add(&args, name_new(a->data->val.ref));

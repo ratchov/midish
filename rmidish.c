@@ -10,18 +10,19 @@
  * standart output (trough the second pipe).
  */
 
-
+#include <limits.h>
 #include <signal.h>
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <readline/readline.h>
 #include <readline/history.h>
 
-#define MIDISHBIN "midish"
-
 int midish_pid;
+char midish_basename[] = "midish";
 FILE *midish_stdout, *midish_stdin;
+char midish_path[PATH_MAX];
 
 #define LINELENGTH 10000
 char linebuf[LINELENGTH + 1];
@@ -106,17 +107,10 @@ startmidish(void) {
 		close(ipipe[0]);
 		close(opipe[1]);
 		/*
-		 * create a new process group, to prevent midish being
-		 * accidently suspended when in performance mode
-		 */		
-		if (setpgid(0, 0) < 0) {
-			perror("setpgid");
-		}
-		/*
 		 * run midish
 		 */
-		if (execlp(MIDISHBIN, MIDISHBIN, "-v", (char *)NULL) < 0) {
-			perror(MIDISHBIN);
+		if (execlp(midish_path, midish_path, "-v", (char *)NULL) < 0) {
+			perror(midish_path);
 		}
 		exit(1);
 	}
@@ -143,21 +137,38 @@ startmidish(void) {
 }
 
 int
-main(void) {
+main(int argc, char *argv[]) {
 #define PROMPTLENGTH 20
 	char *rl, prompt[PROMPTLENGTH];
-
+	unsigned dirlen, filelen;
+	
 	/*
-	 * if stdin or stdout is not a tty, then dont start the front end
-	 * execute midish
+	 * determine the complete path of the midish executable
 	 */
-
+	if (argc > 0) {
+		dirlen = strlen(argv[0]);
+		while(dirlen > 0 && argv[0][dirlen - 1] != '/') dirlen--;
+		memcpy(midish_path, argv[0], dirlen);
+	} else {
+		dirlen = 0;
+	}
+	filelen = strlen(midish_basename);
+	if (dirlen + filelen >= PATH_MAX) {
+		fprintf(stderr, "midish file name too long\n");
+		exit(1);
+	}
+	memcpy(midish_path + dirlen, midish_basename, filelen + 1);
+	
+	/*
+	 * if stdin or stdout is not a tty, then dont start the front end,
+	 * just execute midish
+	 */
 	if (!isatty(STDIN_FILENO) || !isatty(STDOUT_FILENO)) {
-		if (execlp(MIDISHBIN, MIDISHBIN, (char *)NULL) < 0) {
-			perror(MIDISHBIN);
+		if (execlp(midish_path, midish_path, (char *)NULL) < 0) {
+			perror(midish_path);
 		}
 		exit(1);
-	}		
+	}
 	
 	startmidish();
 	fprintf(stderr, "send EOF character (control-D) to quit\n");

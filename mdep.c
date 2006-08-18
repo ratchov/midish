@@ -112,8 +112,14 @@ void
 mux_mdep_done(void) {
 	struct mididev_s *i;
 	for (i = mididev_list; i != NULL; i = i->next) {
-		if (RMIDI(i)->mdep.fd >= 0) {
-			close(RMIDI(i)->mdep.fd);
+		if (RMIDI(i)->mdep.fd < 0) {
+			continue;
+		}
+		while(close(RMIDI(i)->mdep.fd) < 0) {
+			if (errno != EINTR) {
+				perror(RMIDI(i)->mdep.path);
+				break;
+			}
 		}
 	}
 }

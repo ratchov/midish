@@ -1,5 +1,5 @@
 .\"
-.\" Copyright (c) 2003-2005 Alexandre Ratchov
+.\" Copyright (c) 2003-2006 Alexandre Ratchov
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without 
@@ -61,13 +61,6 @@ option of
 to create a front-end, but it can be run instead of 
 .Xr midish 1
 to make the later more user-friendly when used interactively.
-.\".Pp
-.\"The options are as follows:
-.\".Bl -tag -width "-x filename"
-.\".It Fl x Ar filename
-.\"Path to the
-.\".Xr midish 1
-.\"binary
 .Sh SEE ALSO
 .Xr midish 1 ,
 .Xr readline 3
@@ -76,8 +69,8 @@ Midish user's manual and tutorial
 .br
 http://caoua.org/midish/
 .Sh BUGS
-The 
+The
 .Xr midish 1
-binary must be located in the current search path (the
-.Pa PATH 
-environnement variable)
+executable have to be installed in the same directory as the
+.Nm
+executable.

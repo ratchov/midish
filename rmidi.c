@@ -156,6 +156,7 @@ rmidi_inputcb(struct rmidi_s *o, unsigned char *buf, unsigned count) {
 					mux_sysexcb(o->mididev.unit, o->isysex);
 					o->isysex = NULL;
 				}
+				o->istatus = 0;
 				break;
 			default:
 				if (o->isysex) {
@@ -200,10 +201,8 @@ rmidi_out(struct rmidi_s *o, unsigned data) {
 		dbg_putx(data);
 		dbg_puts("\n");
 	}
-	if (o->oused == RMIDI_BUFLEN) {
-		dbg_puts("rmidi_out: buffer overflow\n");
-		dbg_panic();
-	}
+	if (o->oused == RMIDI_BUFLEN)
+		rmidi_flush(o);
 	o->obuf[o->oused] = (unsigned char)data;
 	o->oused++;
 }
