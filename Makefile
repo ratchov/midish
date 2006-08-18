@@ -36,7 +36,6 @@ midish:		${MIDISH_OBJS}
 		${CC} ${LDFLAGS} ${MIDISH_OBJS} -o midish
 
 install-midish:	midish
-		strip midish
 		mkdir -p ${BIN_DIR}
 		mkdir -p ${MAN1_DIR}
 		mkdir -p ${DOC_DIR}
@@ -85,7 +84,6 @@ rmidish:	rmidish.c
 		${LDFLAGS} ${READLINE_LDFLAGS} -o rmidish ${READLINE_LIB}
 
 install-rmidish:rmidish
-		strip rmidish
 		mkdir -p ${BIN_DIR}
 		mkdir -p ${MAN1_DIR}
 		cp rmidish ${BIN_DIR}
