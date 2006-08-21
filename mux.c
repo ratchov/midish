@@ -50,6 +50,7 @@
 #include "mux.h"
 #include "rmidi.h"
 #include "sysex.h"
+#include "timo.h"
 
 	/* 
 	 * MUX_START_DELAY: 
@@ -72,6 +73,7 @@ void mux_chgphase(unsigned phase);
 void
 mux_init(void (*cb)(void *, struct ev *), void *addr) {
 	struct mididev *i;
+	
 	/* 
 	 * default tempo is 120 beats per minutes
 	 * with 24 tics per beat
@@ -99,6 +101,7 @@ mux_init(void (*cb)(void *, struct ev *), void *addr) {
 	mux_cb = cb;
 	mux_addr = addr;
 	sysexlist_init(&mux_sysexlist);
+	timo_init();
 	mux_mdep_init();
 }
 
@@ -113,6 +116,7 @@ mux_done(void) {
 		}
 	}
 	mux_mdep_done();
+	timo_done();
 	sysexlist_done(&mux_sysexlist);
 }
 
@@ -262,6 +266,11 @@ mux_timercb(unsigned long delta) {
 	struct ev ev;
 	struct mididev *dev;
 	mux_curpos += delta;
+	
+	/*
+	 * run expired timeouts
+	 */
+	timo_update(delta);
 
 	/*
 	 * handle active sensing

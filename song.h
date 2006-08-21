@@ -39,6 +39,7 @@
 #include "track.h"
 #include "filt.h"
 #include "sysex.h"
+#include "timo.h"
 
 struct songchan {
 	struct name name;
@@ -100,6 +101,8 @@ struct song {
 	unsigned tic, beat, measure;
 	unsigned metro_enabled;
 	struct ev metro_hi, metro_lo;
+	struct ev *metro_ev;			/* note that is sounding */
+	struct timo metro_to;
 	/* defautls */
 	struct songtrk *curtrk;
 	struct songfilt *curfilt;
