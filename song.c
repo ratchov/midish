@@ -526,7 +526,6 @@ song_metrocb(void *addr) {
 	ev.data.voice.b0  = o->metro_ev->data.voice.b0;
 	ev.data.voice.b1  = EV_NOFF_DEFAULTVEL;
 	mux_putev(&ev);
-	dbg_puts("metro_noff\n");
 	o->metro_ev = NULL;
 }
 
@@ -555,10 +554,9 @@ song_metrotic(struct song *o) {
 		}
 		mux_putev(o->metro_ev);
 		/*
-		 * schedule the corrsponding note off
+		 * schedule the corrsponding note off in 30ms
 		 */
-		timo_add(&o->metro_to, 24*1000*30);
-		dbg_puts("metro_non\n");
+		timo_add(&o->metro_to, 24 * 1000 * 30);
 	}
 }
 
