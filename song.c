@@ -37,6 +37,7 @@
 #include "filt.h"
 #include "song.h"
 #include "cons.h"		/* cons_errxxx */
+#include "metro.h"
 #include "default.h"
 
 unsigned song_debug = 0;
@@ -44,7 +45,6 @@ unsigned song_debug = 0;
 void song_playcb(void *, struct ev *);
 void song_recordcb(void *, struct ev *);
 void song_idlecb(void *, struct ev *);
-void song_metrocb(void *);
 
 struct songtrk *
 songtrk_new(char *name) {
@@ -166,20 +166,8 @@ song_init(struct song *o) {
 	o->beats_per_measure = DEFAULT_BPM;
 	o->tempo = TEMPO_TO_USEC24(DEFAULT_TEMPO, o->tics_per_beat);
 	/* metronome */
+	metro_init(&o->metro);
 	o->tic = o->beat = o->measure = 0;
-	o->metro_enabled = 1;
-	o->metro_hi.cmd = EV_NON;
-	o->metro_hi.data.voice.dev = 0;
-	o->metro_hi.data.voice.ch = 9;
-	o->metro_hi.data.voice.b0 = 67;
-	o->metro_hi.data.voice.b1 = 127;
-	o->metro_lo.cmd = EV_NON;
-	o->metro_lo.data.voice.dev = 0;
-	o->metro_lo.data.voice.ch = 9;
-	o->metro_lo.data.voice.b0 = 68;
-	o->metro_lo.data.voice.b1 = 90;
-	o->metro_ev = NULL;
-	timo_set(&o->metro_to, song_metrocb, o);
 	/* defaults */
 	o->curtrk = NULL;
 	o->curfilt = NULL;
@@ -219,6 +207,7 @@ song_done(struct song *o) {
 		songsx_delete(s);
 	}
 	track_done(&o->meta);
+	metro_done(&o->metro);
 }
 
 /* -------------------------------------------------- track stuff --- */
@@ -515,51 +504,6 @@ song_measuretotic(struct song *o, unsigned measure) {
 }
 
 
-void
-song_metrocb(void *addr) {
-	struct song *o = (struct song *)addr;
-	struct ev ev;
-	
-	ev.cmd = EV_NOFF;
-	ev.data.voice.dev = o->metro_ev->data.voice.dev;
-	ev.data.voice.ch  = o->metro_ev->data.voice.ch;
-	ev.data.voice.b0  = o->metro_ev->data.voice.b0;
-	ev.data.voice.b1  = EV_NOFF_DEFAULTVEL;
-	mux_putev(&ev);
-	o->metro_ev = NULL;
-}
-
-	/*
-	 * if the position pointer is on the first tic
-	 * of a beat then send a metronome "tic" to the midiout
-	 * note: the output is not flushed
-	 */
-
-void
-song_metrotic(struct song *o) {
-	if (o->metro_enabled && o->tic == 0) {
-		/*
-		 * if the last metronome click is sounding
-		 * abord the timeout and stop the click 
-		 */
-		if (o->metro_ev) {
-			dbg_puts("song_metrotic: nested clicks\n");
-			timo_del(&o->metro_to);
-			song_metrocb(o);
-		}
-		if (o->beat == 0) {
-			o->metro_ev = &o->metro_hi;
-		} else {
-			o->metro_ev = &o->metro_lo;
-		}
-		mux_putev(o->metro_ev);
-		/*
-		 * schedule the corrsponding note off in 30ms
-		 */
-		timo_add(&o->metro_to, 24 * 1000 * 30);
-	}
-}
-
 	/*
 	 * returns true if each track in the song is finished
 	 * and false if at least one track is not finished
@@ -681,7 +625,7 @@ song_playtic(struct song *o) {
 				break;
 			}
 		}
-		song_metrotic(o);
+		metro_tic(&o->metro, o->beat, o->tic);
 		for (i = o->trklist; i != NULL; i = (struct songtrk *)i->name.next) {
 			while (track_evavail(&i->track, &i->trackptr)) {
 				track_evget(&i->track, &i->trackptr, &ev);
@@ -829,15 +773,7 @@ song_outputshut(struct song *o) {
 	struct ev ev;
 	struct mididev *dev;
 
-	/*
-	 * if the metronome is sounding, 
-	 * abord the timeout and send the note off
-	 */
-	if (o->metro_ev) {
-		timo_del(&o->metro_to);
-		song_metrocb(o);
-	}
-	
+	metro_shut(&o->metro);	
 	for (dev = mididev_list; dev != NULL; dev = dev->next) {
 		ev.cmd = EV_CTL;		
 		ev.data.voice.dev = dev->unit;

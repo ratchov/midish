@@ -39,7 +39,7 @@
 #include "track.h"
 #include "filt.h"
 #include "sysex.h"
-#include "timo.h"
+#include "metro.h"
 
 struct songchan {
 	struct name name;
@@ -98,11 +98,8 @@ struct song {
 	struct filt *filt;
 	void (*realtimecb)(void *addr, struct ev *ev);
 	/* metronome stuff */
-	unsigned tic, beat, measure;
-	unsigned metro_enabled;
-	struct ev metro_hi, metro_lo;
-	struct ev *metro_ev;			/* note that is sounding */
-	struct timo metro_to;
+	struct metro metro;
+	unsigned measure, beat, tic;
 	/* defautls */
 	struct songtrk *curtrk;
 	struct songfilt *curfilt;
@@ -148,7 +145,6 @@ void song_setcurinput(struct song *o, unsigned dev, unsigned ch);
 
 unsigned song_measuretotic(struct song *o, unsigned);
 
-void song_metrotic(struct song *o);
 void song_playconf(struct song *o);
 void song_nexttic(struct song *o);
 void song_playtic(struct song *o);

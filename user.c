@@ -670,7 +670,7 @@ user_func_metroswitch(struct exec *o, struct data **r) {
 	if (!exec_lookuplong(o, "onoff", &onoff)) {
 		return 0;
 	}	
-	user_song->metro_enabled = onoff;
+	user_song->metro.enabled = onoff;
 	return 1;
 }
 
@@ -685,8 +685,8 @@ user_func_metroconf(struct exec *o, struct data **r) {
 		cons_err("note-on event expected");
 		return 0;
 	}
-	user_song->metro_hi = evhi;
-	user_song->metro_lo = evlo;
+	user_song->metro.hi = evhi;
+	user_song->metro.lo = evlo;
 	return 1;
 }
 

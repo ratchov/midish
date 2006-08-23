@@ -103,9 +103,30 @@
 #define DEFAULT_SXWAIT		20
 
 	/*
+	 * metronome click length in 24-th of microsecond
+	 * (30ms)
+	 */
+#define DEFAULT_METRO_CLICKLEN	(24 * 1000 * 30)
+
+	/*
+	 * default metronome device and midi channel
+	 */
+#define DEFAULT_METRO_DEV	0
+#define DEFAULT_METRO_CHAN	9
+
+	/*
+	 * default metronome click notes and velocities
+	 */
+#define DEFAULT_METRO_HI_NOTE	67
+#define DEFAULT_METRO_HI_VEL	127
+#define DEFAULT_METRO_LO_NOTE	68
+#define DEFAULT_METRO_LO_VEL	90
+
+	/*
 	 * convert tempo (beats per minute)
 	 * to tic length (number of 24-th of microsecond)
 	 */
 #define TEMPO_TO_USEC24(tempo,tpb) (60L * 24000000L / ((tempo) * (tpb)))
+
 
 #endif /* MIDISH_DEFAULT_H */
