@@ -5,10 +5,7 @@ function usage {
 	exit 2
 }
 
-set -- `getopt mxyd:i: $* 2>/dev/null`
-if test $? != 0; then
-	usage;
-fi
+set -- `getopt mxyd:i: $* 2>/dev/null`		|| usage
 
 extclock=0
 sendrt=0

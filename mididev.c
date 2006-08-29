@@ -49,7 +49,7 @@
 
 /* -------------------------------------------- device management --- */
 
-unsigned mididev_ticrate;	/* global dics per unit */
+unsigned mididev_ticrate;	/* global tics per unit */
 
 void
 mididev_init(struct mididev *o, unsigned mode) {

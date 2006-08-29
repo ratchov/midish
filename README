@@ -9,7 +9,7 @@ Important features:
 	  mapping, keyboard splitting, ...)
 	- track recording, metronome
 	- basic track editing (insert, copy, delete, ...)
-	- track quantisation
+	- progressive track quantisation
 	- import and export of standard MIDI files
 	- tempo and time-signature changes
 	- system exclusive messages handling
