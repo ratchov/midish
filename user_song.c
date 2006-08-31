@@ -702,3 +702,24 @@ user_func_songgetcurinput(struct exec *o, struct data **r) {
 	data_listadd(*r, data_newlong(ch));
 	return 1;
 }
+
+
+unsigned
+user_func_songsetfactor(struct exec *o, struct data **r) {
+	long tpu;
+	if (!exec_lookuplong(o, "tempo_factor", &tpu)) {
+		return 0;
+	}
+	if (tpu < 50 || tpu > 200) {
+		cons_err("songsetfactor: factor must be between 50 and 200");
+		return 0;
+	}
+	user_song->tempo_factor = 0x100 * 100 / tpu;
+	return 1;
+}
+
+unsigned
+user_func_songgetfactor(struct exec *o, struct data **r) {
+	*r = data_newlong(user_song->tempo_factor);
+	return 1;
+}

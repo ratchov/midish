@@ -1,10 +1,13 @@
 #
-# song file of midish version 0.2
+# song file of midish version 0.3
 #
 {
 	tics_per_unit 96
-	meta {	timesig 4 24
-		tempo 400000	}
+	tempo_factor 256
+	meta {
+		timesig 4 24
+		tempo 400000
+	}
 	songchan piano {
 		chan {0 0}
 		conf {
@@ -4099,7 +4102,15 @@
 	}
 	curtrk pi1
 	curfilt piano
+	cursx gm_on
 	curchan piano
 	curpos 0
+	curlen 0
 	curquant 0
+	curinput {0 0}
+	metro {
+		enabled 1
+		lo	non {0 9} 68 90
+		hi	non {0 9} 67 127
+	}
 }

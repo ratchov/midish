@@ -165,6 +165,7 @@ song_init(struct song *o) {
 	o->tics_per_beat = o->tics_per_unit / DEFAULT_BPM;
 	o->beats_per_measure = DEFAULT_BPM;
 	o->tempo = TEMPO_TO_USEC24(DEFAULT_TEMPO, o->tics_per_beat);
+	o->tempo_factor = 0x200;
 	/* metronome */
 	metro_init(&o->metro);
 	o->tic = o->beat = o->measure = 0;
@@ -619,7 +620,7 @@ song_playtic(struct song *o) {
 				break;
 			case EV_TEMPO:
 				o->tempo = ev.data.tempo.usec24;
-				mux_chgtempo(o->tempo);	
+				mux_chgtempo(o->tempo_factor * o->tempo  / 0x100);	
 				break;
 			default:
 				break;
@@ -814,7 +815,7 @@ song_playcb(void *addr, struct ev *ev) {
 		if (song_debug) {
 			dbg_puts("song_play: got a start\n");
 		}
-		mux_chgtempo(o->tempo);
+		mux_chgtempo(o->tempo_factor * o->tempo / 0x100);
 		break;
 	case EV_STOP:
 		if (song_debug) {
@@ -854,7 +855,7 @@ song_play(struct song *o) {
 	
 	song_playsysex(o);
 	song_playconf(o);
-	mux_chgtempo(o->tempo);
+	mux_chgtempo(o->tempo_factor * o->tempo / 0x100);
 	mux_chgticrate(o->tics_per_unit);
 	
 	if (song_debug) {
@@ -944,7 +945,7 @@ song_record(struct song *o) {
 	
 	song_playsysex(o);
 	song_playconf(o);
-	mux_chgtempo(o->tempo);
+	mux_chgtempo(o->tempo_factor * o->tempo / 0x100);
 	mux_chgticrate(o->tics_per_unit);
 	
 	if (song_debug) {
@@ -1013,7 +1014,7 @@ song_idle(struct song *o) {
 	
 	song_playsysex(o);
 	song_playconf(o);
-	mux_chgtempo(o->tempo);
+	mux_chgtempo(o->tempo_factor * o->tempo / 0x100);
 	mux_chgticrate(o->tics_per_unit);
 
 	if (song_debug) {

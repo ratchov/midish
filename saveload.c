@@ -411,6 +411,11 @@ song_output(struct song *o, struct textout *f) {
 	textout_putstr(f, "\n");
 
 	textout_indent(f);
+	textout_putstr(f, "tempo_factor ");
+	textout_putlong(f, o->tempo_factor);
+	textout_putstr(f, "\n");
+
+	textout_indent(f);
 	textout_putstr(f, "meta ");
 	track_output(&o->meta, f);
 	textout_putstr(f, "\n");
@@ -1237,10 +1242,6 @@ parse_metro(struct parse *o, struct metro *m) {
 					return 0;
 				}
 				m->enabled = num;
-				dbg_puts("enabled=");
-				dbg_putu(num);
-				dbg_puts("\n");
-				
 			} else if (str_eq(o->lex.strval, "lo")) {
 				if (!parse_ev(o, &ev)) {
 					return 0;
@@ -1402,6 +1403,18 @@ parse_song(struct parse *o, struct song *s) {
 					return 0;
 				}
 				s->tics_per_unit = num;
+			} else if (str_eq(o->lex.strval, "tempo_factor")) {
+				if (!parse_long(o, ~1U, &num)) {
+					return 0;
+				}
+				if (!parse_nl(o)) {
+					return 0;
+				}
+				if (num < 0x80 || num > 0x200) {
+					lex_err(&o->lex, "warning, tempo factor out of bounds\n");
+				} else {
+					s->tempo_factor = num;
+				}
 			} else if (str_eq(o->lex.strval, "curtrk")) {
 				if (!parse_getsym(o)) {
 					return 0;

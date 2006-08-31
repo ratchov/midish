@@ -1035,6 +1035,9 @@ user_mainloop(void) {
 	exec_newbuiltin(exec, "songgetunit", user_func_songgetunit, NULL);
 	exec_newbuiltin(exec, "songsetunit", user_func_songsetunit, 
 			name_newarg("tics_per_unit", NULL));
+	exec_newbuiltin(exec, "songgetfactor", user_func_songgetfactor, NULL);
+	exec_newbuiltin(exec, "songsetfactor", user_func_songsetfactor, 
+			name_newarg("tempo_factor", NULL));
 	exec_newbuiltin(exec, "songgetcurpos", user_func_songgetcurpos, NULL);
 	exec_newbuiltin(exec, "songsetcurpos", user_func_songsetcurpos, 
 			name_newarg("measure", NULL));

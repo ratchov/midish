@@ -93,6 +93,7 @@ struct song {
 	/* real-time parameters */
 	unsigned long tempo;			/* 24th of usec per tic */
 	unsigned beats_per_measure, tics_per_beat;
+	unsigned tempo_factor;			/* tempo = tempo * factor / 200 */
 	struct track rec;
 	struct seqptr recptr;
 	struct filt *filt;

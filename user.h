@@ -163,6 +163,8 @@ unsigned user_func_filtgetcurchan(struct exec *o, struct data **r);
 
 unsigned user_func_songsetunit(struct exec *o, struct data **r);
 unsigned user_func_songgetunit(struct exec *o, struct data **r);
+unsigned user_func_songsetfactor(struct exec *o, struct data **r);
+unsigned user_func_songgetfactor(struct exec *o, struct data **r);
 unsigned user_func_songsetcurpos(struct exec *o, struct data **r);
 unsigned user_func_songgetcurpos(struct exec *o, struct data **r);
 unsigned user_func_songsetcurlen(struct exec *o, struct data **r);
