@@ -1240,6 +1240,7 @@ the console).
 	<LI> added basic support for the MIDI "Active Sensing" feature
 	<LI> make metronome click audible with non-percusive patches
 	<LI> save metronome settings
+        <LI> added tempo factor: <TT>songsetfactor</TT> and <TT>songgetfactor</TT>
 	</UL>
 
 <A name="attributes"></A><H1>13 Project attributes</H1>
@@ -1374,6 +1375,10 @@ the console).
 	<TD>tics_per_unit
 	<TD>number of midi tics per unit note, the default value is 96
 		 which corresponds to the midi standard.
+	<TR>
+	<TD>tempo_factor
+	<TD>number by which the tempo is multiplied
+	    on play and record.
 	<TR>
 	<TD>metronome flag
 	<TD>if the metronome = true, then the metronome is audible
@@ -2568,6 +2573,21 @@ the console).
 <B><TT>songgetunit</TT></B>
         <BLOCKQUOTE>
         return the number of tics per unit note
+        </BLOCKQUOTE>
+
+<A name="func_songsetfactor"></A>
+<B><TT>songsetfactor tempo_factor</TT></B>
+        <BLOCKQUOTE>
+	set the tempo factor for play and record to the given
+	integer value. The tempo factor must be between 50 (play
+	half of the real tempo) and 200 (play at twice the real
+	tempo).
+        </BLOCKQUOTE>
+
+<A name="func_songgetfactor"></A>
+<B><TT>songgetfactor</TT></B>
+        <BLOCKQUOTE>
+        return the current tempo factor
         </BLOCKQUOTE>
 
 <A name="func_songsettempo"></A>
