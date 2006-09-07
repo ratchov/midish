@@ -10,6 +10,8 @@
  * standart output (trough the second pipe).
  */
 
+#include <sys/types.h>
+#include <sys/wait.h>
 #include <limits.h>
 #include <signal.h>
 #include <unistd.h>
@@ -136,6 +138,17 @@ startmidish(void) {
 	linenum = 1;
 }
 
+void
+stopmidish(void) {
+	int status;
+	fclose(midish_stdout);
+	fclose(midish_stdin);
+	if (waitpid(midish_pid, &status, 0) < 0) {
+		perror("waitpid");
+		exit(1);
+	}
+}
+
 int
 main(int argc, char *argv[]) {
 #define PROMPTLENGTH 20
@@ -186,5 +199,7 @@ main(int argc, char *argv[]) {
 		sendline(rl);
 		free(rl);
 	}
+	fputs("\n", stdout);
+	stopmidish();
 	return 0;
 }

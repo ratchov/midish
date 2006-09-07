@@ -1127,16 +1127,10 @@ filt_processev(struct filt *o, struct ev *ev) {
 	/*
 	 * send state event and delete
 	 * the state if it is no more used
-	 *
-	 * a pointer to the next runable state in the
-	 * list is returned
 	 */
 
-struct state *
+void
 filt_staterun(struct filt *o, struct state *s) {
-	struct state *snext;
-	
-	snext = s->next;
 	if (s->data.filt.nevents == 0) {
 		filt_processev(o, &s->ev);
 		if (!s->data.filt.keep) {
@@ -1149,18 +1143,15 @@ filt_staterun(struct filt *o, struct state *s) {
 #endif
 			statelist_rm(&o->statelist, s);
 			state_del(s);
-			return snext;
+			return;
 		}
 	}
 	s->data.filt.nevents++;
-	return snext;
 }
 
 	/*
 	 * create and run a new state and return pointer
 	 * to the next runable state
-	 *
-	 * WARNING: the returned pointer is the next runable state!!!
 	 */
 
 struct state *
@@ -1179,7 +1170,8 @@ filt_statecreate(struct filt *o, struct ev *ev, unsigned keep) {
 	s->data.filt.nevents = 0;
 	s->data.filt.keep = keep;
 	statelist_add(&o->statelist, s);
-	return filt_staterun(o, s);
+	filt_staterun(o, s);
+	return s;
 }
 
 	/*
@@ -1187,11 +1179,11 @@ filt_statecreate(struct filt *o, struct ev *ev, unsigned keep) {
 	 * try to send it
 	 */
 
-struct state *
+void
 filt_stateupdate(struct filt *o, struct state *s, struct ev *ev, unsigned keep) {
 	s->ev = *ev;
 	s->data.filt.keep = keep;
-	return filt_staterun(o, s);
+	filt_staterun(o, s);
 }
 
 	/*
@@ -1215,26 +1207,25 @@ filt_statelookup(struct filt *o, struct ev *ev) {
 	 * 	
 	 */
 
-struct state *
+void
 filt_stateshut(struct filt *o, struct state *s) {
 	struct ev *ev = &s->ev;
-	struct state *snext;
 
 	if (s->ev.cmd == EV_NON || s->ev.cmd == EV_KAT) {
 		ev->cmd = EV_NOFF;
 		ev->data.voice.b0 = s->ev.data.voice.b0;
 		ev->data.voice.b1 = EV_NOFF_DEFAULTVEL;
 		s->data.filt.keep = 0;
-		return filt_staterun(o, s);
+		filt_staterun(o, s);
 	} else if (s->ev.cmd == EV_BEND) {
 		ev->data.voice.b0 = EV_BEND_DEFAULTLO;
 		ev->data.voice.b1 = EV_BEND_DEFAULTHI;
 		s->data.filt.keep = 0;
-		return filt_staterun(o, s);
+		filt_staterun(o, s);
 	} else if (s->ev.cmd == EV_CAT) {
 		ev->data.voice.b0 = EV_CAT_DEFAULT;
 		s->data.filt.keep = 0;
-		return filt_staterun(o, s);
+		filt_staterun(o, s);
 	} else {
 #ifdef FILT_DEBUG
 		if (filt_debug) {
@@ -1242,11 +1233,9 @@ filt_stateshut(struct filt *o, struct state *s) {
 			ev_dbg(ev);
 			dbg_puts("\n");
 		}
-		snext = s->next;
+#endif
 		statelist_rm(&o->statelist, s);
 		state_del(s);
-		return snext;
-#endif
 	}
 }
 
@@ -1258,10 +1247,11 @@ filt_stateshut(struct filt *o, struct state *s) {
 
 void
 filt_shut(struct filt *o) {
-	struct state *s;
+	struct state *s, *snext;
 	
-	while (o->statelist.first) {
-		s = filt_stateshut(o, o->statelist.first);
+	for (s = o->statelist.first; s != NULL; s = snext) {
+		snext = s->next;
+		filt_stateshut(o, s);
 	}
 }
 
@@ -1367,16 +1357,15 @@ filt_evcb(struct filt *o, struct ev *ev) {
 
 void
 filt_timercb(struct filt *o) {
-	struct state *s;
+	struct state *s, *snext;
 	unsigned nevents;
 
-	for (s = o->statelist.first; s != NULL;) {
+	for (s = o->statelist.first; s != NULL; s = snext) {
+		snext = s->next;
 		nevents = s->data.filt.nevents;
 		s->data.filt.nevents = 0;
 		if (nevents > 1) {
-			s = filt_staterun(o, s);
-		} else {
-			s = s->next;
+			filt_staterun(o, s);
 		}
 	}
 }

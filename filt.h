@@ -79,8 +79,8 @@ void filt_processev(struct filt *o, struct ev *ev);
 
 struct state *filt_statecreate(struct filt *o, struct ev *ev, unsigned keep);
 struct state *filt_statelookup(struct filt *o, struct ev *ev);
-struct state *filt_stateshut(struct filt *o, struct state *p);
-struct state *filt_stateupdate(struct filt *o, struct state *p, struct ev *ev, unsigned keep);
+void filt_stateshut(struct filt *o, struct state *p);
+void filt_stateupdate(struct filt *o, struct state *p, struct ev *ev, unsigned keep);
 
 void filt_conf_devdrop(struct filt *o, unsigned idev);
 void filt_conf_nodevdrop(struct filt *o, unsigned idev);

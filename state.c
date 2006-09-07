@@ -69,10 +69,30 @@ state_del(struct state *s) {
 void
 statelist_init(struct statelist *o) {
 	o->first = NULL;
+#ifdef STATE_PROF
+	o->lookup_n = 0;
+	o->lookup_time = 0;
+	o->lookup_max = 0;
+#endif
 }
 
 void
 statelist_done(struct statelist *o) {
+#ifdef STATE_PROF
+	unsigned mean;
+	dbg_puts("statelist_done: lookup: num=");
+	dbg_putu(o->lookup_n);
+	if (o->lookup_n != 0) {
+		mean = 100 * o->lookup_time / o->lookup_n;
+		dbg_puts(", max=");
+		dbg_putu(o->lookup_max);
+		dbg_puts(", mean=");
+		dbg_putu(mean / 100);
+		dbg_puts(".");
+		dbg_putu(mean % 100);
+	}
+	dbg_puts("\n");
+#endif
 	if (o->first != NULL) {
 		dbg_puts("statelist_done: list not empty\n");
 		dbg_panic();
@@ -98,12 +118,25 @@ statelist_rm(struct statelist *o, struct state *st) {
 struct state *
 statelist_lookup(struct statelist *o, struct ev *ev) {
 	struct state *i;
+#ifdef STATE_PROF
+	unsigned time = 0;
+#endif
 
 	for (i = o->first; i != NULL; i = i->next) {
+#ifdef STATE_PROF
+		time++;
+#endif
 		if (ev_sameclass(&i->ev, ev)) { 
-			return i;
+			break;
 		}
 	}
-	return NULL;
+#ifdef STATE_PROF
+	o->lookup_n++;
+	if (o->lookup_max < time) {
+		o->lookup_max = time;
+	}
+	o->lookup_time += time;
+#endif
+	return i;
 }
 

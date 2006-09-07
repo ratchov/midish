@@ -32,6 +32,7 @@
 #define MIDISH_STATE_H
 
 #define STATE_DEBUG
+#define STATE_PROF
 
 #include "ev.h"
 #include "track.h"
@@ -55,6 +56,9 @@ struct statelist {
 	 * XXX: use a hash table instead of simple list
 	 */
 	struct state *first;
+#ifdef STATE_PROF
+	unsigned lookup_n, lookup_max, lookup_time;
+#endif
 };
 
 void	      state_pool_init(unsigned size);
