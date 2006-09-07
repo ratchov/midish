@@ -31,15 +31,9 @@
 #ifndef MIDISH_FILT_H
 #define MIDISH_FILT_H
 
+#include "state.h"
+
 #define FILT_DEBUG
-
-#include "ev.h"
-
-struct state {
-	struct ev ev;			/* initial event */
-	unsigned nevents, keep;
-	struct state *next;
-};
 
 #define RULE_CTLMAP	1
 #define RULE_CTLDROP	2
@@ -69,12 +63,9 @@ struct filt {
 	unsigned active;
 	void (*cb)(void *, struct ev *);
 	void *addr;
-	struct state *statelist;
+	struct statelist statelist;
 	
 };
-
-void state_pool_init(unsigned size);
-void state_pool_done(void);
 
 void filt_init(struct filt *);
 void filt_done(struct filt *);
@@ -82,19 +73,14 @@ void filt_reset(struct filt *);
 void filt_start(struct filt *, void (*)(void *, struct ev *), void *);
 void filt_shut(struct filt *);
 void filt_stop(struct filt *);
-
 void filt_evcb(struct filt *o, struct ev *ev);
 void filt_timercb(struct filt *o);
+void filt_processev(struct filt *o, struct ev *ev);
 
-struct state  *state_new(void);
-void             state_del(struct state *s);
-
-void		 filt_processev(struct filt *o, struct ev *ev);
-
-struct state **filt_statecreate(struct filt *o, struct ev *ev, unsigned keep);
-struct state **filt_statelookup(struct filt *o, struct ev *ev);
-struct state **filt_stateshut(struct filt *o, struct state **p);
-struct state **filt_stateupdate(struct filt *o, struct state **p, struct ev *ev, unsigned keep);
+struct state *filt_statecreate(struct filt *o, struct ev *ev, unsigned keep);
+struct state *filt_statelookup(struct filt *o, struct ev *ev);
+struct state *filt_stateshut(struct filt *o, struct state *p);
+struct state *filt_stateupdate(struct filt *o, struct state *p, struct ev *ev, unsigned keep);
 
 void filt_conf_devdrop(struct filt *o, unsigned idev);
 void filt_conf_nodevdrop(struct filt *o, unsigned idev);

@@ -129,6 +129,13 @@ proc q rate {
 } 
 
 #
+# set the tempo factor
+#
+proc fac percent {
+	songsetfactor $percent
+}
+
+#
 # cut the given number of measures from the current 
 # position on the current track
 #

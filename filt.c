@@ -45,40 +45,6 @@ unsigned filt_debug = 0;
 
 /* ------------------------------------------------------------------ */
 
-	/*
-	 * states are structures used to hold the notes
-	 * which are "on", the values of used controllers
-	 * the bender etc...
-	 *
-	 * since for each midi event, a state can be created
-	 * in realtime, we use a pool.
-	 *
-	 */
-
-struct pool state_pool;
-
-void
-state_pool_init(unsigned size) {
-	pool_init(&state_pool, "state", sizeof(struct state), size);
-}
-
-void
-state_pool_done(void) {
-	pool_done(&state_pool);
-}
-
-struct state *
-state_new(void) {
-	return (struct state *)pool_new(&state_pool);
-}
-
-void
-state_del(struct state *s) {
-	pool_del(&state_pool, s);
-}
-
-/* ------------------------------------------------------------------ */
-
 unsigned char filt_curve_id[128] = {
 	0,	1,	2,	3,	4,	5,	6,	7,
 	8,	9,	10,	11,	12,	13,	14,	15,
@@ -361,13 +327,12 @@ rule_swapodev(struct rule *o, unsigned olddev, unsigned newdev) {
 void
 filt_init(struct filt *o) {
 	o->cb = NULL;
-	o->addr = NULL;
-		
-	o->statelist = NULL;
+	o->addr = NULL;	
 	o->active = 1;
 	o->voice_rules = NULL;
 	o->chan_rules = NULL;
 	o->dev_rules = NULL;
+	statelist_init(&o->statelist);	
 }
 
 	/*
@@ -393,9 +358,9 @@ filt_reset(struct filt *o) {
 		o->dev_rules = r->next;
 		mem_free(r); 
 	}
-	while (o->statelist) {
-		i = o->statelist;
-		o->statelist = i->next;
+	while (o->statelist.first) {
+		i = o->statelist.first;
+		statelist_rm(&o->statelist, i);
 		state_del(i);
 	}
 }
@@ -406,12 +371,10 @@ filt_reset(struct filt *o) {
 
 void
 filt_done(struct filt *o) {
+	statelist_done(&o->statelist);	
 #ifdef FILT_DEBUG
 	if (o->cb != NULL) {
 		dbg_puts("filt_done: call filt_stop first.\n");
-	}
-	if (o->statelist != NULL) {
-		dbg_puts("filt_done: statelist not empty\n");
 	}
 #endif
 	filt_reset(o);
@@ -443,7 +406,7 @@ filt_stop(struct filt *o) {
 	o->cb = NULL;
 	o->addr = NULL;	
 #ifdef FILT_DEBUG
-	if (o->statelist) {
+	if (o->statelist.first) {	/* XXX: use statelist macro */
 		dbg_puts("filt_stop: state list isn't empty\n");
 	}
 #endif
@@ -1169,27 +1132,28 @@ filt_processev(struct filt *o, struct ev *ev) {
 	 * list is returned
 	 */
 
-struct state **
-filt_staterun(struct filt *o, struct state **p) {
-	struct state *s = *p;
+struct state *
+filt_staterun(struct filt *o, struct state *s) {
+	struct state *snext;
 	
-	if (s->nevents == 0) {
+	snext = s->next;
+	if (s->data.filt.nevents == 0) {
 		filt_processev(o, &s->ev);
-		if (!s->keep) {
-			*p = s->next;
+		if (!s->data.filt.keep) {
 #ifdef FILT_DEBUG
-		if (filt_debug) {
-			dbg_puts("filt_staterun: deleting: ");
-			ev_dbg(&s->ev);
-			dbg_puts("\n");
-		}
+			if (filt_debug) {
+				dbg_puts("filt_staterun: deleting: ");
+				ev_dbg(&s->ev);
+				dbg_puts("\n");
+			}
 #endif
+			statelist_rm(&o->statelist, s);
 			state_del(s);
-			return p;
+			return snext;
 		}
 	}
-	s->nevents++;
-	return &s->next;
+	s->data.filt.nevents++;
+	return snext;
 }
 
 	/*
@@ -1199,7 +1163,7 @@ filt_staterun(struct filt *o, struct state **p) {
 	 * WARNING: the returned pointer is the next runable state!!!
 	 */
 
-struct state **
+struct state *
 filt_statecreate(struct filt *o, struct ev *ev, unsigned keep) {
 	struct state *s;
 	
@@ -1212,11 +1176,10 @@ filt_statecreate(struct filt *o, struct ev *ev, unsigned keep) {
 #endif
 	s = state_new();
 	s->ev = *ev;
-	s->nevents = 0;
-	s->keep = keep;
-	s->next = o->statelist;
-	o->statelist = s;
-	return filt_staterun(o, &o->statelist);
+	s->data.filt.nevents = 0;
+	s->data.filt.keep = keep;
+	statelist_add(&o->statelist, s);
+	return filt_staterun(o, s);
 }
 
 	/*
@@ -1224,11 +1187,11 @@ filt_statecreate(struct filt *o, struct ev *ev, unsigned keep) {
 	 * try to send it
 	 */
 
-struct state **
-filt_stateupdate(struct filt *o, struct state **p, struct ev *ev, unsigned keep) {
-	(*p)->ev = *ev;
-	(*p)->keep = keep;
-	return filt_staterun(o, p);
+struct state *
+filt_stateupdate(struct filt *o, struct state *s, struct ev *ev, unsigned keep) {
+	s->ev = *ev;
+	s->data.filt.keep = keep;
+	return filt_staterun(o, s);
 }
 
 	/*
@@ -1238,46 +1201,9 @@ filt_stateupdate(struct filt *o, struct state **p, struct ev *ev, unsigned keep)
 	 * bender etc...
 	 */
 
-struct state **
+struct state *
 filt_statelookup(struct filt *o, struct ev *ev) {
-	struct state **i;
-	
-	if (EV_ISNOTE(ev)) {
-		for (i = &o->statelist; *i != NULL; i = &(*i)->next) {
-			if (EV_ISNOTE(&(*i)->ev) && 
-			    (*i)->ev.data.voice.dev == ev->data.voice.dev && 
-			    (*i)->ev.data.voice.ch == ev->data.voice.ch && 
-			    (*i)->ev.data.voice.b0 == ev->data.voice.b0) {
-				return i;
-			}
-		}	
-	} else if (ev->cmd == EV_CTL) {
-		for (i = &o->statelist; *i != NULL; i = &(*i)->next) {
-			if ((*i)->ev.cmd == EV_CTL && 
-			    (*i)->ev.data.voice.dev == ev->data.voice.dev && 
-			    (*i)->ev.data.voice.ch == ev->data.voice.ch && 
-			    (*i)->ev.data.voice.b0 == ev->data.voice.b0) {
-				return i;
-			}
-		}
-	} else if (ev->cmd == EV_BEND) {
-		for (i = &o->statelist; *i != NULL; i = &(*i)->next) {
-			if ((*i)->ev.cmd == EV_BEND &&
-			    (*i)->ev.data.voice.dev == ev->data.voice.dev && 
-			    (*i)->ev.data.voice.ch == ev->data.voice.ch) {
-				return i;
-			}
-		}	
-	} else if (ev->cmd == EV_CAT) {
-		for (i = &o->statelist; *i != NULL; i = &(*i)->next) {
-			if ((*i)->ev.cmd == EV_CAT && 
-			    (*i)->ev.data.voice.dev == ev->data.voice.dev && 
-			    (*i)->ev.data.voice.ch == ev->data.voice.ch) {
-				return i;
-			}
-		}	
-	}
-	return 0;
+	return statelist_lookup(&o->statelist, ev);
 }
 
 
@@ -1289,26 +1215,26 @@ filt_statelookup(struct filt *o, struct ev *ev) {
 	 * 	
 	 */
 
-struct state **
-filt_stateshut(struct filt *o, struct state **p) {
-	struct ev *ev = &(*p)->ev;
-	struct state *s = *p;
+struct state *
+filt_stateshut(struct filt *o, struct state *s) {
+	struct ev *ev = &s->ev;
+	struct state *snext;
 
 	if (s->ev.cmd == EV_NON || s->ev.cmd == EV_KAT) {
 		ev->cmd = EV_NOFF;
 		ev->data.voice.b0 = s->ev.data.voice.b0;
 		ev->data.voice.b1 = EV_NOFF_DEFAULTVEL;
-		s->keep = 0;
-		return filt_staterun(o, p);
+		s->data.filt.keep = 0;
+		return filt_staterun(o, s);
 	} else if (s->ev.cmd == EV_BEND) {
 		ev->data.voice.b0 = EV_BEND_DEFAULTLO;
 		ev->data.voice.b1 = EV_BEND_DEFAULTHI;
-		s->keep = 0;
-		return filt_staterun(o, p);
+		s->data.filt.keep = 0;
+		return filt_staterun(o, s);
 	} else if (s->ev.cmd == EV_CAT) {
 		ev->data.voice.b0 = EV_CAT_DEFAULT;
-		s->keep = 0;
-		return filt_staterun(o, p);
+		s->data.filt.keep = 0;
+		return filt_staterun(o, s);
 	} else {
 #ifdef FILT_DEBUG
 		if (filt_debug) {
@@ -1316,9 +1242,10 @@ filt_stateshut(struct filt *o, struct state **p) {
 			ev_dbg(ev);
 			dbg_puts("\n");
 		}
-		*p = s->next;
+		snext = s->next;
+		statelist_rm(&o->statelist, s);
 		state_del(s);
-		return p;
+		return snext;
 #endif
 	}
 }
@@ -1331,13 +1258,12 @@ filt_stateshut(struct filt *o, struct state **p) {
 
 void
 filt_shut(struct filt *o) {
-	struct state **p;
-	p = &o->statelist;
-	while (*p) {
-		p = filt_stateshut(o, p);
+	struct state *s;
+	
+	while (o->statelist.first) {
+		s = filt_stateshut(o, o->statelist.first);
 	}
 }
-
 
 	/*
 	 * give an event to the filter for processing
@@ -1345,7 +1271,7 @@ filt_shut(struct filt *o) {
 
 void
 filt_evcb(struct filt *o, struct ev *ev) {
-	struct state **p;
+	struct state *s;
 	unsigned keep;
 	
 	if (filt_debug) {
@@ -1370,9 +1296,9 @@ filt_evcb(struct filt *o, struct ev *ev) {
 	 */
 
 	if (EV_ISNOTE(ev)) {
-		p = filt_statelookup(o, ev);
+		s = filt_statelookup(o, ev);
 		if (ev->cmd == EV_NON) {
-			if (p) {
+			if (s) {
 				dbg_puts("filt_evcb: noteon: state exists, ignored\n");
 				return;
 			}
@@ -1381,8 +1307,8 @@ filt_evcb(struct filt *o, struct ev *ev) {
 			}
 			filt_statecreate(o, ev, 1);
 		} else if (ev->cmd == EV_NOFF) {
-			if (p) {
-				filt_stateupdate(o, p, ev, 0);
+			if (s) {
+				filt_stateupdate(o, s, ev, 0);
 			} else {
 				if (!o->active) {
 					return;
@@ -1390,17 +1316,17 @@ filt_evcb(struct filt *o, struct ev *ev) {
 				dbg_puts("filt_evcb: noteoff: state doesn't exist, event ignored\n");
 			}
 		} else {
-			filt_stateupdate(o, p, ev, 1);
+			filt_stateupdate(o, s, ev, 1);
 		}
 	} else if (ev->cmd == EV_BEND) {
 		keep = (ev->data.voice.b0 != EV_BEND_DEFAULTLO || 
 			ev->data.voice.b1 != EV_BEND_DEFAULTHI) ? 1 : 0;
-		p = filt_statelookup(o, ev);
-		if (!p || 
-		    ev->data.voice.b0 != (*p)->ev.data.voice.b0 ||
-		    ev->data.voice.b1 != (*p)->ev.data.voice.b1) {
-			if (p) {
-				filt_stateupdate(o, p, ev, keep);
+		s = filt_statelookup(o, ev);
+		if (!s || 
+		    ev->data.voice.b0 != s->ev.data.voice.b0 ||
+		    ev->data.voice.b1 != s->ev.data.voice.b1) {
+			if (s) {
+				filt_stateupdate(o, s, ev, keep);
 			} else {
 				if (!o->active) {
 					return;
@@ -1410,14 +1336,14 @@ filt_evcb(struct filt *o, struct ev *ev) {
 		}
 	} else if (ev->cmd == EV_CTL) {
 		keep = 1;
-		p = filt_statelookup(o, ev);
-		if (!p) {
+		s = filt_statelookup(o, ev);
+		if (!s) {
 			if (!o->active) {
 				return;
 			}
 			filt_statecreate(o, ev, keep);
-		} else if (ev->data.voice.b1 != (*p)->ev.data.voice.b1) {
-			filt_stateupdate(o, p, ev, keep);
+		} else if (ev->data.voice.b1 != s->ev.data.voice.b1) {
+			filt_stateupdate(o, s, ev, keep);
 		}
 	} else if (ev->cmd == EV_CAT) {
 		/* 
@@ -1425,14 +1351,14 @@ filt_evcb(struct filt *o, struct ev *ev) {
 		keep = ev->data.voice.b0 != 0 ? 1 : 0;
 		*/
 		keep = 0;		
-		p = filt_statelookup(o, ev);
-		if (!p) {
+		s = filt_statelookup(o, ev);
+		if (!s) {
 			if (!o->active) {
 				return;
 			}
 			filt_statecreate(o, ev, keep);
-		} else if (ev->data.voice.b0 != (*p)->ev.data.voice.b0) {
-			filt_stateupdate(o, p, ev, keep);
+		} else if (ev->data.voice.b0 != s->ev.data.voice.b0) {
+			filt_stateupdate(o, s, ev, keep);
 		}
 	} else {
 		filt_processev(o, ev);
@@ -1441,17 +1367,16 @@ filt_evcb(struct filt *o, struct ev *ev) {
 
 void
 filt_timercb(struct filt *o) {
-	struct state **p;
+	struct state *s;
 	unsigned nevents;
 
-	p = &o->statelist;
-	while (*p) {
-		nevents = (*p)->nevents;
-		(*p)->nevents = 0;
+	for (s = o->statelist.first; s != NULL;) {
+		nevents = s->data.filt.nevents;
+		s->data.filt.nevents = 0;
 		if (nevents > 1) {
-			p = filt_staterun(o, p);
+			s = filt_staterun(o, s);
 		} else {
-			p = &(*p)->next;
+			s = s->next;
 		}
 	}
 }
