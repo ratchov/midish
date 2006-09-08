@@ -165,7 +165,7 @@ song_init(struct song *o) {
 	o->tics_per_beat = o->tics_per_unit / DEFAULT_BPM;
 	o->beats_per_measure = DEFAULT_BPM;
 	o->tempo = TEMPO_TO_USEC24(DEFAULT_TEMPO, o->tics_per_beat);
-	o->tempo_factor = 0x200;
+	o->tempo_factor = 0x100;
 	/* metronome */
 	metro_init(&o->metro);
 	o->tic = o->beat = o->measure = 0;
