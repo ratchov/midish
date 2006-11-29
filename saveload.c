@@ -72,7 +72,7 @@ ev_output(struct ev *e, struct textout *f) {
 			goto one;
 		case EV_KAT:
 			textout_putstr(f, "kat");
-			goto one;
+			goto two;
 		case EV_BEND:
 			textout_putstr(f, "bend");
 			goto two;
