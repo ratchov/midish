@@ -379,10 +379,6 @@ filt_done(struct filt *o) {
  */
 void
 filt_start(struct filt *o, void (*cb)(void *, struct ev *), void *addr) {
-	/*
-	XXX: why ?
-	o->active = 0; 
-	*/
 	o->addr = addr;
 	o->cb = cb;
 	statelist_init(&o->statelist);
@@ -1158,7 +1154,7 @@ filt_evcb(struct filt *o, struct ev *ev) {
 		/*
 		 * XXX: have to do something with the rule set here
 		 */
-		st->silent = !o->active ? 1 : 0;
+		st->silent = o->active ? 0 : 1;
 		if (st->flags & STATE_BOGUS) {
 			dbg_puts("filt_evcb: ");
 			ev_dbg(ev);
@@ -1170,7 +1166,7 @@ filt_evcb(struct filt *o, struct ev *ev) {
 	/*
 	 * nothing to do with silent frames
 	 */
-	if (!st->silent)
+	if (st->silent)
 		return;
 
 	/*

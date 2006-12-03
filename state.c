@@ -159,6 +159,10 @@ statelist_rm(struct statelist *o, struct state *st) {
 }
 
 
+/*
+ * find the first state that matches the given event
+ * return NULL if not found
+ */
 struct state *
 statelist_lookup(struct statelist *o, struct ev *ev) {
 	struct state *i;
@@ -225,7 +229,7 @@ statelist_update(struct statelist *statelist, struct ev *ev) {
 	 * then create a new state.
 	 */
 	if (st == NULL || phase == EV_PHASE_FIRST) {
-		flags = 0;
+		flags = STATE_NEW;
 		if (st == NULL && !(phase & EV_PHASE_FIRST)) {
 #ifdef STATE_DEBUG
 			dbg_puts("statelist_update: ");
