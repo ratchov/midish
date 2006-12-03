@@ -32,10 +32,9 @@
 #include "pool.h"
 
 
-	/*
-	 * initialises a pool of "itemnum" elements of size "itemsize"
-	 */
-
+/*
+ * initialises a pool of "itemnum" elements of size "itemsize"
+ */
 void
 pool_init(struct pool *o, char *name, unsigned itemsize, unsigned itemnum) {
 	unsigned i;
@@ -80,10 +79,9 @@ pool_init(struct pool *o, char *name, unsigned itemsize, unsigned itemnum) {
 }
 
 
-	/*
-	 * frees a pool
-	 */
-
+/*
+ * frees a pool
+ */
 void
 pool_done(struct pool *o) {
 	mem_free(o->data);
@@ -106,13 +104,12 @@ pool_done(struct pool *o) {
 #endif
 }
 
-	/*
-	 * allocate a item in the pool
-	 */
-
+/*
+ * allocate a item in the pool
+ */
 void *
 pool_new(struct pool *o) {	
-	struct poolentry *i;
+	struct poolentry *e;
 	
 	if (!o->first) {
 		dbg_puts("pool_new(");
@@ -121,8 +118,8 @@ pool_new(struct pool *o) {
 		dbg_panic();
 	}
 	
-	i = o->first;
-	o->first = i->next;
+	e = o->first;
+	o->first = e->next;
 
 #ifdef POOL_DEBUG
 	o->newcnt++;
@@ -130,21 +127,19 @@ pool_new(struct pool *o) {
 	if (o->used > o->maxused)
 		o->maxused = o->used;
 #endif
-	return i;
+	return e;
 }
 
-	/*
-	 * free a item to the pool
-	 */
-
+/*
+ * free a item to the pool
+ */
 void
 pool_del(struct pool *o, void *p) {
-	struct poolentry *i = (struct poolentry *)p;
-	
-	i->next = o->first;
-	o->first = i;
+	struct poolentry *e = (struct poolentry *)p;
+#ifdef	POOL_DEBUG
+	unsigned i, n;
+	unsigned *buf;
 
-#ifdef POOL_DEBUG
 	if (o->used == 0) {
 		dbg_puts("pool_del(");
 		dbg_puts(o->name);
@@ -152,6 +147,13 @@ pool_del(struct pool *o, void *p) {
 		dbg_panic();
 	}
 	o->used--;
+
+	buf = (unsigned *)e; 
+	n = o->itemsize / sizeof(unsigned);
+	for (i = 0; i < n; i++)
+		*(buf++) = mem_rnd();
 #endif
+	e->next = o->first;
+	o->first = e;
 }
 

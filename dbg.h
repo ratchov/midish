@@ -35,13 +35,14 @@
 #define NULL (0)
 #endif
 
-void  dbg_puts(char *);
-void  dbg_putx(unsigned long);
-void  dbg_putu(unsigned long);
-void  dbg_panic(void);
-void *mem_alloc(unsigned);
-void  mem_free(void *);
-void  mem_stats(void);
+void	 dbg_puts(char *);
+void	 dbg_putx(unsigned long);
+void	 dbg_putu(unsigned long);
+void	 dbg_panic(void);
+void	*mem_alloc(unsigned);
+void	 mem_free(void *);
+void	 mem_stats(void);
+unsigned mem_rnd(void);
 
 extern unsigned mem_debug;
 

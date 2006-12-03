@@ -36,10 +36,10 @@
 #include "dbg.h"
 #include "sysex.h"
 #include "track.h"
-#include "trackop.h"
 #include "song.h"
 #include "smf.h"
 #include "cons.h"
+#include "frame.h"
 
 char smftype_header[4] = { 'M', 'T', 'h', 'd' };
 char smftype_track[4]  = { 'M', 'T', 'r', 'k' };
@@ -313,15 +313,15 @@ smf_putmeta(struct smf *o, unsigned *used, struct song *s) {
 		if (!track_evavail(&s->meta, &tp)) {
 			break;
 		}
-		if ((*tp.pos)->ev.cmd == EV_TEMPO) {
+		if (tp.pos->ev.cmd == EV_TEMPO) {
 			smf_putvar(o, used, delta);
 			delta = 0;
 			smf_putc(o, used, 0xff);
 			smf_putc(o, used, 0x51);
 			smf_putc(o, used, 0x03);
-			smf_put24(o, used, (*tp.pos)->ev.data.tempo.usec24 * s->tics_per_unit / 96);
-		} else if ((*tp.pos)->ev.cmd == EV_TIMESIG) {
-			denom = s->tics_per_unit / (*tp.pos)->ev.data.sign.tics;
+			smf_put24(o, used, tp.pos->ev.data.tempo.usec24 * s->tics_per_unit / 96);
+		} else if (tp.pos->ev.cmd == EV_TIMESIG) {
+			denom = s->tics_per_unit / tp.pos->ev.data.sign.tics;
 			switch(denom) {
 			case 1:	
 				denom = 0; 
@@ -347,10 +347,10 @@ smf_putmeta(struct smf *o, unsigned *used, struct song *s) {
 			smf_putc(o, used, 0xff);
 			smf_putc(o, used, 0x58);
 			smf_putc(o, used, 0x04);
-			smf_putc(o, used, (*tp.pos)->ev.data.sign.beats);
+			smf_putc(o, used, tp.pos->ev.data.sign.beats);
 			smf_putc(o, used, denom);
 			/* metronome tics per metro beat */
-			smf_putc(o, used, (*tp.pos)->ev.data.sign.tics);
+			smf_putc(o, used, tp.pos->ev.data.sign.tics);
 			/* metronome 1/32 notes per 24 tics */
 			smf_putc(o, used, 8 * s->tics_per_unit / 96);
 		}
@@ -377,18 +377,18 @@ smf_puttrk(struct smf *o, unsigned *used, struct song *s, struct songtrk *t) {
 		if (!track_evavail(&t->track, &tp)) {
 			break;
 		}
-		if (EV_ISVOICE(&(*tp.pos)->ev)) {
+		if (EV_ISVOICE(&tp.pos->ev)) {
 			smf_putvar(o, used, delta);
 			delta = 0;
-			chan = (*tp.pos)->ev.data.voice.ch;
-			newstatus = ((*tp.pos)->ev.cmd << 4) + (chan & 0x0f);
+			chan = tp.pos->ev.data.voice.ch;
+			newstatus = (tp.pos->ev.cmd << 4) + (chan & 0x0f);
 			if (newstatus != status) {
 				status = newstatus;
 				smf_putc(o, used, status);
 			}
-			smf_putc(o, used, (*tp.pos)->ev.data.voice.b0);
+			smf_putc(o, used, tp.pos->ev.data.voice.b0);
 			if (SMF_EVLEN(status) == 2) {
-				smf_putc(o, used, (*tp.pos)->ev.data.voice.b1);
+				smf_putc(o, used, tp.pos->ev.data.voice.b1);
 			}
 		}
 		track_evnext(&t->track, &tp);
@@ -414,17 +414,17 @@ smf_putchan(struct smf *o, unsigned *used, struct song *s, struct songchan *i) {
 		if (!track_evavail(&i->conf, &tp)) {
 			break;
 		}
-		if (EV_ISVOICE(&(*tp.pos)->ev)) {
+		if (EV_ISVOICE(&tp.pos->ev)) {
 			smf_putvar(o, used, delta);
 			delta = 0;
-			newstatus = ((*tp.pos)->ev.cmd << 4) + (i->ch & 0x0f);
+			newstatus = (tp.pos->ev.cmd << 4) + (i->ch & 0x0f);
 			if (newstatus != status) {
 				status = newstatus;
 				smf_putc(o, used, status);
 			}
-			smf_putc(o, used, (*tp.pos)->ev.data.voice.b0);
+			smf_putc(o, used, tp.pos->ev.data.voice.b0);
 			if (SMF_EVLEN(status) == 2) {
-				smf_putc(o, used, (*tp.pos)->ev.data.voice.b1);
+				smf_putc(o, used, tp.pos->ev.data.voice.b1);
 			}
 		}
 		track_evnext(&i->conf, &tp);
@@ -746,7 +746,7 @@ song_fix1(struct song *o) {
 			if (!track_evavail(&t->track, &tp)) {
 				break;
 			}
-			if (EV_ISMETA(&(*tp.pos)->ev)) {
+			if (EV_ISMETA(&tp.pos->ev)) {
 				se = track_seqevrm(&t->track, &tp);
 				track_seqevins(&o->meta, &mp, se);
 				track_seqevnext(&o->meta, &mp);
@@ -755,7 +755,7 @@ song_fix1(struct song *o) {
 			}				
 		}
 		/* check for inconsistecies */
-		track_opcheck(&t->track);
+		track_check(&t->track);
 	}
 }
 

@@ -341,7 +341,6 @@ filt_init(struct filt *o) {
 
 void
 filt_reset(struct filt *o) {
-	struct state *i;
 	struct rule *r;
 	while (o->voice_rules) {
 		r = o->voice_rules;
@@ -358,11 +357,6 @@ filt_reset(struct filt *o) {
 		o->dev_rules = r->next;
 		mem_free(r); 
 	}
-	while (o->statelist.first) {
-		i = o->statelist.first;
-		statelist_rm(&o->statelist, i);
-		state_del(i);
-	}
 }
 
 	/*
@@ -371,7 +365,6 @@ filt_reset(struct filt *o) {
 
 void
 filt_done(struct filt *o) {
-	statelist_done(&o->statelist);	
 #ifdef FILT_DEBUG
 	if (o->cb != NULL) {
 		dbg_puts("filt_done: call filt_stop first.\n");
@@ -394,6 +387,7 @@ filt_start(struct filt *o, void (*cb)(void *, struct ev *), void *addr) {
 	*/
 	o->addr = addr;
 	o->cb = cb;
+	statelist_init(&o->statelist);
 }
 
 
@@ -403,13 +397,9 @@ filt_start(struct filt *o, void (*cb)(void *, struct ev *), void *addr) {
 
 void
 filt_stop(struct filt *o) {
+	statelist_done(&o->statelist);
 	o->cb = NULL;
 	o->addr = NULL;	
-#ifdef FILT_DEBUG
-	if (o->statelist.first) {	/* XXX: use statelist macro */
-		dbg_puts("filt_stop: state list isn't empty\n");
-	}
-#endif
 }
 
 
@@ -1131,9 +1121,9 @@ filt_processev(struct filt *o, struct ev *ev) {
 
 void
 filt_staterun(struct filt *o, struct state *s) {
-	if (s->data.filt.nevents == 0) {
+	if (s->nevents == 0) {
 		filt_processev(o, &s->ev);
-		if (!s->data.filt.keep) {
+		if (!s->keep) {
 #ifdef FILT_DEBUG
 			if (filt_debug) {
 				dbg_puts("filt_staterun: deleting: ");
@@ -1146,7 +1136,7 @@ filt_staterun(struct filt *o, struct state *s) {
 			return;
 		}
 	}
-	s->data.filt.nevents++;
+	s->nevents++;
 }
 
 	/*
@@ -1167,8 +1157,8 @@ filt_statecreate(struct filt *o, struct ev *ev, unsigned keep) {
 #endif
 	s = state_new();
 	s->ev = *ev;
-	s->data.filt.nevents = 0;
-	s->data.filt.keep = keep;
+	s->nevents = 0;
+	s->keep = keep;
 	statelist_add(&o->statelist, s);
 	filt_staterun(o, s);
 	return s;
@@ -1182,7 +1172,7 @@ filt_statecreate(struct filt *o, struct ev *ev, unsigned keep) {
 void
 filt_stateupdate(struct filt *o, struct state *s, struct ev *ev, unsigned keep) {
 	s->ev = *ev;
-	s->data.filt.keep = keep;
+	s->keep = keep;
 	filt_staterun(o, s);
 }
 
@@ -1215,16 +1205,16 @@ filt_stateshut(struct filt *o, struct state *s) {
 		ev->cmd = EV_NOFF;
 		ev->data.voice.b0 = s->ev.data.voice.b0;
 		ev->data.voice.b1 = EV_NOFF_DEFAULTVEL;
-		s->data.filt.keep = 0;
+		s->keep = 0;
 		filt_staterun(o, s);
 	} else if (s->ev.cmd == EV_BEND) {
 		ev->data.voice.b0 = EV_BEND_DEFAULTLO;
 		ev->data.voice.b1 = EV_BEND_DEFAULTHI;
-		s->data.filt.keep = 0;
+		s->keep = 0;
 		filt_staterun(o, s);
 	} else if (s->ev.cmd == EV_CAT) {
 		ev->data.voice.b0 = EV_CAT_DEFAULT;
-		s->data.filt.keep = 0;
+		s->keep = 0;
 		filt_staterun(o, s);
 	} else {
 #ifdef FILT_DEBUG
@@ -1362,8 +1352,8 @@ filt_timercb(struct filt *o) {
 
 	for (s = o->statelist.first; s != NULL; s = snext) {
 		snext = s->next;
-		nevents = s->data.filt.nevents;
-		s->data.filt.nevents = 0;
+		nevents = s->nevents;
+		s->nevents = 0;
 		if (nevents > 1) {
 			filt_staterun(o, s);
 		}

@@ -38,11 +38,10 @@
 
 unsigned cons_breakcnt, cons_ready;
 
-	/* 
-	 * if there is a keyboard interrupt (control-C),
-	 * return 1 and clear the interupt flag
-	 */
-
+/* 
+ * if there is a keyboard interrupt (control-C), return 1 and clear
+ * the interupt flag
+ */
 unsigned
 cons_break(void) {
 	if (cons_breakcnt > 0) {
@@ -66,13 +65,11 @@ cons_done(void) {
 	cons_mdep_done();
 }
 
-	/*
-	 * same as fgetc(stdin), but if midish is started with
-	 * the verb flag, print "+ready\n" to stdout and flush it/
-	 * this is useful to frontends that open midish in a pair
-	 * of pipes
-	 */
-
+/*
+ * same as fgetc(stdin), but if midish is started with the verb flag,
+ * print "+ready\n" to stdout and flush it/ this is useful to
+ * front-ends that open midish in a pair of pipes
+ */
 int
 cons_getc(void) {
 	int c;
@@ -91,10 +88,10 @@ cons_getc(void) {
 	return c;
 }
 
-	/*
-	 * follows routines that report user non-fatal errors
-	 * please use them instead of dbg_xxx (only for debugging)
-	 */
+/*
+ * follows routines that report user non-fatal errors please use them
+ * instead of dbg_xxx (the later are only for debugging)
+ */
 
 void
 cons_err(char *mesg) {

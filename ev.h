@@ -56,9 +56,9 @@
 #define EV_ISRT(ev)	(((ev)->cmd < 0x8) && ((ev)->cmd >= 0x1))
 #define EV_ISMETA(ev)	(((ev)->cmd < EV_NUMCMD) && ((ev)->cmd >= 0x10))
 
-#define EV_ISNOTE(ev)	(((ev)->cmd == EV_NON) || \
-			 ((ev)->cmd == EV_NOFF) || \
-			 ((ev)->cmd == EV_KAT))
+#define EV_ISNOTE(ev)	((ev)->cmd == EV_NON  || \
+			 (ev)->cmd == EV_NOFF || \
+			 (ev)->cmd == EV_KAT)
 
 #define EV_GETNOTE(ev)	((ev)->data.voice.b0)
 #define EV_GETCH(ev)	((ev)->data.voice.ch)
@@ -95,10 +95,22 @@ struct ev {
 	} data;
 };
 
+/*
+ * event phase bitmasks
+ */
 #define EV_PHASE_FIRST		1
 #define EV_PHASE_NEXT		2
 #define EV_PHASE_LAST		4
 
+/* 
+ * event priority: some events have to be played before others
+ * (ex: bank changes are before program changes)
+ */
+#define EV_PRIO_ANY	0
+#define EV_PRIO_PC	1
+#define EV_PRIO_BANK	2
+#define EV_PRIO_RT	3
+#define EV_PRIO_MAX	4
 
 #define EVSPEC_ANY		0
 #define EVSPEC_NOTE		1
@@ -119,9 +131,11 @@ void	 ev_dbg(struct ev *ev);
 unsigned ev_eq(struct ev *ev1, struct ev *ev2);
 unsigned ev_sameclass(struct ev *ev1, struct ev *ev2);
 unsigned ev_ordered(struct ev *ev1, struct ev *ev2);
+unsigned ev_prio(struct ev *ev);
 unsigned ev_str2cmd(struct ev *ev, char *str);
 unsigned ev_phase(struct ev *ev);
 unsigned ev_cancel(struct ev *ev, struct ev *ca);
+unsigned ev_restore(struct ev *ev, struct ev *re);
 
 unsigned evspec_str2cmd(struct evspec *ev, char *str);
 void	 evspec_dbg(struct evspec *o);

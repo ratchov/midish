@@ -40,7 +40,7 @@
 #include "data.h"
 #include "cons.h"
 
-#include "trackop.h"
+#include "frame.h"
 #include "song.h"
 #include "user.h"
 #include "smf.h"
@@ -363,7 +363,7 @@ user_func_songinfo(struct exec *o, struct data **r) {
 			textout_putstr(tout, "nil");
 		}
 		textout_putstr(tout, "\t{");
-		track_opchaninfo(&t->track, map);
+		track_chanmap(&t->track, map);
 		for (i = 0, count = 0; i < DEFAULT_MAXNCHANS; i++) {
 			if (map[i]) {
 				if (count) {
@@ -548,13 +548,8 @@ user_func_songrecord(struct exec *o, struct data **r) {
 }
 
 unsigned
-user_func_songsettempo(struct exec *o, struct data **r) {	/* beat per minute*/
+user_func_songsettempo(struct exec *o, struct data **r) {
 	long tempo, measure;
-	struct ev ev;
-	struct seqptr mp;
-	unsigned bpm, tpb;
-	unsigned long dummy;
-	unsigned pos;
 	
 	if (!exec_lookuplong(o, "measure", &measure) ||
 	    !exec_lookuplong(o, "beats_per_minute", &tempo)) {
@@ -564,28 +559,13 @@ user_func_songsettempo(struct exec *o, struct data **r) {	/* beat per minute*/
 		cons_err("tempo must be between 40 and 240 beats per measure");
 		return 0;
 	}
-	pos = track_opfindtic(&user_song->meta, measure);
-	track_optimeinfo(&user_song->meta, pos, &dummy, &bpm, &tpb);
-	
-	track_rew(&user_song->meta, &mp);
-	track_seekblank(&user_song->meta, &mp, pos);
-	
-	ev.cmd = EV_TEMPO;
-	ev.data.tempo.usec24 = 60L * 24000000L / (tempo * tpb);
-	
-	track_evlast(&user_song->meta, &mp);
-	track_evput(&user_song->meta, &mp, &ev);
-	track_opcheck(&user_song->meta);
+	track_settempo(&user_song->meta, measure, tempo);
 	return 1;
 }
 
 unsigned
 user_func_songtimeins(struct exec *o, struct data **r) {
 	long num, den, amount, from;
-	struct ev ev;
-	struct seqptr mp;
-	unsigned pos, tics, save_bpm, save_tpb;
-	unsigned long dummy_usec24;
 	
 	if (!exec_lookuplong(o, "from", &from) ||
 	    !exec_lookuplong(o, "amount", &amount) ||
@@ -600,71 +580,19 @@ user_func_songtimeins(struct exec *o, struct data **r) {
 	if (amount == 0) {
 		return 1;
 	}
-
-	ev.cmd = EV_TIMESIG;
-	ev.data.sign.beats = num;
-	ev.data.sign.tics = user_song->tics_per_unit / den;
-
-	pos = track_opfindtic(&user_song->meta, from);
-	tics = ev.data.sign.beats * ev.data.sign.tics * amount;
-
-	track_optimeinfo(&user_song->meta, pos, &dummy_usec24, &save_bpm, &save_tpb);
-	
-	track_rew(&user_song->meta, &mp);
-	track_seekblank(&user_song->meta, &mp, pos);
-	track_ticinsmax(&user_song->meta, &mp, tics);
-	
-	if (ev.data.sign.beats != save_bpm || ev.data.sign.tics != save_tpb) {
-		track_rew(&user_song->meta, &mp);
-		track_seek(&user_song->meta, &mp, pos);
-		track_evput(&user_song->meta, &mp, &ev);
-	
-		ev.cmd = EV_TIMESIG;
-		ev.data.sign.beats = save_bpm;
-		ev.data.sign.tics = save_tpb;
-		track_seek(&user_song->meta, &mp, tics);
-		track_evput(&user_song->meta, &mp, &ev);
-	}
+	track_timeins(&user_song->meta, from, amount, 
+	    num, user_song->tics_per_unit / den);
 	return 1;
 }
 
 unsigned
 user_func_songtimerm(struct exec *o, struct data **r) {
 	long amount, from;
-	struct ev ev;
-	struct seqptr mp;
-	unsigned pos, tics, save_bpm, save_tpb, bpm, tpb;
-	unsigned long save_usec24, usec24;
-	
 	if (!exec_lookuplong(o, "from", &from) ||
 	    !exec_lookuplong(o, "amount", &amount)) {
 		return 0;
 	}
-	if (amount == 0) {
-		return 1;
-	}
-
-	pos = track_opfindtic(&user_song->meta, from);
-	tics = track_opfindtic(&user_song->meta, from + amount) - pos;
-	track_optimeinfo(&user_song->meta, pos, &save_usec24, &save_bpm, &save_tpb);
-	
-	track_opcut(&user_song->meta, pos, tics);
-	track_optimeinfo(&user_song->meta, pos, &usec24, &bpm, &tpb);
-	
-	if (bpm != save_bpm || tpb != save_tpb) {
-		ev.cmd = EV_TIMESIG;
-		ev.data.sign.beats = save_bpm;
-		ev.data.sign.tics = save_tpb;
-		track_rew(&user_song->meta, &mp);
-		track_seekblank(&user_song->meta, &mp, pos);
-		track_evput(&user_song->meta, &mp, &ev);
-	}
-	/* 
-	 * XXX: other timesig events should be removed, 
-	 * but we don't have a routine for this,
-	 * so we use track_opcheck 
-	 */
-	track_opcheck(&user_song->meta);
+	track_timerm(&user_song->meta, from, amount);
 	return 1;
 }
 

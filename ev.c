@@ -93,6 +93,15 @@ ev_eq(struct ev *ev1, struct ev *ev2) {
 		    ev1->data.voice.b1 != ev2->data.voice.b1)) {
 			return 0;
 		}
+	} else if (ev1->cmd == EV_TEMPO) {
+		if (ev1->data.tempo.usec24 != ev2->data.tempo.usec24) {
+			return 0;
+		}
+	} else if (ev1->cmd == EV_TIMESIG) {
+		if (ev1->data.sign.beats != ev2->data.sign.beats ||
+		    ev1->data.sign.tics != ev2->data.sign.tics) {
+			return 0;
+		}
 	} else {
 		dbg_puts("ev_eq: not defined\n");
 		dbg_panic();
@@ -193,19 +202,35 @@ ev_ordered(struct ev *ev1, struct ev *ev2) {
 	return 1;
 }
 
-	/*
-	 * return the phase of the event within 
-	 * a frame:
-	 *	- EV_PHASE_FIRST is set if the given event can be the
-	 * 	  first event in a sequence (example: note-on,  
-	 *	  bender != 0x4000)
-	 *	- EV_PHASE_NEXT is set if the given event can be the next
-	 * 	  event in a frame after a 'first event' but not the last
-	 * 	  one (example: key after-touch, beder != 0x4000)
-	 *	- EV_PHASE_LAST is set if the given event can be the last
-	 * 	  event in a frame (example: note-off)
-	 */
+/*
+ * return 1 if the first event has higher "priority"
+ * than the socond one.
+ */
+unsigned
+ev_prio(struct ev *ev) {
+	if (!EV_ISVOICE(ev))
+		return EV_PRIO_RT;
+	if (ev->cmd == EV_CTL && 
+	    (ev->data.voice.b0 == 0 || ev->data.voice.b0 == 32))
+		return EV_PRIO_BANK;
+	if (ev->cmd == EV_PC)
+		return EV_PRIO_PC;
+	return EV_PRIO_ANY;
+}
 
+/*
+ * return the phase of the event within 
+ * a frame:
+ *	- EV_PHASE_FIRST is set if the event can be the
+ * 	  first event in a sequence (example: note-on,  
+ *	  bender != 0x4000)
+ *	- EV_PHASE_NEXT is set if the given event can be the next
+ * 	  event in a frame after a 'first event' but not the last
+ * 	  one (example: key after-touch, beder != 0x4000)
+ *	- EV_PHASE_LAST is set if the given event can be the last
+ * 	  event in a frame (example: note-off, any unknown 
+ *	  controller)
+ */
 unsigned
 ev_phase(struct ev *ev) {
 	unsigned phase;
@@ -235,7 +260,7 @@ ev_phase(struct ev *ev) {
 			    EVCTL_DEFAULT(ev->data.voice.b0)) {
 				phase = EV_PHASE_FIRST | EV_PHASE_NEXT;
 			} else {
-				phase = EV_PHASE_LAST;		
+				phase = EV_PHASE_LAST;
 			}
 		}
 		break;
@@ -255,14 +280,13 @@ ev_phase(struct ev *ev) {
 	return phase;
 }
 
-	/*
-	 * determine the event that will cancel the givent event,
-	 * example a note-off cancels a note-off. If the given
-	 * event cannot (on need not to) be cancelled, then 0 is returned.
-	 * example: program change cannot be cancelled,
-	 * note-off cannot be canceled.
-	 */
-
+/*
+ * determine the event that will cancel the given event,
+ * example a note-off cancels a note-on. If the given
+ * event cannot (on need not to) be cancelled, then 0 is returned.
+ * example: program change cannot be cancelled,
+ * note-off cannot be canceled.
+ */
 unsigned
 ev_cancel(struct ev *ev, struct ev *ca) {
 	if (!EV_ISVOICE(ev)) {
@@ -314,6 +338,28 @@ ev_cancel(struct ev *ev, struct ev *ca) {
 }
 
 
+/*
+ * determine the event that will restore the given event. Example
+ * a note-on could be restored by a note-on. If the given
+ * event cannot (on need not to) be cancelled, then 0 is returned.
+ * example: notes cannot be restored.
+ */
+unsigned
+ev_restore(struct ev *ev, struct ev *re) {
+	if (!EV_ISVOICE(ev) && !EV_ISMETA(ev)) {
+		dbg_puts("ev_restore: must be called with voice/meta argument\n");
+		dbg_panic();
+	}
+	if (EV_ISNOTE(ev)) {
+		return 0;
+	}
+	if (ev_phase(ev) & EV_PHASE_LAST) {
+		dbg_puts("ev_restore: WARNING: called for last event\n");
+		return 0;
+	}
+	*re = *ev;
+	return 1;
+}
 
 void
 ev_dbg(struct ev *ev) {
@@ -552,6 +598,12 @@ evctl_init(void) {
 		evctl_tab[i].name = NULL;
 		evctl_tab[i].defval = 0;
 	}
+	evctl_tab[64].name = str_new("sustain");
+	evctl_tab[64].type = EVCTL_TYPE_SWITCH;
+	evctl_tab[64].defval = 0;
+	evctl_tab[64].name = str_new("modulation");
+	evctl_tab[64].type = EVCTL_TYPE_CONT;
+	evctl_tab[64].defval = 0;
 }
 
 	/*

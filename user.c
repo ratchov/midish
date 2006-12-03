@@ -47,7 +47,6 @@
 #include "mux.h"
 #include "mididev.h"
 
-#include "trackop.h"
 #include "track.h"
 #include "song.h"
 #include "user.h"
@@ -836,6 +835,9 @@ user_mainloop(void) {
 			name_newarg("from", 
 			name_newarg("amount", 
 			name_newarg("quantum", NULL)))));
+	exec_newbuiltin(exec, "trackmerge", user_func_trackmerge,
+			name_newarg("source", 
+			name_newarg("dest", NULL)));
 	exec_newbuiltin(exec, "trackquant", user_func_trackquant, 
 			name_newarg("trackname", 
 			name_newarg("from", 

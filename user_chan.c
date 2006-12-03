@@ -40,7 +40,7 @@
 #include "data.h"
 #include "cons.h"
 
-#include "trackop.h"
+#include "frame.h"
 #include "track.h"
 #include "song.h"
 #include "user.h"
@@ -155,21 +155,9 @@ user_func_chanset(struct exec *o, struct data **r) {
 	}
 	c->dev = dev;
 	c->ch = ch;
-	track_opsetchan(&c->conf, dev, ch);
+	track_setchan(&c->conf, dev, ch);
 	return 1;
 }
-
-
-
-
-
-
-
-
-
-
-
-
 
 unsigned
 user_func_changetch(struct exec *o, struct data **r) {
@@ -193,9 +181,6 @@ user_func_changetdev(struct exec *o, struct data **r) {
 	return 1;
 }
 
-
-
-
 unsigned
 user_func_chanconfev(struct exec *o, struct data **r) {
 	struct songchan *c;
@@ -206,10 +191,10 @@ user_func_chanconfev(struct exec *o, struct data **r) {
 		return 0;
 	}
 	if (ev.data.voice.ch != c->ch || ev.data.voice.dev != c->dev) {
-		cons_err("chanconfev: mismatch dev/chan in event spec");
+		cons_err("chanconfev: dev/chan mismatch in event spec");
 		return 0;
 	}
-	track_opconfev(&c->conf, &ev);
+	track_confev(&c->conf, &ev);
 	return 1;
 }
 

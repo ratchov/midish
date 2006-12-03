@@ -33,7 +33,6 @@
 #include "mux.h"
 #include "track.h"
 #include "frame.h"
-#include "trackop.h"
 #include "filt.h"
 #include "song.h"
 #include "cons.h"		/* cons_errxxx */
@@ -53,7 +52,6 @@ songtrk_new(char *name) {
 	name_init(&o->name, name);
 	o->curfilt = NULL;
 	track_init(&o->track);
-	track_rew(&o->track, &o->trackptr);
 	o->mute = 0;
 	return o;
 }
@@ -122,10 +120,9 @@ songsx_delete(struct songsx *o) {
 	mem_free(o);
 }
 
-	/*
-	 * allocates and initialises a song structure
-	 */
-
+/*
+ * allocates and initialises a song structure
+ */
 struct song *
 song_new(void) {
 	struct song *o;
@@ -134,20 +131,18 @@ song_new(void) {
 	return o;
 }
 
-	/*
-	 * frees a song structure 
-	 */
-
+/*
+ * frees a song structure 
+ */
 void
 song_delete(struct song *o) {
 	song_done(o);
 	mem_free(o);
 }
 
-	/*
-	 * initialises the song
-	 */
-
+/*
+ * initialises the song
+ */
 void
 song_init(struct song *o) {
 	/* song parameters */
@@ -157,9 +152,7 @@ song_init(struct song *o) {
 	o->sxlist = NULL;
 	o->tics_per_unit = DEFAULT_TPU;
 	track_init(&o->meta);
-	track_rew(&o->meta, &o->metaptr);
 	track_init(&o->rec);
-	track_rew(&o->rec, &o->recptr);
 	/* runtime play record parameters */
 	o->filt = NULL;
 	o->tics_per_beat = o->tics_per_unit / DEFAULT_BPM;
@@ -181,10 +174,9 @@ song_init(struct song *o) {
 	o->curinput_ch = 0;
 }
 
-	/*
-	 * deletes a song without freeing it
-	 */
-
+/*
+ * deletes a song without freeing it
+ */
 void
 song_done(struct song *o) {
 	struct songtrk *t, *tnext;
@@ -208,15 +200,15 @@ song_done(struct song *o) {
 		songsx_delete(s);
 	}
 	track_done(&o->meta);
+	track_done(&o->rec);
 	metro_done(&o->metro);
 }
 
 /* -------------------------------------------------- track stuff --- */
 
-	/*
-	 * adds a new track to the song
-	 */
-
+/*
+ * adds a new track to the song
+ */
 void
 song_trkadd(struct song *o, struct songtrk *t) {
 	name_add((struct name **)&o->trklist, (struct name *)t);
@@ -224,11 +216,10 @@ song_trkadd(struct song *o, struct songtrk *t) {
 	song_setcurtrk(o, t);
 }
 
-	/*
-	 * returns the track conrresponding to the
-	 * given name
-	 */
-
+/*
+ * returns the track conrresponding to the
+ * given name
+ */
 struct songtrk *
 song_trklookup(struct song *o, char *name) {
 	return (struct songtrk *)name_lookup((struct name **)&o->trklist, name);
@@ -256,10 +247,9 @@ song_trkrm(struct song *o, struct songtrk *t) {
 
 /* -------------------------------------------------- chan stuff --- */
 
-	/*
-	 * adds a new chan to the song
-	 */
-
+/*
+ * adds a new chan to the song
+ */
 void
 song_chanadd(struct song *o, struct songchan *i) {
 	name_add((struct name **)&o->chanlist, (struct name *)i);
@@ -267,11 +257,10 @@ song_chanadd(struct song *o, struct songchan *i) {
 	song_setcurchan(o, i);
 }
 
-	/*
-	 * returns the chan conrresponding to the
-	 * given name
-	 */
-
+/*
+ * returns the chan conrresponding to the
+ * given name
+ */
 struct songchan *
 song_chanlookup(struct song *o, char *name) {
 	return (struct songchan *)name_lookup((struct name **)&o->chanlist, name);
@@ -316,10 +305,9 @@ song_chanrm(struct song *o, struct songchan *c) {
 
 /* -------------------------------------------------- filt stuff --- */
 
-	/*
-	 * adds a new filt to the song
-	 */
-
+/*
+ * adds a new filt to the song
+ */
 void
 song_filtadd(struct song *o, struct songfilt *f) {
 	name_add((struct name **)&o->filtlist, (struct name *)f);
@@ -327,11 +315,10 @@ song_filtadd(struct song *o, struct songfilt *f) {
 	song_setcurfilt(o, f);
 }
 
-	/*
-	 * returns the filt conrresponding to the
-	 * given name
-	 */
-
+/*
+ * returns the filt conrresponding to the
+ * given name
+ */
 struct songfilt *
 song_filtlookup(struct song *o, char *name) {
 	return (struct songfilt *)name_lookup((struct name **)&o->filtlist, name);
@@ -364,21 +351,19 @@ song_filtrm(struct song *o, struct songfilt *f) {
 
 /* -------------------------------------------------- sx stuff --- */
 
-	/*
-	 * adds a new sx to the song
-	 */
-
+/*
+ * adds a new sx to the song
+ */
 void
 song_sxadd(struct song *o, struct songsx *x) {
 	name_add((struct name **)&o->sxlist, (struct name *)x);
 	song_setcursx(o, x);
 }
 
-	/*
-	 * returns the sx conrresponding to the
-	 * given name
-	 */
-
+/*
+ * returns the sx conrresponding to the
+ * given name
+ */
 struct songsx *
 song_sxlookup(struct song *o, char *name) {
 	return (struct songsx *)name_lookup((struct name **)&o->sxlist, name);
@@ -495,27 +480,25 @@ song_setcurinput(struct song *o, unsigned dev, unsigned ch) {
 	}
 }
 
-	/*
-	 * convert a measure to a number of tics
-	 */
-
+/*
+ * convert a measure to a number of tics
+ */
 unsigned
 song_measuretotic(struct song *o, unsigned measure) {
-	return track_opfindtic(&o->meta, measure);
+	return track_findmeasure(&o->meta, measure);
 }
 
 
-	/*
-	 * returns true if each track in the song is finished
-	 * and false if at least one track is not finished
-	 */
-
+/*
+ * returns true if each track in the song is finished
+ * and false if at least one track is not finished
+ */
 unsigned
 song_finished(struct song *o) {
 	struct songtrk *i;
 	
 	for (i = o->trklist; i != NULL; i = (struct songtrk *)i->name.next) {
-		if (!track_finished(&i->track, &i->trackptr)) {
+		if (!seqptr_eot(&i->trackptr)) {
 			return 0;
 		}
 	}
@@ -527,12 +510,16 @@ void
 song_playconf(struct song *o) {
 	struct songchan *i;
 	struct seqptr cp;
+	struct state *st;
 	struct ev ev;
 	
 	for (i = o->chanlist; i != NULL; i = (struct songchan *)i->name.next) {
-		track_rew(&i->conf, &cp);
-		while (track_evavail(&i->conf, &cp) ) {
-			track_evget(&i->conf, &cp, &ev);
+		seqptr_init(&cp, &i->conf);
+		for (;;) {
+			st = seqptr_evget(&cp);
+			if (st == NULL)
+				break;
+			ev = st->ev;
 			if (EV_ISVOICE(&ev)) {
 				ev.data.voice.dev = i->dev;
 				ev.data.voice.ch = i->ch;
@@ -543,6 +530,7 @@ song_playconf(struct song *o) {
 				dbg_puts("\n");
 			}
 		}
+		seqptr_done(&cp);
 	}
 	mux_flush();
 	mux_sleep(DEFAULT_CHANWAIT);
@@ -566,152 +554,11 @@ song_playsysex(struct song *o) {
 	}
 }
 
-
-void
-song_nexttic(struct song *o) {
-	o->tic++;
-	if (o->tic >= o->tics_per_beat) {
-		o->tic = 0;
-		o->beat++;
-		if (o->beat >= o->beats_per_measure) {
-			o->beat = 0;
-			o->measure++;
-		}
-	}
-}
-
-	/*
-	 * play the data corresponding to a tic
-	 * used by playcb and recordcb
-	 */
-
-void
-song_playtic(struct song *o) {
-	struct songtrk *i;
-	struct ev ev;
-	unsigned phase;
-	
-	phase = mux_getphase();
-	
-	if (phase == MUX_NEXT) {
-		/* tempo_track */
-		if (track_ticavail(&o->meta, &o->metaptr)) {
-			track_ticnext(&o->meta, &o->metaptr);
-		}
-		song_nexttic(o);
-		for (i = o->trklist; i != NULL; i = (struct songtrk *)i->name.next) {
-			if (track_ticavail(&i->track, &i->trackptr)) {
-				track_ticnext(&i->track, &i->trackptr);
-			}
-		}
-	}
-	
-	if (phase == MUX_NEXT || phase == MUX_FIRST) {
-		/* tempo_track */
-		while (track_evavail(&o->meta, &o->metaptr)) {
-			track_evget(&o->meta, &o->metaptr, &ev);		
-			if (o->measure < o->curpos) {
-				break;
-			}
-			switch(ev.cmd) {
-			case EV_TIMESIG:
-				o->beats_per_measure = ev.data.sign.beats;
-				o->tics_per_beat = ev.data.sign.tics;
-				break;
-			case EV_TEMPO:
-				o->tempo = ev.data.tempo.usec24;
-				mux_chgtempo(o->tempo_factor * o->tempo  / 0x100);	
-				break;
-			default:
-				break;
-			}
-		}
-		metro_tic(&o->metro, o->beat, o->tic);
-		for (i = o->trklist; i != NULL; i = (struct songtrk *)i->name.next) {
-			while (track_evavail(&i->track, &i->trackptr)) {
-				track_evget(&i->track, &i->trackptr, &ev);
-				if (EV_ISVOICE(&ev)) {
-					if (!i->mute) {
-						mux_putev(&ev);
-					}
-				} else {
-					dbg_puts("song_playtic: event not implemented : ");
-					dbg_putx(ev.cmd);
-					dbg_puts("\n");
-				}
-			}
-		}	
-	}
-}
-
-void
-song_rt_setup(struct song *o) {
-	struct songfilt *f;
-	song_getcurfilt(o, &f);
-	if (f) {
-		o->filt = &f->filt;	
-	} else {
-		o->filt = NULL;
-	}
-}
-
-
-	/*
-	 * go to a position in the song
-	 * the position pointer of each track is set to
-	 * the given tic. If the track is not long enough
-	 * the pointer is moved to the end of track
-	 */
-
-void
-song_rt_seek(struct song *o, unsigned rewind) {
-	struct songtrk *i;
-	unsigned tic, tics_per_measure, rew_tics;
-	
-	tic = track_opfindtic(&o->meta, o->curpos);
-	track_optimeinfo(&o->meta, tic, &o->tempo, &o->beats_per_measure, &o->tics_per_beat);
-	o->measure = o->curpos;
-	o->beat = 0;
-	o->tic = 0;
-	
-	if (rewind) {
-		tics_per_measure = o->beats_per_measure * o->tics_per_beat;
-
-		if (tic >= tics_per_measure) {
-			rew_tics = tics_per_measure;
-		} else {
-			rew_tics = tic;
-		}
-		
-		/* 
-		 * XXX: make multi-measure countdown possible
-		 *	rew_meas = (rew + tpm - 1) / tpm;
-		 *	rew_beat = ((tic % tpm) + tpb - 1) / tpb
-		 *	rew_tic  = (tic % tpb)
-		 *	meas -= rew_meas
-		 *	beat  = (beat + bpm - rew_beat) % bpm;
-		 *	tic   = (tic + tpb - rew_tic) % tpb;
-		 */	
-		if (rew_tics != 0) {
-			o->measure -= 1;
-			o->beat = (tics_per_measure - rew_tics) / o->tics_per_beat;
-			o->tic =  (tics_per_measure - rew_tics) % o->tics_per_beat;
-			tic -= rew_tics;
-		}
-	}
-	
-	for (i = o->trklist; i != NULL; i = (struct songtrk *)i->name.next) {
-		track_rew(&i->track, &i->trackptr);
-		track_seek(&i->track, &i->trackptr, tic);
-	}
-	track_rew(&o->meta, &o->metaptr);
-	track_seek(&o->meta, &o->metaptr, tic);
-	track_clear(&o->rec, &o->recptr);
-	track_seekblank(&o->rec, &o->recptr, tic);
-}
-
-/* ---------------------------------------------- input filtering --- */
-
+/*
+ * callback called by the filter (if any) that will
+ * call the realtimecb of the song (depending of
+ * the selected mode (play/record/idle)
+ */
 void
 song_inputcb(void *addr, struct ev *ev) {
 	struct song *o = (struct song *)addr;
@@ -731,79 +578,238 @@ song_inputcb(void *addr, struct ev *ev) {
 	mux_flush();
 }
 
+/*
+ * play a meta event
+ */
 void
-song_inputstart(struct song *o, void (*cb)(void *, struct ev *)) {
+song_metaput(struct song *o, struct ev *ev) {
+	switch(ev->cmd) {
+	case EV_TIMESIG:
+		o->beats_per_measure = ev->data.sign.beats;
+		o->tics_per_beat = ev->data.sign.tics;
+		break;
+	case EV_TEMPO:
+		o->tempo = ev->data.tempo.usec24;
+		mux_chgtempo(o->tempo_factor * o->tempo  / 0x100);	
+		break;
+	default:
+		break;
+	}
+}
+
+/*
+ * play the data corresponding to a tic
+ * used by playcb and recordcb
+ */
+void
+song_playtic(struct song *o) {
+	struct songtrk *i;
+	struct state *st;
+	struct ev ev;
+	unsigned phase;
+	
+	phase = mux_getphase();
+	
+	if (phase == MUX_NEXT) {
+		/* 
+		 * tempo_track 
+		 */
+		seqptr_ticskip(&o->metaptr, 1);
+		o->tic++;
+		if (o->tic >= o->tics_per_beat) {
+			o->tic = 0;
+			o->beat++;
+			if (o->beat >= o->beats_per_measure) {
+				o->beat = 0;
+				o->measure++;
+			}
+		}
+		for (i = o->trklist; i != NULL; i = (struct songtrk *)i->name.next) {
+			seqptr_ticskip(&i->trackptr, 1);
+		}
+	}
+	
+	if (phase == MUX_NEXT || phase == MUX_FIRST) {
+		while ((st = seqptr_evget(&o->metaptr))) {
+			song_metaput(o, &st->ev);
+		}
+		metro_tic(&o->metro, o->beat, o->tic);
+		for (i = o->trklist; i != NULL; i = (struct songtrk *)i->name.next) {
+			while ((st = seqptr_evget(&i->trackptr))) {
+				ev = st->ev;
+				if (EV_ISVOICE(&ev)) {
+					if (st->phase & EV_PHASE_FIRST)
+						st->silent = 0;
+					if (!i->mute) {
+						if (st->silent) {
+							ev_dbg(&ev);
+							dbg_puts(": silent state\n");
+					        } else {
+							mux_putev(&ev);					
+						}
+					}
+				} else {
+					dbg_puts("song_playtic: event not implemented : ");
+					dbg_putx(ev.cmd);
+					dbg_puts("\n");
+				}
+			}
+		}
+	}
+}
+
+/*
+ * setup everything to start play/record: the current filter,
+ * go to the current position, etc... must be called with the
+ * mux initialised. The 'cb' parameter is a function that
+ * will be called for each input event. 
+ */
+void
+song_start(struct song *o, 
+    void (*cb)(void *, struct ev *), unsigned countdown) {
+	struct songfilt *f;
+	struct songtrk *i;
+	unsigned tic;
+	struct ev re;
+	struct state *s, *snext;
+
+	/*
+	 * check for the current filter
+	 */
+	song_getcurfilt(o, &f);
+	if (f) {
+		o->filt = &f->filt;	
+	} else {
+		o->filt = NULL;
+	}
+
+	/*
+	 * set the current position and the default
+	 * signature and tempo
+	 */
+	o->measure = o->curpos >= countdown ? o->curpos - countdown : 0;
+	o->beat = 0;
+	o->tic = 0;	
+	o->beats_per_measure = DEFAULT_BPM;
+	o->tics_per_beat = DEFAULT_TPB;
+	o->tempo = TEMPO_TO_USEC24(DEFAULT_TEMPO, DEFAULT_TPB);
+	tic = track_findmeasure(&o->meta, o->measure);
+	
+	/*
+	 * move all tracks to the current position
+	 */	
+	for (i = o->trklist; i != NULL; i = (struct songtrk *)i->name.next) {
+		seqptr_init(&i->trackptr, &i->track);
+		seqptr_skip(&i->trackptr, tic);
+	}
+	seqptr_init(&o->metaptr, &o->meta);
+	seqptr_skip(&o->metaptr, tic);
+	
+	seqptr_init(&o->recptr, &o->rec);
+	seqptr_seek(&o->recptr, tic);
+
 	o->realtimecb = cb;
 	if (o->filt) {
 		filt_start(o->filt, cb, o);
 	}
-}
+
+	mux_init(song_inputcb, o);
+	/*
+	 * send sysex messages and channel config messages
+	 */
+	song_playsysex(o);
+	song_playconf(o);
 
 	/*
-	 * shutdowns all input notes (using the statelist)
+	 * restore track states
 	 */
-
-void
-song_inputshut(struct song *o) {
-	if (o->filt) {
-		filt_shut(o->filt);
-	}
-}
-
-
-void
-song_inputstop(struct song *o) {
-	if (o->filt) {
-		filt_stop(o->filt);
-	}
-}
-
-/* --------------------------------------------- output filtering --- */
-
-	/*
-	 * XXX: normally, we shoud define a stateful filter (as
-	 * for the input) attached only to the output of 
-	 * the player (not to the input). In that way
-	 * outputshut would shutsown only notes played from 
-	 * tracks. But for now, we reset everything
-	 */
-
-void
-song_outputshut(struct song *o) {
-	unsigned i;
-	struct ev ev;
-	struct mididev *dev;
-
-	metro_shut(&o->metro);	
-	for (dev = mididev_list; dev != NULL; dev = dev->next) {
-		ev.cmd = EV_CTL;		
-		ev.data.voice.dev = dev->unit;
-		ev.data.voice.b0 = 121;		/* all note off */
-		ev.data.voice.b1 = 0;
-		for (i = 0; i <= EV_MAXCH; i++) {
-			ev.data.voice.ch = i;
-			mux_putev(&ev);
+	for (i = o->trklist; i != NULL; i = (struct songtrk *)i->name.next) {
+		for (s = i->trackptr.statelist.first; s != NULL; s = snext) {
+			snext = s->next;
+			ev_dbg(&s->ev);
+			if (ev_restore(&s->ev, &re)) {
+				dbg_puts(": restored -> ");
+				ev_dbg(&re);
+				dbg_puts("\n");
+				mux_putev(&re);
+				s->silent = 0;
+			} else {
+				dbg_puts(": not restored, marked as silent\n");
+				s->silent = 1;
+			}
 		}
-		ev.data.voice.dev = dev->unit;
-		ev.data.voice.b0 = 123;		/* all ctl reset */
-		ev.data.voice.b1 = 0;
-		for (i = 0; i <= EV_MAXCH; i++) {
-			ev.data.voice.ch = i;
-			mux_putev(&ev);
+	}
+	for (s = o->metaptr.statelist.first; s != NULL; s = snext) {
+		snext = s->next;
+		ev_dbg(&s->ev);
+		if (EV_ISMETA(&s->ev)) {
+			dbg_puts(": restoreding meta-event\n");
+			song_metaput(o, &s->ev);
+			s->silent = 0;
+		} else {
+			dbg_puts(": not restored, marked as silent\n");
+			s->silent = 1;
 		}
 	}
 	mux_flush();	
 }
 
+/*
+ * stop play/record: undo song_start and things
+ * done during the play/record process. Must be called
+ * with the mux initialised
+ */
+void
+song_stop(struct song *o) {
+	struct songtrk *i;
+	struct state *s, *snext;
+	struct ev ca;
+
+	if (o->filt) {
+		filt_shut(o->filt);
+		filt_stop(o->filt);
+	}
+
+	metro_shut(&o->metro);	
+
+	/*
+	 * stop sounding notes
+	 */
+	for (i = o->trklist; i != NULL; i = (struct songtrk *)i->name.next) {
+		for (s = i->trackptr.statelist.first; s != NULL; s = snext) {
+			snext = s->next;
+			ev_dbg(&s->ev);
+			if (!s->silent && ev_cancel(&s->ev, &ca)) {
+				dbg_puts(": canceled -> ");
+				ev_dbg(&ca);
+				dbg_puts("\n");
+				mux_putev(&ca);
+
+			} else {
+				dbg_puts(": not canceled\n");
+			}
+			statelist_rm(&i->trackptr.statelist, s);
+			state_del(s);
+		}
+	}
+	mux_flush();	
+	mux_done();
+
+	for (i = o->trklist; i != NULL; i = (struct songtrk *)i->name.next) {
+		seqptr_done(&i->trackptr);
+	}
+	seqptr_done(&o->recptr);
+}
+
+
 
 /* ------------------------------------------------------- player --- */
 
-	/*
-	 * play callback:
-	 * is automatically called when an event is received
-	 * (tic, start, midiev, etc)
-	 */
-
+/*
+ * play callback:
+ * is automatically called when an event is received
+ * (tic, start, midiev, etc)
+ */
 void
 song_playcb(void *addr, struct ev *ev) {
 	struct song *o = (struct song *)addr;
@@ -840,23 +846,13 @@ song_playcb(void *addr, struct ev *ev) {
 	}
 }
 
-	/*
-	 * play the song initialises the
-	 * midi/timer and starts an event loop
-	 */
-
+/*
+ * play the song initialises the
+ * midi/timer and starts an event loop
+ */
 void
 song_play(struct song *o) {
-	song_rt_setup(o);
-	song_rt_seek(o, 0);
-
-	song_inputstart(o, song_playcb);
-	mux_init(song_inputcb, o);
-	
-	song_playsysex(o);
-	song_playconf(o);
-	mux_chgtempo(o->tempo_factor * o->tempo / 0x100);
-	mux_chgticrate(o->tics_per_unit);
+	song_start(o, song_playcb, 0);
 	
 	if (song_debug) {
 		dbg_puts("song_play: starting loop, waiting for a start event...\n");
@@ -864,19 +860,14 @@ song_play(struct song *o) {
 	mux_startwait();
 	mux_run();
 	
-	song_inputshut(o);
-	song_outputshut(o);
-	
-	mux_done();
-	song_inputstop(o);
+	song_stop(o);
 }
 
-	/*
-	 * record callback
-	 * is automatically called when an event is received
-	 * (tic, start, midiev, etc)
-	 */
-
+/*
+ * record callback
+ * is automatically called when an event is received
+ * (tic, start, midiev, etc)
+ */
 void
 song_recordcb(void *addr, struct ev *ev) {
 	struct song *o = (struct song *)addr;
@@ -897,11 +888,14 @@ song_recordcb(void *addr, struct ev *ev) {
 		break;
 	case EV_TIC:
 		if (phase == MUX_NEXT) {
-			if (track_finished(&o->rec, &o->recptr)) {
-				track_ticins(&o->rec, &o->recptr);
+			while (seqptr_evget(&o->recptr))
+				; /* nothing */
+			if (seqptr_eot(&o->recptr)) {
+				seqptr_ticput(&o->recptr, 1);
+			} else {
+				seqptr_ticskip(&o->recptr, 1);
 			}
-			track_evlast(&o->rec, &o->recptr);
-			track_ticnext(&o->rec, &o->recptr);
+
 		}
 		song_playtic(o);
 		mux_flush();
@@ -921,7 +915,7 @@ song_recordcb(void *addr, struct ev *ev) {
 			break;
 		}
 		if (phase == MUX_START || phase == MUX_NEXT || phase == MUX_FIRST) {
-			track_evput(&o->rec, &o->recptr, ev);
+			(void)seqptr_evput(&o->recptr, ev);
 		}
 		mux_putev(ev);
 	}
@@ -929,7 +923,6 @@ song_recordcb(void *addr, struct ev *ev) {
 
 void
 song_record(struct song *o) {
-	struct seqptr cp;
 	struct songtrk *t;
 	
 	song_getcurtrk(o, &t);
@@ -937,45 +930,27 @@ song_record(struct song *o) {
 		dbg_puts("song_record: no current track or current track is muted\n");
 	}
 
-	song_rt_setup(o);
-	song_rt_seek(o, 1);
-	
-	song_inputstart(o, song_recordcb);
-	mux_init(song_inputcb, o);
-	
-	song_playsysex(o);
-	song_playconf(o);
-	mux_chgtempo(o->tempo_factor * o->tempo / 0x100);
-	mux_chgticrate(o->tics_per_unit);
-	
+	song_start(o, song_recordcb, 1);
 	if (song_debug) {
 		dbg_puts("song_record: started loop, waiting for a start event...\n");
 	}
 	mux_startwait();
 	mux_run();
+	song_stop(o);
 	
-	song_inputshut(o);
-	song_outputshut(o);
-	
-	mux_done();
-	song_inputstop(o);
-	
-	track_opcheck(&o->rec); 	
 	if (t) {
-		track_rew(&o->curtrk->track, &cp);
-		track_frameput(&o->curtrk->track, &cp, &o->rec);
-		track_opcheck(&o->curtrk->track); 
+		track_merge(&o->curtrk->track, &o->rec);
+		track_clear(&o->rec, &o->recptr);
 	} else {
 		track_clear(&o->rec, &o->recptr);
 	}
 }
 
-	/*
-	 * idle callback:
-	 * is automatically called when an event is received
-	 * (tic, start, midiev, etc)
-	 */
-
+/*
+ * idle callback:
+ * is automatically called when an event is received
+ * (tic, start, midiev, etc)
+ */
 void
 song_idlecb(void *addr, struct ev *ev) {
 	switch (ev->cmd) {
@@ -1000,32 +975,16 @@ song_idlecb(void *addr, struct ev *ev) {
 	}
 }
 
-	/*
-	 * moves inputs events directly to the output
-	 */
-
+/*
+ * moves inputs events directly to the output
+ */
 void
 song_idle(struct song *o) {
-	song_rt_setup(o);
-	song_rt_seek(o, 0);
-
-	song_inputstart(o, song_idlecb);
-	mux_init(song_inputcb, o);
+	song_start(o, song_idlecb, 0);
 	
-	song_playsysex(o);
-	song_playconf(o);
-	mux_chgtempo(o->tempo_factor * o->tempo / 0x100);
-	mux_chgticrate(o->tics_per_unit);
-
 	if (song_debug) {
 		dbg_puts("song_idle: started loop...\n");
 	}
-	mux_run();
-	
-	song_inputshut(o);
-	song_outputshut(o);
-	
-	mux_done();
-	song_inputstop(o);
+	mux_run();	
+	song_stop(o);
 }
-

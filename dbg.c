@@ -30,14 +30,18 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
-#include <signal.h>
 #include "dbg.h"
 
 #define MAGIC_ALLOC	13942
 #define MAGIC_FREE	59811	
 
 unsigned mem_nalloc = 0, mem_nfree = 0, mem_debug = 0;
+
+/*
+ * following routines are used to output debug info, use them
+ * instead of fprintf(stderr, ...) because the will be turned
+ * to no-op in stable version
+ */
 
 void
 dbg_puts(char *msg) {
@@ -54,19 +58,19 @@ dbg_putu(unsigned long n) {
 	fprintf(stderr, "%lu", n);
 }
 
+/*
+ * abort the execution of the program after a fatal error,
+ * we should put code here to backup user data
+ */
 void
 dbg_panic(void) {
-#ifdef SIGTRAP
-	kill(getpid(), SIGTRAP);
-	/* not reached */
-	fputs("dbg_panic: failed to send SIGTRAP\n", stderr);
-	exit(1);
-#else
-	fputs("dbg_panic: exiting...\n", stderr);
-	exit(1);
-#endif
+	abort();
 }
 
+/*
+ * return a random number, will be used to randomize memory
+ * bocks
+ */
 unsigned
 mem_rnd(void) {
 	static unsigned seed = 1989123;
@@ -74,6 +78,13 @@ mem_rnd(void) {
 	return seed;
 }
 
+/*
+ * allocate 'n' bytes of memory (with n > 0). This functions never
+ * fails (and never returns NULL), if there isn't enough memory then
+ * we abord the program.  The memory block is randomized to break code
+ * that doesn't initialize the block.  We also add a footer and a
+ * trailer to detect writes outside the block boundaries.
+ */
 void *
 mem_alloc(unsigned n) {
 	unsigned i, *buf;
@@ -108,7 +119,11 @@ mem_alloc(unsigned n) {
 	return buf + 3;
 }
 
-
+/*
+ * free a memory block. Also check that the header and the
+ * trailer werent changed and randomise the block, so that
+ * the block is not usable once freed
+ */
 void
 mem_free(void *mem) {
 	unsigned *buf, n;

@@ -90,6 +90,7 @@ unsigned user_func_trackcut(struct exec *o, struct data **r);
 unsigned user_func_trackblank(struct exec *o, struct data **r);
 unsigned user_func_trackcopy(struct exec *o, struct data **r);
 unsigned user_func_trackinsert(struct exec *o, struct data **r);
+unsigned user_func_trackmerge(struct exec *o, struct data **r);
 unsigned user_func_trackquant(struct exec *o, struct data **r);
 unsigned user_func_tracktransp(struct exec *o, struct data **r);
 unsigned user_func_tracksetmute(struct exec *o, struct data **r);

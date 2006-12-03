@@ -260,12 +260,12 @@ rmidi_putev(struct rmidi *o, struct ev *ev) {
 		rmidi_out(o, MIDI_ACK);
 		break;	
 	default:
+		if (!EV_ISVOICE(ev)) {
+			break;
+		}
 		if (ev->cmd == EV_NOFF) {
 			ev->cmd = EV_NON;
 			ev->data.voice.b1 = 0;
-		}
-		if (!EV_ISVOICE(ev)) {
-			break;
 		}
 		s = ev->data.voice.ch + ((ev->cmd & 0x0f) << 4);
 		if (s != o->ostatus) {

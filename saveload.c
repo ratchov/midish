@@ -35,7 +35,7 @@
 #include "parse.h"
 #include "textio.h"
 #include "saveload.h"
-#include "trackop.h"
+#include "frame.h"
 
 /* ------------------------------------------------------------------- */
 
@@ -1010,7 +1010,7 @@ parse_songchan(struct parse *o, struct song *s, struct songchan *i) {
 				if (!parse_nl(o)) {
 					return 0;
 				}
-				track_opsetchan(&i->conf, i->dev, i->ch);
+				track_setchan(&i->conf, i->dev, i->ch);
 			} else if (str_eq(o->lex.strval, "chan")) {
 				if (!parse_chan(o, &val, &val2)) {
 					return 0;

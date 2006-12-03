@@ -15,8 +15,8 @@ Important features:
 	- system exclusive messages handling
 
 Contents:
-	- the Midish sequencer/filter
+	- midish - the sequencer/filter
 	- rmidish - a readline(3) front-end to midish
-	- smfplay - a MIDI file player
-	- smfrec - a MIDI file recorder
-	- man-pages, examples, documentation
+	- smfplay, smfrec - MIDI file player and recorder
+
+See also the user manual (manual.html).

@@ -41,7 +41,6 @@
 #include "cons.h"
 
 #include "frame.h"
-#include "trackop.h"
 #include "track.h"
 #include "song.h"
 #include "user.h"
@@ -138,7 +137,6 @@ user_func_trackaddev(struct exec *o, struct data **r) {
 	struct seqptr tp;
 	struct songtrk *t;
 	unsigned pos, bpm, tpb;
-	unsigned long dummy;
 
 	if (!exec_lookuptrack(o, "trackname", &t) || 
 	    !exec_lookuplong(o, "measure", &measure) || 
@@ -148,8 +146,8 @@ user_func_trackaddev(struct exec *o, struct data **r) {
 		return 0;
 	}
 
-	pos = track_opfindtic(&user_song->meta, measure);
-	track_optimeinfo(&user_song->meta, pos, &dummy, &bpm, &tpb);
+	pos = song_measuretotic(user_song, measure);
+	track_timeinfo(&user_song->meta, pos, NULL, &bpm, &tpb);
 	
 	if (beat < 0 || (unsigned)beat >= bpm || 
 	    tic  < 0 || (unsigned)tic  >= tpb) {
@@ -157,6 +155,9 @@ user_func_trackaddev(struct exec *o, struct data **r) {
 		return 0;
 	}
 
+	/*
+	 * XXX: this will not work on short measures, fix findmeasure()
+	 */
 	pos += beat * tpb + tic;	
 
 	track_rew(&t->track, &tp);
@@ -225,7 +226,7 @@ user_func_trackcheck(struct exec *o, struct data **r) {
 		cons_err("trackcheck: no such track");
 		return 0;
 	}
-	track_opcheck(&t->track);
+	track_check(&t->track);
 	return 1;
 }
 
@@ -235,6 +236,7 @@ user_func_trackcut(struct exec *o, struct data **r) {
 	struct songtrk *t;
 	long from, amount, quant;
 	unsigned tic, len;
+	struct track t1, t2;
 	
 	if (!exec_lookuptrack(o, "trackname", &t) ||
 	    !exec_lookuplong(o, "from", &from) ||
@@ -254,7 +256,16 @@ user_func_trackcut(struct exec *o, struct data **r) {
 		tic -= quant/2;
 	}
 
-	track_opcut(&t->track, tic, len);
+	track_init(&t1);
+	track_init(&t2);
+	track_copy(&t->track, 0,   tic, &t1);
+	track_copy(&t->track, tic + len, ~0U, &t2);
+	t2.first->delta += tic;
+	track_clearall(&t->track);
+	track_merge(&t->track, &t1);
+	track_merge(&t->track, &t2);
+	track_done(&t1);
+	track_done(&t2);
 	return 1;
 }
 
@@ -265,6 +276,7 @@ user_func_trackblank(struct exec *o, struct data **r) {
 	struct evspec es;
 	long from, amount, quant;
 	unsigned tic, len;
+	struct track t1, t2;
 	
 	if (!exec_lookuptrack(o, "trackname", &t) ||
 	    !exec_lookuplong(o, "from", &from) ||
@@ -285,7 +297,16 @@ user_func_trackblank(struct exec *o, struct data **r) {
 		tic -= quant/2;
 	}
 
-	track_opblank(&t->track, tic, len, &es);
+	track_init(&t1);
+	track_init(&t2);
+	track_copy(&t->track, 0,   tic, &t1);
+	track_copy(&t->track, tic + len, ~0U, &t2);
+	t2.first->delta += tic + len;
+	track_clearall(&t->track);
+	track_merge(&t->track, &t1);
+	track_merge(&t->track, &t2);
+	track_done(&t1);
+	track_done(&t2);
 	return 1;
 }
 
@@ -294,7 +315,6 @@ unsigned
 user_func_trackcopy(struct exec *o, struct data **r) {
 	struct songtrk *t, *t2;
 	struct track copy;
-	struct seqptr tp2;
 	struct evspec es;
 	long from, where, amount, quant;
 	unsigned tic, tic2, len;
@@ -322,15 +342,9 @@ user_func_trackcopy(struct exec *o, struct data **r) {
 	}
 
 	track_init(&copy);
-	track_opcopy(&t->track, tic, len, &es, &copy);
-	
-	/*
-	 * XXX: we shoud merge, not just copy
-	 */
-	track_rew(&t2->track, &tp2);
-	track_seekblank(&t2->track, &tp2, tic2);
-	track_frameput(&t2->track, &tp2, &copy);
-
+	track_copy(&t->track, tic, len, &copy);
+	copy.first->delta += tic2;
+	track_merge(&t2->track, &copy);
 	track_done(&copy);
 	return 1;
 }
@@ -342,6 +356,7 @@ user_func_trackinsert(struct exec *o, struct data **r) {
 	struct songtrk *t;
 	long from, amount, quant;
 	unsigned tic, len;
+	struct track t1, t2;
 	
 	if (!exec_lookupname(o, "trackname", &trkname) ||
 	    !exec_lookuplong(o, "from", &from) ||
@@ -366,8 +381,28 @@ user_func_trackinsert(struct exec *o, struct data **r) {
 	if (tic > (unsigned)quant/2) {
 		tic -= quant/2;
 	}
+	track_init(&t1);
+	track_init(&t2);
+	track_copy(&t->track, 0,   tic, &t1);
+	track_copy(&t->track, tic, ~0U, &t2);
+	t2.first->delta += tic + len;
+	track_clearall(&t->track);
+	track_merge(&t->track, &t1);
+	track_merge(&t->track, &t2);
+	track_done(&t1);
+	track_done(&t2);	     
+	return 1;
+}
 
-	track_opinsert(&t->track, tic, len);
+unsigned
+user_func_trackmerge(struct exec *o, struct data **r) {
+	struct songtrk *src, *dst;
+
+	if (!exec_lookuptrack(o, "source", &src) ||
+	    !exec_lookuptrack(o, "dest", &dst)) {
+		return 0;
+	}
+	track_merge(&src->track, &dst->track);
 	return 1;
 }
 
@@ -411,14 +446,13 @@ user_func_trackquant(struct exec *o, struct data **r) {
 		offset = 0;
 		len -= quant / 2;
 	}
-	track_opquantise(&t->track, start, len, offset, (unsigned)quant, (unsigned)rate);
+	track_quantize(&t->track, start, len, offset, (unsigned)quant, (unsigned)rate);
 	return 1;
 }
 
 unsigned
 user_func_tracktransp(struct exec *o, struct data **r) {
 	struct songtrk *t;
-	struct seqptr tp;
 	long from, amount, quant, halftones;
 	unsigned tic, len;
 	struct evspec es;
@@ -441,13 +475,8 @@ user_func_tracktransp(struct exec *o, struct data **r) {
 
 	if (tic > (unsigned)quant/2) {
 		tic -= quant/2;
-	}
-	
-	track_rew(&t->track, &tp);
-	if (track_seek(&t->track, &tp, tic) != 0) {
-		return 1;
-	}
-	track_optransp(&t->track, &tp, len, halftones, &es);
+	} /* XXX: should add .. else { len -= quant / 2; }... */	
+	track_transpose(&t->track, tic, len, halftones);
 	return 1;
 }
 
@@ -488,7 +517,7 @@ user_func_trackchanlist(struct exec *o, struct data **r) {
 		return 0;
 	}
 	*r = data_newlist(NULL);
-	track_opchaninfo(&t->track, map);
+	track_chanmap(&t->track, map);
 	for (i = 0; i < DEFAULT_MAXNCHANS; i++) {
 		if (map[i]) {
 			c = song_chanlookup_bynum(user_song, i / 16, i % 16);
@@ -531,8 +560,8 @@ user_func_trackinfo(struct exec *o, struct data **r) {
 	from = 0;
 	for (;;) {
 		start = song_measuretotic(user_song, from);
-		if (start > (unsigned)quant/2) {
-			start -= quant/2;
+		if (start > (unsigned)quant / 2) {
+			start -= quant / 2;
 		}
 		len = song_measuretotic(user_song, from + 1) - start;
 
@@ -548,9 +577,9 @@ user_func_trackinfo(struct exec *o, struct data **r) {
 			if (!track_evavail(&t->track, &tp) || tic >= len) {
 				break;
 			}
-			if (evspec_matchev(&es, &(*tp.pos)->ev)) {
-				if (EV_ISNOTE(&(*tp.pos)->ev)) {
-					if ((*tp.pos)->ev.cmd == EV_NON) {
+			if (evspec_matchev(&es, &tp.pos->ev)) {
+				if (EV_ISNOTE(&tp.pos->ev)) {
+					if (tp.pos->ev.cmd == EV_NON) {
 						count++;
 					}
 				} else {

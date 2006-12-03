@@ -41,31 +41,28 @@
  *	- each clock tic marks the begining of a delta
  *	- each event (struct ev) is played after delta tics
  *
- * a seqptr represents the position of a cursor on the track
- * In play mode, the field 'o->pos' points to a pointer to the event
- * to be played, thus the current event is referenced by *o->pos. The 
- * field 'delta' contains the number of tics elapsed since the last
- * played event. Thus when o->delta reaches (*o->pos)->delta,
- * the event is to be played.
+ * a seqptr represents the position of a cursor on the track In play
+ * mode, the field 'o->pos' points to the event to be played. The
+ * 'delta' field contains the number of tics elapsed since the last
+ * played event. Thus when o->delta reaches o->pos->delta, the event
+ * is to be played.
  *
- * In record mode, the field 'o->pos' points to a pointer
- * which is the 'next' field of the last recorded event.
+ * In record mode, the field 'o->pos' points to the next event that
+ * the event being recorded.
  *
  * The track structure contain a cursor (a pos/delta pair) which is
- * used to walk through the track. All the track_* routines
- * maintain a consistent value of the cursor.
+ * used to walk through the track. All the track_* routines maintain a
+ * consistent value of the cursor.
  *
- * track_ev* routines involve the current event,
- * When calling such a routine, the current position 
- * pointer must be an event not an empty tic (except
- * for track_evavail and track_evins). They are meant to be fast enough
- * to be used in real-time operations.
+ * track_ev* routines involve the current event, When calling such a
+ * routine, the current position pointer must be an event not an empty
+ * tic (except for track_evavail and track_evins). They are meant to
+ * be fast enough to be used in real-time operations.
  *
- * track_tic* routines involves a single tic,
- * When calling such a routine, the current position
- * pointer must be an empty tic, not an event (except
- * for track_ticavail and track_ticins). They are meant to be fast enough
- * to be used in real-time operations.
+ * track_tic* routines involves a single tic, When calling such a
+ * routine, the current position pointer must be an empty tic, not an
+ * event (except for track_ticavail and track_ticins). They are meant
+ * to be fast enough to be used in real-time operations.
  */
 
 #include "dbg.h"
@@ -102,44 +99,21 @@ seqev_dump(struct seqev *i) {
 	ev_dbg(&i->ev);
 }
 
-	/*
-	 * allocates and initialises a track structure
-	 */
-
-struct track *
-track_new(void) {
-	struct track *o;
-	o = (struct track *)mem_alloc(sizeof(struct track));
-	track_init(o);
-	return o;	
-}
-
-	/*
-	 * frees a track structure
-	 */
-	 
-void
-track_delete(struct track *o) {
-	track_done(o);
-	mem_free(o);
-}
-
-	/*
-	 * initialises the track
-	 */
-
+/*
+ * initialise the track
+ */
 void
 track_init(struct track *o) {
-	o->eot.next = NULL;
-	o->eot.delta = 0;
-	o->first = &o->eot;
 	o->eot.ev.cmd = EV_NULL;
+	o->eot.delta = 0;
+	o->eot.next = NULL;
+	o->eot.prev = &o->first;
+	o->first = &o->eot;
 }
 
-	/*
-	 * free a track
-	 */
-
+/*
+ * free a track
+ */
 void
 track_done(struct track *o) {
 	struct seqev *i, *inext;
@@ -148,12 +122,14 @@ track_done(struct track *o) {
 		inext = i->next;
 		seqev_del(i);
 	}
+#ifdef TRACK_DEBUG
+	o->first = (void *)0xdeadbeef;
+#endif
 }
 
-	/*
-	 * dumps a track on stderr, for debugging purposes
-	 */
-
+/*
+ * dump the track on stderr, for debugging purposes
+ */
 void
 track_dump(struct track *o) {
 	struct seqev *i;
@@ -171,12 +147,9 @@ track_dump(struct track *o) {
 	}
 }
 
-
-	/*
-	 * returns the number of events in the track
-	 * does not change the current position pointer
-	 */
-	
+/*
+ * return the number of events in the track
+ */
 unsigned
 track_numev(struct track *o) {
 	unsigned n;
@@ -188,12 +161,10 @@ track_numev(struct track *o) {
 	return n;
 }
 
-	/*
-	 * returns the number of tics in the track
-	 * ie its length (eot included, of course)
-	 * does not change the current position pointer
-	 */
-	
+/*
+ * return the number of tics in the track
+ * ie its length (eot included, of course)
+ */
 unsigned
 track_numtic(struct track *o) {
 	unsigned ntics;
@@ -205,91 +176,133 @@ track_numtic(struct track *o) {
 }
 
 
-/* ---------------------------------------- track_seqev* routines --- */
-
-	/*
-	 * returns true if an (delta,event)
-	 * pair is available
-	 */
+/*
+ * remove all events from the track
+ * XXX: rename this track_clear and put it in track.c,
+ * (but first stop using the old track_clear())
+ */
+void
+track_clearall(struct track *o) {
+	struct seqev *i, *inext;
 	
-unsigned
-track_seqevavail(struct track *o, struct seqptr *p) {
-	return ((*p->pos) != &o->eot);
+	for (i = o->first;  i != &o->eot;  i = inext) {
+		inext = i->next;
+		seqev_del(i);
+	}
+	o->eot.delta = 0;
+	o->eot.prev = &o->first;
+	o->first = &o->eot;
 }
 
-	/*
-	 * inserts an event (stored in an already allocated
-	 * seqev structure). The delta field of the
-	 * structure will be stored as blank time
-	 * before the event. Thus, in normal usage 
-	 * se->delta will be nearly always zero.
-	 */
+/*
+ * clear 'dst' and attach contents of 'src' to 'dst'
+ * (dont forget to copy the 'eot')
+ */
+void
+track_moveall(struct track *dst, struct track *src) {
+	track_clearall(dst);
+	dst->eot.delta = src->eot.delta;
+	if (src->first == &src->eot) {
+		dst->first = &dst->eot;
+		dst->eot.prev = &dst->first;
+	} else {
+		dst->first = src->first;
+		dst->eot.prev = src->eot.prev;
+		dst->first->prev = &dst->first;
+		*dst->eot.prev = &dst->eot;
+	}
+	src->eot.delta = 0;
+	src->eot.prev = &src->first;
+	src->first = &src->eot;
+}
 
+/* ---------------------------------------- track_seqev* routines --- */
+
+/*
+ * return true if an (delta, event) pair is available
+ */
+unsigned
+track_seqevavail(struct track *o, struct seqptr *p) {
+	return (p->pos != &o->eot);
+}
+
+/*
+ * insert an event (stored in an already allocated
+ * seqev structure). The delta field of the
+ * structure will be stored as blank time
+ * before the event. Thus, in normal usage 
+ * se->delta will be nearly always zero.
+ */
 void
 track_seqevins(struct track *o, struct seqptr *p, struct seqev *se) {
 #ifdef TRACK_DEBUG
-	if (p->delta > (*p->pos)->delta) {
-		dbg_puts("track_seqevput: sync. error\n");
+	if (p->delta > p->pos->delta) {
+		dbg_puts("track_seqevins: sync. error\n");
 		dbg_panic();
 	}	
 #endif
 	se->delta += p->delta;
-	(*p->pos)->delta -= p->delta;
-	se->next = *p->pos;
-	*p->pos = se;
+	p->pos->delta -= p->delta;
+	/* link to the list */
+	se->next = p->pos;
+	se->prev = p->pos->prev;
+	*(se->prev) = se;
+	p->pos->prev = &se->next;
+	/* fix current position */
+	p->pos = se;
 }
 
-	/*
-	 * remove the next event and the blank
-	 * space between the current position an
-	 * the event. The seqev structure is not
-	 * deleted and the delta field is set
-	 * to the removed blank space.
-	 */
-
+/*
+ * remove the next event and the blank space between the current
+ * position an the event. The seqev structure is not deleted and the
+ * delta field is set to the removed blank space.
+ */
 struct seqev *
 track_seqevrm(struct track *o, struct seqptr *p) {
 	struct seqev *se;
 #ifdef TRACK_DEBUG
-	if ((*p->pos) == &o->eot) {
+	if (p->pos == &o->eot) {
 		dbg_puts("track_seqevrm: unexpected end of track\n");
 		dbg_panic();
 	}	
 
-	if (p->delta > (*p->pos)->delta) {
+	if (p->delta > p->pos->delta) {
 		dbg_puts("track_seqevrm: sync. error\n");
 		dbg_panic();
 	}	
 #endif
-	se = *p->pos;
+	se = p->pos;
 	se->next->delta += p->delta;
 	se->delta -= p->delta;
-	*p->pos = se->next;
+	/* since se != &eot, next is never NULL */
+	*se->prev = se->next;
+	se->next->prev = se->prev;
+	/* fix current position */
+	p->pos = se->next;
 	return se;
 }
 
 
-	/*
-	 * moves to the next (delta,event) pair
-	 * return the tics we moved
-	 */
-
+/*
+ * move to the next (delta, event) pair
+ * return the tics we moved
+ */
 unsigned
 track_seqevnext(struct track *o, struct seqptr *p) {
 	unsigned tics;
 #ifdef TRACK_DEBUG
-	if ((*p->pos) == &o->eot) {
+	if (p->pos == &o->eot) {
 		dbg_puts("track_seqevnext: unexpected end of track\n");
 		dbg_panic();
 	}
 
-	if (p->delta > (*p->pos)->delta) {
+	if (p->delta > p->pos->delta) {
 		dbg_puts("track_seqevnext: sync. error\n");
 		dbg_panic();
 	}
 #endif
-	tics = (*p->pos)->delta - p->delta;
-	p->pos = &(*p->pos)->next;
+	tics = p->pos->delta - p->delta;
+	p->pos = p->pos->next;
 	p->delta = 0;
 	return tics;
 }
@@ -298,92 +311,84 @@ track_seqevnext(struct track *o, struct seqptr *p) {
 
 /* ------------------------------------------- track_ev* routines --- */
 
-	/*
-	 * returns true if an event is immediately available
-	 */
-	
+/*
+ * return true if an event is immediately available
+ */
 unsigned
 track_evavail(struct track *o, struct seqptr *p) {
-	return ((*p->pos) != &o->eot && p->delta == (*p->pos)->delta);
+	return (p->pos != &o->eot && p->delta == p->pos->delta);
 }
 
-	/*
-	 * skips the current event
-	 * the current position must be an event not
-	 * an empty tic
-	 */
+/*
+ * skip the current event the current position must be an event not an
+ * empty tic
+ */
 
 void
 track_evnext(struct track *o, struct seqptr *p) {
 #ifdef TRACK_DEBUG
-	if ((*p->pos) == &o->eot) {
+	if (p->pos == &o->eot) {
 		dbg_puts("track_evnext: unexpected end of track\n");
 		dbg_panic();
 	}
 
-	if (p->delta != (*p->pos)->delta) {
+	if (p->delta != p->pos->delta) {
 		dbg_puts("track_evnext: sync. error\n");
 		dbg_panic();
 	}
 #endif
-	p->pos = &(*p->pos)->next;
+	p->pos = p->pos->next;
 	p->delta = 0;
 }
 
-	/*
-	 * moves the cursor after the last event
-	 * in the current tic
-	 */
-	
+/*
+ * move the cursor after the last event in the current tic
+ */
 void
 track_evlast(struct track *o, struct seqptr *p) {
 #ifdef TRACK_DEBUG
-	if (p->delta > (*p->pos)->delta) {
+	if (p->delta > p->pos->delta) {
 		dbg_puts("track_evlast: sync. error\n");
 		dbg_panic();
 	}
 #endif
-	while (p->delta == (*p->pos)->delta && *p->pos != &o->eot) {
-		p->pos = &(*p->pos)->next;
+	while (p->delta == p->pos->delta && p->pos != &o->eot) {
+		p->pos = p->pos->next;
 		p->delta = 0;
 	}
 }
 
-	/*
-	 * store the current event to the location
-	 * provided by the caller and move the cursor juste after it;
-	 * the current position must be an event,
-	 * not an empty tic.
-	 */
-
+/*
+ * store the current event to the location provided by the caller and
+ * move the cursor just after it; the current position must be an
+ * event, not an empty tic.
+ */
 void
 track_evget(struct track *o, struct seqptr *p, struct ev *ev) {
 #ifdef TRACK_DEBUG
-	if ((*p->pos) == &o->eot) {
+	if (p->pos == &o->eot) {
 		dbg_puts("track_evget: unexpected end of track\n");
 		dbg_panic();
 	}
 
-	if (p->delta != (*p->pos)->delta) {
+	if (p->delta != p->pos->delta) {
 		dbg_puts("track_evget: sync. error\n");
 		dbg_panic();
 	}
 #endif
-	*ev = (*p->pos)->ev;
-	p->pos = &(*p->pos)->next;
+	*ev = p->pos->ev;
+	p->pos = p->pos->next;
 	p->delta = 0;
 }
 
-	/*
-	 * inserts an event and puts the cursor
-	 * just after it
-	 */
-
+/*
+ * insert an event and put the cursor just after it
+ */
 void
 track_evput(struct track *o, struct seqptr *p, struct ev *ev) {
 	struct seqev *se;
 #ifdef TRACK_DEBUG
-	if (p->delta > (*p->pos)->delta) {
+	if (p->delta > p->pos->delta) {
 		dbg_puts("track_evput: sync. error\n");
 		dbg_panic();
 	}	
@@ -391,108 +396,110 @@ track_evput(struct track *o, struct seqptr *p, struct ev *ev) {
 	se = seqev_new();
 	se->ev = *ev;
 	se->delta = p->delta;
-	(*p->pos)->delta -= p->delta;
-	se->next = *p->pos;
-	*p->pos = se;
-	p->pos = &se->next;
+	p->pos->delta -= p->delta;
 	p->delta = 0;
+	/* link to the list */
+	se->next = p->pos;
+	se->prev = p->pos->prev;
+	*se->prev = se;
+	p->pos->prev = &se->next;
 }
 
-	/*
-	 * deletes the follwing event
-	 * the current position must be an event not
-	 * an empty tic
-	 */
-
+/*
+ * delete the event following the current position; the current
+ * position must be an event not an empty tic
+ */
 void
 track_evdel(struct track *o, struct seqptr *p) {
 	struct seqev *next;
 #ifdef TRACK_DEBUG
-	if ((*p->pos) == &o->eot) {
+	if (p->pos == &o->eot) {
 		dbg_puts("track_evdel: unexpected end of track\n");
 		dbg_panic();
 	}	
 
-	if (p->delta != (*p->pos)->delta) {
+	if (p->delta != p->pos->delta) {
 		dbg_puts("track_evdel: sync. error\n");
 		dbg_panic();
 	}	
 #endif
-	next = (*p->pos)->next;
-	next->delta += (*p->pos)->delta;
-	seqev_del(*p->pos);
-	*p->pos = next;
+	next = p->pos->next;
+	next->delta += p->pos->delta;
+	/* unlink and delete p->pos */
+	*(p->pos->prev) = next;
+	next->prev = p->pos->prev;
+	seqev_del(p->pos);
+	/* fix current position */
+	p->pos = next;
 }
 
-	/*
-	 * inserts an event at the given position, i.e.
-	 * n tics after the current position
-	 * for instance this is useful to implement the "echo track"
-	 * WARNING: if there are already events at this offset,
-	 * we put the event in the last position
-	 * blank space is added at the end of track
-	 * if necessary
-	 */
-
-
+/*
+ * insert an event at the given position, i.e.  n tics after the
+ * current position for instance this is useful to implement the "echo
+ * track" 
+ * WARNING: if there are already events at this offset, we put
+ * the event in the last position blank space is added at the end of
+ * track if necessary
+ */
 void
 track_evinsat(struct track *o, struct seqptr *p, struct ev *ev, unsigned ntics) {
-	struct seqev **pos = p->pos, *targ;
+	struct seqev *pos = p->pos, *targ;
 	unsigned delta = p->delta, amount;
 	
 #ifdef TRACK_DEBUG
-	if (delta > (*p->pos)->delta) {
+	if (delta > p->pos->delta) {
 		dbg_puts("track_evinsat: sync. error\n");
 		dbg_panic();
 	}
 #endif
-	while (ntics > 0 || (*pos)->delta == 0) {
-		amount = (*pos)->delta - delta;
+	while (ntics > 0 || pos->delta == 0) {
+		amount = pos->delta - delta;
 		if (amount == 0) {
-			if (*pos == &o->eot) {
+			if (pos == &o->eot) {
 				o->eot.delta += ntics;
 				delta += ntics;
 				break;
 			}
-			pos = &(*pos)->next;
+			pos = pos->next;
 			delta = 0;
 		} else {
-			if (amount > ntics) amount = ntics;
+			if (amount > ntics)
+				amount = ntics;
 			delta += amount;
 			ntics -= amount;
 		}
 	}
-
 	targ = seqev_new();
 	targ->ev = *ev;
-	targ->next = *pos;
 	targ->delta = delta;
-	(*pos)->delta -= delta;
-	*pos = targ;
+	/* link to the list */
+	targ->next = pos;
+	targ->prev = pos->prev;
+	*(pos->prev) = targ;
+	pos->prev = &targ->next;
+	/* fix current position */
+	p->pos = targ;
 }
 
 
 /* ------------------------------------------ track_tic* routines --- */
 
-	/*
-	 * returns true if a tic is available
-	 */
-
+/*
+ * return true if a tic is available
+ */
 unsigned
 track_ticavail(struct track *o, struct seqptr *p) {
-	return (p->delta < (*p->pos)->delta);
+	return (p->delta < p->pos->delta);
 }
 
-	/*
-	 * skips the current tic
-	 * the current position must be an empty tic, not
-	 * an event.
-	 */
-
+/*
+ * skip the current tic the current position must be an empty tic, not
+ * an event.
+ */
 void
 track_ticnext(struct track *o, struct seqptr *p) {
 #ifdef TRACK_DEBUG
-	if (p->delta >= (*p->pos)->delta) {
+	if (p->delta >= p->pos->delta) {
 		dbg_puts("track_ticnext: sync. error\n");
 		dbg_panic();
 	}
@@ -500,43 +507,42 @@ track_ticnext(struct track *o, struct seqptr *p) {
 	p->delta++;
 }
 
-	/*
-	 * moves the cursor to the following event in the track,
-	 * returns the number of skiped tics
-	 */	
-
+/*
+ * move the cursor to the following event in the track, return the
+ * number of skiped tics
+ */	
 unsigned
 track_ticlast(struct track *o, struct seqptr *p) {
 	unsigned ntics;
 	
 #ifdef TRACK_DEBUG
-	if (p->delta > (*p->pos)->delta) {
+	if (p->delta > p->pos->delta) {
 		dbg_puts("track_ticlast: sync. error\n");
 		track_dump(o);
 		dbg_panic();
 	}
 #endif
-	ntics = (*p->pos)->delta - p->delta;
+	ntics = p->pos->delta - p->delta;
 	p->delta += ntics;
 	return ntics;
 }
-	/*
-	 * try to move to the next event, but never move
-	 * more than 'max' tics. Retrun the number of skipped tics
-	 */
 
+/*
+ * try to move to the next event, but never move
+ * more than 'max' tics. Retrun the number of skipped tics
+ */
 unsigned
 track_ticskipmax(struct track *o, struct seqptr *p, unsigned max) {
 	unsigned ntics;
 	
 #ifdef TRACK_DEBUG
-	if (p->delta > (*p->pos)->delta) {
+	if (p->delta > p->pos->delta) {
 		dbg_puts("track_ticskipmax: sync. error\n");
 		track_dump(o);
 		dbg_panic();
 	}
 #endif
-	ntics = (*p->pos)->delta - p->delta;
+	ntics = p->pos->delta - p->delta;
 	if (ntics > max) {
 		ntics = max;
 	}
@@ -544,73 +550,65 @@ track_ticskipmax(struct track *o, struct seqptr *p, unsigned max) {
 	return ntics;
 }
 
-	/*
-	 * delete tics until the next event, but never move
-	 * more than 'max' tics. Retrun the number of deletes tics
-	 */
-
+/*
+ * delete tics until the next event, but never move more than 'max'
+ * tics. Retrun the number of deletes tics
+ */
 unsigned
 track_ticdelmax(struct track *o, struct seqptr *p, unsigned max) {
 	unsigned ntics;
 	
 #ifdef TRACK_DEBUG
-	if (p->delta > (*p->pos)->delta) {
+	if (p->delta > p->pos->delta) {
 		dbg_puts("track_ticdelmax: sync. error\n");
 		track_dump(o);
 		dbg_panic();
 	}
 #endif
-	ntics = (*p->pos)->delta - p->delta;
+	ntics = p->pos->delta - p->delta;
 	if (ntics > max) {
 		ntics = max;
 	}
-	(*p->pos)->delta -= ntics;
+	p->pos->delta -= ntics;
 	return ntics;
 }
 
-	/*
-	 * insert 'max' tics on the current position
-	 */
-
+/*
+ * insert 'max' tics on the current position
+ */
 void
 track_ticinsmax(struct track *o, struct seqptr *p, unsigned max) {
-	(*p->pos)->delta += max;
+	p->pos->delta += max;
 }
 
-	/*
-	 * deletes the following tic
-	 * ie shifts the rest of the track
-	 */
-
+/*
+ * delete the following tic ie shifts the rest of the track
+ */
 void
 track_ticdel(struct track *o, struct seqptr *p) {
 #ifdef TRACK_DEBUG
-	if (p->delta >= (*p->pos)->delta) {
-		dbg_puts("track_ticrm: sync. error\n");
+	if (p->delta >= p->pos->delta) {
+		dbg_puts("track_ticdel: sync. error\n");
 		dbg_panic();
 	}	
 #endif
-	(*p->pos)->delta--;
+	p->pos->delta--;
 }
 
-	/*
-	 * insert a tic at the current position 
-	 * (will be the next to be read)
-	 */
-	
+/*
+ * insert a tic at the current position (will be the next to be read)
+ */
 void
 track_ticins(struct track *o, struct seqptr *p) {
-	(*p->pos)->delta++;
+	p->pos->delta++;
 }
 
 /* ----------------------------------------------- misc. routines --- */
 
-	/*
-	 * frees all events in the track and
-	 * sets its length to zero; 
-	 * also puts the cursor at the beggining
-	 */
-
+/*
+ * free all events in the track and set its length to zero; also put
+ * the cursor at the beggining
+ */
 void
 track_clear(struct track *o, struct seqptr *p) {
 	struct seqev *i, *inext;
@@ -621,61 +619,52 @@ track_clear(struct track *o, struct seqptr *p) {
 	}
 	o->eot.delta = 0;
 	o->first = &o->eot;
-	p->pos = &o->first;
+	o->eot.prev = &o->first;
+	p->pos = o->first;
 	p->delta = 0;
 }
 	
-	/*
-	 * places the cursor at the beginning of the track
-	 * first event, first tic
-	 */
-
+/*
+ * place the cursor at the beginning of the track
+ * first event, first tic
+ */
 void
 track_rew(struct track *o, struct seqptr *p) {
-	p->pos = &o->first;
+	p->pos = o->first;
 	p->delta = 0;
 }
-	
-	/*
-	 * returns true if the cursor is at the end
-	 * of the track (ie the last event/tic is already retrieved)
-	 */
 
+/*
+ * return true if the cursor is at the end
+ * of the track (ie the last event/tic is already retrieved)
+ */
 unsigned 
 track_finished(struct track *o, struct seqptr *p) {
-	return (*p->pos) == &o->eot  &&  p->delta == o->eot.delta;
+	return p->pos == &o->eot && p->delta == o->eot.delta;
 }
 
-	/*
-	 * moves the cursor n tics forward.
-	 * if the cursor reaches the end of the track,
-	 * we return the number of remaining tics
-	 */
-
+/*
+ * move the cursor n tics forward. if the cursor reaches the end of
+ * the track, return the number of remaining tics
+ */
 unsigned
 track_seek(struct track *o, struct seqptr *p, unsigned ntics) {
-	struct seqev **pos = p->pos;
+	struct seqev *pos = p->pos;
 	unsigned delta = p->delta, amount;
 	
 #ifdef TRACK_DEBUG
-	if (delta > (*p->pos)->delta) {
+	if (delta > p->pos->delta) {
 		dbg_puts("track_seek: sync. error\n");
 		dbg_panic();
 	}
-	
-	/*
-	if (ntics == 0 && !(p->pos == &o->first && p->delta == 0)) {
-		dbg_puts("track_seek: 0 tics seek from the middle of the track\n");
-	}
-	*/
 #endif
 	while (ntics > 0) {
-		amount = (*pos)->delta - delta;
+		amount = pos->delta - delta;
 		if (amount == 0) {
-			if (*pos == &o->eot) {
+			if (pos == &o->eot) {
 				break;
 			} 
-			pos = &(*pos)->next;
+			pos = pos->next;
 			delta = 0;
 		} else {
 			if (amount > ntics) amount = ntics;
@@ -688,12 +677,10 @@ track_seek(struct track *o, struct seqptr *p, unsigned ntics) {
 	return ntics;
 }
 
-	/*
-	 * moves the cursor n tics forward.
-	 * if the end of the thrack is reached, blank space
-	 * will be added.
-	 */
-
+/*
+ * move the cursor n tics forward.  if the end of the track is
+ * reached, blank space will be added.
+ */
 void
 track_seekblank(struct track *o, struct seqptr *p, unsigned ntics) {
 	ntics = track_seek(o, p, ntics);
@@ -703,4 +690,43 @@ track_seekblank(struct track *o, struct seqptr *p, unsigned ntics) {
 	}
 }
 
+/*
+ * set the chan (dev/midichan pair) of
+ * all voice events
+ */
+void
+track_setchan(struct track *src, unsigned dev, unsigned ch) {
+	struct seqev *i;
 
+	for (i = src->first; i != NULL; i = i->next) {
+		if (EV_ISVOICE(&i->ev)) {
+			i->ev.data.voice.dev = dev;
+			i->ev.data.voice.ch = ch;
+		}
+	}
+}
+
+/*
+ * fill a map of used channels/devices
+ */
+void
+track_chanmap(struct track *o, char *map) {
+	struct seqev *se;
+	unsigned dev, ch, i;
+	
+	for (i = 0; i < DEFAULT_MAXNCHANS; i++) {
+		map[i] = 0;
+	}
+
+	for (se = o->first; se != NULL; se = se->next) {
+		if (EV_ISVOICE(&se->ev)) {
+			dev = se->ev.data.voice.dev;
+			ch  = se->ev.data.voice.ch;
+			if (dev >= DEFAULT_MAXNDEVS || ch >= 16) {
+				dbg_puts("track_chanmap: bogus dev/ch pair, stopping\n");
+				break;
+			}
+			map[dev * 16 + ch] = 1;
+		}
+	}
+}

@@ -48,10 +48,10 @@
 #include "cons.h"
 #include "data.h"
 
-	/*
-	 * allocate a new data structure and
-	 * initialise it as 'nil'
-	 */
+/*
+ * allocate a new data structure and
+ * initialise it as 'nil'
+ */
 struct data *
 data_newnil(void) {
 	struct data *o;
@@ -61,10 +61,10 @@ data_newnil(void) {
 	return o;
 }
 
-	/*
-	 * allocate a new data structure and
-	 * initialise with the given long integer
-	 */
+/*
+ * allocate a new data structure and
+ * initialise with the given long integer
+ */
 struct data *
 data_newlong(long val) {
 	struct data *o;
@@ -74,10 +74,10 @@ data_newlong(long val) {
 	return o;
 }
 
-	/*
-	 * allocate a new data structure and
-	 * initialise with (a copy of) the given string
-	 */
+/*
+ * allocate a new data structure and
+ * initialise with (a copy of) the given string
+ */
 struct data *
 data_newstring(char *val) {
 	struct data *o;
@@ -87,10 +87,10 @@ data_newstring(char *val) {
 	return o;
 }
 
-	/*
-	 * allocate a new data structure and
-	 * initialise with (a copy of) the given reference
-	 */
+/*
+ * allocate a new data structure and
+ * initialise with (a copy of) the given reference
+ */
 struct data *
 data_newref(char *val) {
 	struct data *o;
@@ -101,12 +101,12 @@ data_newref(char *val) {
 }
 
 
-	/*
-	 * allocate a new data structure and
-	 * initialise with the given list (not copied).
-	 * The list argument is the first item of a linked
-	 * list of data structures
-	 */
+/*
+ * allocate a new data structure and
+ * initialise with the given list (not copied).
+ * The list argument is the first item of a linked
+ * list of data structures
+ */
 struct data *
 data_newlist(struct data *list) {
 	struct data *o;
@@ -116,10 +116,10 @@ data_newlist(struct data *list) {
 	return o;
 }
 
-	/*
-	 * allocate a new data structure and
-	 * initialise with the given user type
-	 */
+/*
+ * allocate a new data structure and
+ * initialise with the given user type
+ */
 struct data *
 data_newuser(void *addr) {
 	struct data *o;
@@ -129,10 +129,10 @@ data_newuser(void *addr) {
 	return o;
 }
 
-	/*
-	 * return the number of data structures contained
-	 * in the given data structure
-	 */
+/*
+ * return the number of data structures contained
+ * in the given data structure
+ */
 unsigned
 data_numitem(struct data *o) {
 	struct data *i;
@@ -147,11 +147,11 @@ data_numitem(struct data *o) {
 	return n;
 }
 
-	/*
-	 * add to the end of given 'o' data structure (must be of
-	 * type DATA_LIST) the given data structure
-	 * (can be of any type)
-	 */
+/*
+ * add to the end of given 'o' data structure (must be of
+ * type DATA_LIST) the given data structure
+ * (can be of any type)
+ */
 void
 data_listadd(struct data *o, struct data *v) {
 	struct data **i;
@@ -163,10 +163,10 @@ data_listadd(struct data *o, struct data *v) {
 	*i = v;
 }
 
-	/*
-	 * remove the given data struct from the
-	 * given list
-	 */
+/*
+ * remove the given data struct from the
+ * given list
+ */
 void
 data_listremove(struct data *o, struct data *v) {
 	struct data **i;
@@ -183,10 +183,10 @@ data_listremove(struct data *o, struct data *v) {
 	dbg_panic();
 }
 
-	/*
-	 * clear a data structure and set it
-	 * to by of type 'DATA_NIL'
-	 */
+/*
+ * clear a data structure and set it
+ * to by of type 'DATA_NIL'
+ */
 void
 data_clear(struct data *o) {
 	struct data *i, *inext;
@@ -265,14 +265,10 @@ data_dbg(struct data *o) {
 	}
 }
 
-
-/* -------------------------------------------------------------------- */
-
-	/*
-	 * copy src into dst
-	 * never fails
-	 */
-
+/*
+ * copy src into dst
+ * never fails
+ */
 void
 data_assign(struct data *dst, struct data *src) {
 	struct data *n, *i, **j;
@@ -315,11 +311,10 @@ data_assign(struct data *dst, struct data *src) {
 }
 
 
-	/*
-	 * return 1 if op1 et op2 are identical, 
-	 * 0 overwise
-	 */
-
+/*
+ * return 1 if op1 et op2 are identical, 
+ * 0 overwise
+ */
 unsigned
 data_id(struct data *op1, struct data *op2) {
 	struct data *i1, *i2;
@@ -356,16 +351,14 @@ data_id(struct data *op1, struct data *op2) {
 	/* not reached */
 	return 0;
 }
-			
-	/*
-	 * return 1 if the argument is 
-	 *	- a ref  
-	 * 	- a not empty string or list 
-	 *	- a non-zero integer 
-	 * and 0 overwise
-	 */
 
-
+/*
+ * return 1 if the argument is 
+ *	- a ref  
+ * 	- a not empty string or list 
+ *	- a non-zero integer 
+ * and 0 overwise
+ */
 unsigned
 data_eval(struct data *o) {
 	switch(o->type) {
@@ -387,12 +380,11 @@ data_eval(struct data *o) {
 	return 0;	
 }
 
-/* ---------------------------------------------- unary operators --- */
 
-	/*
-	 * Each of the following routines appies an unary operator
-	 * to the first argument. Returs 1 on success, 0 on failure
-	 */
+/*
+ * Each of the following routines appies an unary operator
+ * to the first argument. Returs 1 on success, 0 on failure
+ */
 
 unsigned
 data_neg(struct data *op1) {
@@ -429,14 +421,12 @@ data_not(struct data *op1) {
 }
 
 
-/* --------------------------------------------- binary operators --- */
-
-	/*
-	 * Each of the following routines calculates the 
-	 * result of a binary oprator applied to the couple
-	 * of arguments and stores the result in the first argument.
-	 * Returs 1 on success, 0 on failure
-	 */
+/*
+ * Each of the following routines calculates the 
+ * result of a binary oprator applied to the couple
+ * of arguments and stores the result in the first argument.
+ * Returs 1 on success, 0 on failure
+ */
 
 unsigned 
 data_add(struct data *op1, struct data *op2) {

@@ -31,102 +31,111 @@
 #ifndef MIDISH_DEFAULT_H
 #define MIDISH_DEFAULT_H
 
+/*
+ * version string for newly created files
+ */
 #define VERSION "midish version 0.3"
 
-	/* 
-	 * maximum number of midi devices supported by midish 
-	 */
+/*
+ * convert tempo (beats per minute)
+ * to tic length (number of 24-th of microsecond)
+ */
+#define TEMPO_TO_USEC24(tempo,tpb) (60L * 24000000L / ((tempo) * (tpb)))
+
+/* 
+ * maximum number of midi devices supported by midish 
+ */
 #define DEFAULT_MAXNDEVS	16
 
-	/*
-	 * maximum number of instruments
-	 */
+/*
+ * maximum number of instruments
+ */
 #define DEFAULT_MAXNCHANS	(DEFAULT_MAXNDEVS * 16)
 
-	/*
-	 * maximum number of events
-	 */
+/*
+ * maximum number of events
+ */
 #define DEFAULT_MAXNSEQEVS	100000
 
-	/*
-	 * maximum number of tracks
-	 */
+/*
+ * maximum number of tracks
+ */
 #define DEFAULT_MAXNTRACKPTRS	100
 
-	/*
-	 * maximum number of filter states (roughly
-	 * maximum number of simultaneous notes
-	 */
+/*
+ * maximum number of filter states (roughly
+ * maximum number of simultaneous notes
+ */
 #define DEFAULT_MAXNSTATES	1000
 
-	/*
-	 * maximum number of system exclusive messages
-	 */
+/*
+ * maximum number of system exclusive messages
+ */
 #define DEFAULT_MAXNSYSEXS	2000
 
-	/*
-	 * maximum number of chunks (each sysex is
-	 * a set of chunks)
-	 */
+/*
+ * maximum number of chunks (each sysex is
+ * a set of chunks)
+ */
 #define DEFAULT_MAXNCHUNKS	(DEFAULT_MAXNSYSEXS * 2)
 
-	/*
-	 * default number of tics per beat
-	 */
+/*
+ * default number of tics per beat
+ */
 #define DEFAULT_TPB		24
 
-	/*
-	 * default beats per measure 
-	 */
+/*
+ * default beats per measure 
+ */
 #define DEFAULT_BPM		4
 
-	/*
-	 * default number of tic per unit note
-	 */
+/*
+ * default number of tic per unit note
+ */
 #define DEFAULT_TPU		96
 
-	/* 
-	 * default tempo
-	 */
+/* 
+ * default tempo
+ */
 #define DEFAULT_TEMPO		120
 
-	/*
-	 * number of milliseconds to wait between
-	 * the instrumet config is sent and the playback is stared
-	 */
+/*
+ * default tempo in 24-th of microsecond period
+ */
+#define DEFAULT_USEC24		TEMPO_TO_USEC24(DEFAULT_TEMPO, DEFAULT_TPB)
+
+/*
+ * number of milliseconds to wait between
+ * the instrumet config is sent and the playback is stared
+ */
 #define DEFAULT_CHANWAIT	200
 
-	/*
-	 * nmber of milliseconds to wait after 
-	 * each sysex message is sent
-	 */
+/*
+ * nmber of milliseconds to wait after 
+ * each sysex message is sent
+ */
 #define DEFAULT_SXWAIT		20
 
-	/*
-	 * metronome click length in 24-th of microsecond
-	 * (30ms)
-	 */
+/*
+ * metronome click length in 24-th of microsecond
+ * (30ms)
+ */
 #define DEFAULT_METRO_CLICKLEN	(24 * 1000 * 30)
 
-	/*
-	 * default metronome device and midi channel
-	 */
+/*
+ * default metronome device and midi channel
+ */
 #define DEFAULT_METRO_DEV	0
 #define DEFAULT_METRO_CHAN	9
 
-	/*
-	 * default metronome click notes and velocities
-	 */
+/*
+ * default metronome click notes and velocities
+ */
 #define DEFAULT_METRO_HI_NOTE	67
 #define DEFAULT_METRO_HI_VEL	127
 #define DEFAULT_METRO_LO_NOTE	68
 #define DEFAULT_METRO_LO_VEL	90
 
-	/*
-	 * convert tempo (beats per minute)
-	 * to tic length (number of 24-th of microsecond)
-	 */
-#define TEMPO_TO_USEC24(tempo,tpb) (60L * 24000000L / ((tempo) * (tpb)))
 
 
 #endif /* MIDISH_DEFAULT_H */

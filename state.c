@@ -33,9 +33,12 @@
  * which are "on", the values of used controllers
  * the bender etc...
  *
- * since for each midi event, a state can be created
- * in realtime, we use a pool.
- *
+ * state lists are used in the real-time filter, so we use a state pool. In
+ * a typical performace, the maximum state list length is roughly equal to
+ * the maximum sounding notes; the mean list length is between 2 and 3
+ * states and the maximum is between 10 and 20 states. Currently we use a
+ * singly linked list, but for performance reasons we shoud use a hash table
+ * in the future.
  */
  
 #include "dbg.h"
@@ -93,12 +96,48 @@ statelist_done(struct statelist *o) {
 	}
 	dbg_puts("\n");
 #endif
-	if (o->first != NULL) {
-		dbg_puts("statelist_done: list not empty\n");
-		dbg_panic();
+	statelist_empty(o);
+}
+
+/*
+ * create a new statelist by duplicating another one
+ */
+void
+statelist_dup(struct statelist *o, struct statelist *src) {
+	struct state *i, *n;
+
+	statelist_init(o);
+	for (i = src->first; i != NULL; i = i->next) {
+		n = state_new();
+		n->ev = i->ev;
+		n->phase = i->phase;
+		n->keep = i->keep;
+		statelist_add(o, n);
 	}
 }
 
+/*
+ * remove and free all states from the state list
+ */
+void
+statelist_empty(struct statelist *o) {
+	struct state *i, *inext;
+
+	for (i = o->first; i != NULL; i = inext) {
+		if (!(i->phase & EV_PHASE_LAST)) {
+			dbg_puts("statelist_empty: ");
+			ev_dbg(&i->ev);
+			dbg_puts(": unterminated frame\n");
+		}
+		inext = i->next;
+		statelist_rm(o, i);
+		state_del(i);
+	}
+}
+
+/*
+ * add a state to the state list
+ */ 
 void
 statelist_add(struct statelist *o, struct state *st) {
 	st->next = o->first;
@@ -108,12 +147,17 @@ statelist_add(struct statelist *o, struct state *st) {
 	o->first = st;
 }
 
+/*
+ * remove a state from the state list, the state
+ * isn't freed
+ */
 void
 statelist_rm(struct statelist *o, struct state *st) {
 	*st->prev = st->next;
 	if (st->next)
 		st->next->prev = st->prev;
 }
+
 
 struct state *
 statelist_lookup(struct statelist *o, struct ev *ev) {
@@ -138,5 +182,117 @@ statelist_lookup(struct statelist *o, struct ev *ev) {
 	o->lookup_time += time;
 #endif
 	return i;
+}
+
+/*
+ * create a state for the given event and return the state.
+ * if there is already a state for a related event, then
+ * update the existing state.
+ */
+struct state *
+statelist_update(struct statelist *statelist, struct ev *ev) {
+	struct state *st;
+	unsigned phase, flags;
+
+	phase = ev_phase(ev);
+	st = statelist_lookup(statelist, ev);
+	/*
+	 * purge an unused state (state of terminated frame) that we
+	 * need
+	 */
+	if (st != NULL && st->phase == EV_PHASE_LAST) {
+#ifdef STATE_DEBUG
+		dbg_puts("statelist_update: ");
+		ev_dbg(&st->ev);
+		dbg_puts(": purged\n");
+#endif
+		statelist_rm(statelist, st);
+		state_del(st);
+		st = NULL;
+	}
+
+	/*
+	 * if one of the following are true
+	 *	- there is no state because this is the first
+	 *	  event of a new frame, or this is a bogus next event
+	 *        (the beginning is missing)
+	 *	- there is a state, but this is for sure the
+	 *	  first event of a new frame (thus this is 
+	 *	  de beginning of a nested frame)
+	 * then create a new state.
+	 */
+	if (st == NULL || phase == EV_PHASE_FIRST) {
+		flags = 0;
+		if (st == NULL && !(phase & EV_PHASE_FIRST)) {
+#ifdef STATE_DEBUG
+			dbg_puts("statelist_update: ");
+			ev_dbg(ev);
+			dbg_puts(": not first and no state\n");
+#endif
+			flags = STATE_BOGUS | STATE_NEW;
+		}
+		if (st != NULL && phase == EV_PHASE_FIRST) {
+#ifdef STATE_DEBUG
+			ev_dbg(ev);
+			dbg_puts(": nested events, stacked\n");
+#endif
+			flags = STATE_BOGUS | STATE_NEW;
+		}
+		st = state_new();
+		statelist_add(statelist, st);
+		st->phase = (phase | EV_PHASE_FIRST) & ~EV_PHASE_NEXT;
+		st->flags = flags;
+		st->ev = *ev;
+#ifdef STATE_DEBUG
+		dbg_puts("statelist_update: ");
+		ev_dbg(ev);
+		dbg_puts(": new state\n");
+#endif
+	} else {
+		st->ev = *ev;
+		st->phase = phase & ~EV_PHASE_FIRST;
+		st->flags &= ~STATE_NEW;
+#ifdef STATE_DEBUG
+		dbg_puts("statelist_update: ");
+		ev_dbg(ev);
+		dbg_puts(": updated\n");
+#endif
+	}
+	st->flags &= ~STATE_TOUCHED;
+	st->keep = 0;
+	return st;
+}
+
+/*
+ * mark all states with the 'keep' flag. 
+ *
+ * XXX: If we have separate lists for "keep" and "dont keep" states
+ * the following can be made much faster
+ */
+void
+statelist_keep(struct statelist *o) {
+	struct state *i;
+
+	for (i = o->first; i != NULL; i = i->next) {
+		i->keep = 1;
+	}
+}
+
+
+/*
+ * remove from the "new list" all events present in "old list"
+ */
+void
+statelist_diff(struct statelist *nl, struct statelist *ol) {
+	struct state *i, *inext, *st;
+
+	for (i = nl->first; i != NULL; i = inext) {
+		inext = i->next;
+		st = statelist_lookup(ol, &i->ev);
+		if (st && ev_eq(&st->ev, &i->ev)) {
+			statelist_rm(nl, i);
+			state_del(i);
+		}			
+	}
 }
 
