@@ -274,11 +274,17 @@ statelist_update(struct statelist *statelist, struct ev *ev) {
  */
 void
 statelist_outdate(struct statelist *o) {
-	struct state *i;
+	struct state *i, *inext;
 
-	for (i = o->first; i != NULL; i = i->next) {
-		i->flags &= ~STATE_CHANGED;
-		i->nevents = 0;
+	for (i = o->first; i != NULL; i = inext) {
+		inext = i->next;
+		if (i->phase & EV_PHASE_LAST) {
+			statelist_rm(o, i);
+			state_del(i);
+		} else {
+			i->flags &= ~STATE_CHANGED;
+			i->nevents = 0;
+		}
 	}
 }
 

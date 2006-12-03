@@ -32,10 +32,9 @@
 #define MIDISH_STATE_H
 
 #undef STATE_DEBUG
-#undef STATE_PROF
+#define STATE_PROF
 
 #include "ev.h"
-
 
 struct seqev;
 
@@ -46,21 +45,26 @@ struct state  {
 #define STATE_CHANGED	2		/* updated within the current tick */
 #define STATE_BOGUS	4		/* frame detected as bogus */
 	unsigned flags;
-	unsigned tic;			/* absolute tic of the FIRST event */
-	struct seqev *pos;		/* pointer to the FIRST event */
 	unsigned phase;			/* current phase (of the 'ev' field) */
 
+	unsigned tic;			/* absolute tic of the FIRST event */
+	struct seqev *pos;		/* pointer to the FIRST event */
 	unsigned silent;		/* events shoudn't be played */
 	unsigned nevents;		/* number of events before timeout */
 };
 
 struct statelist {
 	/* 
-	 * XXX: use a hash table instead of simple list
+	 * instead of a simple list, we should use a hash table here,
+	 * but statistics on real-life cases seem to show that lookups
+	 * are very fast thanks to the state ordering (avg lookup
+	 * time is around 1-2 iterations)
 	 */
-	struct state *first;
+	struct state *first;		/* head of the state list */
 #ifdef STATE_PROF
-	unsigned lookup_n, lookup_max, lookup_time;
+	unsigned lookup_n;		/* number of lookups */
+	unsigned lookup_max;		/* max lookup time */
+	unsigned lookup_time;		/* total lookup time */
 #endif
 };
 
@@ -78,6 +82,5 @@ struct state *statelist_lookup(struct statelist *o, struct ev *ev);
 struct state *statelist_update(struct statelist *statelist, struct ev *ev);
 void	      statelist_outdate(struct statelist *o);
 void	      statelist_diff(struct statelist *nl, struct statelist *ol);
-
 
 #endif /* MIDISH_STATE_H */

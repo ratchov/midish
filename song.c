@@ -743,7 +743,7 @@ song_start(struct song *o,
 		snext = s->next;
 		ev_dbg(&s->ev);
 		if (EV_ISMETA(&s->ev)) {
-			dbg_puts(": restoreding meta-event\n");
+			dbg_puts(": restoring meta-event\n");
 			song_metaput(o, &s->ev);
 			s->silent = 0;
 		} else {
@@ -778,15 +778,14 @@ song_stop(struct song *o) {
 	for (i = o->trklist; i != NULL; i = (struct songtrk *)i->name.next) {
 		for (s = i->trackptr.statelist.first; s != NULL; s = snext) {
 			snext = s->next;
-			ev_dbg(&s->ev);
 			if (!s->silent && ev_cancel(&s->ev, &ca)) {
+				dbg_puts("song_stop: ");
+				ev_dbg(&s->ev);
 				dbg_puts(": canceled -> ");
 				ev_dbg(&ca);
 				dbg_puts("\n");
 				mux_putev(&ca);
 
-			} else {
-				dbg_puts(": not canceled\n");
 			}
 			statelist_rm(&i->trackptr.statelist, s);
 			state_del(s);

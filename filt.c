@@ -1112,15 +1112,15 @@ filt_shut(struct filt *o) {
 	
 	for (s = o->statelist.first; s != NULL; s = snext) {
 		snext = s->next;
-		dbg_puts("filt_shut: ");
-		ev_dbg(&s->ev);
 		if (ev_cancel(&s->ev, &ca)) {
 			filt_processev(o, &ca);
-			dbg_puts(": cancelled by: ");
-			ev_dbg(&ca);
-			dbg_puts("\n");
-		} else {
-			dbg_puts(": not cancelled\n");
+			if (filt_debug) {
+				dbg_puts("filt_shut: ");
+				ev_dbg(&s->ev);
+				dbg_puts(": cancelled by: ");
+				ev_dbg(&ca);
+				dbg_puts("\n");
+			}
 		}
 		statelist_rm(&o->statelist, s);
 		state_del(s);
