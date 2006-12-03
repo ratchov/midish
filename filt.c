@@ -359,10 +359,9 @@ filt_reset(struct filt *o) {
 	}
 }
 
-	/*
-	 * destroy a filter
-	 */
-
+/*
+ * destroy a filter
+ */
 void
 filt_done(struct filt *o) {
 #ifdef FILT_DEBUG
@@ -374,11 +373,10 @@ filt_done(struct filt *o) {
 }
 
 
-	/*
-	 * attach a filter to the owener
-	 * events are passed to the given callback (see filt_pass)
-	 */
-
+/*
+ * configure a filter so that output events are passed to the given
+ * callback (see filt_processev)
+ */
 void
 filt_start(struct filt *o, void (*cb)(void *, struct ev *), void *addr) {
 	/*
@@ -391,10 +389,9 @@ filt_start(struct filt *o, void (*cb)(void *, struct ev *), void *addr) {
 }
 
 
-	/*
-	 * detaches the filter from the ower
-	 */
-
+/*
+ * unconfigure a filter
+ */
 void
 filt_stop(struct filt *o) {
 	statelist_done(&o->statelist);
@@ -405,13 +402,12 @@ filt_stop(struct filt *o) {
 
 /* ------------------------------------- configuration management --- */
 
-	/* 
-	 * configure the filt to drop 
-	 * events from a particular device 
-	 * - if the same drop-rule exists then do nothing
-	 * - remove map-rules with the same idev
-	 */
-	 
+/* 
+ * configure the filt to drop 
+ * events from a particular device 
+ * - if the same drop-rule exists then do nothing
+ * - remove map-rules with the same idev
+ */
 void
 filt_conf_devdrop(struct filt *o, unsigned idev) {
 	struct rule **i, *r;
@@ -435,11 +431,10 @@ filt_conf_devdrop(struct filt *o, unsigned idev) {
 	o->dev_rules = r;
 }
 
-	/* 
-	 * configure the filt not to drop 
-	 * events from a particular device 
-	 */ 
-
+/* 
+ * configure the filt not to drop 
+ * events from a particular device 
+ */ 
 void
 filt_conf_nodevdrop(struct filt *o, unsigned idev) {
 	struct rule **i, *r;
@@ -457,13 +452,12 @@ filt_conf_nodevdrop(struct filt *o, unsigned idev) {
 	}
 }
 
-	/* 
-	 * configure the filter to map one device to another 
-	 * - if the same map-rule exists dont add new one
-	 * - remove maps with the same output dev
-	 * - remove drops with the same input
-	 */
-
+/* 
+ * configure the filter to map one device to another 
+ * - if the same map-rule exists dont add new one
+ * - remove maps with the same output dev
+ * - remove drops with the same input
+ */
 void
 filt_conf_devmap(struct filt *o,
     unsigned idev, unsigned odev) {
@@ -490,11 +484,10 @@ filt_conf_devmap(struct filt *o,
 	o->dev_rules = r;
 }
 
-	/* 
-	 * configure the filter not to map 
-	 * any devices to the given one
-	 */
-
+/* 
+ * configure the filter not to map 
+ * any devices to the given one
+ */
 void
 filt_conf_nodevmap(struct filt *o, unsigned odev) {
 	struct rule **i, *r;
@@ -512,11 +505,10 @@ filt_conf_nodevmap(struct filt *o, unsigned odev) {
 	}
 }
 
-	/*
-	 * configure the filter to drop a particular 
-	 * channel
-	 */
-
+/*
+ * configure the filter to drop a particular 
+ * channel
+ */
 void
 filt_conf_chandrop(struct filt *o, unsigned idev, unsigned ich) {
 	struct rule **i, *r;
@@ -544,11 +536,10 @@ filt_conf_chandrop(struct filt *o, unsigned idev, unsigned ich) {
 	o->chan_rules = r;	
 }
 
-	/*
-	 * configure the filter to drop a particular 
-	 * channel
-	 */
-	 
+/*
+ * configure the filter to drop a particular 
+ * channel
+ */
 void
 filt_conf_nochandrop(struct filt *o, unsigned idev, unsigned ich) {
 	struct rule **i, *r;
@@ -761,11 +752,10 @@ filt_conf_keydrop(struct filt *o, unsigned idev, unsigned ich,
 }
 
 
-	/*
-	 * if there is intersection with existing rules
-	 * then remove them
-	 */
-
+/*
+ * if there is intersection with existing rules
+ * then remove them
+ */
 void
 filt_conf_nokeydrop(struct filt *o, unsigned idev, unsigned ich, 
     unsigned keylo, unsigned keyhi) {
@@ -971,12 +961,10 @@ filt_conf_swapodev(struct filt *o, unsigned olddev, unsigned newdev) {
 
 /* ----------------------------------------------- real-time part --- */
 
-	/* 
-	 * executes the given rule; if event matches the rule then
-	 * pass it and return 1, else retrun 0
-	 */
-	 	
-		
+/* 
+ * executes the given rule; if the event matches the rule then
+ * pass it and return 1, else retrun 0
+ */
 unsigned
 filt_matchrule(struct filt *o, struct rule *r, struct ev *ev) {
 	struct ev te;
@@ -1079,10 +1067,9 @@ match_drop:
 }
 
 
-	/*
-	 * match event against all rules
-	 */
-
+/*
+ * match event against all rules
+ */
 void
 filt_processev(struct filt *o, struct ev *ev) {
 	unsigned match;
@@ -1114,145 +1101,38 @@ filt_processev(struct filt *o, struct ev *ev) {
 	}
 }
 
-	/*
-	 * send state event and delete
-	 * the state if it is no more used
-	 */
-
+/*
+ * shuts all notes and restores the default values
+ * of the modified controllers, the bender etc...
+ */
 void
-filt_staterun(struct filt *o, struct state *s) {
-	if (s->nevents == 0) {
-		filt_processev(o, &s->ev);
-		if (!s->keep) {
-#ifdef FILT_DEBUG
-			if (filt_debug) {
-				dbg_puts("filt_staterun: deleting: ");
-				ev_dbg(&s->ev);
-				dbg_puts("\n");
-			}
-#endif
-			statelist_rm(&o->statelist, s);
-			state_del(s);
-			return;
-		}
-	}
-	s->nevents++;
-}
-
-	/*
-	 * create and run a new state and return pointer
-	 * to the next runable state
-	 */
-
-struct state *
-filt_statecreate(struct filt *o, struct ev *ev, unsigned keep) {
-	struct state *s;
+filt_shut(struct filt *o) {
+	struct state *s, *snext;
+	struct ev ca;
 	
-#ifdef FILT_DEBUG
-	if (filt_debug) {
-		dbg_puts("filt_statecreate: ");
-		ev_dbg(ev);
-		dbg_puts("\n");
-	}
-#endif
-	s = state_new();
-	s->ev = *ev;
-	s->nevents = 0;
-	s->keep = keep;
-	statelist_add(&o->statelist, s);
-	filt_staterun(o, s);
-	return s;
-}
-
-	/*
-	 * update the event and the keep-flag of the given state
-	 * try to send it
-	 */
-
-void
-filt_stateupdate(struct filt *o, struct state *s, struct ev *ev, unsigned keep) {
-	s->ev = *ev;
-	s->keep = keep;
-	filt_staterun(o, s);
-}
-
-	/*
-	 * lookup in the state list for a state
-	 * corresponding to the give event. Ie a
-	 * state with the same note, the same controller,
-	 * bender etc...
-	 */
-
-struct state *
-filt_statelookup(struct filt *o, struct ev *ev) {
-	return statelist_lookup(&o->statelist, ev);
-}
-
-
-	/*
-	 * for the given state (returned by filt_statelookup
-	 * or filt_statenew), generates and passes an event
-	 * restoring the default midi state. I.e. generate
-	 * NOTEOFFs for NOTEON-states etc...
-	 * 	
-	 */
-
-void
-filt_stateshut(struct filt *o, struct state *s) {
-	struct ev *ev = &s->ev;
-
-	if (s->ev.cmd == EV_NON || s->ev.cmd == EV_KAT) {
-		ev->cmd = EV_NOFF;
-		ev->data.voice.b0 = s->ev.data.voice.b0;
-		ev->data.voice.b1 = EV_NOFF_DEFAULTVEL;
-		s->keep = 0;
-		filt_staterun(o, s);
-	} else if (s->ev.cmd == EV_BEND) {
-		ev->data.voice.b0 = EV_BEND_DEFAULTLO;
-		ev->data.voice.b1 = EV_BEND_DEFAULTHI;
-		s->keep = 0;
-		filt_staterun(o, s);
-	} else if (s->ev.cmd == EV_CAT) {
-		ev->data.voice.b0 = EV_CAT_DEFAULT;
-		s->keep = 0;
-		filt_staterun(o, s);
-	} else {
-#ifdef FILT_DEBUG
-		if (filt_debug) {
-			dbg_puts("filt_stateshut: deleting: ");
-			ev_dbg(ev);
+	for (s = o->statelist.first; s != NULL; s = snext) {
+		snext = s->next;
+		dbg_puts("filt_shut: ");
+		ev_dbg(&s->ev);
+		if (ev_cancel(&s->ev, &ca)) {
+			filt_processev(o, &ca);
+			dbg_puts(": cancelled by: ");
+			ev_dbg(&ca);
 			dbg_puts("\n");
+		} else {
+			dbg_puts(": not cancelled\n");
 		}
-#endif
 		statelist_rm(&o->statelist, s);
 		state_del(s);
 	}
 }
 
-
-	/*
-	 * shuts all notes and restores the default values
-	 * of the modified controllers, the bender etc...
-	 */
-
-void
-filt_shut(struct filt *o) {
-	struct state *s, *snext;
-	
-	for (s = o->statelist.first; s != NULL; s = snext) {
-		snext = s->next;
-		filt_stateshut(o, s);
-	}
-}
-
-	/*
-	 * give an event to the filter for processing
-	 */
-
+/*
+ * give an event to the filter for processing
+ */
 void
 filt_evcb(struct filt *o, struct ev *ev) {
-	struct state *s;
-	unsigned keep;
+	struct state *st;
 	
 	if (filt_debug) {
 		dbg_puts("filt_run: ");
@@ -1270,92 +1150,47 @@ filt_evcb(struct filt *o, struct ev *ev) {
 	}
 #endif
 
-	/* 
-	 * first, sanitize the input; keep state for
-	 * NOTEs and BENDs
+	/*
+	 * create/update state for this event
 	 */
-
-	if (EV_ISNOTE(ev)) {
-		s = filt_statelookup(o, ev);
-		if (ev->cmd == EV_NON) {
-			if (s) {
-				dbg_puts("filt_evcb: noteon: state exists, ignored\n");
-				return;
-			}
-			if (!o->active) {
-				return;
-			}
-			filt_statecreate(o, ev, 1);
-		} else if (ev->cmd == EV_NOFF) {
-			if (s) {
-				filt_stateupdate(o, s, ev, 0);
-			} else {
-				if (!o->active) {
-					return;
-				}
-				dbg_puts("filt_evcb: noteoff: state doesn't exist, event ignored\n");
-			}
-		} else {
-			filt_stateupdate(o, s, ev, 1);
+	st = statelist_update(&o->statelist, ev);
+	if (st->flags & STATE_NEW) {
+		/*
+		 * XXX: have to do something with the rule set here
+		 */
+		st->silent = !o->active ? 1 : 0;
+		if (st->flags & STATE_BOGUS) {
+			dbg_puts("filt_evcb: ");
+			ev_dbg(ev);
+			dbg_puts(": bogus frame\n");
+			st->silent = 1;
 		}
-	} else if (ev->cmd == EV_BEND) {
-		keep = (ev->data.voice.b0 != EV_BEND_DEFAULTLO || 
-			ev->data.voice.b1 != EV_BEND_DEFAULTHI) ? 1 : 0;
-		s = filt_statelookup(o, ev);
-		if (!s || 
-		    ev->data.voice.b0 != s->ev.data.voice.b0 ||
-		    ev->data.voice.b1 != s->ev.data.voice.b1) {
-			if (s) {
-				filt_stateupdate(o, s, ev, keep);
-			} else {
-				if (!o->active) {
-					return;
-				}
-				filt_statecreate(o, ev, keep);
-			}
-		}
-	} else if (ev->cmd == EV_CTL) {
-		keep = 1;
-		s = filt_statelookup(o, ev);
-		if (!s) {
-			if (!o->active) {
-				return;
-			}
-			filt_statecreate(o, ev, keep);
-		} else if (ev->data.voice.b1 != s->ev.data.voice.b1) {
-			filt_stateupdate(o, s, ev, keep);
-		}
-	} else if (ev->cmd == EV_CAT) {
-		/* 
-		XXX: not tested => set keep to zero 
-		keep = ev->data.voice.b0 != 0 ? 1 : 0;
-		*/
-		keep = 0;		
-		s = filt_statelookup(o, ev);
-		if (!s) {
-			if (!o->active) {
-				return;
-			}
-			filt_statecreate(o, ev, keep);
-		} else if (ev->data.voice.b0 != s->ev.data.voice.b0) {
-			filt_stateupdate(o, s, ev, keep);
-		}
-	} else {
-		filt_processev(o, ev);
 	}
+
+	/*
+	 * nothing to do with silent frames
+	 */
+	if (!st->silent)
+		return;
+
+	/*
+	 * throttling: if we played more than MAXEV 
+	 * events skip this event only if it doesnt change the
+	 * phase of the frame
+	 */
+	if (st->nevents > FILT_MAXEV &&
+	    (st->phase == EV_PHASE_NEXT || 
+	     st->phase == (EV_PHASE_FIRST | EV_PHASE_LAST)))
+		return;
+
+	filt_processev(o, &st->ev);
 }
 
+/*
+ * timeout: outdate all events, so throttling will enable
+ * output again.
+ */
 void
 filt_timercb(struct filt *o) {
-	struct state *s, *snext;
-	unsigned nevents;
-
-	for (s = o->statelist.first; s != NULL; s = snext) {
-		snext = s->next;
-		nevents = s->nevents;
-		s->nevents = 0;
-		if (nevents > 1) {
-			filt_staterun(o, s);
-		}
-	}
+	statelist_outdate(&o->statelist);
 }

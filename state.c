@@ -111,7 +111,7 @@ statelist_dup(struct statelist *o, struct statelist *src) {
 		n = state_new();
 		n->ev = i->ev;
 		n->phase = i->phase;
-		n->keep = i->keep;
+		n->flags = i->flags;
 		statelist_add(o, n);
 	}
 }
@@ -192,7 +192,7 @@ statelist_lookup(struct statelist *o, struct ev *ev) {
 struct state *
 statelist_update(struct statelist *statelist, struct ev *ev) {
 	struct state *st;
-	unsigned phase, flags;
+	unsigned phase, flags, nevents;
 
 	phase = ev_phase(ev);
 	st = statelist_lookup(statelist, ev);
@@ -200,15 +200,18 @@ statelist_update(struct statelist *statelist, struct ev *ev) {
 	 * purge an unused state (state of terminated frame) that we
 	 * need
 	 */
-	if (st != NULL && st->phase == EV_PHASE_LAST) {
+	if (st != NULL && st->phase & EV_PHASE_LAST) {
 #ifdef STATE_DEBUG
 		dbg_puts("statelist_update: ");
 		ev_dbg(&st->ev);
 		dbg_puts(": purged\n");
 #endif
+		nevents = st->nevents;
 		statelist_rm(statelist, st);
 		state_del(st);
 		st = NULL;
+	} else {
+		nevents = 0;
 	}
 
 	/*
@@ -242,6 +245,7 @@ statelist_update(struct statelist *statelist, struct ev *ev) {
 		statelist_add(statelist, st);
 		st->phase = (phase | EV_PHASE_FIRST) & ~EV_PHASE_NEXT;
 		st->flags = flags;
+		st->nevents = nevents;
 		st->ev = *ev;
 #ifdef STATE_DEBUG
 		dbg_puts("statelist_update: ");
@@ -258,26 +262,25 @@ statelist_update(struct statelist *statelist, struct ev *ev) {
 		dbg_puts(": updated\n");
 #endif
 	}
-	st->flags &= ~STATE_TOUCHED;
-	st->keep = 0;
+	st->flags |= STATE_CHANGED;
+	st->nevents++;
 	return st;
 }
 
 /*
- * mark all states with the 'keep' flag. 
- *
- * XXX: If we have separate lists for "keep" and "dont keep" states
- * the following can be made much faster
+ * mark all states as not changed. This routine is called at the
+ * beginning of a tick (track editting) or after a timeout (real-time
+ * filter).
  */
 void
-statelist_keep(struct statelist *o) {
+statelist_outdate(struct statelist *o) {
 	struct state *i;
 
 	for (i = o->first; i != NULL; i = i->next) {
-		i->keep = 1;
+		i->flags &= ~STATE_CHANGED;
+		i->nevents = 0;
 	}
 }
-
 
 /*
  * remove from the "new list" all events present in "old list"

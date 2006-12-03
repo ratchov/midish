@@ -67,6 +67,8 @@ struct filt {
 	
 };
 
+#define FILT_MAXEV	1	/* max events per time slice */
+
 void filt_init(struct filt *);
 void filt_done(struct filt *);
 void filt_reset(struct filt *);

@@ -208,7 +208,7 @@ seqptr_ticskip(struct seqptr *sp, unsigned max) {
 	if (ntics > 0) {
 		sp->delta += ntics;
 		sp->tic += ntics;
-		statelist_keep(&sp->statelist);
+		statelist_outdate(&sp->statelist);
 	}
 	return ntics;
 }
@@ -238,7 +238,7 @@ seqptr_ticput(struct seqptr *sp, unsigned ntics) {
 		sp->pos->delta += ntics;
 		sp->delta += ntics;
 		sp->tic += ntics;
-		statelist_keep(&sp->statelist);
+		statelist_outdate(&sp->statelist);
 	}
 }
 
@@ -411,7 +411,7 @@ void
 seqptr_evmerge2(struct seqptr *pd, struct state *s1, struct state *s2) {
 	struct state *sd;
 
-	if (s1 == NULL || (s1->phase == EV_PHASE_LAST && s1->keep)) {
+	if (s1 == NULL || (s1->phase == EV_PHASE_LAST && !(s1->flags & STATE_CHANGED))) {
 		(void)seqptr_evput(pd, &s2->ev);
 		return;
 	}
@@ -425,7 +425,7 @@ seqptr_evmerge2(struct seqptr *pd, struct state *s1, struct state *s2) {
 			if (!(s1->phase & EV_PHASE_LAST)) 
 				sd = seqptr_rmprev(pd, sd);
 		} else {
-			if (!s1->keep)
+			if (s1->flags & STATE_CHANGED)
 				sd = seqptr_rmlast(pd, sd);
 		}
 		if (sd == NULL || !ev_eq(&sd->ev, &s2->ev)) {
@@ -445,7 +445,7 @@ seqptr_evmerge2(struct seqptr *pd, struct state *s1, struct state *s2) {
 				dbg_puts("seqptr_merge2: ctl to restore not silent\n");
 				dbg_panic();
 			}
-			if (s1->keep && !ev_eq(&sd->ev, &s1->ev)) {
+			if (!(s1->flags & STATE_CHANGED) && !ev_eq(&sd->ev, &s1->ev)) {
 				(void)seqptr_evput(pd, &s1->ev);
 				s1->silent = 0;
 			}
@@ -516,7 +516,7 @@ track_merge(struct track *dst, struct track *src) {
 		if (deltad) {
 			seqptr_ticput(&pd, deltad);
 		}
-		statelist_keep(&orglist);
+		statelist_outdate(&orglist);
 	}
 
 	statelist_done(&orglist);
@@ -569,7 +569,7 @@ track_copy(struct track *src, unsigned start, unsigned len, struct track *dst) {
 	for (st = sp.statelist.first; st != NULL; st = st->next) {
 		if (EV_ISNOTE(&st->ev))
 			continue;
-		if (st->keep && !(st->phase & EV_PHASE_LAST)) {
+		if (!(st->flags & STATE_CHANGED) && !(st->phase & EV_PHASE_LAST)) {
 			if (ev_restore(&st->ev, &ev)) {
        				seqptr_evput(&dp, &st->ev);
 			}

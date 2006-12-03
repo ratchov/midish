@@ -43,7 +43,7 @@ struct state  {
 	struct ev ev;			/* initial event */
 	struct state *next, **prev;	/* for statelist */
 #define STATE_NEW	1		/* just created, never updated */
-#define STATE_TOUCHED	2		/* updated within the current tick */
+#define STATE_CHANGED	2		/* updated within the current tick */
 #define STATE_BOGUS	4		/* frame detected as bogus */
 	unsigned flags;
 	unsigned tic;			/* absolute tic of the FIRST event */
@@ -51,7 +51,6 @@ struct state  {
 	unsigned phase;			/* current phase (of the 'ev' field) */
 
 	unsigned silent;		/* events shoudn't be played */
-	unsigned keep;			/* shouldn't be purged */
 	unsigned nevents;		/* number of events before timeout */
 };
 
@@ -77,7 +76,7 @@ void	      statelist_rm(struct statelist *o, struct state *st);
 void	      statelist_empty(struct statelist *o);
 struct state *statelist_lookup(struct statelist *o, struct ev *ev);
 struct state *statelist_update(struct statelist *statelist, struct ev *ev);
-void	      statelist_keep(struct statelist *o);
+void	      statelist_outdate(struct statelist *o);
 void	      statelist_diff(struct statelist *nl, struct statelist *ol);
 
 
