@@ -543,7 +543,8 @@ track_copy(struct track *src, unsigned start, unsigned len, struct track *dst) {
 	seqptr_init(&dp, dst);
 
 	/*
-	 * go the the start position and tag all events as silent
+	 * stage 1: go the the start position and tag all events as
+	 * silent
 	 */
 	(void)seqptr_skip(&sp, start);
 	for (st = sp.statelist.first; st != NULL; st = st->next) {
@@ -551,7 +552,9 @@ track_copy(struct track *src, unsigned start, unsigned len, struct track *dst) {
 	}
 
 	/*
-	 * move the first tic
+	 * stage 2: move the first tic accepting starting frames; this
+	 * is the last chance for open frames to terminate and to avoid
+	 * to be restored
 	 */
 	while (seqptr_evavail(&sp)) {
 		st = seqptr_evget(&sp);
@@ -564,7 +567,8 @@ track_copy(struct track *src, unsigned start, unsigned len, struct track *dst) {
 	}
 
 	/*
-	 * restore all states that weren't updated by the first tic
+	 * stage 3: restore all states that weren't updated by the
+	 * first tic
 	 */
 	for (st = sp.statelist.first; st != NULL; st = st->next) {
 		if (EV_ISNOTE(&st->ev))
@@ -578,7 +582,7 @@ track_copy(struct track *src, unsigned start, unsigned len, struct track *dst) {
 	}
 
 	/*
-	 * go ahead and copy all events during 'len' tics
+	 * stage 4: go ahead and copy all events during 'len' tics
 	 */
 	amount = 0;
 	for (;;) {
@@ -602,9 +606,9 @@ track_copy(struct track *src, unsigned start, unsigned len, struct track *dst) {
 	
 
 	/*
-	 * cancel all states (that arent silent) on the 'dst' track.
-	 * States that could be canceled are tagged as silent, so
-	 * we can continue copying assicated events
+	 * stage 5: cancel all states (that arent silent) on the 'dst'
+	 * track, states that are canceled are tagged as silent, so we
+	 * can continue copying selected events in the next stage
 	 */
 	for (st = sp.statelist.first; st != NULL; st = st->next) {
 		if (EV_ISNOTE(&st->ev))
@@ -620,7 +624,8 @@ track_copy(struct track *src, unsigned start, unsigned len, struct track *dst) {
 	}
 
 	/*
-	 * copy all event for whose state couldn't be canceled
+	 * state 6: copy all event for whose state couldn't be
+	 * canceled (note events)
 	 */
 	for (;;) {
 		delta = seqptr_ticskip(&sp, ~0U);
@@ -638,6 +643,134 @@ track_copy(struct track *src, unsigned start, unsigned len, struct track *dst) {
 		}
 	}
 }
+
+
+#if 0
+/*
+ * blank a portion of the given track. The copy is consistent, no
+ * frames are copied from the midle: notes are always completely copied,
+ * and controllers (and other) are restored
+ */
+void
+track_blank(struct track *src, unsigned start, unsigned len) {
+	unsigned delta, amount;
+	struct seqptr sp;
+	struct statelist slist;
+	struct state *st;
+	struct ev ev;
+
+	track_clearall(dst);
+	if (len == 0)
+		return;
+	seqptr_init(&sp, src);
+
+	/*
+	 * stage 1: go the the start position and tag all events as
+	 * not silent
+	 */
+	(void)seqptr_skip(&sp, start);
+	for (st = sp.statelist.first; st != NULL; st = st->next) {
+		st->silent = 0;
+	}
+	statelist_dup(&slist, &sp.statelist);
+
+	/*
+	 * stage 3: restore all states that weren't updated by the
+	 * first tic
+	 */
+	for (st = sp.statelist.first; st != NULL; st = st->next) {
+		if (EV_ISNOTE(&st->ev))
+			continue;
+		if (!(st->flags & STATE_CHANGED) && !(st->phase & EV_PHASE_LAST)) {
+			if (ev_restore(&st->ev, &ev)) {
+       				seqptr_evput(&dp, &st->ev);
+			}
+			st->silent = 0;
+		}
+	}
+
+	/*
+	 * stage 4: go ahead and copy all events during 'len' tics
+	 */
+	amount = 0;
+	for (;;) {
+		delta = seqptr_ticskip(&sp, len);
+		amount += delta;
+		len -= delta;
+		if (len == 0)
+			break;
+		
+		if (!seqptr_evavail(&sp))
+			break;
+		st = seqptr_evget(&sp);
+		if (st->phase & EV_PHASE_FIRST)
+			st->silent = 0;
+		if (!st->silent) {
+			seqptr_seek(&dp, amount);
+			seqptr_evput(&dp, &st->ev);
+			amount = 0;
+		}
+	}
+	
+	/*
+	 * stage 2: move the first tic accepting starting frames; this
+	 * is the last chance for open frames to terminate and to avoid
+	 * to be restored
+	 */
+	while (seqptr_evavail(&sp)) {
+		st = seqptr_evget(&sp);
+		if ((EV_ISNOTE(&st->ev) && (st->phase & EV_PHASE_FIRST)) ||
+		    (!EV_ISNOTE(&st->ev) && (st->phase & (EV_PHASE_FIRST | EV_PHASE_NEXT))))
+			st->silent = 0;
+		if (!st->silent) {
+			seqptr_evput(&dp, &st->ev);
+		}
+	}
+
+	/*
+	 * stage 5: cancel all states (that arent silent) on the 'dst'
+	 * track, states that are canceled are tagged as silent, so we
+	 * can continue copying selected events in the next stage
+	 */
+	for (st = sp.statelist.first; st != NULL; st = st->next) {
+		if (EV_ISNOTE(&st->ev))
+			continue;
+		if (!(st->phase & EV_PHASE_LAST)) {
+			if (ev_cancel(&st->ev, &ev)) { 
+				seqptr_seek(&dp, amount);
+				seqptr_evput(&dp, &ev);
+				amount = 0;
+			}
+			st->silent = 1;
+		}
+	}
+
+	/*
+	 * state 6: copy all event for whose state couldn't be
+	 * canceled (note events)
+	 */
+	for (;;) {
+		delta = seqptr_ticskip(&sp, ~0U);
+		amount += delta;
+		
+		if (!seqptr_evavail(&sp))
+			break;
+		st = seqptr_evget(&sp);
+		if (st->phase & EV_PHASE_FIRST)
+			st->silent = 1;
+		if (!st->silent) {
+			seqptr_seek(&dp, amount);
+			seqptr_evput(&dp, &st->ev);
+			amount = 0;
+		}
+	}
+}
+
+
+#endif
+
+
+
 
 /*
  * calculate the offset that the givent tic must be 
@@ -707,15 +840,13 @@ track_quantize(struct track *src, unsigned start, unsigned len,
 		
 		delta -= ofs;
 		ofs = quantize_ofs(tic - start + offset, quantum, rate);
-		delta += ofs;
-
-
 #ifdef FRAME_DEBUG
 		if (ofs < 0 && delta < (unsigned)(-ofs)) {
 			dbg_puts("track_quantize: delta < -ofs\n");
 			dbg_panic();
 		}
 #endif
+		delta += ofs;
 		seqptr_seek(&qp, delta);
 
 		st = seqptr_evdel(&sp, &slist);

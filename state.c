@@ -158,7 +158,6 @@ statelist_rm(struct statelist *o, struct state *st) {
 		st->next->prev = st->prev;
 }
 
-
 /*
  * find the first state that matches the given event
  * return NULL if not found
