@@ -296,20 +296,3 @@ statelist_outdate(struct statelist *o) {
 	}
 }
 
-/*
- * remove from the "new list" all events present in "old list"
- */
-void
-statelist_diff(struct statelist *nl, struct statelist *ol) {
-	struct state *i, *inext, *st;
-
-	for (i = nl->first; i != NULL; i = inext) {
-		inext = i->next;
-		st = statelist_lookup(ol, &i->ev);
-		if (st && ev_eq(&st->ev, &i->ev)) {
-			statelist_rm(nl, i);
-			state_del(i);
-		}			
-	}
-}
-

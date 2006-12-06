@@ -724,7 +724,7 @@ track_blank(struct track *src, unsigned start, unsigned len) {
 			continue;
 		if (!(st->phase & EV_PHASE_LAST)) {
 			if (ev_cancel(&st->ev, &ev)) {
-       				seqptr_evput(&sp, &ev);
+				seqptr_evput(&sp, &ev);
 				st->silent = 1;
 			}
 		}
@@ -1342,6 +1342,7 @@ track_timerm(struct track *t, unsigned measure, unsigned amount) {
 	struct statelist slist;
 	struct state *st, *ost;
 	unsigned tic, len;
+	struct ev ev;
 
 	/*
 	 * go to the requested position and determine the number
@@ -1364,64 +1365,67 @@ track_timerm(struct track *t, unsigned measure, unsigned amount) {
 	dbg_puts("\n");
 #endif
 	/*
-	 * move to the starting position and 
-	 * remove all events and time during 'len' tics
+	 * go to the start position; tag all frames as not silent
 	 */
 	seqptr_init(&sp, t);
-	(void)seqptr_skip(&sp, tic);	
+	(void)seqptr_skip(&sp, tic);
 	statelist_dup(&slist, &sp.statelist);
+	for (st = slist.first; st != NULL; st = st->next) {
+		st->silent = 0;
+	}
 
+	/*
+	 * remove everything during 'len' tics
+	 */
 	for (;;) {
 		len -= seqptr_ticdel(&sp, len);
 		if (len == 0)
 			break;
-		if (seqptr_eot(&sp))
+		if (!seqptr_evavail(&sp))
 			break;
-		do {
-			st = seqptr_evdel(&sp, &slist);
-		} while (st != NULL);
+		st = seqptr_evdel(&sp, &slist);
+		st->silent = 1;
 	}
-	statelist_diff(&slist, &sp.statelist);
 	
-	/* 
-	 * restore time signatures and tempo (all events in the
-	 * "slist" are those that changed and thus they need to be
-	 * restored)
+	/*
+	 * process the next tic; this will give a chance to some
+	 * frames to be restored by themselves (before trying to
+	 * restore them "by hand")
 	 */
-	for (st = slist.first; st != NULL; st = st->next) {
-#ifdef FRAME_DEBUG
-		dbg_puts("timerm: ");
-		ev_dbg(&st->ev);
-		dbg_puts(": resored\n");
-#endif
-		seqptr_evput(&sp, &st->ev);
+	while (seqptr_evavail(&sp)) {
+		st = seqptr_evdel(&sp, &slist);
+		ost = statelist_lookup(&sp.statelist, &st->ev);
+		if (!ost || !ev_eq(&st->ev, &ost->ev))
+			seqptr_evput(&sp, &st->ev);
+		st->silent = 0;
 	}
 
 	/*
-	 * if in what follows, there is a tempo change or a signature
-	 * change then remove the above events
+	 * retore all states that arent silent. states that
+	 * are restored are tagged as not silent, so we can continue
+	 * copying selected events in the next stage
+	 */
+	for (st = slist.first; st != NULL; st = st->next) {
+		if (st->silent && ev_restore(&st->ev, &ev)) {
+			ost = statelist_lookup(&sp.statelist, &ev);
+			if (!ost || !ev_eq(&ev, &ost->ev))
+				seqptr_evput(&sp, &ev);
+			st->silent = 0;
+		}
+	}
+	
+	/*
+	 * state 6: copy all events for not silent frames
 	 */
 	for (;;) {
+		(void)seqptr_ticskip(&sp, ~0U);
 		if (!seqptr_evavail(&sp))
 			break;
-		st = statelist_lookup(&slist, &sp.pos->ev);
-		ost = statelist_lookup(&sp.statelist, &sp.pos->ev);
-		if (ost != NULL && st != NULL) {
-#ifdef FRAME_DEBUG
-			dbg_puts("timerm: ");
-			ev_dbg(&st->ev);
-			dbg_puts(": cleared\n");
-#endif
-			ost = seqptr_rmlast(&sp, ost);
-			statelist_rm(&slist, st);
-			state_del(st);
-			st = NULL;
-		}
-		if (ost != NULL && ev_eq(&ost->ev, &sp.pos->ev)) {
-			(void)seqptr_evdel(&sp, NULL);
-		} else {
-			(void)seqptr_evget(&sp);
-		}
+		st = seqptr_evdel(&sp, &slist);
+		st->silent = 0;
+		ost = statelist_lookup(&sp.statelist, &ev);
+		if (!ost || !ev_eq(&st->ev, &ost->ev))
+			seqptr_evput(&sp, &st->ev);
 	}
 }
 
@@ -1468,7 +1472,6 @@ track_confev(struct track *src, struct ev *ev) {
 			dbg_puts(": bad phase");
 			dbg_puts("\n");
 		}
-			
 	}
 		
 	/*
