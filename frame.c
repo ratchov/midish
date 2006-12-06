@@ -72,6 +72,51 @@
  *	The state list is not updated since the current position
  *	haven't changed. 
  *
+ * 
+ * Common errors and pitfals
+ * -------------------------
+ *
+ * before adding new code, or changing existing code check for the
+ * following errors:
+ *
+ *	- only call seqptr_evput() at the end of track. the only
+ *	  exception of this rule, is when a track is completely
+ *	  rewritten. So the following loop:
+ *
+ *		for (;;) {
+ *			st = seqptr_evdel(&sp, &slist);
+ *			seqptr_evput(&sp, &st->ev);
+ *		}
+ *
+ *	  is ok only if _all_ events are removed.
+ *
+ *	- when rewriting a track one must use a separate statelist
+ *	  for events being removed, so the seqptr->statelist is used for
+ *	  writing new events. When starting rewriting a track on a 
+ *	  given position, be sure to initialise the 'deleted events'
+ *	  statelist with statelist_dup(), and not statelist_init(). 
+ *	  Example:
+ *
+ *		seqptr_skip(&sp, pos);
+ *		statelist_dup(&slist); 
+ *		for (;;) {
+ *			seqptr_evdel(&sp, &slist);
+ *			...
+ *		}
+ *
+ *	- when working with a statelist initialised with statlist_dup()
+ *	  be aware that tags are not copied. The only fields that are copied
+ *	  are those managed by statelist_update() routine. So we must first
+ *	  duplicate the statelist and then tag states. Example:
+ *
+ *		seqptr_skip(&sp, pos);
+ *		statelist_dup(&slist, &sp->slist);
+ *		for (st = slist.first; st != NULL; st = st->next) {
+ *			st->silent = ...
+ *		}
+ *
+ *	  it is _not_ ok, to iterate over sp.statelist and then to dup it.
+ *
  */
 
 #include "dbg.h"
@@ -575,9 +620,9 @@ track_copy(struct track *src, unsigned start, unsigned len, struct track *dst) {
 			continue;
 		if (!(st->flags & STATE_CHANGED) && !(st->phase & EV_PHASE_LAST)) {
 			if (ev_restore(&st->ev, &ev)) {
-       				seqptr_evput(&dp, &st->ev);
+       				seqptr_evput(&dp, &ev);
+				st->silent = 0;
 			}
-			st->silent = 0;
 		}
 	}
 
@@ -645,7 +690,6 @@ track_copy(struct track *src, unsigned start, unsigned len, struct track *dst) {
 }
 
 
-#if 0
 /*
  * blank a portion of the given track. The copy is consistent, no
  * frames are copied from the midle: notes are always completely copied,
@@ -653,13 +697,11 @@ track_copy(struct track *src, unsigned start, unsigned len, struct track *dst) {
  */
 void
 track_blank(struct track *src, unsigned start, unsigned len) {
-	unsigned delta, amount;
 	struct seqptr sp;
 	struct statelist slist;
 	struct state *st;
 	struct ev ev;
 
-	track_clearall(dst);
 	if (len == 0)
 		return;
 	seqptr_init(&sp, src);
@@ -669,106 +711,92 @@ track_blank(struct track *src, unsigned start, unsigned len) {
 	 * not silent
 	 */
 	(void)seqptr_skip(&sp, start);
-	for (st = sp.statelist.first; st != NULL; st = st->next) {
+	statelist_dup(&slist, &sp.statelist);
+	for (st = slist.first; st != NULL; st = st->next) {
 		st->silent = 0;
 	}
-	statelist_dup(&slist, &sp.statelist);
 
 	/*
-	 * stage 3: restore all states that weren't updated by the
-	 * first tic
+	 * stage 2: cancel all states that will be erased from the selection
 	 */
-	for (st = sp.statelist.first; st != NULL; st = st->next) {
+	for (st = slist.first; st != NULL; st = st->next) {
 		if (EV_ISNOTE(&st->ev))
 			continue;
-		if (!(st->flags & STATE_CHANGED) && !(st->phase & EV_PHASE_LAST)) {
-			if (ev_restore(&st->ev, &ev)) {
-       				seqptr_evput(&dp, &st->ev);
+		if (!(st->phase & EV_PHASE_LAST)) {
+			if (ev_cancel(&st->ev, &ev)) {
+       				seqptr_evput(&sp, &ev);
+				st->silent = 1;
 			}
-			st->silent = 0;
 		}
 	}
 
 	/*
-	 * stage 4: go ahead and copy all events during 'len' tics
+	 * stage 3: go ahead and erase events of selected frames
+	 * during 'len' tics
 	 */
-	amount = 0;
 	for (;;) {
-		delta = seqptr_ticskip(&sp, len);
-		amount += delta;
-		len -= delta;
+		len -= seqptr_ticskip(&sp, len);
 		if (len == 0)
 			break;
-		
-		if (!seqptr_evavail(&sp))
+		st = seqptr_evdel(&sp, &slist);
+		if (st == NULL)
 			break;
-		st = seqptr_evget(&sp);
 		if (st->phase & EV_PHASE_FIRST)
-			st->silent = 0;
-		if (!st->silent) {
-			seqptr_seek(&dp, amount);
-			seqptr_evput(&dp, &st->ev);
-			amount = 0;
-		}
+			st->silent = 1;
+		dbg_puts("track_blank: ");
+		ev_dbg(&st->ev);
+		dbg_puts(" silent=");
+		dbg_putu(st->silent);
+		dbg_puts("\n");
+		if (!st->silent)
+			seqptr_evput(&sp, &st->ev);
 	}
 	
 	/*
-	 * stage 2: move the first tic accepting starting frames; this
-	 * is the last chance for open frames to terminate and to avoid
-	 * to be restored
+	 * stage 4: move the first tic of the 'end' boundary,
+	 * accepting starting frames; this is the last chance for
+	 * opened frames to terminate and to avoid to be restored
 	 */
 	while (seqptr_evavail(&sp)) {
-		st = seqptr_evget(&sp);
+		st = seqptr_evdel(&sp, &slist);
 		if ((EV_ISNOTE(&st->ev) && (st->phase & EV_PHASE_FIRST)) ||
 		    (!EV_ISNOTE(&st->ev) && (st->phase & (EV_PHASE_FIRST | EV_PHASE_NEXT))))
 			st->silent = 0;
 		if (!st->silent) {
-			seqptr_evput(&dp, &st->ev);
+			seqptr_evput(&sp, &st->ev);
 		}
 	}
 
 	/*
-	 * stage 5: cancel all states (that arent silent) on the 'dst'
-	 * track, states that are canceled are tagged as silent, so we
-	 * can continue copying selected events in the next stage
+	 * stage 5: retore all states that arent silent. states that
+	 * are retored are tagged as not silent, so we can continue
+	 * copying selected events in the next stage
 	 */
-	for (st = sp.statelist.first; st != NULL; st = st->next) {
-		if (EV_ISNOTE(&st->ev))
+	for (st = slist.first; st != NULL; st = st->next) {
+		if (EV_ISNOTE(&st->ev) || !st->silent)
 			continue;
 		if (!(st->phase & EV_PHASE_LAST)) {
-			if (ev_cancel(&st->ev, &ev)) { 
-				seqptr_seek(&dp, amount);
-				seqptr_evput(&dp, &ev);
-				amount = 0;
+			if (ev_restore(&st->ev, &ev)) { 
+				seqptr_evput(&sp, &ev);
+				st->silent = 0;
 			}
-			st->silent = 1;
 		}
 	}
 
 	/*
-	 * state 6: copy all event for whose state couldn't be
-	 * canceled (note events)
+	 * state 6: copy all events for not silent frames
 	 */
 	for (;;) {
-		delta = seqptr_ticskip(&sp, ~0U);
-		amount += delta;
-		
+		(void)seqptr_ticskip(&sp, ~0U);
 		if (!seqptr_evavail(&sp))
 			break;
-		st = seqptr_evget(&sp);
+		st = seqptr_evdel(&sp, &slist);
 		if (st->phase & EV_PHASE_FIRST)
-			st->silent = 1;
-		if (!st->silent) {
-			seqptr_seek(&dp, amount);
-			seqptr_evput(&dp, &st->ev);
-			amount = 0;
-		}
+			st->silent = 0;
+		if (!st->silent)
+			seqptr_evput(&sp, &st->ev);
 	}
 }
-
-
-#endif
-
 
 
 
@@ -819,11 +847,11 @@ track_quantize(struct track *src, unsigned start, unsigned len,
 	 * (silent = not quantisable)
 	 */
 	(void)seqptr_skip(&sp, start);
+	statelist_dup(&slist, &sp.statelist);
 	for (st = sp.statelist.first; st != NULL; st = st->next) {
 		st->silent = 1;
 	}
 	seqptr_seek(&qp, start);
-	statelist_dup(&slist, &sp.statelist);
 	tic = start;
 	ofs = 0;
 
@@ -914,11 +942,11 @@ track_transpose(struct track *src, unsigned start, unsigned len, int halftones) 
 	 * (silent = not quantisable)
 	 */
 	(void)seqptr_skip(&sp, start);
+	statelist_dup(&slist, &sp.statelist);
 	for (st = sp.statelist.first; st != NULL; st = st->next) {
 		st->silent = 1;
 	}
 	seqptr_seek(&qp, start);
-	statelist_dup(&slist, &sp.statelist);
 	tic = start;
 
 	/*
@@ -1351,7 +1379,7 @@ track_timerm(struct track *t, unsigned measure, unsigned amount) {
 			break;
 		do {
 			st = seqptr_evdel(&sp, &slist);
-		} while(st != NULL);
+		} while (st != NULL);
 	}
 	statelist_diff(&slist, &sp.statelist);
 	

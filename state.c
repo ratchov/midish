@@ -281,7 +281,12 @@ statelist_outdate(struct statelist *o) {
 
 	for (i = o->first; i != NULL; i = inext) {
 		inext = i->next;
-		if (i->phase & EV_PHASE_LAST) {
+		/*
+		 * we purge states that are terminated, but we keep states
+		 * of unknown controllers, tempo changes etc... these
+		 * states have both FIRST and LAST bits set
+		 */
+		if (i->phase == EV_PHASE_LAST) {
 			statelist_rm(o, i);
 			state_del(i);
 		} else {

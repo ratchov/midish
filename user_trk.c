@@ -276,7 +276,7 @@ user_func_trackblank(struct exec *o, struct data **r) {
 	struct evspec es;
 	long from, amount, quant;
 	unsigned tic, len;
-	struct track t1, t2;
+/*	struct track t1, t2;*/
 	
 	if (!exec_lookuptrack(o, "trackname", &t) ||
 	    !exec_lookuplong(o, "from", &from) ||
@@ -296,7 +296,7 @@ user_func_trackblank(struct exec *o, struct data **r) {
 	if (tic > (unsigned)quant/2) {
 		tic -= quant/2;
 	}
-
+#if 0
 	track_init(&t1);
 	track_init(&t2);
 	track_copy(&t->track, 0,   tic, &t1);
@@ -307,6 +307,8 @@ user_func_trackblank(struct exec *o, struct data **r) {
 	track_merge(&t->track, &t2);
 	track_done(&t1);
 	track_done(&t2);
+#endif
+	track_blank(&t->track, tic, len);
 	return 1;
 }
 
