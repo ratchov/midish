@@ -49,7 +49,7 @@ struct state  {
 
 	unsigned tic;			/* absolute tic of the FIRST event */
 	struct seqev *pos;		/* pointer to the FIRST event */
-	unsigned silent;		/* events shoudn't be played */
+	unsigned tag;			/* frame is selected */
 	unsigned nevents;		/* number of events before timeout */
 };
 

@@ -431,16 +431,16 @@ seqptr_rmprev(struct seqptr *sp, struct state *st) {
 void
 seqptr_evmerge1(struct seqptr *pd, struct state *s1, struct state *s2) {
 	if (s1->phase & EV_PHASE_FIRST) {
-		s1->silent = (s2 && s2->phase != EV_PHASE_LAST) ? 1 : 0;
+		s1->tag = (s2 && s2->phase != EV_PHASE_LAST) ? 0 : 1;
 #ifdef FRAME_DEBUG
-		if (s1->silent) {
+		if (!s1->tag) {
 			dbg_puts("seqptr_evmerge1: ");
 			ev_dbg(&s1->ev);
 			dbg_puts(" started in silent state\n");
 		}
 #endif
 	}
-	if (!s1->silent) {
+	if (s1->tag) {
 		(void)seqptr_evput(pd, &s1->ev);
 	}
 }
@@ -476,7 +476,7 @@ seqptr_evmerge2(struct seqptr *pd, struct state *s1, struct state *s2) {
 		if (sd == NULL || !ev_eq(&sd->ev, &s2->ev)) {
 			(void)seqptr_evput(pd, &s2->ev);
 		}
-		s1->silent = 1;
+		s1->tag = 0;
 	} else {
 		if (EV_ISNOTE(&s2->ev)) {
 			(void)seqptr_evput(pd, &s2->ev);
@@ -486,13 +486,13 @@ seqptr_evmerge2(struct seqptr *pd, struct state *s1, struct state *s2) {
 				dbg_puts("seqptr_merge2: no state for silent ctl\n");
 				dbg_panic();
 			}
-			if (!s1->silent) {
+			if (s1->tag) {
 				dbg_puts("seqptr_merge2: ctl to restore not silent\n");
 				dbg_panic();
 			}
 			if (!(s1->flags & STATE_CHANGED) && !ev_eq(&sd->ev, &s1->ev)) {
 				(void)seqptr_evput(pd, &s1->ev);
-				s1->silent = 0;
+				s1->tag = 1;
 			}
 		}
 	}
@@ -512,7 +512,7 @@ track_merge(struct track *dst, struct track *src) {
 	seqptr_init(&pd, dst);
 	seqptr_init(&p2, src);
 	statelist_init(&orglist);
-
+	
 	for (;;) {
 		if (seqptr_eot(&pd) && seqptr_eot(&p2))
 			break;
@@ -593,7 +593,7 @@ track_copy(struct track *src, unsigned start, unsigned len, struct track *dst) {
 	 */
 	(void)seqptr_skip(&sp, start);
 	for (st = sp.statelist.first; st != NULL; st = st->next) {
-		st->silent = 1;
+		st->tag = 0;
 	}
 
 	/*
@@ -605,23 +605,28 @@ track_copy(struct track *src, unsigned start, unsigned len, struct track *dst) {
 		st = seqptr_evget(&sp);
 		if ((EV_ISNOTE(&st->ev) && (st->phase & EV_PHASE_FIRST)) ||
 		    (!EV_ISNOTE(&st->ev) && (st->phase & (EV_PHASE_FIRST | EV_PHASE_NEXT))))
-			st->silent = 0;
-		if (!st->silent) {
+			st->tag = 1;
+		if (st->tag) {
 			seqptr_evput(&dp, &st->ev);
 		}
 	}
 
 	/*
 	 * stage 3: restore all states that weren't updated by the
-	 * first tic
+	 * first tic.
 	 */
 	for (st = sp.statelist.first; st != NULL; st = st->next) {
 		if (EV_ISNOTE(&st->ev))
 			continue;
+		/*
+		 * XXX : using st->flags works, but we shouldn't use it
+		 *	 in frame-related functions, we are supposed
+		 *	 to do everything with st->phase and st->tag
+		 */
 		if (!(st->flags & STATE_CHANGED) && !(st->phase & EV_PHASE_LAST)) {
 			if (ev_restore(&st->ev, &ev)) {
        				seqptr_evput(&dp, &ev);
-				st->silent = 0;
+				st->tag = 1;
 			}
 		}
 	}
@@ -641,8 +646,8 @@ track_copy(struct track *src, unsigned start, unsigned len, struct track *dst) {
 			break;
 		st = seqptr_evget(&sp);
 		if (st->phase & EV_PHASE_FIRST)
-			st->silent = 0;
-		if (!st->silent) {
+			st->tag = 1;
+		if (st->tag) {
 			seqptr_seek(&dp, amount);
 			seqptr_evput(&dp, &st->ev);
 			amount = 0;
@@ -651,8 +656,8 @@ track_copy(struct track *src, unsigned start, unsigned len, struct track *dst) {
 	
 
 	/*
-	 * stage 5: cancel all states (that arent silent) on the 'dst'
-	 * track, states that are canceled are tagged as silent, so we
+	 * stage 5: cancel all states (that are tagged) on the 'dst'
+	 * track, states that are canceled are not tagged, so we
 	 * can continue copying selected events in the next stage
 	 */
 	for (st = sp.statelist.first; st != NULL; st = st->next) {
@@ -664,7 +669,7 @@ track_copy(struct track *src, unsigned start, unsigned len, struct track *dst) {
 				seqptr_evput(&dp, &ev);
 				amount = 0;
 			}
-			st->silent = 1;
+			st->tag = 0;
 		}
 	}
 
@@ -680,8 +685,8 @@ track_copy(struct track *src, unsigned start, unsigned len, struct track *dst) {
 			break;
 		st = seqptr_evget(&sp);
 		if (st->phase & EV_PHASE_FIRST)
-			st->silent = 1;
-		if (!st->silent) {
+			st->tag = 0;
+		if (st->tag) {
 			seqptr_seek(&dp, amount);
 			seqptr_evput(&dp, &st->ev);
 			amount = 0;
@@ -707,13 +712,13 @@ track_blank(struct track *src, unsigned start, unsigned len) {
 	seqptr_init(&sp, src);
 
 	/*
-	 * stage 1: go the the start position and tag all events as
-	 * not silent
+	 * stage 1: go the the start position and tag all events
+	 * (make them silent)
 	 */
 	(void)seqptr_skip(&sp, start);
 	statelist_dup(&slist, &sp.statelist);
 	for (st = slist.first; st != NULL; st = st->next) {
-		st->silent = 0;
+		st->tag = 1;
 	}
 
 	/*
@@ -725,7 +730,7 @@ track_blank(struct track *src, unsigned start, unsigned len) {
 		if (!(st->phase & EV_PHASE_LAST)) {
 			if (ev_cancel(&st->ev, &ev)) {
 				seqptr_evput(&sp, &ev);
-				st->silent = 1;
+				st->tag = 0;
 			}
 		}
 	}
@@ -742,13 +747,13 @@ track_blank(struct track *src, unsigned start, unsigned len) {
 		if (st == NULL)
 			break;
 		if (st->phase & EV_PHASE_FIRST)
-			st->silent = 1;
+			st->tag = 0;
 		dbg_puts("track_blank: ");
 		ev_dbg(&st->ev);
-		dbg_puts(" silent=");
-		dbg_putu(st->silent);
+		dbg_puts(" tag=");
+		dbg_putu(st->tag);
 		dbg_puts("\n");
-		if (!st->silent)
+		if (st->tag)
 			seqptr_evput(&sp, &st->ev);
 	}
 	
@@ -761,30 +766,30 @@ track_blank(struct track *src, unsigned start, unsigned len) {
 		st = seqptr_evdel(&sp, &slist);
 		if ((EV_ISNOTE(&st->ev) && (st->phase & EV_PHASE_FIRST)) ||
 		    (!EV_ISNOTE(&st->ev) && (st->phase & (EV_PHASE_FIRST | EV_PHASE_NEXT))))
-			st->silent = 0;
-		if (!st->silent) {
+			st->tag = 1;
+		if (st->tag) {
 			seqptr_evput(&sp, &st->ev);
 		}
 	}
 
 	/*
-	 * stage 5: retore all states that arent silent. states that
-	 * are retored are tagged as not silent, so we can continue
+	 * stage 5: retore all states that are tagged. states that
+	 * are retored are tagged, so we can continue
 	 * copying selected events in the next stage
 	 */
 	for (st = slist.first; st != NULL; st = st->next) {
-		if (EV_ISNOTE(&st->ev) || !st->silent)
+		if (EV_ISNOTE(&st->ev) || st->tag)
 			continue;
 		if (!(st->phase & EV_PHASE_LAST)) {
 			if (ev_restore(&st->ev, &ev)) { 
 				seqptr_evput(&sp, &ev);
-				st->silent = 0;
+				st->tag = 0;
 			}
 		}
 	}
 
 	/*
-	 * state 6: copy all events for not silent frames
+	 * state 6: copy all events of tagged frames
 	 */
 	for (;;) {
 		(void)seqptr_ticskip(&sp, ~0U);
@@ -792,50 +797,25 @@ track_blank(struct track *src, unsigned start, unsigned len) {
 			break;
 		st = seqptr_evdel(&sp, &slist);
 		if (st->phase & EV_PHASE_FIRST)
-			st->silent = 0;
-		if (!st->silent)
+			st->tag = 1;
+		if (st->tag)
 			seqptr_evput(&sp, &st->ev);
 	}
 }
 
-
-
-/*
- * calculate the offset that the givent tic must be 
- * moved so it is quantized.
- *
- * XXX: this is only used once in track_quantise.
- *	cut&paste the code there and remove this routine
- */
-int
-quantize_ofs(unsigned tic, unsigned quantum, unsigned rate) {
-	unsigned remaind;
-	int ofs;
-	
-	if (quantum != 0) {
-		remaind = tic % quantum;
-	} else {
-		remaind = 0;
-	}
-	if (remaind <= quantum / 2) {
-		ofs = - ((remaind * rate + 99) / 100);
-	} else {
-		ofs = ((quantum - remaind) * rate + 99) / 100;
-	}
-	return ofs;
-}
 
 /*
  * quantize the given track
  */
 void
 track_quantize(struct track *src, unsigned start, unsigned len,
-    unsigned offset, unsigned quantum, unsigned rate) {
+    unsigned offset, unsigned quant, unsigned rate) {
 	unsigned delta, tic;
 	struct track qt;
 	struct seqptr sp, qp;
 	struct state *st;
 	struct statelist slist;
+	unsigned remaind;
 	int ofs;
 
 	track_init(&qt);
@@ -843,13 +823,13 @@ track_quantize(struct track *src, unsigned start, unsigned len,
 	seqptr_init(&qp, &qt);
 
 	/*
-	 * go to t start position and tag all events as silent
-	 * (silent = not quantisable)
+	 * go to start position and untag all events
+	 * (tagged = will be quantized)
 	 */
 	(void)seqptr_skip(&sp, start);
 	statelist_dup(&slist, &sp.statelist);
 	for (st = sp.statelist.first; st != NULL; st = st->next) {
-		st->silent = 1;
+		st->tag = 0;
 	}
 	seqptr_seek(&qp, start);
 	tic = start;
@@ -867,7 +847,12 @@ track_quantize(struct track *src, unsigned start, unsigned len,
 			break;
 		
 		delta -= ofs;
-		ofs = quantize_ofs(tic - start + offset, quantum, rate);
+		remaind = quant != 0 ? (tic - start + offset) % quant : 0;
+		if (remaind <= quant / 2) {
+			ofs = - ((remaind * rate + 99) / 100);
+		} else {
+			ofs = ((quant - remaind) * rate + 99) / 100;
+		}
 #ifdef FRAME_DEBUG
 		if (ofs < 0 && delta < (unsigned)(-ofs)) {
 			dbg_puts("track_quantize: delta < -ofs\n");
@@ -879,28 +864,17 @@ track_quantize(struct track *src, unsigned start, unsigned len,
 
 		st = seqptr_evdel(&sp, &slist);
 		if (st->phase & EV_PHASE_FIRST) {
-			st->silent = !EV_ISNOTE(&st->ev) ? 1 : 0;
+			st->tag = EV_ISNOTE(&st->ev) ? 1 : 0;
 		}
-		if (st->silent) {
-			seqptr_evput(&sp, &st->ev);
-		} else {
+		if (st->tag) {
 			seqptr_evput(&qp, &st->ev);
-		}
-		if (st->ev.cmd == EV_NON) {
-			ev_dbg(&st->ev);
-#ifdef FRAME_DEBUG
-			dbg_puts(": tic=");
-			dbg_putu(tic % quantum);
-			dbg_puts(", ofs=");
-			dbg_puts(ofs < 0 ? "-" : "+");
-			dbg_putu(ofs < 0 ? -ofs : ofs);
-			dbg_puts("\n");
-#endif
+		} else {
+			seqptr_evput(&sp, &st->ev);
 		}
 	}	    
 
 	/*
-	 * finish quantised (not silent) events
+	 * finish quantised (tagged) events
 	 */
 	for (;;) {
 		delta = seqptr_ticskip(&sp, ~0U);
@@ -908,12 +882,12 @@ track_quantize(struct track *src, unsigned start, unsigned len,
 			break;
 		st = seqptr_evdel(&sp, &slist);
 		if (st->phase & EV_PHASE_FIRST)
-			st->silent = 1;
+			st->tag = 0;
 		seqptr_seek(&qp, delta);
-		if (st->silent) {
-			seqptr_evput(&sp, &st->ev);
-		} else {
+		if (st->tag) {
 			seqptr_evput(&qp, &st->ev);
+		} else {
+			seqptr_evput(&sp, &st->ev);
 		}
 	}
 	track_merge(src, &qt);
@@ -938,13 +912,13 @@ track_transpose(struct track *src, unsigned start, unsigned len, int halftones) 
 	seqptr_init(&qp, &qt);
 
 	/*
-	 * go to t start position and tag all events as silent
-	 * (silent = not quantisable)
+	 * go to t start position and untag all frames
+	 * (tagged = will be transposed)
 	 */
 	(void)seqptr_skip(&sp, start);
 	statelist_dup(&slist, &sp.statelist);
 	for (st = sp.statelist.first; st != NULL; st = st->next) {
-		st->silent = 1;
+		st->tag = 0;
 	}
 	seqptr_seek(&qp, start);
 	tic = start;
@@ -962,20 +936,20 @@ track_transpose(struct track *src, unsigned start, unsigned len, int halftones) 
 		
 		st = seqptr_evdel(&sp, &slist);
 		if (st->phase & EV_PHASE_FIRST) {
-			st->silent = !EV_ISNOTE(&st->ev) ? 1 : 0;
+			st->tag = EV_ISNOTE(&st->ev) ? 1 : 0;
 		}
-		if (st->silent) {
-			seqptr_evput(&sp, &st->ev);
-		} else {
+		if (st->tag) {
 			ev = st->ev;
 			ev.data.voice.b0 += halftones;
 			ev.data.voice.b0 &= 0x7f;
 			seqptr_evput(&qp, &ev);
+		} else {
+			seqptr_evput(&sp, &st->ev);
 		}
 	}	    
 
 	/*
-	 * finish transposed (not silent) events
+	 * finish transposed (tagged) frames
 	 */
 	for (;;) {
 		delta = seqptr_ticskip(&sp, ~0U);
@@ -984,14 +958,14 @@ track_transpose(struct track *src, unsigned start, unsigned len, int halftones) 
 			break;
 		st = seqptr_evdel(&sp, &slist);
 		if (st->phase & EV_PHASE_FIRST)
-			st->silent = 1;
-		if (st->silent) {
-			seqptr_evput(&sp, &st->ev);
-		} else {
+			st->tag = 0;
+		if (st->tag) {
 			ev = st->ev;
 			ev.data.voice.b0 += halftones;
 			ev.data.voice.b0 &= 0x7f;
 			seqptr_evput(&qp, &ev);
+		} else {
+			seqptr_evput(&sp, &st->ev);
 		}
 	}
 	track_merge(src, &qt);
@@ -1021,13 +995,13 @@ track_check(struct track *src) {
 		if (st == NULL)
 			break;
 		if (st->flags & STATE_NEW) {
-			st->silent = st->flags & STATE_BOGUS ? 1: 0;
+			st->tag = st->flags & STATE_BOGUS ? 0 : 1;
 			if (st->flags & STATE_BOGUS) {
 				ev_dbg(&st->ev);
 				dbg_puts(": bogus\n");
 			}
 		}
-		if (!st->silent) {
+		if (st->tag) {
 			seqptr_evput(&sp, &st->ev);
 		}	
 	}
@@ -1365,13 +1339,13 @@ track_timerm(struct track *t, unsigned measure, unsigned amount) {
 	dbg_puts("\n");
 #endif
 	/*
-	 * go to the start position; tag all frames as not silent
+	 * go to the start position; tag all frames
 	 */
 	seqptr_init(&sp, t);
 	(void)seqptr_skip(&sp, tic);
 	statelist_dup(&slist, &sp.statelist);
 	for (st = slist.first; st != NULL; st = st->next) {
-		st->silent = 0;
+		st->tag = 1;
 	}
 
 	/*
@@ -1384,7 +1358,7 @@ track_timerm(struct track *t, unsigned measure, unsigned amount) {
 		if (!seqptr_evavail(&sp))
 			break;
 		st = seqptr_evdel(&sp, &slist);
-		st->silent = 1;
+		st->tag = 0;
 	}
 	
 	/*
@@ -1397,32 +1371,32 @@ track_timerm(struct track *t, unsigned measure, unsigned amount) {
 		ost = statelist_lookup(&sp.statelist, &st->ev);
 		if (!ost || !ev_eq(&st->ev, &ost->ev))
 			seqptr_evput(&sp, &st->ev);
-		st->silent = 0;
+		st->tag = 1;
 	}
 
 	/*
-	 * retore all states that arent silent. states that
-	 * are restored are tagged as not silent, so we can continue
+	 * retore all states that are tagged. states that
+	 * are restored are tagged, so we can continue
 	 * copying selected events in the next stage
 	 */
 	for (st = slist.first; st != NULL; st = st->next) {
-		if (st->silent && ev_restore(&st->ev, &ev)) {
+		if (!st->tag && ev_restore(&st->ev, &ev)) {
 			ost = statelist_lookup(&sp.statelist, &ev);
 			if (!ost || !ev_eq(&ev, &ost->ev))
 				seqptr_evput(&sp, &ev);
-			st->silent = 0;
+			st->tag = 1;
 		}
 	}
 	
 	/*
-	 * state 6: copy all events for not silent frames
+	 * state 6: copy all events of tagged frames
 	 */
 	for (;;) {
 		(void)seqptr_ticskip(&sp, ~0U);
 		if (!seqptr_evavail(&sp))
 			break;
 		st = seqptr_evdel(&sp, &slist);
-		st->silent = 0;
+		st->tag = 1;
 		ost = statelist_lookup(&sp.statelist, &ev);
 		if (!ost || !ev_eq(&st->ev, &ost->ev))
 			seqptr_evput(&sp, &st->ev);

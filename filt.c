@@ -1154,19 +1154,19 @@ filt_evcb(struct filt *o, struct ev *ev) {
 		/*
 		 * XXX: have to do something with the rule set here
 		 */
-		st->silent = o->active ? 0 : 1;
+		st->tag = o->active ? 1 : 0;
 		if (st->flags & STATE_BOGUS) {
 			dbg_puts("filt_evcb: ");
 			ev_dbg(ev);
 			dbg_puts(": bogus frame\n");
-			st->silent = 1;
+			st->tag = 0;
 		}
 	}
 
 	/*
-	 * nothing to do with silent frames
+	 * nothing to do with silent (not selected) frames
 	 */
-	if (st->silent)
+	if (!st->tag)
 		return;
 
 	/*

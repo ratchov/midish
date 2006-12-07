@@ -639,13 +639,13 @@ song_playtic(struct song *o) {
 				ev = st->ev;
 				if (EV_ISVOICE(&ev)) {
 					if (st->phase & EV_PHASE_FIRST)
-						st->silent = 0;
+						st->tag = 1;
 					if (!i->mute) {
-						if (st->silent) {
+						if (st->tag) {
+							mux_putev(&ev);
+						} else {
 							ev_dbg(&ev);
-							dbg_puts(": silent state\n");
-					        } else {
-							mux_putev(&ev);					
+							dbg_puts(": no tag\n");
 						}
 					}
 				} else {
@@ -732,10 +732,10 @@ song_start(struct song *o,
 				ev_dbg(&re);
 				dbg_puts("\n");
 				mux_putev(&re);
-				s->silent = 0;
+				s->tag = 1;
 			} else {
-				dbg_puts(": not restored, marked as silent\n");
-				s->silent = 1;
+				dbg_puts(": not restored, not tagged\n");
+				s->tag = 0;
 			}
 		}
 	}
@@ -745,10 +745,10 @@ song_start(struct song *o,
 		if (EV_ISMETA(&s->ev)) {
 			dbg_puts(": restoring meta-event\n");
 			song_metaput(o, &s->ev);
-			s->silent = 0;
+			s->tag = 1;
 		} else {
-			dbg_puts(": not restored, marked as silent\n");
-			s->silent = 1;
+			dbg_puts(": not restored, not tagged\n");
+			s->tag = 0;
 		}
 	}
 	mux_flush();	
@@ -778,7 +778,7 @@ song_stop(struct song *o) {
 	for (i = o->trklist; i != NULL; i = (struct songtrk *)i->name.next) {
 		for (s = i->trackptr.statelist.first; s != NULL; s = snext) {
 			snext = s->next;
-			if (!s->silent && ev_cancel(&s->ev, &ca)) {
+			if (s->tag && ev_cancel(&s->ev, &ca)) {
 				dbg_puts("song_stop: ");
 				ev_dbg(&s->ev);
 				dbg_puts(": canceled -> ");
