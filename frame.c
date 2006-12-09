@@ -588,8 +588,8 @@ track_copy(struct track *src, unsigned start, unsigned len, struct track *dst) {
 	seqptr_init(&dp, dst);
 
 	/*
-	 * stage 1: go the the start position and tag all events as
-	 * silent
+	 * stage 1: go the the start position and tag all frames as
+	 * not being copied
 	 */
 	(void)seqptr_skip(&sp, start);
 	for (st = sp.statelist.first; st != NULL; st = st->next) {
@@ -597,20 +597,21 @@ track_copy(struct track *src, unsigned start, unsigned len, struct track *dst) {
 	}
 
 	/*
-	 * stage 2: move the first tic accepting starting frames; this
-	 * is the last chance for open frames to terminate and to avoid
-	 * to be restored
+	 * stage 2: move the first tic accepting new frames; this
+	 * is the last chance for old frames to terminate and to avoid
+	 * to be restored.
 	 */
 	while (seqptr_evavail(&sp)) {
 		st = seqptr_evget(&sp);
-		if ((EV_ISNOTE(&st->ev) && (st->phase & EV_PHASE_FIRST)) ||
-		    (!EV_ISNOTE(&st->ev) && (st->phase & (EV_PHASE_FIRST | EV_PHASE_NEXT))))
+		if ((st->phase & EV_PHASE_FIRST) ||
+		    (st->phase & EV_PHASE_NEXT && !EV_ISNOTE(&st->ev))) {
 			st->tag = 1;
+		}
 		if (st->tag) {
 			seqptr_evput(&dp, &st->ev);
 		}
 	}
-
+	
 	/*
 	 * stage 3: restore all states that weren't updated by the
 	 * first tic.
@@ -618,12 +619,7 @@ track_copy(struct track *src, unsigned start, unsigned len, struct track *dst) {
 	for (st = sp.statelist.first; st != NULL; st = st->next) {
 		if (EV_ISNOTE(&st->ev))
 			continue;
-		/*
-		 * XXX : using st->flags works, but we shouldn't use it
-		 *	 in frame-related functions, we are supposed
-		 *	 to do everything with st->phase and st->tag
-		 */
-		if (!(st->flags & STATE_CHANGED) && !(st->phase & EV_PHASE_LAST)) {
+		if (!st->tag && !(st->phase & EV_PHASE_LAST)) {
 			if (ev_restore(&st->ev, &ev)) {
        				seqptr_evput(&dp, &ev);
 				st->tag = 1;
@@ -632,7 +628,7 @@ track_copy(struct track *src, unsigned start, unsigned len, struct track *dst) {
 	}
 
 	/*
-	 * stage 4: go ahead and copy all events during 'len' tics
+	 * stage 4: go ahead and copy all frames during 'len' tics
 	 */
 	amount = 0;
 	for (;;) {
@@ -640,11 +636,10 @@ track_copy(struct track *src, unsigned start, unsigned len, struct track *dst) {
 		amount += delta;
 		len -= delta;
 		if (len == 0)
-			break;
-		
-		if (!seqptr_evavail(&sp))
-			break;
+			break;		
 		st = seqptr_evget(&sp);
+		if (st == NULL)
+			break;
 		if (st->phase & EV_PHASE_FIRST)
 			st->tag = 1;
 		if (st->tag) {
@@ -661,15 +656,13 @@ track_copy(struct track *src, unsigned start, unsigned len, struct track *dst) {
 	 * can continue copying selected events in the next stage
 	 */
 	for (st = sp.statelist.first; st != NULL; st = st->next) {
-		if (EV_ISNOTE(&st->ev))
-			continue;
-		if (!(st->phase & EV_PHASE_LAST)) {
+		if (!EV_ISNOTE(&st->ev) && !(st->phase & EV_PHASE_LAST)) {
 			if (ev_cancel(&st->ev, &ev)) { 
 				seqptr_seek(&dp, amount);
 				seqptr_evput(&dp, &ev);
 				amount = 0;
+				st->tag = 0;
 			}
-			st->tag = 0;
 		}
 	}
 
@@ -680,10 +673,9 @@ track_copy(struct track *src, unsigned start, unsigned len, struct track *dst) {
 	for (;;) {
 		delta = seqptr_ticskip(&sp, ~0U);
 		amount += delta;
-		
-		if (!seqptr_evavail(&sp))
-			break;
 		st = seqptr_evget(&sp);
+		if (st == NULL)
+			break;
 		if (st->phase & EV_PHASE_FIRST)
 			st->tag = 0;
 		if (st->tag) {
@@ -712,8 +704,7 @@ track_blank(struct track *src, unsigned start, unsigned len) {
 	seqptr_init(&sp, src);
 
 	/*
-	 * stage 1: go the the start position and tag all events
-	 * (make them silent)
+	 * go the the start position and tag all frames
 	 */
 	(void)seqptr_skip(&sp, start);
 	statelist_dup(&slist, &sp.statelist);
@@ -722,12 +713,10 @@ track_blank(struct track *src, unsigned start, unsigned len) {
 	}
 
 	/*
-	 * stage 2: cancel all states that will be erased from the selection
+	 * cancel and tag frames that will be erased
 	 */
 	for (st = slist.first; st != NULL; st = st->next) {
-		if (EV_ISNOTE(&st->ev))
-			continue;
-		if (!(st->phase & EV_PHASE_LAST)) {
+		if (!EV_ISNOTE(&st->ev) && !(st->phase & EV_PHASE_LAST)) {
 			if (ev_cancel(&st->ev, &ev)) {
 				seqptr_evput(&sp, &ev);
 				st->tag = 0;
@@ -736,8 +725,7 @@ track_blank(struct track *src, unsigned start, unsigned len) {
 	}
 
 	/*
-	 * stage 3: go ahead and erase events of selected frames
-	 * during 'len' tics
+	 * erase events during 'len' tics
 	 */
 	for (;;) {
 		len -= seqptr_ticskip(&sp, len);
@@ -748,60 +736,247 @@ track_blank(struct track *src, unsigned start, unsigned len) {
 			break;
 		if (st->phase & EV_PHASE_FIRST)
 			st->tag = 0;
-		dbg_puts("track_blank: ");
-		ev_dbg(&st->ev);
-		dbg_puts(" tag=");
-		dbg_putu(st->tag);
-		dbg_puts("\n");
 		if (st->tag)
 			seqptr_evput(&sp, &st->ev);
 	}
 	
 	/*
-	 * stage 4: move the first tic of the 'end' boundary,
-	 * accepting starting frames; this is the last chance for
-	 * opened frames to terminate and to avoid to be restored
+	 * move the first tic of the 'end' boundary (new frames are
+	 * tagged) this is the last chance for current frames to
+	 * terminate and to avoid to be restored
 	 */
 	while (seqptr_evavail(&sp)) {
 		st = seqptr_evdel(&sp, &slist);
-		if ((EV_ISNOTE(&st->ev) && (st->phase & EV_PHASE_FIRST)) ||
-		    (!EV_ISNOTE(&st->ev) && (st->phase & (EV_PHASE_FIRST | EV_PHASE_NEXT))))
+		if ((st->phase & EV_PHASE_FIRST) ||
+		    (st->phase & EV_PHASE_NEXT && !EV_ISNOTE(&st->ev))) {
 			st->tag = 1;
+		}
 		if (st->tag) {
 			seqptr_evput(&sp, &st->ev);
 		}
 	}
 
 	/*
-	 * stage 5: retore all states that are tagged. states that
-	 * are retored are tagged, so we can continue
-	 * copying selected events in the next stage
+	 * retore/tag frames that are not tagged.
 	 */
 	for (st = slist.first; st != NULL; st = st->next) {
-		if (EV_ISNOTE(&st->ev) || st->tag)
+		if (EV_ISNOTE(&st->ev))
 			continue;
-		if (!(st->phase & EV_PHASE_LAST)) {
+		if (!st->tag && !(st->phase & EV_PHASE_LAST)) {
 			if (ev_restore(&st->ev, &ev)) { 
 				seqptr_evput(&sp, &ev);
-				st->tag = 0;
+				st->tag = 1;
 			}
 		}
 	}
 
 	/*
-	 * state 6: copy all events of tagged frames
+	 * finish moving tagged frames
 	 */
 	for (;;) {
 		(void)seqptr_ticskip(&sp, ~0U);
-		if (!seqptr_evavail(&sp))
-			break;
 		st = seqptr_evdel(&sp, &slist);
+		if (st == NULL)
+			break;
 		if (st->phase & EV_PHASE_FIRST)
 			st->tag = 1;
 		if (st->tag)
 			seqptr_evput(&sp, &st->ev);
 	}
 }
+
+
+/*
+ * move/copy/blank a portion of the given track. All operations are
+ * consistent, no frames are trashed: notes are always completely
+ * copied/moved/erased but and controllers (and other) are cut if
+ * necessary
+ */
+void
+track_move(struct track *src, unsigned start, unsigned len, 
+    struct evspec *evspec, struct track *dst, unsigned copy, unsigned blank) {
+	unsigned delta, amount;
+	struct seqptr sp, dp;		/* current src & dst track states */
+	struct statelist slist;		/* original src track state */
+	struct state *st;
+	struct ev ev;
+
+#define TAG_KEEP	1		/* frame is not erased */
+#define TAG_COPY	2		/* frame is copyed */
+
+	if (len == 0)
+		return;
+	if (copy) {
+		track_clearall(dst);
+		seqptr_init(&dp, dst);
+	}
+	seqptr_init(&sp, src);
+	
+	/*
+	 * go the the start position and tag all frames as
+	 * not copyed and not to be erased
+	 */
+	(void)seqptr_skip(&sp, start);
+	statelist_dup(&slist, &sp.statelist);
+	for (st = slist.first; st != NULL; st = st->next) {
+       		st->tag = TAG_KEEP;
+	}
+	
+	/*
+	 * cancel all states that will be erased from the selection
+	 * (blank only)
+	 */
+	for (st = slist.first; st != NULL; st = st->next) {
+		if (EV_ISNOTE(&st->ev))
+			continue;
+		if (!(st->phase & EV_PHASE_LAST)) {
+			if (ev_cancel(&st->ev, &ev)) {
+				if (blank)
+					seqptr_evput(&sp, &ev);
+				st->tag &= ~TAG_KEEP;
+			}
+		}
+	}
+		
+	/*
+	 * copy the first tic. Accept new frames: this is the last
+	 * chance for open frames to terminate and to avoid to be
+	 * restored in the copy
+	 *
+	 * blank: just move the tic
+	 */
+	while (seqptr_evavail(&sp)) {
+		st = seqptr_evdel(&sp, &slist);
+		if ((EV_ISNOTE(&st->ev) && (st->phase & EV_PHASE_FIRST)) ||
+		    (!EV_ISNOTE(&st->ev) && (st->phase & (EV_PHASE_FIRST | EV_PHASE_NEXT))))
+			st->tag |= TAG_COPY;
+		if (st->phase & EV_PHASE_FIRST)
+			st->tag &= ~TAG_KEEP;
+		if (copy && (st->tag & TAG_COPY))
+			seqptr_evput(&dp, &st->ev);
+		if (!blank || (st->tag & TAG_KEEP)) {
+			seqptr_evput(&sp, &st->ev);
+		}
+	}
+	
+	/*
+	 * copy only: restore all states that weren't updated by the
+	 * first tic.
+	 */
+	for (st = slist.first; st != NULL; st = st->next) {
+		if (EV_ISNOTE(&st->ev))
+			continue;
+		if (!(st->flags & STATE_CHANGED) && !(st->phase & EV_PHASE_LAST)) {
+			if (ev_restore(&st->ev, &ev)) {
+       				if (copy)
+					seqptr_evput(&dp, &ev);
+				st->tag |= TAG_COPY;
+			}
+		}
+	}
+	
+	/*
+	 * copy:  copy frames during 'len' tics
+	 *
+	 * blank: erase frames during 'len' tics
+	 */
+	amount = 0;
+	for (;;) {
+		delta = seqptr_ticskip(&sp, len);
+		amount += delta;
+		len -= delta;
+		if (len == 0)
+			break;
+		st = seqptr_evdel(&sp, &slist);
+		if (st == NULL)
+			break;
+		if (st->phase & EV_PHASE_FIRST) {
+			st->tag |= TAG_COPY;
+			st->tag &= ~TAG_KEEP;
+		}
+		if (copy && (st->tag & TAG_COPY)) {
+			seqptr_seek(&dp, amount);
+			seqptr_evput(&dp, &st->ev);
+			amount = 0;
+		}
+		if (!blank || (st->tag & TAG_KEEP))
+			seqptr_evput(&sp, &st->ev);
+	}
+	
+	/*
+	 * copy only: cancel all states (that are tagged) on the 'dst'
+	 * track, states that are canceled are not tagged, so we can
+	 * continue copying selected events in the next stage
+	 */
+	for (st = slist.first; st != NULL; st = st->next) {
+		if (EV_ISNOTE(&st->ev))
+			continue;
+		if (!(st->phase & EV_PHASE_LAST)) {
+			if (ev_cancel(&st->ev, &ev)) { 
+				if (copy) {
+					seqptr_seek(&dp, amount);
+					seqptr_evput(&dp, &ev);
+					amount = 0;
+				}
+				st->tag &= ~TAG_COPY;
+			}
+		}
+	}
+
+	/*
+	 * blank: move the first tic of the 'end' boundary,
+	 * accepting starting frames; this is the last chance for
+	 * opened frames to terminate and to avoid to be restored
+	 *
+	 * copy: just copy frames not canceled
+	 */
+	while (seqptr_evavail(&sp)) {
+		st = seqptr_evdel(&sp, &slist);
+		if ((EV_ISNOTE(&st->ev) && (st->phase & EV_PHASE_FIRST)) ||
+		    (!EV_ISNOTE(&st->ev) && (st->phase & (EV_PHASE_FIRST | EV_PHASE_NEXT))))
+			st->tag |= TAG_KEEP;
+		if (st->phase & EV_PHASE_FIRST)
+			st->tag &= ~TAG_COPY;
+		if (copy && (st->tag & TAG_COPY)) {
+			seqptr_seek(&dp, amount);
+			seqptr_evput(&dp, &st->ev);
+			amount = 0;
+		}
+		if (!blank || (st->tag & TAG_KEEP))
+			seqptr_evput(&sp, &st->ev);
+	}
+
+
+	/*
+	 * copy: copy all event for whose state couldn't be
+	 * canceled (note events)
+	 *
+	 * blank: copy tagged frames
+	 */
+	for (;;) {
+		delta = seqptr_ticskip(&sp, ~0U);
+		amount += delta;		
+		if (!seqptr_evavail(&sp))
+			break;
+		st = seqptr_evdel(&sp, &slist);
+		if (st->phase & EV_PHASE_FIRST) {
+			st->tag &= ~TAG_COPY;
+			st->tag |= TAG_KEEP;
+		}
+		if (copy && (st->tag & TAG_COPY)) {
+			seqptr_seek(&dp, amount);
+			seqptr_evput(&dp, &st->ev);
+			amount = 0;
+		}
+		if (!blank || (st->tag & TAG_KEEP))
+			seqptr_evput(&sp, &st->ev);
+	}
+	
+#undef TAG_BLANK
+#undef TAG_COPY
+
+}
+
 
 
 /*

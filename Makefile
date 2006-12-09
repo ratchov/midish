@@ -17,26 +17,29 @@ MAN1_DIR = ${PREFIX}/man/man1
 DOC_DIR = ${PREFIX}/share/doc/midish
 EXAMPLES_DIR = ${PREFIX}/share/examples/midish
 
-MIDISH_OBJS = \
-cons.o data.o dbg.o ev.o exec.o filt.o frame.o lex.o main.o mdep.o metro.o \
-mididev.o mux.o name.o node.o parse.o pool.o rmidi.o saveload.o smf.o \
-song.o state.o str.o sysex.o textio.o timo.o track.o user.o \
-user_trk.o user_chan.o user_filt.o user_sx.o user_song.o user_dev.o 
+PROGS = midish rmidish mkcurves
 
 all:		midish rmidish
 
 install:	install-midish install-rmidish
 
 clean:
-		rm -f -- midish rmidish *~ *.bak *.tmp *.o *.ln *.s *.out \
-		*.core core
+		rm -f -- ${PROGS} ${MIDISH_OBJS} ${RMIDISH_OBJS} \
+		*~ *.bak *.tmp *.ln *.s *.out *.core core
 
 # ---------------------------------------------- dependencies for midish ---
+
+MIDISH_OBJS = \
+cons.o data.o dbg.o ev.o exec.o filt.o frame.o lex.o main.o mdep.o metro.o \
+mididev.o mux.o name.o node.o parse.o pool.o rmidi.o saveload.o smf.o \
+song.o state.o str.o sysex.o textio.o timo.o track.o user.o \
+user_trk.o user_chan.o user_filt.o user_sx.o user_song.o user_dev.o 
 
 midish:		${MIDISH_OBJS}
 		${CC} ${LDFLAGS} ${MIDISH_OBJS} -o midish
 
-install-midish:	midish
+install-midish:	midish smfplay smfrec midish.1 smfplay.1 smfrec.1 \
+		README manual.html midishrc sample.sng
 		mkdir -p ${BIN_DIR} ${MAN1_DIR} ${DOC_DIR} ${EXAMPLES_DIR}
 		cp midish smfplay smfrec ${BIN_DIR}
 		cp midish.1 smfplay.1 smfrec.1 ${MAN1_DIR}
@@ -104,13 +107,16 @@ user_trk.o:	user_trk.c dbg.h default.h node.h exec.h name.h str.h data.h \
 
 # --------------------------------------------- dependencies for rmidish ---
 
-rmidish:	midish rmidish.c
-		${CC} ${CFLAGS} ${READLINE_CFLAGS} ${READLINE_INCLUDE} rmidish.c \
-		${LDFLAGS} ${READLINE_LDFLAGS} -o rmidish ${READLINE_LIB}
+RMIDISH_OBJS = rmidish.o
+
+rmidish:	midish ${RMIDISH_OBJS}
+		${CC} ${LDFLAGS} ${READLINE_LDFLAGS} ${RMIDISH_OBJS} \
+		-o rmidish ${READLINE_LIB}
 
 install-rmidish:rmidish
 		mkdir -p ${BIN_DIR} ${MAN1_DIR}
 		cp rmidish ${BIN_DIR}
 		cp rmidish.1 ${MAN1_DIR}
 
-
+rmidish.o:	rmidish.c
+		${CC} -c ${CFLAGS} ${READLINE_CFLAGS} ${READLINE_INCLUDE} $<

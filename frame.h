@@ -68,6 +68,9 @@ void     track_timerm(struct track *t, unsigned measure, unsigned amount);
 void	 track_insert(struct track *t, unsigned start, unsigned len);
 void	 track_copy(struct track *src, unsigned start, unsigned len, struct track *dst);
 void	 track_blank(struct track *src, unsigned start, unsigned len);
+void     track_move(struct track *src, unsigned start, unsigned len,
+		    struct evspec *evspec, struct track *dst, unsigned copy, unsigned blank);
+
 void     track_quantize(struct track *src, unsigned start, unsigned len, 
 			unsigned offset, unsigned quantum, unsigned rate);
 void     track_transpose(struct track *src, unsigned start, unsigned len, int halftones);
