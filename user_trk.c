@@ -237,6 +237,7 @@ user_func_trackcut(struct exec *o, struct data **r) {
 	long from, amount, quant;
 	unsigned tic, len;
 	struct track t1, t2;
+	struct evspec es;
 	
 	if (!exec_lookuptrack(o, "trackname", &t) ||
 	    !exec_lookuplong(o, "from", &from) ||
@@ -255,11 +256,12 @@ user_func_trackcut(struct exec *o, struct data **r) {
 	if (tic > (unsigned)quant/2) {
 		tic -= quant/2;
 	}
-
+	
+	evspec_reset(&es);
 	track_init(&t1);
 	track_init(&t2);
-	track_copy(&t->track, 0,   tic, &t1);
-	track_copy(&t->track, tic + len, ~0U, &t2);
+	track_copy(&t->track, 0,   tic, &es, &t1);
+	track_copy(&t->track, tic + len, ~0U, &es, &t2);
 	t2.first->delta += tic;
 	track_clearall(&t->track);
 	track_merge(&t->track, &t1);
@@ -299,7 +301,7 @@ user_func_trackblank(struct exec *o, struct data **r) {
 #if 0
 	track_move(&t->track, tic, len, &es, NULL, 0, 1);
 #else
-	track_blank(&t->track, tic, len);
+	track_blank(&t->track, tic, len, &es);
 #endif
 	
 	return 1;
@@ -337,7 +339,7 @@ user_func_trackcopy(struct exec *o, struct data **r) {
 	}
 
 	track_init(&copy);
-	track_copy(&t->track, tic, len, &copy);
+	track_copy(&t->track, tic, len, &es, &copy);
 	copy.first->delta += tic2;
 	track_merge(&t2->track, &copy);
 	track_done(&copy);
@@ -352,6 +354,7 @@ user_func_trackinsert(struct exec *o, struct data **r) {
 	long from, amount, quant;
 	unsigned tic, len;
 	struct track t1, t2;
+	struct evspec es;
 	
 	if (!exec_lookupname(o, "trackname", &trkname) ||
 	    !exec_lookuplong(o, "from", &from) ||
@@ -376,10 +379,11 @@ user_func_trackinsert(struct exec *o, struct data **r) {
 	if (tic > (unsigned)quant/2) {
 		tic -= quant/2;
 	}
+	evspec_reset(&es);
 	track_init(&t1);
 	track_init(&t2);
-	track_copy(&t->track, 0,   tic, &t1);
-	track_copy(&t->track, tic, ~0U, &t2);
+	track_copy(&t->track, 0,   tic, &es, &t1);
+	track_copy(&t->track, tic, ~0U, &es, &t2);
 	t2.first->delta += tic + len;
 	track_clearall(&t->track);
 	track_merge(&t->track, &t1);

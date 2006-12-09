@@ -66,8 +66,8 @@ void     track_settempo(struct track *t, unsigned measure, unsigned tempo);
 void     track_timeins(struct track *t, unsigned measure, unsigned amount, unsigned bpm, unsigned tpb);
 void     track_timerm(struct track *t, unsigned measure, unsigned amount);
 void	 track_insert(struct track *t, unsigned start, unsigned len);
-void	 track_copy(struct track *src, unsigned start, unsigned len, struct track *dst);
-void	 track_blank(struct track *src, unsigned start, unsigned len);
+void	 track_copy(struct track *src, unsigned start, unsigned len, struct evspec *es, struct track *dst);
+void	 track_blank(struct track *src, unsigned start, unsigned len, struct evspec *es);
 void     track_move(struct track *src, unsigned start, unsigned len,
 		    struct evspec *evspec, struct track *dst, unsigned copy, unsigned blank);
 

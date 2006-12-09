@@ -575,7 +575,8 @@ track_merge(struct track *dst, struct track *src) {
  * and controllers (and other) are restored
  */
 void
-track_copy(struct track *src, unsigned start, unsigned len, struct track *dst) {
+track_copy(struct track *src, unsigned start, unsigned len, 
+    struct evspec *es, struct track *dst) {
 	unsigned delta, amount;
 	struct seqptr sp, dp;
 	struct state *st;
@@ -605,7 +606,7 @@ track_copy(struct track *src, unsigned start, unsigned len, struct track *dst) {
 		st = seqptr_evget(&sp);
 		if ((st->phase & EV_PHASE_FIRST) ||
 		    (st->phase & EV_PHASE_NEXT && !EV_ISNOTE(&st->ev))) {
-			st->tag = 1;
+			st->tag = evspec_matchev(es, &st->ev) ? 1 : 0;
 		}
 		if (st->tag) {
 			seqptr_evput(&dp, &st->ev);
@@ -617,7 +618,7 @@ track_copy(struct track *src, unsigned start, unsigned len, struct track *dst) {
 	 * first tic.
 	 */
 	for (st = sp.statelist.first; st != NULL; st = st->next) {
-		if (EV_ISNOTE(&st->ev))
+		if (EV_ISNOTE(&st->ev) || !evspec_matchev(es, &st->ev))
 			continue;
 		if (!st->tag && !(st->phase & EV_PHASE_LAST)) {
 			if (ev_restore(&st->ev, &ev)) {
@@ -641,7 +642,7 @@ track_copy(struct track *src, unsigned start, unsigned len, struct track *dst) {
 		if (st == NULL)
 			break;
 		if (st->phase & EV_PHASE_FIRST)
-			st->tag = 1;
+			st->tag = evspec_matchev(es, &st->ev) ? 1 : 0;
 		if (st->tag) {
 			seqptr_seek(&dp, amount);
 			seqptr_evput(&dp, &st->ev);
@@ -651,12 +652,12 @@ track_copy(struct track *src, unsigned start, unsigned len, struct track *dst) {
 	
 
 	/*
-	 * stage 5: cancel all states (that are tagged) on the 'dst'
-	 * track, states that are canceled are not tagged, so we
-	 * can continue copying selected events in the next stage
+	 * cancel/untag tagged frame
 	 */
 	for (st = sp.statelist.first; st != NULL; st = st->next) {
-		if (!EV_ISNOTE(&st->ev) && !(st->phase & EV_PHASE_LAST)) {
+		if (st->tag && 
+		    !EV_ISNOTE(&st->ev) && 
+		    !(st->phase & EV_PHASE_LAST)) {
 			if (ev_cancel(&st->ev, &ev)) { 
 				seqptr_seek(&dp, amount);
 				seqptr_evput(&dp, &ev);
@@ -667,8 +668,7 @@ track_copy(struct track *src, unsigned start, unsigned len, struct track *dst) {
 	}
 
 	/*
-	 * state 6: copy all event for whose state couldn't be
-	 * canceled (note events)
+	 * finish copying tagged frames
 	 */
 	for (;;) {
 		delta = seqptr_ticskip(&sp, ~0U);
@@ -693,7 +693,7 @@ track_copy(struct track *src, unsigned start, unsigned len, struct track *dst) {
  * and controllers (and other) are restored
  */
 void
-track_blank(struct track *src, unsigned start, unsigned len) {
+track_blank(struct track *src, unsigned start, unsigned len, struct evspec *es) {
 	struct seqptr sp;
 	struct statelist slist;
 	struct state *st;
@@ -717,7 +717,8 @@ track_blank(struct track *src, unsigned start, unsigned len) {
 	 */
 	for (st = slist.first; st != NULL; st = st->next) {
 		if (!EV_ISNOTE(&st->ev) && !(st->phase & EV_PHASE_LAST)) {
-			if (ev_cancel(&st->ev, &ev)) {
+			if (evspec_matchev(es, &st->ev) &&
+			    ev_cancel(&st->ev, &ev)) {
 				seqptr_evput(&sp, &ev);
 				st->tag = 0;
 			}
@@ -734,8 +735,8 @@ track_blank(struct track *src, unsigned start, unsigned len) {
 		st = seqptr_evdel(&sp, &slist);
 		if (st == NULL)
 			break;
-		if (st->phase & EV_PHASE_FIRST)
-			st->tag = 0;
+		if (st->phase & EV_PHASE_FIRST) 
+			st->tag = evspec_matchev(es, &st->ev) ? 0 : 1;
 		if (st->tag)
 			seqptr_evput(&sp, &st->ev);
 	}
