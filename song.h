@@ -57,10 +57,10 @@ struct songfilt {
 };
 
 struct songtrk {
-	struct name name;			/* identifier + list entry */
-	struct track track;			/* actual data */
+	struct name name;		/* identifier + list entry */
+	struct track track;		/* actual data */
 	struct seqptr trackptr;		/* track pointer for RT */
-	struct songfilt *curfilt;		/* source and dest. channel */
+	struct songfilt *curfilt;	/* source and dest. channel */
 	unsigned mute;
 };
 

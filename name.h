@@ -33,29 +33,28 @@
 
 #include "str.h"
 
-	/*
-	 * a name is an entry in a simple list of strings
-	 * the string buffer is owned by the name
-	 */
-
+/*
+ * a name is an entry in a simple list of strings
+ * the string buffer is owned by the name, so it need
+ * not to be allocated if name_xxx routines are used
+ */
 struct name {
 	char *str;
 	struct name *next;
 };
 
-void	       name_init(struct name *o, char *name);
-void	       name_done(struct name *o);
+void	     name_init(struct name *o, char *name);
+void	     name_done(struct name *o);
 struct name *name_new(char *name);
 struct name *name_newarg(char *name, struct name *next);
-void	       name_dbg(struct name *);
-void	       name_delete(struct name *o);
-void	       name_insert(struct name **first, struct name *i);
-void	       name_add(struct name **first, struct name *v);
-void	       name_remove(struct name **first, struct name *v);
-void	       name_empty(struct name **first);
-void           name_cat(struct name **dst, struct name **src); 
-unsigned       name_eq(struct name **first1, struct name **first2);
-
+void	     name_dbg(struct name *);
+void	     name_delete(struct name *o);
+void	     name_insert(struct name **first, struct name *i);
+void	     name_add(struct name **first, struct name *v);
+void	     name_remove(struct name **first, struct name *v);
+void	     name_empty(struct name **first);
+void         name_cat(struct name **dst, struct name **src); 
+unsigned     name_eq(struct name **first1, struct name **first2);
 struct name *name_lookup(struct name **first, char *str);
 
 #endif /* MIDISH_NAME_H */

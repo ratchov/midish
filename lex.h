@@ -52,21 +52,17 @@ enum SYM_ID {
 };
 
 struct tokdef {
-	unsigned id;				/* token id */
-	char *str;				/* corresponding string */
+	unsigned id;			/* token id */
+	char *str;			/* corresponding string */
 };
 
 struct lex {
-	/*struct tokdef *op, *kw;*/
 	unsigned id;
 	char strval[TOK_MAXLEN + 1];
 	unsigned long longval;	
-	/* input */
-	struct textin *in;
-	/* used by ungetchar */
-	int lookchar;
-	/* for error reporting */
-	unsigned line, col;
+	struct textin *in;		/* input file */
+	int lookchar;			/* used by ungetchar */
+	unsigned line, col;		/* for error reporting */
 };
 
 unsigned lex_init(struct lex *, char *);

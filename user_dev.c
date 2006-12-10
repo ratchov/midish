@@ -31,6 +31,8 @@
 /*
  * implements devxxx built-in functions
  * available through the interpreter
+ *
+ * each function is described in the manual.html file
  */
 
 #include "dbg.h"
@@ -60,7 +62,6 @@ user_func_devlist(struct exec *o, struct data **r) {
 	*r = d;
 	return 1;
 }
-
 
 unsigned
 user_func_devattach(struct exec *o, struct data **r) {
@@ -122,7 +123,6 @@ user_func_devsetmaster(struct exec *o, struct data **r) {
 	return 0;
 }
 
-
 unsigned
 user_func_devgetmaster(struct exec *o, struct data **r) {
 	if (mididev_master) {
@@ -149,7 +149,6 @@ user_func_devsendrt(struct exec *o, struct data **r) {
 	return 1;
 }
 
-
 unsigned
 user_func_devticrate(struct exec *o, struct data **r) {
 	long unit, tpu;
@@ -169,7 +168,6 @@ user_func_devticrate(struct exec *o, struct data **r) {
 	mididev_byunit[unit]->ticrate = tpu;
 	return 1;
 }
-
 
 unsigned
 user_func_devinfo(struct exec *o, struct data **r) {

@@ -117,15 +117,13 @@ node_replace(struct node **n, struct node *e) {
 }
 
 
-	/*
-	 * run a node.
-	 * the following rule must be respected
-	 * 1) node_exec must be called always with *r == NULL
-	 * 2) in statements (slist,...) *r != NULL if and only if RETURN
-	 * 3) in expressions (add, ...) *r == NULL if and only if ERROR
-	 */
-
-
+/*
+ * run a node.
+ * the following rule must be respected
+ * 1) node_exec must be called always with *r == NULL
+ * 2) in statements (slist,...) *r != NULL if and only if RETURN
+ * 3) in expressions (add, ...) *r == NULL if and only if ERROR
+ */
 unsigned
 node_exec(struct node *o, struct exec *x, struct data **r) {
 	unsigned result;
@@ -144,10 +142,9 @@ node_exec(struct node *o, struct exec *x, struct data **r) {
 	return result;
 }
 
-	/*
-	 * execute an unary operator ( '-', '!', '~')
-	 */
-
+/*
+ * execute an unary operator ( '-', '!', '~')
+ */
 unsigned
 node_exec_unary(struct node *o, struct exec *x, struct data **r, 
 	unsigned (*func)(struct data *)) { 
@@ -160,10 +157,9 @@ node_exec_unary(struct node *o, struct exec *x, struct data **r,
 	return RESULT_OK;
 }
 
-	/*
-	 * execute a binary operator
-	 */
-
+/*
+ * execute a binary operator
+ */
 unsigned
 node_exec_binary(struct node *o, struct exec *x, struct data **r,
 	unsigned (*func)(struct data *, struct data *)) { 
@@ -190,11 +186,10 @@ node_exec_binary(struct node *o, struct exec *x, struct data **r,
 /* ------------------------------------------------------------------ */
 
 
-	/*
-	 * execute a procedure definition: just check arguments
-	 * and move the tree into a proc structure
-	 */
-
+/*
+ * execute a procedure definition: just check arguments
+ * and move the tree into a proc structure
+ */
 unsigned
 node_exec_proc(struct node *o, struct exec *x, struct data **r) {
 	struct proc *p;
@@ -230,11 +225,9 @@ node_exec_alist(struct node *o, struct exec *x, struct data **r) {
 	return RESULT_ERR;
 }
 
-
-	/*
-	 * execute a list of statements
-	 */
-
+/*
+ * execute a list of statements
+ */
 unsigned
 node_exec_slist(struct node *o, struct exec *x, struct data **r) {
 	struct node *i;
@@ -250,12 +243,10 @@ node_exec_slist(struct node *o, struct exec *x, struct data **r) {
 	return RESULT_OK;
 }
 
-
-	/*
-	 * execute a builtin function
-	 * if the function didn't set 'r', then set it to 'nil'
-	 */
-
+/*
+ * execute a builtin function
+ * if the function didn't set 'r', then set it to 'nil'
+ */
 unsigned
 node_exec_builtin(struct node *o, struct exec *x, struct data **r) {	
 	if (!((unsigned (*)(struct exec *, struct data **))
@@ -268,10 +259,9 @@ node_exec_builtin(struct node *o, struct exec *x, struct data **r) {
 	return RESULT_OK;		
 }
 
-	/*
-	 * return a constant 
-	 */
-	 
+/*
+ * return a constant 
+ */
 unsigned
 node_exec_cst(struct node *o, struct exec *x, struct data **r) {
 	*r = data_newnil();
@@ -279,10 +269,9 @@ node_exec_cst(struct node *o, struct exec *x, struct data **r) {
 	return RESULT_OK;
 }
 
-	/*
-	 * return the value of the variable (in the node)
-	 */
-
+/*
+ * return the value of the variable (in the node)
+ */
 unsigned
 node_exec_var(struct node *o, struct exec *x, struct data **r) {
 	struct var *v;
@@ -297,11 +286,10 @@ node_exec_var(struct node *o, struct exec *x, struct data **r) {
 	return RESULT_OK;
 }
 
-	/*
-	 * ignore the result of the expression
-	 * (used to ignore return values of calls)
-	 */
-
+/*
+ * ignore the result of the expression
+ * (used to ignore return values of calls)
+ */
 unsigned
 node_exec_ignore(struct node *o, struct exec *x, struct data **r) {
 	unsigned result;
@@ -315,10 +303,9 @@ node_exec_ignore(struct node *o, struct exec *x, struct data **r) {
 	return RESULT_OK;
 }
 
-	/*
-	 * call a procedure
-	 */
-
+/*
+ * call a procedure
+ */
 unsigned
 node_exec_call(struct node *o, struct exec *x, struct data **r) {
 	struct proc *p;
@@ -461,19 +448,17 @@ node_exec_assign(struct node *o, struct exec *x, struct data **r) {
 	return RESULT_OK;
 }
 
-	/* 
-	 * do nothing
-	 */
-
+/* 
+ * do nothing
+ */
 unsigned
 node_exec_nop(struct node *o, struct exec *x, struct data **r) {
 	return RESULT_OK;
 }
 
-	/* 
-	 * built a list from the expression list
-	 */
-
+/* 
+ * built a list from the expression list
+ */
 unsigned
 node_exec_list(struct node *o, struct exec *x, struct data **r) {
 	struct node *arg;

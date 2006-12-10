@@ -37,17 +37,6 @@ struct evspec;
 struct ev;
 struct state;
 
-void track_frameget(struct track *o, struct seqptr *p, struct track *frame);
-void track_frameput(struct track *o, struct seqptr *p, struct track *frame);
-void track_frameuniq(struct track *o, struct seqptr *p, struct track *frame);
-void track_framedup(struct track *s, struct track *d);
-void track_framecut(struct track *o, unsigned start, unsigned len);
-void track_frameins(struct track *o, unsigned start, unsigned len);
-void track_frameblank(struct track *o, unsigned start, unsigned len);
-void track_framecopy(struct track *o, unsigned start, unsigned len, struct track *frame);
-unsigned track_framematch(struct track *s, struct evspec *e);
-void track_frametransp(struct track *o, int halftones);
-
 void	      seqptr_init(struct seqptr *sp, struct track *t);
 void	      seqptr_done(struct seqptr *sp);
 unsigned      seqptr_eot(struct seqptr *sp);

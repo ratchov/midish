@@ -31,25 +31,29 @@
 #ifndef MIDISH_DATA_H
 #define MIDISH_DATA_H
 
+
+#define DATA_MAXNITEMS	4096
+
+struct name;
+
+/*
+ * the following represents a "value" for the interpreter.
+ * all types use the same strucure
+ */
+struct data {
 #define DATA_NIL	0
 #define DATA_LONG	1
 #define DATA_STRING	2
 #define DATA_REF	3
 #define DATA_LIST	4
 #define DATA_USER	5
-
-#define DATA_MAXNITEMS	4096
-
-struct name;
-
-struct data {
-	unsigned type;
+	unsigned type;			/* type of the value */
 	union {
-		char *str;
-		long num;
-		struct data *list;
-		char *ref;
-		void *user;
+		char *str;		/* if string */
+		long num;		/* if a number */
+		struct data *list;	/* if a list of values */
+		char *ref;		/* if a reference (name) */
+		void *user;		/* user defined */
 	} val;
 	struct data *next;
 };
@@ -60,12 +64,11 @@ struct data *data_newstring(char *);
 struct data *data_newref(char *);
 struct data *data_newlist(struct data *);
 struct data *data_newuser(void *);
-void	       data_delete(struct data *o);
-void	       data_setfield(struct data *dst, char *field);
-void	       data_dbg(struct data *);
-
-void	       data_listadd(struct data *, struct data *);
-void	       data_listremove(struct data *o, struct data *v);
+void	     data_delete(struct data *o);
+void	     data_setfield(struct data *dst, char *field);
+void	     data_dbg(struct data *);
+void	     data_listadd(struct data *, struct data *);
+void	     data_listremove(struct data *o, struct data *v);
 struct data *data_listlookup(struct data *o, struct name *ref);
 
 void	 data_assign(struct data *dst, struct data *src);

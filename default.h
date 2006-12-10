@@ -136,6 +136,4 @@
 #define DEFAULT_METRO_LO_NOTE	68
 #define DEFAULT_METRO_LO_VEL	90
 
-
-
 #endif /* MIDISH_DEFAULT_H */

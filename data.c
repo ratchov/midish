@@ -427,7 +427,6 @@ data_not(struct data *op1) {
  * of arguments and stores the result in the first argument.
  * Returs 1 on success, 0 on failure
  */
-
 unsigned 
 data_add(struct data *op1, struct data *op2) {
 	struct data **i;

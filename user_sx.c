@@ -31,6 +31,8 @@
 /*
  * implements sysexxxx built-in functions
  * available through the interpreter
+ *
+ * each function is described in the manual.html file
  */
 
 #include "dbg.h"
@@ -190,7 +192,6 @@ user_func_sysexclear(struct exec *o, struct data **r) {
 	}
 	return 1;
 }
-
 
 unsigned
 user_func_sysexsetunit(struct exec *o, struct data **r) {

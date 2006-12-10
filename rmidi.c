@@ -91,11 +91,10 @@ rmidi_done(struct rmidi *o) {
 unsigned rmidi_evlen[] = { 2, 2, 2, 2, 1, 1, 2, 0 };
 #define RMIDI_EVLEN(status) (rmidi_evlen[((status) >> 4) & 7])
 
-	/*
-	 * rmidi_inputcb is called when midi data becomes available
-	 * it calls mux_evcb
-	 */
-
+/*
+ * rmidi_inputcb is called when midi data becomes available
+ * it calls mux_evcb
+ */
 void
 rmidi_inputcb(struct rmidi *o, unsigned char *buf, unsigned count) {
 	struct ev ev;
@@ -214,11 +213,10 @@ rmidi_inputcb(struct rmidi *o, unsigned char *buf, unsigned count) {
 	}
 }
 
-	/*
-	 * write a single midi byte to the output buffer, if
-	 * it is full, flush it.
-	 */
-	 
+/*
+ * write a single midi byte to the output buffer, if
+ * it is full, flush it.
+ */
 void
 rmidi_out(struct rmidi *o, unsigned data) {
 	if (!(o->mididev.mode & MIDIDEV_MODE_OUT)) {
@@ -237,11 +235,10 @@ rmidi_out(struct rmidi *o, unsigned data) {
 	o->oused++;
 }
 
-	/*
-	 * convert an event to bytes stream and queue
-	 * it for sending
-	 */
-
+/*
+ * convert an event to bytes stream and queue
+ * it for sending
+ */
 void
 rmidi_putev(struct rmidi *o, struct ev *ev) {
 	unsigned s;
@@ -280,10 +277,9 @@ rmidi_putev(struct rmidi *o, struct ev *ev) {
 	}
 }
 
-	/*
-	 * queue raw data for sending
-	 */
-
+/*
+ * queue raw data for sending
+ */
 void
 rmidi_sendraw(struct rmidi *o, unsigned char *buf, unsigned len) {
 	if (!(o->mididev.mode & MIDIDEV_MODE_OUT)) {

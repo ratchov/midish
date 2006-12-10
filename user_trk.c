@@ -30,7 +30,10 @@
 
 /*
  * implements trackxxx built-in functions
- * available through the interpreter
+ * available through the interpreter.
+ *
+ * for more details about what does each function, refer
+ * to manual.html
  */
 
 #include "dbg.h"
@@ -47,8 +50,6 @@
 
 #include "saveload.h"
 #include "textio.h"
-
-
 
 unsigned
 user_func_tracklist(struct exec *o, struct data **r) {
@@ -82,7 +83,6 @@ user_func_tracknew(struct exec *o, struct data **r) {
 	return 1;
 }
 
-
 unsigned
 user_func_trackdelete(struct exec *o, struct data **r) {
 	struct songtrk *t;
@@ -95,7 +95,6 @@ user_func_trackdelete(struct exec *o, struct data **r) {
 	songtrk_delete(t);
 	return 1;
 }
-
 
 unsigned
 user_func_trackrename(struct exec *o, struct data **r) {
@@ -115,7 +114,6 @@ user_func_trackrename(struct exec *o, struct data **r) {
 	return 1;
 }
 
-
 unsigned
 user_func_trackexists(struct exec *o, struct data **r) {
 	char *name;
@@ -128,7 +126,6 @@ user_func_trackexists(struct exec *o, struct data **r) {
 	*r = data_newlong(t != NULL ? 1 : 0);
 	return 1;
 }
-
 
 unsigned
 user_func_trackaddev(struct exec *o, struct data **r) {
@@ -166,7 +163,6 @@ user_func_trackaddev(struct exec *o, struct data **r) {
 	track_evput(&t->track, &tp, &ev);
 	return 1;
 }
-
 
 unsigned
 user_func_tracksetcurfilt(struct exec *o, struct data **r) {
@@ -212,7 +208,6 @@ user_func_trackgetcurfilt(struct exec *o, struct data **r) {
 	return 1;
 }
 
-
 unsigned
 user_func_trackcheck(struct exec *o, struct data **r) {
 	char *trkname;
@@ -229,7 +224,6 @@ user_func_trackcheck(struct exec *o, struct data **r) {
 	track_check(&t->track);
 	return 1;
 }
-
 
 unsigned
 user_func_trackcut(struct exec *o, struct data **r) {
@@ -260,8 +254,8 @@ user_func_trackcut(struct exec *o, struct data **r) {
 	evspec_reset(&es);
 	track_init(&t1);
 	track_init(&t2);
-	track_copy(&t->track, 0,   tic, &es, &t1);
-	track_copy(&t->track, tic + len, ~0U, &es, &t2);
+	track_move(&t->track, 0,         tic, &es, &t1, 1, 1);
+	track_move(&t->track, tic + len, ~0U, &es, &t2, 1, 1);
 	t2.first->delta += tic;
 	track_clearall(&t->track);
 	track_merge(&t->track, &t1);
@@ -271,14 +265,12 @@ user_func_trackcut(struct exec *o, struct data **r) {
 	return 1;
 }
 
-
 unsigned
 user_func_trackblank(struct exec *o, struct data **r) {
 	struct songtrk *t;
 	struct evspec es;
 	long from, amount, quant;
 	unsigned tic, len;
-/*	struct track t1, t2;*/
 	
 	if (!exec_lookuptrack(o, "trackname", &t) ||
 	    !exec_lookuplong(o, "from", &from) ||
@@ -298,15 +290,9 @@ user_func_trackblank(struct exec *o, struct data **r) {
 	if (tic > (unsigned)quant/2) {
 		tic -= quant/2;
 	}
-#if 0
 	track_move(&t->track, tic, len, &es, NULL, 0, 1);
-#else
-	track_blank(&t->track, tic, len, &es);
-#endif
-	
 	return 1;
 }
-
 
 unsigned
 user_func_trackcopy(struct exec *o, struct data **r) {
@@ -339,13 +325,12 @@ user_func_trackcopy(struct exec *o, struct data **r) {
 	}
 
 	track_init(&copy);
-	track_copy(&t->track, tic, len, &es, &copy);
+	track_move(&t->track, tic, len, &es, &copy, 1, 0);
 	copy.first->delta += tic2;
 	track_merge(&t2->track, &copy);
 	track_done(&copy);
 	return 1;
 }
-
 
 unsigned
 user_func_trackinsert(struct exec *o, struct data **r) {
@@ -382,8 +367,8 @@ user_func_trackinsert(struct exec *o, struct data **r) {
 	evspec_reset(&es);
 	track_init(&t1);
 	track_init(&t2);
-	track_copy(&t->track, 0,   tic, &es, &t1);
-	track_copy(&t->track, tic, ~0U, &es, &t2);
+	track_move(&t->track, 0,   tic, &es, &t1, 1, 1);
+	track_move(&t->track, tic, ~0U, &es, &t2, 1, 1);
 	t2.first->delta += tic + len;
 	track_clearall(&t->track);
 	track_merge(&t->track, &t1);
@@ -404,7 +389,6 @@ user_func_trackmerge(struct exec *o, struct data **r) {
 	track_merge(&src->track, &dst->track);
 	return 1;
 }
-
 
 unsigned
 user_func_trackquant(struct exec *o, struct data **r) {
@@ -473,12 +457,13 @@ user_func_tracktransp(struct exec *o, struct data **r) {
 	}
 
 	if (tic > (unsigned)quant/2) {
-		tic -= quant/2;
-	} /* XXX: should add .. else { len -= quant / 2; }... */	
+		tic -= quant / 2;
+	} else {
+		len -= quant / 2;
+	}
 	track_transpose(&t->track, tic, len, halftones);
 	return 1;
 }
-
 
 unsigned
 user_func_tracksetmute(struct exec *o, struct data **r) {
@@ -532,7 +517,6 @@ user_func_trackchanlist(struct exec *o, struct data **r) {
 	}
 	return 1;
 }
-
 
 unsigned
 user_func_trackinfo(struct exec *o, struct data **r) {

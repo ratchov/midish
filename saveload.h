@@ -52,7 +52,6 @@ void songfilt_output(struct songfilt *o, struct textout *f);
 void songsx_output(struct songsx *o, struct textout *f);
 void song_output(struct song *o, struct textout *f);
 
-
 void track_save(struct track *o, char *name);
 unsigned track_load(struct track *o, char *name);
 

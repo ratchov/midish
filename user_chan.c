@@ -31,6 +31,8 @@
 /*
  * implements chanxxx built-in functions
  * available through the interpreter
+ *
+ * each function is described in the manual.html file
  */
 
 #include "dbg.h"
@@ -137,7 +139,6 @@ user_func_chanexists(struct exec *o, struct data **r) {
 	*r = data_newlong(i != NULL ? 1 : 0);
 	return 1;
 }
-
 
 unsigned
 user_func_chanset(struct exec *o, struct data **r) {

@@ -52,11 +52,11 @@
 #include "sysex.h"
 #include "timo.h"
 
-	/* 
-	 * MUX_START_DELAY: 
-	 * delay between the START event and the first TIC
-	 * in 24ths of a micro second, here we use 1 tic at 30bpm
-	 */
+/* 
+ * MUX_START_DELAY: 
+ * delay between the START event and the first TIC
+ * in 24ths of a micro second, here we use 1 tic at 30bpm
+ */
 #define MUX_START_DELAY	  (2000000UL)	
 
 unsigned mux_ticrate;
@@ -161,12 +161,11 @@ mux_chgphase(unsigned phase) {
 	mux_phase = phase;
 }
 
-	/*
-	 * Send a TIC to all devices that transmit
-	 * real-time events. The tic is only send if
-	 * the device tic_per_unit permits it.
-	 */
-
+/*
+ * Send a TIC to all devices that transmit
+ * real-time events. The tic is only send if
+ * the device tic_per_unit permits it.
+ */
 void
 mux_sendtic(void) {
 	struct ev ev;
@@ -184,11 +183,9 @@ mux_sendtic(void) {
 	}
 }
 
-	/*
-	 * Similar to sendtic, but sends a START event
-	 */
-
-
+/*
+ * Similar to sendtic, but sends a START event
+ */
 void
 mux_sendstart(void) {
 	struct ev tic, start;
@@ -209,10 +206,9 @@ mux_sendstart(void) {
 	}
 }
 
-	/*
-	 * similar to sendtic, but sends a STOP event
-	 */
-
+/*
+ * similar to sendtic, but sends a STOP event
+ */
 void
 mux_sendstop(void) {
 	struct ev ev;
@@ -404,15 +400,14 @@ mux_evcb(unsigned unit, struct ev *ev) {
 	}
 }
 
-	/*
-	 * called if an error is detected.
-	 * currently we send an all note off and all ctls reset
-	 *
-	 * XXX: these controllers should be handled by the filter
-	 *	they should shutdown recorded states following filtering
-	 *	rules.
-	 */
-
+/*
+ * called if an error is detected.
+ * currently we send an all note off and all ctls reset
+ *
+ * XXX: these controllers should be handled by the filter
+ *	they should shutdown recorded states following filtering
+ *	rules.
+ */
 void
 mux_errorcb(unsigned unit) {
 	unsigned i;
@@ -460,10 +455,9 @@ mux_run(void) {
 }
 
 
-	/*
-	 * called when an sysex has been received
-	 */
-
+/*
+ * called when an sysex has been received
+ */
 void
 mux_sysexcb(unsigned unit, struct sysex *sysex) {
 	struct ev ev;

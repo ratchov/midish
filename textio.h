@@ -37,21 +37,19 @@ struct textin;
 struct textout;
 
 struct textin *textin_new(char *filename);
-void		 textin_delete(struct textin *o);
-unsigned	 textin_getchar(struct textin *o, int *c);
-void		 textin_getpos(struct textin *o, unsigned *line, unsigned *col);
-void		 textin_setprompt(struct textin *o, char *prompt);
+void textin_delete(struct textin *o);
+unsigned textin_getchar(struct textin *o, int *c);
+void textin_getpos(struct textin *o, unsigned *line, unsigned *col);
+void textin_setprompt(struct textin *o, char *prompt);
 
 struct textout *textout_new(char *filename);
-void		  textout_delete(struct textout *o);
-
-void		  textout_indent(struct textout *o);
-void		  textout_shiftleft(struct textout *o);
-void		  textout_shiftright(struct textout *o);
-
-void		  textout_putstr(struct textout *o, char *str);
-void		  textout_putlong(struct textout *o, unsigned long val);
-void		  textout_putbyte(struct textout *o, unsigned val);
+void textout_delete(struct textout *o);
+void textout_indent(struct textout *o);
+void textout_shiftleft(struct textout *o);
+void textout_shiftright(struct textout *o);
+void textout_putstr(struct textout *o, char *str);
+void textout_putlong(struct textout *o, unsigned long val);
+void textout_putbyte(struct textout *o, unsigned val);
 
 /* ------------------------------------------------- stdin/stdout --- */
 

@@ -39,15 +39,16 @@
 
 struct ev;
 
-struct	rmidi {
+struct rmidi {
 	struct mididev    mididev;		/* generic mididev */
 	struct rmidi_mdep mdep;			/* os-specific stuff */
-	unsigned	    istatus;		/* input stuff */
-	unsigned 	    icount;
-	unsigned char	    idata[2];
-	unsigned 	    oused, ostatus;	/* output stuff */
-	unsigned char	    obuf[RMIDI_BUFLEN];
-	struct sysex	   *isysex;
+	unsigned	  istatus;		/* input running status */
+	unsigned 	  icount;		/* bytes in idata[] */
+	unsigned char	  idata[2];		/* current event's data */
+	unsigned 	  oused;		/* bytes in obuf */
+	unsigned	  ostatus;		/* output running status */
+	unsigned char	  obuf[RMIDI_BUFLEN];
+	struct sysex	 *isysex;
 };
 
 #define RMIDI(o) ((struct rmidi *)(o))

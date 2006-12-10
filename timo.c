@@ -42,7 +42,6 @@
 unsigned timo_debug = 0;
 struct timo *timo_queue;
 
-
 /*
  * initialise a timeout structure, arguments are 
  * callback and argument that will be passed to the callback
@@ -107,12 +106,16 @@ timo_update(unsigned delta) {
 			*i = to->next;
 			to->cb(to->arg);
 		} else {
-			/*dbg_puts("timo_update: val: ");
-			dbg_putu(to->val);*/
-			to->val -= delta;
-			/*dbg_puts(" -> ");
+#ifdef TIMO_DEBUG
+			dbg_puts("timo_update: val: ");
 			dbg_putu(to->val);
-			dbg_puts("\n");*/
+#endif
+			to->val -= delta;
+#ifdef TIMO_DEBUG
+			dbg_puts(" -> ");
+			dbg_putu(to->val);
+			dbg_puts("\n");
+#endif
 			i = &(*i)->next;
 		}
 	}

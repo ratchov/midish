@@ -234,12 +234,11 @@ mux_mdep_run(void) {
 	}
 }
 
-	/* 
-	 * sleeps for 'millisecs' milliseconds
-	 * useful when sending system exclusive messages
-	 * IMPORTANT : must never be called inside mux_run 
-	 */
-
+/* 
+ * sleeps for 'millisecs' milliseconds
+ * useful when sending system exclusive messages
+ * IMPORTANT : must never be called inside mux_run 
+ */
 void 
 mux_sleep(unsigned millisecs) {
 	while (poll(NULL, (nfds_t)0, millisecs) < 0) {

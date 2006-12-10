@@ -28,9 +28,15 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * a pool is a large memory block (the pool) that is split into
+ * small blocks of equal size (pools entries). Its used for
+ * fast allocation of pool entries. Free enties are on a singly
+ * linked list
+ */
+
 #include "dbg.h"
 #include "pool.h"
-
 
 /*
  * initialises a pool of "itemnum" elements of size "itemsize"
@@ -40,10 +46,11 @@ pool_init(struct pool *o, char *name, unsigned itemsize, unsigned itemnum) {
 	unsigned i;
 	unsigned char *p;
 	
-	/* round item size */
-	
-	if (itemsize < sizeof(struct poolentry)) {
-		itemsize = sizeof(struct poolentry);
+	/* 
+	 * round item size to sizeof unsigned 
+	 */	
+	if (itemsize < sizeof(struct poolent)) {
+		itemsize = sizeof(struct poolent);
 	}
 	itemsize += sizeof(unsigned) - 1;
 	itemsize &= ~(sizeof(unsigned) - 1);
@@ -66,13 +73,17 @@ pool_init(struct pool *o, char *name, unsigned itemsize, unsigned itemnum) {
 	dbg_puts("pool_init(");
 	dbg_puts(o->name);
 	dbg_puts("): using ");
-	dbg_putu((1023 + o->itemnum * o->itemsize)/1024);
-	dbg_puts(" Kbytes\n");	
+	dbg_putu((1023 + o->itemnum * o->itemsize) / 1024);
+	dbg_puts("Kb\n");	
 #endif	
+
+	/*
+	 * create a linked list of all entries
+	 */
 	p = o->data;
 	for (i = itemnum; i != 0; i--) {
-		((struct poolentry *)p)->next = o->first;
-		o->first = (struct poolentry *)p;
+		((struct poolent *)p)->next = o->first;
+		o->first = (struct poolent *)p;
 		p += itemsize;
 		o->itemnum++;		
 	}
@@ -80,7 +91,7 @@ pool_init(struct pool *o, char *name, unsigned itemsize, unsigned itemnum) {
 
 
 /*
- * frees a pool
+ * free the given pool
  */
 void
 pool_done(struct pool *o) {
@@ -89,9 +100,9 @@ pool_done(struct pool *o) {
 	if (o->used != 0) {
 		dbg_puts("pool_done(");
 		dbg_puts(o->name);
-		dbg_puts("): warning ");
+		dbg_puts("): WARNING ");
 		dbg_putu(o->used);
-		dbg_puts(" items stil allocated\n");
+		dbg_puts(" items still allocated\n");
 	}
 
 	dbg_puts("pool_done(");
@@ -105,11 +116,12 @@ pool_done(struct pool *o) {
 }
 
 /*
- * allocate a item in the pool
+ * allocate an entry from the pool: just unlink
+ * it from the free list and return the pointer
  */
 void *
 pool_new(struct pool *o) {	
-	struct poolentry *e;
+	struct poolent *e;
 	
 	if (!o->first) {
 		dbg_puts("pool_new(");
@@ -118,6 +130,9 @@ pool_new(struct pool *o) {
 		dbg_panic();
 	}
 	
+	/*
+	 * unlink from the free list
+	 */
 	e = o->first;
 	o->first = e->next;
 
@@ -131,15 +146,19 @@ pool_new(struct pool *o) {
 }
 
 /*
- * free a item to the pool
+ * free an entry: just link it again on the free list
  */
 void
 pool_del(struct pool *o, void *p) {
-	struct poolentry *e = (struct poolentry *)p;
+	struct poolent *e = (struct poolent *)p;
 #ifdef	POOL_DEBUG
 	unsigned i, n;
 	unsigned *buf;
 
+	/*
+	 * check if we aren't trying to free more
+	 * entries than the poll size
+	 */
 	if (o->used == 0) {
 		dbg_puts("pool_del(");
 		dbg_puts(o->name);
@@ -148,11 +167,18 @@ pool_del(struct pool *o, void *p) {
 	}
 	o->used--;
 
+	/*
+	 * overwrite the entry with garbage so any attempt to use a
+	 * free entry will probably segfault
+	 */
 	buf = (unsigned *)e; 
 	n = o->itemsize / sizeof(unsigned);
 	for (i = 0; i < n; i++)
 		*(buf++) = mem_rnd();
 #endif
+	/*
+	 * link on the free list
+	 */
 	e->next = o->first;
 	o->first = e;
 }

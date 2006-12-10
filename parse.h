@@ -41,25 +41,25 @@ struct parse {
 };
 
 struct parse *parse_new(char *);
-void		parse_delete(struct parse *);
+void	      parse_delete(struct parse *);
 
-void		parse_error(struct parse *, char *);
+void	      parse_error(struct parse *, char *);
 
-unsigned	parse_getsym(struct parse *);
-void		parse_ungetsym(struct parse *);
+unsigned      parse_getsym(struct parse *);
+void	      parse_ungetsym(struct parse *);
 
-unsigned	parse_end(struct parse *, struct node **);
-unsigned	parse_call(struct parse *, struct node **);
-unsigned	parse_expr(struct parse *, struct node **);
-unsigned	parse_addsub(struct parse *, struct node **);
-unsigned	parse_muldiv(struct parse *, struct node **);
-unsigned	parse_neg(struct parse *, struct node **);
-unsigned	parse_const(struct parse *, struct node **);
-unsigned	parse_assign(struct parse *, struct node **);
-unsigned	parse_stmt(struct parse *, struct node **);
-unsigned	parse_slist(struct parse *, struct node **);
-unsigned	parse_proc(struct parse *, struct node **);
-unsigned	parse_line(struct parse *o, struct node **n);
-unsigned	parse_prog(struct parse *o, struct node **n);
+unsigned      parse_end(struct parse *, struct node **);
+unsigned      parse_call(struct parse *, struct node **);
+unsigned      parse_expr(struct parse *, struct node **);
+unsigned      parse_addsub(struct parse *, struct node **);
+unsigned      parse_muldiv(struct parse *, struct node **);
+unsigned      parse_neg(struct parse *, struct node **);
+unsigned      parse_const(struct parse *, struct node **);
+unsigned      parse_assign(struct parse *, struct node **);
+unsigned      parse_stmt(struct parse *, struct node **);
+unsigned      parse_slist(struct parse *, struct node **);
+unsigned      parse_proc(struct parse *, struct node **);
+unsigned      parse_line(struct parse *o, struct node **n);
+unsigned      parse_prog(struct parse *o, struct node **n);
 
 #endif /* MIDISH_PARSE_H */

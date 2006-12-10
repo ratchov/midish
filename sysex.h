@@ -48,23 +48,23 @@ struct sysexlist {
 	struct sysex *first, **lastptr;
 };
 
-void 		chunk_pool_init(unsigned size);
-void 		chunk_pool_done(void);
+void 	      chunk_pool_init(unsigned size);
+void 	      chunk_pool_done(void);
 struct chunk *chunk_new(void);
-void		chunk_del(struct chunk *o);
+void	      chunk_del(struct chunk *o);
 
-void		sysex_pool_init(unsigned size);
-void		sysex_pool_done(void);
+void	      sysex_pool_init(unsigned size);
+void	      sysex_pool_done(void);
 struct sysex *sysex_new(unsigned unit);
-void		sysex_del(struct sysex *o);
-void		sysex_add(struct sysex *o, unsigned data);
-void		sysex_dbg(struct sysex *o);
-unsigned	sysex_check(struct sysex *o);
+void	      sysex_del(struct sysex *o);
+void	      sysex_add(struct sysex *o, unsigned data);
+void	      sysex_dbg(struct sysex *o);
+unsigned      sysex_check(struct sysex *o);
 
-void 		sysexlist_init(struct sysexlist *o);
-void		sysexlist_done(struct sysexlist *o);
-void		sysexlist_put(struct sysexlist *o, struct sysex *e);
+void 	      sysexlist_init(struct sysexlist *o);
+void	      sysexlist_done(struct sysexlist *o);
+void	      sysexlist_put(struct sysexlist *o, struct sysex *e);
 struct sysex *sysexlist_get(struct sysexlist *o);
-void		sysexlist_dbg(struct sysexlist *o);
+void	      sysexlist_dbg(struct sysexlist *o);
 
 #endif /* MIDISH_SYSEX_H */

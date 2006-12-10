@@ -55,16 +55,16 @@ unsigned     node_exec(struct node *, struct exec *, struct data **);
 
 
 extern struct node_vmt 
-node_vmt_proc, node_vmt_alist, node_vmt_slist,
-node_vmt_call, node_vmt_elist, node_vmt_builtin,
-node_vmt_cst, node_vmt_var, node_vmt_list,
-node_vmt_eq, node_vmt_neq, node_vmt_le, node_vmt_lt, node_vmt_ge, node_vmt_gt,
-node_vmt_ignore, node_vmt_if, node_vmt_for, 
-node_vmt_return, node_vmt_exit, node_vmt_assign, node_vmt_nop,
-node_vmt_and, node_vmt_or, node_vmt_not, 
-node_vmt_neg, node_vmt_add, node_vmt_sub, 
-node_vmt_mul, node_vmt_div, node_vmt_mod,
-node_vmt_lshift, node_vmt_rshift, 
-node_vmt_bitand, node_vmt_bitor, node_vmt_bitxor, node_vmt_bitnot;
+	node_vmt_proc, node_vmt_alist, node_vmt_slist,
+	node_vmt_call, node_vmt_elist, node_vmt_builtin,
+	node_vmt_cst, node_vmt_var, node_vmt_list,
+	node_vmt_eq, node_vmt_neq, node_vmt_le, node_vmt_lt, node_vmt_ge, node_vmt_gt,
+	node_vmt_ignore, node_vmt_if, node_vmt_for, 
+	node_vmt_return, node_vmt_exit, node_vmt_assign, node_vmt_nop,
+	node_vmt_and, node_vmt_or, node_vmt_not, 
+	node_vmt_neg, node_vmt_add, node_vmt_sub, 
+	node_vmt_mul, node_vmt_div, node_vmt_mod,
+	node_vmt_lshift, node_vmt_rshift, 
+	node_vmt_bitand, node_vmt_bitor, node_vmt_bitxor, node_vmt_bitnot;
 
 #endif /* MIDISH_NODE_H */

@@ -28,14 +28,28 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * system exclusive (sysex) message management.
+ *
+ * A sysex message is a long byte string whose size is not know in
+ * advance. So we preallocate a large pool of 256 byte chunks and we
+ * represent a sysex message as a list of chunks. Since there may be
+ * several sysex messages we use a pool for the sysex messages
+ * themselves.
+ *
+ * the song contains a list of sysex message, so we group them in a
+ * list.
+ */
+
 #include "dbg.h"
 #include "sysex.h"
 #include "default.h"
 #include "pool.h"
 
-/* --------------------------------------------- sysex management --- */
+/* ------------------------------------------ sysex pool routines --- */
 
 struct pool chunk_pool;
+struct pool sysex_pool;
 
 void
 chunk_pool_init(unsigned size) {
@@ -46,7 +60,6 @@ void
 chunk_pool_done(void) {
 	pool_done(&chunk_pool);
 }
-
 
 struct chunk *
 chunk_new(void) {
@@ -62,9 +75,6 @@ chunk_del(struct chunk *o) {
 	pool_del(&chunk_pool, o);
 }
 
-
-struct pool sysex_pool;
-
 void
 sysex_pool_init(unsigned size) {
 	pool_init(&sysex_pool, "sysex", sizeof(struct sysex), size);
@@ -75,6 +85,11 @@ sysex_pool_done(void) {
 	pool_done(&sysex_pool);
 }
 
+/* --------------------------------------------- sysex management --- */
+
+/*
+ * create an empty sysex message
+ */
 struct sysex *
 sysex_new(unsigned unit) {
 	struct sysex *o;
@@ -85,6 +100,10 @@ sysex_new(unsigned unit) {
 	return o;
 }
 
+/*
+ * free all chunks of a sysex message, and the message
+ * itself
+ */
 void
 sysex_del(struct sysex *o) {
 	struct chunk *i, *inext;
@@ -95,7 +114,9 @@ sysex_del(struct sysex *o) {
 	pool_del(&sysex_pool, o);
 }
 
-
+/*
+ * add a byte to the message
+ */
 void
 sysex_add(struct sysex *o, unsigned data) {
 	struct chunk *ck;
@@ -112,6 +133,9 @@ sysex_add(struct sysex *o, unsigned data) {
 	ck->data[ck->used++] = data;
 }
 
+/*
+ * dump the sysex message on stderr
+ */
 void
 sysex_dbg(struct sysex *o) {
 	struct chunk *ck;
@@ -128,6 +152,10 @@ sysex_dbg(struct sysex *o) {
 	dbg_puts("}");
 }
 
+/*
+ * check that the sysex message (1) starts with 0xf0, (2) ends
+ * with 0xf7 and (3) doesn't contain any status bytes.
+ */
 unsigned
 sysex_check(struct sysex *o) {
 	unsigned status, data;	
@@ -164,15 +192,18 @@ sysex_check(struct sysex *o) {
 	return 1;
 }
 
-
-
-
+/*
+ * initialise a list of sysex messages
+ */
 void
 sysexlist_init(struct sysexlist *o) {
 	o->first = NULL;
 	o->lastptr = &o->first;
 }
 
+/*
+ * destroy the list
+ */
 void
 sysexlist_done(struct sysexlist *o) {
 	struct sysex *i, *inext;
@@ -185,6 +216,9 @@ sysexlist_done(struct sysexlist *o) {
 	o->lastptr = &o->first;
 }
 
+/*
+ * put a sysex message at the end of the list
+ */
 void
 sysexlist_put(struct sysexlist *o, struct sysex *e) {
 	e->next = NULL;
@@ -192,6 +226,9 @@ sysexlist_put(struct sysexlist *o, struct sysex *e) {
 	o->lastptr = &e->next;
 }
 
+/*
+ * detach the first sysex message on the list
+ */
 struct sysex *
 sysexlist_get(struct sysexlist *o) {
 	struct sysex *e;
@@ -206,6 +243,9 @@ sysexlist_get(struct sysexlist *o) {
 	return 0;		
 }
 
+/*
+ * dump a sysex list on stderr
+ */
 void
 sysexlist_dbg(struct sysexlist *o) {
 	struct sysex *e;

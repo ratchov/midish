@@ -75,6 +75,12 @@
 #define EV_BEND_DEFAULTHI	0x40
 #define EV_CAT_DEFAULT		0
 
+/*
+ * an event: structure used to store MIDI events and some
+ * midish-sepcific events (tempo changes, etc...). This structure have
+ * to be kept as small as possiblea, because its used to store events
+ * on tracks, that may contain a lot of events
+ */
 struct ev {
 	unsigned cmd;
 	union {
@@ -103,8 +109,8 @@ struct ev {
 #define EV_PHASE_LAST		4
 
 /* 
- * event priority: some events have to be played before others
- * (ex: bank changes are before program changes)
+ * event priority: some events have to be played before other, ex:
+ * bank changes are played before program changes
  */
 #define EV_PRIO_ANY	0
 #define EV_PRIO_PC	1
@@ -112,14 +118,17 @@ struct ev {
 #define EV_PRIO_RT	3
 #define EV_PRIO_MAX	4
 
+
+/*
+ * defines a range of events
+ */
+struct evspec {
 #define EVSPEC_ANY		0
 #define EVSPEC_NOTE		1
 #define EVSPEC_CTL		2
 #define EVSPEC_PC		3
 #define EVSPEC_CAT		4
 #define EVSPEC_BEND		5
-
-struct evspec {
 	unsigned cmd;
 	unsigned dev_min, dev_max;
 	unsigned ch_min, ch_max;

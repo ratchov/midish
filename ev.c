@@ -75,11 +75,10 @@ ev_str2cmd(struct ev *ev, char *str) {
 	return 0;
 }
 
-	/*
-	 * return 1 if the pair of events identical
-	 * 0 otherwise
-	 */
-
+/*
+ * return 1 if the pair of events identical
+ * 0 otherwise
+ */
 unsigned
 ev_eq(struct ev *ev1, struct ev *ev2) {
 	if (ev1->cmd != ev2->cmd) {
@@ -110,11 +109,10 @@ ev_eq(struct ev *ev1, struct ev *ev2) {
 }
 
 
-	/*
-	 * return 1 if the pair of events are of the same
-	 * type (same note or same controller or both are tempos etc...)
-	 */
-
+/*
+ * return 1 if the pair of events are of the same
+ * type (same note or same controller or both are tempos etc...)
+ */
 unsigned
 ev_sameclass(struct ev *ev1, struct ev *ev2) {
 	switch (ev1->cmd) {
@@ -160,11 +158,10 @@ ev_sameclass(struct ev *ev1, struct ev *ev2) {
 }
 
 
-	/*
-	 * return 1 if the first event has higher "priority"
-	 * than the socond one.
-	 */
-
+/*
+ * return 1 if the first event has higher "priority"
+ * than the socond one.
+ */
 unsigned
 ev_ordered(struct ev *ev1, struct ev *ev2) {
 	if (!EV_ISVOICE(ev1) || !EV_ISVOICE(ev2)) {
@@ -534,10 +531,9 @@ ch:	if (e->data.voice.dev < o->dev_min ||
 	return 1;
 }
 
-	/*
-	 * configure a controller (set the typ, name, etc...)
-	 */
-
+/*
+ * configure a controller (set the typ, name, etc...)
+ */
 void
 evctl_conf(unsigned i, unsigned type, unsigned defval, char *name) {
 	struct evctl *o = &evctl_tab[i];
@@ -549,11 +545,10 @@ evctl_conf(unsigned i, unsigned type, unsigned defval, char *name) {
 	o->defval = defval;
 }
 
-	/*
-	 * unconfigure a controller (clear its name, set
-	 * its type to "unknown")
-	 */
-
+/*
+ * unconfigure a controller (clear its name, set
+ * its type to "unknown")
+ */
 void
 evctl_unconf(unsigned i) {
 	struct evctl *o = &evctl_tab[i];
@@ -565,11 +560,10 @@ evctl_unconf(unsigned i) {
 	o->defval = 0;
 }
 
-	/*
-	 * find the controller number corresponding the given
-	 * controller name. Return 1 if found, 0 if not
-	 */
-	
+/*
+ * find the controller number corresponding the given
+ * controller name. Return 1 if found, 0 if not
+ */
 unsigned
 evctl_lookup(char *name, unsigned *ret) {
 	unsigned i;
@@ -585,10 +579,9 @@ evctl_lookup(char *name, unsigned *ret) {
 	return 0;
 }
 
-	/*
-	 * initialise the controller table
-	 */
-
+/*
+ * initialise the controller table
+ */
 void
 evctl_init(void) {
 	unsigned i;
@@ -606,10 +599,9 @@ evctl_init(void) {
 	evctl_tab[64].defval = 0;
 }
 
-	/*
-	 * free the controller table 
-	 */
-
+/*
+ * free the controller table 
+ */
 void
 evctl_done(void) {
 	unsigned i;

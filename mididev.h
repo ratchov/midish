@@ -37,8 +37,12 @@
  */
 #define MIDIDEV_OSENSTO		(250 * 24 * 1000)
 #define MIDIDEV_ISENSTO		(350 * 24 * 1000)
-#define MIDIDEV_MODE_IN		1
-#define MIDIDEV_MODE_OUT	2
+
+/*
+ * modes for devices
+ */
+#define MIDIDEV_MODE_IN		1	/* can input */
+#define MIDIDEV_MODE_OUT	2	/* can output */
 
 struct mididev {
 	struct mididev *next;

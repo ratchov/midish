@@ -570,232 +570,17 @@ track_merge(struct track *dst, struct track *src) {
 }
 
 /*
- * copy a portion of the given track. The copy is consistent, no
- * frames are copied from the midle: notes are always completely copied,
- * and controllers (and other) are restored
- */
-void
-track_copy(struct track *src, unsigned start, unsigned len, 
-    struct evspec *es, struct track *dst) {
-	unsigned delta, amount;
-	struct seqptr sp, dp;
-	struct state *st;
-	struct ev ev;
-
-	track_clearall(dst);
-	if (len == 0)
-		return;
-	seqptr_init(&sp, src);
-	seqptr_init(&dp, dst);
-
-	/*
-	 * stage 1: go the the start position and tag all frames as
-	 * not being copied
-	 */
-	(void)seqptr_skip(&sp, start);
-	for (st = sp.statelist.first; st != NULL; st = st->next) {
-		st->tag = 0;
-	}
-
-	/*
-	 * stage 2: move the first tic accepting new frames; this
-	 * is the last chance for old frames to terminate and to avoid
-	 * to be restored.
-	 */
-	while (seqptr_evavail(&sp)) {
-		st = seqptr_evget(&sp);
-		if ((st->phase & EV_PHASE_FIRST) ||
-		    (st->phase & EV_PHASE_NEXT && !EV_ISNOTE(&st->ev))) {
-			st->tag = evspec_matchev(es, &st->ev) ? 1 : 0;
-		}
-		if (st->tag) {
-			seqptr_evput(&dp, &st->ev);
-		}
-	}
-	
-	/*
-	 * stage 3: restore all states that weren't updated by the
-	 * first tic.
-	 */
-	for (st = sp.statelist.first; st != NULL; st = st->next) {
-		if (EV_ISNOTE(&st->ev) || !evspec_matchev(es, &st->ev))
-			continue;
-		if (!st->tag && !(st->phase & EV_PHASE_LAST)) {
-			if (ev_restore(&st->ev, &ev)) {
-       				seqptr_evput(&dp, &ev);
-				st->tag = 1;
-			}
-		}
-	}
-
-	/*
-	 * stage 4: go ahead and copy all frames during 'len' tics
-	 */
-	amount = 0;
-	for (;;) {
-		delta = seqptr_ticskip(&sp, len);
-		amount += delta;
-		len -= delta;
-		if (len == 0)
-			break;		
-		st = seqptr_evget(&sp);
-		if (st == NULL)
-			break;
-		if (st->phase & EV_PHASE_FIRST)
-			st->tag = evspec_matchev(es, &st->ev) ? 1 : 0;
-		if (st->tag) {
-			seqptr_seek(&dp, amount);
-			seqptr_evput(&dp, &st->ev);
-			amount = 0;
-		}
-	}
-	
-
-	/*
-	 * cancel/untag tagged frame
-	 */
-	for (st = sp.statelist.first; st != NULL; st = st->next) {
-		if (st->tag && 
-		    !EV_ISNOTE(&st->ev) && 
-		    !(st->phase & EV_PHASE_LAST)) {
-			if (ev_cancel(&st->ev, &ev)) { 
-				seqptr_seek(&dp, amount);
-				seqptr_evput(&dp, &ev);
-				amount = 0;
-				st->tag = 0;
-			}
-		}
-	}
-
-	/*
-	 * finish copying tagged frames
-	 */
-	for (;;) {
-		delta = seqptr_ticskip(&sp, ~0U);
-		amount += delta;
-		st = seqptr_evget(&sp);
-		if (st == NULL)
-			break;
-		if (st->phase & EV_PHASE_FIRST)
-			st->tag = 0;
-		if (st->tag) {
-			seqptr_seek(&dp, amount);
-			seqptr_evput(&dp, &st->ev);
-			amount = 0;
-		}
-	}
-}
-
-
-/*
- * blank a portion of the given track. The copy is consistent, no
- * frames are copied from the midle: notes are always completely copied,
- * and controllers (and other) are restored
- */
-void
-track_blank(struct track *src, unsigned start, unsigned len, struct evspec *es) {
-	struct seqptr sp;
-	struct statelist slist;
-	struct state *st;
-	struct ev ev;
-
-	if (len == 0)
-		return;
-	seqptr_init(&sp, src);
-
-	/*
-	 * go the the start position and tag all frames
-	 */
-	(void)seqptr_skip(&sp, start);
-	statelist_dup(&slist, &sp.statelist);
-	for (st = slist.first; st != NULL; st = st->next) {
-		st->tag = 1;
-	}
-
-	/*
-	 * cancel and tag frames that will be erased
-	 */
-	for (st = slist.first; st != NULL; st = st->next) {
-		if (!EV_ISNOTE(&st->ev) && !(st->phase & EV_PHASE_LAST)) {
-			if (evspec_matchev(es, &st->ev) &&
-			    ev_cancel(&st->ev, &ev)) {
-				seqptr_evput(&sp, &ev);
-				st->tag = 0;
-			}
-		}
-	}
-
-	/*
-	 * erase events during 'len' tics
-	 */
-	for (;;) {
-		len -= seqptr_ticskip(&sp, len);
-		if (len == 0)
-			break;
-		st = seqptr_evdel(&sp, &slist);
-		if (st == NULL)
-			break;
-		if (st->phase & EV_PHASE_FIRST) 
-			st->tag = evspec_matchev(es, &st->ev) ? 0 : 1;
-		if (st->tag)
-			seqptr_evput(&sp, &st->ev);
-	}
-	
-	/*
-	 * move the first tic of the 'end' boundary (new frames are
-	 * tagged) this is the last chance for current frames to
-	 * terminate and to avoid to be restored
-	 */
-	while (seqptr_evavail(&sp)) {
-		st = seqptr_evdel(&sp, &slist);
-		if ((st->phase & EV_PHASE_FIRST) ||
-		    (st->phase & EV_PHASE_NEXT && !EV_ISNOTE(&st->ev))) {
-			st->tag = 1;
-		}
-		if (st->tag) {
-			seqptr_evput(&sp, &st->ev);
-		}
-	}
-
-	/*
-	 * retore/tag frames that are not tagged.
-	 */
-	for (st = slist.first; st != NULL; st = st->next) {
-		if (EV_ISNOTE(&st->ev))
-			continue;
-		if (!st->tag && !(st->phase & EV_PHASE_LAST)) {
-			if (ev_restore(&st->ev, &ev)) { 
-				seqptr_evput(&sp, &ev);
-				st->tag = 1;
-			}
-		}
-	}
-
-	/*
-	 * finish moving tagged frames
-	 */
-	for (;;) {
-		(void)seqptr_ticskip(&sp, ~0U);
-		st = seqptr_evdel(&sp, &slist);
-		if (st == NULL)
-			break;
-		if (st->phase & EV_PHASE_FIRST)
-			st->tag = 1;
-		if (st->tag)
-			seqptr_evput(&sp, &st->ev);
-	}
-}
-
-
-/*
  * move/copy/blank a portion of the given track. All operations are
- * consistent, no frames are trashed: notes are always completely
- * copied/moved/erased but and controllers (and other) are cut if
- * necessary
+ * consistent: notes are always completely copied/moved/erased and
+ * controllers (and other) are cut when necessary
+ *
+ * if the 'copy' flag is set, then the selection is copied in 
+ * track 'dst'. If 'blank' flag is set, then the selection is
+ * cleanly removed from the 'src' track
  */
 void
 track_move(struct track *src, unsigned start, unsigned len, 
-    struct evspec *evspec, struct track *dst, unsigned copy, unsigned blank) {
+    struct evspec *es, struct track *dst, unsigned copy, unsigned blank) {
 	unsigned delta, amount;
 	struct seqptr sp, dp;		/* current src & dst track states */
 	struct statelist slist;		/* original src track state */
@@ -803,7 +588,7 @@ track_move(struct track *src, unsigned start, unsigned len,
 	struct ev ev;
 
 #define TAG_KEEP	1		/* frame is not erased */
-#define TAG_COPY	2		/* frame is copyed */
+#define TAG_COPY	2		/* frame is copied */
 
 	if (len == 0)
 		return;
@@ -814,8 +599,8 @@ track_move(struct track *src, unsigned start, unsigned len,
 	seqptr_init(&sp, src);
 	
 	/*
-	 * go the the start position and tag all frames as
-	 * not copyed and not to be erased
+	 * go to the start position and tag all frames as
+	 * not being copied and not being erased
 	 */
 	(void)seqptr_skip(&sp, start);
 	statelist_dup(&slist, &sp.statelist);
@@ -824,35 +609,36 @@ track_move(struct track *src, unsigned start, unsigned len,
 	}
 	
 	/*
-	 * cancel all states that will be erased from the selection
-	 * (blank only)
+	 * cancel/tag frames that will be erased (blank only)
 	 */
 	for (st = slist.first; st != NULL; st = st->next) {
-		if (EV_ISNOTE(&st->ev))
-			continue;
-		if (!(st->phase & EV_PHASE_LAST)) {
-			if (ev_cancel(&st->ev, &ev)) {
+		if (!EV_ISNOTE(&st->ev) && !(st->phase & EV_PHASE_LAST)) {
+			if (evspec_matchev(es, &st->ev) && 
+			    ev_cancel(&st->ev, &ev)) {
 				if (blank)
 					seqptr_evput(&sp, &ev);
 				st->tag &= ~TAG_KEEP;
 			}
 		}
 	}
-		
+
 	/*
-	 * copy the first tic. Accept new frames: this is the last
-	 * chance for open frames to terminate and to avoid to be
-	 * restored in the copy
+	 * copy the first tic: tag/copy/erase new frames. This is the
+	 * last chance for already tagged frames to terminate and to
+	 * avoid being restored in the copy
 	 *
-	 * blank: just move the tic
 	 */
 	while (seqptr_evavail(&sp)) {
 		st = seqptr_evdel(&sp, &slist);
-		if ((EV_ISNOTE(&st->ev) && (st->phase & EV_PHASE_FIRST)) ||
-		    (!EV_ISNOTE(&st->ev) && (st->phase & (EV_PHASE_FIRST | EV_PHASE_NEXT))))
-			st->tag |= TAG_COPY;
-		if (st->phase & EV_PHASE_FIRST)
+		if ((st->phase & EV_PHASE_FIRST) ||
+		    (st->phase & EV_PHASE_NEXT && !EV_ISNOTE(&st->ev))) {
+			st->tag &= ~TAG_COPY;
+			if (evspec_matchev(es, &st->ev))
+				st->tag |= TAG_COPY;
+		}
+		if (st->phase & EV_PHASE_FIRST) {
 			st->tag &= ~TAG_KEEP;
+		}
 		if (copy && (st->tag & TAG_COPY))
 			seqptr_evput(&dp, &st->ev);
 		if (!blank || (st->tag & TAG_KEEP)) {
@@ -861,13 +647,13 @@ track_move(struct track *src, unsigned start, unsigned len,
 	}
 	
 	/*
-	 * copy only: restore all states that weren't updated by the
+	 * in the copy, restore frames that weren't updated by the
 	 * first tic.
 	 */
 	for (st = slist.first; st != NULL; st = st->next) {
-		if (EV_ISNOTE(&st->ev))
+		if (EV_ISNOTE(&st->ev) || !evspec_matchev(es, &st->ev))
 			continue;
-		if (!(st->flags & STATE_CHANGED) && !(st->phase & EV_PHASE_LAST)) {
+		if (!(st->tag & TAG_COPY) && !(st->phase & EV_PHASE_LAST)) {
 			if (ev_restore(&st->ev, &ev)) {
        				if (copy)
 					seqptr_evput(&dp, &ev);
@@ -877,9 +663,7 @@ track_move(struct track *src, unsigned start, unsigned len,
 	}
 	
 	/*
-	 * copy:  copy frames during 'len' tics
-	 *
-	 * blank: erase frames during 'len' tics
+	 * tag/copy/erase frames during 'len' tics
 	 */
 	amount = 0;
 	for (;;) {
@@ -892,8 +676,7 @@ track_move(struct track *src, unsigned start, unsigned len,
 		if (st == NULL)
 			break;
 		if (st->phase & EV_PHASE_FIRST) {
-			st->tag |= TAG_COPY;
-			st->tag &= ~TAG_KEEP;
+			st->tag = evspec_matchev(es, &st->ev) ? TAG_COPY : TAG_KEEP;
 		}
 		if (copy && (st->tag & TAG_COPY)) {
 			seqptr_seek(&dp, amount);
@@ -905,9 +688,9 @@ track_move(struct track *src, unsigned start, unsigned len,
 	}
 	
 	/*
-	 * copy only: cancel all states (that are tagged) on the 'dst'
-	 * track, states that are canceled are not tagged, so we can
-	 * continue copying selected events in the next stage
+	 * cancel all copied frames (that are tagged).
+	 * cancelled frames are untagged, so they will stop
+	 * being copied
 	 */
 	for (st = slist.first; st != NULL; st = st->next) {
 		if (EV_ISNOTE(&st->ev))
@@ -925,17 +708,17 @@ track_move(struct track *src, unsigned start, unsigned len,
 	}
 
 	/*
-	 * blank: move the first tic of the 'end' boundary,
-	 * accepting starting frames; this is the last chance for
-	 * opened frames to terminate and to avoid to be restored
-	 *
-	 * copy: just copy frames not canceled
+	 * move the first tic of the 'end' boundary. New frames are
+	 * tagged as "not to erase". This is the last chance for
+	 * untagged frames (those being erased) to terminate and to
+	 * avoid being restored
 	 */
 	while (seqptr_evavail(&sp)) {
 		st = seqptr_evdel(&sp, &slist);
-		if ((EV_ISNOTE(&st->ev) && (st->phase & EV_PHASE_FIRST)) ||
-		    (!EV_ISNOTE(&st->ev) && (st->phase & (EV_PHASE_FIRST | EV_PHASE_NEXT))))
+		if ((st->phase & EV_PHASE_FIRST) ||
+		    (st->phase & EV_PHASE_NEXT && !EV_ISNOTE(&st->ev))) {
 			st->tag |= TAG_KEEP;
+		}
 		if (st->phase & EV_PHASE_FIRST)
 			st->tag &= ~TAG_COPY;
 		if (copy && (st->tag & TAG_COPY)) {
@@ -947,19 +730,30 @@ track_move(struct track *src, unsigned start, unsigned len,
 			seqptr_evput(&sp, &st->ev);
 	}
 
-
 	/*
-	 * copy: copy all event for whose state couldn't be
+	 * retore/tag frames that are not tagged.
+	 */
+	for (st = slist.first; st != NULL; st = st->next) {
+		if (EV_ISNOTE(&st->ev))
+			continue;
+		if (!(st->tag & TAG_KEEP) && !(st->phase & EV_PHASE_LAST)) {
+			if (ev_restore(&st->ev, &ev)) { 
+				seqptr_evput(&sp, &ev);
+				st->tag |= TAG_KEEP;
+			}
+		}
+	}
+	
+	/*
+	 * copy frames for whose state couldn't be
 	 * canceled (note events)
-	 *
-	 * blank: copy tagged frames
 	 */
 	for (;;) {
 		delta = seqptr_ticskip(&sp, ~0U);
 		amount += delta;		
-		if (!seqptr_evavail(&sp))
-			break;
 		st = seqptr_evdel(&sp, &slist);
+		if (st == NULL)
+			break;
 		if (st->phase & EV_PHASE_FIRST) {
 			st->tag &= ~TAG_COPY;
 			st->tag |= TAG_KEEP;
@@ -973,12 +767,13 @@ track_move(struct track *src, unsigned start, unsigned len,
 			seqptr_evput(&sp, &st->ev);
 	}
 	
+	statelist_done(&slist);
+	seqptr_done(&sp);
+	if (copy)
+		seqptr_done(&dp);
 #undef TAG_BLANK
 #undef TAG_COPY
-
 }
-
-
 
 /*
  * quantize the given track
@@ -1068,6 +863,8 @@ track_quantize(struct track *src, unsigned start, unsigned len,
 	}
 	track_merge(src, &qt);
 	statelist_done(&slist);
+	seqptr_done(&sp);
+	seqptr_done(&qp);
 	track_done(&qt);
 }
 
@@ -1146,6 +943,8 @@ track_transpose(struct track *src, unsigned start, unsigned len, int halftones) 
 	}
 	track_merge(src, &qt);
 	statelist_done(&slist);
+	seqptr_done(&sp);
+	seqptr_done(&qp);
 	track_done(&qt);
 }
 
@@ -1577,6 +1376,8 @@ track_timerm(struct track *t, unsigned measure, unsigned amount) {
 		if (!ost || !ev_eq(&st->ev, &ost->ev))
 			seqptr_evput(&sp, &st->ev);
 	}
+	statelist_done(&slist);
+	seqptr_done(&sp);
 }
 
 

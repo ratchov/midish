@@ -31,6 +31,8 @@
 /*
  * implements filtxxx built-in functions
  * available through the interpreter
+ *
+ * each function is described in the manual.html file
  */
 
 #include "dbg.h"
@@ -134,7 +136,6 @@ user_func_filtinfo(struct exec *o, struct data **r) {
 	return 1;
 }
 
-
 unsigned
 user_func_filtdevdrop(struct exec *o, struct data **r) {
 	struct songfilt *f;
@@ -152,8 +153,6 @@ user_func_filtdevdrop(struct exec *o, struct data **r) {
 	return 1;
 }
 
-
-
 unsigned
 user_func_filtnodevdrop(struct exec *o, struct data **r) {
 	struct songfilt *f;
@@ -170,7 +169,6 @@ user_func_filtnodevdrop(struct exec *o, struct data **r) {
 	filt_conf_nodevdrop(&f->filt, idev);
 	return 1;
 }
-
 
 unsigned
 user_func_filtdevmap(struct exec *o, struct data **r) {
@@ -191,7 +189,6 @@ user_func_filtdevmap(struct exec *o, struct data **r) {
 	return 1;
 }
 
-
 unsigned
 user_func_filtnodevmap(struct exec *o, struct data **r) {
 	struct songfilt *f;
@@ -209,7 +206,6 @@ user_func_filtnodevmap(struct exec *o, struct data **r) {
 	return 1;
 }
 
-
 unsigned
 user_func_filtchandrop(struct exec *o, struct data **r) {
 	struct songfilt *f;
@@ -222,7 +218,6 @@ user_func_filtchandrop(struct exec *o, struct data **r) {
 	filt_conf_chandrop(&f->filt, idev, ich);
 	return 1;
 }
-
 
 unsigned
 user_func_filtnochandrop(struct exec *o, struct data **r) {
@@ -283,7 +278,6 @@ user_func_filtctldrop(struct exec *o, struct data **r) {
 	return 1;
 }
 
-
 unsigned
 user_func_filtnoctldrop(struct exec *o, struct data **r) {
 	struct songfilt *f;
@@ -302,7 +296,6 @@ user_func_filtnoctldrop(struct exec *o, struct data **r) {
 	filt_conf_noctldrop(&f->filt, idev, ich, ictl);
 	return 1;
 }
-
 
 unsigned
 user_func_filtctlmap(struct exec *o, struct data **r) {
@@ -324,7 +317,6 @@ user_func_filtctlmap(struct exec *o, struct data **r) {
 	filt_conf_ctlmap(&f->filt, idev, ich, odev, och, ictl, octl);
 	return 1;
 }
-
 
 unsigned
 user_func_filtnoctlmap(struct exec *o, struct data **r) {
@@ -365,7 +357,6 @@ user_func_filtkeydrop(struct exec *o, struct data **r) {
 	return 1;
 }
 
-
 unsigned
 user_func_filtnokeydrop(struct exec *o, struct data **r) {
 	struct songfilt *f;
@@ -385,7 +376,6 @@ user_func_filtnokeydrop(struct exec *o, struct data **r) {
 	filt_conf_nokeydrop(&f->filt, idev, ich, kstart, kend);
 	return 1;
 }
-
 
 unsigned
 user_func_filtkeymap(struct exec *o, struct data **r) {
@@ -413,7 +403,6 @@ user_func_filtkeymap(struct exec *o, struct data **r) {
 	return 1;
 }
 
-
 unsigned
 user_func_filtnokeymap(struct exec *o, struct data **r) {
 	struct songfilt *f;
@@ -434,8 +423,6 @@ user_func_filtnokeymap(struct exec *o, struct data **r) {
 	return 1;
 }
 
-
-
 unsigned
 user_func_filtreset(struct exec *o, struct data **r) {
 	struct songfilt *f;
@@ -446,7 +433,6 @@ user_func_filtreset(struct exec *o, struct data **r) {
 	filt_reset(&f->filt);
 	return 1;
 }
-
 
 unsigned
 user_func_filtchgich(struct exec *o, struct data **r) {
@@ -461,7 +447,6 @@ user_func_filtchgich(struct exec *o, struct data **r) {
 	filt_conf_chgich(&f->filt, olddev, oldch, newdev, newch);
 	return 1;
 }
-
 
 unsigned
 user_func_filtchgidev(struct exec *o, struct data **r) {
@@ -496,7 +481,6 @@ user_func_filtswapich(struct exec *o, struct data **r) {
 	return 1;
 }
 
-
 unsigned
 user_func_filtswapidev(struct exec *o, struct data **r) {
 	struct songfilt *f;
@@ -529,7 +513,6 @@ user_func_filtchgoch(struct exec *o, struct data **r) {
 	filt_conf_chgoch(&f->filt, olddev, oldch, newdev, newch);
 	return 1;
 }
-
 
 unsigned
 user_func_filtchgodev(struct exec *o, struct data **r) {
@@ -564,7 +547,6 @@ user_func_filtswapoch(struct exec *o, struct data **r) {
 	return 1;
 }
 
-
 unsigned
 user_func_filtswapodev(struct exec *o, struct data **r) {
 	struct songfilt *f;
@@ -583,7 +565,6 @@ user_func_filtswapodev(struct exec *o, struct data **r) {
 	filt_conf_swapodev(&f->filt, olddev, newdev);
 	return 1;
 }
-
 
 unsigned
 user_func_filtsetcurchan(struct exec *o, struct data **r) {

@@ -31,6 +31,8 @@
 /*
  * implements misc built-in functions
  * available through the interpreter
+ *
+ * each function is described in the manual.html file
  */
 
 #include "dbg.h"
@@ -60,13 +62,12 @@ unsigned user_flag_verb = 0;
 
 /* -------------------------------------------------- some tools --- */
 
-	/*
-	 * execute a script from a file in the 'exec' environnement
-	 * the script has acces to the global variables, but
-	 * not to the local variables of the calling proc. Thus
-	 * it can be safely used in a procedure
-	 */
-
+/*
+ * execute a script from a file in the 'exec' environnement
+ * the script has acces to the global variables, but
+ * not to the local variables of the calling proc. Thus
+ * it can be safely used in a procedure
+ */
 unsigned
 exec_runfile(struct exec *exec, char *filename) {
 	struct parse *parse;
@@ -93,11 +94,10 @@ exec_runfile(struct exec *exec, char *filename) {
 	return res;
 }
 
-	/*
-	 * find the pointer to the songtrk contained in 'var'
-	 * ('var' must be a reference)
-	 */
-
+/*
+ * find the pointer to the songtrk contained in 'var'
+ * ('var' must be a reference)
+ */
 unsigned
 exec_lookuptrack(struct exec *o, char *var, struct songtrk **res) {
 	char *name;	
@@ -114,14 +114,12 @@ exec_lookuptrack(struct exec *o, char *var, struct songtrk **res) {
 	return 1;
 }
 
-
-	/*
-	 * find the (dev, ch) couple for the channel referenced by 'var'
-	 * 'var' can be 
-	 *	- a reference to a songchan
-	 *	- a list of two integers (like '{dev chan}')
-	 */
-
+/*
+ * find the (dev, ch) couple for the channel referenced by 'var'
+ * 'var' can be 
+ *	- a reference to a songchan
+ *	- a list of two integers (like '{dev chan}')
+ */
 unsigned
 exec_lookupchan_getnum(struct exec *o, char *var, 
     unsigned *dev, unsigned *ch) {
@@ -138,12 +136,11 @@ exec_lookupchan_getnum(struct exec *o, char *var,
 	return 1;
 }
 
-	/*
-	 * find the pointer to an existing songchan
-	 * that is referenced by 'var'.
-	 * ('var' must be a reference)
-	 */
-
+/*
+ * find the pointer to an existing songchan
+ * that is referenced by 'var'.
+ * ('var' must be a reference)
+ */
 unsigned
 exec_lookupchan_getref(struct exec *o, char *var, struct songchan **res) {
 	struct var *arg;
@@ -168,12 +165,10 @@ exec_lookupchan_getref(struct exec *o, char *var, struct songchan **res) {
 	return 1;
 }
 
-
-	/*
-	 * find the pointer to the songfilt contained in 'var'
-	 * ('var' must be a reference)
-	 */
-
+/*
+ * find the pointer to the songfilt contained in 'var'
+ * ('var' must be a reference)
+ */
 unsigned
 exec_lookupfilt(struct exec *o, char *var, struct songfilt **res) {
 	char *name;	
@@ -190,11 +185,10 @@ exec_lookupfilt(struct exec *o, char *var, struct songfilt **res) {
 	return 1;
 }
 
-	/*
-	 * find the pointer to the songsx contained in 'var'
-	 * ('var' must be a reference)
-	 */
-
+/*
+ * find the pointer to the songsx contained in 'var'
+ * ('var' must be a reference)
+ */
 unsigned
 exec_lookupsx(struct exec *o, char *var, struct songsx **res) {
 	char *name;	
@@ -211,20 +205,19 @@ exec_lookupsx(struct exec *o, char *var, struct songsx **res) {
 	return 1;
 }
 
-	/*
-	 * fill the event with the one referenced by 'var'
-	 * 'var' can be:
-	 * 	- { noff chan xxx yyy }
-	 * 	- { non chan xxx yyy }
-	 * 	- { ctl chan xxx yyy }
-	 * 	- { kat chan xxx yyy }
-	 * 	- { cat chan xxx }
-	 * 	- { pc chan xxx }
-	 * 	- { bend chan xxx }
-	 * where 'chan' is in the same as in lookupchan_getnum
-	 * and 'xxx' and 'yyy' are integers
-	 */
-
+/*
+ * fill the event with the one referenced by 'var'
+ * 'var' can be:
+ * 	- { noff chan xxx yyy }
+ * 	- { non chan xxx yyy }
+ * 	- { ctl chan xxx yyy }
+ * 	- { kat chan xxx yyy }
+ * 	- { cat chan xxx }
+ * 	- { pc chan xxx }
+ * 	- { bend chan xxx }
+ * where 'chan' is in the same as in lookupchan_getnum
+ * and 'xxx' and 'yyy' are integers
+ */
 unsigned
 exec_lookupev(struct exec *o, char *name, struct ev *ev) {
 	struct var *arg;
@@ -285,13 +278,12 @@ exec_lookupev(struct exec *o, char *name, struct ev *ev) {
 	return 1;
 }
 
-	/* 
-	 * fill the evspec with the one referenced by var.
-	 * var is of this form
-	 * 	- { [type [chanrange [xxxrange [yyyrange]]]] }	
-	 * (brackets mean optionnal)
-	 */
-
+/* 
+ * fill the evspec with the one referenced by var.
+ * var is of this form
+ * 	- { [type [chanrange [xxxrange [yyyrange]]]] }	
+ * (brackets mean optionnal)
+ */
 unsigned
 exec_lookupevspec(struct exec *o, char *name, struct evspec *e) {
 	struct var *arg;
@@ -406,10 +398,9 @@ toomany:
 	return 0;				
 }
 
-	/*
-	 * print a data to the user console
-	 */
-
+/*
+ * print a data to the user console
+ */
 void
 data_print(struct data *d) {
 	struct data *i;
@@ -450,10 +441,9 @@ data_print(struct data *d) {
 	}
 }
 
-	/*
-	 * convert 2 integer lists to channels
-	 */
-	 
+/*
+ * convert 2 integer lists to channels
+ */
 unsigned
 data_num2chan(struct data *o, unsigned *res_dev, unsigned *res_ch) {
 	long dev, ch;
@@ -479,12 +469,11 @@ data_num2chan(struct data *o, unsigned *res_dev, unsigned *res_ch) {
 	return 1;
 }
 
-	/*
-	 * convert lists to channels, 'data' can be
-	 * 	- a reference to an existing songchan
-	 *	- a pair of integers '{ dev midichan }'
-	 */
-	 
+/*
+ * convert lists to channels, 'data' can be
+ * 	- a reference to an existing songchan
+ *	- a pair of integers '{ dev midichan }'
+ */
 unsigned
 data_list2chan(struct data *o, unsigned *res_dev, unsigned *res_ch) {
 	struct songchan *i;
@@ -506,15 +495,12 @@ data_list2chan(struct data *o, unsigned *res_dev, unsigned *res_ch) {
 	}
 }
 
-
-	/*
-	 * convert a data to a pair of integers
-	 * data can be:
-	 * 	- a liste of 2 integers
-	 *	- a single integer (then min = max)
-	 */
-	 
-	 
+/*
+ * convert a data to a pair of integers
+ * data can be:
+ * 	- a liste of 2 integers
+ *	- a single integer (then min = max)
+ */
 unsigned
 data_list2range(struct data *d, unsigned min, unsigned max, 
     unsigned *lo, unsigned *hi) {
@@ -545,11 +531,10 @@ data_list2range(struct data *d, unsigned min, unsigned max,
 	return 1;
 }
 
-	/*
-	 * check if the pattern in data (list of integers)
-	 * match the beggining of the given sysex
-	 */
-
+/*
+ * check if the pattern in data (list of integers)
+ * match the beggining of the given sysex
+ */
 unsigned
 data_matchsysex(struct data *d, struct sysex *sx, unsigned *res) {
 	unsigned i;
@@ -586,8 +571,9 @@ data_matchsysex(struct data *d, struct sysex *sx, unsigned *res) {
 
 /* ---------------------------------------- interpreter functions --- */
 
-	/* XXX: for testing */
-
+/* 
+ * XXX: for testing 
+ */
 unsigned
 user_func_ev(struct exec *o, struct data **r) {
 	struct evspec ev;
@@ -599,14 +585,12 @@ user_func_ev(struct exec *o, struct data **r) {
 	return 1;
 }
 
-
 unsigned
 user_func_panic(struct exec *o, struct data **r) {
 	dbg_panic();
 	/* not reached */
 	return 0;
 }
-
 
 unsigned
 user_func_debug(struct exec *o, struct data **r) {
@@ -640,7 +624,6 @@ user_func_exec(struct exec *o, struct data **r) {
 	}	
 	return exec_runfile(o, filename);
 }
-
 
 unsigned
 user_func_print(struct exec *o, struct data **r) {
@@ -764,7 +747,6 @@ user_func_sendraw(struct exec *o, struct data **r) {
 	return 1;
 }
 
-
 unsigned
 user_mainloop(void) {
 	struct parse *parse;
@@ -773,9 +755,16 @@ user_mainloop(void) {
 	struct data *data;
 	unsigned result, exitcode;
 	
+	/* 
+	 * create the project (ie the song) and
+	 * the execution environment of the interpreter
+	 */
 	user_song = song_new();
 	exec = exec_new();
 
+	/*
+	 * register built-in functions 
+	 */
 	exec_newbuiltin(exec, "ev", user_func_ev, 
 			name_newarg("ev", NULL));
 	exec_newbuiltin(exec, "print", user_func_print, 
@@ -1120,10 +1109,16 @@ user_mainloop(void) {
 	exec_newbuiltin(exec, "devinfo", user_func_devinfo,
 			name_newarg("unit", NULL));
 
+	/*
+	 * run the user startup script: $HOME/.midishrc or /etc/midishrc
+	 */
 	if (!user_flag_batch) {
 		exec_runrcfile(exec);
 	}
 
+	/*
+	 * create the parser and start parsing standard input
+	 */
 	parse = parse_new(NULL);
 	if (parse == NULL) {
 		return 0;
@@ -1132,7 +1127,15 @@ user_mainloop(void) {
 	root = NULL;
 	data = NULL;
 	for (;;) {
+		/*
+		 * print mem_alloc() and mem_free() stats, useful to
+		 * track memory leaks
+		 */
 		mem_stats();
+		
+		/*
+		 * parse a block
+		 */
 		if (!parse_getsym(parse)) {
 			goto err;
 		}
@@ -1148,7 +1151,9 @@ user_mainloop(void) {
 			goto err;
 		}
 		
-		/* at this stage no parse error */
+		/* 
+		 * at this stage no parse error, execute the tree
+		 */
 		result = node_exec(root, exec, &data);
 		node_delete(root);
 		root = NULL;
@@ -1156,16 +1161,20 @@ user_mainloop(void) {
 			continue;
 		}
 		if (result == RESULT_EXIT) {
-			exitcode = 1;
+			exitcode = 1;	/* 1 means success */
 			break;
 		}
-
-	err:	if (user_flag_batch) {
-			exitcode = 0;
+		
+	err:	
+		/* 
+		 * in batch mode stop on the first error
+		 */
+		if (user_flag_batch) {
+			exitcode = 0;	/* 0 means failure */
 			break;
 		}
 	}
-
+	
 	parse_delete(parse);
 	exec_delete(exec);
 	song_delete(user_song);

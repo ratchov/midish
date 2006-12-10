@@ -35,6 +35,12 @@
 
 #define FILT_DEBUG
 
+
+struct rule {
+	struct rule *next;
+/*
+ * filtering rule types
+ */
 #define RULE_CTLMAP	1
 #define RULE_CTLDROP	2
 #define RULE_KEYMAP	3
@@ -43,27 +49,33 @@
 #define RULE_CHANDROP	6
 #define RULE_DEVMAP	7
 #define RULE_DEVDROP	8
-
-struct rule {
-	struct rule *next;
 	unsigned type;
-	unsigned idev, odev;
-	unsigned ich, och;
-	unsigned ictl, octl;
-	unsigned keylo, keyhi;
-	int keyplus;
-	unsigned char *curve;
+	/*
+	 * parametes of the rule not all are used by all types of rules, 
+	 * but we dont make an 'union' because some routine manipulate
+	 * multiple rules
+	 */
+	unsigned idev, odev;	/* input and output devices */
+	unsigned ich, och;	/* input and output midi channels */
+	unsigned ictl, octl;	/* input and output controllers */
+	unsigned keylo, keyhi;	/* keyboard range */
+	int keyplus;		/* halftones to transpose */
+	unsigned char *curve;	/* curve to use (controllers) */
 };
 
 struct filt {
-	/* config */
+	/* 
+	 * config of the filter: singly linked list of rules
+	 */
 	struct rule *voice_rules, *chan_rules, *dev_rules;
 	
-	/* real-time stuff*/
-	unsigned active;
-	void (*cb)(void *, struct ev *);
-	void *addr;
-	struct statelist statelist;
+	/*
+	 * used in real-time only
+	 */
+	unsigned active;			/* filter is active */
+	void (*cb)(void *, struct ev *);	/* called for output events */
+	void *addr;				/* argument of 'cb' */
+	struct statelist statelist;		/* state of the filer */
 	
 };
 

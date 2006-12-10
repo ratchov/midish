@@ -160,10 +160,10 @@ lex_recover(struct lex *o, char *msg) {
 		}
 	}
 }
-	/*
-	 * convert string to number in any base between 2 and 36
-	 */
 
+/*
+ * convert string to number in any base between 2 and 36
+ */
 unsigned
 lex_str2long(struct lex *o, unsigned base) {
 	char *p;

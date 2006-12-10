@@ -31,6 +31,8 @@
 /*
  * implements songxxx built-in functions
  * available through the interpreter
+ *
+ * each function is described in the manual.html file
  */
 
 #include "dbg.h"
@@ -70,7 +72,6 @@ user_func_songsetcurchan(struct exec *o, struct data **r) {
 	return 1;
 }
 
-
 unsigned
 user_func_songgetcurchan(struct exec *o, struct data **r) {
 	struct songchan *cur;
@@ -105,7 +106,6 @@ user_func_songsetcursysex(struct exec *o, struct data **r) {
 	return 1;
 }
 
-
 unsigned
 user_func_songgetcursysex(struct exec *o, struct data **r) {
 	struct songsx *cur;
@@ -118,7 +118,6 @@ user_func_songgetcursysex(struct exec *o, struct data **r) {
 	}
 	return 1;
 }
-
 
 unsigned
 user_func_songsetunit(struct exec *o, struct data **r) {	/* tics per unit note */
@@ -143,7 +142,6 @@ user_func_songgetunit(struct exec *o, struct data **r) {	/* tics per unit note *
 	*r = data_newlong(user_song->tics_per_unit);
 	return 1;
 }
-
 
 unsigned
 user_func_songsetcurpos(struct exec *o, struct data **r) {
@@ -181,13 +179,11 @@ user_func_songsetcurlen(struct exec *o, struct data **r) {
 	return 1;
 }
 
-
 unsigned
 user_func_songgetcurlen(struct exec *o, struct data **r) {
 	*r = data_newlong(user_song->curlen);
 	return 1;
 }
-
 
 unsigned
 user_func_songsetcurquant(struct exec *o, struct data **r) {
@@ -204,14 +200,11 @@ user_func_songsetcurquant(struct exec *o, struct data **r) {
 	return 1;
 }
 
-
 unsigned
 user_func_songgetcurquant(struct exec *o, struct data **r) {
 	*r = data_newlong(user_song->curquant);
 	return 1;
 }
-
-
 
 unsigned
 user_func_songsetcurtrack(struct exec *o, struct data **r) {
@@ -234,7 +227,6 @@ user_func_songsetcurtrack(struct exec *o, struct data **r) {
 	return 1;
 }
 
-
 unsigned
 user_func_songgetcurtrack(struct exec *o, struct data **r) {
 	struct songtrk *cur;
@@ -247,7 +239,6 @@ user_func_songgetcurtrack(struct exec *o, struct data **r) {
 	}
 	return 1;
 }
-
 
 unsigned
 user_func_songsetcurfilt(struct exec *o, struct data **r) {
@@ -273,7 +264,6 @@ user_func_songsetcurfilt(struct exec *o, struct data **r) {
 	}
 	return 0;
 }
-
 
 unsigned
 user_func_songgetcurfilt(struct exec *o, struct data **r) {
@@ -492,15 +482,12 @@ user_func_songload(struct exec *o, struct data **r) {
 	return song_load(user_song, filename);
 }
 
-
 unsigned
 user_func_songreset(struct exec *o, struct data **r) {
 	song_done(user_song);
 	song_init(user_song);
 	return 1;
 }
-
-
 
 unsigned
 user_func_songexportsmf(struct exec *o, struct data **r) {
@@ -510,7 +497,6 @@ user_func_songexportsmf(struct exec *o, struct data **r) {
 	}	
 	return song_exportsmf(user_song, filename);
 }
-
 
 unsigned
 user_func_songimportsmf(struct exec *o, struct data **r) {
@@ -527,7 +513,6 @@ user_func_songimportsmf(struct exec *o, struct data **r) {
 	user_song = sng;
 	return 1;
 }
-
 
 unsigned
 user_func_songidle(struct exec *o, struct data **r) {
@@ -596,14 +581,12 @@ user_func_songtimerm(struct exec *o, struct data **r) {
 	return 1;
 }
 
-
 unsigned
 user_func_songtimeinfo(struct exec *o, struct data **r) {
 	track_output(&user_song->meta, tout);
 	textout_putstr(tout, "\n");
 	return 1;
 }
-
 
 unsigned
 user_func_songsetcurinput(struct exec *o, struct data **r) {
@@ -620,7 +603,6 @@ user_func_songsetcurinput(struct exec *o, struct data **r) {
 	return 1;
 }
 
-
 unsigned
 user_func_songgetcurinput(struct exec *o, struct data **r) {
 	unsigned dev, ch;
@@ -630,7 +612,6 @@ user_func_songgetcurinput(struct exec *o, struct data **r) {
 	data_listadd(*r, data_newlong(ch));
 	return 1;
 }
-
 
 unsigned
 user_func_songsetfactor(struct exec *o, struct data **r) {
