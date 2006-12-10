@@ -1124,6 +1124,31 @@ filt_shut(struct filt *o) {
 }
 
 /*
+ * kill all active frames matching the given event (because a bogus
+ * event was received)
+ */
+void
+filt_kill(struct filt *o, struct ev *ev) {
+	struct state *st;
+	struct ev ca;
+
+	for (st = o->statelist.first; st != NULL; st = st->next) {
+		if (!ev_sameclass(&st->ev, ev) ||
+		    !st->tag ||
+		    st->phase & EV_PHASE_LAST) {
+			continue;
+		}
+		if (ev_cancel(ev, &ca)) {
+			filt_processev(o, &ca);
+			dbg_puts("filt_kill: ");
+			ev_dbg(&st->ev);
+			dbg_puts(": killed\n");
+			st->tag = 0;		       
+		}
+	}
+}
+
+/*
  * give an event to the filter for processing
  */
 void
@@ -1160,6 +1185,7 @@ filt_evcb(struct filt *o, struct ev *ev) {
 			ev_dbg(ev);
 			dbg_puts(": bogus frame\n");
 			st->tag = 0;
+			filt_kill(o, ev);
 		}
 	}
 

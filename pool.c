@@ -74,7 +74,7 @@ pool_init(struct pool *o, char *name, unsigned itemsize, unsigned itemnum) {
 	dbg_puts(o->name);
 	dbg_puts("): using ");
 	dbg_putu((1023 + o->itemnum * o->itemsize) / 1024);
-	dbg_puts("Kb\n");	
+	dbg_puts("kB\n");	
 #endif	
 
 	/*
