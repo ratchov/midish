@@ -1129,10 +1129,11 @@ filt_shut(struct filt *o) {
  */
 void
 filt_kill(struct filt *o, struct ev *ev) {
-	struct state *st;
+	struct state *st, *stnext;
 	struct ev ca;
 
-	for (st = o->statelist.first; st != NULL; st = st->next) {
+	for (st = o->statelist.first; st != NULL; st = stnext) {
+		stnext = st->next;
 		if (!ev_sameclass(&st->ev, ev) ||
 		    !st->tag ||
 		    st->phase & EV_PHASE_LAST) {
@@ -1143,7 +1144,8 @@ filt_kill(struct filt *o, struct ev *ev) {
 			dbg_puts("filt_kill: ");
 			ev_dbg(&st->ev);
 			dbg_puts(": killed\n");
-			st->tag = 0;		       
+			statelist_rm(&o->statelist, st);
+			state_del(st);
 		}
 	}
 }

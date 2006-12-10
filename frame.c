@@ -1060,63 +1060,19 @@ seqptr_gettempo(struct seqptr *sp, unsigned long *usec24) {
  */
 unsigned
 seqptr_skipmeasure(struct seqptr *sp, unsigned m0) {
-	unsigned ticrel, ticabs, m, dm, tics_per_meas, bpm, tpb;
-
-	/* 
-	 * XXX: remove the ugly seqptr_issign() routine, and
-	 * do something simpler here:
-	 *
-	 *	while (m > 0) {
-	 *		seqptr_getsign();
-	 *		seqptr_skip(tics_per_meas);
-	 *	}
-	 */
-
-	m = ticabs = ticrel = 0;
-	for (;;) {
+	unsigned m, bpm, tpb, tics_per_meas, delta;
+	
+	for (m = 0; m < m0; m++) {
+		while (seqptr_evget(sp)) {
+			/* nothing */
+		}
 		seqptr_getsign(sp, &bpm, &tpb);
 		tics_per_meas = bpm * tpb;
-		if (seqptr_eot(sp)) {
-			return (m0 - m) * tics_per_meas - ticrel;
-		}
-
-		/* 
-		 * move forward to the next event, but not
-		 * beyound the requested measure
-		 */
-		ticrel += seqptr_ticskip(sp, (m0 - m) * tics_per_meas - ticrel);
-		dm      = ticrel / tics_per_meas;
-		ticrel  = ticrel % tics_per_meas;
-		ticabs += dm * tics_per_meas;
-		m      += dm;
-		if (m == m0)
-			return 0;
-
-		/*
-		 * we have to deal with short measures; so we check
-		 * without moving forward nor updating the state list
-		 * if there is a time signature change; if so we
-		 * terminate the current measure (considered short)
-		 */
-		if (ticrel != 0 && seqptr_issign(sp)) {
-			m++;
-			dbg_puts("track_findmeasure: measure #");
-			dbg_putu(m);
-			dbg_puts("is short\n");
-			if (m == m0)
-				return 0;
-			ticabs += ticrel;
-			ticrel = 0;
-		}
-
-		/*
-		 * move to the end of the tic
-		 */
-		while (seqptr_evget(sp))
-			; /* nothing */
+		delta = seqptr_skip(sp, tics_per_meas);
+		if (delta > 0)
+			return (m0 - m - 1) * tics_per_meas + delta;		
 	}
-	
-
+	return 0;
 }
 
 /*
