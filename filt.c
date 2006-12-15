@@ -1124,7 +1124,7 @@ filt_shut(struct filt *o) {
 }
 
 /*
- * kill all active frames matching the given event (because a bogus
+ * kill all tagged frames matching the given event (because a bogus
  * event was received)
  */
 void
@@ -1186,11 +1186,11 @@ filt_evcb(struct filt *o, struct ev *ev) {
 		 * XXX: have to do something with the rule set here
 		 */
 		st->tag = o->active ? 1 : 0;
-		if (st->flags & STATE_BOGUS) {
+		if (st->flags & (STATE_BOGUS | STATE_NESTED)) {
 			if (filt_debug) {
 				dbg_puts("filt_evcb: ");
 				ev_dbg(ev);
-				dbg_puts(": bogus frame\n");
+				dbg_puts(": bogus/nested frame\n");
 			}
 			st->tag = 0;
 			filt_kill(o, ev);
