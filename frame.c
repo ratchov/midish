@@ -124,8 +124,7 @@
 #include "default.h"
 #include "frame.h"
 
-#define SEQPTR_DEBUG
-#define FRAME_DEBUG
+#undef FRAME_DEBUG
 
 /*
  * initialise a seqptr structure at the beginning of 

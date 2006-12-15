@@ -643,7 +643,8 @@ song_playtic(struct song *o) {
 					if (!i->mute) {
 						if (st->tag) {
 							mux_putev(&ev);
-						} else {
+						} else if (song_debug) {
+							dbg_puts("song_playtic: ");
 							ev_dbg(&ev);
 							dbg_puts(": no tag\n");
 						}
@@ -726,28 +727,42 @@ song_start(struct song *o,
 	for (i = o->trklist; i != NULL; i = (struct songtrk *)i->name.next) {
 		for (s = i->trackptr.statelist.first; s != NULL; s = snext) {
 			snext = s->next;
-			ev_dbg(&s->ev);
 			if (ev_restore(&s->ev, &re)) {
-				dbg_puts(": restored -> ");
-				ev_dbg(&re);
-				dbg_puts("\n");
+				if (song_debug) {
+					dbg_puts("song_start: ");
+					ev_dbg(&s->ev);
+					dbg_puts(": restored -> ");
+					ev_dbg(&re);
+					dbg_puts("\n");
+				}
 				mux_putev(&re);
 				s->tag = 1;
 			} else {
-				dbg_puts(": not restored, not tagged\n");
+				if (song_debug) {
+					dbg_puts("song_start: ");
+					ev_dbg(&s->ev);
+					dbg_puts(": not restored (no tag)\n");
+				}
 				s->tag = 0;
 			}
 		}
 	}
 	for (s = o->metaptr.statelist.first; s != NULL; s = snext) {
 		snext = s->next;
-		ev_dbg(&s->ev);
 		if (EV_ISMETA(&s->ev)) {
-			dbg_puts(": restoring meta-event\n");
+			if (song_debug) {
+				dbg_puts("song_start: ");
+				ev_dbg(&s->ev);
+				dbg_puts(": restoring meta-event\n");
+			}
 			song_metaput(o, &s->ev);
 			s->tag = 1;
 		} else {
-			dbg_puts(": not restored, not tagged\n");
+			if (song_debug) {
+				dbg_puts("song_start: ");
+				ev_dbg(&s->ev);
+				dbg_puts(": not restored (no tag)\n");
+			}
 			s->tag = 0;
 		}
 	}
@@ -779,11 +794,13 @@ song_stop(struct song *o) {
 		for (s = i->trackptr.statelist.first; s != NULL; s = snext) {
 			snext = s->next;
 			if (s->tag && ev_cancel(&s->ev, &ca)) {
-				dbg_puts("song_stop: ");
-				ev_dbg(&s->ev);
-				dbg_puts(": canceled -> ");
-				ev_dbg(&ca);
-				dbg_puts("\n");
+				if (song_debug) {
+					dbg_puts("song_stop: ");
+					ev_dbg(&s->ev);
+					dbg_puts(": canceled -> ");
+					ev_dbg(&ca);
+					dbg_puts("\n");
+				}
 				mux_putev(&ca);
 
 			}

@@ -45,8 +45,6 @@
 #include "pool.h"
 #include "state.h"
 
-unsigned statelist_debug = 0;
-
 struct pool state_pool;
 
 void

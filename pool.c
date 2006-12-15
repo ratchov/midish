@@ -38,6 +38,8 @@
 #include "dbg.h"
 #include "pool.h"
 
+unsigned pool_debug = 0;
+
 /*
  * initialises a pool of "itemnum" elements of size "itemsize"
  */
@@ -70,11 +72,6 @@ pool_init(struct pool *o, char *name, unsigned itemsize, unsigned itemnum) {
 	o->maxused = 0;
 	o->used = 0;
 	o->newcnt = 0;
-	dbg_puts("pool_init(");
-	dbg_puts(o->name);
-	dbg_puts("): using ");
-	dbg_putu((1023 + o->itemnum * o->itemsize) / 1024);
-	dbg_puts("kB\n");	
 #endif	
 
 	/*
@@ -104,14 +101,17 @@ pool_done(struct pool *o) {
 		dbg_putu(o->used);
 		dbg_puts(" items still allocated\n");
 	}
-
-	dbg_puts("pool_done(");
-	dbg_puts(o->name);
-	dbg_puts("): maxused = ");
-	dbg_putu(100 * o->maxused / o->itemnum);
-	dbg_puts("% allocs = ");
-	dbg_putu(100 * o->newcnt / o->itemnum);
-	dbg_puts("%\n");
+	if (pool_debug) {
+		dbg_puts("pool_done(");
+		dbg_puts(o->name);
+		dbg_puts("): using ");
+		dbg_putu((1023 + o->itemnum * o->itemsize) / 1024);
+		dbg_puts("kB maxused = ");
+		dbg_putu(100 * o->maxused / o->itemnum);
+		dbg_puts("% allocs = ");
+		dbg_putu(100 * o->newcnt / o->itemnum);
+		dbg_puts("%\n");
+	}
 #endif
 }
 
