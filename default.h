@@ -66,7 +66,7 @@
  * maximum number of filter states (roughly
  * maximum number of simultaneous notes
  */
-#define DEFAULT_MAXNSTATES	1000
+#define DEFAULT_MAXNSTATES	10000
 
 /*
  * maximum number of system exclusive messages

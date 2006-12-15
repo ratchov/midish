@@ -191,6 +191,9 @@ statelist_lookup(struct statelist *o, struct ev *ev) {
  * create a state for the given event and return the state.
  * if there is already a state for a related event, then
  * update the existing state.
+ *
+ * Note: it would be nice if to reuse existing states instead of
+ * purging them and allocating new ones
  */
 struct state *
 statelist_update(struct statelist *statelist, struct ev *ev) {
@@ -199,9 +202,10 @@ statelist_update(struct statelist *statelist, struct ev *ev) {
 
 	phase = ev_phase(ev);
 	st = statelist_lookup(statelist, ev);
+
 	/*
 	 * purge an unused state (state of terminated frame) that we
-	 * need
+	 * need. This will also purge bogus frames.
 	 */
 	if (st != NULL && st->phase & EV_PHASE_LAST) {
 #ifdef STATE_DEBUG
@@ -228,25 +232,27 @@ statelist_update(struct statelist *statelist, struct ev *ev) {
 	 * then create a new state.
 	 */
 	if (st == NULL || phase == EV_PHASE_FIRST) {
-		flags = STATE_NEW;
-		if (st == NULL && !(phase & EV_PHASE_FIRST)) {
+		if (!(phase & EV_PHASE_FIRST)) {
+			flags = STATE_BOGUS | STATE_NEW;
+			phase = EV_PHASE_FIRST | EV_PHASE_LAST;
 #ifdef STATE_DEBUG
 			dbg_puts("statelist_update: ");
 			ev_dbg(ev);
 			dbg_puts(": not first and no state\n");
 #endif
-			flags = STATE_BOGUS | STATE_NEW;
-		}
-		if (st != NULL && phase == EV_PHASE_FIRST) {
+		} else if (st != NULL) {
+			flags = STATE_NESTED | STATE_NEW;
 #ifdef STATE_DEBUG
 			ev_dbg(ev);
 			dbg_puts(": nested events, stacked\n");
 #endif
-			flags = STATE_BOGUS | STATE_NEW;
+		} else {
+			flags = STATE_NEW;
+			phase &= ~EV_PHASE_NEXT;
 		}
 		st = state_new();
 		statelist_add(statelist, st);
-		st->phase = (phase | EV_PHASE_FIRST) & ~EV_PHASE_NEXT;
+		st->phase = phase;
 		st->flags = flags;
 		st->nevents = nevents;
 		st->ev = *ev;

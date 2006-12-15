@@ -1139,14 +1139,18 @@ filt_kill(struct filt *o, struct ev *ev) {
 		    st->phase & EV_PHASE_LAST) {
 			continue;
 		}
-		if (ev_cancel(ev, &ca)) {
+		/*
+		 * cancel/untag the frame and change the phase to
+		 * EV_PHASE_LAST, so the state can be deleted if
+		 * necessary
+		 */
+		if (ev_cancel(ev, &ca))
 			filt_processev(o, &ca);
-			dbg_puts("filt_kill: ");
-			ev_dbg(&st->ev);
-			dbg_puts(": killed\n");
-			statelist_rm(&o->statelist, st);
-			state_del(st);
-		}
+		st->phase = EV_PHASE_LAST;
+		st->tag = 0;
+		dbg_puts("filt_kill: ");
+		ev_dbg(&st->ev);
+		dbg_puts(": killed\n");
 	}
 }
 
@@ -1183,9 +1187,11 @@ filt_evcb(struct filt *o, struct ev *ev) {
 		 */
 		st->tag = o->active ? 1 : 0;
 		if (st->flags & STATE_BOGUS) {
-			dbg_puts("filt_evcb: ");
-			ev_dbg(ev);
-			dbg_puts(": bogus frame\n");
+			if (filt_debug) {
+				dbg_puts("filt_evcb: ");
+				ev_dbg(ev);
+				dbg_puts(": bogus frame\n");
+			}
 			st->tag = 0;
 			filt_kill(o, ev);
 		}

@@ -159,7 +159,8 @@ rmidi_inputcb(struct rmidi *o, unsigned char *buf, unsigned count) {
 			switch(data) {
 			case MIDI_SYSEXSTART:
 				if (o->isysex) {
-					dbg_puts("rmidi_inputcb: previous sysex aborted\n");
+					if (rmidi_debug)
+						dbg_puts("rmidi_inputcb: previous sysex aborted\n");
 					sysex_del(o->isysex);
 				}
 				o->isysex = sysex_new(o->mididev.unit);
@@ -179,7 +180,8 @@ rmidi_inputcb(struct rmidi *o, unsigned char *buf, unsigned count) {
 				 * aborted.
 				 */
 				if (o->isysex) {
-					dbg_puts("rmidi_inputcb: current sysex aborted\n");
+					if (rmidi_debug)
+						dbg_puts("rmidi_inputcb: current sysex aborted\n");
 					sysex_del(o->isysex);
 					o->isysex = NULL;
 				}

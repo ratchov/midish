@@ -970,10 +970,18 @@ track_check(struct track *src) {
 		if (st == NULL)
 			break;
 		if (st->flags & STATE_NEW) {
-			st->tag = st->flags & STATE_BOGUS ? 0 : 1;
 			if (st->flags & STATE_BOGUS) {
+				dbg_puts("track_check: ");
 				ev_dbg(&st->ev);
 				dbg_puts(": bogus\n");
+				st->tag = 0;
+			} else if (st->flags & STATE_NESTED) {
+				dbg_puts("track_check: ");
+				ev_dbg(&st->ev);
+				dbg_puts(": nested\n");
+				st->tag = 0;
+			} else {
+				st->tag = 1;
 			}
 		}
 		if (st->tag) {
@@ -987,6 +995,7 @@ track_check(struct track *src) {
 	for (st = sp.statelist.first; st != NULL; st = stnext) {
 		stnext = st->next;
 		if (!(st->phase & EV_PHASE_LAST)) {
+			dbg_puts("track_check: ");
 			ev_dbg(&st->ev);
 			dbg_puts(": unterminated\n");
 			(void)seqptr_rmprev(&sp, st);
@@ -1059,10 +1068,10 @@ seqptr_gettempo(struct seqptr *sp, unsigned long *usec24) {
  * (only on premature end-of-track)
  */
 unsigned
-seqptr_skipmeasure(struct seqptr *sp, unsigned m0) {
+seqptr_skipmeasure(struct seqptr *sp, unsigned meas) {
 	unsigned m, bpm, tpb, tics_per_meas, delta;
 	
-	for (m = 0; m < m0; m++) {
+	for (m = 0; m < meas; m++) {
 		while (seqptr_evget(sp)) {
 			/* nothing */
 		}
@@ -1070,7 +1079,7 @@ seqptr_skipmeasure(struct seqptr *sp, unsigned m0) {
 		tics_per_meas = bpm * tpb;
 		delta = seqptr_skip(sp, tics_per_meas);
 		if (delta > 0)
-			return (m0 - m - 1) * tics_per_meas + delta;		
+			return (meas - m - 1) * tics_per_meas + delta;
 	}
 	return 0;
 }

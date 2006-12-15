@@ -697,7 +697,7 @@ song_start(struct song *o,
 	
 	/*
 	 * move all tracks to the current position
-	 */	
+	 */
 	for (i = o->trklist; i != NULL; i = (struct songtrk *)i->name.next) {
 		seqptr_init(&i->trackptr, &i->track);
 		seqptr_skip(&i->trackptr, tic);
@@ -798,6 +798,7 @@ song_stop(struct song *o) {
 		seqptr_done(&i->trackptr);
 	}
 	seqptr_done(&o->recptr);
+	seqptr_done(&o->metaptr);
 }
 
 

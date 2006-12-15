@@ -44,6 +44,7 @@ struct state  {
 #define STATE_NEW	1		/* just created, never updated */
 #define STATE_CHANGED	2		/* updated within the current tick */
 #define STATE_BOGUS	4		/* frame detected as bogus */
+#define STATE_NESTED	8		/* nested frame */
 	unsigned flags;
 	unsigned phase;			/* current phase (of the 'ev' field) */
 
