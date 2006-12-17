@@ -151,16 +151,12 @@ user_func_trackaddev(struct exec *o, struct data **r) {
 		cons_err("beat and tic must fit in the selected measure");
 		return 0;
 	}
-
-	/*
-	 * XXX: this will not work on short measures, fix findmeasure()
-	 */
 	pos += beat * tpb + tic;	
 
-	track_rew(&t->track, &tp);
-	track_seekblank(&t->track, &tp, pos);
-	track_evlast(&t->track, &tp);
-	track_evput(&t->track, &tp, &ev);
+	seqptr_init(&tp, &t->track);
+	seqptr_seek(&tp, pos);
+	seqptr_evput(&tp, &ev);
+	seqptr_done(&tp);
 	return 1;
 }
 
@@ -521,10 +517,11 @@ user_func_trackchanlist(struct exec *o, struct data **r) {
 unsigned
 user_func_trackinfo(struct exec *o, struct data **r) {
 	struct songtrk *t;
-	struct seqptr tp;
+	struct seqptr mp, tp;
 	struct evspec es;
-	long from, quant;
-	unsigned start, len, tic, count;
+	struct state *st;
+	long quant;
+	unsigned len, count, count_next, tpb, bpm;
 
 	if (!exec_lookuptrack(o, "trackname", &t) ||
 	    !exec_lookuplong(o, "quantum", &quant) ||
@@ -540,41 +537,53 @@ user_func_trackinfo(struct exec *o, struct data **r) {
 	textout_shiftright(tout);
 	textout_indent(tout);
 	
-	from = 0;
+	count_next = 0;
+	seqptr_init(&tp, &t->track);
+	seqptr_init(&mp, &user_song->meta);
 	for (;;) {
-		start = song_measuretotic(user_song, from);
-		if (start > (unsigned)quant / 2) {
-			start -= quant / 2;
+		/*
+		 * scan for a time signature change
+		 */
+		while (seqptr_evget(&mp)) {
+			/* nothing */
 		}
-		len = song_measuretotic(user_song, from + 1) - start;
-
-		track_rew(&t->track, &tp);
-		track_seek(&t->track, &tp, start);
-		if (track_finished(&t->track, &tp)) {
-			break;
-		}
-		tic = 0;
-		count = 0;
+		seqptr_getsign(&mp, &bpm, &tpb);
+		
+		/*
+		 * count starting events
+		 */
+		len = bpm * tpb;
+		count = count_next;
+		count_next = 0;
 		for (;;) {
-			tic += track_ticlast(&t->track, &tp);
-			if (!track_evavail(&t->track, &tp) || tic >= len) {
+			len -= seqptr_ticskip(&tp, len);
+			if (len == 0)
 				break;
-			}
-			if (evspec_matchev(&es, &tp.pos->ev)) {
-				if (EV_ISNOTE(&tp.pos->ev)) {
-					if (tp.pos->ev.cmd == EV_NON) {
-						count++;
-					}
-				} else {
+			st = seqptr_evget(&tp);
+			if (st == NULL)
+				break;
+			if (st->phase & EV_PHASE_FIRST &&
+			    evspec_matchev(&es, &st->ev)) {
+				if (len >= quant / 2) 
 					count++;
-				}
-	                }			
-			track_evnext(&t->track, &tp);
+				else
+					count_next++;
+	                }
 		}
 		textout_putlong(tout, count);
 		textout_putstr(tout, " ");
-		from ++;
+		if (seqptr_eot(&tp)) {
+			if (len < quant / 2) {
+				textout_putlong(tout, count_next);
+				textout_putstr(tout, " ");
+			}
+			break;
+		}
+		(void)seqptr_skip(&mp, bpm * tpb);
 	}
+	seqptr_done(&mp);
+	seqptr_done(&tp);
+	
 	textout_putstr(tout, "\n");
 	textout_shiftleft(tout);
 	textout_indent(tout);

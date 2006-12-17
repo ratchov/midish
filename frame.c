@@ -1023,29 +1023,6 @@ seqptr_getsign(struct seqptr *sp, unsigned *bpm, unsigned *tpb) {
 }
 
 /*
- * look forward for a TIMESIG event return 1 if there is one in the
- * current tic else return 0.
- * 
- * XXX: this is too ugly, see comments in seqptr_skipmeasure()
- */
-unsigned
-seqptr_issign(struct seqptr *sp) {
-	struct seqev *se;
-	unsigned delta;
-
-	se = sp->pos;
-	delta = sp->delta;
-	for (;;) {
-		if (delta < se->delta || se->ev.cmd == NULL)
-			return 0;
-		if (se->ev.cmd == EV_TIMESIG)
-			return 1;
-		delta -= se->delta;
-		se = se->next;
-	}
-}
-
-/*
  * get the current tempo (at the current position)
  */
 struct state *

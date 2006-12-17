@@ -47,6 +47,8 @@ unsigned      seqptr_ticdel(struct seqptr *sp, unsigned max);
 void	      seqptr_ticput(struct seqptr *sp, unsigned ntics);
 unsigned      seqptr_skip(struct seqptr *sp, unsigned ntics);
 void	      seqptr_seek(struct seqptr *sp, unsigned ntics);
+struct state *seqptr_getsign(struct seqptr *sp, unsigned *bpm, unsigned *tpb);
+struct state *seqptr_gettempo(struct seqptr *sp, unsigned long *usec24);
 
 unsigned track_findmeasure(struct track *t, unsigned m0);
 void	 track_timeinfo(struct track *t, unsigned tic, unsigned long *usec24, unsigned *bpm, unsigned *tpb);
