@@ -307,6 +307,49 @@ track_seqevnext(struct track *o, struct seqptr *p) {
 	return tics;
 }
 
+/* ------------------------------------------- seqev_xxx routines --- */
+
+/*
+ * return true if an event is available on the track
+ */
+unsigned
+seqev_avail(struct seqev *pos) {
+	return (pos->ev.cmd != EV_NULL);
+}
+
+/*
+ * insert an event (stored in an already allocated seqev
+ * structure) just before the event of the given position
+ * (the delta field of the given event is ignored)
+ */
+void
+seqev_ins(struct seqev *pos, struct seqev *se) {
+	se->delta = pos->delta;
+	pos->delta = 0;
+	/* link to the list */
+	se->next = pos;
+	se->prev = pos->prev;
+	*(se->prev) = se;
+	pos->prev = &se->next;
+}
+
+/*
+ * remove the event (but not blank space) on the given position
+ */
+void
+seqev_rm(struct seqev *pos) {
+#ifdef TRACK_DEBUG
+	if (pos->ev.cmd == EV_NULL) {
+		dbg_puts("seqev_rm: unexpected end of track\n");
+		dbg_panic();
+	}	
+#endif
+	pos->next->delta += pos->delta;
+	pos->delta = 0;
+	/* since se != &eot, next is never NULL */
+	*pos->prev = pos->next;
+	pos->next->prev = pos->prev;
+}
 
 
 /* ------------------------------------------- track_ev* routines --- */

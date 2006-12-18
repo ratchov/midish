@@ -115,27 +115,22 @@ one:
 
 void
 track_output(struct track *t, struct textout *f) {
-	unsigned delta;
-	struct ev ev;
-	struct seqptr tp;
+	struct seqev *i;
 	
 	textout_putstr(f, "{\n");
 	textout_shiftright(f);
 	
-	track_rew(t, &tp);
-	for (;;) {
-		delta = track_ticlast(t, &tp);
-		if (delta != 0) {
+	for (i = t->first; i != NULL; i = i->next) {
+		if (i->delta != 0) {
 			textout_indent(f);
-			textout_putlong(f, delta);
+			textout_putlong(f, i->delta);
 			textout_putstr(f, "\n");		
 		}
-		if (!track_evavail(t, &tp)) {
+		if (i->ev.cmd == EV_NULL) {
 			break;
 		}
-		track_evget(t, &tp, &ev);
 		textout_indent(f);
-		ev_output(&ev, f);
+		ev_output(&i->ev, f);
 		textout_putstr(f, "\n");		
 	}
 	
@@ -734,8 +729,7 @@ ignore:		parse_ungetsym(o);
 unsigned
 parse_track(struct parse *o, struct track *t) {
 	unsigned delta;
-	struct ev ev;
-	struct seqptr tp;
+	struct seqev *pos, *se;
 	
 	if (!parse_getsym(o)) {
 		return 0;
@@ -744,7 +738,8 @@ parse_track(struct parse *o, struct track *t) {
 		lex_err(&o->lex, "'{' expected while parsing track");
 		return 0;
 	}
-	track_rew(t, &tp);	
+	track_clearall(t);	
+	pos = t->first;
 	for (;;) {
 		if (!parse_getsym(o)) {
 			return 0;
@@ -758,15 +753,15 @@ parse_track(struct parse *o, struct track *t) {
 			if (!parse_delta(o, &delta)) {
 				return 0;
 			}
-			delta = o->lex.longval;
-			track_seekblank(t, &tp, delta);
+			pos->delta += delta;
 		} else {
+			se = seqev_new();
 			parse_ungetsym(o);
-			if (!parse_ev(o, &ev)) {
+			if (!parse_ev(o, &se->ev)) {
+				seqev_del(se);
 				return 0;
 			}
-			track_evlast(t, &tp);
-			track_evput(t, &tp, &ev);
+			seqev_ins(pos, se);
 		}
 	}
 	return 1;			
