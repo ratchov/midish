@@ -75,35 +75,6 @@ unsigned      seqev_avail(struct seqev *pos);
 void	      seqev_ins(struct seqev *pos, struct seqev *se);
 void	      seqev_rm(struct seqev *pos);
 
-void	      track_seqevins(struct track *o, struct seqptr *p, struct seqev *se);
-struct seqev *track_seqevrm(struct track *o, struct seqptr *p);
-unsigned      track_seqevnext(struct track *o, struct seqptr *p);
-unsigned      track_seqevavail(struct track *o, struct seqptr *p);
-
-unsigned      track_evavail(struct track *o, struct seqptr *p);
-void	      track_evnext(struct track *o, struct seqptr *p);
-void	      track_evlast(struct track *o, struct seqptr *p);
-void	      track_evget(struct track *o, struct seqptr *p, struct ev *ev);
-void	      track_evput(struct track *o, struct seqptr *p, struct ev *ev);
-void	      track_evdel(struct track *o, struct seqptr *p);
-void	      track_evinsat(struct track *o, struct seqptr *p, struct ev *ev, unsigned ntics);
-
-unsigned      track_ticavail(struct track *o, struct seqptr *p);
-void	      track_ticnext(struct track *o, struct seqptr *p);
-unsigned      track_ticlast(struct track *o, struct seqptr *p);
-unsigned      track_ticskipmax(struct track *o, struct seqptr *p, unsigned max);
-unsigned      track_ticdelmax(struct track *o, struct seqptr *p, unsigned max);
-void	      track_ticinsmax(struct track *o, struct seqptr *p, unsigned max);
-void	      track_ticdel(struct track *o, struct seqptr *p);
-void	      track_ticins(struct track *o, struct seqptr *p);
-
-void	      track_clear(struct track *o, struct seqptr *p);
-void	      track_rew(struct track *o, struct seqptr *p);
-unsigned      track_finished(struct track *o, struct seqptr *p);
-unsigned      track_seek(struct track *o, struct seqptr *p, unsigned ntics);
-void	      track_seekblank(struct track *o, struct seqptr *p, unsigned ntics);
-unsigned      track_filt(struct track *o, struct seqptr *p, unsigned ntics,
-			unsigned (*func)(void *, struct ev *), void *addr);
 void	      track_setchan(struct track *src, unsigned dev, unsigned ch);
 void	      track_chanmap(struct track *o, char *map);
 

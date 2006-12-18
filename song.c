@@ -957,9 +957,9 @@ song_record(struct song *o) {
 	
 	if (t) {
 		track_merge(&o->curtrk->track, &o->rec);
-		track_clear(&o->rec, &o->recptr);
+		track_clearall(&o->rec);
 	} else {
-		track_clear(&o->rec, &o->recptr);
+		track_clearall(&o->rec);
 	}
 }
 
