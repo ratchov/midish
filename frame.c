@@ -592,7 +592,7 @@ track_move(struct track *src, unsigned start, unsigned len,
 	if (len == 0)
 		return;
 	if (copy) {
-		track_clearall(dst);
+		track_clear(dst);
 		seqptr_init(&dp, dst);
 	}
 	seqptr_init(&sp, src);

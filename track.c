@@ -209,11 +209,9 @@ track_numtic(struct track *o) {
 
 /*
  * remove all events from the track
- * XXX: rename this track_clear and put it in track.c,
- * (but first stop using the old track_clear())
  */
 void
-track_clearall(struct track *o) {
+track_clear(struct track *o) {
 	struct seqev *i, *inext;
 	
 	for (i = o->first;  i != &o->eot;  i = inext) {
@@ -224,30 +222,6 @@ track_clearall(struct track *o) {
 	o->eot.prev = &o->first;
 	o->first = &o->eot;
 }
-
-/*
- * clear 'dst' and attach contents of 'src' to 'dst'
- * (dont forget to copy the 'eot')
- */
-void
-track_moveall(struct track *dst, struct track *src) {
-	track_clearall(dst);
-	dst->eot.delta = src->eot.delta;
-	if (src->first == &src->eot) {
-		dst->first = &dst->eot;
-		dst->eot.prev = &dst->first;
-	} else {
-		dst->first = src->first;
-		dst->eot.prev = src->eot.prev;
-		dst->first->prev = &dst->first;
-		*dst->eot.prev = &dst->eot;
-	}
-	src->eot.delta = 0;
-	src->eot.prev = &src->first;
-	src->first = &src->eot;
-}
-
-
 
 /*
  * set the chan (dev/midichan pair) of

@@ -47,14 +47,6 @@ struct track {
 	struct seqev *first;		/* head of the event list */
 };
 
-struct seqptr {
-	struct statelist statelist;
-	struct seqev *pos;		/* next event (current position) */
-	unsigned delta;			/* tics until the next event */	 
-	unsigned tic;			/* absolute tic of the current pos */
-};
-
-
 void	      seqev_pool_init(unsigned size);
 void	      seqev_pool_done(void);
 struct seqev *seqev_new(void);
@@ -68,8 +60,7 @@ void	      track_done(struct track *o);
 void	      track_dump(struct track *o);
 unsigned      track_numev(struct track *o);
 unsigned      track_numtic(struct track *o);
-void	      track_clearall(struct track *o);
-void	      track_moveall(struct track *dst, struct track *src);
+void	      track_clear(struct track *o);
 
 unsigned      seqev_avail(struct seqev *pos);
 void	      seqev_ins(struct seqev *pos, struct seqev *se);

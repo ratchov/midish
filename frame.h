@@ -31,12 +31,17 @@
 #ifndef MIDISH_FRAME_H
 #define MIDISH_FRAME_H
 
+#include "state.h"
+
+struct seqptr {
+	struct statelist statelist;
+	struct seqev *pos;		/* next event (current position) */
+	unsigned delta;			/* tics until the next event */	 
+	unsigned tic;			/* absolute tic of the current pos */
+};
+
 struct track;
-struct seqptr;
 struct evspec;
-struct ev;
-struct state;
-struct statelist;
 
 void	      seqptr_init(struct seqptr *sp, struct track *t);
 void	      seqptr_done(struct seqptr *sp);

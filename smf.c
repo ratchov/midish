@@ -570,7 +570,7 @@ smf_gettrack(struct smf *o, struct song *s, struct songtrk *t) {
 	}
 	status = 0;
 	abspos = 0;
-	track_clearall(&t->track);
+	track_clear(&t->track);
 	pos = t->track.first;
 	for (;;) {
 		if (o->index >= o->length) {
@@ -822,6 +822,7 @@ song_importsmf(char *filename) {
 		if (!smf_gettrack(&f, o, t)) {
 			goto bad3;
 		}
+		track_check(&t->track);
 	}
 	smf_close(&f);
 	

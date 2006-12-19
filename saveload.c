@@ -738,7 +738,7 @@ parse_track(struct parse *o, struct track *t) {
 		lex_err(&o->lex, "'{' expected while parsing track");
 		return 0;
 	}
-	track_clearall(t);	
+	track_clear(t);	
 	pos = t->first;
 	for (;;) {
 		if (!parse_getsym(o)) {

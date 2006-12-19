@@ -37,6 +37,7 @@
 
 #include "name.h"
 #include "track.h"
+#include "frame.h"
 #include "filt.h"
 #include "sysex.h"
 #include "metro.h"
