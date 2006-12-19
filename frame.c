@@ -1001,6 +1001,12 @@ track_check(struct track *src) {
 		}
 	}
 
+	/*
+	 * statelist_done() will complain about bogus frames.  Since
+	 * bugs are fixed in the track, we empty slist to avoid
+	 * warning messages
+	 */
+	statelist_empty(&slist);
 	statelist_done(&slist);
 	seqptr_done(&sp);
 }

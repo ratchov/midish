@@ -67,6 +67,9 @@ state_del(struct state *s) {
 	pool_del(&state_pool, s);
 }
 
+/*
+ * initialise an empty state list
+ */
 void
 statelist_init(struct statelist *o) {
 	o->first = NULL;
@@ -77,10 +80,36 @@ statelist_init(struct statelist *o) {
 #endif
 }
 
+/*
+ * destroy a statelist. All states are deleted, but if there are
+ * states corresponding to unterminated frames, then a warning is
+ * issued, since this probably is due to track inconsistencies
+ */
 void
 statelist_done(struct statelist *o) {
+	struct state *i, *inext;
 #ifdef STATE_PROF
 	unsigned mean;
+#endif
+
+	/*
+	 * free all states
+	 */
+	for (i = o->first; i != NULL; i = inext) {
+		if (!(i->phase & EV_PHASE_LAST)) {
+			dbg_puts("statelist_done: ");
+			ev_dbg(&i->ev);
+			dbg_puts(": unterminated frame\n");
+		}
+		inext = i->next;
+		statelist_rm(o, i);
+		state_del(i);
+	}
+
+#ifdef STATE_PROF
+	/*
+	 * display profiling statistics
+	 */
 	dbg_puts("statelist_done: lookup: num=");
 	dbg_putu(o->lookup_n);
 	if (o->lookup_n != 0) {
@@ -94,7 +123,6 @@ statelist_done(struct statelist *o) {
 	}
 	dbg_puts("\n");
 #endif
-	statelist_empty(o);
 }
 
 /*
@@ -122,11 +150,6 @@ statelist_empty(struct statelist *o) {
 	struct state *i, *inext;
 
 	for (i = o->first; i != NULL; i = inext) {
-		if (!(i->phase & EV_PHASE_LAST)) {
-			dbg_puts("statelist_empty: ");
-			ev_dbg(&i->ev);
-			dbg_puts(": unterminated frame\n");
-		}
 		inext = i->next;
 		statelist_rm(o, i);
 		state_del(i);
