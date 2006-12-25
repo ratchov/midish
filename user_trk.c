@@ -142,9 +142,7 @@ user_func_trackaddev(struct exec *o, struct data **r) {
 	    !exec_lookupev(o, "event", &ev)) {
 		return 0;
 	}
-
-	pos = song_measuretotic(user_song, measure);
-	track_timeinfo(&user_song->meta, pos, NULL, &bpm, &tpb);
+	track_timeinfo(&user_song->meta, measure, &pos, NULL, &bpm, &tpb);
 	
 	if (beat < 0 || (unsigned)beat >= bpm || 
 	    tic  < 0 || (unsigned)tic  >= tpb) {

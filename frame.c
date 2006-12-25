@@ -1092,15 +1092,29 @@ track_findmeasure(struct track *t, unsigned m) {
 }
 
 /*
- * return the tempo and time signature corresponding to the given tic
+ * return the absolute tic, the tempo and the time signature
+ * corresponding to the given measure number
  */
 void
-track_timeinfo(struct track *t, unsigned tic, 
+track_timeinfo(struct track *t, unsigned meas, unsigned *abs, 
     unsigned long *usec24, unsigned *bpm, unsigned *tpb) {
 	struct seqptr sp;
+	unsigned tic;
 
 	seqptr_init(&sp, t);
-	(void)seqptr_skip(&sp, tic);
+	tic  = seqptr_skipmeasure(&sp, meas);
+	tic += sp.tic;
+
+	/*
+	 * move to the last event, so all meta events enter the
+	 * state list
+	 */
+	while (seqptr_evget(&sp)) {
+		/* nothing */
+	}
+	if (tic) {
+		*abs = tic;
+	}
 	seqptr_getsign(&sp, bpm, tpb);
 	seqptr_gettempo(&sp, usec24);
 	seqptr_done(&sp);

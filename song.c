@@ -695,6 +695,12 @@ song_start(struct song *o,
 	o->tics_per_beat = DEFAULT_TPB;
 	o->tempo = TEMPO_TO_USEC24(DEFAULT_TEMPO, DEFAULT_TPB);
 	tic = track_findmeasure(&o->meta, o->measure);
+	if (o->measure > 0 && tic > o->curquant / 2 && o->curquant / 2 > 0) {
+		tic -= o->curquant / 2;
+		o->tic = o->beats_per_measure * o->tics_per_beat - o->curquant / 2;
+		o->beat = o->beats_per_measure - 1;
+		o->measure--;
+	}
 	
 	/*
 	 * move all tracks to the current position
