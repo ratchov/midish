@@ -790,7 +790,7 @@ track_quantize(struct track *src, unsigned start, unsigned len,
 	 */
 	(void)seqptr_skip(&sp, start);
 	statelist_dup(&slist, &sp.statelist);
-	for (st = sp.statelist.first; st != NULL; st = st->next) {
+	for (st = slist.first; st != NULL; st = st->next) {
 		st->tag = 0;
 	}
 	seqptr_seek(&qp, start);
@@ -881,7 +881,7 @@ track_transpose(struct track *src, unsigned start, unsigned len, int halftones) 
 	 */
 	(void)seqptr_skip(&sp, start);
 	statelist_dup(&slist, &sp.statelist);
-	for (st = sp.statelist.first; st != NULL; st = st->next) {
+	for (st = slist.first; st != NULL; st = st->next) {
 		st->tag = 0;
 	}
 	seqptr_seek(&qp, start);
