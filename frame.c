@@ -124,7 +124,7 @@
 #include "default.h"
 #include "frame.h"
 
-#undef FRAME_DEBUG
+#undef  FRAME_DEBUG
 
 /*
  * initialise a seqptr structure at the beginning of 
@@ -384,7 +384,7 @@ seqptr_rmprev(struct seqptr *sp, struct state *st) {
 #ifdef FRAME_DEBUG
 	dbg_puts("seqptr_rmprev: ");
 	ev_dbg(&st->ev);
-	dbg_puts(" removing frame\n");
+	dbg_puts(" removing whole frame\n");
 #endif
 	/*
 	 * start a the first event of the frame and iterate until the
@@ -430,7 +430,7 @@ seqptr_rmprev(struct seqptr *sp, struct state *st) {
 void
 seqptr_evmerge1(struct seqptr *pd, struct state *s1, struct state *s2) {
 	if (s1->phase & EV_PHASE_FIRST) {
-		s1->tag = (s2 && s2->phase != EV_PHASE_LAST) ? 0 : 1;
+		s1->tag = (!s2 || (!s2->phase & EV_PHASE_LAST)) ? 1 : 0;
 #ifdef FRAME_DEBUG
 		if (!s1->tag) {
 			dbg_puts("seqptr_evmerge1: ");
@@ -455,45 +455,37 @@ void
 seqptr_evmerge2(struct seqptr *pd, struct state *s1, struct state *s2) {
 	struct state *sd;
 
-	if (s1 == NULL || (s1->phase == EV_PHASE_LAST && !(s1->flags & STATE_CHANGED))) {
-		(void)seqptr_evput(pd, &s2->ev);
-		return;
-	}
-	if (!(s2->phase & EV_PHASE_LAST) || s1->phase & EV_PHASE_LAST) {
-		sd = statelist_lookup(&pd->statelist, &s2->ev);
-		if (sd == NULL) {
-			dbg_puts("seqptr_merge2: no conflicting events\n");
-			dbg_panic();
-		}
-		if (EV_ISNOTE(&s2->ev)) {
-			if (!(s1->phase & EV_PHASE_LAST)) 
-				sd = seqptr_rmprev(pd, sd);
-		} else {
-			if (s1->flags & STATE_CHANGED)
-				sd = seqptr_rmlast(pd, sd);
-		}
-		if (sd == NULL || !ev_eq(&sd->ev, &s2->ev)) {
-			(void)seqptr_evput(pd, &s2->ev);
-		}
-		s1->tag = 0;
-	} else {
-		if (EV_ISNOTE(&s2->ev)) {
-			(void)seqptr_evput(pd, &s2->ev);
-		} else {
-			sd = statelist_lookup(&pd->statelist, &s2->ev);
+	sd = statelist_lookup(&pd->statelist, &s2->ev);
+	if (s2->phase & EV_PHASE_FIRST) {
+		if (s1 && s1->tag) {
 			if (sd == NULL) {
-				dbg_puts("seqptr_merge2: no state for silent ctl\n");
+				dbg_puts("seqptr_merge2: no conflict\n");
 				dbg_panic();
 			}
-			if (s1->tag) {
-				dbg_puts("seqptr_merge2: ctl to restore not silent\n");
-				dbg_panic();
+		if (EV_ISNOTE(&s2->ev)) {
+				if (!(s1->phase & EV_PHASE_LAST)) 
+					sd = seqptr_rmprev(pd, sd);
+			} else {
+				if (s1->flags & STATE_CHANGED)
+					sd = seqptr_rmlast(pd, sd);
 			}
-			if (!(s1->flags & STATE_CHANGED) && !ev_eq(&sd->ev, &s1->ev)) {
-				(void)seqptr_evput(pd, &s1->ev);
-				s1->tag = 1;
-			}
+			s1->tag = 0;
 		}
+		s2->tag = 1;
+	} else if (s2->phase & EV_PHASE_NEXT) {
+		/* nothing to do, conflicts already handled */
+	} else if (s2->phase & EV_PHASE_LAST) {
+		if (s1) {
+			s2->tag = 0;
+			if (sd == NULL || !ev_eq(&sd->ev, &s1->ev)) {
+				sd = seqptr_evput(pd, &s1->ev);
+			}
+			s1->tag = 1;
+		}
+	}
+
+	if (s2->tag && (sd == NULL || !ev_eq(&sd->ev, &s2->ev))) {
+		(void)seqptr_evput(pd, &s2->ev);
 	}
 }
 
@@ -513,9 +505,6 @@ track_merge(struct track *dst, struct track *src) {
 	statelist_init(&orglist);
 	
 	for (;;) {
-		if (seqptr_eot(&pd) && seqptr_eot(&p2))
-			break;
-	
 		/*
 		 * remove all events from 'dst' and put them back on
 		 * on 'dst' by merging them with the state table of
@@ -544,18 +533,21 @@ track_merge(struct track *dst, struct track *src) {
 		}
 		
 		/*
-		 * move to the next non empty tick
-		 * XXX: simplify
+		 * move to the next non empty tick: the next tic is the
+		 * smaller position of the next event of each track
 		 */
 		delta1 = pd.pos->delta - pd.delta;
 		delta2 = p2.pos->delta - p2.delta;
-		if (delta1 > delta2 && delta2 > 0) {
-			delta1 = delta2;
-		} else if (delta2 > delta1 && delta1 > 0) {
-			delta2 = delta1;
+		if (delta1 > 0) {
+			deltad = delta1; 
+			if (delta2 > 0 && delta2 < deltad)
+				deltad = delta2;
+		} else if (delta2 > 0) {
+			deltad = delta2;
+		} else {
+			break;
 		}
-		deltad = delta1 > delta2 ? delta1 : delta2;
-		seqptr_ticskip(&p2, delta2);
+		seqptr_ticskip(&p2, deltad);
 		deltad -= seqptr_ticskip(&pd, deltad);
 		if (deltad) {
 			seqptr_ticput(&pd, deltad);
