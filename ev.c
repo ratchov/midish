@@ -343,6 +343,7 @@ ev_cancel(struct ev *ev, struct ev *ca) {
  */
 unsigned
 ev_restore(struct ev *ev, struct ev *re) {
+	unsigned phase;
 	if (!EV_ISVOICE(ev) && !EV_ISMETA(ev)) {
 		dbg_puts("ev_restore: must be called with voice/meta argument\n");
 		dbg_panic();
@@ -350,7 +351,8 @@ ev_restore(struct ev *ev, struct ev *re) {
 	if (EV_ISNOTE(ev)) {
 		return 0;
 	}
-	if (ev_phase(ev) & EV_PHASE_LAST) {
+	phase = ev_phase(ev);
+	if ((phase & EV_PHASE_LAST) && !(phase & EV_PHASE_FIRST)) {
 		dbg_puts("ev_restore: WARNING: called for last event\n");
 		return 0;
 	}

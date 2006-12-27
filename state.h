@@ -32,7 +32,7 @@
 #define MIDISH_STATE_H
 
 #undef  STATE_DEBUG
-#undef  STATE_PROF
+#define STATE_PROF
 
 #include "ev.h"
 
@@ -75,6 +75,7 @@ struct state *state_new(void);
 void	      state_del(struct state *s);
 void	      statelist_init(struct statelist *o);
 void	      statelist_done(struct statelist *o);
+void	      statelist_dump(struct statelist *o);
 void	      statelist_dup(struct statelist *o, struct statelist *src);
 void	      statelist_add(struct statelist *o, struct state *st);
 void	      statelist_rm(struct statelist *o, struct state *st);

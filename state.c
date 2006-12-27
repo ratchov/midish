@@ -125,6 +125,17 @@ statelist_done(struct statelist *o) {
 #endif
 }
 
+void
+statelist_dump(struct statelist *o) {
+	struct state *i;
+
+	dbg_puts("statelist_dump:\n");
+	for (i = o->first; i != NULL; i = i->next) {
+		ev_dbg(&i->ev);
+		dbg_puts("\n");
+	}
+}
+
 /*
  * create a new statelist by duplicating another one
  */
@@ -209,38 +220,80 @@ statelist_lookup(struct statelist *o, struct ev *ev) {
 }
 
 /*
- * create a state for the given event and return the state.
- * if there is already a state for a related event, then
- * update the existing state.
+ * update the state of a frame when a new event is received. If this
+ * is the first event of the frame, then create a new state.
  *
- * Note: it would be nice if to reuse existing states instead of
- * purging them and allocating new ones
+ * XXX: try to reuse existing states instead of purging them and
+ * allocating new ones
  */
 struct state *
 statelist_update(struct statelist *statelist, struct ev *ev) {
-	struct state *st;
+	struct state *st, *stnext;
 	unsigned phase, flags, nevents;
-
-	phase = ev_phase(ev);
-	st = statelist_lookup(statelist, ev);
-
-	/*
-	 * purge an unused state (state of terminated frame) that we
-	 * need. This will also purge bogus frames.
-	 */
-	if (st != NULL && st->phase & EV_PHASE_LAST) {
-#ifdef STATE_DEBUG
-		dbg_puts("statelist_update: ");
-		ev_dbg(&st->ev);
-		dbg_puts(": purged\n");
+#ifdef STATE_PROF
+	unsigned time = 0;
 #endif
-		nevents = st->nevents;
-		statelist_rm(statelist, st);
-		state_del(st);
-		st = NULL;
-	} else {
-		nevents = 0;
+	
+	/*
+	 * we scan for a matching state, if it exists but is
+	 * terminated (phase = EV_PHASE_LAST) we purge it in order to
+	 * ruse the list entry. We cant just use statelist_lookup(),
+	 * because this will not work with nested frames (eg. if the
+	 * "top" state is purged but not the other one). So here we
+	 * inline a kind of 'lookup_for_write()' routine here:
+	 */
+	nevents = 0;
+	st = statelist->first;
+	for (;;) {
+#ifdef STATE_PROF
+		time++;
+#endif
+		if (st == NULL) {
+			st = state_new();
+			statelist_add(statelist, st);
+			st->flags = STATE_NEW;
+			st->nevents = 0;
+			break;
+		}
+		stnext = st->next;
+		if (ev_sameclass(&st->ev, ev)) {
+			/*
+			 * found a matching state
+			 */
+			phase = st->phase;
+			flags = st->flags;
+			if (phase & EV_PHASE_LAST) {
+#ifdef STATE_DEBUG
+				dbg_puts("statelist_update: ");
+				ev_dbg(&st->ev);
+				dbg_puts(": purged\n");
+#endif
+				/*
+				 * if the event is not tagged as 
+				 * nested, we reached the deepest
+				 * state, so stop iterating here
+				 */
+				if (!(flags & STATE_NESTED)) {
+					st->flags = STATE_NEW;
+					break;
+				} else {
+					statelist_rm(statelist, st);
+					state_del(st);
+				}
+			} else {
+				st->flags &= ~STATE_NEW;
+				break;
+			}
+		}
+		st = stnext;
 	}
+#ifdef STATE_PROF
+	statelist->lookup_n++;
+	if (statelist->lookup_max < time) {
+		statelist->lookup_max = time;
+	}
+	statelist->lookup_time += time;
+#endif
 
 	/*
 	 * if one of the following are true
@@ -252,30 +305,32 @@ statelist_update(struct statelist *statelist, struct ev *ev) {
 	 *	  de beginning of a nested frame)
 	 * then create a new state.
 	 */
-	if (st == NULL || phase == EV_PHASE_FIRST) {
-		if (!(phase & EV_PHASE_FIRST)) {
-			flags = STATE_BOGUS | STATE_NEW;
-			phase = EV_PHASE_FIRST | EV_PHASE_LAST;
+	phase = ev_phase(ev);
+	if (st->flags & STATE_NEW || phase == EV_PHASE_FIRST) {
+		if (st->flags & STATE_NEW) {
+			if (!(phase & EV_PHASE_FIRST)) {
+				phase = EV_PHASE_FIRST | EV_PHASE_LAST;
+				st->flags |= STATE_BOGUS;
+#ifdef STATE_DEBUG
+				dbg_puts("statelist_update: ");
+				ev_dbg(ev);
+				dbg_puts(": not first and no state\n");
+#endif
+			} else {
+				phase &= ~EV_PHASE_NEXT;
+			}
+		} else {
 #ifdef STATE_DEBUG
 			dbg_puts("statelist_update: ");
 			ev_dbg(ev);
-			dbg_puts(": not first and no state\n");
-#endif
-		} else if (st != NULL) {
-			flags = STATE_NESTED | STATE_NEW;
-#ifdef STATE_DEBUG
-			ev_dbg(ev);
 			dbg_puts(": nested events, stacked\n");
 #endif
-		} else {
-			flags = STATE_NEW;
-			phase &= ~EV_PHASE_NEXT;
+			st = state_new();
+			statelist_add(statelist, st);
+			st->flags = STATE_NESTED | STATE_NEW;
+			st->nevents = 0;
 		}
-		st = state_new();
-		statelist_add(statelist, st);
 		st->phase = phase;
-		st->flags = flags;
-		st->nevents = nevents;
 		st->ev = *ev;
 #ifdef STATE_DEBUG
 		dbg_puts("statelist_update: ");

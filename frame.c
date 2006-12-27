@@ -37,22 +37,23 @@
  *
  * It maintains a "state list" that contains the complete state of the
  * track at the current postion: the list of all sounding notes, the
- * state of all controllers etc... This allows for instance to move to
- * an arbitrary position and to recover the complete midi state.
+ * state of all controllers etc... This allows to ensure full
+ * consistency when a track is modified. So, always use the following
+ * 6 primitives to modify a track.
  *
  * Moving within the track:
  *
  *	there is no low-level primitives for moving forward, instead
  *	reading primitives should be used (and the result should be
  *	ignored). That's because the state list have to be kept up to
- *	date. Thus there is no way to go backward.
+ *	date. Thus there is no way to go backward. 
  *
- * Reading: 
+ * Reading:
  *
  *	there are 2 low-level primitives for reading: seqptr_ticskip()
  *	skips empty tics (moves forward) and seqptr_evget() reads
- *	events. There can be multiple seqptr structures reading 
- *	the same track.
+ *	events. There can be multiple seqptr structures reading the
+ *	same track.
  *
  * Writing:
  *
@@ -60,17 +61,20 @@
  *	adds empty tics and seqptr_evput() adds an event at the
  *	current postion. The state list is updated as new events were
  *	read with seqptr_evget(). If there is a writer, there must not
- *	be any readers. In order to keep track consistency, events
- *	must only be appended at the end-of-track; indeed, if we write
- *	an arbitrary event in the middle of a track, generally it
- *	isn't possible to solve all conflicts.
+ *	be readers. In order to keep track consistency, events must
+ *	only be appended at the end-of-track; indeed, if we write an
+ *	arbitrary event in the middle of a track, generally it isn't
+ *	possible to solve all conflicts.
  *
  * Erasing:
  *
  *	there are 2 low-level routines for erasing: seqptr_ticdel()
  *	deletes empty tics and seqptr_evdel() deletes the next event.
  *	The state list is not updated since the current position
- *	haven't changed. 
+ *	haven't changed. However, to keep state of erased events both
+ *	functions take as optionnal argument a state list, that is
+ *	updated as events and blank space were read with
+ *	seqptr_evget() and seqptr_ticskip()
  *
  * 
  * Common errors and pitfals
@@ -86,9 +90,11 @@
  *		for (;;) {
  *			st = seqptr_evdel(&sp, &slist);
  *			seqptr_evput(&sp, &st->ev);
+ *			...
  *		}
  *
- *	  is ok only if _all_ events are removed.
+ *	  is ok only if _all_ events are removed. This is the only
+ *	  correct way of consistetly modifying a track.
  *
  *	- when rewriting a track one must use a separate statelist
  *	  for events being removed, so the seqptr->statelist is used for
@@ -112,10 +118,25 @@
  *		seqptr_skip(&sp, pos);
  *		statelist_dup(&slist, &sp->slist);
  *		for (st = slist.first; st != NULL; st = st->next) {
- *			st->silent = ...
+ *			st->tag = ...
  *		}
  *
  *	  it is _not_ ok, to iterate over sp.statelist and then to dup it.
+ *
+ *	- seqptr_tic{skip,put,del}() outdates the statelist of the
+ *	  seqptr. This purges unused states and updates the
+ *	  STATE_CHANGED flag. However, if we use seqptr_ticskip() with
+ *	  seqptr_evdel(), we'll not outdate the right state list. So we
+ *	  have to rewrite blank space too (not only events) as
+ *	  follows:
+ *
+ *		for (;;) {
+ *			delta = seqptr_ticdel(&sp, &slist);
+ *			seqptr_ticput(&sp, delta);
+ *
+ *			st = seqptr_evdel(&sp, &slist);
+ *			seqptr_evput(&sp, st->ev);
+ *		} 
  *
  */
 
@@ -262,7 +283,7 @@ seqptr_ticskip(struct seqptr *sp, unsigned max) {
  * same semantics as seqptr_ticskip()
  */
 unsigned
-seqptr_ticdel(struct seqptr *sp, unsigned max) {
+seqptr_ticdel(struct seqptr *sp, unsigned max, struct statelist *slist) {
 	unsigned ntics;
 
 	ntics = sp->pos->delta - sp->delta;
@@ -270,6 +291,9 @@ seqptr_ticdel(struct seqptr *sp, unsigned max) {
 		ntics = max;
 	}
 	sp->pos->delta -= ntics;
+	if (slist != NULL && max > 0) {
+		statelist_outdate(slist);
+	}
 	return ntics;
 }
 
@@ -429,6 +453,14 @@ seqptr_rmprev(struct seqptr *sp, struct state *st) {
  */
 void
 seqptr_evmerge1(struct seqptr *pd, struct state *s1, struct state *s2) {
+	/*
+	 * ignore bogus events
+	 */
+	if (s1->flags & (STATE_BOGUS | STATE_NESTED))
+		return;
+	if (s2 != NULL && s2->flags & (STATE_BOGUS | STATE_NESTED))
+		s2 = NULL;
+
 	if (s1->phase & EV_PHASE_FIRST) {
 		s1->tag = (!s2 || (!s2->phase & EV_PHASE_LAST)) ? 1 : 0;
 #ifdef FRAME_DEBUG
@@ -455,14 +487,27 @@ void
 seqptr_evmerge2(struct seqptr *pd, struct state *s1, struct state *s2) {
 	struct state *sd;
 
+	/*
+	 * ignore bogus events
+	 */
+	if (s2->flags & (STATE_BOGUS | STATE_NESTED))
+		return;
+	if (s1 != NULL && s1->flags & (STATE_BOGUS | STATE_NESTED))
+		s1 = NULL;
+
+	/*
+	 * tag/untag frames depending of if there are conflicts
+	 */
 	sd = statelist_lookup(&pd->statelist, &s2->ev);
 	if (s2->phase & EV_PHASE_FIRST) {
 		if (s1 && s1->tag) {
 			if (sd == NULL) {
-				dbg_puts("seqptr_merge2: no conflict\n");
+				dbg_puts("seqptr_merge2: ");
+				ev_dbg(&s1->ev);
+				dbg_puts(": no conflict\n");
 				dbg_panic();
 			}
-		if (EV_ISNOTE(&s2->ev)) {
+			if (EV_ISNOTE(&s2->ev)) {
 				if (!(s1->phase & EV_PHASE_LAST)) 
 					sd = seqptr_rmprev(pd, sd);
 			} else {
@@ -484,6 +529,9 @@ seqptr_evmerge2(struct seqptr *pd, struct state *s1, struct state *s2) {
 		}
 	}
 
+	/*
+	 * store the event, if the frame is tagged
+	 */
 	if (s2->tag && (sd == NULL || !ev_eq(&sd->ev, &s2->ev))) {
 		(void)seqptr_evput(pd, &s2->ev);
 	}
@@ -545,14 +593,12 @@ track_merge(struct track *dst, struct track *src) {
 		} else if (delta2 > 0) {
 			deltad = delta2;
 		} else {
+			/* both delta1 and delta2 are zero */
 			break;
 		}
-		seqptr_ticskip(&p2, deltad);
-		deltad -= seqptr_ticskip(&pd, deltad);
-		if (deltad) {
-			seqptr_ticput(&pd, deltad);
-		}
-		statelist_outdate(&orglist);
+		(void)seqptr_ticskip(&p2, deltad);
+		(void)seqptr_ticdel(&pd, deltad, &orglist);
+		seqptr_ticput(&pd, deltad);
 	}
 
 	statelist_done(&orglist);
@@ -572,7 +618,7 @@ track_merge(struct track *dst, struct track *src) {
 void
 track_move(struct track *src, unsigned start, unsigned len, 
     struct evspec *es, struct track *dst, unsigned copy, unsigned blank) {
-	unsigned delta, amount;
+	unsigned delta, amount_sp, amount_dp;
 	struct seqptr sp, dp;		/* current src & dst track states */
 	struct statelist slist;		/* original src track state */
 	struct state *st;
@@ -656,10 +702,11 @@ track_move(struct track *src, unsigned start, unsigned len,
 	/*
 	 * tag/copy/erase frames during 'len' tics
 	 */
-	amount = 0;
+	amount_dp = amount_sp = 0;
 	for (;;) {
-		delta = seqptr_ticskip(&sp, len);
-		amount += delta;
+		delta = seqptr_ticdel(&sp, len, &slist);
+		amount_dp += delta;
+		amount_sp += delta;
 		len -= delta;
 		if (len == 0)
 			break;
@@ -670,12 +717,15 @@ track_move(struct track *src, unsigned start, unsigned len,
 			st->tag = evspec_matchev(es, &st->ev) ? TAG_COPY : TAG_KEEP;
 		}
 		if (copy && (st->tag & TAG_COPY)) {
-			seqptr_seek(&dp, amount);
+			seqptr_seek(&dp, amount_dp);
 			seqptr_evput(&dp, &st->ev);
-			amount = 0;
+			amount_dp = 0;
 		}
-		if (!blank || (st->tag & TAG_KEEP))
+		if (!blank || (st->tag & TAG_KEEP)) {
+			seqptr_ticput(&sp, amount_sp);
 			seqptr_evput(&sp, &st->ev);
+			amount_sp = 0;
+		}
 	}
 	
 	/*
@@ -689,9 +739,9 @@ track_move(struct track *src, unsigned start, unsigned len,
 		if (!(st->phase & EV_PHASE_LAST)) {
 			if (ev_cancel(&st->ev, &ev)) { 
 				if (copy) {
-					seqptr_seek(&dp, amount);
+					seqptr_seek(&dp, amount_dp);
 					seqptr_evput(&dp, &ev);
-					amount = 0;
+					amount_dp = 0;
 				}
 				st->tag &= ~TAG_COPY;
 			}
@@ -713,12 +763,16 @@ track_move(struct track *src, unsigned start, unsigned len,
 		if (st->phase & EV_PHASE_FIRST)
 			st->tag &= ~TAG_COPY;
 		if (copy && (st->tag & TAG_COPY)) {
-			seqptr_seek(&dp, amount);
+			seqptr_seek(&dp, amount_dp);
 			seqptr_evput(&dp, &st->ev);
-			amount = 0;
+			amount_dp = 0;
 		}
-		if (!blank || (st->tag & TAG_KEEP))
+		if (!blank || (st->tag & TAG_KEEP)) {
+			seqptr_ticput(&sp, amount_sp);
 			seqptr_evput(&sp, &st->ev);
+			amount_sp = 0;
+		}
+			
 	}
 
 	/*
@@ -729,6 +783,10 @@ track_move(struct track *src, unsigned start, unsigned len,
 			continue;
 		if (!(st->tag & TAG_KEEP) && !(st->phase & EV_PHASE_LAST)) {
 			if (ev_restore(&st->ev, &ev)) { 
+				if (amount_sp) {
+					seqptr_ticput(&sp, amount_sp);
+					amount_sp = 0;
+				}
 				seqptr_evput(&sp, &ev);
 				st->tag |= TAG_KEEP;
 			}
@@ -740,8 +798,9 @@ track_move(struct track *src, unsigned start, unsigned len,
 	 * canceled (note events)
 	 */
 	for (;;) {
-		delta = seqptr_ticskip(&sp, ~0U);
-		amount += delta;		
+		delta = seqptr_ticdel(&sp, ~0U, &slist);
+		amount_dp += delta;
+		amount_sp += delta;
 		st = seqptr_evdel(&sp, &slist);
 		if (st == NULL)
 			break;
@@ -750,12 +809,15 @@ track_move(struct track *src, unsigned start, unsigned len,
 			st->tag |= TAG_KEEP;
 		}
 		if (copy && (st->tag & TAG_COPY)) {
-			seqptr_seek(&dp, amount);
+			seqptr_seek(&dp, amount_dp);
 			seqptr_evput(&dp, &st->ev);
-			amount = 0;
+			amount_dp = 0;
 		}
-		if (!blank || (st->tag & TAG_KEEP))
+		if (!blank || (st->tag & TAG_KEEP)) {
+			seqptr_ticput(&sp, amount_sp);
 			seqptr_evput(&sp, &st->ev);
+			amount_sp = 0;
+		}
 	}
 	
 	statelist_done(&slist);
@@ -802,12 +864,14 @@ track_quantize(struct track *src, unsigned start, unsigned len,
 	 * while stretching the time scale in the destination track
 	 */
 	for (;;) {
-		delta = seqptr_ticskip(&sp, len);
+		delta = seqptr_ticdel(&sp, len, &slist);
 		tic += delta;
 	
 		if (tic >= start + len || !seqptr_evavail(&sp))
 			break;
 		
+		seqptr_ticput(&sp, delta);
+
 		delta -= ofs;
 		remaind = quant != 0 ? (tic - start + offset) % quant : 0;
 		if (remaind <= quant / 2) {
@@ -839,7 +903,8 @@ track_quantize(struct track *src, unsigned start, unsigned len,
 	 * finish quantised (tagged) events
 	 */
 	for (;;) {
-		delta = seqptr_ticskip(&sp, ~0U);
+		delta = seqptr_ticdel(&sp, ~0U, &slist);
+		seqptr_ticput(&sp, delta);
 		if (!seqptr_evavail(&sp))
 			break;
 		st = seqptr_evdel(&sp, &slist);
@@ -891,7 +956,8 @@ track_transpose(struct track *src, unsigned start, unsigned len, int halftones) 
 	 * go ahead and copy all events to transpose during 'len' tics,
 	 */
 	for (;;) {
-		delta = seqptr_ticskip(&sp, len);
+		delta = seqptr_ticdel(&sp, len, &slist);
+		seqptr_ticput(&sp, delta);
 		seqptr_seek(&qp, delta);
 		tic += delta;
 	
@@ -916,7 +982,8 @@ track_transpose(struct track *src, unsigned start, unsigned len, int halftones) 
 	 * finish transposed (tagged) frames
 	 */
 	for (;;) {
-		delta = seqptr_ticskip(&sp, ~0U);
+		delta = seqptr_ticdel(&sp, ~0U, &slist);
+		seqptr_ticput(&sp, delta);
 		seqptr_seek(&qp, delta);
 		if (!seqptr_evavail(&sp))
 			break;
@@ -945,8 +1012,9 @@ track_transpose(struct track *src, unsigned start, unsigned len, int halftones) 
 void
 track_check(struct track *src) {
 	struct seqptr sp;
-	struct state *st, *stnext;
+	struct state *dst, *st, *stnext;
 	struct statelist slist;
+	unsigned delta;
 
 	seqptr_init(&sp, src);
 	statelist_init(&slist);
@@ -956,7 +1024,9 @@ track_check(struct track *src) {
 	 * see statelist_update() for definition of bogus
 	 */
 	for (;;) {
-		(void)seqptr_ticskip(&sp, ~0U);
+		delta = seqptr_ticdel(&sp, ~0U, &slist);
+		seqptr_ticput(&sp, delta);
+
 		st = seqptr_evdel(&sp, &slist);
 		if (st == NULL)
 			break;
@@ -976,8 +1046,18 @@ track_check(struct track *src) {
 			}
 		}
 		if (st->tag) {
-			seqptr_evput(&sp, &st->ev);
-		}	
+			/*
+			 * dont dumplicate events
+			 */
+			dst = statelist_lookup(&sp.statelist, &st->ev);
+			if (dst == NULL || !ev_eq(&dst->ev, &st->ev)) {
+				seqptr_evput(&sp, &st->ev);
+			} else {
+				dbg_puts("track_check: ");
+				ev_dbg(&st->ev);
+				dbg_puts(": duplicated\n");
+			}
+		}
 	}
 
 	/*
@@ -1155,7 +1235,7 @@ track_settempo(struct track *t, unsigned measure, unsigned tempo) {
 	 * remove the next tempo event if it has the current value
 	 */
 	for (;;) {
-		seqptr_ticskip(&sp, ~0);
+		seqptr_ticskip(&sp, ~0U);
 		if (!seqptr_evavail(&sp))
 			break;
 		if (sp.pos->ev.cmd == EV_TEMPO) {
@@ -1221,7 +1301,7 @@ track_timeins(struct track *t, unsigned measure, unsigned amount,
 	 * remove the next timesig if it has the current value
 	 */
 	for (;;) {
-		seqptr_ticskip(&sp, ~0);
+		seqptr_ticskip(&sp, ~0U);
 		if (!seqptr_evavail(&sp))
 			break;
 		if (sp.pos->ev.cmd == EV_TIMESIG) {
@@ -1243,7 +1323,7 @@ track_timerm(struct track *t, unsigned measure, unsigned amount) {
 	struct seqptr sp;
 	struct statelist slist;
 	struct state *st, *ost;
-	unsigned tic, len;
+	unsigned delta, tic, len;
 	struct ev ev;
 
 	/*
@@ -1280,7 +1360,7 @@ track_timerm(struct track *t, unsigned measure, unsigned amount) {
 	 * remove everything during 'len' tics
 	 */
 	for (;;) {
-		len -= seqptr_ticdel(&sp, len);
+		len -= seqptr_ticdel(&sp, len, &slist);
 		if (len == 0)
 			break;
 		if (!seqptr_evavail(&sp))
@@ -1320,7 +1400,8 @@ track_timerm(struct track *t, unsigned measure, unsigned amount) {
 	 * state 6: copy all events of tagged frames
 	 */
 	for (;;) {
-		(void)seqptr_ticskip(&sp, ~0U);
+		delta = seqptr_ticdel(&sp, ~0U, &slist);
+		seqptr_ticput(&sp, delta);
 		if (!seqptr_evavail(&sp))
 			break;
 		st = seqptr_evdel(&sp, &slist);
