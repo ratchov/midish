@@ -738,7 +738,8 @@ song_fix1(struct song *o) {
 		seqptr_init(&tp, &t->track);
 		statelist_init(&slist);
 		for (;;) {
-			delta = seqptr_ticskip(&tp, ~0U);
+			delta = seqptr_ticdel(&tp, ~0U, &slist);
+			seqptr_ticput(&tp, delta);
 			seqptr_ticput(&cp, delta);
 			st = seqptr_evdel(&tp, &slist);
 			if (st == NULL) {
