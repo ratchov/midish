@@ -1241,6 +1241,14 @@ the console).
 	<LI> make metronome click audible with non-percusive patches
 	<LI> save metronome settings
         <LI> added tempo factor: <TT>songsetfactor</TT> and <TT>songgetfactor</TT>
+	<LI> changed all track functions to gracefully handle nested notes, overlapping
+	     controllers/benders.
+	<LI> when entering real-time mode, restore the states of all 
+	     controllers/benders corresponding to the current position
+	<LI> when leaving real-time mode release only notes that
+	     are sounding and reset only controllers that are touched
+	     instead of resetting all notes/controllers. This allows
+	     midish to better share MIDI devices with other sequencers.
 	</UL>
 
 <A name="attributes"></A><H1>13 Project attributes</H1>
@@ -1970,10 +1978,11 @@ the console).
 <B><TT>trackquant trackname from amount rate quantum</TT></B>
         <BLOCKQUOTE>
         quantise <TT>amount</TT> measures of the track
-        <TT>trackname</TT> from measure <TT>from</TT> ; the quantum is
-        the round in tics (see songsetunit). Rate must be
-        between 0 and 100. 0 means no quantisation and
-        100 means full quantisation.
+        <TT>trackname</TT> from measure <TT>from</TT>. Note positions
+	are rounded to the nearest tick multiple of the 'quantum'
+        argument; the later must be larger than 4 ticks.
+	Rate must be between 0 and 100: 0 means no
+        quantisation and 100 means full quantisation.
         </BLOCKQUOTE>
 
 <A name="func_tracktransp"></A>

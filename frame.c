@@ -874,13 +874,13 @@ track_quantize(struct track *src, unsigned start, unsigned len,
 
 		delta -= ofs;
 		remaind = quant != 0 ? (tic - start + offset) % quant : 0;
-		if (remaind <= quant / 2) {
+		if (remaind < quant / 2) {
 			ofs = - ((remaind * rate + 99) / 100);
 		} else {
 			ofs = ((quant - remaind) * rate + 99) / 100;
 		}
 #ifdef FRAME_DEBUG
-		if (ofs < 0 && delta < (unsigned)(-ofs)) {
+		if (ofs < 0 && delta < (unsigned)-ofs) {
 			dbg_puts("track_quantize: delta < -ofs\n");
 			dbg_panic();
 		}
