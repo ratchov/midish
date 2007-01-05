@@ -62,6 +62,7 @@ struct statelist {
 	 * time is around 1-2 iterations)
 	 */
 	struct state *first;		/* head of the state list */
+	unsigned changed;		/* if changed within this tick */
 #ifdef STATE_PROF
 	unsigned lookup_n;		/* number of lookups */
 	unsigned lookup_max;		/* max lookup time */

@@ -137,6 +137,14 @@ track_dump(struct track *o) {
 }
 
 /*
+ * return true if the track is empty 
+ */
+unsigned
+track_isempty(struct track *o) {
+	return o->first->ev.cmd == EV_NULL && o->first->delta == 0;
+}
+
+/*
  * return true if an event is available on the track
  */
 unsigned

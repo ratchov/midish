@@ -73,6 +73,7 @@ state_del(struct state *s) {
 void
 statelist_init(struct statelist *o) {
 	o->first = NULL;
+	o->changed = 0;
 #ifdef STATE_PROF
 	o->lookup_n = 0;
 	o->lookup_time = 0;
@@ -349,6 +350,7 @@ statelist_update(struct statelist *statelist, struct ev *ev) {
 	}
 	st->flags |= STATE_CHANGED;
 	st->nevents++;
+	statelist->changed = 1;
 	return st;
 }
 
@@ -361,6 +363,10 @@ void
 statelist_outdate(struct statelist *o) {
 	struct state *i, *inext;
 
+	if (!o->changed)
+		return;
+
+	o->changed = 0;
 	for (i = o->first; i != NULL; i = inext) {
 		inext = i->next;
 		/*

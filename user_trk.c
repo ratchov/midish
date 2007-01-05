@@ -253,7 +253,9 @@ user_func_trackcut(struct exec *o, struct data **r) {
 	t2.first->delta += tic;
 	track_clear(&t->track);
 	track_merge(&t->track, &t1);
-	track_merge(&t->track, &t2);
+	if (!track_isempty(&t2)) {
+		track_merge(&t->track, &t2);
+	}
 	track_done(&t1);
 	track_done(&t2);
 	return 1;
@@ -320,8 +322,10 @@ user_func_trackcopy(struct exec *o, struct data **r) {
 
 	track_init(&copy);
 	track_move(&t->track, tic, len, &es, &copy, 1, 0);
-	copy.first->delta += tic2;
-	track_merge(&t2->track, &copy);
+	if (!track_isempty(&copy)) {
+		copy.first->delta += tic2;
+		track_merge(&t2->track, &copy);
+	}
 	track_done(&copy);
 	return 1;
 }
@@ -366,7 +370,9 @@ user_func_trackinsert(struct exec *o, struct data **r) {
 	t2.first->delta += tic + len;
 	track_clear(&t->track);
 	track_merge(&t->track, &t1);
-	track_merge(&t->track, &t2);
+	if (!track_isempty(&t2)) {
+		track_merge(&t->track, &t2);
+	}
 	track_done(&t1);
 	track_done(&t2);	     
 	return 1;

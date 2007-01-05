@@ -61,6 +61,7 @@ void	      track_dump(struct track *o);
 unsigned      track_numev(struct track *o);
 unsigned      track_numtic(struct track *o);
 void	      track_clear(struct track *o);
+unsigned      track_isempty(struct track *o);
 
 unsigned      seqev_avail(struct seqev *pos);
 void	      seqev_ins(struct seqev *pos, struct seqev *se);

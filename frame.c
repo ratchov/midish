@@ -337,6 +337,44 @@ seqptr_seek(struct seqptr *sp, unsigned ntics) {
 		seqptr_ticput(sp, ntics);
 }
 
+
+/*
+ * generate an event that will suspend the frame of the given
+ * state; the state is unchanged and may belong to any statelist.
+ * If an event was generated, its state is returned, otherwise
+ * NULL is returned.
+ */
+struct state *
+seqptr_pause(struct seqptr *sp, struct state *st) {
+	struct ev ev;
+
+	if (!EV_ISNOTE(&st->ev) && !(st->phase & EV_PHASE_LAST)) {
+		if (ev_cancel(&st->ev, &ev)) {
+			return seqptr_evput(sp, &ev);
+		}
+	}
+	return NULL;
+}
+
+/*
+ * generate an event that will restore the frame of the given
+ * state; the state is unchanged and may belong to any statelist.
+ * If an event was generated, its state is returned, otherwise
+ * NULL is returned.
+ */
+struct state *
+seqptr_unpause(struct seqptr *sp, struct state *st) {
+	struct ev ev;
+
+	if (!EV_ISNOTE(&st->ev) && !(st->phase & EV_PHASE_LAST)) {
+		if (ev_restore(&st->ev, &ev)) {
+			return seqptr_evput(sp, &ev);
+		}
+	}
+	return NULL;
+}
+
+
 /*
  * erase the event contained in the given state. Everything happens
  * as the event never existed on the track. Returns the new state, 
@@ -618,7 +656,7 @@ track_merge(struct track *dst, struct track *src) {
 void
 track_move(struct track *src, unsigned start, unsigned len, 
     struct evspec *es, struct track *dst, unsigned copy, unsigned blank) {
-	unsigned delta, amount_sp, amount_dp;
+	unsigned delta;
 	struct seqptr sp, dp;		/* current src & dst track states */
 	struct statelist slist;		/* original src track state */
 	struct state *st;
@@ -648,14 +686,11 @@ track_move(struct track *src, unsigned start, unsigned len,
 	/*
 	 * cancel/tag frames that will be erased (blank only)
 	 */
-	for (st = slist.first; st != NULL; st = st->next) {
-		if (!EV_ISNOTE(&st->ev) && !(st->phase & EV_PHASE_LAST)) {
-			if (evspec_matchev(es, &st->ev) && 
-			    ev_cancel(&st->ev, &ev)) {
-				if (blank)
-					seqptr_evput(&sp, &ev);
+	if (blank) {
+		for (st = slist.first; st != NULL; st = st->next) {
+			if (evspec_matchev(es, &st->ev) &&
+			    seqptr_pause(&sp, st))
 				st->tag &= ~TAG_KEEP;
-			}
 		}
 	}
 
@@ -687,13 +722,12 @@ track_move(struct track *src, unsigned start, unsigned len,
 	 * in the copy, restore frames that weren't updated by the
 	 * first tic.
 	 */
-	for (st = slist.first; st != NULL; st = st->next) {
-		if (EV_ISNOTE(&st->ev) || !evspec_matchev(es, &st->ev))
-			continue;
-		if (!(st->tag & TAG_COPY) && !(st->phase & EV_PHASE_LAST)) {
-			if (ev_restore(&st->ev, &ev)) {
-       				if (copy)
-					seqptr_evput(&dp, &ev);
+	if (copy) {
+		for (st = slist.first; st != NULL; st = st->next) {
+			if (!evspec_matchev(es, &st->ev))
+				continue;
+			if (!(st->tag & TAG_COPY) && 
+			    seqptr_unpause(&dp, st)) {
 				st->tag |= TAG_COPY;
 			}
 		}
@@ -702,11 +736,11 @@ track_move(struct track *src, unsigned start, unsigned len,
 	/*
 	 * tag/copy/erase frames during 'len' tics
 	 */
-	amount_dp = amount_sp = 0;
 	for (;;) {
 		delta = seqptr_ticdel(&sp, len, &slist);
-		amount_dp += delta;
-		amount_sp += delta;
+		if (copy)
+			seqptr_ticput(&dp, delta);
+		seqptr_ticput(&sp, delta);
 		len -= delta;
 		if (len == 0)
 			break;
@@ -717,14 +751,10 @@ track_move(struct track *src, unsigned start, unsigned len,
 			st->tag = evspec_matchev(es, &st->ev) ? TAG_COPY : TAG_KEEP;
 		}
 		if (copy && (st->tag & TAG_COPY)) {
-			seqptr_seek(&dp, amount_dp);
 			seqptr_evput(&dp, &st->ev);
-			amount_dp = 0;
 		}
 		if (!blank || (st->tag & TAG_KEEP)) {
-			seqptr_ticput(&sp, amount_sp);
 			seqptr_evput(&sp, &st->ev);
-			amount_sp = 0;
 		}
 	}
 	
@@ -733,18 +763,10 @@ track_move(struct track *src, unsigned start, unsigned len,
 	 * cancelled frames are untagged, so they will stop
 	 * being copied
 	 */
-	for (st = slist.first; st != NULL; st = st->next) {
-		if (EV_ISNOTE(&st->ev))
-			continue;
-		if (!(st->phase & EV_PHASE_LAST)) {
-			if (ev_cancel(&st->ev, &ev)) { 
-				if (copy) {
-					seqptr_seek(&dp, amount_dp);
-					seqptr_evput(&dp, &ev);
-					amount_dp = 0;
-				}
+	if (copy) {
+		for (st = slist.first; st != NULL; st = st->next) {
+			if (seqptr_pause(&dp, st))
 				st->tag &= ~TAG_COPY;
-			}
 		}
 	}
 
@@ -763,14 +785,10 @@ track_move(struct track *src, unsigned start, unsigned len,
 		if (st->phase & EV_PHASE_FIRST)
 			st->tag &= ~TAG_COPY;
 		if (copy && (st->tag & TAG_COPY)) {
-			seqptr_seek(&dp, amount_dp);
 			seqptr_evput(&dp, &st->ev);
-			amount_dp = 0;
 		}
 		if (!blank || (st->tag & TAG_KEEP)) {
-			seqptr_ticput(&sp, amount_sp);
 			seqptr_evput(&sp, &st->ev);
-			amount_sp = 0;
 		}
 			
 	}
@@ -783,10 +801,6 @@ track_move(struct track *src, unsigned start, unsigned len,
 			continue;
 		if (!(st->tag & TAG_KEEP) && !(st->phase & EV_PHASE_LAST)) {
 			if (ev_restore(&st->ev, &ev)) { 
-				if (amount_sp) {
-					seqptr_ticput(&sp, amount_sp);
-					amount_sp = 0;
-				}
 				seqptr_evput(&sp, &ev);
 				st->tag |= TAG_KEEP;
 			}
@@ -799,8 +813,9 @@ track_move(struct track *src, unsigned start, unsigned len,
 	 */
 	for (;;) {
 		delta = seqptr_ticdel(&sp, ~0U, &slist);
-		amount_dp += delta;
-		amount_sp += delta;
+		if (copy)
+			seqptr_ticput(&dp, delta);
+		seqptr_ticput(&sp, delta);
 		st = seqptr_evdel(&sp, &slist);
 		if (st == NULL)
 			break;
@@ -809,14 +824,10 @@ track_move(struct track *src, unsigned start, unsigned len,
 			st->tag |= TAG_KEEP;
 		}
 		if (copy && (st->tag & TAG_COPY)) {
-			seqptr_seek(&dp, amount_dp);
 			seqptr_evput(&dp, &st->ev);
-			amount_dp = 0;
 		}
 		if (!blank || (st->tag & TAG_KEEP)) {
-			seqptr_ticput(&sp, amount_sp);
 			seqptr_evput(&sp, &st->ev);
-			amount_sp = 0;
 		}
 	}
 	
@@ -886,7 +897,7 @@ track_quantize(struct track *src, unsigned start, unsigned len,
 		}
 #endif
 		delta += ofs;
-		seqptr_seek(&qp, delta);
+		seqptr_ticput(&qp, delta);
 
 		st = seqptr_evdel(&sp, &slist);
 		if (st->phase & EV_PHASE_FIRST) {
@@ -910,7 +921,7 @@ track_quantize(struct track *src, unsigned start, unsigned len,
 		st = seqptr_evdel(&sp, &slist);
 		if (st->phase & EV_PHASE_FIRST)
 			st->tag = 0;
-		seqptr_seek(&qp, delta);
+		seqptr_ticput(&qp, delta);
 		if (st->tag) {
 			seqptr_evput(&qp, &st->ev);
 		} else {
@@ -958,7 +969,7 @@ track_transpose(struct track *src, unsigned start, unsigned len, int halftones) 
 	for (;;) {
 		delta = seqptr_ticdel(&sp, len, &slist);
 		seqptr_ticput(&sp, delta);
-		seqptr_seek(&qp, delta);
+		seqptr_ticput(&qp, delta);
 		tic += delta;
 	
 		if (tic >= start + len || !seqptr_evavail(&sp))
@@ -984,7 +995,7 @@ track_transpose(struct track *src, unsigned start, unsigned len, int halftones) 
 	for (;;) {
 		delta = seqptr_ticdel(&sp, ~0U, &slist);
 		seqptr_ticput(&sp, delta);
-		seqptr_seek(&qp, delta);
+		seqptr_ticput(&qp, delta);
 		if (!seqptr_evavail(&sp))
 			break;
 		st = seqptr_evdel(&sp, &slist);
