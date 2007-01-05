@@ -642,6 +642,7 @@ track_merge(struct track *dst, struct track *src) {
 	statelist_done(&orglist);
 	seqptr_done(&p2);
 	seqptr_done(&pd);
+	track_chomp(dst);
 }
 
 /*
@@ -833,8 +834,10 @@ track_move(struct track *src, unsigned start, unsigned len,
 	
 	statelist_done(&slist);
 	seqptr_done(&sp);
-	if (copy)
+	if (copy) {
 		seqptr_done(&dp);
+		track_chomp(dst);
+	}
 #undef TAG_BLANK
 #undef TAG_COPY
 }

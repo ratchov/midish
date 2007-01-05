@@ -145,6 +145,14 @@ track_isempty(struct track *o) {
 }
 
 /*
+ * remove trailing blank space
+ */
+void
+track_chomp(struct track *o) {
+	o->eot.delta = 0;
+}
+
+/*
  * return true if an event is available on the track
  */
 unsigned
