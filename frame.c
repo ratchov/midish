@@ -556,7 +556,9 @@ seqptr_evmerge2(struct seqptr *pd, struct state *s1, struct state *s2) {
 		}
 		s2->tag = 1;
 	} else if (s2->phase & EV_PHASE_NEXT) {
-		/* nothing to do, conflicts already handled */
+		/* 
+		 * nothing to do, conflicts already handled 
+		 */
 	} else if (s2->phase & EV_PHASE_LAST) {
 		if (s1) {
 			s2->tag = 0;
@@ -661,7 +663,6 @@ track_move(struct track *src, unsigned start, unsigned len,
 	struct seqptr sp, dp;		/* current src & dst track states */
 	struct statelist slist;		/* original src track state */
 	struct state *st;
-	struct ev ev;
 
 #define TAG_KEEP	1		/* frame is not erased */
 #define TAG_COPY	2		/* frame is copied */
@@ -798,13 +799,8 @@ track_move(struct track *src, unsigned start, unsigned len,
 	 * retore/tag frames that are not tagged.
 	 */
 	for (st = slist.first; st != NULL; st = st->next) {
-		if (EV_ISNOTE(&st->ev))
-			continue;
-		if (!(st->tag & TAG_KEEP) && !(st->phase & EV_PHASE_LAST)) {
-			if (ev_restore(&st->ev, &ev)) { 
-				seqptr_evput(&sp, &ev);
-				st->tag |= TAG_KEEP;
-			}
+		if (!(st->tag & TAG_KEEP) && seqptr_unpause(&sp, st)) {
+			st->tag |= TAG_KEEP;
 		}
 	}
 	
@@ -838,6 +834,8 @@ track_move(struct track *src, unsigned start, unsigned len,
 		seqptr_done(&dp);
 		track_chomp(dst);
 	}
+	if (blank)
+		track_chomp(src);
 #undef TAG_BLANK
 #undef TAG_COPY
 }
@@ -1212,9 +1210,12 @@ track_timeinfo(struct track *t, unsigned meas, unsigned *abs,
 void
 track_settempo(struct track *t, unsigned measure, unsigned tempo) {
 	struct seqptr sp;
+	struct state *st;
+	struct statelist slist;
 	struct ev ev;
 	unsigned long usec24, old_usec24;
 	unsigned tic, bpm, tpb;
+	unsigned delta;
 
 	/*
 	 * go to the requested position, insert blank if necessary
@@ -1224,14 +1225,17 @@ track_settempo(struct track *t, unsigned measure, unsigned tempo) {
 	if (tic) {
 		seqptr_ticput(&sp, tic);
 	}
+	statelist_dup(&slist, &sp.statelist);
+
 	/*
 	 * remove all tempo events at the current tic
 	 */
-	while (seqptr_evavail(&sp)) {
-		if (sp.pos->ev.cmd == EV_TEMPO)
-			seqptr_evdel(&sp, NULL);
-		else 
-			seqptr_evget(&sp);
+	for (;;) {
+		st = seqptr_evdel(&sp, &slist);
+		if (st == NULL)
+			break;
+		if (st->ev.cmd != EV_TEMPO)
+			seqptr_evput(&sp, &st->ev);
 	}
 
 	/*
@@ -1245,23 +1249,25 @@ track_settempo(struct track *t, unsigned measure, unsigned tempo) {
 		ev.data.tempo.usec24 = usec24;
 		seqptr_evput(&sp, &ev);
 	}
+
 	/*
-	 * remove the next tempo event if it has the current value
+	 * move next events, skipping dumplicate tempos
 	 */
 	for (;;) {
-		seqptr_ticskip(&sp, ~0U);
-		if (!seqptr_evavail(&sp))
+		delta = seqptr_ticdel(&sp, ~0U, &slist);
+		seqptr_ticput(&sp, delta);
+		st = seqptr_evdel(&sp, &slist);
+		if (st == NULL)
 			break;
-		if (sp.pos->ev.cmd == EV_TEMPO) {
-			if (sp.pos->ev.data.tempo.usec24 == usec24)
-				seqptr_evdel(&sp, NULL);
-			break;
+		if (st->ev.cmd != EV_TEMPO || 
+		    st->ev.data.tempo.usec24 != usec24) {
+			usec24 = st->ev.data.tempo.usec24;
+			seqptr_evput(&sp, &st->ev);
 		}
-		seqptr_evget(&sp);
 	}
 	seqptr_done(&sp);
+	statelist_done(&slist);
 }
-
 
 /*
  * insert measures in the given tempo track
@@ -1269,10 +1275,13 @@ track_settempo(struct track *t, unsigned measure, unsigned tempo) {
 void
 track_timeins(struct track *t, unsigned measure, unsigned amount,
     unsigned bpm, unsigned tpb) {
-	struct seqptr sp;
-	struct state *sign;
+	struct seqptr sp, dp;
+	struct state *st, *sign;
+	struct statelist slist;
+	struct track t2;
 	struct ev ev;
 	unsigned tic, save_bpm, save_tpb;
+	unsigned delta;
 
 	/*
 	 * go to the requested position, insert blank if necessary
@@ -1282,8 +1291,13 @@ track_timeins(struct track *t, unsigned measure, unsigned amount,
 	if (tic) {
 		seqptr_ticput(&sp, tic);
 	}
-	sign = seqptr_getsign(&sp, &save_bpm, &save_tpb);
+	statelist_dup(&slist, &sp.statelist);
 
+	/*
+	 * append the new time signature, blank space
+	 * and restore the old time signature
+	 */
+	sign = seqptr_getsign(&sp, &save_bpm, &save_tpb);
 	if (bpm != save_bpm || tpb != save_tpb) {
 		ev.cmd = EV_TIMESIG;
 		ev.data.sign.beats = bpm;
@@ -1291,42 +1305,35 @@ track_timeins(struct track *t, unsigned measure, unsigned amount,
 		sign = seqptr_evput(&sp, &ev);
 	}
 	seqptr_ticput(&sp, bpm * tpb * amount);
-
-	/* 
-	 * restore the time signature
-	 */
 	if (bpm != save_bpm || tpb != save_tpb) {
 		ev.cmd = EV_TIMESIG;
 		ev.data.sign.beats = save_bpm;
 		ev.data.sign.tics = save_tpb;
 		sign = seqptr_evput(&sp, &ev);
 	}
-	for (;;) {
-		if (!seqptr_evavail(&sp))
-			break;
-		if (sign != NULL && sp.pos->ev.cmd == EV_TIMESIG) {
-			sign = seqptr_rmlast(&sp, sign);
-			break;
-		}
-		seqptr_evget(&sp);
-	}
-	
+
 	/*
-	 * remove the next timesig if it has the current value
+	 * copy the rest of the track into a new track
+	 * so we can use track_merge() instead of restoring
+	 * everything by hand
 	 */
+	track_init(&t2);
+	seqptr_init(&dp, &t2);
+	seqptr_ticput(&dp, sp.tic);
 	for (;;) {
-		seqptr_ticskip(&sp, ~0U);
-		if (!seqptr_evavail(&sp))
+		delta = seqptr_ticdel(&sp, ~0U, &slist);
+		seqptr_ticput(&dp, delta);
+		st = seqptr_evdel(&sp, &slist);
+		if (st == NULL)
 			break;
-		if (sp.pos->ev.cmd == EV_TIMESIG) {
-			if (sp.pos->ev.data.sign.beats == bpm &&
-			    sp.pos->ev.data.sign.tics == tpb)
-				seqptr_evdel(&sp, NULL);
-			break;
-		}
-		seqptr_evget(&sp);
+		st = seqptr_evput(&dp, &st->ev);
 	}
 	seqptr_done(&sp);
+	seqptr_done(&dp);
+	statelist_done(&slist);
+
+	track_merge(t, &t2);
+	track_done(&t2);
 }
 
 /*
