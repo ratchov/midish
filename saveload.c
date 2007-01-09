@@ -664,6 +664,27 @@ parse_ev(struct parse_s *o, struct ev_s *ev) {
 		}
 		ev->data.voice.b0 = val;
 		if (ev->cmd != EV_PC && ev->cmd != EV_CAT) {
+			if (ev->cmd == EV_KAT) {
+				/*
+				 * XXX: midish 0.2.5 used to generate
+				 * bogus kat events (without the last
+				 * byte.  As workaround, we ignore
+				 * such event, in order to allow user
+				 * to load its files
+				 */
+				if (!parse_getsym(o)) {
+					return 0;
+				}
+				if (o->lex.id != TOK_NUM) {
+					parse_ungetsym(o);
+					if (!parse_nl(o)) {
+						return 0;
+					}
+					ev->cmd = EV_NULL;
+					return 1;
+				}
+				parse_ungetsym(o);
+			}
 			if (!parse_long(o, EV_MAXB1, &val)) {
 				return 0;
 			}
@@ -689,6 +710,7 @@ ignore:		parse_ungetsym(o);
 			return 0;
 		}
 		lex_err(&o->lex, "unknown event, ignored");
+		ev->cmd = EV_NULL;
 		return 1;
 		
 	}
@@ -734,8 +756,10 @@ parse_track(struct parse_s *o, struct track_s *t) {
 			if (!parse_ev(o, &ev)) {
 				return 0;
 			}
-			track_evlast(t, &tp);
-			track_evput(t, &tp, &ev);
+			if (ev.cmd != EV_NULL) {
+				track_evlast(t, &tp);
+				track_evput(t, &tp, &ev);
+			}
 		}
 	}
 	return 1;			
