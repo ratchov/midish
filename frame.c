@@ -1096,6 +1096,47 @@ track_check(struct track *src) {
 }
 
 /*
+ * extract the configuration of a track at the given position (last
+ * prog change, parameters etc...) and store it in the given empty
+ * track
+ */
+void
+track_confget(struct track *src, unsigned pos, struct track *dst) {
+	struct seqptr sp, dp;
+	struct state *st;
+	unsigned prio;
+
+	seqptr_init(&dp, dst);
+	seqptr_skip(&dp, ~0U);
+	seqptr_init(&sp, src);
+	seqptr_skip(&sp, pos);
+
+	/*
+	 * untag all states (states are tagged for copied events)
+	 */
+	for (st = sp.statelist.first; st != NULL; st = st->next) {
+		st->tag = 0;
+	}
+
+	/*
+	 * dump events but order them by priority
+	 */
+	for (prio = EV_PRIO_ANY; prio <= EV_PRIO_MAX; prio++) {
+		for (st = sp.statelist.first; st != NULL; st = st->next) {
+			if (st->tag || ev_prio(&st->ev) != prio)
+				continue;
+			if (st->phase == (EV_PHASE_FIRST | EV_PHASE_LAST)) {
+				seqptr_evput(&dp, &st->ev);
+				st->tag = 1;
+			}
+		}
+	}
+	seqptr_done(&sp);
+	seqptr_done(&dp);
+}
+
+
+/*
  * get the current tempo (at the current position)
  */
 struct state *
@@ -1228,7 +1269,7 @@ track_settempo(struct track *t, unsigned measure, unsigned tempo) {
 	statelist_dup(&slist, &sp.statelist);
 
 	/*
-	 * remove all tempo events at the current tic
+	 * remove tempo events at the current tic
 	 */
 	for (;;) {
 		st = seqptr_evdel(&sp, &slist);
@@ -1251,7 +1292,7 @@ track_settempo(struct track *t, unsigned measure, unsigned tempo) {
 	}
 
 	/*
-	 * move next events, skipping dumplicate tempos
+	 * move next events, skipping duplicate tempos
 	 */
 	for (;;) {
 		delta = seqptr_ticdel(&sp, ~0U, &slist);
@@ -1275,65 +1316,74 @@ track_settempo(struct track *t, unsigned measure, unsigned tempo) {
 void
 track_timeins(struct track *t, unsigned measure, unsigned amount,
     unsigned bpm, unsigned tpb) {
-	struct seqptr sp, dp;
-	struct state *st, *sign;
+	struct seqptr sp;
+	struct state *st;
 	struct statelist slist;
-	struct track t2;
 	struct ev ev;
-	unsigned tic, save_bpm, save_tpb;
+	unsigned save_bpm, save_tpb;
 	unsigned delta;
 
 	/*
 	 * go to the requested position, insert blank if necessary
 	 */
 	seqptr_init(&sp, t);
-	tic = seqptr_skipmeasure(&sp, measure);
-	if (tic) {
-		seqptr_ticput(&sp, tic);
+	delta = seqptr_skipmeasure(&sp, measure);
+	if (delta) {
+		seqptr_ticput(&sp, delta);
 	}
 	statelist_dup(&slist, &sp.statelist);
 
 	/*
 	 * append the new time signature, blank space
-	 * and restore the old time signature
 	 */
-	sign = seqptr_getsign(&sp, &save_bpm, &save_tpb);
+	(void)seqptr_getsign(&sp, &save_bpm, &save_tpb);
 	if (bpm != save_bpm || tpb != save_tpb) {
 		ev.cmd = EV_TIMESIG;
 		ev.data.sign.beats = bpm;
 		ev.data.sign.tics = tpb;
-		sign = seqptr_evput(&sp, &ev);
+		(void)seqptr_evput(&sp, &ev);
 	}
 	seqptr_ticput(&sp, bpm * tpb * amount);
-	if (bpm != save_bpm || tpb != save_tpb) {
-		ev.cmd = EV_TIMESIG;
-		ev.data.sign.beats = save_bpm;
-		ev.data.sign.tics = save_tpb;
-		sign = seqptr_evput(&sp, &ev);
+
+	/*
+	 * move all events on the current tick, skipping duplicate
+	 * signature changes. This will restore the old time signature
+	 * if needed
+	 */
+	for (;;) {
+		st = seqptr_evdel(&sp, &slist);
+		if (st == NULL) {
+			if (bpm != save_bpm || tpb != save_tpb) {
+				ev.cmd = EV_TIMESIG;
+				ev.data.sign.beats = save_bpm;
+				ev.data.sign.tics = save_tpb;
+				seqptr_evput(&sp, &ev);
+			}
+			break;
+		}
+		if (st->ev.cmd == EV_TIMESIG) {
+			if (st->ev.data.sign.beats != bpm ||
+			    st->ev.data.sign.tics != tpb) {
+				seqptr_evput(&sp, &st->ev);
+			}
+			break;
+		}
+		seqptr_evput(&sp, &st->ev);
 	}
 
 	/*
-	 * copy the rest of the track into a new track
-	 * so we can use track_merge() instead of restoring
-	 * everything by hand
+	 * move the rest of the track
 	 */
-	track_init(&t2);
-	seqptr_init(&dp, &t2);
-	seqptr_ticput(&dp, sp.tic);
 	for (;;) {
 		delta = seqptr_ticdel(&sp, ~0U, &slist);
-		seqptr_ticput(&dp, delta);
+		seqptr_ticput(&sp, delta);
 		st = seqptr_evdel(&sp, &slist);
 		if (st == NULL)
 			break;
-		st = seqptr_evput(&dp, &st->ev);
+		(void)seqptr_evput(&sp, &st->ev);
 	}
-	seqptr_done(&sp);
-	seqptr_done(&dp);
 	statelist_done(&slist);
-
-	track_merge(t, &t2);
-	track_done(&t2);
+	seqptr_done(&sp);
 }
 
 /*

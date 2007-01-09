@@ -690,6 +690,27 @@ parse_ev(struct parse *o, struct ev *ev) {
 		}
 		ev->data.voice.b0 = val;
 		if (ev->cmd != EV_PC && ev->cmd != EV_CAT) {
+			if (ev->cmd == EV_KAT) {
+				/*
+				 * XXX: midish 0.2.5 used to generate
+				 * bogus kat events (without the last
+				 * byte.  As workaround, we ignore
+				 * such event, in order to allow user
+				 * to load its files
+				 */
+				if (!parse_getsym(o)) {
+					return 0;
+				}
+				if (o->lex.id != TOK_NUM) {
+					parse_ungetsym(o);
+					if (!parse_nl(o)) {
+						return 0;
+					}
+					ev->cmd = EV_NULL;
+					return 1;
+				}
+				parse_ungetsym(o);
+			}
 			if (!parse_long(o, EV_MAXB1, &val)) {
 				return 0;
 			}
@@ -715,6 +736,7 @@ ignore:		parse_ungetsym(o);
 			return 0;
 		}
 		lex_err(&o->lex, "unknown event, ignored");
+		ev->cmd = EV_NULL;
 		return 1;
 		
 	}
@@ -761,7 +783,11 @@ parse_track(struct parse *o, struct track *t) {
 				seqev_del(se);
 				return 0;
 			}
-			seqev_ins(pos, se);
+			if (se->ev.cmd != EV_NULL) {
+				seqev_ins(pos, se);
+			} else {
+				seqev_del(se);
+			}
 		}
 	}
 	return 1;			
@@ -1241,9 +1267,6 @@ parse_metro(struct parse *o, struct metro *m) {
 				if (!parse_ev(o, &ev)) {
 					return 0;
 				}
-				if (!parse_nl(o)) {
-					return 0;
-				}
 				if (ev.cmd != EV_NON) {
 					lex_err(&o->lex, "'lo' must be followed by a 'non' event\n");
 				} else {
@@ -1251,9 +1274,6 @@ parse_metro(struct parse *o, struct metro *m) {
 				}					
 			} else if (str_eq(o->lex.strval, "hi")) {
 				if (!parse_ev(o, &ev)) {
-					return 0;
-				}
-				if (!parse_nl(o)) {
 					return 0;
 				}
 				if (ev.cmd != EV_NON) {
