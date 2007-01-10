@@ -690,14 +690,14 @@ parse_ev(struct parse *o, struct ev *ev) {
 		}
 		ev->data.voice.b0 = val;
 		if (ev->cmd != EV_PC && ev->cmd != EV_CAT) {
+			/*
+			 * XXX: midish version < 0.2.6 used to
+			 * generate bogus kat events (without the last
+			 * byte).  As workaround, we ignore such
+			 * events, in order to allow user to load its
+			 * files. Remove this code when no more needed
+			 */
 			if (ev->cmd == EV_KAT) {
-				/*
-				 * XXX: midish 0.2.5 used to generate
-				 * bogus kat events (without the last
-				 * byte.  As workaround, we ignore
-				 * such event, in order to allow user
-				 * to load its files
-				 */
 				if (!parse_getsym(o)) {
 					return 0;
 				}

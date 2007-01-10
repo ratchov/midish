@@ -659,6 +659,38 @@ song_playtic(struct song *o) {
 	}
 }
 
+#if 0
+/*
+ * restore the state of a track (all controllers, program changes,
+ * etc..
+ */
+void
+song_trkrestore(struct song *o, struct songtrk *t) {
+	
+		for (s = t->trackptr.statelist.first; s != NULL; s = snext) {
+			snext = s->next;
+			if (ev_restore(&s->ev, &re)) {
+				if (song_debug) {
+					dbg_puts("song_start: ");
+					ev_dbg(&s->ev);
+					dbg_puts(": restored -> ");
+					ev_dbg(&re);
+					dbg_puts("\n");
+				}
+				mux_putev(&re);
+				s->tag = 1;
+			} else {
+				if (song_debug) {
+					dbg_puts("song_start: ");
+					ev_dbg(&s->ev);
+					dbg_puts(": not restored (no tag)\n");
+				}
+				s->tag = 0;
+			}
+		}
+}
+#endif
+
 /*
  * setup everything to start play/record: the current filter,
  * go to the current position, etc... must be called with the
