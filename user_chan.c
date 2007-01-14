@@ -83,16 +83,12 @@ user_func_channew(struct exec *o, struct data **r) {
 	if (i != NULL) {
 		cons_errs(i->name.str, "dev/chan number already used");
 		return 0;
-	}
-	
-	i = songchan_new(name);
+	}	
 	if (dev > EV_MAXDEV || ch > EV_MAXCH) {
 		cons_err("channew: dev/chan number out of bounds");
 		return 0;
 	}
-	i->dev = dev;
-	i->ch = ch;
-	song_chanadd(user_song, i);
+	i = song_channew(user_song, name, dev, ch);
 	return 1;
 }
 
@@ -102,10 +98,7 @@ user_func_chandelete(struct exec *o, struct data **r) {
 	if (!exec_lookupchan_getref(o, "channame", &c)) {
 		return 0;
 	}
-	if (!song_chanrm(user_song, c)) {
-		return 0;
-	}
-	songchan_delete(c);
+	song_chandel(user_song, c);
 	return 1;
 }
 

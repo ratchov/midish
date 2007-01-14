@@ -812,14 +812,12 @@ song_importsmf(char *filename) {
 	
 	o = song_new();
 	o->tics_per_unit = timecode * 4;   /* timecode = tics per quarter */
-	sx = songsx_new("sx");
-	song_sxadd(o, sx);
+	sx = song_sxnew(o, "sx");
 	o->cursx = sx;
 	
 	for (i = 0; i < ntrks; i++) {
 		snprintf(trackname, MAXTRACKNAME, "trk%02u", i);
-		t = songtrk_new(trackname);
-		song_trkadd(o, t);
+		t = song_trknew(o, trackname);
 		if (!smf_gettrack(&f, o, t)) {
 			goto bad3;
 		}

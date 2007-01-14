@@ -76,8 +76,7 @@ user_func_sysexnew(struct exec *o, struct data **r) {
 		cons_err("sysexnew: sysex already exists");
 		return 0;
 	}
-	i = songsx_new(name);
-	song_sxadd(user_song, i);
+	i = song_sxnew(user_song, name);
 	return 1;
 }
 
@@ -87,10 +86,7 @@ user_func_sysexdelete(struct exec *o, struct data **r) {
 	if (!exec_lookupsx(o, "sysexname", &c)) {
 		return 0;
 	}
-	if (!song_sxrm(user_song, c)) {
-		return 0;
-	}
-	songsx_delete(c);
+	song_sxdel(user_song, c);
 	return 1;
 }
 

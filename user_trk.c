@@ -78,8 +78,7 @@ user_func_tracknew(struct exec *o, struct data **r) {
 		cons_err("tracknew: track already exists");
 		return 0;
 	}
-	t = songtrk_new(trkname);
-	song_trkadd(user_song, t);
+	t = song_trknew(user_song, trkname);
 	return 1;
 }
 
@@ -89,10 +88,7 @@ user_func_trackdelete(struct exec *o, struct data **r) {
 	if (!exec_lookuptrack(o, "trackname", &t)) {
 		return 0;
 	}
-	if (!song_trkrm(user_song, t)) {
-		return 0;
-	}
-	songtrk_delete(t);
+	song_trkdel(user_song, t);
 	return 1;
 }
 

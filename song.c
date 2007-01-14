@@ -45,81 +45,6 @@ void song_playcb(void *, struct ev *);
 void song_recordcb(void *, struct ev *);
 void song_idlecb(void *, struct ev *);
 
-struct songtrk *
-songtrk_new(char *name) {
-	struct songtrk *o;
-	o = (struct songtrk *)mem_alloc(sizeof(struct songtrk));
-	name_init(&o->name, name);
-	o->curfilt = NULL;
-	track_init(&o->track);
-	o->mute = 0;
-	return o;
-}
-
-
-void
-songtrk_delete(struct songtrk *o) {
-	track_done(&o->track);
-	name_done(&o->name);
-	mem_free(o);
-}
-
-
-struct songchan *
-songchan_new(char *name) {
-	struct songchan *o;
-	o = (struct songchan *)mem_alloc(sizeof(struct songchan));
-	name_init(&o->name, name);
-	track_init(&o->conf);
-	o->dev = o->curinput_dev = 0;
-	o->ch = o->curinput_ch = 0;
-	return o;
-}
-
-
-void
-songchan_delete(struct songchan *o) {
-	track_done(&o->conf);
-	name_done(&o->name);	
-	mem_free(o);
-}
-
-
-struct songfilt *
-songfilt_new(char *name) {
-	struct songfilt *o;
-	o = (struct songfilt *)mem_alloc(sizeof(struct songfilt));
-	o->curchan = NULL;
-	name_init(&o->name, name);
-	filt_init(&o->filt);
-	return o;
-}
-
-
-void
-songfilt_delete(struct songfilt *o) {
-	filt_done(&o->filt);
-	name_done(&o->name);	
-	mem_free(o);
-}
-
-struct songsx *
-songsx_new(char *name) {
-	struct songsx *o;
-	o = (struct songsx *)mem_alloc(sizeof(struct songsx));
-	name_init(&o->name, name);
-	sysexlist_init(&o->sx);
-	return o;
-}
-
-
-void
-songsx_delete(struct songsx *o) {
-	sysexlist_done(&o->sx);
-	name_done(&o->name);	
-	mem_free(o);
-}
-
 /*
  * allocates and initialises a song structure
  */
@@ -179,25 +104,17 @@ song_init(struct song *o) {
  */
 void
 song_done(struct song *o) {
-	struct songtrk *t, *tnext;
-	struct songchan *i, *inext;
-	struct songfilt *f, *fnext;
-	struct songsx *s, *snext;
-	for (t = o->trklist; t != NULL; t = tnext) {
-		tnext = (struct songtrk *)t->name.next;
-		songtrk_delete(t);
+	while (o->trklist) {
+		song_trkdel(o, o->trklist);
 	}
-	for (i = o->chanlist; i != NULL; i = inext) {
-		inext = (struct songchan *)i->name.next;
-		songchan_delete(i);
+	while (o->chanlist) {
+		song_chandel(o, o->chanlist);
 	}
-	for (f = o->filtlist; f != NULL; f = fnext) {
-		fnext = (struct songfilt *)f->name.next;
-		songfilt_delete(f);
+	while (o->filtlist) {
+		song_filtdel(o, o->filtlist);
 	}
-	for (s = o->sxlist; s != NULL; s = snext) {
-		snext = (struct songsx *)s->name.next;
-		songsx_delete(s);
+	while (o->sxlist) {
+		song_sxdel(o, o->sxlist);
 	}
 	track_done(&o->meta);
 	track_done(&o->rec);
@@ -207,13 +124,36 @@ song_done(struct song *o) {
 /* -------------------------------------------------- track stuff --- */
 
 /*
- * adds a new track to the song
+ * create a new track in the song
  */
-void
-song_trkadd(struct song *o, struct songtrk *t) {
+struct songtrk *
+song_trknew(struct song *o, char *name) {
+	struct songtrk *t;
+
+	t = (struct songtrk *)mem_alloc(sizeof(struct songtrk));
+	name_init(&t->name, name);
+	track_init(&t->track);
+	t->curfilt = NULL;
+	t->mute = 0;
+
 	name_add((struct name **)&o->trklist, (struct name *)t);
 	song_getcurfilt(o, &t->curfilt);
 	song_setcurtrk(o, t);
+	return t;
+}
+
+/*
+ * delete the current track from the song
+ */
+void
+song_trkdel(struct song *o, struct songtrk *t) {
+	if (o->curtrk == t) {
+		o->curtrk = NULL;
+	}
+	name_remove((struct name **)&o->trklist, (struct name *)t);
+	track_done(&t->track);
+	name_done(&t->name);
+	mem_free(t);
 }
 
 /*
@@ -226,35 +166,44 @@ song_trklookup(struct song *o, char *name) {
 }
 
 
-unsigned
-song_trkrm(struct song *o, struct songtrk *t) {
-	struct songtrk **i;
-	
-	if (o->curtrk == t) {
-		o->curtrk = NULL;
-	}
-	i = &o->trklist;
-	while(*i != NULL) {
-		if (*i == t) {
-			*i = (struct songtrk *)t->name.next;
-			break;
-		}
-		i = (struct songtrk **)&(*i)->name.next;
-	}
-	return 1;
-}
-
 
 /* -------------------------------------------------- chan stuff --- */
 
 /*
  * adds a new chan to the song
  */
+struct songchan *
+song_channew(struct song *o, char *name, unsigned dev, unsigned ch) {
+	struct songchan *c;
+
+	c = (struct songchan *)mem_alloc(sizeof(struct songchan));
+	name_init(&c->name, name);
+	track_init(&c->conf);
+	c->dev = c->curinput_dev = dev;
+	c->ch = c->curinput_ch = ch;
+
+	name_add((struct name **)&o->chanlist, (struct name *)c);
+	song_getcurinput(o, &c->curinput_dev, &c->curinput_ch);
+	song_setcurchan(o, c);
+	return c;
+}
+
 void
-song_chanadd(struct song *o, struct songchan *i) {
-	name_add((struct name **)&o->chanlist, (struct name *)i);
-	song_getcurinput(o, &i->curinput_dev, &i->curinput_ch);
-	song_setcurchan(o, i);
+song_chandel(struct song *o, struct songchan *c) {
+	struct songfilt *f;
+
+	if (o->curchan == c) {
+		o->curchan = NULL;
+	}
+	for (f = o->filtlist; f != NULL; f = (struct songfilt *)f->name.next) {
+		if (f->curchan == c) {
+			f->curchan = NULL;
+		}
+	}	
+	name_remove((struct name **)&o->chanlist, (struct name *)c);
+	track_done(&c->conf);
+	name_done(&c->name);	
+	mem_free(c);
 }
 
 /*
@@ -278,41 +227,25 @@ song_chanlookup_bynum(struct song *o, unsigned dev, unsigned ch) {
 	return 0;
 }
 
-unsigned
-song_chanrm(struct song *o, struct songchan *c) {
-	struct songchan **i;
-	struct songfilt *f;
-
-	if (o->curchan == c) {
-		o->curchan = NULL;
-	}
-	for (f = o->filtlist; f != NULL; f = (struct songfilt *)f->name.next) {
-		if (f->curchan == c) {
-			f->curchan = NULL;
-		}
-	}	
-
-	i = &o->chanlist;
-	while(*i != NULL) {
-		if (*i == c) {
-			*i = (struct songchan *)c->name.next;
-			break;
-		}
-		i = (struct songchan **)&(*i)->name.next;
-	}
-	return 1;
-}
 
 /* -------------------------------------------------- filt stuff --- */
 
 /*
  * adds a new filt to the song
  */
-void
-song_filtadd(struct song *o, struct songfilt *f) {
+struct songfilt *
+song_filtnew(struct song *o, char *name) {
+	struct songfilt *f;
+
+	f = (struct songfilt *)mem_alloc(sizeof(struct songfilt));
+	f->curchan = NULL;
+	name_init(&f->name, name);
+	filt_init(&f->filt);
+
 	name_add((struct name **)&o->filtlist, (struct name *)f);
 	song_getcurchan(o, &f->curchan);
 	song_setcurfilt(o, f);
+	return f;
 }
 
 /*
@@ -325,10 +258,9 @@ song_filtlookup(struct song *o, char *name) {
 }
 
 
-unsigned
-song_filtrm(struct song *o, struct songfilt *f) {
+void
+song_filtdel(struct song *o, struct songfilt *f) {
 	struct songtrk *t;
-	struct songfilt **i;
 
 	if (o->curfilt == f) {
 		o->curfilt = NULL;
@@ -338,15 +270,10 @@ song_filtrm(struct song *o, struct songfilt *f) {
 			t->curfilt = NULL;
 		}		
 	}	
-	i = &o->filtlist;
-	while(*i != NULL) {
-		if (*i == f) {
-			*i = (struct songfilt *)f->name.next;
-			break;
-		}
-		i = (struct songfilt **)&(*i)->name.next;
-	}
-	return 1;
+	name_remove((struct name **)&o->filtlist, (struct name *)f);
+	filt_done(&f->filt);
+	name_done(&f->name);	
+	mem_free(f);
 }
 
 /* -------------------------------------------------- sx stuff --- */
@@ -354,10 +281,16 @@ song_filtrm(struct song *o, struct songfilt *f) {
 /*
  * adds a new sx to the song
  */
-void
-song_sxadd(struct song *o, struct songsx *x) {
+struct songsx *
+song_sxnew(struct song *o, char *name) {
+	struct songsx *x;
+
+	x = (struct songsx *)mem_alloc(sizeof(struct songsx));
+	name_init(&x->name, name);
+	sysexlist_init(&x->sx);
 	name_add((struct name **)&o->sxlist, (struct name *)x);
 	song_setcursx(o, x);
+	return x;
 }
 
 /*
@@ -370,22 +303,15 @@ song_sxlookup(struct song *o, char *name) {
 }
 
 
-unsigned
-song_sxrm(struct song *o, struct songsx *f) {
-	struct songsx **i;
-
-	if (o->cursx == f) {
+void
+song_sxdel(struct song *o, struct songsx *x) {
+	if (o->cursx == x) {
 		o->cursx = NULL;
 	}
-	i = &o->sxlist;
-	while(*i != NULL) {
-		if (*i == f) {
-			*i = (struct songsx *)f->name.next;
-			break;
-		}
-		i = (struct songsx **)&(*i)->name.next;
-	}
-	return 1;
+	name_remove((struct name **)&o->sxlist, (struct name *)x);
+	sysexlist_done(&x->sx);
+	name_done(&x->name);	
+	mem_free(x);
 }
 
 

@@ -76,8 +76,7 @@ user_func_filtnew(struct exec *o, struct data **r) {
 		cons_err("filtnew: filt already exists");
 		return 0;
 	}
-	i = songfilt_new(name);
-	song_filtadd(user_song, i);
+	i = song_filtnew(user_song, name);
 	return 1;
 }
 
@@ -87,10 +86,7 @@ user_func_filtdelete(struct exec *o, struct data **r) {
 	if (!exec_lookupfilt(o, "filtname", &f)) {
 		return 0;
 	}
-	if (!song_filtrm(user_song, f)) {
-		return 0;
-	}
-	songfilt_delete(f);
+	song_filtdel(user_song, f);
 	return 1;
 }
 

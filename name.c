@@ -38,7 +38,6 @@
 void
 name_init(struct name *o, char *name) {
 	o->str = str_new(name);
-	o->next = NULL;
 }
 
 void
@@ -121,7 +120,6 @@ name_empty(struct name **first) {
 	*first = NULL;
 }
 
-
 void
 name_cat(struct name **dst, struct name **src) {
 	while (*dst != NULL) {
@@ -133,7 +131,6 @@ name_cat(struct name **dst, struct name **src) {
 		src = &(*src)->next;
 	}
 }
-
 
 unsigned
 name_eq(struct name **first1, struct name **first2) {
@@ -149,7 +146,6 @@ name_eq(struct name **first1, struct name **first2) {
 		n2 = n2->next;
 	}
 }
-
 
 struct name *
 name_lookup(struct name **first, char *str) {

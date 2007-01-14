@@ -70,18 +70,6 @@ struct songsx {
 	struct sysexlist sx;
 };
 
-struct songtrk *songtrk_new(char *);
-void songtrk_delete(struct songtrk *);
-
-struct songchan *songchan_new(char *);
-void songchan_delete(struct songchan *o);
-
-struct songfilt *songfilt_new(char *);
-void songfilt_delete(struct songfilt *o);
-
-struct songsx *songsx_new(char *);
-void songsx_delete(struct songsx *o);
-
 struct song {
 	/* music-related fields, should be saved */
 	struct track meta;			/* tempo track */
@@ -117,22 +105,22 @@ void song_delete(struct song *o);
 void song_init(struct song *o);
 void song_done(struct song *o);
 
-void song_trkadd(struct song *o, struct songtrk *t);
+struct songtrk *song_trknew(struct song *o, char *name);
 struct songtrk *song_trklookup(struct song *o, char *name);
-unsigned song_trkrm(struct song *o, struct songtrk *t);
+void song_trkdel(struct song *o, struct songtrk *t);
 
-void song_chanadd(struct song *o, struct songchan *);
+struct songchan *song_channew(struct song *o, char *name, unsigned dev, unsigned ch);
 struct songchan *song_chanlookup(struct song *o, char *name);
 struct songchan *song_chanlookup_bynum(struct song *o, unsigned dev, unsigned ch);
-unsigned song_chanrm(struct song *o, struct songchan *c);
+void song_chandel(struct song *o, struct songchan *c);
 
-void song_filtadd(struct song *o, struct songfilt *i);
+struct songfilt *song_filtnew(struct song *o, char *name);
 struct songfilt *song_filtlookup(struct song *o, char *name);
-unsigned song_filtrm(struct song *o, struct songfilt *f);
+void song_filtdel(struct song *o, struct songfilt *f);
 
-void song_sxadd(struct song *o, struct songsx *t);
+struct songsx *song_sxnew(struct song *o, char *name);
 struct songsx *song_sxlookup(struct song *o, char *name);
-unsigned song_sxrm(struct song *o, struct songsx *t);
+void           song_sxdel(struct song *o, struct songsx *t);
 
 void song_getcursx(struct song *o, struct songsx **r);
 void song_setcursx(struct song *o, struct songsx *x);
