@@ -46,7 +46,7 @@ void song_recordcb(void *, struct ev *);
 void song_idlecb(void *, struct ev *);
 
 /*
- * allocates and initialises a song structure
+ * allocate and initialise a song structure
  */
 struct song *
 song_new(void) {
@@ -57,7 +57,7 @@ song_new(void) {
 }
 
 /*
- * frees a song structure 
+ * free the given song structure
  */
 void
 song_delete(struct song *o) {
@@ -66,7 +66,7 @@ song_delete(struct song *o) {
 }
 
 /*
- * initialises the song
+ * initialise the given song
  */
 void
 song_init(struct song *o) {
@@ -100,7 +100,7 @@ song_init(struct song *o) {
 }
 
 /*
- * deletes a song without freeing it
+ * delete a song without freeing it
  */
 void
 song_done(struct song *o) {
@@ -120,8 +120,6 @@ song_done(struct song *o) {
 	track_done(&o->rec);
 	metro_done(&o->metro);
 }
-
-/* -------------------------------------------------- track stuff --- */
 
 /*
  * create a new track in the song
@@ -157,20 +155,15 @@ song_trkdel(struct song *o, struct songtrk *t) {
 }
 
 /*
- * returns the track conrresponding to the
- * given name
+ * return the track with the given name
  */
 struct songtrk *
 song_trklookup(struct song *o, char *name) {
 	return (struct songtrk *)name_lookup((struct name **)&o->trklist, name);
 }
 
-
-
-/* -------------------------------------------------- chan stuff --- */
-
 /*
- * adds a new chan to the song
+ * add a new chan to the song
  */
 struct songchan *
 song_channew(struct song *o, char *name, unsigned dev, unsigned ch) {
@@ -188,6 +181,9 @@ song_channew(struct song *o, char *name, unsigned dev, unsigned ch) {
 	return c;
 }
 
+/*
+ * delete the given chan from the song
+ */
 void
 song_chandel(struct song *o, struct songchan *c) {
 	struct songfilt *f;
@@ -207,15 +203,16 @@ song_chandel(struct song *o, struct songchan *c) {
 }
 
 /*
- * returns the chan conrresponding to the
- * given name
+ * return the chan with the given name
  */
 struct songchan *
 song_chanlookup(struct song *o, char *name) {
 	return (struct songchan *)name_lookup((struct name **)&o->chanlist, name);
 }
 
-
+/*
+ * return the chan matching the given (dev, ch) pair
+ */
 struct songchan *
 song_chanlookup_bynum(struct song *o, unsigned dev, unsigned ch) {
 	struct songchan *i;
@@ -227,11 +224,8 @@ song_chanlookup_bynum(struct song *o, unsigned dev, unsigned ch) {
 	return 0;
 }
 
-
-/* -------------------------------------------------- filt stuff --- */
-
 /*
- * adds a new filt to the song
+ * add a new filt to the song
  */
 struct songfilt *
 song_filtnew(struct song *o, char *name) {
@@ -249,15 +243,8 @@ song_filtnew(struct song *o, char *name) {
 }
 
 /*
- * returns the filt conrresponding to the
- * given name
+ * delete the given filter from the song
  */
-struct songfilt *
-song_filtlookup(struct song *o, char *name) {
-	return (struct songfilt *)name_lookup((struct name **)&o->filtlist, name);
-}
-
-
 void
 song_filtdel(struct song *o, struct songfilt *f) {
 	struct songtrk *t;
@@ -276,10 +263,16 @@ song_filtdel(struct song *o, struct songfilt *f) {
 	mem_free(f);
 }
 
-/* -------------------------------------------------- sx stuff --- */
+/*
+ * return the filt conrresponding to the given name
+ */
+struct songfilt *
+song_filtlookup(struct song *o, char *name) {
+	return (struct songfilt *)name_lookup((struct name **)&o->filtlist, name);
+}
 
 /*
- * adds a new sx to the song
+ * add a new sx to the song
  */
 struct songsx *
 song_sxnew(struct song *o, char *name) {
@@ -294,15 +287,8 @@ song_sxnew(struct song *o, char *name) {
 }
 
 /*
- * returns the sx conrresponding to the
- * given name
+ * delete the given sysex bank from the song
  */
-struct songsx *
-song_sxlookup(struct song *o, char *name) {
-	return (struct songsx *)name_lookup((struct name **)&o->sxlist, name);
-}
-
-
 void
 song_sxdel(struct song *o, struct songsx *x) {
 	if (o->cursx == x) {
@@ -314,9 +300,19 @@ song_sxdel(struct song *o, struct songsx *x) {
 	mem_free(x);
 }
 
+/*
+ * return the sx with the given name
+ */
+struct songsx *
+song_sxlookup(struct song *o, char *name) {
+	return (struct songsx *)name_lookup((struct name **)&o->sxlist, name);
+}
 
-/* ------------------------------------------------- {get,set}xxx --- */
-
+/*
+ * the following routines are basically getters and setters for song
+ * "current" parametters. They also deal with inheritancs of these
+ * values
+ */
 void
 song_getcursx(struct song *o, struct songsx **r) {
 	*r = o->cursx;
@@ -407,17 +403,8 @@ song_setcurinput(struct song *o, unsigned dev, unsigned ch) {
 }
 
 /*
- * convert a measure to a number of tics
- */
-unsigned
-song_measuretotic(struct song *o, unsigned measure) {
-	return track_findmeasure(&o->meta, measure);
-}
-
-
-/*
- * returns true if each track in the song is finished
- * and false if at least one track is not finished
+ * return true if each track in the song is finished and false if at
+ * least one track is not finished
  */
 unsigned
 song_finished(struct song *o) {
@@ -431,7 +418,9 @@ song_finished(struct song *o) {
 	return 1;
 }
 
-
+/*
+ * send to the output all events from all chans
+ */
 void
 song_playconf(struct song *o) {
 	struct songchan *i;
@@ -462,7 +451,9 @@ song_playconf(struct song *o) {
 	mux_sleep(DEFAULT_CHANWAIT);
 }
 
-
+/*
+ * send all sysex messages
+ */
 void
 song_playsysex(struct song *o) {
 	struct songsx *l;
@@ -782,10 +773,6 @@ song_stop(struct song *o) {
 	seqptr_done(&o->metaptr);
 }
 
-
-
-/* ------------------------------------------------------- player --- */
-
 /*
  * play callback:
  * is automatically called when an event is received
@@ -828,8 +815,7 @@ song_playcb(void *addr, struct ev *ev) {
 }
 
 /*
- * play the song initialises the
- * midi/timer and starts an event loop
+ * play the song initialise the midi/timer and start the event loop
  */
 void
 song_play(struct song *o) {
@@ -845,8 +831,7 @@ song_play(struct song *o) {
 }
 
 /*
- * record callback
- * is automatically called when an event is received
+ * record callback is automatically called when an event is received
  * (tic, start, midiev, etc)
  */
 void
@@ -902,6 +887,10 @@ song_recordcb(void *addr, struct ev *ev) {
 	}
 }
 
+/*
+ * record the current track: initialise the midi/timer and start the
+ * event loop
+ */
 void
 song_record(struct song *o) {
 	struct songtrk *t;
@@ -926,8 +915,7 @@ song_record(struct song *o) {
 }
 
 /*
- * idle callback:
- * is automatically called when an event is received
+ * idle callback: is automatically called when an event is received
  * (tic, start, midiev, etc)
  */
 void

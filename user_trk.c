@@ -229,8 +229,8 @@ user_func_trackcut(struct exec *o, struct data **r) {
 	    !exec_lookuplong(o, "quantum", &quant)) {
 		return 0;
 	}
-	tic = song_measuretotic(user_song, from);
-	len = song_measuretotic(user_song, from + amount) - tic;
+	tic = track_findmeasure(&user_song->meta, from);
+	len = track_findmeasure(&user_song->meta, from + amount) - tic;
 
 	if (quant < 0 || (unsigned)quant > user_song->tics_per_unit) {
 		cons_err("quantum must be between 0 and tics_per_unit");
@@ -271,8 +271,8 @@ user_func_trackblank(struct exec *o, struct data **r) {
 	    !exec_lookupevspec(o, "evspec", &es)) {
 		return 0;
 	}
-	tic = song_measuretotic(user_song, from);
-	len = song_measuretotic(user_song, from + amount) - tic;
+	tic = track_findmeasure(&user_song->meta, from);
+	len = track_findmeasure(&user_song->meta, from + amount) - tic;
 	
 	if (quant < 0 || (unsigned)quant > user_song->tics_per_unit) {
 		cons_err("quantum must be between 0 and tics_per_unit");
@@ -303,9 +303,9 @@ user_func_trackcopy(struct exec *o, struct data **r) {
 	    !exec_lookupevspec(o, "evspec", &es)) {
 		return 0;
 	}
-	tic  = song_measuretotic(user_song, from);
-	len  = song_measuretotic(user_song, from + amount) - tic;
-	tic2 = song_measuretotic(user_song, where);
+	tic  = track_findmeasure(&user_song->meta, from);
+	len  = track_findmeasure(&user_song->meta, from + amount) - tic;
+	tic2 = track_findmeasure(&user_song->meta, where);
 
 	if (quant < 0 || (unsigned)quant > user_song->tics_per_unit) {
 		cons_err("quantum must be between 0 and tics_per_unit");
@@ -347,8 +347,8 @@ user_func_trackinsert(struct exec *o, struct data **r) {
 		return 0;
 	}
 
-	tic = song_measuretotic(user_song, from);
-	len = song_measuretotic(user_song, from + amount) - tic;
+	tic = track_findmeasure(&user_song->meta, from);
+	len = track_findmeasure(&user_song->meta, from + amount) - tic;
 
 	if (quant < 0 || (unsigned)quant > user_song->tics_per_unit) {
 		cons_err("quantum must be between 0 and tics_per_unit");
@@ -411,8 +411,8 @@ user_func_trackquant(struct exec *o, struct data **r) {
 		return 0;
 	}
 
-	start = song_measuretotic(user_song, from);
-	len = song_measuretotic(user_song, from + amount) - start;
+	start = track_findmeasure(&user_song->meta, from);
+	len = track_findmeasure(&user_song->meta, from + amount) - start;
 	
 	if (quant < 0 || (unsigned)quant > user_song->tics_per_unit) {
 		cons_err("quantum must be between 0 and tics_per_unit");
@@ -444,8 +444,8 @@ user_func_tracktransp(struct exec *o, struct data **r) {
 	    !exec_lookupevspec(o, "evspec", &es)) {
 		return 0;
 	}
-	tic = song_measuretotic(user_song, from);
-	len = song_measuretotic(user_song, from + amount) - tic;
+	tic = track_findmeasure(&user_song->meta, from);
+	len = track_findmeasure(&user_song->meta, from + amount) - tic;
 	
 	if (quant < 0 || (unsigned)quant > user_song->tics_per_unit) {
 		cons_err("quantum must be between 0 and tics_per_unit");
