@@ -309,7 +309,7 @@ node_exec_ignore(struct node *o, struct exec *x, struct data **r) {
 unsigned
 node_exec_call(struct node *o, struct exec *x, struct data **r) {
 	struct proc *p;
-	struct var  **oldlocals, *newlocals;
+	struct name **oldlocals, *newlocals;
 	struct name *argn;
 	struct node *argv;
 	char *procname_save;
@@ -332,7 +332,7 @@ node_exec_call(struct node *o, struct exec *x, struct data **r) {
 		if (node_exec(argv, x, r) == RESULT_ERR) {
 			goto finish;
 		}
-		var_insert(&newlocals, var_new(argn->str, *r));
+		var_new(&newlocals, argn->str, *r);
 		argv = argv->next;
 		*r = NULL;
 	}
@@ -346,7 +346,7 @@ node_exec_call(struct node *o, struct exec *x, struct data **r) {
 	x->procname = p->name.str;
 	result = node_exec(p->code, x, r);
 	if (result != RESULT_ERR) {
-		if (*r == NULL) {			/* we always return something */
+		if (*r == NULL) {	/* we always return something */
 			*r = data_newnil();
 		}
 		if (result != RESULT_EXIT) {
@@ -397,8 +397,7 @@ node_exec_for(struct node *o, struct exec *x, struct data **r) {
 	}
 	v = exec_varlookup(x, o->data->val.ref);
 	if (v == NULL) {
-		v = var_new(o->data->val.ref, data_newnil());
-		var_insert(x->locals, v);
+		v = var_new(x->locals, o->data->val.ref, data_newnil());
 	}
 	result = RESULT_OK;
 	for (i = list->val.list; i != NULL; i = i->next) {
@@ -439,8 +438,7 @@ node_exec_assign(struct node *o, struct exec *x, struct data **r) {
 	}
 	v = exec_varlookup(x, o->data->val.ref);
 	if (v == NULL) {
-		v = var_new(o->data->val.ref, expr);
-		var_insert(x->locals, v);
+		v = var_new(x->locals, o->data->val.ref, expr);
 	} else {
 		data_delete(v->data);
 		v->data = expr;

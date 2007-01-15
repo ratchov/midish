@@ -53,6 +53,12 @@ struct var {
 	struct data *data;	/* value, see data.h */
 };
 
+#define VAR_FOREACH(i,list)			\
+	for (i = (struct var *)(list);		\
+	     i != NULL;				\
+	     i = (struct var *)(i->name.next)) 
+	
+
 /*
  * a procedure is a name, a list of argument names
  * and a the actual code (tree)
@@ -63,25 +69,28 @@ struct proc {
 	struct node *code;
 };
 
+#define PROC_FOREACH(i,list)			\
+	for (i = (struct proc *)(list);		\
+	     i != NULL;				\
+	     i = (struct proc *)(i->name.next)) 
+	
 /*
  * exec is the interpreter's environment
  */
  
 struct exec {
-	struct var *globals;	/* list of global variables */
-	struct var **locals;	/* pointer to list of local variables */
-	struct proc *procs;	/* list of user and built-in procs */
+	struct name *globals;	/* list of global variables */
+	struct name **locals;	/* pointer to list of local variables */
+	struct name *procs;	/* list of user and built-in procs */
 	char *procname;		/* current proc name, for err messages */
 #define EXEC_MAXDEPTH	40
 	unsigned depth;		/* max depth of nested proc calls */
 };
 
-struct var *var_new(char *name, struct data *data);
-void        var_delete(struct var *i);
+struct var *var_new(struct name **list, char *name, struct data *data);
+void        var_delete(struct name **list, struct var *i);
 void	    var_dbg(struct var *i);
-struct var *var_lookup(struct var **first, char *name);
-void	    var_insert(struct var **first, struct var *i);
-void	    var_empty(struct var **first);
+void	    var_empty(struct name **first);
 
 struct exec *exec_new(void);
 void	     exec_delete(struct exec *o);
@@ -100,8 +109,7 @@ unsigned exec_lookupbool(struct exec *exec, char *name, long *val);
 
 struct proc *proc_new(char *name);
 void 	     proc_delete(struct proc *o);
-struct proc *proc_lookup(struct proc **first, char *name);
-void	     proc_empty(struct proc **first);
+void	     proc_empty(struct name **first);
 void 	     proc_dbg(struct proc *o);
 
 #endif /* MIDISH_EXEC_H */

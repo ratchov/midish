@@ -54,22 +54,24 @@
 
 /*
  * create a new variable with the given name and value
- */
-	 
+ * and insert it on the given variable list
+ */	 
 struct var *
-var_new(char *name, struct data *data) {
+var_new(struct name **list, char *name, struct data *data) {
 	struct var *o;
 	o = (struct var *)mem_alloc(sizeof(struct var));
-	name_init(&o->name, name);
 	o->data = data;
+	name_init(&o->name, name);
+	name_insert(list, (struct name *)o);
 	return o;
 }
 
 /*
- * delete a variable (also frees data)
+ * delete the given variable from the given list
  */
 void
-var_delete(struct var *o) {
+var_delete(struct name **list, struct var *o) {
+	name_remove(list, (struct name *)o);
 	if (o->data != NULL) {
 		data_delete(o->data);
 	}
@@ -91,33 +93,13 @@ var_dbg(struct var *o) {
 }
 
 /*
- * find the variable with the given name 
- * in the given variable list
- */
-struct var *
-var_lookup(struct var **first, char *name) {
-	return (struct var *)name_lookup((struct name **)first, name);
-}
-
-/*
- * insert the given variable into the given list
- */
-void
-var_insert(struct var **first, struct var *i) {
-	name_insert((struct name **)first, (struct name *)i);
-}
-
-/*
  * delete all variables and clear the given list
  */
 void
-var_empty(struct var **first) {
-	struct var *i, *inext;
-	for (i = *first; i != NULL; i = inext) {
-		inext = (struct var *)i->name.next;
-		var_delete(i);
+var_empty(struct name **list) {
+	while (*list != NULL) {
+		var_delete(list, (struct var *)*list);
 	}
-	*first = NULL;
 }
 
 /*
@@ -145,22 +127,15 @@ proc_delete(struct proc *o) {
 }
 
 /*
- * find the procedure with the given name in the given list
- */
-struct proc *
-proc_lookup(struct proc **first, char *name) {
-	return (struct proc *)name_lookup((struct name **)first, name);
-}
-
-/*
  * free all procedures and clear the given list
  */
 void
-proc_empty(struct proc **first) {
-	struct proc *i, *inext;
-	for (i = *first; i != NULL; i = inext) {
-		inext = (struct proc *)i->name.next;
-		proc_delete(i);
+proc_empty(struct name **first) {
+	struct name *i;
+	while (*first) {
+		i = *first;
+		name_remove(first, i);
+		proc_delete((struct proc *)i);
 	}
 	*first = NULL;
 }
@@ -228,16 +203,16 @@ exec_delete(struct exec *o) {
  */
 struct var *
 exec_varlookup(struct exec *o, char *name) {
-	struct var *var;
+	struct name *var;
 
-	var = var_lookup(o->locals, name);
+	var = name_lookup(o->locals, name);
 	if (var != NULL) {
-		return var;
+		return (struct var *)var;
 	}
 	if (o->locals != &o->globals) {
-		var = var_lookup(&o->globals, name);
+		var = name_lookup(&o->globals, name);
 		if (var != NULL) {
-			return var;
+			return (struct var *)var;
 		}
 	}
 	return NULL;
@@ -248,7 +223,7 @@ exec_varlookup(struct exec *o, char *name) {
  */
 struct proc *
 exec_proclookup(struct exec *o, char *name) {
-	return proc_lookup(&o->procs, name);
+	return (struct proc *)name_lookup(&o->procs, name);
 }
 
 /*
@@ -262,7 +237,7 @@ exec_newbuiltin(struct exec *o, char *name,
 	newp = proc_new(name);
 	newp->args = args;
 	newp->code = node_new(&node_vmt_builtin, data_newuser((void *)func));
-	name_add((struct name **)&o->procs, (struct name *)newp);
+	name_add(&o->procs, (struct name *)newp);
 }
 
 /*
@@ -270,8 +245,7 @@ exec_newbuiltin(struct exec *o, char *name,
  */
 void
 exec_newvar(struct exec *o, char *name, struct data *val) {
-	name_insert((struct name **)&o->globals,
-		    (struct name *)var_new(name, val));
+	var_new(&o->globals, name, val);
 }
 
 /*
@@ -284,7 +258,8 @@ void
 exec_dumpprocs(struct exec *o) {
 	struct proc *p;
 	struct name *n;
-	for (p = o->procs; p != NULL; p = (struct proc *)p->name.next) {
+
+	PROC_FOREACH(p, o->procs) {
 		dbg_puts(p->name.str);
 		dbg_puts("(");
 		for (n = p->args; n != NULL; n = n->next) {
@@ -306,7 +281,7 @@ exec_dumpprocs(struct exec *o) {
 void
 exec_dumpvars(struct exec *o) {
 	struct var *v;
-	for (v = o->globals; v != NULL; v = (struct var *)v->name.next) {
+	VAR_FOREACH(v, o->globals) {
 		dbg_puts(v->name.str);
 		dbg_puts(" = ");
 		data_dbg(v->data);

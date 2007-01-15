@@ -71,7 +71,7 @@ unsigned user_flag_verb = 0;
 unsigned
 exec_runfile(struct exec *exec, char *filename) {
 	struct parse *parse;
-	struct var **locals;
+	struct name **locals;
 	struct node *root;
 	struct data *data;
 	unsigned res;
