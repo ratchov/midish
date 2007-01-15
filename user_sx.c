@@ -55,7 +55,7 @@ user_func_sysexlist(struct exec *o, struct data **r) {
 	struct songsx *i;
 
 	d = data_newlist(NULL);
-	for (i = user_song->sxlist; i != NULL; i = (struct songsx *)i->name.next) {
+	SONG_FOREACH_SX(user_song, i) {
 		n = data_newref(i->name.str);
 		data_listadd(d, n);
 	}

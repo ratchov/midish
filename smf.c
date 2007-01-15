@@ -478,15 +478,15 @@ song_exportsmf(struct song *o, char *filename) {
 		return 0;
 	}
 	ntrks = 0;
-	for (t = o->trklist; t != NULL; t = (struct songtrk *)t->name.next) {
+	SONG_FOREACH_TRK(o, t) {
 		ntrks++;
 	}
 	nchan = 0;
-	for (i = o->chanlist; i != NULL; i = (struct songchan *)i->name.next) {
+	SONG_FOREACH_CHAN(o, i) {
 		nchan++;
 	}
 	nsx = 0;
-	for (s = o->sxlist; s != NULL; s = (struct songsx *)s->name.next) {
+	SONG_FOREACH_SX(o, s) {
 		nsx++;
 	}
 
@@ -503,7 +503,7 @@ song_exportsmf(struct song *o, char *filename) {
 	smf_putmeta(&f, NULL, o);
 		
 	/* write each sx */
-	for (s = o->sxlist; s != NULL; s = (struct songsx *)s->name.next) {
+	SONG_FOREACH_SX(o, s) {
 		used = 0;
 		smf_putsx(&f, &used, o, s);
 		smf_putheader(&f, smftype_track, used);
@@ -511,7 +511,7 @@ song_exportsmf(struct song *o, char *filename) {
 	}	
 					
 	/* write each chan */
-	for (i = o->chanlist; i != NULL; i = (struct songchan *)i->name.next) {
+	SONG_FOREACH_CHAN(o, i) {
 		used = 0;
 		smf_putchan(&f, &used, o, i);
 		smf_putheader(&f, smftype_track, used);
@@ -519,7 +519,7 @@ song_exportsmf(struct song *o, char *filename) {
 	}
 
 	/* write each track */
-	for (t = o->trklist; t != NULL; t = (struct songtrk *)t->name.next) {
+	SONG_FOREACH_TRK(o, t) {
 		used = 0;
 		smf_puttrk(&f, &used, o, t);
 		smf_putheader(&f, smftype_track, used);
@@ -561,6 +561,7 @@ unsigned
 smf_gettrack(struct smf *o, struct song *s, struct songtrk *t) {
 	unsigned delta, i, status, type, length, abspos;
 	unsigned tempo, num, den, dummy;
+	struct songsx *songsx;
 	struct seqev *pos, *se;
 	struct sysex *sx;
 	unsigned c;
@@ -572,6 +573,7 @@ smf_gettrack(struct smf *o, struct song *s, struct songtrk *t) {
 	abspos = 0;
 	track_clear(&t->track);
 	pos = t->track.first;
+	songsx = (struct songsx *)s->sxlist;	/* first (and unique) sysex in song */
 	for (;;) {
 		if (o->index >= o->length) {
 			return 1;
@@ -663,7 +665,7 @@ smf_gettrack(struct smf *o, struct song *s, struct songtrk *t) {
 				return 0;
 			}				
 			if (sysex_check(sx)) {
-				sysexlist_put(&s->sxlist->sx, sx);
+				sysexlist_put(&songsx->sx, sx);
 			} else {
 				cons_err("corrupted sysex message, ignored");
 				/*
@@ -730,7 +732,7 @@ song_fix1(struct song *o) {
 	struct songtrk *t;
 	unsigned delta;
 		
-	for (t = o->trklist; t != NULL; t = (struct songtrk *)t->name.next) {
+	SONG_FOREACH_TRK(o, t) {
 		/* move meta events into meta track */
 		delta = 0;
 		track_init(&copy);

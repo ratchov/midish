@@ -56,7 +56,7 @@ user_func_chanlist(struct exec *o, struct data **r) {
 	struct songchan *i;
 
 	d = data_newlist(NULL);
-	for (i = user_song->chanlist; i != NULL; i = (struct songchan *)i->name.next) {
+	SONG_FOREACH_CHAN(user_song, i) {
 		n = data_newref(i->name.str);
 		data_listadd(d, n);
 	}

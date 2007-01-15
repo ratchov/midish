@@ -57,7 +57,7 @@ user_func_tracklist(struct exec *o, struct data **r) {
 	struct songtrk *i;
 
 	d = data_newlist(NULL);
-	for (i = user_song->trklist; i != NULL; i = (struct songtrk *)i->name.next) {
+	SONG_FOREACH_TRK(user_song, i) {
 		n = data_newref(i->name.str);
 		data_listadd(d, n);
 	}

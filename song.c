@@ -105,16 +105,16 @@ song_init(struct song *o) {
 void
 song_done(struct song *o) {
 	while (o->trklist) {
-		song_trkdel(o, o->trklist);
+		song_trkdel(o, (struct songtrk *)o->trklist);
 	}
 	while (o->chanlist) {
-		song_chandel(o, o->chanlist);
+		song_chandel(o, (struct songchan *)o->chanlist);
 	}
 	while (o->filtlist) {
-		song_filtdel(o, o->filtlist);
+		song_filtdel(o, (struct songfilt *)o->filtlist);
 	}
 	while (o->sxlist) {
-		song_sxdel(o, o->sxlist);
+		song_sxdel(o, (struct songsx *)o->sxlist);
 	}
 	track_done(&o->meta);
 	track_done(&o->rec);
@@ -134,7 +134,7 @@ song_trknew(struct song *o, char *name) {
 	t->curfilt = NULL;
 	t->mute = 0;
 
-	name_add((struct name **)&o->trklist, (struct name *)t);
+	name_add(&o->trklist, (struct name *)t);
 	song_getcurfilt(o, &t->curfilt);
 	song_setcurtrk(o, t);
 	return t;
@@ -148,7 +148,7 @@ song_trkdel(struct song *o, struct songtrk *t) {
 	if (o->curtrk == t) {
 		o->curtrk = NULL;
 	}
-	name_remove((struct name **)&o->trklist, (struct name *)t);
+	name_remove(&o->trklist, (struct name *)t);
 	track_done(&t->track);
 	name_done(&t->name);
 	mem_free(t);
@@ -159,7 +159,7 @@ song_trkdel(struct song *o, struct songtrk *t) {
  */
 struct songtrk *
 song_trklookup(struct song *o, char *name) {
-	return (struct songtrk *)name_lookup((struct name **)&o->trklist, name);
+	return (struct songtrk *)name_lookup(&o->trklist, name);
 }
 
 /*
@@ -175,7 +175,7 @@ song_channew(struct song *o, char *name, unsigned dev, unsigned ch) {
 	c->dev = c->curinput_dev = dev;
 	c->ch = c->curinput_ch = ch;
 
-	name_add((struct name **)&o->chanlist, (struct name *)c);
+	name_add(&o->chanlist, (struct name *)c);
 	song_getcurinput(o, &c->curinput_dev, &c->curinput_ch);
 	song_setcurchan(o, c);
 	return c;
@@ -191,12 +191,12 @@ song_chandel(struct song *o, struct songchan *c) {
 	if (o->curchan == c) {
 		o->curchan = NULL;
 	}
-	for (f = o->filtlist; f != NULL; f = (struct songfilt *)f->name.next) {
+	SONG_FOREACH_FILT(o, f) {
 		if (f->curchan == c) {
 			f->curchan = NULL;
 		}
-	}	
-	name_remove((struct name **)&o->chanlist, (struct name *)c);
+	}
+	name_remove(&o->chanlist, (struct name *)c);
 	track_done(&c->conf);
 	name_done(&c->name);	
 	mem_free(c);
@@ -207,7 +207,7 @@ song_chandel(struct song *o, struct songchan *c) {
  */
 struct songchan *
 song_chanlookup(struct song *o, char *name) {
-	return (struct songchan *)name_lookup((struct name **)&o->chanlist, name);
+	return (struct songchan *)name_lookup(&o->chanlist, name);
 }
 
 /*
@@ -216,7 +216,8 @@ song_chanlookup(struct song *o, char *name) {
 struct songchan *
 song_chanlookup_bynum(struct song *o, unsigned dev, unsigned ch) {
 	struct songchan *i;
-	for (i = o->chanlist; i != NULL; i = (struct songchan *)i->name.next) {
+
+	SONG_FOREACH_CHAN(o, i) {
 		if (i->dev == dev && i->ch == ch) {
 			return i;
 		}
@@ -236,7 +237,7 @@ song_filtnew(struct song *o, char *name) {
 	name_init(&f->name, name);
 	filt_init(&f->filt);
 
-	name_add((struct name **)&o->filtlist, (struct name *)f);
+	name_add(&o->filtlist, (struct name *)f);
 	song_getcurchan(o, &f->curchan);
 	song_setcurfilt(o, f);
 	return f;
@@ -252,12 +253,12 @@ song_filtdel(struct song *o, struct songfilt *f) {
 	if (o->curfilt == f) {
 		o->curfilt = NULL;
 	}
-	for (t = o->trklist; t != NULL; t = (struct songtrk *)t->name.next) {
+	SONG_FOREACH_TRK(o, t) {
 		if (t->curfilt == f) {
 			t->curfilt = NULL;
 		}		
 	}	
-	name_remove((struct name **)&o->filtlist, (struct name *)f);
+	name_remove(&o->filtlist, (struct name *)f);
 	filt_done(&f->filt);
 	name_done(&f->name);	
 	mem_free(f);
@@ -268,7 +269,7 @@ song_filtdel(struct song *o, struct songfilt *f) {
  */
 struct songfilt *
 song_filtlookup(struct song *o, char *name) {
-	return (struct songfilt *)name_lookup((struct name **)&o->filtlist, name);
+	return (struct songfilt *)name_lookup(&o->filtlist, name);
 }
 
 /*
@@ -281,7 +282,7 @@ song_sxnew(struct song *o, char *name) {
 	x = (struct songsx *)mem_alloc(sizeof(struct songsx));
 	name_init(&x->name, name);
 	sysexlist_init(&x->sx);
-	name_add((struct name **)&o->sxlist, (struct name *)x);
+	name_add(&o->sxlist, (struct name *)x);
 	song_setcursx(o, x);
 	return x;
 }
@@ -294,7 +295,7 @@ song_sxdel(struct song *o, struct songsx *x) {
 	if (o->cursx == x) {
 		o->cursx = NULL;
 	}
-	name_remove((struct name **)&o->sxlist, (struct name *)x);
+	name_remove(&o->sxlist, (struct name *)x);
 	sysexlist_done(&x->sx);
 	name_done(&x->name);	
 	mem_free(x);
@@ -305,7 +306,7 @@ song_sxdel(struct song *o, struct songsx *x) {
  */
 struct songsx *
 song_sxlookup(struct song *o, char *name) {
-	return (struct songsx *)name_lookup((struct name **)&o->sxlist, name);
+	return (struct songsx *)name_lookup(&o->sxlist, name);
 }
 
 /*
@@ -409,8 +410,8 @@ song_setcurinput(struct song *o, unsigned dev, unsigned ch) {
 unsigned
 song_finished(struct song *o) {
 	struct songtrk *i;
-	
-	for (i = o->trklist; i != NULL; i = (struct songtrk *)i->name.next) {
+
+	SONG_FOREACH_TRK(o, i) {
 		if (!seqptr_eot(&i->trackptr)) {
 			return 0;
 		}
@@ -428,7 +429,7 @@ song_playconf(struct song *o) {
 	struct state *st;
 	struct ev ev;
 	
-	for (i = o->chanlist; i != NULL; i = (struct songchan *)i->name.next) {
+	SONG_FOREACH_CHAN(o, i) {
 		seqptr_init(&cp, &i->conf);
 		for (;;) {
 			st = seqptr_evget(&cp);
@@ -460,7 +461,7 @@ song_playsysex(struct song *o) {
 	struct sysex *s;
 	struct chunk *c;
 	
-	for (l = o->sxlist; l != NULL; l = (struct songsx *)l->name.next) {
+	SONG_FOREACH_SX(o, l) {
 		for (s = l->sx.first; s != NULL; s = s->next) {
 			for (c = s->first; c != NULL; c = c->next) {
 				mux_sendraw(s->unit, c->data, c->used);
@@ -541,7 +542,7 @@ song_playtic(struct song *o) {
 				o->measure++;
 			}
 		}
-		for (i = o->trklist; i != NULL; i = (struct songtrk *)i->name.next) {
+		SONG_FOREACH_TRK(o, i) {
 			seqptr_ticskip(&i->trackptr, 1);
 		}
 	}
@@ -551,7 +552,7 @@ song_playtic(struct song *o) {
 			song_metaput(o, &st->ev);
 		}
 		metro_tic(&o->metro, o->beat, o->tic);
-		for (i = o->trklist; i != NULL; i = (struct songtrk *)i->name.next) {
+		SONG_FOREACH_TRK(o, i) {
 			while ((st = seqptr_evget(&i->trackptr))) {
 				ev = st->ev;
 				if (EV_ISVOICE(&ev)) {
@@ -584,27 +585,27 @@ song_playtic(struct song *o) {
 void
 song_trkrestore(struct song *o, struct songtrk *t) {
 	
-		for (s = t->trackptr.statelist.first; s != NULL; s = snext) {
-			snext = s->next;
-			if (ev_restore(&s->ev, &re)) {
-				if (song_debug) {
-					dbg_puts("song_start: ");
-					ev_dbg(&s->ev);
-					dbg_puts(": restored -> ");
-					ev_dbg(&re);
-					dbg_puts("\n");
-				}
-				mux_putev(&re);
-				s->tag = 1;
-			} else {
-				if (song_debug) {
-					dbg_puts("song_start: ");
-					ev_dbg(&s->ev);
-					dbg_puts(": not restored (no tag)\n");
-				}
-				s->tag = 0;
+	for (s = t->trackptr.statelist.first; s != NULL; s = snext) {
+		snext = s->next;
+		if (ev_restore(&s->ev, &re)) {
+			if (song_debug) {
+				dbg_puts("song_start: ");
+				ev_dbg(&s->ev);
+				dbg_puts(": restored -> ");
+				ev_dbg(&re);
+				dbg_puts("\n");
 			}
+			mux_putev(&re);
+			s->tag = 1;
+		} else {
+			if (song_debug) {
+				dbg_puts("song_start: ");
+				ev_dbg(&s->ev);
+				dbg_puts(": not restored (no tag)\n");
+			}
+			s->tag = 0;
 		}
+	}
 }
 #endif
 
@@ -654,7 +655,7 @@ song_start(struct song *o,
 	/*
 	 * move all tracks to the current position
 	 */
-	for (i = o->trklist; i != NULL; i = (struct songtrk *)i->name.next) {
+	SONG_FOREACH_TRK(o, i) {
 		seqptr_init(&i->trackptr, &i->track);
 		seqptr_skip(&i->trackptr, tic);
 	}
@@ -679,7 +680,7 @@ song_start(struct song *o,
 	/*
 	 * restore track states
 	 */
-	for (i = o->trklist; i != NULL; i = (struct songtrk *)i->name.next) {
+	SONG_FOREACH_TRK(o, i) {
 		for (s = i->trackptr.statelist.first; s != NULL; s = snext) {
 			snext = s->next;
 			if (ev_restore(&s->ev, &re)) {
@@ -745,7 +746,7 @@ song_stop(struct song *o) {
 	/*
 	 * stop sounding notes
 	 */
-	for (i = o->trklist; i != NULL; i = (struct songtrk *)i->name.next) {
+	SONG_FOREACH_TRK(o, i) {
 		for (s = i->trackptr.statelist.first; s != NULL; s = snext) {
 			snext = s->next;
 			if (s->tag && ev_cancel(&s->ev, &ca)) {
@@ -766,7 +767,7 @@ song_stop(struct song *o) {
 	mux_flush();	
 	mux_done();
 
-	for (i = o->trklist; i != NULL; i = (struct songtrk *)i->name.next) {
+	SONG_FOREACH_TRK(o, i) {
 		seqptr_done(&i->trackptr);
 	}
 	seqptr_done(&o->recptr);

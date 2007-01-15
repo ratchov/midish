@@ -55,7 +55,7 @@ user_func_filtlist(struct exec *o, struct data **r) {
 	struct songfilt *i;
 
 	d = data_newlist(NULL);
-	for (i = user_song->filtlist; i != NULL; i = (struct songfilt *)i->name.next) {
+	SONG_FOREACH_FILT(user_song, i) {
 		n = data_newref(i->name.str);
 		data_listadd(d, n);
 	}

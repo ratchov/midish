@@ -295,7 +295,7 @@ user_func_songinfo(struct exec *o, struct data **r) {
 	textout_shiftright(tout);
 	textout_indent(tout);
 	textout_putstr(tout, "# chan_name,  {devicenum, midichan}, default_input\n");
-	for (c = user_song->chanlist; c != NULL; c = (struct songchan *)c->name.next) {
+	SONG_FOREACH_CHAN(user_song, c) {
 		textout_indent(tout);
 		textout_putstr(tout, c->name.str);
 		textout_putstr(tout, "\t");
@@ -322,7 +322,7 @@ user_func_songinfo(struct exec *o, struct data **r) {
 	textout_shiftright(tout);
 	textout_indent(tout);
 	textout_putstr(tout, "# filter_name,  default_channel\n");
-	for (f = user_song->filtlist; f != NULL; f = (struct songfilt *)f->name.next) {
+	SONG_FOREACH_FILT(user_song, f) {
 		textout_indent(tout);
 		textout_putstr(tout, f->name.str);
 		textout_putstr(tout, "\t");
@@ -343,7 +343,7 @@ user_func_songinfo(struct exec *o, struct data **r) {
 	textout_shiftright(tout);
 	textout_indent(tout);
 	textout_putstr(tout, "# track_name,  default_filter,  used_channels,  flags\n");
-	for (t = user_song->trklist; t != NULL; t = (struct songtrk *)t->name.next) {
+	SONG_FOREACH_TRK(user_song, t) {
 		textout_indent(tout);
 		textout_putstr(tout, t->name.str);
 		textout_putstr(tout, "\t");
@@ -388,7 +388,7 @@ user_func_songinfo(struct exec *o, struct data **r) {
 	textout_shiftright(tout);
 	textout_indent(tout);
 	textout_putstr(tout, "# sysex_name,  number_messages\n");
-	for (s = user_song->sxlist; s != NULL; s = (struct songsx *)s->name.next) {
+	SONG_FOREACH_SX(user_song, s) {
 		textout_indent(tout);
 		textout_putstr(tout, s->name.str);
 		textout_putstr(tout, "\t");

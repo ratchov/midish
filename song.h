@@ -74,10 +74,10 @@ struct song {
 	/* music-related fields, should be saved */
 	struct track meta;			/* tempo track */
 	struct seqptr metaptr;
-	struct songtrk *trklist;
-	struct songchan *chanlist;
-	struct songfilt *filtlist;
-	struct songsx *sxlist;
+	struct name *trklist;
+	struct name *chanlist;
+	struct name *filtlist;
+	struct name *sxlist;
 	unsigned tics_per_unit;			/* global time resulution */
 	/* real-time parameters */
 	unsigned long tempo;			/* 24th of usec per tic */
@@ -99,6 +99,26 @@ struct song {
 	unsigned curquant, curlen;
 	unsigned curinput_dev, curinput_ch;		
 };
+
+#define SONG_FOREACH_TRK(s, i)				\
+	for (i = (struct songtrk *)(s)->trklist;	\
+	     i != NULL;					\
+	     i = (struct songtrk *)i->name.next)
+
+#define SONG_FOREACH_CHAN(s, i)				\
+	for (i = (struct songchan *)(s)->chanlist;	\
+	     i != NULL;					\
+	     i = (struct songchan *)i->name.next)
+
+#define SONG_FOREACH_FILT(s, i)				\
+	for (i = (struct songfilt *)(s)->filtlist;	\
+	     i != NULL;					\
+	     i = (struct songfilt *)i->name.next)
+
+#define SONG_FOREACH_SX(s, i)				\
+	for (i = (struct songsx *)(s)->sxlist;		\
+	     i != NULL;					\
+	     i = (struct songsx *)i->name.next)
 
 struct song *song_new(void);
 void song_delete(struct song *o);

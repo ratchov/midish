@@ -415,7 +415,7 @@ song_output(struct song *o, struct textout *f) {
 	track_output(&o->meta, f);
 	textout_putstr(f, "\n");
 
-	for (i = o->chanlist; i != NULL; i = (struct songchan *)i->name.next) {
+	SONG_FOREACH_CHAN(o, i) {
 		textout_indent(f);
 		textout_putstr(f, "songchan ");
 		textout_putstr(f, i->name.str);
@@ -423,7 +423,7 @@ song_output(struct song *o, struct textout *f) {
 		songchan_output(i, f);
 		textout_putstr(f, "\n");
 	}
-	for (g = o->filtlist; g != NULL; g = (struct songfilt *)g->name.next) {
+	SONG_FOREACH_FILT(o, g) {
 		textout_indent(f);
 		textout_putstr(f, "songfilt ");
 		textout_putstr(f, g->name.str);
@@ -431,7 +431,7 @@ song_output(struct song *o, struct textout *f) {
 		songfilt_output(g, f);
 		textout_putstr(f, "\n");
 	}
-	for (t = o->trklist; t != NULL; t = (struct songtrk *)t->name.next) {
+	SONG_FOREACH_TRK(o, t) {
 		textout_indent(f);
 		textout_putstr(f, "songtrk ");
 		textout_putstr(f, t->name.str);
@@ -439,7 +439,7 @@ song_output(struct song *o, struct textout *f) {
 		songtrk_output(t, f);
 		textout_putstr(f, "\n");
 	}
-	for (s = o->sxlist; s != NULL; s = (struct songsx *)s->name.next) {
+	SONG_FOREACH_SX(o, s) {
 		textout_indent(f);
 		textout_putstr(f, "songsx ");
 		textout_putstr(f, s->name.str);
