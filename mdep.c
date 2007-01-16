@@ -116,6 +116,7 @@ mux_mdep_init(void) {
 		} else {
 			dbg_puts("mux_mdep_init: not allowed mode\n");
 			dbg_panic();
+			mode = 0;
 		}
 		RMIDI(i)->mdep.fd = open(RMIDI(i)->mdep.path, mode, 0666);
 		if (RMIDI(i)->mdep.fd < 0) {

@@ -223,6 +223,8 @@ seqptr_evdel(struct seqptr *sp, struct statelist *slist) {
 	}
 	if (slist)
 		st = statelist_update(slist, &sp->pos->ev);
+	else 
+		st = NULL;
 	next = sp->pos->next;
 	next->delta += sp->pos->delta;
 	/* unlink and delete sp->pos */
