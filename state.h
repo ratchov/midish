@@ -61,14 +61,16 @@ struct statelist {
 	 * are very fast thanks to the state ordering (avg lookup
 	 * time is around 1-2 iterations)
 	 */
-	struct state *first;		/* head of the state list */
-	unsigned changed;		/* if changed within this tick */
+	struct state *first;	/* head of the state list */
+	unsigned changed;	/* if changed within this tick */
 #ifdef STATE_PROF
-	unsigned lookup_n;		/* number of lookups */
-	unsigned lookup_max;		/* max lookup time */
-	unsigned lookup_time;		/* total lookup time */
+	unsigned lookup_n;	/* number of lookups */
+	unsigned lookup_max;	/* max lookup time */
+	unsigned lookup_time;	/* total lookup time */
 #endif
 };
+
+#define STATELIST_REVMAX 3	/* num events sattelist_cancel() returns */
 
 void	      state_pool_init(unsigned size);
 void	      state_pool_done(void);
@@ -84,6 +86,7 @@ void	      statelist_empty(struct statelist *o);
 struct state *statelist_lookup(struct statelist *o, struct ev *ev);
 struct state *statelist_update(struct statelist *statelist, struct ev *ev);
 void	      statelist_outdate(struct statelist *o);
-void	      statelist_diff(struct statelist *nl, struct statelist *ol);
+unsigned      statelist_cancel(struct statelist *slist, struct state *st, struct ev *rev);
+unsigned      statelist_restore(struct statelist *slist, struct state *st, struct ev *rev);
 
 #endif /* MIDISH_STATE_H */

@@ -346,16 +346,19 @@ seqptr_seek(struct seqptr *sp, unsigned ntics) {
  * If an event was generated, its state is returned, otherwise
  * NULL is returned.
  */
-struct state *
-seqptr_pause(struct seqptr *sp, struct state *st) {
-	struct ev ev;
+unsigned
+seqptr_cancel(struct seqptr *sp, struct state *st) {
+	struct ev ev[STATELIST_REVMAX];
+	unsigned i, nev;
 
 	if (!EV_ISNOTE(&st->ev) && !(st->phase & EV_PHASE_LAST)) {
-		if (ev_cancel(&st->ev, &ev)) {
-			return seqptr_evput(sp, &ev);
+		nev = statelist_cancel(&sp->statelist, st, ev);
+		for (i = 0; i < nev; i++) {
+			seqptr_evput(sp, &ev[i]);
 		}
+		return 1;
 	}
-	return NULL;
+	return 0;
 }
 
 /*
@@ -364,16 +367,19 @@ seqptr_pause(struct seqptr *sp, struct state *st) {
  * If an event was generated, its state is returned, otherwise
  * NULL is returned.
  */
-struct state *
-seqptr_unpause(struct seqptr *sp, struct state *st) {
-	struct ev ev;
+unsigned
+seqptr_restore(struct seqptr *sp, struct state *st) {
+	struct ev ev[STATELIST_REVMAX];
+	unsigned i, nev;
 
 	if (!EV_ISNOTE(&st->ev) && !(st->phase & EV_PHASE_LAST)) {
-		if (ev_restore(&st->ev, &ev)) {
-			return seqptr_evput(sp, &ev);
+		nev = statelist_restore(&sp->statelist, st, ev);
+		for (i = 0; i < nev; i++) {
+			seqptr_evput(sp, &ev[i]);
 		}
+		return 1;
 	}
-	return NULL;
+	return 0;
 }
 
 
@@ -693,7 +699,7 @@ track_move(struct track *src, unsigned start, unsigned len,
 	if (blank) {
 		for (st = slist.first; st != NULL; st = st->next) {
 			if (evspec_matchev(es, &st->ev) &&
-			    seqptr_pause(&sp, st))
+			    seqptr_cancel(&sp, st))
 				st->tag &= ~TAG_KEEP;
 		}
 	}
@@ -731,7 +737,7 @@ track_move(struct track *src, unsigned start, unsigned len,
 			if (!evspec_matchev(es, &st->ev))
 				continue;
 			if (!(st->tag & TAG_COPY) && 
-			    seqptr_unpause(&dp, st)) {
+			    seqptr_restore(&dp, st)) {
 				st->tag |= TAG_COPY;
 			}
 		}
@@ -769,7 +775,7 @@ track_move(struct track *src, unsigned start, unsigned len,
 	 */
 	if (copy) {
 		for (st = slist.first; st != NULL; st = st->next) {
-			if (seqptr_pause(&dp, st))
+			if (seqptr_cancel(&dp, st))
 				st->tag &= ~TAG_COPY;
 		}
 	}
@@ -801,7 +807,7 @@ track_move(struct track *src, unsigned start, unsigned len,
 	 * retore/tag frames that are not tagged.
 	 */
 	for (st = slist.first; st != NULL; st = st->next) {
-		if (!(st->tag & TAG_KEEP) && seqptr_unpause(&sp, st)) {
+		if (!(st->tag & TAG_KEEP) && seqptr_restore(&sp, st)) {
 			st->tag |= TAG_KEEP;
 		}
 	}
@@ -1397,7 +1403,6 @@ track_timerm(struct track *t, unsigned measure, unsigned amount) {
 	struct statelist slist;
 	struct state *st, *ost;
 	unsigned delta, tic, len;
-	struct ev ev;
 
 	/*
 	 * go to the requested position and determine the number
@@ -1461,10 +1466,10 @@ track_timerm(struct track *t, unsigned measure, unsigned amount) {
 	 * copying selected events in the next stage
 	 */
 	for (st = slist.first; st != NULL; st = st->next) {
-		if (!st->tag && ev_restore(&st->ev, &ev)) {
-			ost = statelist_lookup(&sp.statelist, &ev);
-			if (!ost || !ev_eq(&ev, &ost->ev))
-				seqptr_evput(&sp, &ev);
+		if (!st->tag) {
+			ost = statelist_lookup(&sp.statelist, &st->ev);
+			if (!ost || !ev_eq(&st->ev, &ost->ev))
+				seqptr_evput(&sp, &st->ev);
 			st->tag = 1;
 		}
 	}
@@ -1479,7 +1484,7 @@ track_timerm(struct track *t, unsigned measure, unsigned amount) {
 			break;
 		st = seqptr_evdel(&sp, &slist);
 		st->tag = 1;
-		ost = statelist_lookup(&sp.statelist, &ev);
+		ost = statelist_lookup(&sp.statelist, &st->ev);
 		if (!ost || !ev_eq(&st->ev, &ost->ev))
 			seqptr_evput(&sp, &st->ev);
 	}

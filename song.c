@@ -577,38 +577,6 @@ song_playtic(struct song *o) {
 	}
 }
 
-#if 0
-/*
- * restore the state of a track (all controllers, program changes,
- * etc..
- */
-void
-song_trkrestore(struct song *o, struct songtrk *t) {
-	
-	for (s = t->trackptr.statelist.first; s != NULL; s = snext) {
-		snext = s->next;
-		if (ev_restore(&s->ev, &re)) {
-			if (song_debug) {
-				dbg_puts("song_start: ");
-				ev_dbg(&s->ev);
-				dbg_puts(": restored -> ");
-				ev_dbg(&re);
-				dbg_puts("\n");
-			}
-			mux_putev(&re);
-			s->tag = 1;
-		} else {
-			if (song_debug) {
-				dbg_puts("song_start: ");
-				ev_dbg(&s->ev);
-				dbg_puts(": not restored (no tag)\n");
-			}
-			s->tag = 0;
-		}
-	}
-}
-#endif
-
 /*
  * setup everything to start play/record: the current filter,
  * go to the current position, etc... must be called with the
@@ -619,9 +587,9 @@ void
 song_start(struct song *o, 
     void (*cb)(void *, struct ev *), unsigned countdown) {
 	struct songfilt *f;
-	struct songtrk *i;
-	unsigned tic;
-	struct ev re;
+	struct songtrk *t;
+	unsigned tic, i, nev;
+	struct ev re[STATELIST_REVMAX];
 	struct state *s, *snext;
 
 	/*
@@ -655,9 +623,9 @@ song_start(struct song *o,
 	/*
 	 * move all tracks to the current position
 	 */
-	SONG_FOREACH_TRK(o, i) {
-		seqptr_init(&i->trackptr, &i->track);
-		seqptr_skip(&i->trackptr, tic);
+	SONG_FOREACH_TRK(o, t) {
+		seqptr_init(&t->trackptr, &t->track);
+		seqptr_skip(&t->trackptr, tic);
 	}
 	seqptr_init(&o->metaptr, &o->meta);
 	seqptr_skip(&o->metaptr, tic);
@@ -680,24 +648,27 @@ song_start(struct song *o,
 	/*
 	 * restore track states
 	 */
-	SONG_FOREACH_TRK(o, i) {
-		for (s = i->trackptr.statelist.first; s != NULL; s = snext) {
+	SONG_FOREACH_TRK(o, t) {
+		for (s = t->trackptr.statelist.first; s != NULL; s = snext) {
 			snext = s->next;
-			if (ev_restore(&s->ev, &re)) {
-				if (song_debug) {
-					dbg_puts("song_start: ");
-					ev_dbg(&s->ev);
-					dbg_puts(": restored -> ");
-					ev_dbg(&re);
-					dbg_puts("\n");
+			if (!EV_ISNOTE(&s->ev)) {
+				nev = statelist_restore(&t->trackptr.statelist, s, re);
+				for (i = 0; i < nev; i++) {
+					if (song_debug) {
+						dbg_puts("song_start: ");
+						ev_dbg(&s->ev);
+						dbg_puts(": restored -> ");
+						ev_dbg(&re[i]);
+						dbg_puts("\n");
+					}
+					mux_putev(&re[i]);
 				}
-				mux_putev(&re);
 				s->tag = 1;
 			} else {
 				if (song_debug) {
 					dbg_puts("song_start: ");
 					ev_dbg(&s->ev);
-					dbg_puts(": not restored (no tag)\n");
+					dbg_puts(": not restored (not tagged)\n");
 				}
 				s->tag = 0;
 			}
@@ -717,7 +688,7 @@ song_start(struct song *o,
 			if (song_debug) {
 				dbg_puts("song_start: ");
 				ev_dbg(&s->ev);
-				dbg_puts(": not restored (no tag)\n");
+				dbg_puts(": not restored (not tagged)\n");
 			}
 			s->tag = 0;
 		}
@@ -732,9 +703,10 @@ song_start(struct song *o,
  */
 void
 song_stop(struct song *o) {
-	struct songtrk *i;
+	struct songtrk *t;
 	struct state *s, *snext;
-	struct ev ca;
+	struct ev ca[STATELIST_REVMAX];
+	unsigned i, nev;
 
 	if (o->filt) {
 		filt_shut(o->filt);
@@ -746,29 +718,32 @@ song_stop(struct song *o) {
 	/*
 	 * stop sounding notes
 	 */
-	SONG_FOREACH_TRK(o, i) {
-		for (s = i->trackptr.statelist.first; s != NULL; s = snext) {
+	SONG_FOREACH_TRK(o, t) {
+		for (s = t->trackptr.statelist.first; s != NULL; s = snext) {
 			snext = s->next;
-			if (s->tag && ev_cancel(&s->ev, &ca)) {
-				if (song_debug) {
-					dbg_puts("song_stop: ");
-					ev_dbg(&s->ev);
-					dbg_puts(": canceled -> ");
-					ev_dbg(&ca);
-					dbg_puts("\n");
+			if (s->tag) {
+				nev = statelist_cancel(&t->trackptr.statelist, s, ca);
+				for (i = 0; i < nev; i++) {
+					if (song_debug) {
+						dbg_puts("song_stop: ");
+						ev_dbg(&s->ev);
+						dbg_puts(": canceled -> ");
+						ev_dbg(&ca[i]);
+						dbg_puts("\n");
+					}
+					mux_putev(&ca[i]);
 				}
-				mux_putev(&ca);
 
 			}
-			statelist_rm(&i->trackptr.statelist, s);
+			statelist_rm(&t->trackptr.statelist, s);
 			state_del(s);
 		}
 	}
 	mux_flush();	
 	mux_done();
 
-	SONG_FOREACH_TRK(o, i) {
-		seqptr_done(&i->trackptr);
+	SONG_FOREACH_TRK(o, t) {
+		seqptr_done(&t->trackptr);
 	}
 	seqptr_done(&o->recptr);
 	seqptr_done(&o->metaptr);

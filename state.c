@@ -384,3 +384,88 @@ statelist_outdate(struct statelist *o) {
 	}
 }
 
+/*
+ * generate an array of events that can be played in order to cancel
+ * the given state (ie restore all parameters related to the frame
+ * state as the frame never existed). Return the number of generated
+ * events
+ *
+ * note: if zero is returned, that doesn't mean that the frame
+ * couldn't be canceled, that just means no events are needed (btw
+ * currently this never happens...)
+ */
+unsigned
+statelist_cancel(struct statelist *slist, struct state *st, struct ev *rev) {
+	switch(st->ev.cmd) {
+	case EV_NON:
+	case EV_KAT:
+		rev->cmd = EV_NOFF;
+		rev->data.voice.b0  = st->ev.data.voice.b0;
+		rev->data.voice.b1  = EV_NOFF_DEFAULTVEL;
+		break;
+	case EV_CAT:
+		if (st->ev.data.voice.b0 == EV_CAT_DEFAULT) {
+			return 0;
+		}
+		rev->cmd = EV_CAT;
+		rev->data.voice.b0  = EV_CAT_DEFAULT;
+		break;
+	case EV_CTL:
+		if (EVCTL_TYPE(st->ev.data.voice.b0) == EVCTL_TYPE_UNKNOWN ||
+		    st->ev.data.voice.b1 == EVCTL_DEFAULT(st->ev.data.voice.b0)) {
+			return 0;
+		}
+		rev->cmd = EV_CTL;
+		rev->data.voice.b0 = st->ev.data.voice.b0;
+		rev->data.voice.b1 = EVCTL_DEFAULT(st->ev.data.voice.b0);
+		break;
+	case EV_BEND:
+		if (st->ev.data.voice.b0 == EV_BEND_DEFAULTLO &&
+		    st->ev.data.voice.b1 == EV_BEND_DEFAULTHI) {
+		    	return 0;
+		}
+		rev->cmd = EV_BEND;
+		rev->data.voice.b0 = EV_BEND_DEFAULTLO;
+		rev->data.voice.b1 = EV_BEND_DEFAULTHI;
+		break;
+	case EV_NOFF:
+	case EV_PC:
+		return 0;
+	default:
+		/* 
+		 * XXX: shouldn't we just return 0 instead of panic()ing ?
+		 */
+		dbg_puts("statelist_cancel: unknown event type\n");
+		dbg_panic();
+	}
+	rev->data.voice.dev = st->ev.data.voice.dev;
+	rev->data.voice.ch  = st->ev.data.voice.ch;
+	return 1;
+}
+
+
+/*
+ * generate an array of events that will restore the given state
+ * return the number of generated events.
+ *
+ * note: if zero is returned, that doesn't mean that the frame
+ * couldn't be canceled, that just means no events are needed (btw
+ * currently this never happens...)
+ */
+unsigned
+statelist_restore(struct statelist *slist, struct state *st, struct ev *rev) {
+	if (EV_ISNOTE(&st->ev)) {
+		/*
+		 * we never use this function for NOTE events, so
+		 * if we're here, there is problem somewhere...
+		 */
+		dbg_puts("statelist_restore: can't restore note events\n");
+		dbg_panic();
+	}
+	if ((st->phase & EV_PHASE_LAST) && !(st->phase & EV_PHASE_FIRST)) {
+		dbg_puts("statelist_restore: WARNING: called for last event\n");
+		return 0;
+	}
+	*rev = st->ev;
+	return 1;
+}

@@ -143,8 +143,6 @@ unsigned ev_ordered(struct ev *ev1, struct ev *ev2);
 unsigned ev_prio(struct ev *ev);
 unsigned ev_str2cmd(struct ev *ev, char *str);
 unsigned ev_phase(struct ev *ev);
-unsigned ev_cancel(struct ev *ev, struct ev *ca);
-unsigned ev_restore(struct ev *ev, struct ev *re);
 
 unsigned evspec_str2cmd(struct evspec *ev, char *str);
 void	 evspec_dbg(struct evspec *o);
