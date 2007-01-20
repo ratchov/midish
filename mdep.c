@@ -94,12 +94,19 @@ cons_mdep_done(void) {
 	}
 }
 
+
+/*
+ * open midi devices
+ */
 void
 mux_mdep_init(void) {
 	struct sigaction sa;
 	struct mididev *i;
 	int mode;
 
+	/*
+	 * ignore SIGPIPE, because we handle write errors
+	 */
 	sa.sa_handler = SIG_IGN;
 	if (sigaction(SIGPIPE, &sa, NULL) < 0) {
 		perror("mux_mdep_init: sigaction");
@@ -130,7 +137,9 @@ mux_mdep_init(void) {
 	}
 }
 
-
+/*
+ * close midi devices
+ */
 void
 mux_mdep_done(void) {
 	struct sigaction sa;
@@ -155,7 +164,9 @@ mux_mdep_done(void) {
 	}
 }
 
-
+/*
+ * loop and call appropriate call-backs when input is available
+ */
 void
 mux_mdep_run(void) {
 	nfds_t ifds;
@@ -217,10 +228,9 @@ mux_mdep_run(void) {
 		}
 
 		/*
-		 * number of micro-seconds between now
-		 * and the last timeout we called poll(). 
-		 * Warning: because of system clock changes this value
-		 * can be negative.
+		 * number of micro-seconds between now and the last
+		 * time we called poll(). Warning: because of system
+		 * clock changes this value can be negative.
 		 */
 		delta_usec = 1000000L * (tv.tv_sec - tv_last.tv_sec);
 		delta_usec += tv.tv_usec - tv_last.tv_usec;
@@ -236,9 +246,9 @@ mux_mdep_run(void) {
 }
 
 /* 
- * sleeps for 'millisecs' milliseconds
+ * sleep for 'millisecs' milliseconds
  * useful when sending system exclusive messages
- * IMPORTANT : must never be called inside mux_run 
+ * IMPORTANT : must never be called inside mux_run() 
  */
 void 
 mux_sleep(unsigned millisecs) {
@@ -259,6 +269,9 @@ void
 rmidi_mdep_done(struct rmidi *o) {
 }
 
+/*
+ * flush the given midi device
+ */
 void
 rmidi_flush(struct rmidi *o) {
 	int res;
@@ -283,6 +296,10 @@ rmidi_flush(struct rmidi *o) {
 	o->oused = 0;
 }
 
+/*
+ * start $HOME/.midishrc script, if it doesn't exist then
+ * try /etc/midishrc
+ */
 unsigned
 exec_runrcfile(struct exec *o) {
 	char *home;
