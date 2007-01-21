@@ -1156,6 +1156,7 @@ filt_kill(struct filt *o, struct ev *ev) {
 		dbg_puts("filt_kill: ");
 		ev_dbg(&st->ev);
 		dbg_puts(": killed\n");
+		st->tag = 0;
 	}
 }
 
@@ -1197,7 +1198,6 @@ filt_evcb(struct filt *o, struct ev *ev) {
 				ev_dbg(ev);
 				dbg_puts(": bogus/nested frame\n");
 			}
-			st->tag = 0;
 			filt_kill(o, ev);
 		}
 	}
