@@ -578,6 +578,85 @@ song_playtic(struct song *o) {
 }
 
 /*
+ * restore all frames in the given statelist
+ */
+void
+song_confrestore(struct statelist *slist) {
+	struct state *s;
+	struct ev re[STATELIST_REVMAX];
+	unsigned prio, i, nev;
+
+	for (prio = EV_PRIO_ANY; prio <= EV_PRIO_MAX; prio++) {
+		for (s = slist->first; s != NULL; s = s->next) {
+			if (ev_prio(&s->ev) != prio)
+				continue;
+			if (!EV_ISNOTE(&s->ev)) {
+				nev = statelist_restore(slist, s, re);
+				for (i = 0; i < nev; i++) {
+					if (song_debug) {
+						dbg_puts("song_confrestore: ");
+						ev_dbg(&s->ev);
+						dbg_puts(": restored -> ");
+						ev_dbg(&re[i]);
+						dbg_puts(" (");
+						dbg_putu(i);
+						dbg_puts(")\n");
+					}
+					mux_putev(&re[i]);
+				}
+				s->tag = 1;
+			} else {
+				if (song_debug) {
+					dbg_puts("song_confrestore: ");
+					ev_dbg(&s->ev);
+					dbg_puts(": not restored (not tagged)\n");
+				}
+				s->tag = 0;
+			}
+		}
+	}
+}
+
+/*
+ * cancel all frames in the given state list
+ */
+void
+song_confcancel(struct statelist *slist) {
+	struct state *s;
+	struct ev ca[STATELIST_REVMAX];
+	unsigned prio, i, nev;
+
+	for (prio = EV_PRIO_ANY; prio <= EV_PRIO_MAX; prio++) {
+		for (s = slist->first; s != NULL; s = s->next) {
+			if (ev_prio(&s->ev) != prio)
+				continue;
+			if (s->tag) {
+				nev = statelist_cancel(slist, s, ca);
+				for (i = 0; i < nev; i++) {
+					if (song_debug) {
+						dbg_puts("song_confcancel: ");
+						ev_dbg(&s->ev);
+						dbg_puts(": canceled -> ");
+						ev_dbg(&ca[i]);
+						dbg_puts(" (");
+						dbg_putu(i);
+						dbg_puts(")\n");
+					}
+					mux_putev(&ca[i]);
+				}
+				s->tag = 0;
+			} else {
+				if (song_debug) {
+					dbg_puts("song_confcancel: ");
+					ev_dbg(&s->ev);
+					dbg_puts(": not canceled (no tag)\n");
+				}
+			}
+		}
+	}
+}
+
+/*
  * setup everything to start play/record: the current filter,
  * go to the current position, etc... must be called with the
  * mux initialised. The 'cb' parameter is a function that
@@ -588,9 +667,8 @@ song_start(struct song *o,
     void (*cb)(void *, struct ev *), unsigned countdown) {
 	struct songfilt *f;
 	struct songtrk *t;
-	unsigned tic, i, nev;
-	struct ev re[STATELIST_REVMAX];
-	struct state *s, *snext;
+	unsigned tic;
+	struct state *s;
 
 	/*
 	 * check for the current filter
@@ -649,33 +727,9 @@ song_start(struct song *o,
 	 * restore track states
 	 */
 	SONG_FOREACH_TRK(o, t) {
-		for (s = t->trackptr.statelist.first; s != NULL; s = snext) {
-			snext = s->next;
-			if (!EV_ISNOTE(&s->ev)) {
-				nev = statelist_restore(&t->trackptr.statelist, s, re);
-				for (i = 0; i < nev; i++) {
-					if (song_debug) {
-						dbg_puts("song_start: ");
-						ev_dbg(&s->ev);
-						dbg_puts(": restored -> ");
-						ev_dbg(&re[i]);
-						dbg_puts("\n");
-					}
-					mux_putev(&re[i]);
-				}
-				s->tag = 1;
-			} else {
-				if (song_debug) {
-					dbg_puts("song_start: ");
-					ev_dbg(&s->ev);
-					dbg_puts(": not restored (not tagged)\n");
-				}
-				s->tag = 0;
-			}
-		}
+		song_confrestore(&t->trackptr.statelist);
 	}
-	for (s = o->metaptr.statelist.first; s != NULL; s = snext) {
-		snext = s->next;
+	for (s = o->metaptr.statelist.first; s != NULL; s = s->next) {
 		if (EV_ISMETA(&s->ev)) {
 			if (song_debug) {
 				dbg_puts("song_start: ");
@@ -704,45 +758,24 @@ song_start(struct song *o,
 void
 song_stop(struct song *o) {
 	struct songtrk *t;
-	struct state *s, *snext;
-	struct ev ca[STATELIST_REVMAX];
-	unsigned i, nev;
 
 	if (o->filt) {
 		filt_shut(o->filt);
 		filt_stop(o->filt);
 	}
-
 	metro_shut(&o->metro);	
 
 	/*
 	 * stop sounding notes
 	 */
 	SONG_FOREACH_TRK(o, t) {
-		for (s = t->trackptr.statelist.first; s != NULL; s = snext) {
-			snext = s->next;
-			if (s->tag) {
-				nev = statelist_cancel(&t->trackptr.statelist, s, ca);
-				for (i = 0; i < nev; i++) {
-					if (song_debug) {
-						dbg_puts("song_stop: ");
-						ev_dbg(&s->ev);
-						dbg_puts(": canceled -> ");
-						ev_dbg(&ca[i]);
-						dbg_puts("\n");
-					}
-					mux_putev(&ca[i]);
-				}
-
-			}
-			statelist_rm(&t->trackptr.statelist, s);
-			state_del(s);
-		}
+		song_confcancel(&t->trackptr.statelist);
 	}
 	mux_flush();	
 	mux_done();
 
 	SONG_FOREACH_TRK(o, t) {
+		statelist_empty(&t->trackptr.statelist);
 		seqptr_done(&t->trackptr);
 	}
 	seqptr_done(&o->recptr);
