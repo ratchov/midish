@@ -129,9 +129,18 @@ ev_sameclass(struct ev *ev1, struct ev *ev2) {
 	case EV_CTL:
 		if (ev1->cmd != ev2->cmd ||
 		    ev1->data.voice.dev != ev2->data.voice.dev ||
-		    ev1->data.voice.ch != ev2->data.voice.ch ||
-		    ev1->data.voice.b0 != ev2->data.voice.b0) {
+		    ev1->data.voice.ch != ev2->data.voice.ch) {
 			return 0;
+		}
+		if (ev1->data.voice.b0 != ev2->data.voice.b0) {
+			if (EVCTL_IS7BIT(ev1->data.voice.b0) || 
+			    EVCTL_IS7BIT(ev2->data.voice.b0)) {
+				return 0;
+			} else {
+				if (EVCTL_HI(ev1->data.voice.b0) != ev2->data.voice.b0 ||
+				    EVCTL_HI(ev2->data.voice.b0) != ev1->data.voice.b0) 
+					return 0;
+			}
 		}
 		break;
 	case EV_BEND:
@@ -250,7 +259,7 @@ ev_phase(struct ev *ev) {
 		}
 		break;
 	case EV_CTL:
-		if (EVCTL_TYPE(ev->data.voice.b0) == EVCTL_TYPE_UNKNOWN) {
+		if (!EVCTL_ISFRAME(ev->data.voice.b0)) {
 			phase = EV_PHASE_FIRST | EV_PHASE_LAST;
 		} else {
 			if (ev->data.voice.b1 != 
@@ -461,7 +470,25 @@ evctl_conf(unsigned i, unsigned type, unsigned defval, char *name) {
 	}
 	o->name = str_new(name);
 	o->type = type;
+	o->bits = EVCTL_7BIT;
 	o->defval = defval;
+}
+
+/*
+ * configure a 14 bit controller (set the typ, name, etc...)
+ */
+void
+evctl_conf14(unsigned num_hi, unsigned num_lo, unsigned type, unsigned defval,
+	     char *name_hi, char *name_lo) {
+	struct evctl *hi = &evctl_tab[num_hi];
+	struct evctl *lo = &evctl_tab[num_lo];
+	
+	evctl_conf(num_hi, type, (defval >> 7) & 0x7f, name_hi);
+	evctl_conf(num_lo, type, defval & 0x7f, name_lo);
+	hi->hi = lo->hi = num_hi;
+	hi->lo = lo->lo = num_lo;
+	hi->bits = EVCTL_MSB;
+	lo->bits = EVCTL_LSB;
 }
 
 /*
@@ -471,11 +498,17 @@ evctl_conf(unsigned i, unsigned type, unsigned defval, char *name) {
 void
 evctl_unconf(unsigned i) {
 	struct evctl *o = &evctl_tab[i];
+
 	if (o->name != NULL) {
 		str_delete(o->name);
 		o->name = NULL;
 	}
-	o->type = EVCTL_TYPE_UNKNOWN;
+	/*
+	 * XXX it it's an MSB (or LSB), we should unconf also
+	 * LSB (or MSB)
+	 */
+	o->type = EVCTL_PARAM;
+	o->bits = EVCTL_7BIT;
 	o->defval = 0;
 }
 
@@ -506,16 +539,18 @@ evctl_init(void) {
 	unsigned i;
 	
 	for (i = 0; i < 128; i++) {
-		evctl_tab[i].type = EVCTL_TYPE_UNKNOWN;
+		evctl_tab[i].type = EVCTL_PARAM;
+		evctl_tab[i].bits = EVCTL_7BIT;
 		evctl_tab[i].name = NULL;
 		evctl_tab[i].defval = 0;
 	}
-	evctl_tab[64].name = str_new("sustain");
-	evctl_tab[64].type = EVCTL_TYPE_SWITCH;
-	evctl_tab[64].defval = 0;
-	evctl_tab[64].name = str_new("modulation");
-	evctl_tab[64].type = EVCTL_TYPE_CONT;
-	evctl_tab[64].defval = 0;
+
+	/*
+	 * some defaults, for testing ...
+	 */
+	evctl_conf14(0, 32, EVCTL_PARAM, 0, "bank_hi", "bank_lo");
+	evctl_conf(1,       EVCTL_FRAME, 0, "modulation");
+	evctl_conf(64,      EVCTL_FRAME, 0, "sustain");
 }
 
 /*

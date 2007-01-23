@@ -411,7 +411,7 @@ statelist_cancel(struct statelist *slist, struct state *st, struct ev *rev) {
 		rev->data.voice.b0  = EV_CAT_DEFAULT;
 		break;
 	case EV_CTL:
-		if (EVCTL_TYPE(st->ev.data.voice.b0) == EVCTL_TYPE_UNKNOWN ||
+		if (!EVCTL_ISFRAME(st->ev.data.voice.b0) ||
 		    st->ev.data.voice.b1 == EVCTL_DEFAULT(st->ev.data.voice.b0)) {
 			return 0;
 		}

@@ -150,20 +150,30 @@ void	 evspec_reset(struct evspec *o);
 unsigned evspec_matchev(struct evspec *o, struct ev *e);
 
 struct evctl {
-#define EVCTL_TYPE_UNKNOWN	0
-#define EVCTL_TYPE_CONT		1
-#define EVCTL_TYPE_SWITCH	2
+#define EVCTL_PARAM	0
+#define EVCTL_FRAME	1
 	unsigned type;
+#define EVCTL_7BIT	0
+#define EVCTL_MSB	1
+#define EVCTL_LSB	2
+	unsigned bits;
 	char *name;
-	unsigned defval;
+	unsigned char defval, lo, hi;
 };
 
-#define EVCTL_TYPE(i)		(evctl_tab[(i)].type)
+#define EVCTL_ISPARAM(i)	(evctl_tab[(i)].type == EVCTL_PARAM)
+#define EVCTL_ISFRAME(i)	(evctl_tab[(i)].type == EVCTL_FRAME)
+#define EVCTL_IS7BIT(i)		(evctl_tab[(i)].bits == EVCTL_7BIT)
+
 #define EVCTL_DEFAULT(i)	(evctl_tab[(i)].defval)
+#define EVCTL_HI(i)		(evctl_tab[(i)].hi)
+#define EVCTL_LO(i)		(evctl_tab[(i)].lo)
 
 extern	struct evctl evctl_tab[128];
 
 void	 evctl_conf(unsigned i, unsigned type, unsigned defval, char *name);
+void     evctl_conf14(unsigned num_hi, unsigned num_lo, unsigned type, unsigned defval,
+		      char *name_hi, char *name_lo);
 void	 evctl_unconf(unsigned i);
 unsigned evctl_lookup(char *name, unsigned *ret);
 void	 evctl_init(void);

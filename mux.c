@@ -33,12 +33,48 @@
  *	- midi input and output
  *	- internal external/timer
  *
- * the unit of time is the 24th of microsecond, thus
- * the tempo is stored we the same accurancy than in a 
- * standard midi file.
+ * the time unit is the 24th of microsecond (thus the tempo is stored
+ * with the same accurancy as in standard midi files).
  *
  * the timer has the following states:
  * STARTWAIT -> START -> FIRST_TIC -> NEXT_TIC -> STOPWAIT -> STOP
+ *
+ * STARTWAIT:
+ *
+ *	we're waiting (forever) for a "start" MIDI event; once it is
+ *	received, we switch to the next state (START state). If the
+ *	internal clock source is used, then we switch immediately to
+ *	next state.
+ *
+ * START:
+ *
+ *	we just received the "start" MIDI event, so we wait for the
+ *	first "tick" MIDI event; once it's received we switch to the
+ *	next state (FIRST_TIC). If the internal clock source is used
+ *	we wait MUX_START_DELAT (0.1 second) and we switch to the next
+ *	state.
+ *
+ * FIRST_TIC:
+ *
+ *	we received the first "tick" event after a "start" event,
+ *	the music starts now, so call appropriate call-backs to do so
+ *	and wait for the next "tick" event.
+ *
+ * NEXT_TIC:
+ *
+ *	we received another "tick" event, move the music one
+ *	step forward.
+ *
+ * STOPWAIT:
+ *
+ *	the music is over, so the upper layer puts this module in the
+ *	STOPAIT state. So we just wait for the "stop" MIDI event;
+ *	thats necessary because other MIDI sequencers may not have
+ *	finished. 
+ *
+ * STOP:
+ *
+ *	nothing to do, ignore any MIDI sync events.
  *
  */
 
