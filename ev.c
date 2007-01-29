@@ -108,65 +108,6 @@ ev_eq(struct ev *ev1, struct ev *ev2) {
 	return 1;
 }
 
-
-/*
- * return 1 if the pair of events are of the same
- * type (same note or same controller or both are tempos etc...)
- */
-unsigned
-ev_sameclass(struct ev *ev1, struct ev *ev2) {
-	switch (ev1->cmd) {
-	case EV_NON:
-	case EV_NOFF:
-	case EV_KAT:
-		if (!EV_ISNOTE(ev2) ||
-		    ev1->data.voice.dev != ev2->data.voice.dev ||
-		    ev1->data.voice.ch != ev2->data.voice.ch ||
-		    ev1->data.voice.b0 != ev2->data.voice.b0) {
-			return 0;
-		}
-		break;		
-	case EV_CTL:
-		if (ev1->cmd != ev2->cmd ||
-		    ev1->data.voice.dev != ev2->data.voice.dev ||
-		    ev1->data.voice.ch != ev2->data.voice.ch) {
-			return 0;
-		}
-		if (ev1->data.voice.b0 != ev2->data.voice.b0) {
-			if (EVCTL_IS7BIT(ev1->data.voice.b0) || 
-			    EVCTL_IS7BIT(ev2->data.voice.b0)) {
-				return 0;
-			} else {
-				if (EVCTL_HI(ev1->data.voice.b0) != ev2->data.voice.b0 ||
-				    EVCTL_HI(ev2->data.voice.b0) != ev1->data.voice.b0) 
-					return 0;
-			}
-		}
-		break;
-	case EV_BEND:
-	case EV_CAT:
-	case EV_PC:
-		if (ev1->cmd != ev2->cmd ||
-		    ev1->data.voice.dev != ev2->data.voice.dev ||
-		    ev1->data.voice.ch != ev2->data.voice.ch) {
-			return 0;
-		}
-		break;
-	case EV_TEMPO:
-	case EV_TIMESIG:
-		if (ev1->cmd != ev2->cmd) {
-			return 0;
-		}
-		break;
-	default:
-		dbg_puts("ev_sameclass: bad event type\n");
-		dbg_panic();
-		break;
-	}
-	return 1;
-}
-
-
 /*
  * return 1 if the first event has higher "priority"
  * than the socond one.

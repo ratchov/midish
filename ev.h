@@ -161,9 +161,13 @@ struct evctl {
 	unsigned char defval, lo, hi;
 };
 
+#define EVCTL_UNDEF	255
+
 #define EVCTL_ISPARAM(i)	(evctl_tab[(i)].type == EVCTL_PARAM)
 #define EVCTL_ISFRAME(i)	(evctl_tab[(i)].type == EVCTL_FRAME)
 #define EVCTL_IS7BIT(i)		(evctl_tab[(i)].bits == EVCTL_7BIT)
+#define EVCTL_ISHI(i)		(evctl_tab[(i)].bits == EVCTL_MSB)
+#define EVCTL_ISLO(i)		(evctl_tab[(i)].bits == EVCTL_LSB)
 
 #define EVCTL_DEFAULT(i)	(evctl_tab[(i)].defval)
 #define EVCTL_HI(i)		(evctl_tab[(i)].hi)

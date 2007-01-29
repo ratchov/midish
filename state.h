@@ -31,7 +31,7 @@
 #ifndef MIDISH_STATE_H
 #define MIDISH_STATE_H
 
-#undef STATE_DEBUG
+#define STATE_DEBUG
 #undef STATE_PROF
 
 #include "ev.h"
@@ -52,6 +52,7 @@ struct state  {
 	struct seqev *pos;		/* pointer to the FIRST event */
 	unsigned tag;			/* frame is selected */
 	unsigned nevents;		/* number of events before timeout */
+	unsigned char ctx_hi, ctx_lo;	/* context for 14bit controllers */
 };
 
 struct statelist {
@@ -83,6 +84,7 @@ void	      statelist_dup(struct statelist *o, struct statelist *src);
 void	      statelist_add(struct statelist *o, struct state *st);
 void	      statelist_rm(struct statelist *o, struct state *st);
 void	      statelist_empty(struct statelist *o);
+unsigned      statelist_match(struct statelist *o, struct state *st, struct ev *ev);
 struct state *statelist_lookup(struct statelist *o, struct ev *ev);
 struct state *statelist_update(struct statelist *statelist, struct ev *ev);
 void	      statelist_outdate(struct statelist *o);

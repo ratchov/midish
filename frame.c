@@ -410,7 +410,7 @@ seqptr_rmlast(struct seqptr *sp, struct state *st) {
 		if (i == sp->pos) {
 			break;
 		}
-		if (ev_sameclass(&st->ev, &i->ev)) {
+		if (statelist_match(&sp->statelist, st, &i->ev)) {
 			prev = cur;
 			cur = i;
 		}
@@ -462,7 +462,7 @@ seqptr_rmprev(struct seqptr *sp, struct state *st) {
 	 */
 	i = st->pos;
 	for (;;) {
-		if (ev_sameclass(&st->ev, &i->ev)) {
+		if (statelist_match(&sp->statelist, st, &i->ev)) {
 			/* 
 			 * remove the event from the track
 			 * (but not the blank space)

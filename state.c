@@ -68,6 +68,33 @@ state_del(struct state *s) {
 }
 
 /*
+ * copy event content into a state. It isn't enough to just
+ * copy the event; special care must be taken for controller
+ * events to handle contexts for 14bit controllers and
+ * reference to RPN/NRPN for data-entry controllers
+ */
+void
+state_copy(struct state *st, struct ev *ev) {
+	st->ev = *ev;
+	if (ev->cmd == EV_CTL && !EVCTL_IS7BIT(ev->data.voice.b0)) {
+		if (EVCTL_ISHI(ev->data.voice.b0)) {
+			st->ctx_hi = ev->data.voice.b1;
+		} else {
+			st->ctx_lo = ev->data.voice.b1;
+		}
+#ifdef STATE_DEBUG
+		dbg_puts("state_copy: ");
+		ev_dbg(ev);
+		dbg_puts(": hi = ");
+		dbg_putu(st->ctx_hi);
+		dbg_puts(", lo = ");
+		dbg_putu(st->ctx_lo);
+		dbg_puts("\n");
+#endif
+	}
+}
+
+/*
  * initialise an empty state list
  */
 void
@@ -150,6 +177,8 @@ statelist_dup(struct statelist *o, struct statelist *src) {
 		n->ev = i->ev;
 		n->phase = i->phase;
 		n->flags = i->flags;
+		n->ctx_hi = i->ctx_hi;
+		n->ctx_lo = i->ctx_lo;
 		statelist_add(o, n);
 	}
 }
@@ -192,6 +221,65 @@ statelist_rm(struct statelist *o, struct state *st) {
 }
 
 /*
+ * check if the given event matches the given frame (if it matches,
+ * then iether the event is part of the frame, either there is a
+ * conflict between the frame and the event)
+ */
+unsigned
+statelist_match(struct statelist *o, struct state *st, struct ev *ev) {
+	switch (st->ev.cmd) {
+	case EV_NON:
+	case EV_NOFF:
+	case EV_KAT:
+		if (!EV_ISNOTE(ev) ||
+		    st->ev.data.voice.b0 != ev->data.voice.b0 ||
+		    st->ev.data.voice.ch != ev->data.voice.ch ||
+		    st->ev.data.voice.dev != ev->data.voice.dev) {
+			return 0;
+		}
+		break;		
+	case EV_CTL:
+		if (st->ev.cmd != ev->cmd ||
+		    st->ev.data.voice.dev != ev->data.voice.dev ||
+		    st->ev.data.voice.ch != ev->data.voice.ch) {
+			return 0;
+		}
+		if (st->ev.data.voice.b0 != ev->data.voice.b0) {
+			if (EVCTL_IS7BIT(st->ev.data.voice.b0) || 
+			    EVCTL_IS7BIT(ev->data.voice.b0)) {
+				return 0;
+			} else {
+				if (EVCTL_HI(st->ev.data.voice.b0) != ev->data.voice.b0 &&
+				    EVCTL_HI(ev->data.voice.b0) != st->ev.data.voice.b0)
+					return 0;
+			}
+		}
+		break;
+	case EV_BEND:
+	case EV_CAT:
+	case EV_PC:
+		if (st->ev.cmd != ev->cmd ||
+		    st->ev.data.voice.dev != ev->data.voice.dev ||
+		    st->ev.data.voice.ch != ev->data.voice.ch) {
+			return 0;
+		}
+		break;
+	case EV_TEMPO:
+	case EV_TIMESIG:
+		if (st->ev.cmd != ev->cmd) {
+			return 0;
+		}
+		break;
+	default:
+		dbg_puts("statelist_match: bad event type\n");
+		dbg_panic();
+		break;
+	}
+	return 1;
+}
+
+
+/*
  * find the first state that matches the given event
  * return NULL if not found
  */
@@ -206,7 +294,7 @@ statelist_lookup(struct statelist *o, struct ev *ev) {
 #ifdef STATE_PROF
 		time++;
 #endif
-		if (ev_sameclass(&i->ev, ev)) { 
+		if (statelist_match(o, i, ev)) { 
 			break;
 		}
 	}
@@ -254,10 +342,11 @@ statelist_update(struct statelist *statelist, struct ev *ev) {
 			statelist_add(statelist, st);
 			st->flags = STATE_NEW;
 			st->nevents = 0;
+			st->ctx_hi = st->ctx_lo = EVCTL_UNDEF;
 			break;
 		}
 		stnext = st->next;
-		if (ev_sameclass(&st->ev, ev)) {
+		if (statelist_match(statelist, st, ev)) {
 			/*
 			 * found a matching state
 			 */
@@ -273,6 +362,7 @@ statelist_update(struct statelist *statelist, struct ev *ev) {
 				 * if the event is not tagged as 
 				 * nested, we reached the deepest
 				 * state, so stop iterating here
+				 * else continue purging states
 				 */
 				if (!(flags & STATE_NESTED)) {
 					st->flags = STATE_NEW;
@@ -332,14 +422,14 @@ statelist_update(struct statelist *statelist, struct ev *ev) {
 			st->nevents = 0;
 		}
 		st->phase = phase;
-		st->ev = *ev;
+		state_copy(st, ev);
 #ifdef STATE_DEBUG
 		dbg_puts("statelist_update: ");
 		ev_dbg(ev);
 		dbg_puts(": new state\n");
 #endif
 	} else {
-		st->ev = *ev;
+		state_copy(st, ev);
 		st->phase = phase & ~EV_PHASE_FIRST;
 		st->flags &= ~STATE_NEW;
 #ifdef STATE_DEBUG

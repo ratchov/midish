@@ -1137,7 +1137,7 @@ filt_kill(struct filt *o, struct ev *ev) {
 
 	for (st = o->statelist.first; st != NULL; st = stnext) {
 		stnext = st->next;
-		if (!ev_sameclass(&st->ev, ev) ||
+		if (!statelist_match(&o->statelist, st, ev) ||
 		    !st->tag ||
 		    st->phase & EV_PHASE_LAST) {
 			continue;
