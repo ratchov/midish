@@ -145,7 +145,7 @@
 #include "default.h"
 #include "frame.h"
 
-#undef  FRAME_DEBUG
+#define FRAME_DEBUG
 
 /*
  * initialise a seqptr structure at the beginning of 
@@ -1492,7 +1492,6 @@ track_timerm(struct track *t, unsigned measure, unsigned amount) {
 	seqptr_done(&sp);
 }
 
-
 /*
  * add an event to the first event of a track (config track)
  * in an ordered way
@@ -1500,65 +1499,55 @@ track_timerm(struct track *t, unsigned measure, unsigned amount) {
 void
 track_confev(struct track *src, struct ev *ev) {
 	struct seqptr sp;
-	struct seqev *se;
+	struct ev rev[STATELIST_REVMAX];
 	struct statelist slist;
-	struct state *i, *inext, *st;
-	unsigned prio;
+	struct state *st;
+	unsigned i, nev;
 
+#ifdef FRAME_DEBUG
+	dbg_puts("\ntrack_confev: starting\n");
+#endif
+	if (ev_phase(ev) != (EV_PHASE_FIRST | EV_PHASE_LAST)) {
+		dbg_puts("track_confev: ");
+		ev_dbg(&st->ev);
+		dbg_puts(": bad phase, ignored");
+		dbg_puts("\n");
+		return;
+	}
 	seqptr_init(&sp, src);
 	statelist_init(&slist);
-
+	
 	/*
-	 * load all states of the first tick, until the first note
+	 * delete the track, keeping state of all frames
 	 */
 	for (;;) {
-		if (!seqptr_evavail(&sp) || EV_ISNOTE(&sp.pos->ev))
+		(void)seqptr_ticdel(&sp, ~0U, &slist);
+		if (!seqptr_evdel(&sp, &slist))
 			break;
-		seqptr_evdel(&sp, &slist);
 	}
+
+#ifdef FRAME_DEBUG
+	dbg_puts("track_confev: updating\n");
+#endif
 
 	/*
 	 * update the state for 'ev'
 	 */
-	if (ev) {
-		st = statelist_lookup(&slist, ev);
-		if (st == NULL) {
-			st = state_new();
-			statelist_add(&slist, st);
-			st->flags = STATE_NEW;
-		}
-		st->ev = *ev;
-		st->phase = ev_phase(ev);
-		if (st->phase != (EV_PHASE_FIRST | EV_PHASE_LAST)) {
-			dbg_puts("track_confev: ");
-			ev_dbg(&st->ev);
-			dbg_puts(": bad phase");
-			dbg_puts("\n");
-		}
-	}
+	statelist_update(&slist, ev);
 		
+#ifdef FRAME_DEBUG
+	dbg_puts("track_confev: dumping\n");
+#endif
+
 	/*
 	 * dump events, order them by priority
 	 */
-	for (prio = EV_PRIO_ANY; prio <= EV_PRIO_MAX; prio++) {
-		for (i = slist.first; i != NULL; i = inext) {
-			inext = i->next;
-			if (ev_prio(&i->ev) == prio) {
-				se = seqev_new();
-				se->delta = 0;
-				se->ev = i->ev;
-				/* insert the event */
-				se->next = src->first;
-				src->first->prev = &se->next;
-				src->first = se;
-				se->prev = &src->first;
-				/* remove the state */
-				statelist_rm(&slist, i);
-				state_del(i);
-			}
-		}
+	for (st = slist.first; st != NULL; st = st->next) {
+		nev = statelist_restore(&sp.statelist, st, rev);
+		for (i = 0; i < nev; i++)
+			(void)seqptr_evput(&sp, &rev[i]);
 	}
-
+	
 	statelist_done(&slist);
 	seqptr_done(&sp);
 }

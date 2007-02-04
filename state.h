@@ -71,7 +71,7 @@ struct statelist {
 #endif
 };
 
-#define STATELIST_REVMAX 3	/* num events sattelist_cancel() returns */
+#define STATELIST_REVMAX 3	/* num events statelist_cancel() returns */
 
 void	      state_pool_init(unsigned size);
 void	      state_pool_done(void);
