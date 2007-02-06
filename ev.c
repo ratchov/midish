@@ -113,47 +113,6 @@ ev_eq(struct ev *ev1, struct ev *ev2) {
  * than the socond one.
  */
 unsigned
-ev_ordered(struct ev *ev1, struct ev *ev2) {
-	if (!EV_ISVOICE(ev1) || !EV_ISVOICE(ev2)) {
-		return 1;
-	}
-	/* both are voice events */
-	if (EV_GETDEV(ev1) != EV_GETDEV(ev2) ||
-	    EV_GETCH(ev1) != EV_GETCH(ev2)) {
-		return 1;
-	}
-#define ISBANKHI(ev) ((ev)->cmd == EV_CTL && (ev)->data.voice.b0 == 0)
-#define ISBANKLO(ev) ((ev)->cmd == EV_CTL && (ev)->data.voice.b0 == 32)
-#define ISPC(ev)     ((ev)->cmd == EV_PC)
-	if (ISBANKHI(ev1)) {
-		return 1;
-	}
-	if (ISBANKHI(ev2)) {
-		return 0;
-	}
-	if (ISBANKLO(ev1)) {
-		return 1;
-	}
-	if (ISBANKLO(ev2)) {
-		return 0;
-	}
-	if (ISPC(ev1)) {
-		return 1;
-	}
-	if (ISPC(ev2)) {
-		return 0;
-	}
-#undef ISPC
-#undef ISBANKLO
-#undef ISBANKHI
-	return 1;
-}
-
-/*
- * return 1 if the first event has higher "priority"
- * than the socond one.
- */
-unsigned
 ev_prio(struct ev *ev) {
 	if (!EV_ISVOICE(ev))
 		return EV_PRIO_RT;

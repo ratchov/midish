@@ -1501,8 +1501,8 @@ track_confev(struct track *src, struct ev *ev) {
 	struct seqptr sp;
 	struct ev rev[STATELIST_REVMAX];
 	struct statelist slist;
-	struct state *st;
-	unsigned i, nev;
+	struct state *s, *st;
+	unsigned i, nev, tag, tagmax, tagmin;
 
 #ifdef FRAME_DEBUG
 	dbg_puts("\ntrack_confev: starting\n");
@@ -1518,12 +1518,17 @@ track_confev(struct track *src, struct ev *ev) {
 	statelist_init(&slist);
 	
 	/*
-	 * delete the track, keeping state of all frames
+	 * delete the track, keeping state of all frames we tag states
+	 * with a serial number, so we can keep track of the order in
+	 * which they are updated
 	 */
+	tagmax = 0;
 	for (;;) {
 		(void)seqptr_ticdel(&sp, ~0U, &slist);
-		if (!seqptr_evdel(&sp, &slist))
+		st = seqptr_evdel(&sp, &slist);
+		if (st == NULL)
 			break;
+		st->tag = tagmax++;
 	}
 
 #ifdef FRAME_DEBUG
@@ -1533,21 +1538,46 @@ track_confev(struct track *src, struct ev *ev) {
 	/*
 	 * update the state for 'ev'
 	 */
-	statelist_update(&slist, ev);
+	st = statelist_update(&slist, ev);
+	st->tag = tagmax++;
 		
-#ifdef FRAME_DEBUG
-	dbg_puts("track_confev: dumping\n");
-#endif
-
 	/*
-	 * dump events, order them by priority
+	 * dump events. We have to dump them while respecting update
+	 * order (older states first, newer states last) Since
+	 * statelists are small and this routine is never called in
+	 * real-time, it doesn't matter if its slow.
 	 */
-	for (st = slist.first; st != NULL; st = st->next) {
+	for (tagmin = 0; tagmin < tagmax; tagmin = tag) {
+		/*
+		 * find the next state with tag > tagmin
+		 */
+		st = NULL;
+		tag = tagmax;
+		for (s = slist.first; s != NULL; s = s->next) {
+			if (s->tag >= tagmin && s->tag < tag) {
+				st = s;
+				tag = s->tag;
+			}
+		}
+#ifdef FRAME_DEBUG
+		dbg_puts("track_confev: dumping\n");
+#endif
+		/*
+		 * restore the state
+		 */
 		nev = statelist_restore(&sp.statelist, st, rev);
-		for (i = 0; i < nev; i++)
+		for (i = 0; i < nev; i++) {
+			/* 
+			 * skip events that are already written
+			 * XXX: doesn't work with 14bit ctls
+			 */
+			st = statelist_lookup(&sp.statelist, &rev[i]);
+			if (st && ev_eq(&st->ev, &rev[i]))
+				continue;
 			(void)seqptr_evput(&sp, &rev[i]);
+		}
+		tag++;
 	}
-	
 	statelist_done(&slist);
 	seqptr_done(&sp);
 }
