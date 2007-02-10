@@ -578,40 +578,88 @@ song_playtic(struct song *o) {
 }
 
 /*
- * restore all frames in the given statelist
+ * restore the given frame and tag it appropriately
+ */
+void
+song_strestore(struct state *s) {
+	struct ev re[STATE_REVMAX];
+	unsigned i, nev;
+	
+	if (!EV_ISNOTE(&s->ev)) {
+		nev = state_restore(s, re);
+		for (i = 0; i < nev; i++) {
+			if (song_debug) {
+				dbg_puts("song_strestore: ");
+				ev_dbg(&s->ev);
+				dbg_puts(": restored -> ");
+				ev_dbg(&re[i]);
+				dbg_puts(" (");
+				dbg_putu(i);
+				dbg_puts(")\n");
+			}
+			mux_putev(&re[i]);
+		}
+		s->tag = 1;
+	} else {
+		if (song_debug) {
+			dbg_puts("song_strestore: ");
+			ev_dbg(&s->ev);
+			dbg_puts(": not restored (not tagged)\n");
+		}
+		s->tag = 0;
+	}
+}
+
+/*
+ * restore all frames in the given statelist. First, restore events
+ * that have context, then the rest.
  */
 void
 song_confrestore(struct statelist *slist) {
 	struct state *s;
-	struct ev re[STATELIST_REVMAX];
-	unsigned i, nev;
 
 	for (s = slist->first; s != NULL; s = s->next) {
-		if (!EV_ISNOTE(&s->ev)) {
-			nev = statelist_restore(slist, s, re);
-			for (i = 0; i < nev; i++) {
-				if (song_debug) {
-					dbg_puts("song_confrestore: ");
-					ev_dbg(&s->ev);
-					dbg_puts(": restored -> ");
-					ev_dbg(&re[i]);
-					dbg_puts(" (");
-					dbg_putu(i);
-					dbg_puts(")\n");
-				}
-				mux_putev(&re[i]);
-			}
-			s->tag = 1;
-		} else {
+		if (STATE_HASCTX(s))
+			song_strestore(s);
+	}
+	for (s = slist->first; s != NULL; s = s->next) {
+		if (!STATE_HASCTX(s))
+			song_strestore(s);
+	}
+}
+
+/*
+ * cancel the given frame
+ */
+void
+song_stcancel(struct state *s) {
+	struct ev ca[STATE_REVMAX];
+	unsigned i, nev;
+
+	if (s->tag) {
+		nev = state_cancel(s, ca);
+		for (i = 0; i < nev; i++) {
 			if (song_debug) {
-				dbg_puts("song_confrestore: ");
+				dbg_puts("song_stcancel: ");
 				ev_dbg(&s->ev);
-				dbg_puts(": not restored (not tagged)\n");
+				dbg_puts(": canceled -> ");
+				ev_dbg(&ca[i]);
+				dbg_puts(" (");
+				dbg_putu(i);
+				dbg_puts(")\n");
 			}
-			s->tag = 0;
+				mux_putev(&ca[i]);
+		}
+		s->tag = 0;
+	} else {
+		if (song_debug) {
+			dbg_puts("song_stcancel: ");
+			ev_dbg(&s->ev);
+			dbg_puts(": not canceled (no tag)\n");
 		}
 	}
 }
+
 
 /*
  * cancel all frames in the given state list
@@ -619,32 +667,9 @@ song_confrestore(struct statelist *slist) {
 void
 song_confcancel(struct statelist *slist) {
 	struct state *s;
-	struct ev ca[STATELIST_REVMAX];
-	unsigned i, nev;
 
 	for (s = slist->first; s != NULL; s = s->next) {
-		if (s->tag) {
-			nev = statelist_cancel(slist, s, ca);
-			for (i = 0; i < nev; i++) {
-				if (song_debug) {
-					dbg_puts("song_confcancel: ");
-					ev_dbg(&s->ev);
-					dbg_puts(": canceled -> ");
-					ev_dbg(&ca[i]);
-					dbg_puts(" (");
-					dbg_putu(i);
-					dbg_puts(")\n");
-				}
-				mux_putev(&ca[i]);
-			}
-			s->tag = 0;
-		} else {
-			if (song_debug) {
-				dbg_puts("song_confcancel: ");
-				ev_dbg(&s->ev);
-				dbg_puts(": not canceled (no tag)\n");
-			}
-		}
+		song_stcancel(s);
 	}
 }
 

@@ -215,6 +215,160 @@ state_eq(struct state *st, struct ev *ev) {
 }
 
 /*
+ * generate an array of events that can be played in order to cancel
+ * the given state (ie restore all parameters related to the frame
+ * state as the frame never existed). Return the number of generated
+ * events
+ *
+ * note: if zero is returned, that doesn't mean that the frame
+ * couldn't be canceled, that just means no events are needed (btw
+ * currently this never happens...)
+ */
+unsigned
+state_cancel(struct state *st, struct ev *rev) {
+	if (st->phase & EV_PHASE_LAST)
+		return 0;
+	switch(st->ev.cmd) {
+	case EV_NON:
+	case EV_KAT:
+		rev->cmd = EV_NOFF;
+		rev->data.voice.b0  = st->ev.data.voice.b0;
+		rev->data.voice.b1  = EV_NOFF_DEFAULTVEL;
+		rev->data.voice.dev = st->ev.data.voice.dev;
+		rev->data.voice.ch  = st->ev.data.voice.ch;
+		break;
+	case EV_CAT:
+		rev->cmd = EV_CAT;
+		rev->data.voice.b0  = EV_CAT_DEFAULT;
+		rev->data.voice.dev = st->ev.data.voice.dev;
+		rev->data.voice.ch  = st->ev.data.voice.ch;
+		break;
+	case EV_CTL:
+		if (EV_CTL_IS7BIT(&st->ev)) {
+			rev->cmd = EV_CTL;
+			rev->data.voice.b0 = st->ev.data.voice.b0;
+			rev->data.voice.b1 = EV_CTL_DEFVAL(&st->ev);
+			rev->data.voice.dev = st->ev.data.voice.dev;
+			rev->data.voice.ch  = st->ev.data.voice.ch;
+			return 1;
+		} else {
+			rev->cmd = EV_CTL;
+			rev->data.voice.b0 = EV_CTL_HI(&st->ev);
+			rev->data.voice.b1 = EV_CTL_DEFVAL(rev);
+			rev->data.voice.dev = st->ev.data.voice.dev;
+			rev->data.voice.ch  = st->ev.data.voice.ch;
+			rev++;
+			rev->cmd = EV_CTL;
+			rev->data.voice.b0 = EV_CTL_LO(&st->ev);
+			rev->data.voice.b1 = EV_CTL_DEFVAL(rev);
+			rev->data.voice.dev = st->ev.data.voice.dev;
+			rev->data.voice.ch  = st->ev.data.voice.ch;
+			return 2;
+		}
+		/* not reached */
+	case EV_BEND:
+		rev->cmd = EV_BEND;
+		rev->data.voice.b0 = EV_BEND_DEFAULTLO;
+		rev->data.voice.b1 = EV_BEND_DEFAULTHI;
+		rev->data.voice.dev = st->ev.data.voice.dev;
+		rev->data.voice.ch  = st->ev.data.voice.ch;
+		break;
+	default:
+		/* 
+		 * other events have their EV_PHASE_LAST bit set, so
+		 * we never come here
+		 */
+		dbg_puts("state_cancel: unknown event type\n");
+		dbg_panic();
+	}
+	return 1;
+}
+
+
+/*
+ * generate an array of events that will restore the given state
+ * return the number of generated events.
+ *
+ * note: if zero is returned, that doesn't mean that the frame
+ * couldn't be canceled, that just means no events are needed (btw
+ * currently this never happens...)
+ */
+unsigned
+state_restore(struct state *st, struct ev *rev) {
+	unsigned num = 0;
+	if (EV_ISNOTE(&st->ev)) {
+		/*
+		 * we never use this function for NOTE events, so
+		 * if we're here, there is problem somewhere...
+		 */
+		dbg_puts("state_restore: can't restore note events\n");
+		dbg_panic();
+	}
+	if ((st->phase & EV_PHASE_LAST) && !(st->phase & EV_PHASE_FIRST)) {
+		dbg_puts("state_restore: WARNING: called for last event\n");
+		return 0;
+	}
+	switch(st->ev.cmd) {
+	case EV_CTL:
+		if (EV_CTL_IS7BIT(&st->ev)) {
+			*rev = st->ev;
+			return 1;
+		}
+		if (st->ctx_hi == EV_CTL_UNDEF) {
+			/*
+			 * we do nothig because lsb without
+			 * msb is considered bogus
+			 */
+			return 0;
+		}
+		rev->cmd = EV_CTL;
+		rev->data.voice.b0 = EV_CTL_HI(&st->ev);
+		rev->data.voice.b1 = st->ctx_hi;
+		rev->data.voice.dev = st->ev.data.voice.dev;
+		rev->data.voice.ch  = st->ev.data.voice.ch;
+		if (st->ctx_lo != EV_CTL_UNDEF) {
+			rev++;
+			rev->cmd = EV_CTL;
+			rev->data.voice.b0 = EV_CTL_LO(&st->ev);
+			rev->data.voice.b1 = st->ctx_lo;
+			rev->data.voice.dev = st->ev.data.voice.dev;
+			rev->data.voice.ch  = st->ev.data.voice.ch;
+			return 2;
+		} else {
+			return 1;
+		}
+		/* not reached */
+	case EV_PC:
+		if (st->ctx_hi != EV_CTL_UNDEF) {
+			rev->cmd = EV_CTL;
+			rev->data.voice.b0 = 0; /* BANK HI */
+			rev->data.voice.b1 = st->ctx_hi;
+			rev->data.voice.dev = st->ev.data.voice.dev;
+			rev->data.voice.ch  = st->ev.data.voice.ch;
+			rev++;
+			num++;
+			if (st->ctx_lo != EV_CTL_UNDEF) {
+				rev->cmd = EV_CTL;
+				rev->data.voice.b0 = 32; /* BANK LO */
+				rev->data.voice.b1 = st->ctx_lo;
+				rev->data.voice.dev = st->ev.data.voice.dev;
+				rev->data.voice.ch  = st->ev.data.voice.ch;
+				rev++;
+				num++;
+			}
+		}
+		*rev = st->ev;
+		num++;
+		return num;			
+	default:
+		*rev = st->ev;
+		return 1;
+	}
+	/* not reached */
+}
+
+
+/*
  * initialise an empty state list
  */
 void
@@ -569,158 +723,5 @@ statelist_outdate(struct statelist *o) {
 			i->nevents = 0;
 		}
 	}
-}
-
-/*
- * generate an array of events that can be played in order to cancel
- * the given state (ie restore all parameters related to the frame
- * state as the frame never existed). Return the number of generated
- * events
- *
- * note: if zero is returned, that doesn't mean that the frame
- * couldn't be canceled, that just means no events are needed (btw
- * currently this never happens...)
- */
-unsigned
-statelist_cancel(struct statelist *slist, struct state *st, struct ev *rev) {
-	if (st->phase & EV_PHASE_LAST)
-		return 0;
-	switch(st->ev.cmd) {
-	case EV_NON:
-	case EV_KAT:
-		rev->cmd = EV_NOFF;
-		rev->data.voice.b0  = st->ev.data.voice.b0;
-		rev->data.voice.b1  = EV_NOFF_DEFAULTVEL;
-		rev->data.voice.dev = st->ev.data.voice.dev;
-		rev->data.voice.ch  = st->ev.data.voice.ch;
-		break;
-	case EV_CAT:
-		rev->cmd = EV_CAT;
-		rev->data.voice.b0  = EV_CAT_DEFAULT;
-		rev->data.voice.dev = st->ev.data.voice.dev;
-		rev->data.voice.ch  = st->ev.data.voice.ch;
-		break;
-	case EV_CTL:
-		if (EV_CTL_IS7BIT(&st->ev)) {
-			rev->cmd = EV_CTL;
-			rev->data.voice.b0 = st->ev.data.voice.b0;
-			rev->data.voice.b1 = EV_CTL_DEFVAL(&st->ev);
-			rev->data.voice.dev = st->ev.data.voice.dev;
-			rev->data.voice.ch  = st->ev.data.voice.ch;
-			return 1;
-		} else {
-			rev->cmd = EV_CTL;
-			rev->data.voice.b0 = EV_CTL_HI(&st->ev);
-			rev->data.voice.b1 = EV_CTL_DEFVAL(rev);
-			rev->data.voice.dev = st->ev.data.voice.dev;
-			rev->data.voice.ch  = st->ev.data.voice.ch;
-			rev++;
-			rev->cmd = EV_CTL;
-			rev->data.voice.b0 = EV_CTL_LO(&st->ev);
-			rev->data.voice.b1 = EV_CTL_DEFVAL(rev);
-			rev->data.voice.dev = st->ev.data.voice.dev;
-			rev->data.voice.ch  = st->ev.data.voice.ch;
-			return 2;
-		}
-		/* not reached */
-	case EV_BEND:
-		rev->cmd = EV_BEND;
-		rev->data.voice.b0 = EV_BEND_DEFAULTLO;
-		rev->data.voice.b1 = EV_BEND_DEFAULTHI;
-		rev->data.voice.dev = st->ev.data.voice.dev;
-		rev->data.voice.ch  = st->ev.data.voice.ch;
-		break;
-	default:
-		/* 
-		 * other events have their EV_PHASE_LAST bit set, so
-		 * we never come here
-		 */
-		dbg_puts("statelist_cancel: unknown event type\n");
-		dbg_panic();
-	}
-	return 1;
-}
-
-
-/*
- * generate an array of events that will restore the given state
- * return the number of generated events.
- *
- * note: if zero is returned, that doesn't mean that the frame
- * couldn't be canceled, that just means no events are needed (btw
- * currently this never happens...)
- */
-unsigned
-statelist_restore(struct statelist *slist, struct state *st, struct ev *rev) {
-	unsigned num = 0;
-	if (EV_ISNOTE(&st->ev)) {
-		/*
-		 * we never use this function for NOTE events, so
-		 * if we're here, there is problem somewhere...
-		 */
-		dbg_puts("statelist_restore: can't restore note events\n");
-		dbg_panic();
-	}
-	if ((st->phase & EV_PHASE_LAST) && !(st->phase & EV_PHASE_FIRST)) {
-		dbg_puts("statelist_restore: WARNING: called for last event\n");
-		return 0;
-	}
-	switch(st->ev.cmd) {
-	case EV_CTL:
-		if (EV_CTL_IS7BIT(&st->ev)) {
-			*rev = st->ev;
-			return 1;
-		}
-		if (st->ctx_hi == EV_CTL_UNDEF) {
-			/*
-			 * we do nothig because lsb without
-			 * msb is considered bogus
-			 */
-			return 0;
-		}
-		rev->cmd = EV_CTL;
-		rev->data.voice.b0 = EV_CTL_HI(&st->ev);
-		rev->data.voice.b1 = st->ctx_hi;
-		rev->data.voice.dev = st->ev.data.voice.dev;
-		rev->data.voice.ch  = st->ev.data.voice.ch;
-		if (st->ctx_lo != EV_CTL_UNDEF) {
-			rev++;
-			rev->cmd = EV_CTL;
-			rev->data.voice.b0 = EV_CTL_LO(&st->ev);
-			rev->data.voice.b1 = st->ctx_lo;
-			rev->data.voice.dev = st->ev.data.voice.dev;
-			rev->data.voice.ch  = st->ev.data.voice.ch;
-			return 2;
-		} else {
-			return 1;
-		}
-		/* not reached */
-	case EV_PC:
-		if (st->ctx_hi != EV_CTL_UNDEF) {
-			rev->cmd = EV_CTL;
-			rev->data.voice.b0 = 0; /* BANK HI */
-			rev->data.voice.b1 = st->ctx_hi;
-			rev->data.voice.dev = st->ev.data.voice.dev;
-			rev->data.voice.ch  = st->ev.data.voice.ch;
-			rev++;
-			num++;
-			if (st->ctx_lo != EV_CTL_UNDEF) {
-				rev->cmd = EV_CTL;
-				rev->data.voice.b0 = 32; /* BANK LO */
-				rev->data.voice.b1 = st->ctx_lo;
-				rev->data.voice.dev = st->ev.data.voice.dev;
-				rev->data.voice.ch  = st->ev.data.voice.ch;
-				rev++;
-				num++;
-			}
-		}
-		*rev = st->ev;
-		num++;
-		return num;			
-	default:
-		*rev = st->ev;
-		return 1;
-	}
-	/* not reached */
 }
 

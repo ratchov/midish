@@ -38,6 +38,10 @@
 
 struct seqev;
 
+struct evctx {
+	unsigned char ctl_hi, ctl_lo, val_hi, val_lo;
+};
+
 struct state  {
 	struct ev ev;			/* initial event */
 	struct state *next, **prev;	/* for statelist */
@@ -55,6 +59,13 @@ struct state  {
 	unsigned char ctx_hi, ctx_lo;	/* context for 14bit controllers */
 };
 
+/*
+ * return true if the state depends on any context (ex: PCs may depend
+ * on bank changes, lo/hi nibbles of 14bit controllers depend on each
+ * other).
+ */
+#define STATE_HASCTX(s)	((s)->ctx_hi != EV_CTL_UNDEF || (s)->ctx_lo != EV_CTL_UNDEF)
+
 struct statelist {
 	/* 
 	 * instead of a simple list, we should use a hash table here,
@@ -71,7 +82,7 @@ struct statelist {
 #endif
 };
 
-#define STATELIST_REVMAX 3	/* num events statelist_cancel() returns */
+#define STATE_REVMAX 3		/* num events state_cancel() & co return */
 
 void	      state_pool_init(unsigned size);
 void	      state_pool_done(void);
@@ -80,6 +91,9 @@ void	      state_del(struct state *s);
 void	      state_copyev(struct state *s, struct ev *ev, struct state *ctx);
 unsigned      state_match(struct state *s, struct ev *ev, struct state *st);
 unsigned      state_eq(struct state *s, struct ev *ev);
+unsigned      state_cancel(struct state *st, struct ev *rev);
+unsigned      state_restore(struct state *st, struct ev *rev);
+
 void	      statelist_init(struct statelist *o);
 void	      statelist_done(struct statelist *o);
 void	      statelist_dump(struct statelist *o);
@@ -90,7 +104,5 @@ void	      statelist_empty(struct statelist *o);
 struct state *statelist_lookup(struct statelist *o, struct ev *ev);
 struct state *statelist_update(struct statelist *statelist, struct ev *ev);
 void	      statelist_outdate(struct statelist *o);
-unsigned      statelist_cancel(struct statelist *slist, struct state *st, struct ev *rev);
-unsigned      statelist_restore(struct statelist *slist, struct state *st, struct ev *rev);
 
 #endif /* MIDISH_STATE_H */

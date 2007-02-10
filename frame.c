@@ -348,11 +348,11 @@ seqptr_seek(struct seqptr *sp, unsigned ntics) {
  */
 unsigned
 seqptr_cancel(struct seqptr *sp, struct state *st) {
-	struct ev ev[STATELIST_REVMAX];
+	struct ev ev[STATE_REVMAX];
 	unsigned i, nev;
 
 	if (!EV_ISNOTE(&st->ev) && !(st->phase & EV_PHASE_LAST)) {
-		nev = statelist_cancel(&sp->statelist, st, ev);
+		nev = state_cancel(st, ev);
 		for (i = 0; i < nev; i++) {
 			seqptr_evput(sp, &ev[i]);
 		}
@@ -369,11 +369,11 @@ seqptr_cancel(struct seqptr *sp, struct state *st) {
  */
 unsigned
 seqptr_restore(struct seqptr *sp, struct state *st) {
-	struct ev ev[STATELIST_REVMAX];
+	struct ev ev[STATE_REVMAX];
 	unsigned i, nev;
 
 	if (!EV_ISNOTE(&st->ev) && !(st->phase & EV_PHASE_LAST)) {
-		nev = statelist_restore(&sp->statelist, st, ev);
+		nev = state_restore(st, ev);
 		for (i = 0; i < nev; i++) {
 			seqptr_evput(sp, &ev[i]);
 		}
@@ -1104,47 +1104,6 @@ track_check(struct track *src) {
 }
 
 /*
- * extract the configuration of a track at the given position (last
- * prog change, parameters etc...) and store it in the given empty
- * track
- */
-void
-track_confget(struct track *src, unsigned pos, struct track *dst) {
-	struct seqptr sp, dp;
-	struct state *st;
-	unsigned prio;
-
-	seqptr_init(&dp, dst);
-	seqptr_skip(&dp, ~0U);
-	seqptr_init(&sp, src);
-	seqptr_skip(&sp, pos);
-
-	/*
-	 * untag all states (states are tagged for copied events)
-	 */
-	for (st = sp.statelist.first; st != NULL; st = st->next) {
-		st->tag = 0;
-	}
-
-	/*
-	 * dump events but order them by priority
-	 */
-	for (prio = EV_PRIO_ANY; prio <= EV_PRIO_MAX; prio++) {
-		for (st = sp.statelist.first; st != NULL; st = st->next) {
-			if (st->tag || ev_prio(&st->ev) != prio)
-				continue;
-			if (st->phase == (EV_PHASE_FIRST | EV_PHASE_LAST)) {
-				seqptr_evput(&dp, &st->ev);
-				st->tag = 1;
-			}
-		}
-	}
-	seqptr_done(&sp);
-	seqptr_done(&dp);
-}
-
-
-/*
  * get the current tempo (at the current position)
  */
 struct state *
@@ -1493,13 +1452,13 @@ track_timerm(struct track *t, unsigned measure, unsigned amount) {
 }
 
 /*
- * add an event to the first event of a track (config track)
- * in an ordered way
+ * add an event to the first event of a track (config track), if there
+ * is such an event, then replace it.
  */
 void
 track_confev(struct track *src, struct ev *ev) {
 	struct seqptr sp;
-	struct ev rev[STATELIST_REVMAX];
+	struct ev rev[STATE_REVMAX];
 	struct statelist slist;
 	struct state *s, *st;
 	unsigned i, nev, tag, tagmax, tagmin;
@@ -1565,12 +1524,8 @@ track_confev(struct track *src, struct ev *ev) {
 		/*
 		 * restore the state
 		 */
-		nev = statelist_restore(&sp.statelist, st, rev);
+		nev = state_restore(st, rev);
 		for (i = 0; i < nev; i++) {
-			/* 
-			 * skip events that are already written
-			 * XXX: doesn't work with 14bit ctls
-			 */
 			st = statelist_lookup(&sp.statelist, &rev[i]);
 			if (st && state_eq(st, &rev[i]))
 				continue;

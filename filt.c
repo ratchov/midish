@@ -1104,12 +1104,12 @@ filt_processev(struct filt *o, struct ev *ev) {
 void
 filt_shut(struct filt *o) {
 	struct state *s, *snext;
-	struct ev ca[STATELIST_REVMAX];
+	struct ev ca[STATE_REVMAX];
 	unsigned i, nev;
 	
 	for (s = o->statelist.first; s != NULL; s = snext) {
 		snext = s->next;
-		nev = statelist_cancel(&o->statelist, s, ca);
+		nev = state_cancel(s, ca);
 		for (i = 0; i < nev; i++) {
 			if (filt_debug) {
 				dbg_puts("filt_shut: ");
@@ -1132,7 +1132,7 @@ filt_shut(struct filt *o) {
 void
 filt_kill(struct filt *o, struct ev *ev) {
 	struct state *st, *stnext;
-	struct ev ca[STATELIST_REVMAX];
+	struct ev ca[STATE_REVMAX];
 	unsigned i, nev;
 
 	for (st = o->statelist.first; st != NULL; st = stnext) {
@@ -1147,7 +1147,7 @@ filt_kill(struct filt *o, struct ev *ev) {
 		 * EV_PHASE_LAST, so the state can be deleted if
 		 * necessary
 		 */
-		nev = statelist_cancel(&o->statelist, st, ca);
+		nev = state_cancel(st, ca);
 		for (i = 0; i < nev; i++) {
 			filt_processev(o, &ca[i]);
 		}
