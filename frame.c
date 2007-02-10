@@ -410,7 +410,7 @@ seqptr_rmlast(struct seqptr *sp, struct state *st) {
 		if (i == sp->pos) {
 			break;
 		}
-		if (statelist_match(&sp->statelist, st, &i->ev)) {
+		if (state_match(st, &i->ev, NULL)) {
 			prev = cur;
 			cur = i;
 		}
@@ -462,7 +462,7 @@ seqptr_rmprev(struct seqptr *sp, struct state *st) {
 	 */
 	i = st->pos;
 	for (;;) {
-		if (statelist_match(&sp->statelist, st, &i->ev)) {
+		if (state_match(st, &i->ev, NULL)) {
 			/* 
 			 * remove the event from the track
 			 * (but not the blank space)
@@ -570,7 +570,7 @@ seqptr_evmerge2(struct seqptr *pd, struct state *s1, struct state *s2) {
 	} else if (s2->phase & EV_PHASE_LAST) {
 		if (s1) {
 			s2->tag = 0;
-			if (sd == NULL || !ev_eq(&sd->ev, &s1->ev)) {
+			if (sd == NULL || !state_eq(sd, &s1->ev)) {
 				sd = seqptr_evput(pd, &s1->ev);
 			}
 			s1->tag = 1;
@@ -580,7 +580,7 @@ seqptr_evmerge2(struct seqptr *pd, struct state *s1, struct state *s2) {
 	/*
 	 * store the event, if the frame is tagged
 	 */
-	if (s2->tag && (sd == NULL || !ev_eq(&sd->ev, &s2->ev))) {
+	if (s2->tag && (sd == NULL || !state_eq(sd, &s2->ev))) {
 		(void)seqptr_evput(pd, &s2->ev);
 	}
 }
@@ -1070,7 +1070,7 @@ track_check(struct track *src) {
 			 * dont dumplicate events
 			 */
 			dst = statelist_lookup(&sp.statelist, &st->ev);
-			if (dst == NULL || !ev_eq(&dst->ev, &st->ev)) {
+			if (dst == NULL || !state_eq(dst, &st->ev)) {
 				seqptr_evput(&sp, &st->ev);
 			} else {
 				dbg_puts("track_check: ");
@@ -1455,7 +1455,7 @@ track_timerm(struct track *t, unsigned measure, unsigned amount) {
 	while (seqptr_evavail(&sp)) {
 		st = seqptr_evdel(&sp, &slist);
 		ost = statelist_lookup(&sp.statelist, &st->ev);
-		if (!ost || !ev_eq(&st->ev, &ost->ev))
+		if (!ost || !state_eq(ost, &st->ev))
 			seqptr_evput(&sp, &st->ev);
 		st->tag = 1;
 	}
@@ -1468,7 +1468,7 @@ track_timerm(struct track *t, unsigned measure, unsigned amount) {
 	for (st = slist.first; st != NULL; st = st->next) {
 		if (!st->tag) {
 			ost = statelist_lookup(&sp.statelist, &st->ev);
-			if (!ost || !ev_eq(&st->ev, &ost->ev))
+			if (!ost || !state_eq(ost, &st->ev))
 				seqptr_evput(&sp, &st->ev);
 			st->tag = 1;
 		}
@@ -1485,7 +1485,7 @@ track_timerm(struct track *t, unsigned measure, unsigned amount) {
 		st = seqptr_evdel(&sp, &slist);
 		st->tag = 1;
 		ost = statelist_lookup(&sp.statelist, &st->ev);
-		if (!ost || !ev_eq(&st->ev, &ost->ev))
+		if (!ost || !state_eq(ost, &st->ev))
 			seqptr_evput(&sp, &st->ev);
 	}
 	statelist_done(&slist);
@@ -1572,7 +1572,7 @@ track_confev(struct track *src, struct ev *ev) {
 			 * XXX: doesn't work with 14bit ctls
 			 */
 			st = statelist_lookup(&sp.statelist, &rev[i]);
-			if (st && ev_eq(&st->ev, &rev[i]))
+			if (st && state_eq(st, &rev[i]))
 				continue;
 			(void)seqptr_evput(&sp, &rev[i]);
 		}

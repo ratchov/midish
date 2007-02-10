@@ -68,6 +68,153 @@ state_del(struct state *s) {
 }
 
 /*
+ * copy event content into an existing state. It isn't enough to just
+ * copy the event; special care must be taken for controller events to
+ * handle contexts for 14bit controllers and reference to RPN/NRPN for
+ * data-entry controllers
+ */
+void
+state_copyev(struct state *st, struct ev *ev, struct state *ctx) {
+	st->ev = *ev;
+	switch(ev->cmd) {
+	case EV_CTL:
+		if (!EV_CTL_IS7BIT(ev)) {
+			/* 
+			 * set lsb/msb nibbles
+			 */
+			if (EV_CTL_IS14BIT_HI(ev)) {
+				st->ctx_hi = ev->data.voice.b1;
+			} else {
+				st->ctx_lo = ev->data.voice.b1;
+			}
+		}
+		break;
+	case EV_PC:
+		if (ctx != NULL) {
+			st->ctx_hi = ctx->ctx_hi;
+			st->ctx_lo = ctx->ctx_lo;
+		} else {
+			st->ctx_hi = EV_CTL_UNDEF;
+			st->ctx_lo = EV_CTL_UNDEF;
+		}
+		break;
+	}
+#ifdef STATE_DEBUG
+	dbg_puts("statelist_copyev: ");
+	ev_dbg(ev);
+	dbg_puts(": hi = ");
+	dbg_putu(st->ctx_hi);
+	dbg_puts(", lo = ");
+	dbg_putu(st->ctx_lo);
+	dbg_puts("\n");
+#endif
+}
+
+/*
+ * check if the given event matches the given frame (if so, this means
+ * that, iether the event is part of the frame, either there is a
+ * conflict between the frame and the event)
+ */
+unsigned
+state_match(struct state *st, struct ev *ev, struct state *ctx) {
+	switch (st->ev.cmd) {
+	case EV_NON:
+	case EV_NOFF:
+	case EV_KAT:
+		if (!EV_ISNOTE(ev) ||
+		    st->ev.data.voice.b0 != ev->data.voice.b0 ||
+		    st->ev.data.voice.ch != ev->data.voice.ch ||
+		    st->ev.data.voice.dev != ev->data.voice.dev) {
+			return 0;
+		}
+		break;		
+	case EV_CTL:
+		if (st->ev.cmd != ev->cmd ||
+		    st->ev.data.voice.dev != ev->data.voice.dev ||
+		    st->ev.data.voice.ch != ev->data.voice.ch) {
+			return 0;
+		}
+		if (st->ev.data.voice.b0 != ev->data.voice.b0) {
+			if (EV_CTL_IS7BIT(&st->ev) || EV_CTL_IS7BIT(ev)) {
+				return 0;
+			} else {
+				if (EV_CTL_HI(&st->ev) != ev->data.voice.b0 &&
+				    EV_CTL_HI(ev) != st->ev.data.voice.b0)
+					return 0;
+			}
+		}
+		break;
+	case EV_BEND:
+	case EV_CAT:
+	case EV_PC:
+		if (st->ev.cmd != ev->cmd ||
+		    st->ev.data.voice.dev != ev->data.voice.dev ||
+		    st->ev.data.voice.ch != ev->data.voice.ch) {
+			return 0;
+		}
+		break;
+	case EV_TEMPO:
+	case EV_TIMESIG:
+		if (st->ev.cmd != ev->cmd) {
+			return 0;
+		}
+		break;
+	default:
+		dbg_puts("state_match: bad event type\n");
+		dbg_panic();
+		break;
+	}
+	return 1;
+}
+
+/*
+ * compare a state with to a matching event (ie one for which
+ * state_match() returns 1)
+ */
+unsigned
+state_eq(struct state *st, struct ev *ev) {
+	if (EV_ISVOICE(&st->ev)) {
+		switch(st->ev.cmd) {
+		case EV_CTL:
+			if (EV_CTL_IS7BIT(ev)) {
+				if (st->ev.data.voice.b1 != ev->data.voice.b1)
+					return 0;
+			} else if (EV_CTL_IS14BIT_HI(ev)) {
+				if (st->ctx_hi != ev->data.voice.b1)
+					return 0;
+			} else {
+				if (st->ctx_lo != ev->data.voice.b1)
+					return 0;
+			}
+			break;
+		case EV_CAT:
+		case EV_PC:
+			if (st->ev.data.voice.b0 != ev->data.voice.b0)
+				return 0;
+			break;
+		default:
+			if (st->ev.cmd != ev->cmd ||
+			    st->ev.data.voice.b1 != ev->data.voice.b1)
+				return 0;
+			break;
+		}
+	} else if (st->ev.cmd == EV_TEMPO) {
+		if (st->ev.data.tempo.usec24 != ev->data.tempo.usec24) {
+			return 0;
+		}
+	} else if (st->ev.cmd == EV_TIMESIG) {
+		if (st->ev.data.sign.beats != ev->data.sign.beats ||
+		    st->ev.data.sign.tics != ev->data.sign.tics) {
+			return 0;
+		}
+	} else {
+		dbg_puts("state_eq: not defined\n");
+		dbg_panic();
+	}
+	return 1;
+}
+
+/*
  * initialise an empty state list
  */
 void
@@ -194,111 +341,40 @@ statelist_rm(struct statelist *o, struct state *st) {
 }
 
 /*
- * check if the given event matches the given frame (if it matches,
- * then iether the event is part of the frame, either there is a
- * conflict between the frame and the event)
+ * find (if any) the state that contains the context of the given
+ * event
  */
-unsigned
-statelist_match(struct statelist *o, struct state *st, struct ev *ev) {
-	switch (st->ev.cmd) {
-	case EV_NON:
-	case EV_NOFF:
-	case EV_KAT:
-		if (!EV_ISNOTE(ev) ||
-		    st->ev.data.voice.b0 != ev->data.voice.b0 ||
-		    st->ev.data.voice.ch != ev->data.voice.ch ||
-		    st->ev.data.voice.dev != ev->data.voice.dev) {
-			return 0;
-		}
-		break;		
-	case EV_CTL:
-		if (st->ev.cmd != ev->cmd ||
-		    st->ev.data.voice.dev != ev->data.voice.dev ||
-		    st->ev.data.voice.ch != ev->data.voice.ch) {
-			return 0;
-		}
-		if (st->ev.data.voice.b0 != ev->data.voice.b0) {
-			if (EVCTL_IS7BIT(st->ev.data.voice.b0) || 
-			    EVCTL_IS7BIT(ev->data.voice.b0)) {
-				return 0;
-			} else {
-				if (EVCTL_HI(st->ev.data.voice.b0) != ev->data.voice.b0 &&
-				    EVCTL_HI(ev->data.voice.b0) != st->ev.data.voice.b0)
-					return 0;
+struct state *
+statelist_getctx(struct statelist *slist, struct ev *ev) {
+	struct state *i;
+
+	switch(ev->cmd) {
+	case EV_PC:
+		for (i = slist->first; i != NULL; i = i->next) {
+			if (i->ev.cmd == EV_CTL && EV_CTL_ISBANK(&i->ev) &&
+			    i->ev.data.voice.ch == ev->data.voice.ch &&
+			    i->ev.data.voice.dev == ev->data.voice.dev) {
+				return i;
 			}
 		}
 		break;
-	case EV_BEND:
-	case EV_CAT:
-	case EV_PC:
-		if (st->ev.cmd != ev->cmd ||
-		    st->ev.data.voice.dev != ev->data.voice.dev ||
-		    st->ev.data.voice.ch != ev->data.voice.ch) {
-			return 0;
-		}
-		break;
-	case EV_TEMPO:
-	case EV_TIMESIG:
-		if (st->ev.cmd != ev->cmd) {
-			return 0;
+	case EV_CTL:
+		if (!EV_CTL_ISDATAENT(ev))
+			break;
+		for (i = slist->first; i != NULL; i = i->next) {
+			if (i->ev.cmd == EV_CTL && EV_CTL_ISNRPN(&i->ev) &&
+			    i->ev.data.voice.ch == ev->data.voice.ch &&
+			    i->ev.data.voice.dev == ev->data.voice.dev) {
+				return i;
+			}
 		}
 		break;
 	default:
-		dbg_puts("statelist_match: bad event type\n");
-		dbg_panic();
 		break;
 	}
-	return 1;
+	return NULL;
 }
 
-
-/*
- * copy event content into an existing state. It isn't enough to just
- * copy the event; special care must be taken for controller events to
- * handle contexts for 14bit controllers and reference to RPN/NRPN for
- * data-entry controllers
- */
-void
-statelist_copyev(struct statelist *slist, struct ev *ev, struct state *st) {
-	struct state *ctxst;
-	struct ev ctxev;
-
-	st->ev = *ev;
-	switch(ev->cmd) {
-	case EV_CTL:
-		if (EVCTL_IS7BIT(ev->data.voice.b0))
-			break;
-		if (EVCTL_ISHI(ev->data.voice.b0)) {
-			st->ctx_hi = ev->data.voice.b1;
-		} else {
-			st->ctx_lo = ev->data.voice.b1;
-		}
-		break;
-	case EV_PC:
-		ctxev.cmd = EV_CTL;
-		ctxev.data.voice.b0 = 0; /* bank msb, b1 unused */
-		ctxev.data.voice.dev = ev->data.voice.dev;
-		ctxev.data.voice.ch = ev->data.voice.ch;		
-		ctxst = statelist_lookup(slist, &ctxev);
-		if (ctxst) {
-			st->ctx_hi = ctxst->ctx_hi;
-			st->ctx_lo = ctxst->ctx_lo;
-		} else {
-			st->ctx_hi = EVCTL_UNDEF;
-			st->ctx_lo = EVCTL_UNDEF;
-		}
-		break;
-	}
-#ifdef STATE_DEBUG
-	dbg_puts("statelist_copyev: ");
-	ev_dbg(ev);
-	dbg_puts(": hi = ");
-	dbg_putu(st->ctx_hi);
-	dbg_puts(", lo = ");
-	dbg_putu(st->ctx_lo);
-	dbg_puts("\n");
-#endif
-}
 
 /*
  * find the first state that matches the given event
@@ -315,7 +391,7 @@ statelist_lookup(struct statelist *o, struct ev *ev) {
 #ifdef STATE_PROF
 		time++;
 #endif
-		if (statelist_match(o, i, ev)) { 
+		if (state_match(i, ev, NULL)) { 
 			break;
 		}
 	}
@@ -363,11 +439,11 @@ statelist_update(struct statelist *statelist, struct ev *ev) {
 			statelist_add(statelist, st);
 			st->flags = STATE_NEW;
 			st->nevents = 0;
-			st->ctx_hi = st->ctx_lo = EVCTL_UNDEF;
+			st->ctx_hi = st->ctx_lo = EV_CTL_UNDEF;
 			break;
 		}
 		stnext = st->next;
-		if (statelist_match(statelist, st, ev)) {
+		if (state_match(st, ev, NULL)) {
 			/*
 			 * found a matching state
 			 */
@@ -443,14 +519,14 @@ statelist_update(struct statelist *statelist, struct ev *ev) {
 			st->nevents = 0;
 		}
 		st->phase = phase;
-		statelist_copyev(statelist, ev, st);
+		state_copyev(st, ev, NULL);
 #ifdef STATE_DEBUG
 		dbg_puts("statelist_update: ");
 		ev_dbg(ev);
 		dbg_puts(": new state\n");
 #endif
 	} else {
-		statelist_copyev(statelist, ev, st);
+		state_copyev(st, ev, NULL);
 		st->phase = phase & ~EV_PHASE_FIRST;
 		st->flags &= ~STATE_NEW;
 #ifdef STATE_DEBUG
@@ -515,27 +591,33 @@ statelist_cancel(struct statelist *slist, struct state *st, struct ev *rev) {
 		rev->cmd = EV_NOFF;
 		rev->data.voice.b0  = st->ev.data.voice.b0;
 		rev->data.voice.b1  = EV_NOFF_DEFAULTVEL;
+		rev->data.voice.dev = st->ev.data.voice.dev;
+		rev->data.voice.ch  = st->ev.data.voice.ch;
 		break;
 	case EV_CAT:
 		rev->cmd = EV_CAT;
 		rev->data.voice.b0  = EV_CAT_DEFAULT;
+		rev->data.voice.dev = st->ev.data.voice.dev;
+		rev->data.voice.ch  = st->ev.data.voice.ch;
 		break;
 	case EV_CTL:
-		if (EVCTL_IS7BIT(st->ev.data.voice.b0)) {
+		if (EV_CTL_IS7BIT(&st->ev)) {
 			rev->cmd = EV_CTL;
 			rev->data.voice.b0 = st->ev.data.voice.b0;
-			rev->data.voice.b1 = EVCTL_DEFAULT(st->ev.data.voice.b0);
+			rev->data.voice.b1 = EV_CTL_DEFVAL(&st->ev);
+			rev->data.voice.dev = st->ev.data.voice.dev;
+			rev->data.voice.ch  = st->ev.data.voice.ch;
 			return 1;
 		} else {
 			rev->cmd = EV_CTL;
-			rev->data.voice.b0 = EVCTL_HI(st->ev.data.voice.b0);
-			rev->data.voice.b1 = EVCTL_DEFAULT(rev->data.voice.b0);
+			rev->data.voice.b0 = EV_CTL_HI(&st->ev);
+			rev->data.voice.b1 = EV_CTL_DEFVAL(rev);
 			rev->data.voice.dev = st->ev.data.voice.dev;
 			rev->data.voice.ch  = st->ev.data.voice.ch;
 			rev++;
 			rev->cmd = EV_CTL;
-			rev->data.voice.b0 = EVCTL_LO(st->ev.data.voice.b0);
-			rev->data.voice.b1 = EVCTL_DEFAULT(rev->data.voice.b0);
+			rev->data.voice.b0 = EV_CTL_LO(&st->ev);
+			rev->data.voice.b1 = EV_CTL_DEFVAL(rev);
 			rev->data.voice.dev = st->ev.data.voice.dev;
 			rev->data.voice.ch  = st->ev.data.voice.ch;
 			return 2;
@@ -545,6 +627,8 @@ statelist_cancel(struct statelist *slist, struct state *st, struct ev *rev) {
 		rev->cmd = EV_BEND;
 		rev->data.voice.b0 = EV_BEND_DEFAULTLO;
 		rev->data.voice.b1 = EV_BEND_DEFAULTHI;
+		rev->data.voice.dev = st->ev.data.voice.dev;
+		rev->data.voice.ch  = st->ev.data.voice.ch;
 		break;
 	default:
 		/* 
@@ -554,8 +638,6 @@ statelist_cancel(struct statelist *slist, struct state *st, struct ev *rev) {
 		dbg_puts("statelist_cancel: unknown event type\n");
 		dbg_panic();
 	}
-	rev->data.voice.dev = st->ev.data.voice.dev;
-	rev->data.voice.ch  = st->ev.data.voice.ch;
 	return 1;
 }
 
@@ -585,11 +667,11 @@ statelist_restore(struct statelist *slist, struct state *st, struct ev *rev) {
 	}
 	switch(st->ev.cmd) {
 	case EV_CTL:
-		if (EVCTL_IS7BIT(st->ev.data.voice.b0)) {
+		if (EV_CTL_IS7BIT(&st->ev)) {
 			*rev = st->ev;
 			return 1;
 		}
-		if (st->ctx_hi == EVCTL_UNDEF) {
+		if (st->ctx_hi == EV_CTL_UNDEF) {
 			/*
 			 * we do nothig because lsb without
 			 * msb is considered bogus
@@ -597,14 +679,14 @@ statelist_restore(struct statelist *slist, struct state *st, struct ev *rev) {
 			return 0;
 		}
 		rev->cmd = EV_CTL;
-		rev->data.voice.b0 = EVCTL_HI(st->ev.data.voice.b0);
+		rev->data.voice.b0 = EV_CTL_HI(&st->ev);
 		rev->data.voice.b1 = st->ctx_hi;
 		rev->data.voice.dev = st->ev.data.voice.dev;
 		rev->data.voice.ch  = st->ev.data.voice.ch;
-		if (st->ctx_lo != EVCTL_UNDEF) {
+		if (st->ctx_lo != EV_CTL_UNDEF) {
 			rev++;
 			rev->cmd = EV_CTL;
-			rev->data.voice.b0 = EVCTL_LO(st->ev.data.voice.b0);
+			rev->data.voice.b0 = EV_CTL_LO(&st->ev);
 			rev->data.voice.b1 = st->ctx_lo;
 			rev->data.voice.dev = st->ev.data.voice.dev;
 			rev->data.voice.ch  = st->ev.data.voice.ch;
@@ -614,7 +696,7 @@ statelist_restore(struct statelist *slist, struct state *st, struct ev *rev) {
 		}
 		/* not reached */
 	case EV_PC:
-		if (st->ctx_hi != EVCTL_UNDEF) {
+		if (st->ctx_hi != EV_CTL_UNDEF) {
 			rev->cmd = EV_CTL;
 			rev->data.voice.b0 = 0; /* BANK HI */
 			rev->data.voice.b1 = st->ctx_hi;
@@ -622,7 +704,7 @@ statelist_restore(struct statelist *slist, struct state *st, struct ev *rev) {
 			rev->data.voice.ch  = st->ev.data.voice.ch;
 			rev++;
 			num++;
-			if (st->ctx_lo != EVCTL_UNDEF) {
+			if (st->ctx_lo != EV_CTL_UNDEF) {
 				rev->cmd = EV_CTL;
 				rev->data.voice.b0 = 32; /* BANK LO */
 				rev->data.voice.b1 = st->ctx_lo;

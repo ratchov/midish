@@ -584,35 +584,31 @@ void
 song_confrestore(struct statelist *slist) {
 	struct state *s;
 	struct ev re[STATELIST_REVMAX];
-	unsigned prio, i, nev;
+	unsigned i, nev;
 
-	for (prio = EV_PRIO_ANY; prio <= EV_PRIO_MAX; prio++) {
-		for (s = slist->first; s != NULL; s = s->next) {
-			if (ev_prio(&s->ev) != prio)
-				continue;
-			if (!EV_ISNOTE(&s->ev)) {
-				nev = statelist_restore(slist, s, re);
-				for (i = 0; i < nev; i++) {
-					if (song_debug) {
-						dbg_puts("song_confrestore: ");
-						ev_dbg(&s->ev);
-						dbg_puts(": restored -> ");
-						ev_dbg(&re[i]);
-						dbg_puts(" (");
-						dbg_putu(i);
-						dbg_puts(")\n");
-					}
-					mux_putev(&re[i]);
-				}
-				s->tag = 1;
-			} else {
+	for (s = slist->first; s != NULL; s = s->next) {
+		if (!EV_ISNOTE(&s->ev)) {
+			nev = statelist_restore(slist, s, re);
+			for (i = 0; i < nev; i++) {
 				if (song_debug) {
 					dbg_puts("song_confrestore: ");
 					ev_dbg(&s->ev);
-					dbg_puts(": not restored (not tagged)\n");
+					dbg_puts(": restored -> ");
+					ev_dbg(&re[i]);
+					dbg_puts(" (");
+					dbg_putu(i);
+					dbg_puts(")\n");
 				}
-				s->tag = 0;
+				mux_putev(&re[i]);
 			}
+			s->tag = 1;
+		} else {
+			if (song_debug) {
+				dbg_puts("song_confrestore: ");
+				ev_dbg(&s->ev);
+				dbg_puts(": not restored (not tagged)\n");
+			}
+			s->tag = 0;
 		}
 	}
 }
@@ -624,33 +620,29 @@ void
 song_confcancel(struct statelist *slist) {
 	struct state *s;
 	struct ev ca[STATELIST_REVMAX];
-	unsigned prio, i, nev;
+	unsigned i, nev;
 
-	for (prio = EV_PRIO_ANY; prio <= EV_PRIO_MAX; prio++) {
-		for (s = slist->first; s != NULL; s = s->next) {
-			if (ev_prio(&s->ev) != prio)
-				continue;
-			if (s->tag) {
-				nev = statelist_cancel(slist, s, ca);
-				for (i = 0; i < nev; i++) {
-					if (song_debug) {
-						dbg_puts("song_confcancel: ");
-						ev_dbg(&s->ev);
-						dbg_puts(": canceled -> ");
-						ev_dbg(&ca[i]);
-						dbg_puts(" (");
-						dbg_putu(i);
-						dbg_puts(")\n");
-					}
-					mux_putev(&ca[i]);
-				}
-				s->tag = 0;
-			} else {
+	for (s = slist->first; s != NULL; s = s->next) {
+		if (s->tag) {
+			nev = statelist_cancel(slist, s, ca);
+			for (i = 0; i < nev; i++) {
 				if (song_debug) {
 					dbg_puts("song_confcancel: ");
 					ev_dbg(&s->ev);
-					dbg_puts(": not canceled (no tag)\n");
+					dbg_puts(": canceled -> ");
+					ev_dbg(&ca[i]);
+					dbg_puts(" (");
+					dbg_putu(i);
+					dbg_puts(")\n");
 				}
+				mux_putev(&ca[i]);
+			}
+			s->tag = 0;
+		} else {
+			if (song_debug) {
+				dbg_puts("song_confcancel: ");
+				ev_dbg(&s->ev);
+				dbg_puts(": not canceled (no tag)\n");
 			}
 		}
 	}

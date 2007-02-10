@@ -70,10 +70,15 @@
 		(ev)->data.voice.b1 = (v) >> 7;		\
 	} while(0);
 
-#define EV_NOFF_DEFAULTVEL	100
-#define EV_BEND_DEFAULTLO	0
-#define EV_BEND_DEFAULTHI	0x40
-#define EV_CAT_DEFAULT		0
+/*
+ * some special values of data.voice.b0 and data.voice.b1
+ */
+#define EV_NOFF_DEFAULTVEL	100	/* defaul note-off velocity */
+#define EV_BEND_DEFAULTLO	0	/* defaul bender val. (low nibble) */
+#define EV_BEND_DEFAULTHI	0x40	/* defaul bender val. (high nibble) */
+#define EV_CAT_DEFAULT		0	/* default channel aftertouch value */
+#define EV_CTL_UNKNOWN		255	/* unknown controller number */
+#define EV_CTL_UNDEF		255	/* unknown controller value */
 
 /*
  * an event: structure used to store MIDI events and some
@@ -137,9 +142,6 @@ struct evspec {
 };
 
 void	 ev_dbg(struct ev *ev);
-unsigned ev_eq(struct ev *ev1, struct ev *ev2);
-unsigned ev_sameclass(struct ev *ev1, struct ev *ev2);
-unsigned ev_ordered(struct ev *ev1, struct ev *ev2);
 unsigned ev_prio(struct ev *ev);
 unsigned ev_str2cmd(struct ev *ev, char *str);
 unsigned ev_phase(struct ev *ev);
@@ -149,31 +151,52 @@ void	 evspec_dbg(struct evspec *o);
 void	 evspec_reset(struct evspec *o);
 unsigned evspec_matchev(struct evspec *o, struct ev *e);
 
+/*
+ * describes a controller number; this structures defines
+ * how varius other routines bahave when a controller
+ * event with the same number is found
+ */
 struct evctl {
-#define EVCTL_PARAM	0
-#define EVCTL_FRAME	1
-	unsigned type;
-#define EVCTL_7BIT	0
-#define EVCTL_MSB	1
-#define EVCTL_LSB	2
-	unsigned bits;
-	char *name;
-	unsigned char defval, lo, hi;
+#define EVCTL_PARAM	0	/* config. parameter (volume, reverb, ... ) */
+#define EVCTL_FRAME	1	/* wheels/switches with default values */
+#define EVCTL_BANK	2	/* bank (context for pc events) */
+#define EVCTL_NRPN	3	/* nrpn/rpn (context for data entries) */
+#define EVCTL_DATAENT	4	/* data entries */
+	unsigned type;		/* controller type */
+#define EVCTL_7BIT	0	/* 7bit controller */
+#define EVCTL_14BIT_HI	1	/* 7bit MSB of a 14bit controller */
+#define EVCTL_14BIT_LO	2	/* 7bit LSB of a 14bit controller */
+	unsigned bits;		/* controller bitness */
+	char *name;		/* controller name or NULL if none */
+	unsigned char defval;	/* default value if type == EVCTL_FRAME */
+	unsigned char lo;	/* LSB ctrl number if bits != EVCTL_7BIT */
+	unsigned char hi;	/* MSB ctrl number if bits != EVCTL_7BIT */
 };
 
-#define EVCTL_UNDEF	255
-
-#define EVCTL_ISPARAM(i)	(evctl_tab[(i)].type == EVCTL_PARAM)
-#define EVCTL_ISFRAME(i)	(evctl_tab[(i)].type == EVCTL_FRAME)
-#define EVCTL_IS7BIT(i)		(evctl_tab[(i)].bits == EVCTL_7BIT)
-#define EVCTL_ISHI(i)		(evctl_tab[(i)].bits == EVCTL_MSB)
-#define EVCTL_ISLO(i)		(evctl_tab[(i)].bits == EVCTL_LSB)
-
-#define EVCTL_DEFAULT(i)	(evctl_tab[(i)].defval)
-#define EVCTL_HI(i)		(evctl_tab[(i)].hi)
-#define EVCTL_LO(i)		(evctl_tab[(i)].lo)
-
 extern	struct evctl evctl_tab[128];
+
+#define EV_CTL_ISPARAM(ev) \
+	(evctl_tab[(ev)->data.voice.b0].type == EVCTL_PARAM)
+#define EV_CTL_ISFRAME(ev) \
+	(evctl_tab[(ev)->data.voice.b0].type == EVCTL_FRAME)
+#define EV_CTL_ISBANK(ev) \
+	(evctl_tab[(ev)->data.voice.b0].type == EVCTL_BANK)
+#define EV_CTL_ISNRPN(ev) \
+	(evctl_tab[(ev)->data.voice.b0].type == EVCTL_NRPN)
+#define EV_CTL_ISDATAENT(ev) \
+	(evctl_tab[(ev)->data.voice.b0].type == EVCTL_DATAENT)
+#define EV_CTL_IS7BIT(ev) \
+	(evctl_tab[(ev)->data.voice.b0].bits == EVCTL_7BIT)
+#define EV_CTL_IS14BIT_HI(ev) \
+	(evctl_tab[(ev)->data.voice.b0].bits == EVCTL_14BIT_HI)
+#define EV_CTL_IS14BIT_LO(ev) \
+	(evctl_tab[(ev)->data.voice.b0].bits == EVCTL_14BIT_LO)
+#define EV_CTL_DEFVAL(ev) \
+	(evctl_tab[(ev)->data.voice.b0].defval)
+#define EV_CTL_HI(ev) \
+	(evctl_tab[(ev)->data.voice.b0].hi)
+#define EV_CTL_LO(ev) \
+	(evctl_tab[(ev)->data.voice.b0].lo)
 
 void	 evctl_conf(unsigned i, unsigned type, unsigned defval, char *name);
 void     evctl_conf14(unsigned num_hi, unsigned num_lo, unsigned type, unsigned defval,

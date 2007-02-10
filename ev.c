@@ -76,39 +76,6 @@ ev_str2cmd(struct ev *ev, char *str) {
 }
 
 /*
- * return 1 if the pair of events identical
- * 0 otherwise
- */
-unsigned
-ev_eq(struct ev *ev1, struct ev *ev2) {
-	if (ev1->cmd != ev2->cmd) {
-		return 0;
-	}
-	if (EV_ISVOICE(ev1)) {
-		if (ev1->data.voice.dev != ev2->data.voice.dev ||
-		    ev1->data.voice.ch != ev2->data.voice.ch ||
-		    ev1->data.voice.b0 != ev2->data.voice.b0 ||
-		    ((ev1->cmd != EV_CAT && ev1->cmd != EV_PC) &&
-		    ev1->data.voice.b1 != ev2->data.voice.b1)) {
-			return 0;
-		}
-	} else if (ev1->cmd == EV_TEMPO) {
-		if (ev1->data.tempo.usec24 != ev2->data.tempo.usec24) {
-			return 0;
-		}
-	} else if (ev1->cmd == EV_TIMESIG) {
-		if (ev1->data.sign.beats != ev2->data.sign.beats ||
-		    ev1->data.sign.tics != ev2->data.sign.tics) {
-			return 0;
-		}
-	} else {
-		dbg_puts("ev_eq: not defined\n");
-		dbg_panic();
-	}
-	return 1;
-}
-
-/*
  * return 1 if the first event has higher "priority"
  * than the socond one.
  */
@@ -159,11 +126,10 @@ ev_phase(struct ev *ev) {
 		}
 		break;
 	case EV_CTL:
-		if (!EVCTL_ISFRAME(ev->data.voice.b0)) {
+		if (!EV_CTL_ISFRAME(ev)) {
 			phase = EV_PHASE_FIRST | EV_PHASE_LAST;
 		} else {
-			if (ev->data.voice.b1 != 
-			    EVCTL_DEFAULT(ev->data.voice.b0)) {
+			if (ev->data.voice.b1 != EV_CTL_DEFVAL(ev)) {
 				phase = EV_PHASE_FIRST | EV_PHASE_NEXT;
 			} else {
 				phase = EV_PHASE_LAST;
@@ -387,8 +353,8 @@ evctl_conf14(unsigned num_hi, unsigned num_lo, unsigned type, unsigned defval,
 	evctl_conf(num_lo, type, defval & 0x7f, name_lo);
 	hi->hi = lo->hi = num_hi;
 	hi->lo = lo->lo = num_lo;
-	hi->bits = EVCTL_MSB;
-	lo->bits = EVCTL_LSB;
+	hi->bits = EVCTL_14BIT_HI;
+	lo->bits = EVCTL_14BIT_LO;
 }
 
 /*
@@ -404,8 +370,7 @@ evctl_unconf(unsigned i) {
 		o->name = NULL;
 	}
 	/*
-	 * XXX it it's an MSB (or LSB), we should unconf also
-	 * LSB (or MSB)
+	 * XXX: we must unconfigure also the other nibble
 	 */
 	o->type = EVCTL_PARAM;
 	o->bits = EVCTL_7BIT;
@@ -448,8 +413,9 @@ evctl_init(void) {
 	/*
 	 * some defaults, for testing ...
 	 */
-	evctl_conf14(0, 32, EVCTL_PARAM, 0, "bank_hi", "bank_lo");
-	evctl_conf(1,       EVCTL_FRAME, 0, "modulation");
+	evctl_conf14(0, 32, EVCTL_BANK,  0, "bank_hi", "bank_lo");
+	evctl_conf(1,       EVCTL_FRAME, 0, "mod");
+	evctl_conf(7,       EVCTL_PARAM, 0, "vol");
 	evctl_conf(64,      EVCTL_FRAME, 0, "sustain");
 }
 
