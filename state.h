@@ -31,20 +31,18 @@
 #ifndef MIDISH_STATE_H
 #define MIDISH_STATE_H
 
-#define STATE_DEBUG
+#undef STATE_DEBUG
 #undef STATE_PROF
 
 #include "ev.h"
 
 struct seqev;
 
-struct evctx {
-	unsigned char ctl_hi, ctl_lo, val_hi, val_lo;
-};
-
 struct state  {
-	struct ev ev;			/* initial event */
+	struct ev ev;			/* last event */
+	struct evctx ctx;		/* context for PCs and DATAENTs */
 	struct state *next, **prev;	/* for statelist */
+	unsigned char hi, lo;		/* 7bit nibbles of 14bit CTLs */
 #define STATE_NEW	1		/* just created, never updated */
 #define STATE_CHANGED	2		/* updated within the current tick */
 #define STATE_BOGUS	4		/* frame detected as bogus */
@@ -56,7 +54,6 @@ struct state  {
 	struct seqev *pos;		/* pointer to the FIRST event */
 	unsigned tag;			/* frame is selected */
 	unsigned nevents;		/* number of events before timeout */
-	unsigned char ctx_hi, ctx_lo;	/* context for 14bit controllers */
 };
 
 /*
@@ -64,7 +61,9 @@ struct state  {
  * on bank changes, lo/hi nibbles of 14bit controllers depend on each
  * other).
  */
-#define STATE_HASCTX(s)	((s)->ctx_hi != EV_CTL_UNDEF || (s)->ctx_lo != EV_CTL_UNDEF)
+#define STATE_HASCTX(s) \
+	((s)->ctx.ctl_hi != EV_CTL_UNKNOWN || \
+	 (s)->ctx.ctl_lo != EV_CTL_UNKNOWN)
 
 struct statelist {
 	/* 
@@ -82,7 +81,7 @@ struct statelist {
 #endif
 };
 
-#define STATE_REVMAX 3		/* num events state_cancel() & co return */
+#define STATE_REVMAX 4		/* num events state_cancel() & co return */
 
 void	      state_pool_init(unsigned size);
 void	      state_pool_done(void);

@@ -76,36 +76,62 @@ state_del(struct state *s) {
 void
 state_copyev(struct state *st, struct ev *ev, struct state *ctx) {
 	st->ev = *ev;
-	switch(ev->cmd) {
-	case EV_CTL:
+	if (ev->cmd == EV_CTL) {
 		if (!EV_CTL_IS7BIT(ev)) {
 			/* 
 			 * set lsb/msb nibbles
 			 */
 			if (EV_CTL_IS14BIT_HI(ev)) {
-				st->ctx_hi = ev->data.voice.b1;
+				st->hi = ev->data.voice.b1;
+				st->lo = EV_CTL_UNDEF;
 			} else {
-				st->ctx_lo = ev->data.voice.b1;
+				st->lo = ev->data.voice.b1;
 			}
 		}
-		break;
-	case EV_PC:
-		if (ctx != NULL) {
-			st->ctx_hi = ctx->ctx_hi;
-			st->ctx_lo = ctx->ctx_lo;
-		} else {
-			st->ctx_hi = EV_CTL_UNDEF;
-			st->ctx_lo = EV_CTL_UNDEF;
+		if (!EV_CTL_ISDATAENT(ev)) {
+			/* there is no context to copy */
+			return;
 		}
-		break;
+	}
+	if (ctx != NULL) {
+		if (EV_CTL_IS7BIT(&ctx->ev)) {
+			st->ctx.ctl_hi = ctx->ev.data.voice.b0;
+			st->ctx.val_hi = ctx->ev.data.voice.b1;
+			st->ctx.ctl_lo = EV_CTL_UNKNOWN;
+		} else {
+			st->ctx.ctl_hi = EV_CTL_HI(&ctx->ev);
+			st->ctx.val_hi = ctx->hi;
+			st->ctx.ctl_lo = EV_CTL_LO(&ctx->ev);
+			st->ctx.val_lo = ctx->lo;
+		}
+	} else {
+		st->ctx.ctl_hi = EV_CTL_UNKNOWN;
+		st->ctx.ctl_lo = EV_CTL_UNKNOWN;
 	}
 #ifdef STATE_DEBUG
 	dbg_puts("statelist_copyev: ");
 	ev_dbg(ev);
-	dbg_puts(": hi = ");
-	dbg_putu(st->ctx_hi);
-	dbg_puts(", lo = ");
-	dbg_putu(st->ctx_lo);
+	dbg_puts(": ctx=");
+	if (ctx) {
+		ev_dbg(&ctx->ev);
+	} else {
+		dbg_puts("<none>");
+	}
+		
+	if (st->ctx.ctl_hi != EV_CTL_UNKNOWN) {
+		dbg_puts(" ");
+		dbg_putu(st->ctx.ctl_hi);
+		dbg_puts("(");
+		dbg_putu(st->ctx.val_hi);
+		dbg_puts(")");
+	}
+	if (st->ctx.ctl_lo != EV_CTL_UNKNOWN) {
+		dbg_puts(" ");
+		dbg_putu(st->ctx.ctl_lo);
+		dbg_puts("(");
+		dbg_putu(st->ctx.val_lo);
+		dbg_puts(")");
+	}
 	dbg_puts("\n");
 #endif
 }
@@ -133,6 +159,16 @@ state_match(struct state *st, struct ev *ev, struct state *ctx) {
 		    st->ev.data.voice.dev != ev->data.voice.dev ||
 		    st->ev.data.voice.ch != ev->data.voice.ch) {
 			return 0;
+		}		
+		if (ctx != NULL && EV_CTL_ISDATAENT(&st->ev)) {
+			/*
+			 * this is a data-entry, so we have
+			 * to also compare contexts 
+			 */
+			if (st->ctx.val_lo != ctx->lo ||
+			    st->ctx.val_hi != ctx->hi) {
+				return 0;
+			}
 		}
 		if (st->ev.data.voice.b0 != ev->data.voice.b0) {
 			if (EV_CTL_IS7BIT(&st->ev) || EV_CTL_IS7BIT(ev)) {
@@ -144,6 +180,7 @@ state_match(struct state *st, struct ev *ev, struct state *ctx) {
 			}
 		}
 		break;
+
 	case EV_BEND:
 	case EV_CAT:
 	case EV_PC:
@@ -164,6 +201,11 @@ state_match(struct state *st, struct ev *ev, struct state *ctx) {
 		dbg_panic();
 		break;
 	}
+#ifdef STATE_DEBUG
+	dbg_puts("state_match: ");
+	ev_dbg(&st->ev);
+	dbg_puts(": ok\n");
+#endif
 	return 1;
 }
 
@@ -180,10 +222,10 @@ state_eq(struct state *st, struct ev *ev) {
 				if (st->ev.data.voice.b1 != ev->data.voice.b1)
 					return 0;
 			} else if (EV_CTL_IS14BIT_HI(ev)) {
-				if (st->ctx_hi != ev->data.voice.b1)
+				if (st->hi != ev->data.voice.b1)
 					return 0;
 			} else {
-				if (st->ctx_lo != ev->data.voice.b1)
+				if (st->lo != ev->data.voice.b1)
 					return 0;
 			}
 			break;
@@ -308,61 +350,74 @@ state_restore(struct state *st, struct ev *rev) {
 		dbg_puts("state_restore: WARNING: called for last event\n");
 		return 0;
 	}
-	switch(st->ev.cmd) {
-	case EV_CTL:
-		if (EV_CTL_IS7BIT(&st->ev)) {
-			*rev = st->ev;
-			return 1;
-		}
-		if (st->ctx_hi == EV_CTL_UNDEF) {
-			/*
-			 * we do nothig because lsb without
-			 * msb is considered bogus
-			 */
-			return 0;
-		}
+
+	/*
+	 * if there is a context then restore it
+	 */
+	if (st->ctx.ctl_hi != EV_CTL_UNKNOWN) {
 		rev->cmd = EV_CTL;
-		rev->data.voice.b0 = EV_CTL_HI(&st->ev);
-		rev->data.voice.b1 = st->ctx_hi;
+		rev->data.voice.b0 = st->ctx.ctl_hi;
+		rev->data.voice.b1 = st->ctx.val_hi;
 		rev->data.voice.dev = st->ev.data.voice.dev;
 		rev->data.voice.ch  = st->ev.data.voice.ch;
-		if (st->ctx_lo != EV_CTL_UNDEF) {
-			rev++;
+		rev++;
+		num++;
+		if (st->ctx.ctl_lo != EV_CTL_UNKNOWN) {
 			rev->cmd = EV_CTL;
-			rev->data.voice.b0 = EV_CTL_LO(&st->ev);
-			rev->data.voice.b1 = st->ctx_lo;
-			rev->data.voice.dev = st->ev.data.voice.dev;
-			rev->data.voice.ch  = st->ev.data.voice.ch;
-			return 2;
-		} else {
-			return 1;
-		}
-		/* not reached */
-	case EV_PC:
-		if (st->ctx_hi != EV_CTL_UNDEF) {
-			rev->cmd = EV_CTL;
-			rev->data.voice.b0 = 0; /* BANK HI */
-			rev->data.voice.b1 = st->ctx_hi;
+			rev->data.voice.b0 = st->ctx.ctl_lo;
+			rev->data.voice.b1 = st->ctx.val_lo;
 			rev->data.voice.dev = st->ev.data.voice.dev;
 			rev->data.voice.ch  = st->ev.data.voice.ch;
 			rev++;
 			num++;
-			if (st->ctx_lo != EV_CTL_UNDEF) {
-				rev->cmd = EV_CTL;
-				rev->data.voice.b0 = 32; /* BANK LO */
-				rev->data.voice.b1 = st->ctx_lo;
-				rev->data.voice.dev = st->ev.data.voice.dev;
-				rev->data.voice.ch  = st->ev.data.voice.ch;
-				rev++;
-				num++;
-			}
 		}
+	}
+	
+	switch(st->ev.cmd) {
+	case EV_CTL:
+		if (EV_CTL_IS7BIT(&st->ev)) {
+			*rev = st->ev;
+			num++;
+			return num;
+		}
+		if (st->hi == EV_CTL_UNDEF) {
+			/*
+			 * we do nothig because lsb without
+			 * msb is considered bogus
+			 */
+#ifdef STATE_DEBUG
+			dbg_puts("state_restore: ");
+			ev_dbg(&st->ev);
+			dbg_puts(": no msb nibble\n");
+#endif
+			return 0;
+		}
+		rev->cmd = EV_CTL;
+		rev->data.voice.b0 = EV_CTL_HI(&st->ev);
+		rev->data.voice.b1 = st->hi;
+		rev->data.voice.dev = st->ev.data.voice.dev;
+		rev->data.voice.ch  = st->ev.data.voice.ch;
+		rev++;
+		num++;
+		if (st->lo != EV_CTL_UNDEF) {
+			rev->cmd = EV_CTL;
+			rev->data.voice.b0 = EV_CTL_LO(&st->ev);
+			rev->data.voice.b1 = st->lo;
+			rev->data.voice.dev = st->ev.data.voice.dev;
+			rev->data.voice.ch  = st->ev.data.voice.ch;
+			rev++;
+			num++;
+		}
+		return num;
+		/* not reached */
+	case EV_PC:
 		*rev = st->ev;
 		num++;
 		return num;			
 	default:
 		*rev = st->ev;
-		return 1;
+		num++;
+		return num;
 	}
 	/* not reached */
 }
@@ -451,8 +506,9 @@ statelist_dup(struct statelist *o, struct statelist *src) {
 		n->ev = i->ev;
 		n->phase = i->phase;
 		n->flags = i->flags;
-		n->ctx_hi = i->ctx_hi;
-		n->ctx_lo = i->ctx_lo;
+		n->hi = i->hi;
+		n->lo = i->lo;
+		n->ctx = i->ctx;
 		statelist_add(o, n);
 	}
 }
@@ -568,12 +624,13 @@ statelist_lookup(struct statelist *o, struct ev *ev) {
  */
 struct state *
 statelist_update(struct statelist *statelist, struct ev *ev) {
-	struct state *st, *stnext;
+	struct state *st, *stnext, *ctx;
 	unsigned phase, flags, nevents;
 #ifdef STATE_PROF
 	unsigned time = 0;
 #endif
-	
+	ctx = statelist_getctx(statelist, ev);
+
 	/*
 	 * we scan for a matching state, if it exists but is
 	 * terminated (phase = EV_PHASE_LAST) we purge it in order to
@@ -593,11 +650,12 @@ statelist_update(struct statelist *statelist, struct ev *ev) {
 			statelist_add(statelist, st);
 			st->flags = STATE_NEW;
 			st->nevents = 0;
-			st->ctx_hi = st->ctx_lo = EV_CTL_UNDEF;
+			st->ctx.ctl_hi = st->ctx.ctl_lo = EV_CTL_UNKNOWN;
+			st->hi = st->lo = EV_CTL_UNDEF;
 			break;
 		}
 		stnext = st->next;
-		if (state_match(st, ev, NULL)) {
+		if (state_match(st, ev, ctx)) {
 			/*
 			 * found a matching state
 			 */
@@ -672,22 +730,22 @@ statelist_update(struct statelist *statelist, struct ev *ev) {
 			st->flags = STATE_NESTED | STATE_NEW;
 			st->nevents = 0;
 		}
-		st->phase = phase;
-		state_copyev(st, ev, NULL);
 #ifdef STATE_DEBUG
 		dbg_puts("statelist_update: ");
 		ev_dbg(ev);
 		dbg_puts(": new state\n");
 #endif
+		st->phase = phase;
+		state_copyev(st, ev, ctx);
 	} else {
-		state_copyev(st, ev, NULL);
-		st->phase = phase & ~EV_PHASE_FIRST;
-		st->flags &= ~STATE_NEW;
 #ifdef STATE_DEBUG
 		dbg_puts("statelist_update: ");
 		ev_dbg(ev);
 		dbg_puts(": updated\n");
 #endif
+		state_copyev(st, ev,  ctx);
+		st->phase = phase & ~EV_PHASE_FIRST;
+		st->flags &= ~STATE_NEW;
 	}
 	st->flags |= STATE_CHANGED;
 	st->nevents++;

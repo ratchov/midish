@@ -1,7 +1,7 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <!--
 /*
- * Copyright (c) 2003-2006 Alexandre Ratchov <alex@caoua.org>
+ * Copyright (c) 2003-2007 Alexandre Ratchov <alex@caoua.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without 
@@ -1249,6 +1249,9 @@ the console).
 	     are sounding and reset only controllers that are touched
 	     instead of resetting all notes/controllers. This allows
 	     midish to better share MIDI devices with other sequencers.
+	<LI> added support for 14bit controllers
+	<LI> added support for RPN/NRPN entries in channels configuration track
+	
 	</UL>
 
 <A name="attributes"></A><H1>13 Project attributes</H1>
@@ -3071,6 +3074,21 @@ the console).
                 the current channel
                 </BLOCKQUOTE>
                         
+        <B><TT>rpn addr val</TT></B> 
+                <BLOCKQUOTE>
+		set registered parameter number (RPN) 'addr'
+		for the current channel to 'val'. Both 'addr' 
+		and 'val' are integers in the range 0..16383.
+                </BLOCKQUOTE>
+
+        <B><TT>nrpn addr val</TT></B> 
+                <BLOCKQUOTE>
+		set not registered parameter number (NRPN) 'addr'
+		for the current channel to 'val'. Both 'addr' 
+		and 'val' are integers in the range 0..16383.
+                </BLOCKQUOTE>
+
+
 <A name="example"></A><H1>18 Example sessions</H1>
 
 <H2>18.1 Example - midi filtering</H2>
@@ -3155,8 +3173,8 @@ the console).
 
 <HR>
 <SMALL><EM>
-Copyright (c) 2003-2006 Alexandre Ratchov <alex@caoua.org><BR>
-Last updated jun 24, 2006
+Copyright (c) 2003-2007 Alexandre Ratchov<BR>
+Last updated jan 10, 2007
 </EM></SMALL>
 
 </BODY>

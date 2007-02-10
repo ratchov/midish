@@ -107,6 +107,16 @@ struct ev {
 };
 
 /*
+ * context of an event; program change events depend on the last bank
+ * controller and data entry controllers depend last RPN/NRPN controller.
+ * So the context is always a controller, we store it here:
+ */
+struct evctx {
+	unsigned char ctl_hi, ctl_lo;	/* 14bit controller of the context */
+	unsigned char val_hi, val_lo;	/* value of the above controller */
+};
+
+/*
  * event phase bitmasks
  */
 #define EV_PHASE_FIRST		1

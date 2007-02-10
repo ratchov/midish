@@ -414,9 +414,12 @@ evctl_init(void) {
 	 * some defaults, for testing ...
 	 */
 	evctl_conf14(0, 32, EVCTL_BANK,  0, "bank_hi", "bank_lo");
-	evctl_conf(1,       EVCTL_FRAME, 0, "mod");
-	evctl_conf(7,       EVCTL_PARAM, 0, "vol");
-	evctl_conf(64,      EVCTL_FRAME, 0, "sustain");
+	evctl_conf14(6, 38, EVCTL_DATAENT,  0, "data_hi", "data_lo");
+	evctl_conf(1, EVCTL_FRAME, 0, "mod");
+	evctl_conf(7, EVCTL_PARAM, 0, "vol");
+	evctl_conf(64, EVCTL_FRAME, 0, "sustain");
+	evctl_conf14(98, 99, EVCTL_NRPN,  0, "nrpn_hi", "nrpn_lo");
+	evctl_conf14(100, 101, EVCTL_NRPN,  0, "rpn_hi", "rpn_lo");
 }
 
 /*
