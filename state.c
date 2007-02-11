@@ -45,7 +45,19 @@
  * 20 states. Currently we use a singly linked list, but for
  * performance reasons we shoud use a hash table in the future.
  *
-
+ * TODO:
+ *
+ *	state_xxx() routines are over-complicated. That's because
+ *	ceraint events (PCs, data-entry controllers, all 14bit
+ *	controllers) cannot be interpreted out of their context (like
+ *	bank controllers for PCs). Since most of the code uses state
+ *	strucures (as opposed to bare events), it could be nice to
+ *	define states without dependencies between them and remove
+ *	completely the even structure. For instance the PC state could
+ *	contain its bank data entries could contain RPN/NRPNs
+ *	etc... This will largely simplify state_xxx() routines and
+ *	make everything faster and easier to maintain.
+ *	
  */
  
 #include "dbg.h"
@@ -377,7 +389,6 @@ state_cancel(struct state *st, struct ev *rev) {
 	}
 	return 1;
 }
-
 
 /*
  * generate an array of events that will restore the given state
