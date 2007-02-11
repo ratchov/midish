@@ -29,16 +29,23 @@
  */
 
 /*
- * states are structures used to hold the notes
- * which are "on", the values of used controllers
- * the bender etc...
+ * states are structures used to hold events like notes, last values
+ * of controllers, the current value of the bender, etc...  states
+ * also contain "extentions" to MIDI events, like the last bank value
+ * for prog-changes, nrpn/rpn for data entries etc...
+ * 
+ * states are linked to a list (statelist structure), so that the list
+ * contains the complete state of the a MIDI stream (ie all sounding
+ * notes, states of all controllers etc...)
  *
- * state lists are used in the real-time filter, so we use a state pool. In
- * a typical performace, the maximum state list length is roughly equal to
- * the maximum sounding notes; the mean list length is between 2 and 3
- * states and the maximum is between 10 and 20 states. Currently we use a
- * singly linked list, but for performance reasons we shoud use a hash table
- * in the future.
+ * statelist structures are used in the real-time filter, so we use a
+ * state pool. In a typical performace, the maximum state list length
+ * is roughly equal to the maximum sounding notes; the mean list
+ * length is between 2 and 3 states and the maximum is between 10 and
+ * 20 states. Currently we use a singly linked list, but for
+ * performance reasons we shoud use a hash table in the future.
+ *
+
  */
  
 #include "dbg.h"
@@ -68,10 +75,57 @@ state_del(struct state *s) {
 }
 
 /*
- * copy event content into an existing state. It isn't enough to just
- * copy the event; special care must be taken for controller events to
- * handle contexts for 14bit controllers and reference to RPN/NRPN for
- * data-entry controllers
+ * dump the state to stderr
+ */
+void
+state_dbg(struct state *s) {
+	ev_dbg(&s->ev);
+	if (s->ev.cmd == EV_CTL && !EV_CTL_IS7BIT(&s->ev)) {
+		dbg_puts(" hi=");
+		dbg_putx(s->hi);
+		dbg_puts(" lo=");
+		dbg_putx(s->lo);
+	}
+	if (s->ctx.ctl_hi != EV_CTL_UNKNOWN) {
+		dbg_puts(" ctl_hi=");
+		dbg_putx(s->ctx.ctl_hi);
+		dbg_puts(" val_hi=");
+		dbg_putx(s->ctx.val_hi);
+	}
+	if (s->ctx.ctl_lo != EV_CTL_UNKNOWN) {
+		dbg_puts(" ctl_lo=");
+		dbg_putx(s->ctx.ctl_lo);
+		dbg_puts(" val_lo=");
+		dbg_putx(s->ctx.val_lo);
+	}
+	if (s->flags & STATE_NEW) {
+		dbg_puts(" NEW");
+	}
+	if (s->flags & STATE_CHANGED) {
+		dbg_puts(" CHANGED");
+	}
+	if (s->flags & STATE_BOGUS) {
+		dbg_puts(" BOGUS");
+	}
+	if (s->flags & STATE_NESTED) {
+		dbg_puts(" NESTED");
+	}
+	if (s->phase & EV_PHASE_FIRST) {
+		dbg_puts(" FIRST");
+	}
+	if (s->phase & EV_PHASE_NEXT) {
+		dbg_puts(" NEXT");
+	}
+	if (s->phase & EV_PHASE_LAST) {
+		dbg_puts(" LAST");
+	}		
+}
+
+/*
+ * copy an event (and its context, af any) into a state. It isn't
+ * enough to just copy the event; special care must be taken for
+ * controller events to handle contexts for 14bit controllers and
+ * reference to RPN/NRPN for data-entry controllers
  */
 void
 state_copyev(struct state *st, struct ev *ev, struct state *ctx) {
@@ -87,10 +141,6 @@ state_copyev(struct state *st, struct ev *ev, struct state *ctx) {
 			} else {
 				st->lo = ev->data.voice.b1;
 			}
-		}
-		if (!EV_CTL_ISDATAENT(ev)) {
-			/* there is no context to copy */
-			return;
 		}
 	}
 	if (ctx != NULL) {
@@ -108,32 +158,6 @@ state_copyev(struct state *st, struct ev *ev, struct state *ctx) {
 		st->ctx.ctl_hi = EV_CTL_UNKNOWN;
 		st->ctx.ctl_lo = EV_CTL_UNKNOWN;
 	}
-#ifdef STATE_DEBUG
-	dbg_puts("statelist_copyev: ");
-	ev_dbg(ev);
-	dbg_puts(": ctx=");
-	if (ctx) {
-		ev_dbg(&ctx->ev);
-	} else {
-		dbg_puts("<none>");
-	}
-		
-	if (st->ctx.ctl_hi != EV_CTL_UNKNOWN) {
-		dbg_puts(" ");
-		dbg_putu(st->ctx.ctl_hi);
-		dbg_puts("(");
-		dbg_putu(st->ctx.val_hi);
-		dbg_puts(")");
-	}
-	if (st->ctx.ctl_lo != EV_CTL_UNKNOWN) {
-		dbg_puts(" ");
-		dbg_putu(st->ctx.ctl_lo);
-		dbg_puts("(");
-		dbg_putu(st->ctx.val_lo);
-		dbg_puts(")");
-	}
-	dbg_puts("\n");
-#endif
 }
 
 /*
@@ -159,17 +183,15 @@ state_match(struct state *st, struct ev *ev, struct state *ctx) {
 		    st->ev.data.voice.dev != ev->data.voice.dev ||
 		    st->ev.data.voice.ch != ev->data.voice.ch) {
 			return 0;
-		}		
-		if (ctx != NULL && EV_CTL_ISDATAENT(&st->ev)) {
-			/*
-			 * this is a data-entry, so we have
-			 * to also compare contexts 
-			 */
-			if (st->ctx.val_lo != ctx->lo ||
-			    st->ctx.val_hi != ctx->hi) {
-				return 0;
-			}
 		}
+#if 0
+		if (EV_CTL_ISNRPN(&st->ev) && EV_CTL_ISNRPN(ev)) {
+			/*
+			 * RPNs match NRPNs
+			 */
+			break;
+		}
+#endif
 		if (st->ev.data.voice.b0 != ev->data.voice.b0) {
 			if (EV_CTL_IS7BIT(&st->ev) || EV_CTL_IS7BIT(ev)) {
 				return 0;
@@ -177,6 +199,19 @@ state_match(struct state *st, struct ev *ev, struct state *ctx) {
 				if (EV_CTL_HI(&st->ev) != ev->data.voice.b0 &&
 				    EV_CTL_HI(ev) != st->ev.data.voice.b0)
 					return 0;
+			}
+		}	
+		/*
+		 * if this event depends on a context the 
+		 * also compare contexts. We do this only for controllers
+		 * because currently only DATAENTs 
+		 */
+		if (ctx != NULL && EV_CTL_ISDATAENT(&st->ev)) {
+			if (st->ctx.ctl_hi != EV_CTL_HI(&ctx->ev) ||
+			    st->ctx.ctl_lo != EV_CTL_LO(&ctx->ev) ||
+			    st->ctx.val_hi != ctx->hi ||
+			    st->ctx.val_lo != ctx->lo ) {
+				return 0;
 			}
 		}
 		break;
@@ -664,7 +699,7 @@ statelist_update(struct statelist *statelist, struct ev *ev) {
 			if (phase & EV_PHASE_LAST) {
 #ifdef STATE_DEBUG
 				dbg_puts("statelist_update: ");
-				ev_dbg(&st->ev);
+				state_dbg(st);
 				dbg_puts(": purged\n");
 #endif
 				/*
@@ -730,19 +765,9 @@ statelist_update(struct statelist *statelist, struct ev *ev) {
 			st->flags = STATE_NESTED | STATE_NEW;
 			st->nevents = 0;
 		}
-#ifdef STATE_DEBUG
-		dbg_puts("statelist_update: ");
-		ev_dbg(ev);
-		dbg_puts(": new state\n");
-#endif
 		st->phase = phase;
 		state_copyev(st, ev, ctx);
 	} else {
-#ifdef STATE_DEBUG
-		dbg_puts("statelist_update: ");
-		ev_dbg(ev);
-		dbg_puts(": updated\n");
-#endif
 		state_copyev(st, ev,  ctx);
 		st->phase = phase & ~EV_PHASE_FIRST;
 		st->flags &= ~STATE_NEW;
@@ -750,6 +775,11 @@ statelist_update(struct statelist *statelist, struct ev *ev) {
 	st->flags |= STATE_CHANGED;
 	st->nevents++;
 	statelist->changed = 1;
+#ifdef STATE_DEBUG
+	dbg_puts("statelist_update: updated: ");
+	state_dbg(st);
+	dbg_puts("\n");
+#endif
 	return st;
 }
 

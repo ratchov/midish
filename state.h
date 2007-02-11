@@ -31,7 +31,7 @@
 #ifndef MIDISH_STATE_H
 #define MIDISH_STATE_H
 
-#undef STATE_DEBUG
+#define STATE_DEBUG
 #undef STATE_PROF
 
 #include "ev.h"

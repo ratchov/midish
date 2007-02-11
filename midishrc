@@ -358,10 +358,10 @@ proc rpn addr val {
 #
 # set NRPN to the given value for the current chan
 #
-proc rpn addr val { 
+proc nrpn addr val { 
 	let c = [songgetcurchan]
-	chanconfev $c {ctl $c 100 ($addr >> 7) & 0x7f}
-	chanconfev $c {ctl $c 101 $addr & 0x7f}
+	chanconfev $c {ctl $c 98 ($addr >> 7) & 0x7f}
+	chanconfev $c {ctl $c 99 $addr & 0x7f}
  	chanconfev $c {ctl $c 6 ($val >> 7) & 0x7f}
 	chanconfev $c {ctl $c 38 $val & 0x7f}
 }
