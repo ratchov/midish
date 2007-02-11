@@ -145,7 +145,7 @@
 #include "default.h"
 #include "frame.h"
 
-#undef FRAME_DEBUG
+#define FRAME_DEBUG
 
 /*
  * initialise a seqptr structure at the beginning of 
@@ -859,7 +859,8 @@ track_quantize(struct track *src, unsigned start, unsigned len,
 	struct seqptr sp, qp;
 	struct state *st;
 	struct statelist slist;
-	unsigned remaind;
+	unsigned remaind; 
+	unsigned fluct, notes;
 	int ofs;
 
 	track_init(&qt);
@@ -883,6 +884,8 @@ track_quantize(struct track *src, unsigned start, unsigned len,
 	 * go ahead and copy all events to quantize during 'len' tics,
 	 * while stretching the time scale in the destination track
 	 */
+	fluct = 0;
+	notes = 0;
 	for (;;) {
 		delta = seqptr_ticdel(&sp, len, &slist);
 		tic += delta;
@@ -910,7 +913,13 @@ track_quantize(struct track *src, unsigned start, unsigned len,
 
 		st = seqptr_evdel(&sp, &slist);
 		if (st->phase & EV_PHASE_FIRST) {
-			st->tag = EV_ISNOTE(&st->ev) ? 1 : 0;
+			if (EV_ISNOTE(&st->ev)) {
+				st->tag = 1;
+				fluct += (ofs < 0) ? -ofs : ofs;
+				notes++;
+			} else {
+				st->tag = 0;
+			}
 		}
 		if (st->tag) {
 			seqptr_evput(&qp, &st->ev);
@@ -942,6 +951,13 @@ track_quantize(struct track *src, unsigned start, unsigned len,
 	seqptr_done(&sp);
 	seqptr_done(&qp);
 	track_done(&qt);
+	dbg_puts("track_quantize: fluct = ");
+	dbg_putu(fluct);
+	dbg_puts(", notes = ");
+	dbg_putu(notes);
+	dbg_puts(", avg = ");
+	dbg_putu(100 * fluct / notes);
+	dbg_puts("% of a tick\n");
 }
 
 /*

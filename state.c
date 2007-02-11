@@ -129,9 +129,19 @@ state_dbg(struct state *s) {
  */
 void
 state_copyev(struct state *st, struct ev *ev, struct state *ctx) {
-	st->ev = *ev;
 	if (ev->cmd == EV_CTL) {
 		if (!EV_CTL_IS7BIT(ev)) {
+			/*
+			 * if we're updating RPN->NRPN or NRPN->RPN
+			 * then reset st->hi and st->lo, so we don't
+			 * mix RPN "hi" bits with NRPN "lo" bits
+			 */
+			if (st->ev.cmd == EV_CTL && EV_CTL_ISNRPN(&st->ev)) {
+				if (EV_CTL_HI(&st->ev) != EV_CTL_HI(ev)) {
+					st->hi = EV_CTL_UNDEF;
+					st->lo = EV_CTL_UNDEF;
+				}
+			}
 			/* 
 			 * set lsb/msb nibbles
 			 */
@@ -139,7 +149,12 @@ state_copyev(struct state *st, struct ev *ev, struct state *ctx) {
 				st->hi = ev->data.voice.b1;
 				st->lo = EV_CTL_UNDEF;
 			} else {
-				st->lo = ev->data.voice.b1;
+				if (st->hi == EV_CTL_UNDEF) {
+					st->flags |= STATE_BOGUS;
+					st->lo = EV_CTL_UNDEF;
+				} else {					
+					st->lo = ev->data.voice.b1;
+				}
 			}
 		}
 	}
@@ -158,6 +173,7 @@ state_copyev(struct state *st, struct ev *ev, struct state *ctx) {
 		st->ctx.ctl_hi = EV_CTL_UNKNOWN;
 		st->ctx.ctl_lo = EV_CTL_UNKNOWN;
 	}
+	st->ev = *ev;
 }
 
 /*
@@ -184,14 +200,12 @@ state_match(struct state *st, struct ev *ev, struct state *ctx) {
 		    st->ev.data.voice.ch != ev->data.voice.ch) {
 			return 0;
 		}
-#if 0
 		if (EV_CTL_ISNRPN(&st->ev) && EV_CTL_ISNRPN(ev)) {
 			/*
 			 * RPNs match NRPNs
 			 */
 			break;
 		}
-#endif
 		if (st->ev.data.voice.b0 != ev->data.voice.b0) {
 			if (EV_CTL_IS7BIT(&st->ev) || EV_CTL_IS7BIT(ev)) {
 				return 0;
@@ -254,13 +268,16 @@ state_eq(struct state *st, struct ev *ev) {
 		switch(st->ev.cmd) {
 		case EV_CTL:
 			if (EV_CTL_IS7BIT(ev)) {
-				if (st->ev.data.voice.b1 != ev->data.voice.b1)
+				if (st->ev.data.voice.b1 != ev->data.voice.b1 ||
+				    st->ev.data.voice.b0 != ev->data.voice.b0)
 					return 0;
 			} else if (EV_CTL_IS14BIT_HI(ev)) {
-				if (st->hi != ev->data.voice.b1)
+				if (st->hi != ev->data.voice.b1 ||
+				    EV_CTL_HI(&st->ev) != ev->data.voice.b0)
 					return 0;
 			} else {
-				if (st->lo != ev->data.voice.b1)
+				if (st->lo != ev->data.voice.b1 ||
+				    EV_CTL_LO(&st->ev) != ev->data.voice.b0)
 					return 0;
 			}
 			break;
@@ -627,16 +644,16 @@ statelist_getctx(struct statelist *slist, struct ev *ev) {
  */
 struct state *
 statelist_lookup(struct statelist *o, struct ev *ev) {
-	struct state *i;
+	struct state *i, *ctx;
 #ifdef STATE_PROF
 	unsigned time = 0;
 #endif
-
+	ctx = statelist_getctx(o, ev);
 	for (i = o->first; i != NULL; i = i->next) {
 #ifdef STATE_PROF
 		time++;
 #endif
-		if (state_match(i, ev, NULL)) { 
+		if (state_match(i, ev, ctx)) { 
 			break;
 		}
 	}
@@ -654,8 +671,9 @@ statelist_lookup(struct statelist *o, struct ev *ev) {
  * update the state of a frame when a new event is received. If this
  * is the first event of the frame, then create a new state.
  *
- * XXX: try to reuse existing states instead of purging them and
- * allocating new ones
+ * we dont reuse existing states, but instead we purge them and we
+ * allocating new ones, so that states that are updated go to the
+ * beginning of the list.
  */
 struct state *
 statelist_update(struct statelist *statelist, struct ev *ev) {
@@ -697,11 +715,6 @@ statelist_update(struct statelist *statelist, struct ev *ev) {
 			phase = st->phase;
 			flags = st->flags;
 			if (phase & EV_PHASE_LAST) {
-#ifdef STATE_DEBUG
-				dbg_puts("statelist_update: ");
-				state_dbg(st);
-				dbg_puts(": purged\n");
-#endif
 				/*
 				 * if the event is not tagged as 
 				 * nested, we reached the deepest
@@ -764,6 +777,8 @@ statelist_update(struct statelist *statelist, struct ev *ev) {
 			statelist_add(statelist, st);
 			st->flags = STATE_NESTED | STATE_NEW;
 			st->nevents = 0;
+			st->ctx.ctl_hi = st->ctx.ctl_lo = EV_CTL_UNKNOWN;
+			st->hi = st->lo = EV_CTL_UNDEF;
 		}
 		st->phase = phase;
 		state_copyev(st, ev, ctx);
