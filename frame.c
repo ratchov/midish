@@ -951,13 +951,15 @@ track_quantize(struct track *src, unsigned start, unsigned len,
 	seqptr_done(&sp);
 	seqptr_done(&qp);
 	track_done(&qt);
-	dbg_puts("track_quantize: fluct = ");
-	dbg_putu(fluct);
-	dbg_puts(", notes = ");
-	dbg_putu(notes);
-	dbg_puts(", avg = ");
-	dbg_putu(100 * fluct / notes);
-	dbg_puts("% of a tick\n");
+	if (notes > 0) {
+		dbg_puts("track_quantize: fluct = ");
+		dbg_putu(fluct);
+		dbg_puts(", notes = ");
+		dbg_putu(notes);
+		dbg_puts(", avg = ");
+		dbg_putu(100 * fluct / notes);
+		dbg_puts("% of a tick\n");
+	}
 }
 
 /*
