@@ -140,12 +140,23 @@
  *
  */
 
+/*
+ * TODO:
+ *	- seqptr_merge1() and seqptr_merge2 are currently broken for
+ *	  nrpn/rpn. They are supposed to use seqptr_restore() and
+ *	  seqptr_cancel()
+ *
+ *	- seqptr_cancel() and seqptr_restore() shouldn't
+ *	  write new events if the current state is
+ *	  the same as the event we write
+ */
+
 #include "dbg.h"
 #include "track.h"
 #include "default.h"
 #include "frame.h"
 
-#undef FRAME_DEBUG
+#define FRAME_DEBUG
 
 /*
  * initialise a seqptr structure at the beginning of 
@@ -508,7 +519,7 @@ seqptr_evmerge1(struct seqptr *pd, struct state *s1, struct state *s2) {
 		s2 = NULL;
 
 	if (s1->phase & EV_PHASE_FIRST) {
-		s1->tag = (!s2 || (!s2->phase & EV_PHASE_LAST)) ? 1 : 0;
+		s1->tag = (!s2 || (s2->phase & EV_PHASE_LAST)) ? 1 : 0;
 #ifdef FRAME_DEBUG
 		if (!s1->tag) {
 			dbg_puts("seqptr_evmerge1: ");
@@ -568,7 +579,7 @@ seqptr_evmerge2(struct seqptr *pd, struct state *s1, struct state *s2) {
 		 * nothing to do, conflicts already handled 
 		 */
 	} else if (s2->phase & EV_PHASE_LAST) {
-		if (s1) {
+		if (s1 && !EV_ISNOTE(&s1->ev)) {
 			s2->tag = 0;
 			if (sd == NULL || !state_eq(sd, &s1->ev)) {
 				sd = seqptr_evput(pd, &s1->ev);
