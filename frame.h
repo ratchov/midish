@@ -45,7 +45,6 @@ struct evspec;
 
 void	      seqptr_init(struct seqptr *sp, struct track *t);
 void	      seqptr_done(struct seqptr *sp);
-unsigned      seqptr_eot(struct seqptr *sp);
 struct state *seqptr_evget(struct seqptr *sp);
 struct state *seqptr_evdel(struct seqptr *sp, struct statelist *slist);
 struct state *seqptr_evput(struct seqptr *sp, struct ev *ev);

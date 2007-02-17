@@ -101,7 +101,7 @@ struct ev {
 #define EV_MAXB0	0x7f
 #define EV_MAXB1	0x7f
 #define EV_MAXBEND	0x3fff
-			unsigned char dev, ch, b0, b1;
+			unsigned short dev, ch, b0, b1;
 		} voice;
 	} data;
 };

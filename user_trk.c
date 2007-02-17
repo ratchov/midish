@@ -572,7 +572,7 @@ user_func_trackinfo(struct exec *o, struct data **r) {
 		}
 		textout_putlong(tout, count);
 		textout_putstr(tout, " ");
-		if (seqptr_eot(&tp)) {
+		if (len > 0) {
 			if (len < (unsigned)quant / 2) {
 				textout_putlong(tout, count_next);
 				textout_putstr(tout, " ");

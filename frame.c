@@ -181,22 +181,6 @@ seqptr_done(struct seqptr *sp) {
 	sp->tic = 0;
 }
 
-/*
- * return true if the end-of-track is reached
- */
-unsigned
-seqptr_eot(struct seqptr *sp) {
-	return sp->pos->ev.cmd == EV_NULL && sp->delta == sp->pos->delta;
-}
-
-/*
- * return true if an event is available within the current tic
- */
-unsigned
-seqptr_evavail(struct seqptr *sp) {
-	return sp->pos->delta == sp->delta && sp->pos->ev.cmd != EV_NULL;
-}
-
 /* 
  * return the state structure of the next available event
  * or NULL if there is no next event in the current tick.
@@ -329,12 +313,17 @@ seqptr_ticput(struct seqptr *sp, unsigned ntics) {
  */
 unsigned 
 seqptr_skip(struct seqptr *sp, unsigned ntics) {
-	for (;;) {
-		if (seqptr_eot(sp) || ntics == 0)
-			break;
+	unsigned delta;
+	while (ntics > 0) {
 		while (seqptr_evget(sp))
 			; /* nothing */
-		ntics -= seqptr_ticskip(sp, ntics);
+		delta = seqptr_ticskip(sp, ntics);
+		/* 
+		 * check if the end of the track was reached
+		 */
+		if (delta == 0)
+			break;
+		ntics -= delta;
 	}
 	return ntics;
 }
@@ -721,8 +710,10 @@ track_move(struct track *src, unsigned start, unsigned len,
 	 * avoid being restored in the copy
 	 *
 	 */
-	while (seqptr_evavail(&sp)) {
+	for (;;) {
 		st = seqptr_evdel(&sp, &slist);
+		if (st == NULL)
+			break;
 		if ((st->phase & EV_PHASE_FIRST) ||
 		    (st->phase & EV_PHASE_NEXT && !EV_ISNOTE(&st->ev))) {
 			st->tag &= ~TAG_COPY;
@@ -797,8 +788,10 @@ track_move(struct track *src, unsigned start, unsigned len,
 	 * untagged frames (those being erased) to terminate and to
 	 * avoid being restored
 	 */
-	while (seqptr_evavail(&sp)) {
+	for (;;) {
 		st = seqptr_evdel(&sp, &slist);
+		if (st == NULL)
+			break;
 		if ((st->phase & EV_PHASE_FIRST) ||
 		    (st->phase & EV_PHASE_NEXT && !EV_ISNOTE(&st->ev))) {
 			st->tag |= TAG_KEEP;
@@ -899,11 +892,12 @@ track_quantize(struct track *src, unsigned start, unsigned len,
 	notes = 0;
 	for (;;) {
 		delta = seqptr_ticdel(&sp, len, &slist);
-		tic += delta;
-	
-		if (tic >= start + len || !seqptr_evavail(&sp))
+		tic += delta;	
+		if (tic >= start + len)
 			break;
-		
+		st = seqptr_evdel(&sp, &slist);
+		if (st == NULL)
+			break;
 		seqptr_ticput(&sp, delta);
 
 		delta -= ofs;
@@ -922,7 +916,6 @@ track_quantize(struct track *src, unsigned start, unsigned len,
 		delta += ofs;
 		seqptr_ticput(&qp, delta);
 
-		st = seqptr_evdel(&sp, &slist);
 		if (st->phase & EV_PHASE_FIRST) {
 			if (EV_ISNOTE(&st->ev)) {
 				st->tag = 1;
@@ -945,9 +938,9 @@ track_quantize(struct track *src, unsigned start, unsigned len,
 	for (;;) {
 		delta = seqptr_ticdel(&sp, ~0U, &slist);
 		seqptr_ticput(&sp, delta);
-		if (!seqptr_evavail(&sp))
-			break;
 		st = seqptr_evdel(&sp, &slist);
+		if (st == NULL)
+			break;
 		if (st->phase & EV_PHASE_FIRST)
 			st->tag = 0;
 		seqptr_ticput(&qp, delta);
@@ -1009,11 +1002,11 @@ track_transpose(struct track *src, unsigned start, unsigned len, int halftones) 
 		seqptr_ticput(&sp, delta);
 		seqptr_ticput(&qp, delta);
 		tic += delta;
-	
-		if (tic >= start + len || !seqptr_evavail(&sp))
-			break;
-		
+		if (tic >= start + len)
+			break;		
 		st = seqptr_evdel(&sp, &slist);
+		if (st == NULL)
+			break;
 		if (st->phase & EV_PHASE_FIRST) {
 			st->tag = EV_ISNOTE(&st->ev) ? 1 : 0;
 		}
@@ -1034,9 +1027,9 @@ track_transpose(struct track *src, unsigned start, unsigned len, int halftones) 
 		delta = seqptr_ticdel(&sp, ~0U, &slist);
 		seqptr_ticput(&sp, delta);
 		seqptr_ticput(&qp, delta);
-		if (!seqptr_evavail(&sp))
-			break;
 		st = seqptr_evdel(&sp, &slist);
+		if (st == NULL)
+			break;
 		if (st->phase & EV_PHASE_FIRST)
 			st->tag = 0;
 		if (st->tag) {
@@ -1429,9 +1422,9 @@ track_timerm(struct track *t, unsigned measure, unsigned amount) {
 		len -= seqptr_ticdel(&sp, len, &slist);
 		if (len == 0)
 			break;
-		if (!seqptr_evavail(&sp))
-			break;
 		st = seqptr_evdel(&sp, &slist);
+		if (st == NULL)
+			break;
 		st->tag = 0;
 	}
 	
@@ -1440,8 +1433,10 @@ track_timerm(struct track *t, unsigned measure, unsigned amount) {
 	 * frames to be restored by themselves (before trying to
 	 * restore them "by hand")
 	 */
-	while (seqptr_evavail(&sp)) {
+	for (;;) {
 		st = seqptr_evdel(&sp, &slist);
+		if (st == NULL)
+			break;
 		ost = statelist_lookup(&sp.statelist, &st->ev);
 		if (!ost || !state_eq(ost, &st->ev))
 			seqptr_evput(&sp, &st->ev);
@@ -1468,9 +1463,9 @@ track_timerm(struct track *t, unsigned measure, unsigned amount) {
 	for (;;) {
 		delta = seqptr_ticdel(&sp, ~0U, &slist);
 		seqptr_ticput(&sp, delta);
-		if (!seqptr_evavail(&sp))
-			break;
 		st = seqptr_evdel(&sp, &slist);
+		if (st == NULL)
+			break;
 		st->tag = 1;
 		ost = statelist_lookup(&sp.statelist, &st->ev);
 		if (!ost || !state_eq(ost, &st->ev))

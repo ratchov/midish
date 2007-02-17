@@ -698,10 +698,10 @@ statelist_update(struct statelist *statelist, struct ev *ev) {
 	/*
 	 * we scan for a matching state, if it exists but is
 	 * terminated (phase = EV_PHASE_LAST) we purge it in order to
-	 * ruse the list entry. We cant just use statelist_lookup(),
+	 * reuse the list entry. We cant just use statelist_lookup(),
 	 * because this will not work with nested frames (eg. if the
 	 * "top" state is purged but not the other one). So here we
-	 * inline a kind of 'lookup_for_write()' routine here:
+	 * inline a kind of 'lookup_for_write()' routine:
 	 */
 	nevents = 0;
 	st = statelist->first;

@@ -404,22 +404,6 @@ song_setcurinput(struct song *o, unsigned dev, unsigned ch) {
 }
 
 /*
- * return true if each track in the song is finished and false if at
- * least one track is not finished
- */
-unsigned
-song_finished(struct song *o) {
-	struct songtrk *i;
-
-	SONG_FOREACH_TRK(o, i) {
-		if (!seqptr_eot(&i->trackptr)) {
-			return 0;
-		}
-	}
-	return 1;
-}
-
-/*
  * send to the output all events from all chans
  */
 void
@@ -516,66 +500,76 @@ song_metaput(struct song *o, struct ev *ev) {
 }
 
 /*
- * play the data corresponding to a tic
- * used by playcb and recordcb
+ * move all track pointers 1 tic forward. Return true if at least one
+ * track moved forward and 0 if no track moved forward (ie end of the
+ * song was track reached)
+ *
+ * Note that must be no events available on any track, in other words,
+ * this routine must be called after song_ticplay()
+ */
+unsigned
+song_ticskip(struct song *o) {
+	unsigned tic;
+	struct songtrk *i;
+
+	/* 
+	 * tempo_track 
+	 */
+	(void)seqptr_ticskip(&o->metaptr, 1);
+	o->tic++;
+	if (o->tic >= o->tics_per_beat) {
+		o->tic = 0;
+		o->beat++;
+		if (o->beat >= o->beats_per_measure) {
+			o->beat = 0;
+			o->measure++;
+		}
+	}
+	tic = 1;
+	SONG_FOREACH_TRK(o, i) {
+		tic += seqptr_ticskip(&i->trackptr, 1);
+	}
+	return tic;
+}
+
+/*
+ * play the data corresponding to the current tick used by playcb and
+ * recordcb.
  */
 void
-song_playtic(struct song *o) {
+song_ticplay(struct song *o) {
 	struct songtrk *i;
 	struct state *st;
 	struct ev ev;
-	unsigned phase;
 	
-	phase = mux_getphase();
-	
-	if (phase == MUX_NEXT) {
-		/* 
-		 * tempo_track 
-		 */
-		seqptr_ticskip(&o->metaptr, 1);
-		o->tic++;
-		if (o->tic >= o->tics_per_beat) {
-			o->tic = 0;
-			o->beat++;
-			if (o->beat >= o->beats_per_measure) {
-				o->beat = 0;
-				o->measure++;
-			}
-		}
-		SONG_FOREACH_TRK(o, i) {
-			seqptr_ticskip(&i->trackptr, 1);
-		}
+	while ((st = seqptr_evget(&o->metaptr))) {
+		song_metaput(o, &st->ev);
 	}
-	
-	if (phase == MUX_NEXT || phase == MUX_FIRST) {
-		while ((st = seqptr_evget(&o->metaptr))) {
-			song_metaput(o, &st->ev);
-		}
-		metro_tic(&o->metro, o->beat, o->tic);
-		SONG_FOREACH_TRK(o, i) {
-			while ((st = seqptr_evget(&i->trackptr))) {
-				ev = st->ev;
-				if (EV_ISVOICE(&ev)) {
-					if (st->phase & EV_PHASE_FIRST)
-						st->tag = 1;
-					if (!i->mute) {
-						if (st->tag) {
-							mux_putev(&ev);
-						} else if (song_debug) {
-							dbg_puts("song_playtic: ");
-							ev_dbg(&ev);
-							dbg_puts(": no tag\n");
-						}
+	metro_tic(&o->metro, o->beat, o->tic);
+	SONG_FOREACH_TRK(o, i) {
+		while ((st = seqptr_evget(&i->trackptr))) {
+			ev = st->ev;
+			if (EV_ISVOICE(&ev)) {
+				if (st->phase & EV_PHASE_FIRST)
+					st->tag = 1;
+				if (!i->mute) {
+					if (st->tag) {
+						mux_putev(&ev);
+					} else if (song_debug) {
+						dbg_puts("song_ticplay: ");
+						ev_dbg(&ev);
+						dbg_puts(": no tag\n");
 					}
-				} else {
-					dbg_puts("song_playtic: event not implemented : ");
-					dbg_putx(ev.cmd);
-					dbg_puts("\n");
 				}
+			} else {
+				dbg_puts("song_ticplay: event not implemented : ");
+				dbg_putx(ev.cmd);
+				dbg_puts("\n");
 			}
 		}
 	}
 }
+
 
 /*
  * restore the given frame and tag it appropriately
@@ -823,15 +817,17 @@ song_playcb(void *addr, struct ev *ev) {
 		}
 		break;
 	case EV_TIC:
-		if (song_finished(o) && phase != MUX_STOP) {
-			mux_stopwait();
-			break;
-		} else {
-			song_playtic(o);
+		if (phase == MUX_NEXT) {
+			if (!song_ticskip(o)) {
+				mux_stopwait();
+			}
+		}
+		if (phase == MUX_NEXT || phase == MUX_FIRST) {
+			song_ticplay(o);
 		}
 		mux_flush();
 		break;
-	default:		
+	default:
 		if (!EV_ISVOICE(ev)) {
 			break;
 		}
@@ -864,7 +860,7 @@ void
 song_recordcb(void *addr, struct ev *ev) {
 	struct song *o = (struct song *)addr;
 	struct sysex *sx;
-	unsigned phase;
+	unsigned phase, delta;
 	
 	phase = mux_getphase();
 	switch (ev->cmd) {
@@ -882,14 +878,14 @@ song_recordcb(void *addr, struct ev *ev) {
 		if (phase == MUX_NEXT) {
 			while (seqptr_evget(&o->recptr))
 				; /* nothing */
-			if (seqptr_eot(&o->recptr)) {
+			delta = seqptr_ticskip(&o->recptr, 1);
+			if (delta == 0)
 				seqptr_ticput(&o->recptr, 1);
-			} else {
-				seqptr_ticskip(&o->recptr, 1);
-			}
-
+			(void)song_ticskip(o);
 		}
-		song_playtic(o);
+		if (phase == MUX_NEXT || phase == MUX_FIRST) {
+			song_ticplay(o);
+		}
 		mux_flush();
 		break;
 	case EV_SYSEX:
