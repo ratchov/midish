@@ -42,7 +42,7 @@ struct state  {
 	struct ev ev;			/* last event */
 	struct evctx ctx;		/* context for PCs and DATAENTs */
 	struct state *next, **prev;	/* for statelist */
-	unsigned char hi, lo;		/* 7bit nibbles of 14bit CTLs */
+	unsigned char b2;		/* 7bit "hi" bits of 14bit CTLs */
 #define STATE_NEW	1		/* just created, never updated */
 #define STATE_CHANGED	2		/* updated within the current tick */
 #define STATE_BOGUS	4		/* frame detected as bogus */
@@ -87,6 +87,7 @@ void	      state_pool_init(unsigned size);
 void	      state_pool_done(void);
 struct state *state_new(void);
 void	      state_del(struct state *s);
+void	      state_dbg(struct state *s);
 void	      state_copyev(struct state *s, struct ev *ev, struct state *ctx);
 unsigned      state_match(struct state *s, struct ev *ev, struct state *st);
 unsigned      state_eq(struct state *s, struct ev *ev);

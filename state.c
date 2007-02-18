@@ -93,10 +93,8 @@ void
 state_dbg(struct state *s) {
 	ev_dbg(&s->ev);
 	if (s->ev.cmd == EV_CTL && !EV_CTL_IS7BIT(&s->ev)) {
-		dbg_puts(" hi=");
-		dbg_putx(s->hi);
-		dbg_puts(" lo=");
-		dbg_putx(s->lo);
+		dbg_puts(" b2=");
+		dbg_putx(s->b2);
 	}
 	if (s->ctx.ctl_hi != EV_CTL_UNKNOWN) {
 		dbg_puts(" ctl_hi=");
@@ -141,32 +139,19 @@ state_dbg(struct state *s) {
  */
 void
 state_copyev(struct state *st, struct ev *ev, struct state *ctx) {
-	if (ev->cmd == EV_CTL) {
-		if (!EV_CTL_IS7BIT(ev)) {
-			/*
-			 * if we're updating RPN->NRPN or NRPN->RPN
-			 * then reset st->hi and st->lo, so we don't
-			 * mix RPN "hi" bits with NRPN "lo" bits
-			 */
-			if (st->ev.cmd == EV_CTL && EV_CTL_ISNRPN(&st->ev)) {
-				if (EV_CTL_HI(&st->ev) != EV_CTL_HI(ev)) {
-					st->hi = EV_CTL_UNDEF;
-					st->lo = EV_CTL_UNDEF;
-				}
+	if (ev->cmd == EV_CTL && EV_CTL_IS14BIT_LO(ev)) {
+		if (st->ev.cmd == EV_NULL) {
+			st->flags |= STATE_BOGUS;
+			goto copy_and_out;
+		}
+		if (st->ev.cmd == EV_CTL) {
+			if (EV_CTL_IS14BIT_HI(&st->ev)) {
+				st->b2 = st->ev.data.voice.b1;
 			}
-			/* 
-			 * set lsb/msb nibbles
-			 */
-			if (EV_CTL_IS14BIT_HI(ev)) {
-				st->hi = ev->data.voice.b1;
-				st->lo = EV_CTL_UNDEF;
-			} else {
-				if (st->hi == EV_CTL_UNDEF) {
-					st->flags |= STATE_BOGUS;
-					st->lo = EV_CTL_UNDEF;
-				} else {					
-					st->lo = ev->data.voice.b1;
-				}
+			if (EV_CTL_ISNRPN(&st->ev) && 
+			    EV_CTL_HI(&st->ev) != EV_CTL_HI(ev)) {
+				st->flags |= STATE_BOGUS;
+				goto copy_and_out;
 			}
 		}
 	}
@@ -177,14 +162,16 @@ state_copyev(struct state *st, struct ev *ev, struct state *ctx) {
 			st->ctx.ctl_lo = EV_CTL_UNKNOWN;
 		} else {
 			st->ctx.ctl_hi = EV_CTL_HI(&ctx->ev);
-			st->ctx.val_hi = ctx->hi;
+			st->ctx.val_hi = ctx->b2;
 			st->ctx.ctl_lo = EV_CTL_LO(&ctx->ev);
-			st->ctx.val_lo = ctx->lo;
+			st->ctx.val_lo = ctx->ev.data.voice.b1;
 		}
+		st->flags |= ctx->flags & STATE_BOGUS;
 	} else {
 		st->ctx.ctl_hi = EV_CTL_UNKNOWN;
 		st->ctx.ctl_lo = EV_CTL_UNKNOWN;
 	}
+copy_and_out:
 	st->ev = *ev;
 }
 
@@ -228,15 +215,16 @@ state_match(struct state *st, struct ev *ev, struct state *ctx) {
 			}
 		}	
 		/*
-		 * if this event depends on a context the 
-		 * also compare contexts. We do this only for controllers
-		 * because currently only DATAENTs 
+		 * if this event depends on a context then also
+		 * compare contexts. We do this only for controllers
+		 * because currently only DATAENTs dont match if thier
+		 * contexts differ
 		 */
 		if (ctx != NULL && EV_CTL_ISDATAENT(&st->ev)) {
 			if (st->ctx.ctl_hi != EV_CTL_HI(&ctx->ev) ||
 			    st->ctx.ctl_lo != EV_CTL_LO(&ctx->ev) ||
-			    st->ctx.val_hi != ctx->hi ||
-			    st->ctx.val_lo != ctx->lo ) {
+			    st->ctx.val_hi != ctx->b2 ||
+			    st->ctx.val_lo != ctx->ev.data.voice.b1) {
 				return 0;
 			}
 		}
@@ -271,7 +259,7 @@ state_match(struct state *st, struct ev *ev, struct state *ctx) {
 }
 
 /*
- * compare a state with to a matching event (ie one for which
+ * compare a state to a matching event (ie one for which
  * state_match() returns 1)
  */
 unsigned
@@ -284,13 +272,26 @@ state_eq(struct state *st, struct ev *ev) {
 				    st->ev.data.voice.b0 != ev->data.voice.b0)
 					return 0;
 			} else if (EV_CTL_IS14BIT_HI(ev)) {
-				if (st->hi != ev->data.voice.b1 ||
-				    EV_CTL_HI(&st->ev) != ev->data.voice.b0)
-					return 0;
+				if (EV_CTL_IS14BIT_HI(&st->ev)) {
+					if (st->ev.data.voice.b1 != ev->data.voice.b1 ||
+					    st->ev.data.voice.b0 != ev->data.voice.b0) {
+						return 0;
+					}
+				} else {
+					if (st->b2 != ev->data.voice.b1 ||
+					    EV_CTL_HI(&st->ev) != ev->data.voice.b0) {
+						return 0;
+					}
+				}
 			} else {
-				if (st->lo != ev->data.voice.b1 ||
-				    EV_CTL_LO(&st->ev) != ev->data.voice.b0)
+				if (EV_CTL_IS14BIT_HI(&st->ev)) {
 					return 0;
+				} else {
+					if (st->ev.data.voice.b1 != ev->data.voice.b1 ||
+					    st->ev.data.voice.b0 != ev->data.voice.b0) {
+						return 0;
+					}
+				}
 			}
 			break;
 		case EV_CAT:
@@ -350,7 +351,7 @@ state_cancel(struct state *st, struct ev *rev) {
 		rev->data.voice.ch  = st->ev.data.voice.ch;
 		break;
 	case EV_CTL:
-		if (EV_CTL_IS7BIT(&st->ev)) {
+		if (!EV_CTL_IS14BIT_LO(&st->ev)) {
 			rev->cmd = EV_CTL;
 			rev->data.voice.b0 = st->ev.data.voice.b0;
 			rev->data.voice.b1 = EV_CTL_DEFVAL(&st->ev);
@@ -365,7 +366,7 @@ state_cancel(struct state *st, struct ev *rev) {
 			rev->data.voice.ch  = st->ev.data.voice.ch;
 			rev++;
 			rev->cmd = EV_CTL;
-			rev->data.voice.b0 = EV_CTL_LO(&st->ev);
+			rev->data.voice.b0 = st->ev.data.voice.b0;
 			rev->data.voice.b1 = EV_CTL_DEFVAL(rev);
 			rev->data.voice.dev = st->ev.data.voice.dev;
 			rev->data.voice.ch  = st->ev.data.voice.ch;
@@ -401,6 +402,10 @@ state_cancel(struct state *st, struct ev *rev) {
 unsigned
 state_restore(struct state *st, struct ev *rev) {
 	unsigned num = 0;
+
+	if (st->flags & STATE_BOGUS)
+		return 0;
+
 	if (EV_ISNOTE(&st->ev)) {
 		/*
 		 * we never use this function for NOTE events, so
@@ -425,52 +430,36 @@ state_restore(struct state *st, struct ev *rev) {
 		rev->data.voice.ch  = st->ev.data.voice.ch;
 		rev++;
 		num++;
-		if (st->ctx.ctl_lo != EV_CTL_UNKNOWN) {
-			rev->cmd = EV_CTL;
-			rev->data.voice.b0 = st->ctx.ctl_lo;
-			rev->data.voice.b1 = st->ctx.val_lo;
-			rev->data.voice.dev = st->ev.data.voice.dev;
-			rev->data.voice.ch  = st->ev.data.voice.ch;
-			rev++;
-			num++;
-		}
-	}
-	
-	switch(st->ev.cmd) {
-	case EV_CTL:
-		if (EV_CTL_IS7BIT(&st->ev)) {
-			*rev = st->ev;
-			num++;
-			return num;
-		}
-		if (st->hi == EV_CTL_UNDEF) {
-			/*
-			 * we do nothig because lsb without
-			 * msb is considered bogus
-			 */
-#ifdef STATE_DEBUG
-			dbg_puts("state_restore: ");
-			ev_dbg(&st->ev);
-			dbg_puts(": no msb nibble\n");
-#endif
-			return 0;
-		}
 		rev->cmd = EV_CTL;
-		rev->data.voice.b0 = EV_CTL_HI(&st->ev);
-		rev->data.voice.b1 = st->hi;
+		rev->data.voice.b0 = st->ctx.ctl_lo;
+		rev->data.voice.b1 = st->ctx.val_lo;
 		rev->data.voice.dev = st->ev.data.voice.dev;
 		rev->data.voice.ch  = st->ev.data.voice.ch;
 		rev++;
 		num++;
-		if (st->lo != EV_CTL_UNDEF) {
-			rev->cmd = EV_CTL;
-			rev->data.voice.b0 = EV_CTL_LO(&st->ev);
-			rev->data.voice.b1 = st->lo;
-			rev->data.voice.dev = st->ev.data.voice.dev;
-			rev->data.voice.ch  = st->ev.data.voice.ch;
-			rev++;
+	}
+	
+	switch(st->ev.cmd) {
+	case EV_CTL:
+		if (!EV_CTL_IS14BIT_LO(&st->ev)) {
+			*rev = st->ev;
 			num++;
+			return num;
 		}
+		rev->cmd = EV_CTL;
+		rev->data.voice.b0  = EV_CTL_HI(&st->ev);
+		rev->data.voice.b1  = st->b2;
+		rev->data.voice.dev = st->ev.data.voice.dev;
+		rev->data.voice.ch  = st->ev.data.voice.ch;
+		rev++;
+		num++;
+		rev->cmd = EV_CTL;
+		rev->data.voice.b0  = st->ev.data.voice.b0;
+		rev->data.voice.b1  = st->ev.data.voice.b1;
+		rev->data.voice.dev = st->ev.data.voice.dev;
+		rev->data.voice.ch  = st->ev.data.voice.ch;
+		rev++;
+		num++;
 		return num;
 		/* not reached */
 	case EV_PC:
@@ -569,8 +558,7 @@ statelist_dup(struct statelist *o, struct statelist *src) {
 		n->ev = i->ev;
 		n->phase = i->phase;
 		n->flags = i->flags;
-		n->hi = i->hi;
-		n->lo = i->lo;
+		n->b2 = i->b2;
 		n->ctx = i->ctx;
 		statelist_add(o, n);
 	}
@@ -715,7 +703,7 @@ statelist_update(struct statelist *statelist, struct ev *ev) {
 			st->flags = STATE_NEW;
 			st->nevents = 0;
 			st->ctx.ctl_hi = st->ctx.ctl_lo = EV_CTL_UNKNOWN;
-			st->hi = st->lo = EV_CTL_UNDEF;
+			st->ev.cmd = EV_NULL; /* used by copyev */
 			break;
 		}
 		stnext = st->next;
@@ -789,7 +777,7 @@ statelist_update(struct statelist *statelist, struct ev *ev) {
 			st->flags = STATE_NESTED | STATE_NEW;
 			st->nevents = 0;
 			st->ctx.ctl_hi = st->ctx.ctl_lo = EV_CTL_UNKNOWN;
-			st->hi = st->lo = EV_CTL_UNDEF;
+			st->ev.cmd = EV_NULL; /* used by copyev */
 		}
 		st->phase = phase;
 		state_copyev(st, ev, ctx);

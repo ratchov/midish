@@ -156,7 +156,7 @@
 #include "default.h"
 #include "frame.h"
 
-#define FRAME_DEBUG
+#undef FRAME_DEBUG
 
 /*
  * initialise a seqptr structure at the beginning of 
@@ -1543,7 +1543,9 @@ track_confev(struct track *src, struct ev *ev) {
 			}
 		}
 #ifdef FRAME_DEBUG
-		dbg_puts("track_confev: dumping\n");
+		dbg_puts("track_confev: dumping: ");
+		state_dbg(st);
+		dbg_puts("\n");
 #endif
 		/*
 		 * restore the state
@@ -1551,8 +1553,12 @@ track_confev(struct track *src, struct ev *ev) {
 		nev = state_restore(st, rev);
 		for (i = 0; i < nev; i++) {
 			st = statelist_lookup(&sp.statelist, &rev[i]);
-			if (st && state_eq(st, &rev[i]))
+			if (st && state_eq(st, &rev[i])) {
+#ifdef FRAME_DEBUG
+				dbg_puts("track_confev: skipped\n");
+#endif
 				continue;
+			}
 			(void)seqptr_evput(&sp, &rev[i]);
 		}
 		tag++;
