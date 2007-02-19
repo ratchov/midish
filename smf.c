@@ -759,12 +759,19 @@ song_fix1(struct song *o) {
 		track_merge(&o->meta, &copy);
 		track_done(&copy);
 	}
+
+	/*
+	 * remove the first track, if there are not events
+	 */
+	t = (struct songtrk *)o->trklist;
+	if (t->track.first->ev.cmd == EV_NULL) {
+		song_trkdel(o, t);
+	}
 }
 
 /*
- * fix song imported from format 0 smf: call fix1 to move meta events
- * to the meta-track then create a track for each channel and copy
- * corresponding events.
+ * fix song imported from format 0 SMFs: call fix1 to move meta events
+ * to the meta-track then split it creating one track per channel
  */
 void
 song_fix0(struct song *o) {
