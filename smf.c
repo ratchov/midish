@@ -41,6 +41,8 @@
 #include "cons.h"
 #include "frame.h"
 
+#define MAXTRACKNAME 100
+
 char smftype_header[4] = { 'M', 'T', 'h', 'd' };
 char smftype_track[4]  = { 'M', 'T', 'r', 'k' };
 
@@ -54,11 +56,10 @@ struct smf {
 	unsigned length, index;		/* current chunk length/position */
 };
 
-	/*
-	 * open a standard midi file and initialise
-	 * the smf structure
-	 */
-
+/*
+ * open a standard midi file and initialise
+ * the smf structure
+ */
 unsigned
 smf_open(struct smf *o, char *path, char *mode) {
 	o->file = fopen(path, mode);
@@ -180,15 +181,13 @@ smf_getheader(struct smf *o, char *hdr) {
 	return 1;
 }
 
-	/*
-	 * in smf_put* routines there is a 'unsigned *used' argument
-	 * if (used == NULL) then data is not written in the smf
-	 * structure, only *user is incremented by the number
-	 * of bytes that would be written otherwise.
-	 * This is used to determine chunk's length
-	 */
-
-
+/*
+ * in smf_put* routines there is a 'unsigned *used' argument
+ * if (used == NULL) then data is not written in the smf
+ * structure, only *user is incremented by the number
+ * of bytes that would be written otherwise.
+ * This is used to determine chunk's length
+ */
 void
 smf_put32(struct smf *o, unsigned *used, unsigned val) {
 	unsigned char buf[4];
@@ -532,10 +531,9 @@ song_exportsmf(struct song *o, char *filename) {
 /* ------------------------------------------------------- import --- */
 
 
-	/* 
-	 * parse '0xF0 varlen data data ... data 0xF7'
-	 */
-
+/* 
+ * parse '0xF0 varlen data data ... data 0xF7'
+ */
 unsigned
 smf_getsysex(struct smf *o, struct sysex *sx) {
 	unsigned i, length, c;
@@ -553,10 +551,9 @@ smf_getsysex(struct smf *o, struct sysex *sx) {
 }
 
 
-	/*
-	 * parse a track 'varlen event varlen event ... varlen event'
-	 */
-
+/*
+ * parse a track 'varlen event varlen event ... varlen event'
+ */
 unsigned
 smf_gettrack(struct smf *o, struct song *s, struct songtrk *t) {
 	unsigned delta, i, status, type, length, abspos;
@@ -765,14 +762,60 @@ song_fix1(struct song *o) {
 }
 
 /*
- * fix song imported from format 0 smf 
+ * fix song imported from format 0 smf: call fix1 to move meta events
+ * to the meta-track then create a track for each channel and copy
+ * corresponding events.
  */
 void
 song_fix0(struct song *o) {
+	char trackname[MAXTRACKNAME];	
+	struct seqptr tp, cp;
+	struct state *st;
+	struct statelist slist;
+	struct songtrk *t, *smf;
+	unsigned delta;
+	unsigned i;
+
 	song_fix1(o);
+	smf = (struct songtrk *)o->trklist;
+	if (smf == NULL) {
+		return;
+	}
+	for (i = 1; i < 16; i++) {
+		snprintf(trackname, MAXTRACKNAME, "trk%02u", i);
+		t = song_trknew(o, trackname);
+		delta = 0;
+		seqptr_init(&cp, &t->track);
+		seqptr_init(&tp, &smf->track);
+		statelist_init(&slist);
+		for (;;) {
+			delta = seqptr_ticdel(&tp, ~0U, &slist);
+			seqptr_ticput(&tp, delta);
+			seqptr_ticput(&cp, delta);
+			st = seqptr_evdel(&tp, &slist);
+			if (st == NULL) {
+				break;
+			}
+			if (st->phase & EV_PHASE_FIRST) {
+				if (EV_ISVOICE(&st->ev) &&
+				    st->ev.data.voice.ch == i) {
+					st->tag = 1;
+				} else {
+					st->tag = 0;
+				}
+			}
+			if (st->tag) {
+				seqptr_evput(&cp, &st->ev);
+			} else {
+				seqptr_evput(&tp, &st->ev);
+			}
+		}
+		statelist_done(&slist);
+		seqptr_done(&tp);
+		seqptr_done(&cp);
+	}
 }
 
-#define MAXTRACKNAME 100
 
 struct song *
 song_importsmf(char *filename) {
