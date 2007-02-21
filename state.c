@@ -96,17 +96,15 @@ state_dbg(struct state *s) {
 		dbg_puts(" b2=");
 		dbg_putx(s->b2);
 	}
-	if (s->ctx.ctl_hi != EV_CTL_UNKNOWN) {
-		dbg_puts(" ctl_hi=");
-		dbg_putx(s->ctx.ctl_hi);
-		dbg_puts(" val_hi=");
-		dbg_putx(s->ctx.val_hi);
-	}
-	if (s->ctx.ctl_lo != EV_CTL_UNKNOWN) {
-		dbg_puts(" ctl_lo=");
-		dbg_putx(s->ctx.ctl_lo);
-		dbg_puts(" val_lo=");
-		dbg_putx(s->ctx.val_lo);
+	if (STATE_HASCTX(s)) {
+		dbg_puts(" ctx_b0=");
+		dbg_putx(s->ctx_b0);
+		dbg_puts(" ctx_b1=");
+		dbg_putx(s->ctx_b1);
+		if (evctl_tab[s->ctx_b0].bits == EVCTL_14BIT_LO) {
+			dbg_puts(" ctx_b2=");
+			dbg_putx(s->ctx_b2);
+		}
 	}
 	if (s->flags & STATE_NEW) {
 		dbg_puts(" NEW");
@@ -138,10 +136,11 @@ state_dbg(struct state *s) {
  * reference to RPN/NRPN for data-entry controllers
  */
 void
-state_copyev(struct state *st, struct ev *ev, struct state *ctx) {
+state_copyev(struct state *st, struct ev *ev, unsigned ph, struct state *ctx) {
 	if (ev->cmd == EV_CTL && EV_CTL_IS14BIT_LO(ev)) {
-		if (st->ev.cmd == EV_NULL) {
+		if (st->flags & STATE_NEW) {
 			st->flags |= STATE_BOGUS;
+			ph |= EV_PHASE_LAST;
 			goto copy_and_out;
 		}
 		if (st->ev.cmd == EV_CTL) {
@@ -151,28 +150,27 @@ state_copyev(struct state *st, struct ev *ev, struct state *ctx) {
 			if (EV_CTL_ISNRPN(&st->ev) && 
 			    EV_CTL_HI(&st->ev) != EV_CTL_HI(ev)) {
 				st->flags |= STATE_BOGUS;
+				ph |= EV_PHASE_LAST;
 				goto copy_and_out;
 			}
 		}
 	}
 	if (ctx != NULL) {
-		if (EV_CTL_IS7BIT(&ctx->ev)) {
-			st->ctx.ctl_hi = ctx->ev.data.voice.b0;
-			st->ctx.val_hi = ctx->ev.data.voice.b1;
-			st->ctx.ctl_lo = EV_CTL_UNKNOWN;
-		} else {
-			st->ctx.ctl_hi = EV_CTL_HI(&ctx->ev);
-			st->ctx.val_hi = ctx->b2;
-			st->ctx.ctl_lo = EV_CTL_LO(&ctx->ev);
-			st->ctx.val_lo = ctx->ev.data.voice.b1;
+		st->ctx_b0 = ctx->ev.data.voice.b0;
+		st->ctx_b1 = ctx->ev.data.voice.b1;
+		st->ctx_b2 = ctx->b2;
+		if (ctx->flags & STATE_BOGUS) {
+			st->flags |= STATE_BOGUS;
+			ph |= EV_PHASE_LAST;
 		}
-		st->flags |= ctx->flags & STATE_BOGUS;
 	} else {
-		st->ctx.ctl_hi = EV_CTL_UNKNOWN;
-		st->ctx.ctl_lo = EV_CTL_UNKNOWN;
+		st->ctx_b0 = EV_CTL_UNKNOWN;
 	}
 copy_and_out:
 	st->ev = *ev;
+	st->phase = ph;
+	st->flags |= STATE_CHANGED;
+	st->nevents++;
 }
 
 /*
@@ -221,10 +219,9 @@ state_match(struct state *st, struct ev *ev, struct state *ctx) {
 		 * contexts differ
 		 */
 		if (ctx != NULL && EV_CTL_ISDATAENT(&st->ev)) {
-			if (st->ctx.ctl_hi != EV_CTL_HI(&ctx->ev) ||
-			    st->ctx.ctl_lo != EV_CTL_LO(&ctx->ev) ||
-			    st->ctx.val_hi != ctx->b2 ||
-			    st->ctx.val_lo != ctx->ev.data.voice.b1) {
+			if (st->ctx_b0 != EV_CTL_LO(&ctx->ev) ||
+			    st->ctx_b1 != ctx->ev.data.voice.b1 ||
+			    st->ctx_b2 != ctx->b2) {
 				return 0;
 			}
 		}
@@ -422,17 +419,19 @@ state_restore(struct state *st, struct ev *rev) {
 	/*
 	 * if there is a context then restore it
 	 */
-	if (st->ctx.ctl_hi != EV_CTL_UNKNOWN) {
+	if (st->ctx_b0 != EV_CTL_UNKNOWN) {
+		if (evctl_tab[st->ctx_b0].bits == EVCTL_14BIT_LO) {
+			rev->cmd = EV_CTL;
+			rev->data.voice.b0 = evctl_tab[st->ctx_b0].hi;
+			rev->data.voice.b1 = st->ctx_b2;
+			rev->data.voice.dev = st->ev.data.voice.dev;
+			rev->data.voice.ch  = st->ev.data.voice.ch;
+			rev++;
+			num++;
+		}
 		rev->cmd = EV_CTL;
-		rev->data.voice.b0 = st->ctx.ctl_hi;
-		rev->data.voice.b1 = st->ctx.val_hi;
-		rev->data.voice.dev = st->ev.data.voice.dev;
-		rev->data.voice.ch  = st->ev.data.voice.ch;
-		rev++;
-		num++;
-		rev->cmd = EV_CTL;
-		rev->data.voice.b0 = st->ctx.ctl_lo;
-		rev->data.voice.b1 = st->ctx.val_lo;
+		rev->data.voice.b0 = st->ctx_b0;
+		rev->data.voice.b1 = st->ctx_b1;
 		rev->data.voice.dev = st->ev.data.voice.dev;
 		rev->data.voice.ch  = st->ev.data.voice.ch;
 		rev++;
@@ -559,7 +558,9 @@ statelist_dup(struct statelist *o, struct statelist *src) {
 		n->phase = i->phase;
 		n->flags = i->flags;
 		n->b2 = i->b2;
-		n->ctx = i->ctx;
+		n->ctx_b0 = i->ctx_b0;
+		n->ctx_b1 = i->ctx_b1;
+		n->ctx_b2 = i->ctx_b2;
 		statelist_add(o, n);
 	}
 }
@@ -636,7 +637,6 @@ statelist_getctx(struct statelist *slist, struct ev *ev) {
 	return NULL;
 }
 
-
 /*
  * find the first state that matches the given event
  * return NULL if not found
@@ -677,7 +677,7 @@ statelist_lookup(struct statelist *o, struct ev *ev) {
 struct state *
 statelist_update(struct statelist *statelist, struct ev *ev) {
 	struct state *st, *stnext, *ctx;
-	unsigned phase, flags, nevents;
+	unsigned phase;
 #ifdef STATE_PROF
 	unsigned time = 0;
 #endif
@@ -691,7 +691,6 @@ statelist_update(struct statelist *statelist, struct ev *ev) {
 	 * "top" state is purged but not the other one). So here we
 	 * inline a kind of 'lookup_for_write()' routine:
 	 */
-	nevents = 0;
 	st = statelist->first;
 	for (;;) {
 #ifdef STATE_PROF
@@ -702,8 +701,6 @@ statelist_update(struct statelist *statelist, struct ev *ev) {
 			statelist_add(statelist, st);
 			st->flags = STATE_NEW;
 			st->nevents = 0;
-			st->ctx.ctl_hi = st->ctx.ctl_lo = EV_CTL_UNKNOWN;
-			st->ev.cmd = EV_NULL; /* used by copyev */
 			break;
 		}
 		stnext = st->next;
@@ -711,17 +708,15 @@ statelist_update(struct statelist *statelist, struct ev *ev) {
 			/*
 			 * found a matching state
 			 */
-			phase = st->phase;
-			flags = st->flags;
-			if (phase & EV_PHASE_LAST) {
+			if (st->phase & EV_PHASE_LAST) {
 				/*
 				 * if the event is not tagged as 
 				 * nested, we reached the deepest
 				 * state, so stop iterating here
 				 * else continue purging states
 				 */
-				if (!(flags & STATE_NESTED)) {
-					st->flags = STATE_NEW;
+				if (!(st->flags & STATE_NESTED)) {
+					st->flags = 0;
 					break;
 				} else {
 					statelist_rm(statelist, st);
@@ -753,41 +748,44 @@ statelist_update(struct statelist *statelist, struct ev *ev) {
 	 * then create a new state.
 	 */
 	phase = ev_phase(ev);
-	if (st->flags & STATE_NEW || phase == EV_PHASE_FIRST) {
-		if (st->flags & STATE_NEW) {
-			if (!(phase & EV_PHASE_FIRST)) {
-				phase = EV_PHASE_FIRST | EV_PHASE_LAST;
-				st->flags |= STATE_BOGUS;
-#ifdef STATE_DEBUG
-				dbg_puts("statelist_update: ");
-				ev_dbg(ev);
-				dbg_puts(": not first and no state\n");
-#endif
-			} else {
-				phase &= ~EV_PHASE_NEXT;
-			}
-		} else {
+	if (st->flags & STATE_NEW || st->phase & EV_PHASE_LAST) {
+		/*
+		 * this is new state or a terminated frame that we are
+		 * reusing
+		 */
+		if (!(phase & EV_PHASE_FIRST)) {
+			phase = EV_PHASE_FIRST | EV_PHASE_LAST;
+			st->flags |= STATE_BOGUS;
 #ifdef STATE_DEBUG
 			dbg_puts("statelist_update: ");
 			ev_dbg(ev);
-			dbg_puts(": nested events, stacked\n");
+			dbg_puts(": not first and no state\n");
 #endif
-			st = state_new();
-			statelist_add(statelist, st);
-			st->flags = STATE_NESTED | STATE_NEW;
-			st->nevents = 0;
-			st->ctx.ctl_hi = st->ctx.ctl_lo = EV_CTL_UNKNOWN;
-			st->ev.cmd = EV_NULL; /* used by copyev */
+		} else {
+			phase &= ~EV_PHASE_NEXT;
 		}
-		st->phase = phase;
-		state_copyev(st, ev, ctx);
+	} else if (phase == EV_PHASE_FIRST) {
+		/*
+		 * this frame is not yet terminated. the incoming
+		 * event starts a new one that's conflicting
+		 */
+#ifdef STATE_DEBUG
+		dbg_puts("statelist_update: ");
+		ev_dbg(ev);
+		dbg_puts(": nested events, stacked\n");
+#endif
+		st = state_new();
+		statelist_add(statelist, st);
+		st->flags = STATE_NESTED | STATE_NEW;
+		st->nevents = 0;
 	} else {
-		state_copyev(st, ev,  ctx);
-		st->phase = phase & ~EV_PHASE_FIRST;
-		st->flags &= ~STATE_NEW;
+		/*
+		 * this frame is not yet terminated, the incoming
+		 * event belongs to it
+		 */
+		phase &=  ~EV_PHASE_FIRST;
 	}
-	st->flags |= STATE_CHANGED;
-	st->nevents++;
+	state_copyev(st, ev, phase, ctx);
 	statelist->changed = 1;
 #ifdef STATE_DEBUG
 	dbg_puts("statelist_update: updated: ");

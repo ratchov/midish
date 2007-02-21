@@ -39,21 +39,41 @@
 struct seqev;
 
 struct state  {
-	struct ev ev;			/* last event */
-	struct evctx ctx;		/* context for PCs and DATAENTs */
 	struct state *next, **prev;	/* for statelist */
+	struct ev ev;			/* last event */
+	unsigned phase;			/* current phase (of the 'ev' field) */
 	unsigned char b2;		/* 7bit "hi" bits of 14bit CTLs */
+
+	/*
+	 * the state may contain a copy of the last bank
+	 * controller (for prog-change states) and the last
+	 * RPN/NRPN controller (for data entries).
+	 */
+	unsigned char ctx_b0;		/* a copy of ev.b0 of the context */
+	unsigned char ctx_b1;		/* a copy of ev.b1 of the context */
+	unsigned char ctx_b2;		/* a copy of b2 of the context */
+
+	/*
+	 * the following flags are set by statelist_update() and
+	 * statelist_outdate() and can be read by other routines,
+	 * but shouldn't be changed
+	 */
 #define STATE_NEW	1		/* just created, never updated */
 #define STATE_CHANGED	2		/* updated within the current tick */
 #define STATE_BOGUS	4		/* frame detected as bogus */
 #define STATE_NESTED	8		/* nested frame */
-	unsigned flags;
-	unsigned phase;			/* current phase (of the 'ev' field) */
+	unsigned flags;			/* bitmap of above */
+	unsigned nevents;		/* number of events before timeout */
 
+	/*
+	 * the following are general purpose fields that are ignored
+	 * by state_xxx() and statelist_xxx() routines. Other
+	 * subsystems (seqptr, filt, ...) use them for various
+	 * purposes
+	 */
+	unsigned tag;			/* user-defined tag */
 	unsigned tic;			/* absolute tic of the FIRST event */
 	struct seqev *pos;		/* pointer to the FIRST event */
-	unsigned tag;			/* frame is selected */
-	unsigned nevents;		/* number of events before timeout */
 };
 
 /*
@@ -61,9 +81,7 @@ struct state  {
  * on bank changes, lo/hi nibbles of 14bit controllers depend on each
  * other).
  */
-#define STATE_HASCTX(s) \
-	((s)->ctx.ctl_hi != EV_CTL_UNKNOWN || \
-	 (s)->ctx.ctl_lo != EV_CTL_UNKNOWN)
+#define STATE_HASCTX(s) ((s)->ctx_b0 != EV_CTL_UNKNOWN)
 
 struct statelist {
 	/* 
@@ -88,7 +106,8 @@ void	      state_pool_done(void);
 struct state *state_new(void);
 void	      state_del(struct state *s);
 void	      state_dbg(struct state *s);
-void	      state_copyev(struct state *s, struct ev *ev, struct state *ctx);
+void	      state_copyev(struct state *s, struct ev *ev, 
+			   unsigned phase, struct state *ctx);
 unsigned      state_match(struct state *s, struct ev *ev, struct state *st);
 unsigned      state_eq(struct state *s, struct ev *ev);
 unsigned      state_cancel(struct state *st, struct ev *rev);

@@ -1072,7 +1072,7 @@ track_check(struct track *src) {
 		st = seqptr_evdel(&sp, &slist);
 		if (st == NULL)
 			break;
-		if (st->flags & STATE_NEW) {
+		if (st->phase & EV_PHASE_FIRST) {
 			if (st->flags & STATE_BOGUS) {
 				dbg_puts("track_check: ");
 				ev_dbg(&st->ev);

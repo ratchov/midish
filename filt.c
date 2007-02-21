@@ -41,6 +41,9 @@
 #include "filt.h"
 #include "pool.h"
 
+#define TAG_PASS 1
+#define TAG_PENDING 2
+
 unsigned filt_debug = 0;
 
 /* ------------------------------------------------------------------ */
@@ -1138,7 +1141,7 @@ filt_kill(struct filt *o, struct ev *ev) {
 	for (st = o->statelist.first; st != NULL; st = stnext) {
 		stnext = st->next;
 		if (!state_match(st, ev, NULL) ||
-		    !st->tag ||
+		    !(st->tag & TAG_PASS) ||
 		    st->phase & EV_PHASE_LAST) {
 			continue;
 		}
@@ -1152,11 +1155,10 @@ filt_kill(struct filt *o, struct ev *ev) {
 			filt_processev(o, &ca[i]);
 		}
 		st->phase = EV_PHASE_LAST;
-		st->tag = 0;
+		st->tag &= ~TAG_PASS;
 		dbg_puts("filt_kill: ");
 		ev_dbg(&st->ev);
 		dbg_puts(": killed\n");
-		st->tag = 0;
 	}
 }
 
@@ -1187,11 +1189,11 @@ filt_evcb(struct filt *o, struct ev *ev) {
 	 * create/update state for this event
 	 */
 	st = statelist_update(&o->statelist, ev);
-	if (st->flags & STATE_NEW) {
+	if (st->phase & EV_PHASE_FIRST) {
 		/*
 		 * XXX: have to do something with the rule set here
 		 */
-		st->tag = o->active ? 1 : 0;
+		st->tag = o->active ? TAG_PASS : 0;
 		if (st->flags & (STATE_BOGUS | STATE_NESTED)) {
 			if (filt_debug) {
 				dbg_puts("filt_evcb: ");
@@ -1205,7 +1207,7 @@ filt_evcb(struct filt *o, struct ev *ev) {
 	/*
 	 * nothing to do with silent (not selected) frames
 	 */
-	if (!st->tag)
+	if (!(st->tag & TAG_PASS))
 		return;
 
 	/*
