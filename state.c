@@ -170,7 +170,6 @@ copy_and_out:
 	st->ev = *ev;
 	st->phase = ph;
 	st->flags |= STATE_CHANGED;
-	st->nevents++;
 }
 
 /*
@@ -700,7 +699,6 @@ statelist_update(struct statelist *statelist, struct ev *ev) {
 			st = state_new();
 			statelist_add(statelist, st);
 			st->flags = STATE_NEW;
-			st->nevents = 0;
 			break;
 		}
 		stnext = st->next;
@@ -777,7 +775,6 @@ statelist_update(struct statelist *statelist, struct ev *ev) {
 		st = state_new();
 		statelist_add(statelist, st);
 		st->flags = STATE_NESTED | STATE_NEW;
-		st->nevents = 0;
 	} else {
 		/*
 		 * this frame is not yet terminated, the incoming
@@ -820,7 +817,6 @@ statelist_outdate(struct statelist *o) {
 			state_del(i);
 		} else {
 			i->flags &= ~STATE_CHANGED;
-			i->nevents = 0;
 		}
 	}
 }

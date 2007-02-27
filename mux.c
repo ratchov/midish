@@ -37,7 +37,7 @@
  * with the same accurancy as in standard midi files).
  *
  * the timer has the following states:
- * STARTWAIT -> START -> FIRST_TIC -> NEXT_TIC -> STOPWAIT -> STOP
+ * STOP -> STARTWAIT -> START -> FIRST_TIC -> NEXT_TIC -> STOPWAIT -> STOP
  *
  * STARTWAIT:
  *
@@ -68,8 +68,8 @@
  * STOPWAIT:
  *
  *	the music is over, so the upper layer puts this module in the
- *	STOPAIT state. So we just wait for the "stop" MIDI event;
- *	thats necessary because other MIDI sequencers may not have
+ *	STOPWAIT state. So we just wait for the "stop" MIDI event;
+ *	that's necessary because other MIDI sequencers may not have
  *	finished. 
  *
  * STOP:

@@ -44,6 +44,11 @@
 #define TAG_PASS 1
 #define TAG_PENDING 2
 
+/*
+ * timeout for throtteling: 1 tick at 60 bpm
+ */
+#define FILT_TIMO TEMPO_TO_USEC24(120,24)
+
 unsigned filt_debug = 0;
 
 /* ------------------------------------------------------------------ */
@@ -322,11 +327,11 @@ rule_swapodev(struct rule *o, unsigned olddev, unsigned newdev) {
 
 /* --------------------------------------------------------------------- */
 
+void filt_timocb(void *);
 
-	/* 
-	 * initialise a filter
-	 */
-	 
+/* 
+ * initialise a filter
+ */
 void
 filt_init(struct filt *o) {
 	o->cb = NULL;
@@ -335,13 +340,12 @@ filt_init(struct filt *o) {
 	o->voice_rules = NULL;
 	o->chan_rules = NULL;
 	o->dev_rules = NULL;
-	statelist_init(&o->statelist);	
+	timo_set(&o->timo, filt_timocb, o);
 }
 
-	/*
-	 * removes all filtering rules and all states
-	 */
-
+/*
+ * removes all filtering rules and all states
+ */
 void
 filt_reset(struct filt *o) {
 	struct rule *r;
@@ -385,6 +389,8 @@ filt_start(struct filt *o, void (*cb)(void *, struct ev *), void *addr) {
 	o->addr = addr;
 	o->cb = cb;
 	statelist_init(&o->statelist);
+	timo_add(&o->timo, FILT_TIMO);
+	dbg_puts("filt_start()\n");
 }
 
 
@@ -393,6 +399,8 @@ filt_start(struct filt *o, void (*cb)(void *, struct ev *), void *addr) {
  */
 void
 filt_stop(struct filt *o) {
+	dbg_puts("filt_stop()\n");
+	timo_del(&o->timo);
 	statelist_done(&o->statelist);
 	o->cb = NULL;
 	o->addr = NULL;	
@@ -1190,6 +1198,8 @@ filt_evcb(struct filt *o, struct ev *ev) {
 	 */
 	st = statelist_update(&o->statelist, ev);
 	if (st->phase & EV_PHASE_FIRST) {
+		if (st->flags & STATE_NEW)
+			st->nevents = 0;
 		/*
 		 * XXX: have to do something with the rule set here
 		 */
@@ -1217,10 +1227,13 @@ filt_evcb(struct filt *o, struct ev *ev) {
 	 */
 	if (st->nevents > FILT_MAXEV &&
 	    (st->phase == EV_PHASE_NEXT || 
-	     st->phase == (EV_PHASE_FIRST | EV_PHASE_LAST)))
+	     st->phase == (EV_PHASE_FIRST | EV_PHASE_LAST))) {
+		st->tag |= TAG_PENDING;
 		return;
+	}
 
 	filt_processev(o, &st->ev);
+	st->nevents++;
 }
 
 /*
@@ -1228,6 +1241,18 @@ filt_evcb(struct filt *o, struct ev *ev) {
  * output again.
  */
 void
-filt_timercb(struct filt *o) {
+filt_timocb(void *addr) {
+	struct filt *o = (struct filt *)addr;
+	struct state *i;
+
 	statelist_outdate(&o->statelist);
+	for (i = o->statelist.first; i != NULL; i = i->next) {
+		i->nevents = 0;
+		if (i->tag & TAG_PENDING) {
+			i->tag &= ~TAG_PENDING;
+			filt_processev(o, &i->ev);
+			i->nevents++;
+		}
+	}
+	timo_add(&o->timo, FILT_TIMO);
 }

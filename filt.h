@@ -32,6 +32,7 @@
 #define MIDISH_FILT_H
 
 #include "state.h"
+#include "timo.h"
 
 #define FILT_DEBUG
 
@@ -76,7 +77,7 @@ struct filt {
 	void (*cb)(void *, struct ev *);	/* called for output events */
 	void *addr;				/* argument of 'cb' */
 	struct statelist statelist;		/* state of the filer */
-	
+	struct timo timo;			/* for throtteling */	
 };
 
 #define FILT_MAXEV	1	/* max events per time slice */

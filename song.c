@@ -466,9 +466,11 @@ song_inputcb(void *addr, struct ev *ev) {
 	struct song *o = (struct song *)addr;
 	
 	if (!EV_ISVOICE(ev)) {
+		/*
 		if (o->filt && ev->cmd == EV_TIC) {
 			filt_timercb(o->filt);
 		}
+		*/
 		o->realtimecb(o, ev);
 		return;
 	}
@@ -722,12 +724,10 @@ song_start(struct song *o,
 	seqptr_init(&o->recptr, &o->rec);
 	seqptr_seek(&o->recptr, tic);
 
-	o->realtimecb = cb;
-	if (o->filt) {
-		filt_start(o->filt, cb, o);
-	}
 
+	o->realtimecb = cb;
 	mux_init(song_inputcb, o);
+
 	/*
 	 * send sysex messages and channel config messages
 	 */
@@ -757,6 +757,9 @@ song_start(struct song *o,
 			}
 			s->tag = 0;
 		}
+	}
+	if (o->filt) {
+		filt_start(o->filt, cb, o);
 	}
 	mux_flush();	
 }

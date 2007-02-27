@@ -39,6 +39,8 @@
 #include "dbg.h"
 #include "timo.h"
 
+#undef TIMO_DEBUG 
+
 unsigned timo_debug = 0;
 struct timo *timo_queue;
 
@@ -64,6 +66,7 @@ timo_add(struct timo *o, unsigned delta) {
 		dbg_puts("timo_set: already set\n");
 		dbg_panic();
 	}
+	o->set = 1;
 	o->val = delta;
 	for (i = &timo_queue; *i != NULL && (*i)->val < delta; i = &(*i)->next)
 		; /* nothing */
@@ -85,6 +88,9 @@ timo_del(struct timo *o) {
 			return;
 		}
 	}
+#ifdef TIMO_DEBUG
+	dbg_puts("timo_del: not found\n");
+#endif
 }
 
 /*
@@ -138,4 +144,5 @@ timo_done(void) {
 		dbg_puts("timo_done: timo_queue not empty!\n");
 		dbg_panic();
 	}
+	timo_queue = (struct timo *)0xdeadbeef;
 }
