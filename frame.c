@@ -156,7 +156,7 @@
 #include "default.h"
 #include "frame.h"
 
-#undef FRAME_DEBUG
+#define FRAME_DEBUG
 
 /*
  * initialise a seqptr structure at the beginning of 
@@ -891,14 +891,14 @@ track_quantize(struct track *src, unsigned start, unsigned len,
 	fluct = 0;
 	notes = 0;
 	for (;;) {
-		delta = seqptr_ticdel(&sp, len, &slist);
+		delta = seqptr_ticdel(&sp, start + len - tic, &slist);
+		seqptr_ticput(&sp, delta);
 		tic += delta;	
 		if (tic >= start + len)
 			break;
 		st = seqptr_evdel(&sp, &slist);
 		if (st == NULL)
 			break;
-		seqptr_ticput(&sp, delta);
 
 		delta -= ofs;
 		remaind = quant != 0 ? (tic - start + offset) % quant : 0;
@@ -1487,7 +1487,7 @@ track_confev(struct track *src, struct ev *ev) {
 	struct state *s, *st;
 	unsigned i, nev, tag, tagmax, tagmin;
 
-#ifdef FRAME_DEBUG
+#ifdef FRAME_DEBUG_CONF
 	dbg_puts("\ntrack_confev: starting\n");
 #endif
 	if (ev_phase(ev) != (EV_PHASE_FIRST | EV_PHASE_LAST)) {
@@ -1514,7 +1514,7 @@ track_confev(struct track *src, struct ev *ev) {
 		st->tag = tagmax++;
 	}
 
-#ifdef FRAME_DEBUG
+#ifdef FRAME_DEBUG_CONF
 	dbg_puts("track_confev: updating\n");
 #endif
 
@@ -1542,7 +1542,7 @@ track_confev(struct track *src, struct ev *ev) {
 				tag = s->tag;
 			}
 		}
-#ifdef FRAME_DEBUG
+#ifdef FRAME_DEBUG_CONF
 		dbg_puts("track_confev: dumping: ");
 		state_dbg(st);
 		dbg_puts("\n");
@@ -1554,7 +1554,7 @@ track_confev(struct track *src, struct ev *ev) {
 		for (i = 0; i < nev; i++) {
 			st = statelist_lookup(&sp.statelist, &rev[i]);
 			if (st && state_eq(st, &rev[i])) {
-#ifdef FRAME_DEBUG
+#ifdef FRAME_DEBUG_CONF
 				dbg_puts("track_confev: skipped\n");
 #endif
 				continue;
