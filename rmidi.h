@@ -32,7 +32,6 @@
 #define MIDISH_RMIDI_H
 
 #define RMIDI_BUFLEN		0x400
-#undef  RMIDI_DEBUG_OUTPUT
 
 #include "mdep.h"
 #include "mididev.h"

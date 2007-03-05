@@ -151,7 +151,7 @@ pool_new(struct pool *o) {
 void
 pool_del(struct pool *o, void *p) {
 	struct poolent *e = (struct poolent *)p;
-#ifdef	POOL_DEBUG
+#ifdef POOL_DEBUG
 	unsigned i, n;
 	unsigned *buf;
 

@@ -411,7 +411,9 @@ state_restore(struct state *st, struct ev *rev) {
 		dbg_panic();
 	}
 	if ((st->phase & EV_PHASE_LAST) && !(st->phase & EV_PHASE_FIRST)) {
-		dbg_puts("state_restore: WARNING: called for last event\n");
+		dbg_puts("state_restore: ");
+		state_dbg(st);
+		dbg_puts(": called for last event!\n");
 		return 0;
 	}
 

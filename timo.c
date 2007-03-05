@@ -39,8 +39,6 @@
 #include "dbg.h"
 #include "timo.h"
 
-#undef TIMO_DEBUG 
-
 unsigned timo_debug = 0;
 struct timo *timo_queue;
 

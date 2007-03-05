@@ -34,9 +34,6 @@
 #include "state.h"
 #include "timo.h"
 
-#define FILT_DEBUG
-
-
 struct rule {
 	struct rule *next;
 /*

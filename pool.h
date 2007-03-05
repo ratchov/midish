@@ -31,8 +31,6 @@
 #ifndef MIDISH_POOL_H
 #define MIDISH_POOL_H
 
-#define POOL_DEBUG
-
 /*
  * entry of the pool. Any real pool entry is
  * cast to this structure by the pool code. The

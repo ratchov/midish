@@ -156,8 +156,6 @@
 #include "default.h"
 #include "frame.h"
 
-#define FRAME_DEBUG
-
 /*
  * initialise a seqptr structure at the beginning of 
  * the given track.
