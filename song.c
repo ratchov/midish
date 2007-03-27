@@ -680,7 +680,7 @@ song_start(struct song *o,
     void (*cb)(void *, struct ev *), unsigned countdown) {
 	struct songfilt *f;
 	struct songtrk *t;
-	unsigned tic;
+	unsigned tic, off;
 	struct state *s;
 
 	/*
@@ -703,10 +703,20 @@ song_start(struct song *o,
 	o->beats_per_measure = DEFAULT_BPM;
 	o->tics_per_beat = DEFAULT_TPB;
 	o->tempo = TEMPO_TO_USEC24(DEFAULT_TEMPO, DEFAULT_TPB);
+
+	/*
+	 * slightly shift start position, so notes
+	 * within the same quantum are played
+	 */
 	tic = track_findmeasure(&o->meta, o->measure);
-	if (o->measure > 0 && tic > o->curquant / 2 && o->curquant / 2 > 0) {
-		tic -= o->curquant / 2;
-		o->tic = o->beats_per_measure * o->tics_per_beat - o->curquant / 2;
+	off = o->curquant / 2;
+	if (off > o->tics_per_beat) 
+		off = o->tics_per_beat;
+	if (off > tic)
+		off = tic;
+	if (o->measure > 0 && off > 0) {
+		tic -= off;
+		o->tic = o->tics_per_beat - off;
 		o->beat = o->beats_per_measure - 1;
 		o->measure--;
 	}

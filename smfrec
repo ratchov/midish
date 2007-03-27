@@ -1,11 +1,9 @@
 #!/bin/sh
 
-function usage {
+usage() {
 	echo "usage: smfrec [-amxy] [-d device] [-i device] midifile"
 	exit 2
 }
-
-set -- `getopt amxyd:i: $* 2>/dev/null`		|| usage
 
 extclock=0
 sendrt=0
@@ -15,30 +13,28 @@ metronome=0
 tempo=0
 append=0
 
-for i; do
-	case "$i" in
-	-a)
-		append=1; shift;;
-	-m)
-		metronome=1; shift;;
-	-x)
-		extclock=1; shift;;
-	-y)
-		sendrt=1; shift;;
-	-d)
-		device=$2; shift; shift;;
-	-i)
-		input=$2; shift; shift;;
-	--)
-		shift; break;;
+while getopts amxyd:i: optname; do
+	case "$optname" in
+	a)
+		append=1;;
+	m)
+		metronome=1;;
+	x)
+		extclock=1;;
+	y)
+		sendrt=1;;
+	d)
+		device="$OPTARG";;
+	i)
+		input="$OPTARG";;
 	esac
 done
-
+shift $(($OPTIND - 1))
 if [ "$#" != "1" -o -z "$1" ]; then 
 	usage;
 fi
 
-exec midish -b << END
+exec midish -b <<EOF
 if $append {
 	songimportsmf "$1"
 }
@@ -68,4 +64,4 @@ sysexnew sx
 songsetcursysex sx
 songrecord
 songexportsmf "$1"
-END
+EOF
