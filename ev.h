@@ -208,9 +208,8 @@ extern	struct evctl evctl_tab[128];
 #define EV_CTL_LO(ev) \
 	(evctl_tab[(ev)->data.voice.b0].lo)
 
-void	 evctl_conf(unsigned i, unsigned type, unsigned defval, char *name);
-void     evctl_conf14(unsigned num_hi, unsigned num_lo, unsigned type, unsigned defval,
-		      char *name_hi, char *name_lo);
+void     evctl_conf(unsigned num_hi, unsigned num_lo,
+		    unsigned type, char *name, unsigned defval);
 void	 evctl_unconf(unsigned i);
 unsigned evctl_lookup(char *name, unsigned *ret);
 void	 evctl_init(void);

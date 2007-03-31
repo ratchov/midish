@@ -329,32 +329,27 @@ ch:	if (e->data.voice.dev < o->dev_min ||
  * configure a controller (set the typ, name, etc...)
  */
 void
-evctl_conf(unsigned i, unsigned type, unsigned defval, char *name) {
-	struct evctl *o = &evctl_tab[i];
-	if (o->name != NULL) {
-		str_delete(o->name);
-	}
-	o->name = str_new(name);
-	o->type = type;
-	o->bits = EVCTL_7BIT;
-	o->defval = defval;
-}
+evctl_conf(unsigned num_hi, unsigned num_lo, unsigned type, 
+	   char *name, unsigned defval) {
+	struct evctl *hi = &evctl_tab[num_hi], *lo;
 
-/*
- * configure a 14 bit controller (set the typ, name, etc...)
- */
-void
-evctl_conf14(unsigned num_hi, unsigned num_lo, unsigned type, unsigned defval,
-	     char *name_hi, char *name_lo) {
-	struct evctl *hi = &evctl_tab[num_hi];
-	struct evctl *lo = &evctl_tab[num_lo];
-	
-	evctl_conf(num_hi, type, (defval >> 7) & 0x7f, name_hi);
-	evctl_conf(num_lo, type, defval & 0x7f, name_lo);
-	hi->hi = lo->hi = num_hi;
-	hi->lo = lo->lo = num_lo;
-	hi->bits = EVCTL_14BIT_HI;
-	lo->bits = EVCTL_14BIT_LO;
+	if (name) {
+		hi->name = str_new(name);
+	}
+	hi->type = type;
+	if (num_lo == EV_CTL_UNKNOWN) {
+		hi->bits = EVCTL_7BIT;
+		hi->defval = defval;
+	} else {
+		lo = &evctl_tab[num_lo];
+		lo->type = type;
+		hi->bits = EVCTL_14BIT_HI;
+		lo->bits = EVCTL_14BIT_LO;
+		hi->hi = lo->hi = num_hi;
+		hi->lo = lo->lo = num_lo;
+		hi->defval = (defval >> 7) & 0x7f;
+		lo->defval = defval & 0x7f;
+	}
 }
 
 /*
@@ -363,18 +358,25 @@ evctl_conf14(unsigned num_hi, unsigned num_lo, unsigned type, unsigned defval,
  */
 void
 evctl_unconf(unsigned i) {
-	struct evctl *o = &evctl_tab[i];
+	struct evctl *hi = &evctl_tab[i], *lo;
 
-	if (o->name != NULL) {
-		str_delete(o->name);
-		o->name = NULL;
+	if (hi->bits != EVCTL_7BIT) {
+		lo = evctl_tab + evctl_tab[i].lo;
+		if (lo->name != NULL) {
+			str_delete(lo->name);
+			lo->name = NULL;
+		}
+		lo->type = EVCTL_PARAM;
+		lo->bits = EVCTL_7BIT;
+		lo->defval = 0;
 	}
-	/*
-	 * XXX: we must unconfigure also the other nibble
-	 */
-	o->type = EVCTL_PARAM;
-	o->bits = EVCTL_7BIT;
-	o->defval = 0;
+	if (hi->name != NULL) {
+		str_delete(hi->name);
+		hi->name = NULL;
+	}
+	hi->type = EVCTL_PARAM;
+	hi->bits = EVCTL_7BIT;
+	hi->defval = 0;
 }
 
 /*
@@ -413,13 +415,13 @@ evctl_init(void) {
 	/*
 	 * some defaults, for testing ...
 	 */
-	evctl_conf14(0, 32, EVCTL_BANK,  0, "bank_hi", "bank_lo");
-	evctl_conf14(6, 38, EVCTL_DATAENT,  0, "data_hi", "data_lo");
-	evctl_conf(1, EVCTL_FRAME, 0, "mod");
-	evctl_conf(7, EVCTL_PARAM, 0, "vol");
-	evctl_conf(64, EVCTL_FRAME, 0, "sustain");
-	evctl_conf14(98, 99, EVCTL_NRPN,  0, "nrpn_hi", "nrpn_lo");
-	evctl_conf14(100, 101, EVCTL_NRPN,  0, "rpn_hi", "rpn_lo");
+	evctl_conf(0,   32,	        EVCTL_BANK,    "bank", 0);
+	evctl_conf(6,   38,	        EVCTL_DATAENT, "dataent", 0);
+	evctl_conf(1,   EV_CTL_UNKNOWN, EVCTL_FRAME,   "mod", 0);
+	evctl_conf(7,   EV_CTL_UNKNOWN, EVCTL_PARAM,   "vol", 0);
+	evctl_conf(64,  EV_CTL_UNKNOWN, EVCTL_FRAME,   "sustain", 0);
+	evctl_conf(98,  99,	        EVCTL_NRPN,    "nrpn", 0);
+	evctl_conf(100, 101,	        EVCTL_NRPN,    "rpn", 0);
 }
 
 /*
