@@ -399,6 +399,25 @@ toomany:
 }
 
 /*
+ * find the (hi lo) couple for the 14bit controller
+ * number:
+ *	- an integer for 7bit controller
+ *	- a list of two integers (like '{hi lo}')
+ */
+unsigned
+exec_lookupctl(struct exec *o, char *var, 
+    unsigned *hi, unsigned *lo) {
+	struct var *arg;
+	
+	arg = exec_varlookup(o, var);
+	if (!arg) {
+		dbg_puts("exec_lookupctl: no such var\n");
+		dbg_panic();
+	}
+	return data_list2ctl(arg->data, hi, lo);
+}
+
+/*
  * print a data to the user console
  */
 void
@@ -448,8 +467,7 @@ unsigned
 data_num2chan(struct data *o, unsigned *res_dev, unsigned *res_ch) {
 	long dev, ch;
 
-	if (o->type == DATA_LIST ||
-	    o == NULL || 
+	if (o == NULL || 
 	    o->next == NULL || 
 	    o->next->next != NULL ||
 	    o->type != DATA_LONG || 
@@ -526,6 +544,42 @@ data_list2range(struct data *d, unsigned min, unsigned max,
 	}
 	if (*lo < min || *lo > max || *hi < min || *hi > max || *lo > *hi) {
 		cons_err("range values out of bounds");
+		return 0;
+	}
+	return 1;
+}
+
+/*
+ * convert a data to a pair of integers
+ * data can be:
+ * 	- a liste of 2 integers
+ *	- a single integer (then min = max)
+ */
+unsigned
+data_list2ctl(struct data *d, unsigned *hi, unsigned *lo) {
+    	if (d->type == DATA_LONG) {
+		if (d->val.num < 0 || d->val.num > EV_MAXB0) {
+			cons_err("7bit ctl number out of bounds");
+			return 0;
+		}
+		*hi = d->val.num;
+		*lo = EV_CTL_UNKNOWN;
+	} else if (d->type == DATA_LIST) {
+		d = d->val.list;
+		if (!d || !d->next || d->next->next || 
+		    d->type != DATA_LONG || d->next->type != DATA_LONG) {
+			cons_err("exactly 2 numbers expected in 14bit ctl spec");
+			return 0;
+		}
+		if (d->val.num < 0 || d->val.num > EV_MAXB0 || 
+		    d->next->val.num < 0 || d->next->val.num > EV_MAXB0) {
+			cons_err("14bit ctl nibble out of range");
+			return 0;
+		}
+		*lo = d->val.num;
+		*hi = d->next->val.num;
+	} else {
+		cons_err("list or number expected in ctl spec");
 		return 0;
 	}
 	return 1;
@@ -1079,6 +1133,14 @@ user_mainloop(void) {
 			name_newarg("from", 
 			name_newarg("amount", NULL)));
 	exec_newbuiltin(exec, "songtimeinfo", user_func_songtimeinfo, NULL);
+	exec_newbuiltin(exec, "ctlconf", user_func_ctlconf, 
+			name_newarg("name", 
+			name_newarg("ctl", 
+			name_newarg("type", 
+			name_newarg("defval", NULL)))));
+	exec_newbuiltin(exec, "ctlunconf", user_func_ctlunconf, 
+			name_newarg("name", NULL));
+	exec_newbuiltin(exec, "ctlinfo", user_func_ctlinfo, NULL);
 
 	exec_newbuiltin(exec, "metroswitch", user_func_metroswitch, 
 			name_newarg("onoff", NULL));

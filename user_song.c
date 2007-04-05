@@ -632,3 +632,99 @@ user_func_songgetfactor(struct exec *o, struct data **r) {
 	*r = data_newlong(user_song->tempo_factor);
 	return 1;
 }
+
+unsigned
+user_func_ctlconf(struct exec *o, struct data **r) {
+	char *name, *typename;
+	long defval;
+	unsigned hi, lo, type;
+	
+	if (!exec_lookupname(o, "name", &name) ||
+	    !exec_lookupctl(o, "ctl", &hi, &lo) ||
+	    !exec_lookupname(o, "type", &typename) ||
+	    !exec_lookuplong(o, "defval", &defval)) {
+		return 0;
+	}
+	if (defval < 0 || defval > (lo == EV_CTL_UNKNOWN ? 0x7f : 0x3fff)) {
+		cons_err("defval out of bounds");
+		return 0;
+	}
+	if (str_eq(typename, "param")) {
+		type = EVCTL_PARAM;
+	} else if (str_eq(typename, "frame")) {
+		type = EVCTL_FRAME;
+	} else if (str_eq(typename, "bank")) {
+		type = EVCTL_NRPN;
+	} else if (str_eq(typename, "nrpn")) {
+		type = EVCTL_NRPN;
+	} else if (str_eq(typename, "dataent")) {
+		type = EVCTL_DATAENT;
+	} else {
+		cons_errs(typename, "unknown ctl type");
+		return 0;
+	}
+	evctl_unconf(hi);
+	evctl_conf(hi, lo, type, name, defval);
+	return 1;
+}
+
+
+unsigned
+user_func_ctlunconf(struct exec *o, struct data **r) {
+	char *name;
+	unsigned hi;
+	
+	if (!exec_lookupname(o, "name", &name)) {
+		return 0;
+	}
+	if (!evctl_lookup(name, &hi)) {
+		cons_errs(name, "no such controller");
+		return 0;
+	}
+	evctl_unconf(hi);
+	return 1;
+}
+
+
+unsigned
+user_func_ctlinfo(struct exec *o, struct data **r) {
+	unsigned i;
+	struct evctl *ctl;
+	char *types[] = { "param", "frame", "bank", "nrpn", "dataent" };
+	
+	textout_putstr(tout, "ctltab {\n");
+	textout_shiftright(tout);
+	textout_indent(tout);
+	textout_putstr(tout, "#\n");
+	textout_indent(tout);
+	textout_putstr(tout, "# name\tnumber\t\ttype\tdefval\n");
+	textout_indent(tout);
+	textout_putstr(tout, "#\n");
+	for (i = 0; i < 128; i++) {
+		ctl = &evctl_tab[i];
+		if (ctl->name) {
+			textout_indent(tout);
+			textout_putstr(tout, ctl->name);
+			textout_putstr(tout, "\t");
+			if (ctl->bits == EVCTL_7BIT) {
+				textout_putlong(tout, i);
+				textout_putstr(tout, "\t");
+			} else {
+				textout_putstr(tout, "{");
+				textout_putlong(tout, evctl_tab[i].hi);
+				textout_putstr(tout, " ");
+				textout_putlong(tout, evctl_tab[i].lo);
+				textout_putstr(tout, "}   ");
+			}
+			textout_putstr(tout, "\t");
+			textout_putstr(tout, types[ctl->type]);
+			textout_putstr(tout, "\t");
+			textout_putlong(tout, evctl_tab[i].defval);
+    			textout_putstr(tout, "\n");
+		}
+	}
+	textout_shiftleft(tout);
+	textout_putstr(tout, "}\n");
+	return 1;
+}
+

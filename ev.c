@@ -389,7 +389,7 @@ evctl_lookup(char *name, unsigned *ret) {
 	struct evctl *ctl;
 	
 	for (i = 0; i < 128; i++) {
-		ctl = &evctl_tab[0];
+		ctl = &evctl_tab[i];
 		if (ctl->name != NULL && str_eq(ctl->name, name)) {
 			*ret = i;
 			return 1;

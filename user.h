@@ -67,12 +67,15 @@ unsigned exec_lookupfilt(struct exec *o, char *var, struct songfilt **res);
 unsigned exec_lookupsx(struct exec *o, char *var, struct songsx **res);
 unsigned exec_lookupev(struct exec *o, char *name, struct ev *ev);
 unsigned exec_lookupevspec(struct exec *o, char *name, struct evspec *e);
+unsigned exec_lookupctl(struct exec *o, char *var, unsigned *hi, unsigned *lo);
+
 
 void	 data_print(struct data *d);
 unsigned data_num2chan(struct data *o, unsigned *dev, unsigned *ch);
 unsigned data_list2chan(struct data *o, unsigned *dev, unsigned *ch);
 unsigned data_list2range(struct data *d, unsigned min, unsigned max, unsigned *lo, unsigned *hi);
 unsigned data_matchsysex(struct data *d, struct sysex *sx, unsigned *res);
+unsigned data_list2ctl(struct data *d, unsigned *hi, unsigned *lo);
 
 /* track functions */
 
@@ -218,5 +221,9 @@ unsigned user_func_debug(struct exec *o, struct data **r);
 unsigned user_func_exec(struct exec *o, struct data **r);
 unsigned user_func_print(struct exec *o, struct data **r);
 unsigned user_func_info(struct exec *o, struct data **r);
+
+unsigned user_func_ctlconf(struct exec *o, struct data **r);
+unsigned user_func_ctlunconf(struct exec *o, struct data **r);
+unsigned user_func_ctlinfo(struct exec *o, struct data **r);
 
 #endif /* MIDISH_USER_H */
