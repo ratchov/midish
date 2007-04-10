@@ -915,7 +915,7 @@ song_recordcb(void *addr, struct ev *ev) {
 		if (!EV_ISVOICE(ev)) {
 			break;
 		}
-		if (phase == MUX_START || phase == MUX_NEXT || phase == MUX_FIRST) {
+		if (phase >= MUX_START) {
 			(void)seqptr_evput(&o->recptr, ev);
 		}
 		mux_putev(ev);
