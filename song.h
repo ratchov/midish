@@ -86,7 +86,7 @@ struct song {
 	struct track rec;
 	struct seqptr recptr;
 	struct filt *filt;
-	void (*realtimecb)(void *addr, struct ev *ev);
+	struct muxops *ops;
 	/* metronome stuff */
 	struct metro metro;
 	unsigned measure, beat, tic;

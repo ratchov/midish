@@ -95,19 +95,21 @@
  */
 #define MUX_START_DELAY	  (2000000UL)	
 
+unsigned mux_debug = 1;
 unsigned mux_ticrate;
 unsigned long mux_ticlength, mux_curpos, mux_nextpos;
 unsigned mux_curtic;
 unsigned mux_phase;
 struct sysexlist mux_sysexlist;
-void (*mux_cb)(void *, struct ev *);
+struct muxops *mux_ops;
 void *mux_addr;
+
 
 void mux_dbgphase(unsigned phase);
 void mux_chgphase(unsigned phase);
 
 void
-mux_init(void (*cb)(void *, struct ev *), void *addr) {
+mux_init(struct muxops *ops, void *addr) {
 	struct mididev *i;
 	
 	/* 
@@ -134,7 +136,7 @@ mux_init(void (*cb)(void *, struct ev *), void *addr) {
 	mux_curpos = 0;
 	mux_nextpos = 0;
 	mux_phase = MUX_STOP;
-	mux_cb = cb;
+	mux_ops = ops;
 	mux_addr = addr;
 	sysexlist_init(&mux_sysexlist);
 	timo_init();
@@ -204,14 +206,12 @@ mux_chgphase(unsigned phase) {
  */
 void
 mux_sendtic(void) {
-	struct ev ev;
 	struct mididev *i;
 
-	ev.cmd = EV_TIC;
 	for (i = mididev_list; i != NULL; i = i->next) {
 		if (i->sendrt && i != mididev_master) {
 			while (i->ticdelta >= mux_ticrate) {
-				rmidi_putev(RMIDI(i), &ev);
+				rmidi_puttic(RMIDI(i));
 				i->ticdelta -= mux_ticrate;
 			}
 			i->ticdelta += i->ticrate;
@@ -224,11 +224,8 @@ mux_sendtic(void) {
  */
 void
 mux_sendstart(void) {
-	struct ev tic, start;
 	struct mididev *i;
 
-	tic.cmd = EV_TIC;
-	start.cmd = EV_START;
 	for (i = mididev_list; i != NULL; i = i->next) {
 		if (i->sendrt && i != mididev_master) {
 			i->ticdelta = i->ticrate;
@@ -236,8 +233,8 @@ mux_sendstart(void) {
 			 * send a tic just before the start event
 			 * in order to notify that we are the master
 			 */
-			rmidi_putev(RMIDI(i), &tic);
-			rmidi_putev(RMIDI(i), &start);
+			rmidi_puttic(RMIDI(i));
+			rmidi_putstart(RMIDI(i));
 		}
 	}
 }
@@ -247,13 +244,11 @@ mux_sendstart(void) {
  */
 void
 mux_sendstop(void) {
-	struct ev ev;
 	struct mididev *i;
 
-	ev.cmd = EV_STOP;
 	for (i = mididev_list; i != NULL; i = i->next) {
 		if (i->sendrt && i != mididev_master) {
-			rmidi_putev(RMIDI(i), &ev);
+			rmidi_putstop(RMIDI(i));
 		}
 	}
 }
@@ -295,7 +290,6 @@ mux_sendraw(unsigned unit, unsigned char *buf, unsigned len) {
 
 void
 mux_timercb(unsigned long delta) {
-	struct ev ev;
 	struct mididev *dev;
 	mux_curpos += delta;
 	
@@ -319,8 +313,7 @@ mux_timercb(unsigned long delta) {
 		}
 		if (dev->osensto) {
 			if (dev->osensto <= delta) {
-				ev.cmd = EV_ACTSENS;
-				rmidi_putev(RMIDI(dev), &ev);
+				rmidi_putack(RMIDI(dev));
 				rmidi_flush(RMIDI(dev));
 				dev->osensto = MIDIDEV_OSENSTO;
 			} else {
@@ -332,26 +325,28 @@ mux_timercb(unsigned long delta) {
 	/*
 	 * update clocks, when necessary
 	 */
-	if (!mididev_master) {	/* if internal clock source (no master) */
+	if (!mididev_master) {	
+		/* 
+		 * internal clock source (no master) 
+		 */
 		if (mux_phase == MUX_STARTWAIT) {
 			mux_chgphase(MUX_START);
 			mux_sendstart();
 			mux_curpos = 0;
 			mux_nextpos = MUX_START_DELAY;
-			if (mux_cb) {
-				ev.cmd = EV_START;
-				mux_cb(mux_addr, &ev);
+			if (mux_debug) {
+				dbg_puts("mux_timercb: generated start\n");
 			}
 			mux_flush();
 		}
 
 		if (mux_phase == MUX_STOPWAIT) {
 			mux_chgphase(MUX_STOP);
-			mux_sendstop();
-			if (mux_cb) {
-				ev.cmd = EV_STOP;
-				mux_cb(mux_addr, &ev);
+			if (mux_debug) {
+				dbg_puts("mux_timercb: generated stop\n");
 			}
+			mux_ops->stop(mux_addr);
+			mux_sendstop();
 			mux_flush();
 		}
 		
@@ -364,76 +359,100 @@ mux_timercb(unsigned long delta) {
 				mux_chgphase(MUX_FIRST);
 			}
 			mux_sendtic();
-			if (mux_cb) {
-				ev.cmd = EV_TIC;
-				mux_cb(mux_addr, &ev);
-			}
-			mux_flush();	
 			if (mux_phase == MUX_NEXT) {
 				mux_curtic++;
+				mux_ops->move(mux_addr);
 			} else if (mux_phase == MUX_FIRST) {
 				mux_curtic = 0;
+				mux_ops->start(mux_addr);
 			}
+			mux_flush();	
 		}
 	}
 }
 
+/*
+ * called when a MIDI TICK is received
+ */
+void
+mux_ticcb(unsigned unit) {
+	struct mididev *dev = mididev_byunit[unit];
+
+	if (!mididev_master || dev != mididev_master) {	
+		return;
+	}
+	while (mididev_master->ticdelta >= mididev_master->ticrate) {
+		if (mux_phase == MUX_FIRST) {
+			mux_chgphase(MUX_NEXT);
+		} else if (mux_phase == MUX_START) {
+			mux_chgphase(MUX_FIRST);
+		}
+		if (mux_phase == MUX_NEXT) {
+			mux_curtic++;
+			mux_ops->move(mux_addr);
+		} else if (mux_phase == MUX_FIRST) {
+			mux_curtic = 0;
+			mux_ops->start(mux_addr);
+		}
+		/* XXX: where is the flush ?! */
+		mididev_master->ticdelta -= mididev_master->ticrate;
+	}
+	mididev_master->ticdelta += mux_ticrate;
+}
+
+/*
+ * called when a MIDI START event is received
+ */
+void
+mux_startcb(unsigned unit) {
+	struct mididev *dev = mididev_byunit[unit];
+
+	if (!mididev_master || dev != mididev_master) {	
+		return;
+	}
+	mux_chgphase(MUX_START);
+	if (mux_debug) {
+		dbg_puts("mux_evcb: got start event\n");
+	}
+}
+
+/*
+ * called when a MIDI STOP event is received
+ */
+void
+mux_stopcb(unsigned unit) {
+	struct mididev *dev = mididev_byunit[unit];
+
+	if (!mididev_master || dev != mididev_master) {	
+		return;
+	}
+	mux_chgphase(MUX_STOP);
+	if (mux_debug) {
+		dbg_puts("mux_evcb: got stop\n");
+	}
+	mux_ops->stop(mux_addr);
+}
+
+/*
+ * called when a MIDI Active-sensing is received
+ */
+void
+mux_ackcb(unsigned unit) {
+	struct mididev *dev = mididev_byunit[unit];
+
+	if (dev->isensto == 0) {
+		dbg_putu(dev->unit);
+		dbg_puts(": sensing enabled\n");
+		dev->isensto = MIDIDEV_ISENSTO;
+	}
+}
+
+/*
+ * called when a MIDI voice event is received
+ */
 void
 mux_evcb(unsigned unit, struct ev *ev) {
-	struct mididev *dev = mididev_byunit[unit];
-	
-	switch(ev->cmd) {
-	case EV_TIC:
-		if (mididev_master && dev == mididev_master) {	/* if external clock */
-			while (mididev_master->ticdelta >= mididev_master->ticrate) {
-				if (mux_phase == MUX_FIRST) {
-					mux_chgphase(MUX_NEXT);
-				} else if (mux_phase == MUX_START) {
-					mux_chgphase(MUX_FIRST);
-				}
-				if (mux_phase == MUX_NEXT) {
-					mux_curtic++;
-				} else if (mux_phase == MUX_FIRST) {
-					mux_curtic = 0;
-				}
-				if (mux_cb) {
-					mux_cb(mux_addr, ev);
-				}
-				mididev_master->ticdelta -= mididev_master->ticrate;
-			}
-			mididev_master->ticdelta += mux_ticrate;
-		}
-		break;
-	case EV_START:
-		if (mididev_master && dev == mididev_master) {	/* if external clock */
-			mux_chgphase(MUX_START);
-			if (mux_cb) {
-				mux_cb(mux_addr, ev);
-			}
-		}
-		break;
-	case EV_STOP:
-		if (mididev_master && dev == mididev_master) {	/* if external clock */
-			mux_chgphase(MUX_STOP);
-			if (mux_cb) {
-				mux_cb(mux_addr, ev);
-			}
-		}
-		break;
-		
-	case EV_ACTSENS:
-		if (dev->isensto == 0) {
-			dbg_putu(dev->unit);
-			dbg_puts(": sensing enabled\n");
-			dev->isensto = MIDIDEV_ISENSTO;
-		}
-		break;
-		
-	default:
-		if (mux_cb) {
-			mux_cb(mux_addr, ev);
-		}
-	}
+	mux_ops->ev(mux_addr, ev);
 }
 
 /*
@@ -458,34 +477,27 @@ mux_errorcb(unsigned unit) {
 	ev.data.voice.b1 = 0;
 	for (i = 0; i <= EV_MAXCH; i++) {
 		ev.data.voice.ch = i;
-		if (mux_cb)
-			mux_cb(mux_addr, &ev);
+		mux_ops->ev(mux_addr, &ev);
 	}
 	ev.data.voice.b0 = 121;		/* all ctl reset */
 	ev.data.voice.b1 = 0;
 	for (i = 0; i <= EV_MAXCH; i++) {
 		ev.data.voice.ch = i;
-		if (mux_cb)
-			mux_cb(mux_addr, &ev);
+		mux_ops->ev(mux_addr, &ev);
 	}
 	mux_flush();
 }
 
 void
 mux_run(void) {
-	struct ev ev;
-	
 	mux_mdep_run();
 	
 	if (!mididev_master) {
 		if (mux_phase > MUX_START && mux_phase < MUX_STOP) {
 			mux_chgphase(MUX_STOP);
+			mux_ops->stop(mux_addr);
 			mux_sendstop();
 			mux_flush();
-			if (mux_cb) {
-				ev.cmd = EV_STOP;
-				mux_cb(mux_addr, &ev);
-			}
 		}
 	}
 }
@@ -496,12 +508,9 @@ mux_run(void) {
  */
 void
 mux_sysexcb(unsigned unit, struct sysex *sysex) {
-	struct ev ev;
+	/* XXX: remove list put()/get() */
 	sysexlist_put(&mux_sysexlist, sysex);
-	if (mux_cb) {
-		ev.cmd = EV_SYSEX;
-		mux_cb(mux_addr, &ev);
-	}
+	mux_ops->sysex(mux_addr, sysex);
 }
 
 

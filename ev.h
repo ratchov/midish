@@ -34,12 +34,6 @@
 #include "default.h"
 
 #define EV_NULL		0
-#define EV_TIC		0x1
-#define EV_START	0x2
-#define EV_STOP		0x3
-#define EV_SYSEX	0x4
-#define EV_ACTSENS	0x5
-
 #define EV_NOFF		0x8
 #define EV_NON		0x9
 #define EV_KAT		0xa
@@ -53,17 +47,15 @@
 #define EV_NUMCMD	0x12
 
 #define EV_ISVOICE(ev)	(((ev)->cmd < 0xf) && ((ev)->cmd >= 0x8))
-#define EV_ISRT(ev)	(((ev)->cmd < 0x8) && ((ev)->cmd >= 0x1))
+
 #define EV_ISMETA(ev)	(((ev)->cmd < EV_NUMCMD) && ((ev)->cmd >= 0x10))
 
 #define EV_ISNOTE(ev)	((ev)->cmd == EV_NON  || \
 			 (ev)->cmd == EV_NOFF || \
 			 (ev)->cmd == EV_KAT)
 
-#define EV_GETNOTE(ev)	((ev)->data.voice.b0)
-#define EV_GETCH(ev)	((ev)->data.voice.ch)
-#define EV_GETDEV(ev)	((ev)->data.voice.dev)
 #define EV_GETBEND(ev)	(0x80 * (ev)->data.voice.b1 + (ev)->data.voice.b0)
+
 #define EV_SETBEND(ev,v)				\
 	do { 						\
 		(ev)->data.voice.b0 = (v) & 0x7f;	\

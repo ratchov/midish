@@ -43,7 +43,15 @@
 struct ev;
 struct sysex;
 
-void mux_init(void (*cb)(void *, struct ev *), void *addr);
+struct muxops {
+	void (*start)(void *);
+	void (*stop)(void *);
+	void (*move)(void *);
+	void (*ev)(void *, struct ev *);
+	void (*sysex)(void *, struct sysex *);
+};
+
+void mux_init(struct muxops *ops, void *addr);
 void mux_done(void);
 void mux_run(void);
 void mux_sleep(unsigned millisecs);
@@ -62,6 +70,10 @@ void mux_mdep_done(void);
 void mux_mdep_run(void);
 
 void mux_timercb(unsigned long delta);
+void mux_startcb(unsigned unit);
+void mux_stopcb(unsigned unit);
+void mux_ticcb(unsigned unit);
+void mux_ackcb(unsigned unit);
 void mux_evcb(unsigned, struct ev *ev);
 void mux_sysexcb(unsigned unit, struct sysex *);
 void mux_errorcb(unsigned unit);

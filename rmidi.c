@@ -30,12 +30,30 @@
 
 /*
  * rmidi extends mididev and implements
- * raw midi devices (à la BSD/Linux OSS-compatible devices)
+ * raw midi devices (ie BSD/Linux/OSS-compatible devices)
  *
- * converts midi bytes (ie 'unsigned char') 
- * to midi events (struct ev) and calls mux_evcb on the input
+ * basically, this modules converts midi bytes (ie 'unsigned char') to
+ * midi events (struct ev) and calls mux_xxx callbacks to handle midi
+ * input. Similatly, it converts midi events to bytes and sends them
+ * on the wire
  *
- * converts midi events into bytes and sends them on the wire
+ * the module provides the following methods:
+ *
+ * - rmidi_new() and rmidi_delete() allocates and free
+ *   associated data structures
+ *
+ * - rmidi_inputcb() routine is called by the lower layer when
+ *   midi input has been read(), basically it decodes the midi byte
+ *   stream and calls mux_xxx() routines
+ *
+ * - rmidi_put{ev,start,stop,tic,ack}() routines send respectively
+ *   a voice event, clock start, clock stop, clock tick and midi 
+ *   active sens.
+ *
+ * Since currenly we support only one device type, there is no
+ * "virtual method" table or whatever, thus we simly call rmidi_xxx()
+ * routines. Some parts of the code are trivial, so they are still
+ * inlined in mdep.c and mux.c
  */
 
 #include "dbg.h"
@@ -87,7 +105,6 @@ rmidi_done(struct rmidi *o) {
 	mididev_done(&o->mididev);
 }
 
-
 unsigned rmidi_evlen[] = { 2, 2, 2, 2, 1, 1, 2, 0 };
 #define RMIDI_EVLEN(status) (rmidi_evlen[((status) >> 4) & 7])
 
@@ -119,20 +136,16 @@ rmidi_inputcb(struct rmidi *o, unsigned char *buf, unsigned count) {
 		if (data >= 0xf8) {
 			switch(data) {
 			case MIDI_TIC:
-				ev.cmd = EV_TIC;
-				mux_evcb(o->mididev.unit, &ev);
+				mux_ticcb(o->mididev.unit);
 				break;
 			case MIDI_START:
-				ev.cmd = EV_START;
-				mux_evcb(o->mididev.unit, &ev);
+				mux_startcb(o->mididev.unit);
 				break;
 			case MIDI_STOP:
-				ev.cmd = EV_STOP;
-				mux_evcb(o->mididev.unit, &ev);
+				mux_stopcb(o->mididev.unit);
 				break;
 			case MIDI_ACK:
-				ev.cmd = EV_ACTSENS;
-				mux_evcb(o->mididev.unit, &ev);
+				mux_ackcb(o->mididev.unit);
 				break;
 			default:
 				if (rmidi_debug) {
@@ -176,8 +189,8 @@ rmidi_inputcb(struct rmidi *o, unsigned char *buf, unsigned count) {
 				break;
 			default:
 				/*
-				 * sysex message without the stop byte is considered
-				 * aborted.
+				 * sysex message without the stop byte
+				 * is considered as aborted.
 				 */
 				if (o->isysex) {
 					if (rmidi_debug)
@@ -198,7 +211,8 @@ rmidi_inputcb(struct rmidi *o, unsigned char *buf, unsigned count) {
 				ev.data.voice.b1 = o->idata[1];
 				ev.data.voice.ch = o->istatus & 0x0f;
 				ev.data.voice.dev = o->mididev.unit;
-				if (ev.cmd == EV_NON && ev.data.voice.b1 == 0) {
+				if (ev.cmd == EV_NON && 
+				    ev.data.voice.b1 == 0) {
 					ev.cmd = EV_NOFF;
 					ev.data.voice.b1 = EV_NOFF_DEFAULTVEL;
 				}
@@ -206,7 +220,7 @@ rmidi_inputcb(struct rmidi *o, unsigned char *buf, unsigned count) {
 			}
 		} else if (o->istatus == MIDI_SYSEXSTART) {
 			/*
-			 * NOTE: we use running status only for voice events
+			 * NOTE: MIDI uses running status only for voice events
 			 *	 so, if you add new system common messages
 			 *       here don't forget to reset the running status
 			 */
@@ -217,7 +231,7 @@ rmidi_inputcb(struct rmidi *o, unsigned char *buf, unsigned count) {
 
 /*
  * write a single midi byte to the output buffer, if
- * it is full, flush it.
+ * it is full, flush it. Shouldn't we inline it?
  */
 void
 rmidi_out(struct rmidi *o, unsigned data) {
@@ -237,45 +251,49 @@ rmidi_out(struct rmidi *o, unsigned data) {
 	o->oused++;
 }
 
+void
+rmidi_putstart(struct rmidi *o) {
+	rmidi_out(o, MIDI_START);
+}
+
+void
+rmidi_putstop(struct rmidi *o) {
+	rmidi_out(o, MIDI_STOP);
+}
+
+void
+rmidi_puttic(struct rmidi *o) {
+	rmidi_out(o, MIDI_TIC);
+}
+
+void
+rmidi_putack(struct rmidi *o) {
+	rmidi_out(o, MIDI_ACK);
+}
+
 /*
- * convert an event to bytes stream and queue
+ * convert a voice event to byte stream and queue
  * it for sending
  */
 void
 rmidi_putev(struct rmidi *o, struct ev *ev) {
 	unsigned s;
 	
-	switch (ev->cmd) {
-	case EV_TIC:
-		rmidi_out(o, MIDI_TIC);
-		break;	
-	case EV_START:
-		rmidi_out(o, MIDI_START);
-		break;
-	case EV_STOP:
-		rmidi_out(o, MIDI_STOP);
-		break;	
-	case EV_ACTSENS:
-		rmidi_out(o, MIDI_ACK);
-		break;	
-	default:
-		if (!EV_ISVOICE(ev)) {
-			break;
-		}
-		if (ev->cmd == EV_NOFF) {
-			ev->cmd = EV_NON;
-			ev->data.voice.b1 = 0;
-		}
-		s = ev->data.voice.ch + ((ev->cmd & 0x0f) << 4);
-		if (s != o->ostatus) {
-			o->ostatus = s;
-			rmidi_out(o, s);
-		}
-		rmidi_out(o, ev->data.voice.b0);
-		if (RMIDI_EVLEN(s) == 2) {
-			rmidi_out(o, ev->data.voice.b1);
-		}
-		break;
+	if (!EV_ISVOICE(ev)) {
+		return;
+	}
+	if (ev->cmd == EV_NOFF) {
+		ev->cmd = EV_NON;
+		ev->data.voice.b1 = 0;
+	}
+	s = ev->data.voice.ch + ((ev->cmd & 0x0f) << 4);
+	if (s != o->ostatus) {
+		o->ostatus = s;
+		rmidi_out(o, s);
+	}
+	rmidi_out(o, ev->data.voice.b0);
+	if (RMIDI_EVLEN(s) == 2) {
+		rmidi_out(o, ev->data.voice.b1);
 	}
 }
 

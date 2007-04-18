@@ -51,7 +51,8 @@ data.o:		data.c dbg.h str.h cons.h data.h
 dbg.o:		dbg.c dbg.h
 ev.o:		ev.c dbg.h ev.h default.h str.h
 exec.o:		exec.c dbg.h exec.h name.h str.h data.h node.h cons.h
-filt.o:		filt.c dbg.h ev.h default.h filt.h state.h timo.h pool.h
+filt.o:		filt.c dbg.h ev.h default.h filt.h state.h timo.h pool.h \
+		mux.h
 frame.o:	frame.c dbg.h track.h ev.h default.h state.h frame.h
 lex.o:		lex.c dbg.h lex.h str.h textio.h cons.h
 main.o:		main.c dbg.h str.h cons.h ev.h default.h mux.h track.h \
@@ -62,7 +63,6 @@ mdep.o:		mdep.c default.h mux.h rmidi.h mdep.h mididev.h cons.h \
 metro.o:	metro.c dbg.h mux.h metro.h ev.h default.h timo.h
 mididev.o:	mididev.c dbg.h default.h mididev.h data.h name.h str.h \
 		rmidi.h mdep.h pool.h cons.h
-mkcurves.o:	mkcurves.c
 mux.o:		mux.c dbg.h ev.h default.h mdep.h mux.h rmidi.h \
 		mididev.h sysex.h timo.h
 name.o:		name.c dbg.h name.h str.h
@@ -72,6 +72,7 @@ parse.o:	parse.c dbg.h textio.h lex.h data.h parse.h node.h \
 pool.o:		pool.c dbg.h pool.h
 rmidi.o:	rmidi.c dbg.h default.h mdep.h ev.h sysex.h mux.h \
 		rmidi.h mididev.h
+rmidish.o:	rmidish.c
 saveload.o:	saveload.c dbg.h name.h str.h song.h track.h ev.h \
 		default.h state.h frame.h filt.h timo.h sysex.h metro.h \
 		parse.h lex.h textio.h saveload.h

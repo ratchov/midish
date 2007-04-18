@@ -34,6 +34,8 @@
 #include "state.h"
 #include "timo.h"
 
+struct muxops;
+
 struct rule {
 	struct rule *next;
 /*
@@ -71,8 +73,8 @@ struct filt {
 	 * used in real-time only
 	 */
 	unsigned active;			/* filter is active */
-	void (*cb)(void *, struct ev *);	/* called for output events */
-	void *addr;				/* argument of 'cb' */
+	struct muxops *ops;			/* set of call-backs */
+	void *addr;				/* arg to ops callbacks */
 	struct statelist statelist;		/* state of the filer */
 	struct timo timo;			/* for throtteling */	
 };
@@ -82,7 +84,7 @@ struct filt {
 void filt_init(struct filt *);
 void filt_done(struct filt *);
 void filt_reset(struct filt *);
-void filt_start(struct filt *, void (*)(void *, struct ev *), void *);
+void filt_start(struct filt *, struct muxops *, void *);
 void filt_shut(struct filt *);
 void filt_stop(struct filt *);
 void filt_evcb(struct filt *o, struct ev *ev);

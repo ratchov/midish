@@ -40,6 +40,7 @@
 #include "ev.h"
 #include "filt.h"
 #include "pool.h"
+#include "mux.h"
 
 #define TAG_PASS 1
 #define TAG_PENDING 2
@@ -334,7 +335,7 @@ void filt_timocb(void *);
  */
 void
 filt_init(struct filt *o) {
-	o->cb = NULL;
+	o->ops = NULL;
 	o->addr = NULL;	
 	o->active = 1;
 	o->voice_rules = NULL;
@@ -372,7 +373,7 @@ filt_reset(struct filt *o) {
 void
 filt_done(struct filt *o) {
 #ifdef FILT_DEBUG
-	if (o->cb != NULL) {
+	if (o->ops != NULL) {
 		dbg_puts("filt_done: call filt_stop first.\n");
 	}
 #endif
@@ -385,9 +386,9 @@ filt_done(struct filt *o) {
  * callback (see filt_processev)
  */
 void
-filt_start(struct filt *o, void (*cb)(void *, struct ev *), void *addr) {
+filt_start(struct filt *o, struct muxops *ops, void *addr) {
 	o->addr = addr;
-	o->cb = cb;
+	o->ops = ops;
 	statelist_init(&o->statelist);
 	timo_add(&o->timo, FILT_TIMO);
 	dbg_puts("filt_start()\n");
@@ -402,7 +403,7 @@ filt_stop(struct filt *o) {
 	dbg_puts("filt_stop()\n");
 	timo_del(&o->timo);
 	statelist_done(&o->statelist);
-	o->cb = NULL;
+	o->ops = NULL;
 	o->addr = NULL;	
 }
 
@@ -1060,9 +1061,7 @@ match_pass:
 		ev_dbg(&te);
 		dbg_puts("\n");
 	}
-	if (o->cb) {
-		o->cb(o->addr, &te);
-	}
+	o->ops->ev(o->addr, &te);
 	return 1;
 match_drop:
 	if (filt_debug) {
@@ -1100,9 +1099,7 @@ filt_processev(struct filt *o, struct ev *ev) {
 					ev_dbg(ev);
 					dbg_puts("\n");
 				}
-				if (o->cb) {
-					o->cb(o->addr, ev);
-				}
+				o->ops->ev(o->addr, ev);
 			}
 		}
 	}
@@ -1183,8 +1180,8 @@ filt_evcb(struct filt *o, struct ev *ev) {
 		dbg_puts("\n");
 	}
 #ifdef FILT_DEBUG
-	if (o->cb == NULL) {
-		dbg_puts("filt_evcb: cb = NULL, bad initialisation\n");
+	if (o->ops == NULL) {
+		dbg_puts("filt_evcb: ops = NULL, bad initialisation\n");
 		dbg_panic();
 	}
 	if (!EV_ISVOICE(ev)) {
