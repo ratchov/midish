@@ -98,8 +98,18 @@ timo_del(struct timo *o) {
  */
 void
 timo_update(unsigned delta) {
-	struct timo **i, *to;
+	struct timo **i, *to, *xhead, **xtail;
 	
+	/*
+	 * initialize queue of expired timeouts
+	 */
+	xhead = NULL;
+	xtail = &xhead;
+
+	/*
+	 * iterate over all timeouts, update values and move expired
+	 * timeouts to the "expired queue"
+	 */
 	i = &timo_queue;
 	for (;;) {
 		to = *i;
@@ -108,7 +118,8 @@ timo_update(unsigned delta) {
 		if (to->val < delta) {
 			to->set = 0;
 			*i = to->next;
-			to->cb(to->arg);
+			to->next = NULL;
+			*xtail = to;
 		} else {
 #ifdef TIMO_DEBUG
 			dbg_puts("timo_update: val: ");
@@ -122,6 +133,15 @@ timo_update(unsigned delta) {
 #endif
 			i = &(*i)->next;
 		}
+	}
+
+	/*
+	 * call call expired timeouts
+	 */
+	while (xhead) {
+		to = xhead;
+		xhead = to->next;
+		to->cb(to->arg);
 	}
 }
 

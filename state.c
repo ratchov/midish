@@ -254,6 +254,65 @@ state_match(struct state *st, struct ev *ev, struct state *ctx) {
 	return 1;
 }
 
+/* 
+ * check if the given state belongs to the event spec
+ */
+unsigned
+state_inspec(struct state *st, struct evspec *spec, struct state *ctx) {
+	if (!(st->phase & EV_PHASE_FIRST)) {
+		dbg_puts("state_inspec: not first\n");
+		dbg_panic();
+	}
+	switch(spec->cmd) {
+	case EVSPEC_ANY:
+		goto ch;
+	case EVSPEC_NOTE:
+		if (st->ev.cmd == EV_NON) {
+			goto b0;
+		}
+		break;
+	case EVSPEC_CTL:
+		if (st->ev.cmd == EV_CTL) {
+			goto b0;
+		}
+		break;
+	case EVSPEC_CAT:
+		if (st->ev.cmd == EV_CAT) {
+			goto b1;
+		}
+		break;
+	case EVSPEC_PC:
+		if (st->ev.cmd == EV_PC) {
+			goto b1;
+		}
+		break;
+	case EVSPEC_BEND:
+		if (st->ev.cmd == EV_BEND) {
+			goto b1;
+		}
+		break;
+	default:
+		break;
+	}
+	return 0;
+
+b1:	if (st->ev.data.voice.b1 < spec->b1_min ||
+	    st->ev.data.voice.b1 > spec->b1_max) {
+		return 0;
+	}
+b0:	if (st->ev.data.voice.b0 < spec->b0_min ||
+	    st->ev.data.voice.b0 > spec->b0_max) {
+		return 0;
+	}
+ch:	if (st->ev.data.voice.dev < spec->dev_min ||
+	    st->ev.data.voice.dev > spec->dev_max ||
+	    st->ev.data.voice.ch < spec->ch_min ||
+	    st->ev.data.voice.ch > spec->ch_max) {
+		return 0;
+	}
+	return 1;
+}
+
 /*
  * compare a state to a matching event (ie one for which
  * state_match() returns 1)
