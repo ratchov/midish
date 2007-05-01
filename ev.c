@@ -368,7 +368,7 @@ evctl_init(void) {
 	evctl_conf(1,   EV_CTL_UNKNOWN, EVCTL_FRAME,   "mod", 0);
 	evctl_conf(7,   EV_CTL_UNKNOWN, EVCTL_PARAM,   "vol", 0);
 	evctl_conf(64,  EV_CTL_UNKNOWN, EVCTL_FRAME,   "sustain", 0);
-	evctl_conf(98,  99,	        EVCTL_NRPN,    "nrpn", 0);
+	evctl_conf(99,  98,	        EVCTL_NRPN,    "nrpn", 0);
 	evctl_conf(100, 101,	        EVCTL_NRPN,    "rpn", 0);
 }
 
