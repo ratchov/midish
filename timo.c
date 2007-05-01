@@ -41,6 +41,7 @@
 
 unsigned timo_debug = 0;
 struct timo *timo_queue;
+unsigned timo_abstime;
 
 /*
  * initialise a timeout structure, arguments are 
@@ -60,14 +61,23 @@ timo_set(struct timo *o, void (*cb)(void *), void *arg) {
 void
 timo_add(struct timo *o, unsigned delta) {
 	struct timo **i;
+	unsigned val;
+
+#ifdef TIMO_DEBUG
 	if (o->set) {
 		dbg_puts("timo_set: already set\n");
 		dbg_panic();
 	}
-	o->set = 1;
-	o->val = delta;
-	for (i = &timo_queue; *i != NULL && (*i)->val < delta; i = &(*i)->next)
+	if (delta == 0) {
+		dbg_puts("timo_set: zero timeout is evil\n");
+		dbg_panic();
+	}
+#endif
+	val = timo_abstime + delta;
+	for (i = &timo_queue; *i != NULL && (*i)->val <= val; i = &(*i)->next)
 		; /* nothing */
+	o->set = 1;
+	o->val = val;
 	o->next = *i;
 	*i = o;
 }
@@ -87,80 +97,59 @@ timo_del(struct timo *o) {
 		}
 	}
 #ifdef TIMO_DEBUG
-	dbg_puts("timo_del: not found\n");
+	if (timo_debug)
+		dbg_puts("timo_del: not found\n");
 #endif
 }
 
 /*
- * routine to be called by the timer when 'delta'
- * 24-th of microsecond elapsed. This routine calls
- * callbacks when necessary
+ * routine to be called by the timer when 'delta' 24-th of microsecond
+ * elapsed. This routine updates time referece used by timeouts and
+ * calls expired timeouts
  */
 void
 timo_update(unsigned delta) {
-	struct timo **i, *to, *xhead, **xtail;
+	struct timo *to;
+	int diff;
 	
 	/*
-	 * initialize queue of expired timeouts
+	 * update time reference
 	 */
-	xhead = NULL;
-	xtail = &xhead;
+	timo_abstime += delta;
 
 	/*
-	 * iterate over all timeouts, update values and move expired
-	 * timeouts to the "expired queue"
+	 * remove from the queue and run expired timeouts
 	 */
-	i = &timo_queue;
-	for (;;) {
-		to = *i;
-		if (to == NULL)
+	while (timo_queue != NULL) {
+		diff = timo_queue->val - timo_abstime;
+		if (diff > 0)
 			break;
-		if (to->val < delta) {
-			to->set = 0;
-			*i = to->next;
-			to->next = NULL;
-			*xtail = to;
-		} else {
-#ifdef TIMO_DEBUG
-			dbg_puts("timo_update: val: ");
-			dbg_putu(to->val);
-#endif
-			to->val -= delta;
-#ifdef TIMO_DEBUG
-			dbg_puts(" -> ");
-			dbg_putu(to->val);
-			dbg_puts("\n");
-#endif
-			i = &(*i)->next;
-		}
-	}
-
-	/*
-	 * call call expired timeouts
-	 */
-	while (xhead) {
-		to = xhead;
-		xhead = to->next;
+		to = timo_queue;
+		timo_queue = to->next;
+		to->set = 0;
 		to->cb(to->arg);
 	}
 }
 
 /*
- * initialize the timeouts queue
+ * initialize timeout queue
  */
 void
 timo_init(void) {
 	timo_queue = NULL;
+	timo_abstime = 0;
 }
 
 /*
- * destroy the timeout queue
+ * destroy timeout queue
  */
 void
 timo_done(void) {
+#ifdef TIMO_DEBUG
 	if (timo_queue != NULL) {
 		dbg_puts("timo_done: timo_queue not empty!\n");
 		dbg_panic();
 	}
 	timo_queue = (struct timo *)0xdeadbeef;
+#endif
 }

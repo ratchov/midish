@@ -165,10 +165,7 @@ rule_chgich(struct rule *o, unsigned olddev, unsigned oldch,
 	case RULE_KEYMAP:
 	case RULE_CTLDROP:
 	case RULE_CTLMAP:
-		if (o->idev == newdev && o->ich == newch) {
-			o->ich = oldch;			
-			o->idev = olddev;			
-		} else if (o->idev == olddev && o->ich == oldch) {
+		if (o->idev == olddev && o->ich == oldch) {
 			o->idev = newdev;
 			o->ich = newch;
 		}
@@ -192,8 +189,6 @@ rule_chgidev(struct rule *o, unsigned olddev, unsigned newdev) {
 	case RULE_DEVMAP:
 		if (o->idev == olddev) {
 			o->idev = newdev;
-		} else if (o->idev == newdev) {
-			o->idev = olddev;
 		}
 		break;
 	default:
@@ -255,10 +250,7 @@ rule_chgoch(struct rule *o, unsigned olddev, unsigned oldch,
 	case RULE_CHANMAP:
 	case RULE_KEYMAP:
 	case RULE_CTLMAP:
-		if (o->odev == newdev && o->och == newch) {
-			o->och = oldch;			
-			o->odev = olddev;			
-		} else if (o->odev == olddev && o->och == oldch) {
+		if (o->odev == olddev && o->och == oldch) {
 			o->odev = newdev;
 			o->och = newch;
 		}
@@ -278,8 +270,6 @@ rule_chgodev(struct rule *o, unsigned olddev, unsigned newdev) {
 	case RULE_DEVMAP:
 		if (o->odev == olddev) {
 			o->odev = newdev;
-		} else if (o->odev == newdev) {
-			o->odev = olddev;
 		}
 		break;
 	default:
