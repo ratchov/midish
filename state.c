@@ -47,7 +47,7 @@
  *
  * TODO:
  *
- *	state_xxx() routines are over-complicated. That's because
+ *	state_xxx() routines seem over-complicated. That's because
  *	ceraint events (PCs, data-entry controllers, all 14bit
  *	controllers) cannot be interpreted out of their context (like
  *	bank controllers for PCs). Since most of the code uses state
@@ -130,7 +130,7 @@ state_dbg(struct state *s) {
 }
 
 /*
- * copy an event (and its context, af any) into a state. It isn't
+ * copy an event (and its context, if any) into a state. It isn't
  * enough to just copy the event; special care must be taken for
  * controller events to handle contexts for 14bit controllers and
  * reference to RPN/NRPN for data-entry controllers
@@ -259,14 +259,14 @@ state_match(struct state *st, struct ev *ev, struct state *ctx) {
  */
 unsigned
 state_inspec(struct state *st, struct evspec *spec, struct state *ctx) {
-	if (!(st->phase & EV_PHASE_FIRST)) {
-		dbg_puts("state_inspec: not first\n");
-		dbg_panic();
-	}
 	switch(spec->cmd) {
 	case EVSPEC_ANY:
 		goto ch;
 	case EVSPEC_NOTE:
+		if (!(st->phase & EV_PHASE_FIRST)) {
+			dbg_puts("state_inspec: not first\n");
+			dbg_panic();
+		}
 		if (st->ev.cmd == EV_NON) {
 			goto b0;
 		}

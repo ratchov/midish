@@ -668,7 +668,7 @@ track_move(struct track *src, unsigned start, unsigned len,
 	unsigned delta;
 	struct seqptr sp, dp;		/* current src & dst track states */
 	struct statelist slist;		/* original src track state */
-	struct state *st;
+	struct state *st, *ctx;
 
 #define TAG_KEEP	1		/* frame is not erased */
 #define TAG_COPY	2		/* frame is copied */
@@ -696,7 +696,8 @@ track_move(struct track *src, unsigned start, unsigned len,
 	 */
 	if (blank) {
 		for (st = slist.first; st != NULL; st = st->next) {
-			if (evspec_matchev(es, &st->ev) &&
+			ctx = statelist_getctx(&slist, &st->ev);
+			if (state_inspec(st, es, ctx) &&
 			    seqptr_cancel(&sp, st))
 				st->tag &= ~TAG_KEEP;
 		}
@@ -715,7 +716,8 @@ track_move(struct track *src, unsigned start, unsigned len,
 		if ((st->phase & EV_PHASE_FIRST) ||
 		    (st->phase & EV_PHASE_NEXT && !EV_ISNOTE(&st->ev))) {
 			st->tag &= ~TAG_COPY;
-			if (evspec_matchev(es, &st->ev))
+			ctx = statelist_getctx(&slist, &st->ev);
+			if (state_inspec(st, es, ctx))
 				st->tag |= TAG_COPY;
 		}
 		if (st->phase & EV_PHASE_FIRST) {
@@ -734,7 +736,8 @@ track_move(struct track *src, unsigned start, unsigned len,
 	 */
 	if (copy) {
 		for (st = slist.first; st != NULL; st = st->next) {
-			if (!evspec_matchev(es, &st->ev))
+			ctx = statelist_getctx(&slist, &st->ev);
+			if (!state_inspec(st, es, ctx))
 				continue;
 			if (!(st->tag & TAG_COPY) && 
 			    seqptr_restore(&dp, st)) {
@@ -758,7 +761,8 @@ track_move(struct track *src, unsigned start, unsigned len,
 		if (st == NULL)
 			break;
 		if (st->phase & EV_PHASE_FIRST) {
-			st->tag = evspec_matchev(es, &st->ev) ? TAG_COPY : TAG_KEEP;
+			ctx = statelist_getctx(&slist, &st->ev);
+			st->tag = state_inspec(st, es, ctx) ? TAG_COPY : TAG_KEEP;
 		}
 		if (copy && (st->tag & TAG_COPY)) {
 			seqptr_evput(&dp, &st->ev);

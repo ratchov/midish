@@ -273,58 +273,6 @@ evspec_dbg(struct evspec *o) {
 	}
 }
 
-unsigned
-evspec_matchev(struct evspec *o, struct ev *e) {
-	switch(o->cmd) {
-	case EVSPEC_ANY:
-		goto ch;
-	case EVSPEC_NOTE:
-		if (EV_ISNOTE(e)) {
-			goto b0;
-		}
-		break;
-	case EVSPEC_CTL:
-		if (e->cmd == EV_CTL) {
-			goto b0;
-		}
-		break;
-	case EVSPEC_CAT:
-		if (e->cmd == EV_CAT) {
-			goto b1;
-		}
-		break;
-	case EVSPEC_PC:
-		if (e->cmd == EV_PC) {
-			goto b1;
-		}
-		break;
-	case EVSPEC_BEND:
-		if (e->cmd == EV_BEND) {
-			goto b1;
-		}
-		break;
-	default:
-		break;
-	}
-	return 0;
-
-b1:	if (e->data.voice.b1 < o->b1_min ||
-	    e->data.voice.b1 > o->b1_max) {
-		return 0;
-	}
-b0:	if (e->data.voice.b0 < o->b0_min ||
-	    e->data.voice.b0 > o->b0_max) {
-		return 0;
-	}
-ch:	if (e->data.voice.dev < o->dev_min ||
-	    e->data.voice.dev > o->dev_max ||
-	    e->data.voice.ch < o->ch_min ||
-	    e->data.voice.ch > o->ch_max) {
-		return 0;
-	}
-	return 1;
-}
-
 /*
  * configure a controller (set the typ, name, etc...)
  */

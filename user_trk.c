@@ -519,7 +519,7 @@ user_func_trackinfo(struct exec *o, struct data **r) {
 	struct songtrk *t;
 	struct seqptr mp, tp;
 	struct evspec es;
-	struct state *st;
+	struct state *st, *ctx;
 	long quant;
 	unsigned len, count, count_next, tpb, bpm;
 
@@ -561,13 +561,15 @@ user_func_trackinfo(struct exec *o, struct data **r) {
 				break;
 			st = seqptr_evget(&tp);
 			if (st == NULL)
-				break;
-			if (st->phase & EV_PHASE_FIRST &&
-			    evspec_matchev(&es, &st->ev)) {
-				if (len >= (unsigned)quant / 2) 
-					count++;
-				else
-					count_next++;
+				break;			
+			if (st->phase & EV_PHASE_FIRST) {
+				ctx = statelist_getctx(&tp.statelist, &st->ev);
+				if (state_inspec(st, &es, ctx)) {
+					if (len >= (unsigned)quant / 2) 
+						count++;
+					else
+						count_next++;
+				}
 	                }
 		}
 		textout_putlong(tout, count);

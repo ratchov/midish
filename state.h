@@ -106,6 +106,8 @@ void	      state_dbg(struct state *s);
 void	      state_copyev(struct state *s, struct ev *ev, 
 			   unsigned phase, struct state *ctx);
 unsigned      state_match(struct state *s, struct ev *ev, struct state *st);
+unsigned      state_inspec(struct state *st, struct evspec *spec, 
+			   struct state *ctx);
 unsigned      state_eq(struct state *s, struct ev *ev);
 unsigned      state_cancel(struct state *st, struct ev *rev);
 unsigned      state_restore(struct state *st, struct ev *rev);
@@ -114,10 +116,11 @@ void	      statelist_init(struct statelist *o);
 void	      statelist_done(struct statelist *o);
 void	      statelist_dump(struct statelist *o);
 void	      statelist_dup(struct statelist *o, struct statelist *src);
+void	      statelist_empty(struct statelist *o);
 void	      statelist_add(struct statelist *o, struct state *st);
 void	      statelist_rm(struct statelist *o, struct state *st);
-void	      statelist_empty(struct statelist *o);
 struct state *statelist_lookup(struct statelist *o, struct ev *ev);
+struct state *statelist_getctx(struct statelist *slist, struct ev *ev);
 struct state *statelist_update(struct statelist *statelist, struct ev *ev);
 void	      statelist_outdate(struct statelist *o);
 
