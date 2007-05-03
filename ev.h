@@ -33,22 +33,24 @@
 
 #include "default.h"
 
-#define EV_NULL		0
-#define EV_NOFF		0x8
-#define EV_NON		0x9
-#define EV_KAT		0xa
-#define EV_CTL		0xb
-#define EV_PC		0xc
-#define EV_CAT		0xd
-#define EV_BEND		0xe
-#define EV_TEMPO	0x10
-#define EV_TIMESIG	0x11
+#define EV_NULL		0		/* "null" or end-of-track */
+#define EV_TEMPO	0x3		/* tempo change */
+#define EV_TIMESIG	0x4		/* time signature change */
+#define EV_XRPN		0x5		/* NRPN/RPN + data entry */
+#define EV_XCTL		0x6		/* 14bit controller */
+#define EV_XPC		0x7		/* prog/ change + bank select */
+#define EV_NOFF		0x8		/* MIDI note off */
+#define EV_NON		0x9		/* MIDI note on */
+#define EV_KAT		0xa		/* MIDI key after-toutch */
+#define EV_CTL		0xb		/* MIDI controller */
+#define EV_PC		0xc		/* MIDI prog. change */
+#define EV_CAT		0xd		/* MIDI channel aftertouch */
+#define EV_BEND		0xe		/* MIDI pitch bend */
+#define EV_NUMCMD	0xf
 
-#define EV_NUMCMD	0x12
+#define EV_ISVOICE(ev)	(((ev)->cmd <= EV_BEND) && ((ev)->cmd >= EV_XRPN))
 
-#define EV_ISVOICE(ev)	(((ev)->cmd < 0xf) && ((ev)->cmd >= 0x8))
-
-#define EV_ISMETA(ev)	(((ev)->cmd < EV_NUMCMD) && ((ev)->cmd >= 0x10))
+#define EV_ISMETA(ev)	(((ev)->cmd <= EV_TIMESIG) && ((ev)->cmd >= EV_TEMPO))
 
 #define EV_ISNOTE(ev)	((ev)->cmd == EV_NON  || \
 			 (ev)->cmd == EV_NOFF || \

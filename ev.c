@@ -37,13 +37,11 @@
 #include "str.h"
 
 char *ev_cmdstr[EV_NUMCMD] = { 
-	"nil",		"tic",		"start",	"stop", 
-	"sysex",	NULL,		NULL,		NULL,
+	"nil",		NULL,		NULL,		"tempo",
+	"timesig",	"xrpn",		"xctl",		"xpc",
 	"noff",		"non",		"kat",		"ctl",
-	"pc",		"cat",		"bend",		NULL,
-	"tempo",	"timesig"
+	"pc",		"cat",		"bend"
 };
-
 
 char *evspec_cmdstr[] = {
 	"any", "note", "ctl", "pc", "cat", "bend", NULL
@@ -369,7 +367,7 @@ evctl_init(void) {
 	evctl_conf(7,   EV_CTL_UNKNOWN, EVCTL_PARAM,   "vol", 0);
 	evctl_conf(64,  EV_CTL_UNKNOWN, EVCTL_FRAME,   "sustain", 0);
 	evctl_conf(99,  98,	        EVCTL_NRPN,    "nrpn", 0);
-	evctl_conf(100, 101,	        EVCTL_NRPN,    "rpn", 0);
+	evctl_conf(101, 100,	        EVCTL_NRPN,    "rpn", 0);
 }
 
 /*
