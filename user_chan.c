@@ -184,7 +184,7 @@ user_func_chanconfev(struct exec *o, struct data **r) {
 	    !exec_lookupev(o, "event", &ev)) {
 		return 0;
 	}
-	if (ev.data.voice.ch != c->ch || ev.data.voice.dev != c->dev) {
+	if (ev.ch != c->ch || ev.dev != c->dev) {
 		cons_err("chanconfev: dev/chan mismatch in event spec");
 		return 0;
 	}

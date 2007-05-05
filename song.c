@@ -41,10 +41,6 @@
 
 unsigned song_debug = 1;
 
-void song_playcb(void *, struct ev *);
-void song_recordcb(void *, struct ev *);
-void song_idlecb(void *, struct ev *);
-
 /*
  * allocate and initialise a song structure
  */
@@ -421,8 +417,8 @@ song_playconf(struct song *o) {
 				break;
 			ev = st->ev;
 			if (EV_ISVOICE(&ev)) {
-				ev.data.voice.dev = i->dev;
-				ev.data.voice.ch = i->ch;
+				ev.dev = i->dev;
+				ev.ch = i->ch;
 				mux_putev(&ev);
 			} else {
 				dbg_puts("song_playconf: event not implemented : ");
@@ -464,11 +460,11 @@ void
 song_metaput(struct song *o, struct ev *ev) {
 	switch(ev->cmd) {
 	case EV_TIMESIG:
-		o->beats_per_measure = ev->data.sign.beats;
-		o->tics_per_beat = ev->data.sign.tics;
+		o->beats_per_measure = ev->sign_beats;
+		o->tics_per_beat = ev->sign_tics;
 		break;
 	case EV_TEMPO:
-		o->tempo = ev->data.tempo.usec24;
+		o->tempo = ev->tempo_usec24;
 		mux_chgtempo(o->tempo_factor * o->tempo  / 0x100);	
 		break;
 	default:

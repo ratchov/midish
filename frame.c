@@ -1014,8 +1014,8 @@ track_transpose(struct track *src, unsigned start, unsigned len, int halftones) 
 		}
 		if (st->tag) {
 			ev = st->ev;
-			ev.data.voice.b0 += halftones;
-			ev.data.voice.b0 &= 0x7f;
+			ev.note_num += halftones;
+			ev.note_num &= 0x7f;
 			seqptr_evput(&qp, &ev);
 		} else {
 			seqptr_evput(&sp, &st->ev);
@@ -1036,8 +1036,8 @@ track_transpose(struct track *src, unsigned start, unsigned len, int halftones) 
 			st->tag = 0;
 		if (st->tag) {
 			ev = st->ev;
-			ev.data.voice.b0 += halftones;
-			ev.data.voice.b0 &= 0x7f;
+			ev.note_num += halftones;
+			ev.note_num &= 0x7f;
 			seqptr_evput(&qp, &ev);
 		} else {
 			seqptr_evput(&sp, &st->ev);
@@ -1138,9 +1138,9 @@ seqptr_getsign(struct seqptr *sp, unsigned *bpm, unsigned *tpb) {
 	ev.cmd = EV_TIMESIG;
 	st = statelist_lookup(&sp->statelist, &ev);
 	if (bpm) 
-		*bpm = (st == NULL) ? DEFAULT_BPM : st->ev.data.sign.beats;
+		*bpm = (st == NULL) ? DEFAULT_BPM : st->ev.sign_beats;
 	if (tpb)
-		*tpb = (st == NULL) ? DEFAULT_TPB : st->ev.data.sign.tics;
+		*tpb = (st == NULL) ? DEFAULT_TPB : st->ev.sign_tics;
 	return st;
 }
 
@@ -1155,7 +1155,7 @@ seqptr_gettempo(struct seqptr *sp, unsigned long *usec24) {
 	ev.cmd = EV_TEMPO;
 	st = statelist_lookup(&sp->statelist, &ev);
 	if (usec24)
-		*usec24 = (st == NULL) ? DEFAULT_USEC24 : st->ev.data.tempo.usec24;
+		*usec24 = (st == NULL) ? DEFAULT_USEC24 : st->ev.tempo_usec24;
 	return st;
 }
 
@@ -1228,7 +1228,7 @@ track_timeinfo(struct track *t, unsigned meas, unsigned *abs,
 	while (seqptr_evget(&sp)) {
 		/* nothing */
 	}
-	if (tic) {
+	if (abs) {
 		*abs = tic;
 	}
 	seqptr_getsign(&sp, bpm, tpb);
@@ -1278,7 +1278,7 @@ track_settempo(struct track *t, unsigned measure, unsigned tempo) {
 	seqptr_gettempo(&sp, &old_usec24);
 	if (usec24 != old_usec24) {
 		ev.cmd = EV_TEMPO;
-		ev.data.tempo.usec24 = usec24;
+		ev.tempo_usec24 = usec24;
 		seqptr_evput(&sp, &ev);
 	}
 
@@ -1292,8 +1292,8 @@ track_settempo(struct track *t, unsigned measure, unsigned tempo) {
 		if (st == NULL)
 			break;
 		if (st->ev.cmd != EV_TEMPO || 
-		    st->ev.data.tempo.usec24 != usec24) {
-			usec24 = st->ev.data.tempo.usec24;
+		    st->ev.tempo_usec24 != usec24) {
+			usec24 = st->ev.tempo_usec24;
 			seqptr_evput(&sp, &st->ev);
 		}
 	}
@@ -1330,8 +1330,8 @@ track_timeins(struct track *t, unsigned measure, unsigned amount,
 	(void)seqptr_getsign(&sp, &save_bpm, &save_tpb);
 	if (bpm != save_bpm || tpb != save_tpb) {
 		ev.cmd = EV_TIMESIG;
-		ev.data.sign.beats = bpm;
-		ev.data.sign.tics = tpb;
+		ev.sign_beats = bpm;
+		ev.sign_tics = tpb;
 		(void)seqptr_evput(&sp, &ev);
 	}
 	seqptr_ticput(&sp, bpm * tpb * amount);
@@ -1346,15 +1346,15 @@ track_timeins(struct track *t, unsigned measure, unsigned amount,
 		if (st == NULL) {
 			if (bpm != save_bpm || tpb != save_tpb) {
 				ev.cmd = EV_TIMESIG;
-				ev.data.sign.beats = save_bpm;
-				ev.data.sign.tics = save_tpb;
+				ev.sign_beats = save_bpm;
+				ev.sign_tics = save_tpb;
 				seqptr_evput(&sp, &ev);
 			}
 			break;
 		}
 		if (st->ev.cmd == EV_TIMESIG) {
-			if (st->ev.data.sign.beats != bpm ||
-			    st->ev.data.sign.tics != tpb) {
+			if (st->ev.sign_beats != bpm ||
+			    st->ev.sign_tics != tpb) {
 				seqptr_evput(&sp, &st->ev);
 			}
 			break;

@@ -74,22 +74,6 @@ ev_str2cmd(struct ev *ev, char *str) {
 }
 
 /*
- * return 1 if the first event has higher "priority"
- * than the socond one.
- */
-unsigned
-ev_prio(struct ev *ev) {
-	if (!EV_ISVOICE(ev))
-		return EV_PRIO_RT;
-	if (ev->cmd == EV_CTL && 
-	    (ev->data.voice.b0 == 0 || ev->data.voice.b0 == 32))
-		return EV_PRIO_BANK;
-	if (ev->cmd == EV_PC)
-		return EV_PRIO_PC;
-	return EV_PRIO_ANY;
-}
-
-/*
  * return the phase of the event within 
  * a frame:
  *	- EV_PHASE_FIRST is set if the event can be the
@@ -117,7 +101,7 @@ ev_phase(struct ev *ev) {
 		phase = EV_PHASE_NEXT;
 		break;
 	case EV_CAT:
-		if (ev->data.voice.b0 != EV_CAT_DEFAULT) {
+		if (ev->cat_val != EV_CAT_DEFAULT) {
 			phase = EV_PHASE_FIRST | EV_PHASE_NEXT;
 		} else {
 			phase = EV_PHASE_LAST;
@@ -127,7 +111,7 @@ ev_phase(struct ev *ev) {
 		if (!EV_CTL_ISFRAME(ev)) {
 			phase = EV_PHASE_FIRST | EV_PHASE_LAST;
 		} else {
-			if (ev->data.voice.b1 != EV_CTL_DEFVAL(ev)) {
+			if (ev->ctl_val != EV_CTL_DEFVAL(ev)) {
 				phase = EV_PHASE_FIRST | EV_PHASE_NEXT;
 			} else {
 				phase = EV_PHASE_LAST;
@@ -135,8 +119,7 @@ ev_phase(struct ev *ev) {
 		}
 		break;
 	case EV_BEND:
-		if (ev->data.voice.b0 != EV_BEND_DEFAULTLO ||
-		    ev->data.voice.b1 != EV_BEND_DEFAULTHI) {
+		if (ev->bend_val != EV_BEND_DEFAULT) {
 			phase = EV_PHASE_FIRST | EV_PHASE_NEXT;
 		} else {
 			phase = EV_PHASE_LAST;		
@@ -165,34 +148,34 @@ ev_dbg(struct ev *ev) {
 		case EV_NOFF:
 		case EV_KAT:
 		case EV_CTL:
-		case EV_BEND:
 			dbg_puts(" {");
-			dbg_putx(ev->data.voice.dev);
+			dbg_putx(ev->dev);
 			dbg_puts(" ");
-			dbg_putx(ev->data.voice.ch);
+			dbg_putx(ev->ch);
 			dbg_puts("} ");
-			dbg_putx(ev->data.voice.b0);
+			dbg_putx(ev->v0);
 			dbg_puts(" ");
-			dbg_putx(ev->data.voice.b1);
+			dbg_putx(ev->v1);
 			break;
+		case EV_BEND:
 		case EV_CAT:
 		case EV_PC:
 			dbg_puts(" {");
-			dbg_putx(ev->data.voice.dev);
+			dbg_putx(ev->dev);
 			dbg_puts(" ");
-			dbg_putx(ev->data.voice.ch);
+			dbg_putx(ev->ch);
 			dbg_puts("} ");
-			dbg_putx(ev->data.voice.b0);
+			dbg_putx(ev->v0);
 			break;
 		case EV_TEMPO:
 			dbg_puts(" ");
-			dbg_putu((unsigned)ev->data.tempo.usec24);
+			dbg_putu((unsigned)ev->tempo_usec24);
 			break;
 		case EV_TIMESIG:
 			dbg_puts(" ");
-			dbg_putx(ev->data.sign.beats);
+			dbg_putx(ev->sign_beats);
 			dbg_puts(" ");
-			dbg_putx(ev->data.sign.tics);
+			dbg_putx(ev->sign_tics);
 			break;
 		}
 	}

@@ -969,74 +969,74 @@ filt_matchrule(struct filt *o, struct rule *r, struct ev *ev) {
 		
 	switch(r->type) {
 	case RULE_DEVDROP:
-		if (ev->data.voice.dev == r->idev) {
+		if (ev->dev == r->idev) {
 			goto match_drop;
 		}
 		break;	
 	case RULE_DEVMAP:
-		if (ev->data.voice.dev == r->idev) {
+		if (ev->dev == r->idev) {
 			te = *ev;
-			te.data.voice.dev = r->odev;
+			te.dev = r->odev;
 			goto match_pass;
 		}
 		break;
 	case RULE_CHANDROP:
-		if (ev->data.voice.dev == r->idev &&
-		    ev->data.voice.ch == r->ich) {
+		if (ev->dev == r->idev &&
+		    ev->ch == r->ich) {
 			goto match_drop;
 		}
 		break;
 	case RULE_CHANMAP:
-		if (ev->data.voice.dev == r->idev && 
-		    ev->data.voice.ch == r->ich) {
+		if (ev->dev == r->idev && 
+		    ev->ch == r->ich) {
 			te = *ev;
-			te.data.voice.dev = r->odev;
-			te.data.voice.ch = r->och;
+			te.dev = r->odev;
+			te.ch = r->och;
 			goto match_pass;
 		}
 		break;
 	case RULE_KEYDROP:
 		if (EV_ISNOTE(ev) && 
-		    ev->data.voice.dev == r->idev && 
-		    ev->data.voice.ch == r->ich && 
-		    ev->data.voice.b0 >= r->keylo &&
-		    ev->data.voice.b0 <= r->keyhi) {
+		    ev->dev == r->idev && 
+		    ev->ch == r->ich && 
+		    ev->note_num >= r->keylo &&
+		    ev->note_num <= r->keyhi) {
 			goto match_drop;
 		}
 		break;
 	case RULE_KEYMAP:
 		if (EV_ISNOTE(ev) && 
-		    ev->data.voice.dev == r->idev && 
-		    ev->data.voice.ch == r->ich && 
-		    ev->data.voice.b0 >= r->keylo &&
-		    ev->data.voice.b0 <= r->keyhi) {
+		    ev->dev == r->idev && 
+		    ev->ch == r->ich && 
+		    ev->note_num >= r->keylo &&
+		    ev->note_num <= r->keyhi) {
 			te = *ev;
-			te.data.voice.dev = r->odev;
-			te.data.voice.ch = r->och;
-			te.data.voice.b0 += r->keyplus;
-			te.data.voice.b0 &= 0x7f;
-			te.data.voice.b1 = r->curve[te.data.voice.b1];
+			te.dev = r->odev;
+			te.ch = r->och;
+			te.note_num += r->keyplus;
+			te.note_num &= 0x7f;
+			te.note_vel = r->curve[te.note_vel];
 			goto match_pass;
 		}
 		break;
 	case RULE_CTLDROP:
 		if (ev->cmd == EV_CTL &&
-		    ev->data.voice.dev == r->idev &&
-		    ev->data.voice.ch == r->ich &&
-		    ev->data.voice.b0 == r->ictl) {
+		    ev->dev == r->idev &&
+		    ev->ch == r->ich &&
+		    ev->ctl_num == r->ictl) {
 			goto match_drop;
 		}
 		break;
 	case RULE_CTLMAP:
 		if (ev->cmd == EV_CTL &&
-		    ev->data.voice.dev == r->idev &&
-		    ev->data.voice.ch == r->ich &&
-		    ev->data.voice.b0 == r->ictl) {
+		    ev->dev == r->idev &&
+		    ev->ch == r->ich &&
+		    ev->ctl_num == r->ictl) {
 			te = *ev;
-			te.data.voice.dev = r->odev;
-			te.data.voice.ch = r->och;
-			te.data.voice.b0 = r->octl;
-			te.data.voice.b1 = r->curve[te.data.voice.b1];
+			te.dev = r->odev;
+			te.ch = r->och;
+			te.ctl_num = r->octl;
+			te.ctl_val = r->curve[te.ctl_val];
 			goto match_pass;
 		}
 		break;

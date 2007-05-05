@@ -317,9 +317,9 @@ smf_putmeta(struct smf *o, unsigned *used, struct song *s) {
 			smf_putc(o, used, 0xff);
 			smf_putc(o, used, 0x51);
 			smf_putc(o, used, 0x03);
-			smf_put24(o, used, pos->ev.data.tempo.usec24 * s->tics_per_unit / 96);
+			smf_put24(o, used, pos->ev.tempo_usec24 * s->tics_per_unit / 96);
 		} else if (pos->ev.cmd == EV_TIMESIG) {
-			denom = s->tics_per_unit / pos->ev.data.sign.tics;
+			denom = s->tics_per_unit / pos->ev.sign_tics;
 			switch(denom) {
 			case 1:	
 				denom = 0; 
@@ -345,10 +345,10 @@ smf_putmeta(struct smf *o, unsigned *used, struct song *s) {
 			smf_putc(o, used, 0xff);
 			smf_putc(o, used, 0x58);
 			smf_putc(o, used, 0x04);
-			smf_putc(o, used, pos->ev.data.sign.beats);
+			smf_putc(o, used, pos->ev.sign_beats);
 			smf_putc(o, used, denom);
 			/* metronome tics per metro beat */
-			smf_putc(o, used, pos->ev.data.sign.tics);
+			smf_putc(o, used, pos->ev.sign_tics);
 			/* metronome 1/32 notes per 24 tics */
 			smf_putc(o, used, 8 * s->tics_per_unit / 96);
 		}
@@ -375,15 +375,20 @@ smf_puttrk(struct smf *o, unsigned *used, struct song *s, struct songtrk *t) {
 		if (EV_ISVOICE(&pos->ev)) {
 			smf_putvar(o, used, delta);
 			delta = 0;
-			chan = pos->ev.data.voice.ch;
+			chan = pos->ev.ch;
 			newstatus = (pos->ev.cmd << 4) + (chan & 0x0f);
 			if (newstatus != status) {
 				status = newstatus;
 				smf_putc(o, used, status);
 			}
-			smf_putc(o, used, pos->ev.data.voice.b0);
-			if (SMF_EVLEN(status) == 2) {
-				smf_putc(o, used, pos->ev.data.voice.b1);
+			if (pos->ev.cmd == EV_BEND) {
+				smf_putc(o, used, pos->ev.bend_val & 0x7f);
+				smf_putc(o, used, pos->ev.bend_val >> 7);
+			} else {
+				smf_putc(o, used, pos->ev.v0);
+				if (SMF_EVLEN(status) == 2) {
+					smf_putc(o, used, pos->ev.v1);
+				}
 			}
 		}
 	}
@@ -415,9 +420,9 @@ smf_putchan(struct smf *o, unsigned *used, struct song *s, struct songchan *i) {
 				status = newstatus;
 				smf_putc(o, used, status);
 			}
-			smf_putc(o, used, pos->ev.data.voice.b0);
+			smf_putc(o, used, pos->ev.v0);
 			if (SMF_EVLEN(status) == 2) {
-				smf_putc(o, used, pos->ev.data.voice.b1);
+				smf_putc(o, used, pos->ev.v1);
 			}
 		}
 	}
@@ -602,7 +607,7 @@ smf_gettrack(struct smf *o, struct song *s, struct songtrk *t) {
 				}
 				se = seqev_new();
 				se->ev.cmd = EV_TEMPO;
-				se->ev.data.tempo.usec24 = tempo * 96 / s->tics_per_unit;
+				se->ev.tempo_usec24 = tempo * 96 / s->tics_per_unit;
 				goto putev;
 			} else if (type == 0x58 && length == 4) {
 				/* time signature change */
@@ -614,8 +619,8 @@ smf_gettrack(struct smf *o, struct song *s, struct songtrk *t) {
 				}
 				se = seqev_new();
 				se->ev.cmd = EV_TIMESIG;
-				se->ev.data.sign.beats = num;
-				se->ev.data.sign.tics = s->tics_per_unit / (1 << den);
+				se->ev.sign_beats = num;
+				se->ev.sign_tics = s->tics_per_unit / (1 << den);
 				if (!smf_getc(o, &dummy)) {
 					return 0;
 				}
@@ -679,21 +684,26 @@ smf_gettrack(struct smf *o, struct song *s, struct songtrk *t) {
 		runningstatus:
 			se = seqev_new();
 			se->ev.cmd = (status >> 4) & 0xf;
-			se->ev.data.voice.dev = 0;
-			se->ev.data.voice.ch = status & 0xf;
-			se->ev.data.voice.b0 = c & 0x7f;
+			se->ev.dev = 0;
+			se->ev.ch = status & 0xf;
+			se->ev.v0 = c & 0x7f;
 			if (SMF_EVLEN(status) == 2) {
 				if (!smf_getc(o, &c)) {
 					seqev_del(se);
 					return 0;
 				}
-				se->ev.data.voice.b1 = c & 0x7f;
+				c &= 0x7f;
+				if (se->ev.cmd == EV_BEND) {
+					se->ev.v0 += c << 7;
+				} else {
+					se->ev.v1 = c;
+				}
 			}
 		putev:
 			if (se->ev.cmd == EV_NON && 
-			    se->ev.data.voice.b1 == 0) {
+			    se->ev.v1 == 0) {
 				se->ev.cmd = EV_NOFF;
-				se->ev.data.voice.b1 = EV_NOFF_DEFAULTVEL;
+				se->ev.v1 = EV_NOFF_DEFAULTVEL;
 			}
 			seqev_ins(pos, se);
 			/*
@@ -805,7 +815,7 @@ song_fix0(struct song *o) {
 			}
 			if (st->phase & EV_PHASE_FIRST) {
 				if (EV_ISVOICE(&st->ev) &&
-				    st->ev.data.voice.ch == i) {
+				    st->ev.ch == i) {
 					st->tag = 1;
 				} else {
 					st->tag = 0;

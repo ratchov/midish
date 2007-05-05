@@ -56,20 +56,11 @@
 			 (ev)->cmd == EV_NOFF || \
 			 (ev)->cmd == EV_KAT)
 
-#define EV_GETBEND(ev)	(0x80 * (ev)->data.voice.b1 + (ev)->data.voice.b0)
-
-#define EV_SETBEND(ev,v)				\
-	do { 						\
-		(ev)->data.voice.b0 = (v) & 0x7f;	\
-		(ev)->data.voice.b1 = (v) >> 7;		\
-	} while(0);
-
 /*
- * some special values of data.voice.b0 and data.voice.b1
+ * some special values for events
  */
 #define EV_NOFF_DEFAULTVEL	100	/* defaul note-off velocity */
-#define EV_BEND_DEFAULTLO	0	/* defaul bender val. (low nibble) */
-#define EV_BEND_DEFAULTHI	0x40	/* defaul bender val. (high nibble) */
+#define EV_BEND_DEFAULT		0x2000	/* defaul bender value */
 #define EV_CAT_DEFAULT		0	/* default channel aftertouch value */
 #define EV_CTL_UNKNOWN		255	/* unknown controller number */
 #define EV_CTL_UNDEF		255	/* unknown controller value */
@@ -81,23 +72,26 @@
  * on tracks, that may contain a lot of events
  */
 struct ev {
-	unsigned cmd;
-	union {
-		struct {
-			unsigned long usec24;
-		} tempo;
-		struct {
-			unsigned short beats, tics;
-		} sign;
-		struct voice {
+	unsigned char cmd, dev, ch;
+#define note_num	v0
+#define note_vel	v1
+#define note_kat	v1
+#define ctl_num		v0
+#define ctl_val		v1
+#define pc_prog		v0
+#define pc_bank		v1
+#define cat_val		v0
+#define bend_val	v0
+#define tempo_usec24	v0
+#define sign_beats	v0
+#define sign_tics	v1
+	unsigned v0, v1;
 #define EV_MAXDEV	(DEFAULT_MAXNDEVS - 1)
 #define EV_MAXCH	15
 #define EV_MAXB0	0x7f
 #define EV_MAXB1	0x7f
 #define EV_MAXBEND	0x3fff
-			unsigned short dev, ch, b0, b1;
-		} voice;
-	} data;
+#define EV_UNDEF	0xffff
 };
 
 /*
@@ -180,27 +174,27 @@ struct evctl {
 extern	struct evctl evctl_tab[128];
 
 #define EV_CTL_ISPARAM(ev) \
-	(evctl_tab[(ev)->data.voice.b0].type == EVCTL_PARAM)
+	(evctl_tab[(ev)->ctl_num].type == EVCTL_PARAM)
 #define EV_CTL_ISFRAME(ev) \
-	(evctl_tab[(ev)->data.voice.b0].type == EVCTL_FRAME)
+	(evctl_tab[(ev)->ctl_num].type == EVCTL_FRAME)
 #define EV_CTL_ISBANK(ev) \
-	(evctl_tab[(ev)->data.voice.b0].type == EVCTL_BANK)
+	(evctl_tab[(ev)->ctl_num].type == EVCTL_BANK)
 #define EV_CTL_ISNRPN(ev) \
-	(evctl_tab[(ev)->data.voice.b0].type == EVCTL_NRPN)
+	(evctl_tab[(ev)->ctl_num].type == EVCTL_NRPN)
 #define EV_CTL_ISDATAENT(ev) \
-	(evctl_tab[(ev)->data.voice.b0].type == EVCTL_DATAENT)
+	(evctl_tab[(ev)->ctl_num].type == EVCTL_DATAENT)
 #define EV_CTL_IS7BIT(ev) \
-	(evctl_tab[(ev)->data.voice.b0].bits == EVCTL_7BIT)
+	(evctl_tab[(ev)->ctl_num].bits == EVCTL_7BIT)
 #define EV_CTL_IS14BIT_HI(ev) \
-	(evctl_tab[(ev)->data.voice.b0].bits == EVCTL_14BIT_HI)
+	(evctl_tab[(ev)->ctl_num].bits == EVCTL_14BIT_HI)
 #define EV_CTL_IS14BIT_LO(ev) \
-	(evctl_tab[(ev)->data.voice.b0].bits == EVCTL_14BIT_LO)
+	(evctl_tab[(ev)->ctl_num].bits == EVCTL_14BIT_LO)
 #define EV_CTL_DEFVAL(ev) \
-	(evctl_tab[(ev)->data.voice.b0].defval)
+	(evctl_tab[(ev)->ctl_num].defval)
 #define EV_CTL_HI(ev) \
-	(evctl_tab[(ev)->data.voice.b0].hi)
+	(evctl_tab[(ev)->ctl_num].hi)
 #define EV_CTL_LO(ev) \
-	(evctl_tab[(ev)->data.voice.b0].lo)
+	(evctl_tab[(ev)->ctl_num].lo)
 
 void     evctl_conf(unsigned num_hi, unsigned num_lo,
 		    unsigned type, char *name, unsigned defval);

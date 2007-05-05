@@ -145,7 +145,7 @@ state_copyev(struct state *st, struct ev *ev, unsigned ph, struct state *ctx) {
 		}
 		if (st->ev.cmd == EV_CTL) {
 			if (EV_CTL_IS14BIT_HI(&st->ev)) {
-				st->b2 = st->ev.data.voice.b1;
+				st->b2 = st->ev.ctl_val;
 			}
 			if (EV_CTL_ISNRPN(&st->ev) && 
 			    EV_CTL_HI(&st->ev) != EV_CTL_HI(ev)) {
@@ -156,8 +156,8 @@ state_copyev(struct state *st, struct ev *ev, unsigned ph, struct state *ctx) {
 		}
 	}
 	if (ctx != NULL) {
-		st->ctx_b0 = ctx->ev.data.voice.b0;
-		st->ctx_b1 = ctx->ev.data.voice.b1;
+		st->ctx_b0 = ctx->ev.v0;
+		st->ctx_b1 = ctx->ev.v1;
 		st->ctx_b2 = ctx->b2;
 		if (ctx->flags & STATE_BOGUS) {
 			st->flags |= STATE_BOGUS;
@@ -184,16 +184,16 @@ state_match(struct state *st, struct ev *ev, struct state *ctx) {
 	case EV_NOFF:
 	case EV_KAT:
 		if (!EV_ISNOTE(ev) ||
-		    st->ev.data.voice.b0 != ev->data.voice.b0 ||
-		    st->ev.data.voice.ch != ev->data.voice.ch ||
-		    st->ev.data.voice.dev != ev->data.voice.dev) {
+		    st->ev.note_num != ev->note_num ||
+		    st->ev.ch != ev->ch ||
+		    st->ev.dev != ev->dev) {
 			return 0;
 		}
 		break;		
 	case EV_CTL:
 		if (st->ev.cmd != ev->cmd ||
-		    st->ev.data.voice.dev != ev->data.voice.dev ||
-		    st->ev.data.voice.ch != ev->data.voice.ch) {
+		    st->ev.dev != ev->dev ||
+		    st->ev.ch != ev->ch) {
 			return 0;
 		}
 		if (EV_CTL_ISNRPN(&st->ev) && EV_CTL_ISNRPN(ev)) {
@@ -202,12 +202,12 @@ state_match(struct state *st, struct ev *ev, struct state *ctx) {
 			 */
 			break;
 		}
-		if (st->ev.data.voice.b0 != ev->data.voice.b0) {
+		if (st->ev.ctl_num != ev->ctl_num) {
 			if (EV_CTL_IS7BIT(&st->ev) || EV_CTL_IS7BIT(ev)) {
 				return 0;
 			} else {
-				if (EV_CTL_HI(&st->ev) != ev->data.voice.b0 &&
-				    EV_CTL_HI(ev) != st->ev.data.voice.b0)
+				if (EV_CTL_HI(&st->ev) != ev->ctl_num &&
+				    EV_CTL_HI(ev) != st->ev.ctl_num)
 					return 0;
 			}
 		}	
@@ -219,7 +219,7 @@ state_match(struct state *st, struct ev *ev, struct state *ctx) {
 		 */
 		if (ctx != NULL && EV_CTL_ISDATAENT(&st->ev)) {
 			if (st->ctx_b0 != EV_CTL_LO(&ctx->ev) ||
-			    st->ctx_b1 != ctx->ev.data.voice.b1 ||
+			    st->ctx_b1 != ctx->ev.ctl_val ||
 			    st->ctx_b2 != ctx->b2) {
 				return 0;
 			}
@@ -230,8 +230,8 @@ state_match(struct state *st, struct ev *ev, struct state *ctx) {
 	case EV_CAT:
 	case EV_PC:
 		if (st->ev.cmd != ev->cmd ||
-		    st->ev.data.voice.dev != ev->data.voice.dev ||
-		    st->ev.data.voice.ch != ev->data.voice.ch) {
+		    st->ev.dev != ev->dev ||
+		    st->ev.ch != ev->ch) {
 			return 0;
 		}
 		break;
@@ -296,18 +296,18 @@ state_inspec(struct state *st, struct evspec *spec, struct state *ctx) {
 	}
 	return 0;
 
-b1:	if (st->ev.data.voice.b1 < spec->b1_min ||
-	    st->ev.data.voice.b1 > spec->b1_max) {
+b1:	if (st->ev.v1 < spec->b1_min ||
+	    st->ev.v1 > spec->b1_max) {
 		return 0;
 	}
-b0:	if (st->ev.data.voice.b0 < spec->b0_min ||
-	    st->ev.data.voice.b0 > spec->b0_max) {
+b0:	if (st->ev.v0 < spec->b0_min ||
+	    st->ev.v0 > spec->b0_max) {
 		return 0;
 	}
-ch:	if (st->ev.data.voice.dev < spec->dev_min ||
-	    st->ev.data.voice.dev > spec->dev_max ||
-	    st->ev.data.voice.ch < spec->ch_min ||
-	    st->ev.data.voice.ch > spec->ch_max) {
+ch:	if (st->ev.dev < spec->dev_min ||
+	    st->ev.dev > spec->dev_max ||
+	    st->ev.ch < spec->ch_min ||
+	    st->ev.ch > spec->ch_max) {
 		return 0;
 	}
 	return 1;
@@ -323,18 +323,18 @@ state_eq(struct state *st, struct ev *ev) {
 		switch(st->ev.cmd) {
 		case EV_CTL:
 			if (EV_CTL_IS7BIT(ev)) {
-				if (st->ev.data.voice.b1 != ev->data.voice.b1 ||
-				    st->ev.data.voice.b0 != ev->data.voice.b0)
+				if (st->ev.ctl_val != ev->ctl_val ||
+				    st->ev.ctl_num != ev->ctl_num)
 					return 0;
 			} else if (EV_CTL_IS14BIT_HI(ev)) {
 				if (EV_CTL_IS14BIT_HI(&st->ev)) {
-					if (st->ev.data.voice.b1 != ev->data.voice.b1 ||
-					    st->ev.data.voice.b0 != ev->data.voice.b0) {
+					if (st->ev.ctl_val != ev->ctl_val ||
+					    st->ev.ctl_num != ev->ctl_num) {
 						return 0;
 					}
 				} else {
-					if (st->b2 != ev->data.voice.b1 ||
-					    EV_CTL_HI(&st->ev) != ev->data.voice.b0) {
+					if (st->b2 != ev->ctl_val ||
+					    EV_CTL_HI(&st->ev) != ev->ctl_num) {
 						return 0;
 					}
 				}
@@ -342,8 +342,8 @@ state_eq(struct state *st, struct ev *ev) {
 				if (EV_CTL_IS14BIT_HI(&st->ev)) {
 					return 0;
 				} else {
-					if (st->ev.data.voice.b1 != ev->data.voice.b1 ||
-					    st->ev.data.voice.b0 != ev->data.voice.b0) {
+					if (st->ev.ctl_val != ev->ctl_val ||
+					    st->ev.ctl_num != ev->ctl_num) {
 						return 0;
 					}
 				}
@@ -351,22 +351,22 @@ state_eq(struct state *st, struct ev *ev) {
 			break;
 		case EV_CAT:
 		case EV_PC:
-			if (st->ev.data.voice.b0 != ev->data.voice.b0)
+			if (st->ev.v0 != ev->v0)
 				return 0;
 			break;
 		default:
 			if (st->ev.cmd != ev->cmd ||
-			    st->ev.data.voice.b1 != ev->data.voice.b1)
+			    st->ev.v1 != ev->v1)
 				return 0;
 			break;
 		}
 	} else if (st->ev.cmd == EV_TEMPO) {
-		if (st->ev.data.tempo.usec24 != ev->data.tempo.usec24) {
+		if (st->ev.tempo_usec24 != ev->tempo_usec24) {
 			return 0;
 		}
 	} else if (st->ev.cmd == EV_TIMESIG) {
-		if (st->ev.data.sign.beats != ev->data.sign.beats ||
-		    st->ev.data.sign.tics != ev->data.sign.tics) {
+		if (st->ev.sign_beats != ev->sign_beats ||
+		    st->ev.sign_tics != ev->sign_tics) {
 			return 0;
 		}
 	} else {
@@ -394,46 +394,45 @@ state_cancel(struct state *st, struct ev *rev) {
 	case EV_NON:
 	case EV_KAT:
 		rev->cmd = EV_NOFF;
-		rev->data.voice.b0  = st->ev.data.voice.b0;
-		rev->data.voice.b1  = EV_NOFF_DEFAULTVEL;
-		rev->data.voice.dev = st->ev.data.voice.dev;
-		rev->data.voice.ch  = st->ev.data.voice.ch;
+		rev->note_num = st->ev.note_num;
+		rev->note_vel = EV_NOFF_DEFAULTVEL;
+		rev->dev = st->ev.dev;
+		rev->ch = st->ev.ch;
 		break;
 	case EV_CAT:
 		rev->cmd = EV_CAT;
-		rev->data.voice.b0  = EV_CAT_DEFAULT;
-		rev->data.voice.dev = st->ev.data.voice.dev;
-		rev->data.voice.ch  = st->ev.data.voice.ch;
+		rev->cat_val = EV_CAT_DEFAULT;
+		rev->dev = st->ev.dev;
+		rev->ch  = st->ev.ch;
 		break;
 	case EV_CTL:
 		if (!EV_CTL_IS14BIT_LO(&st->ev)) {
 			rev->cmd = EV_CTL;
-			rev->data.voice.b0 = st->ev.data.voice.b0;
-			rev->data.voice.b1 = EV_CTL_DEFVAL(&st->ev);
-			rev->data.voice.dev = st->ev.data.voice.dev;
-			rev->data.voice.ch  = st->ev.data.voice.ch;
+			rev->ctl_num = st->ev.ctl_num;
+			rev->ctl_val = EV_CTL_DEFVAL(&st->ev);
+			rev->dev = st->ev.dev;
+			rev->ch = st->ev.ch;
 			return 1;
 		} else {
 			rev->cmd = EV_CTL;
-			rev->data.voice.b0 = EV_CTL_HI(&st->ev);
-			rev->data.voice.b1 = EV_CTL_DEFVAL(rev);
-			rev->data.voice.dev = st->ev.data.voice.dev;
-			rev->data.voice.ch  = st->ev.data.voice.ch;
+			rev->ctl_num = EV_CTL_HI(&st->ev);
+			rev->ctl_val = EV_CTL_DEFVAL(rev);
+			rev->dev = st->ev.dev;
+			rev->ch = st->ev.ch;
 			rev++;
 			rev->cmd = EV_CTL;
-			rev->data.voice.b0 = st->ev.data.voice.b0;
-			rev->data.voice.b1 = EV_CTL_DEFVAL(rev);
-			rev->data.voice.dev = st->ev.data.voice.dev;
-			rev->data.voice.ch  = st->ev.data.voice.ch;
+			rev->ctl_num = st->ev.ctl_num;
+			rev->ctl_val = EV_CTL_DEFVAL(rev);
+			rev->dev = st->ev.dev;
+			rev->ch = st->ev.ch;
 			return 2;
 		}
 		/* not reached */
 	case EV_BEND:
 		rev->cmd = EV_BEND;
-		rev->data.voice.b0 = EV_BEND_DEFAULTLO;
-		rev->data.voice.b1 = EV_BEND_DEFAULTHI;
-		rev->data.voice.dev = st->ev.data.voice.dev;
-		rev->data.voice.ch  = st->ev.data.voice.ch;
+		rev->bend_val = EV_BEND_DEFAULT;
+		rev->dev = st->ev.dev;
+		rev->ch = st->ev.ch;
 		break;
 	default:
 		/* 
@@ -482,18 +481,18 @@ state_restore(struct state *st, struct ev *rev) {
 	if (st->ctx_b0 != EV_CTL_UNKNOWN) {
 		if (evctl_tab[st->ctx_b0].bits == EVCTL_14BIT_LO) {
 			rev->cmd = EV_CTL;
-			rev->data.voice.b0 = evctl_tab[st->ctx_b0].hi;
-			rev->data.voice.b1 = st->ctx_b2;
-			rev->data.voice.dev = st->ev.data.voice.dev;
-			rev->data.voice.ch  = st->ev.data.voice.ch;
+			rev->ctl_num = evctl_tab[st->ctx_b0].hi;
+			rev->ctl_val = st->ctx_b2;
+			rev->dev = st->ev.dev;
+			rev->ch = st->ev.ch;
 			rev++;
 			num++;
 		}
 		rev->cmd = EV_CTL;
-		rev->data.voice.b0 = st->ctx_b0;
-		rev->data.voice.b1 = st->ctx_b1;
-		rev->data.voice.dev = st->ev.data.voice.dev;
-		rev->data.voice.ch  = st->ev.data.voice.ch;
+		rev->ctl_num = st->ctx_b0;
+		rev->ctl_val = st->ctx_b1;
+		rev->dev = st->ev.dev;
+		rev->ch = st->ev.ch;
 		rev++;
 		num++;
 	}
@@ -506,17 +505,17 @@ state_restore(struct state *st, struct ev *rev) {
 			return num;
 		}
 		rev->cmd = EV_CTL;
-		rev->data.voice.b0  = EV_CTL_HI(&st->ev);
-		rev->data.voice.b1  = st->b2;
-		rev->data.voice.dev = st->ev.data.voice.dev;
-		rev->data.voice.ch  = st->ev.data.voice.ch;
+		rev->ctl_num = EV_CTL_HI(&st->ev);
+		rev->ctl_val = st->b2;
+		rev->dev = st->ev.dev;
+		rev->ch = st->ev.ch;
 		rev++;
 		num++;
 		rev->cmd = EV_CTL;
-		rev->data.voice.b0  = st->ev.data.voice.b0;
-		rev->data.voice.b1  = st->ev.data.voice.b1;
-		rev->data.voice.dev = st->ev.data.voice.dev;
-		rev->data.voice.ch  = st->ev.data.voice.ch;
+		rev->ctl_num = st->ev.ctl_num;
+		rev->ctl_val = st->ev.ctl_val;
+		rev->dev = st->ev.dev;
+		rev->ch = st->ev.ch;
 		rev++;
 		num++;
 		return num;
@@ -674,8 +673,8 @@ statelist_getctx(struct statelist *slist, struct ev *ev) {
 	case EV_PC:
 		for (i = slist->first; i != NULL; i = i->next) {
 			if (i->ev.cmd == EV_CTL && EV_CTL_ISBANK(&i->ev) &&
-			    i->ev.data.voice.ch == ev->data.voice.ch &&
-			    i->ev.data.voice.dev == ev->data.voice.dev) {
+			    i->ev.ch == ev->ch &&
+			    i->ev.dev == ev->dev) {
 				return i;
 			}
 		}
@@ -685,8 +684,8 @@ statelist_getctx(struct statelist *slist, struct ev *ev) {
 			break;
 		for (i = slist->first; i != NULL; i = i->next) {
 			if (i->ev.cmd == EV_CTL && EV_CTL_ISNRPN(&i->ev) &&
-			    i->ev.data.voice.ch == ev->data.voice.ch &&
-			    i->ev.data.voice.dev == ev->data.voice.dev) {
+			    i->ev.ch == ev->ch &&
+			    i->ev.dev == ev->dev) {
 				return i;
 			}
 		}

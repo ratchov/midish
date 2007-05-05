@@ -75,18 +75,24 @@ ev_output(struct ev *e, struct textout *f) {
 			goto two;
 		case EV_BEND:
 			textout_putstr(f, "bend");
-			goto two;
+			textout_putstr(f, " ");
+			chan_output(e->dev, e->ch, f);
+			textout_putstr(f, " ");
+			textout_putlong(f, e->bend_val & 0x7f);
+			textout_putstr(f, " ");
+			textout_putlong(f, e->bend_val >> 7);
+			break;
 		case EV_TEMPO:
 			textout_putstr(f, "tempo");
 			textout_putstr(f, " ");
-			textout_putlong(f, e->data.tempo.usec24);
+			textout_putlong(f, e->tempo_usec24);
 			break;			
 		case EV_TIMESIG:
 			textout_putstr(f, "timesig");
 			textout_putstr(f, " ");
-			textout_putlong(f, e->data.sign.beats);
+			textout_putlong(f, e->sign_beats);
 			textout_putstr(f, " ");
-			textout_putlong(f, e->data.sign.tics);
+			textout_putlong(f, e->sign_tics);
 			break;			
 		default:
 			textout_putstr(f, "# ignored event\n");
@@ -98,17 +104,17 @@ ev_output(struct ev *e, struct textout *f) {
 	return;	
 two:
 	textout_putstr(f, " ");
-	chan_output(e->data.voice.dev, e->data.voice.ch, f);
+	chan_output(e->dev, e->ch, f);
 	textout_putstr(f, " ");
-	textout_putlong(f, e->data.voice.b0);
+	textout_putlong(f, e->v0);
 	textout_putstr(f, " ");
-	textout_putlong(f, e->data.voice.b1);
+	textout_putlong(f, e->v1);
 	return;
 one:	
 	textout_putstr(f, " ");
-	chan_output(e->data.voice.dev, e->data.voice.ch, f);
+	chan_output(e->dev, e->ch, f);
 	textout_putstr(f, " ");
-	textout_putlong(f, e->data.voice.b0);
+	textout_putlong(f, e->v0);
 	return;
 }
 	
@@ -683,17 +689,16 @@ parse_ev(struct parse *o, struct ev *ev) {
 		if (!parse_chan(o, &val, &val2)) {
 			return 0;
 		}
-		ev->data.voice.dev = val;
-		ev->data.voice.ch = val2;
+		ev->dev = val;
+		ev->ch = val2;
 		if (!parse_long(o, EV_MAXB0, &val)) {
 			return 0;
 		}
-		ev->data.voice.b0 = val;
 		if (ev->cmd != EV_PC && ev->cmd != EV_CAT) {
 			/*
 			 * XXX: midish version < 0.2.6 used to
 			 * generate bogus kat events (without the last
-			 * byte).  As workaround, we ignore such
+			 * byte). As workaround, we ignore such
 			 * events, in order to allow user to load its
 			 * files. Remove this code when no more needed
 			 */
@@ -711,25 +716,32 @@ parse_ev(struct parse *o, struct ev *ev) {
 				}
 				parse_ungetsym(o);
 			}
-			if (!parse_long(o, EV_MAXB1, &val)) {
+			if (!parse_long(o, EV_MAXB1, &val2)) {
 				return 0;
 			}
-			ev->data.voice.b1 = val;
+			if (ev->cmd == EV_BEND) {
+				ev->bend_val = val + (val2 << 7);
+			} else {
+				ev->v0 = val;
+				ev->v1 = val2;
+			}
+		} else {
+			ev->v0 = val;
 		}
 	} else if (ev->cmd == EV_TEMPO) {
 		if (!parse_long(o, ~1U, &val)) {
 			return 0;
 		}
-		ev->data.tempo.usec24 = val;
+		ev->tempo_usec24 = val;
 	} else if (ev->cmd == EV_TIMESIG) {
 		if (!parse_long(o, ~1U, &val)) {
 			return 0;
 		}
-		ev->data.sign.beats = o->lex.longval;
+		ev->sign_beats = o->lex.longval; /* XXX: should use val, fix it everywhere */
 		if (!parse_long(o, ~1U, &val)) {
 			return 0;
 		}
-		ev->data.sign.tics = o->lex.longval;
+		ev->sign_tics = o->lex.longval;
 	} else {
 ignore:		parse_ungetsym(o);
 		if (!parse_ukline(o)) {

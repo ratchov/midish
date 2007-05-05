@@ -222,7 +222,7 @@ unsigned
 exec_lookupev(struct exec *o, char *name, struct ev *ev) {
 	struct var *arg;
 	struct data *d;
-	unsigned dev, ch;
+	unsigned dev, ch, max;
 
 	arg = exec_varlookup(o, name);
 	if (!arg) {
@@ -250,25 +250,22 @@ exec_lookupev(struct exec *o, char *name, struct ev *ev) {
 	if (!data_list2chan(d, &dev, &ch)) {
 		return 0;
 	}
-	ev->data.voice.dev = dev;
-	ev->data.voice.ch = ch;
+	ev->dev = dev;
+	ev->ch = ch;
 	d = d->next;
-	if (!d || d->type != DATA_LONG || d->val.num < 0 || d->val.num > 127) {
+	max = ev->cmd == EV_BEND ? 0x3fff : 0xff;
+	if (!d || d->type != DATA_LONG || d->val.num < 0 || d->val.num > max) {
 		cons_err("bad byte0 in event spec");
 		return 0;
 	}
-	if (ev->cmd == EV_BEND) {
-		EV_SETBEND(ev, d->val.num);
-	} else {
-		ev->data.voice.b0 = d->val.num;
-	}		
+	ev->v0 = d->val.num;
 	d = d->next;
 	if (ev->cmd != EV_PC && ev->cmd != EV_CAT && ev->cmd != EV_BEND) {
 		if (!d || d->type != DATA_LONG || d->val.num < 0 || d->val.num > 127) {
 			cons_err("bad byte1 in event spec");
 			return 0;
 		}
-		ev->data.voice.b1 = d->val.num;
+		ev->v1 = d->val.num;
 	} else {
 		if (d) {
 			cons_err("extra data in event spec");
@@ -737,22 +734,22 @@ user_func_shut(struct exec *o, struct data **r) {
 	for (dev = mididev_list; dev != NULL; dev = dev->next) {
 		for (i = 0; i < EV_MAXCH; i++) {
 			ev.cmd = EV_CTL;
-			ev.data.voice.dev = dev->unit;		
-			ev.data.voice.ch = i;
-			ev.data.voice.b0 = 121;
-			ev.data.voice.b1 = 0;
+			ev.dev = dev->unit;		
+			ev.ch = i;
+			ev.ctl_num = 121;
+			ev.ctl_val = 0;
 			mux_putev(&ev);
 			ev.cmd = EV_CTL;		
-			ev.data.voice.dev = dev->unit;		
-			ev.data.voice.ch = i;
-			ev.data.voice.b0 = 123;
-			ev.data.voice.b1 = 0;
+			ev.dev = dev->unit;		
+			ev.ch = i;
+			ev.ctl_num = 123;
+			ev.ctl_val = 0;
 			mux_putev(&ev);
 			ev.cmd = EV_BEND;
-			ev.data.voice.dev = dev->unit;		
-			ev.data.voice.ch = i;
-			ev.data.voice.b0 = EV_BEND_DEFAULTLO;
-			ev.data.voice.b1 = EV_BEND_DEFAULTHI;
+			ev.dev = dev->unit;		
+			ev.ch = i;
+			ev.bend_val = EV_BEND_DEFAULT;
+			mux_putev(&ev);
 		}
 	}
 	

@@ -249,8 +249,8 @@ track_setchan(struct track *src, unsigned dev, unsigned ch) {
 
 	for (i = src->first; i != NULL; i = i->next) {
 		if (EV_ISVOICE(&i->ev)) {
-			i->ev.data.voice.dev = dev;
-			i->ev.data.voice.ch = ch;
+			i->ev.dev = dev;
+			i->ev.ch = ch;
 		}
 	}
 }
@@ -269,8 +269,8 @@ track_chanmap(struct track *o, char *map) {
 
 	for (se = o->first; se != NULL; se = se->next) {
 		if (EV_ISVOICE(&se->ev)) {
-			dev = se->ev.data.voice.dev;
-			ch  = se->ev.data.voice.ch;
+			dev = se->ev.dev;
+			ch  = se->ev.ch;
 			if (dev >= DEFAULT_MAXNDEVS || ch >= 16) {
 				dbg_puts("track_chanmap: bogus dev/ch pair, stopping\n");
 				break;

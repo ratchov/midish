@@ -41,15 +41,15 @@ void
 metro_init(struct metro *o) {
 	o->enabled = 1;
 	o->hi.cmd = EV_NON;
-	o->hi.data.voice.dev = DEFAULT_METRO_DEV;
-	o->hi.data.voice.ch  = DEFAULT_METRO_CHAN;
-	o->hi.data.voice.b0  = DEFAULT_METRO_HI_NOTE;
-	o->hi.data.voice.b1  = DEFAULT_METRO_HI_VEL;
+	o->hi.dev = DEFAULT_METRO_DEV;
+	o->hi.ch  = DEFAULT_METRO_CHAN;
+	o->hi.note_num = DEFAULT_METRO_HI_NOTE;
+	o->hi.note_vel = DEFAULT_METRO_HI_VEL;
 	o->lo.cmd = EV_NON;
-	o->lo.data.voice.dev = DEFAULT_METRO_DEV;
-	o->lo.data.voice.ch  = DEFAULT_METRO_CHAN;
-	o->lo.data.voice.b0  = DEFAULT_METRO_LO_NOTE;
-	o->lo.data.voice.b1  = DEFAULT_METRO_LO_VEL;
+	o->lo.dev = DEFAULT_METRO_DEV;
+	o->lo.ch  = DEFAULT_METRO_CHAN;
+	o->lo.note_num = DEFAULT_METRO_LO_NOTE;
+	o->lo.note_vel = DEFAULT_METRO_LO_VEL;
 	o->ev = NULL;
 	timo_set(&o->to, metro_tocb, o);
 }
@@ -75,10 +75,10 @@ metro_tocb(void *addr) {
 		dbg_panic();
 	}
 	ev.cmd = EV_NOFF;
-	ev.data.voice.dev = o->ev->data.voice.dev;
-	ev.data.voice.ch  = o->ev->data.voice.ch;
-	ev.data.voice.b0  = o->ev->data.voice.b0;
-	ev.data.voice.b1  = EV_NOFF_DEFAULTVEL;
+	ev.dev = o->ev->dev;
+	ev.ch  = o->ev->ch;
+	ev.note_num = o->ev->note_num;
+	ev.note_vel = EV_NOFF_DEFAULTVEL;
 	mux_putev(&ev);
 	o->ev = NULL;
 }

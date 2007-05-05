@@ -147,6 +147,7 @@ user_func_trackaddev(struct exec *o, struct data **r) {
 	}
 	pos += beat * tpb + tic;	
 
+
 	seqptr_init(&tp, &t->track);
 	seqptr_seek(&tp, pos);
 	seqptr_evput(&tp, &ev);

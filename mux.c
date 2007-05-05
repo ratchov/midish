@@ -259,7 +259,7 @@ mux_putev(struct ev *ev) {
 	struct mididev *dev;
 	
 	if (EV_ISVOICE(ev)) {
-		unit = ev->data.voice.dev;
+		unit = ev->dev;
 		if (unit < DEFAULT_MAXNDEVS) {
 			dev = mididev_byunit[unit];
 			if (dev != NULL) {
@@ -472,17 +472,17 @@ mux_errorcb(unsigned unit) {
 	 * send all sound off and ctls reset
 	 */
 	ev.cmd = EV_CTL;
-	ev.data.voice.dev = unit;
-	ev.data.voice.b0 = 120;		/* all sound off */
-	ev.data.voice.b1 = 0;
+	ev.dev = unit;
+	ev.ctl_num = 120;		/* all sound off */
+	ev.ctl_val = 0;
 	for (i = 0; i <= EV_MAXCH; i++) {
-		ev.data.voice.ch = i;
+		ev.ch = i;
 		mux_ops->ev(mux_addr, &ev);
 	}
-	ev.data.voice.b0 = 121;		/* all ctl reset */
-	ev.data.voice.b1 = 0;
+	ev.ctl_num = 121;		/* all ctl reset */
+	ev.ctl_val = 0;
 	for (i = 0; i <= EV_MAXCH; i++) {
-		ev.data.voice.ch = i;
+		ev.ch = i;
 		mux_ops->ev(mux_addr, &ev);
 	}
 	mux_flush();
