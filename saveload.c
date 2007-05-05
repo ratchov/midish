@@ -90,9 +90,9 @@ ev_output(struct ev *e, struct textout *f) {
 		case EV_TIMESIG:
 			textout_putstr(f, "timesig");
 			textout_putstr(f, " ");
-			textout_putlong(f, e->sign_beats);
+			textout_putlong(f, e->timesig_beats);
 			textout_putstr(f, " ");
-			textout_putlong(f, e->sign_tics);
+			textout_putlong(f, e->timesig_tics);
 			break;			
 		default:
 			textout_putstr(f, "# ignored event\n");
@@ -737,11 +737,11 @@ parse_ev(struct parse *o, struct ev *ev) {
 		if (!parse_long(o, ~1U, &val)) {
 			return 0;
 		}
-		ev->sign_beats = o->lex.longval; /* XXX: should use val, fix it everywhere */
+		ev->timesig_beats = o->lex.longval; /* XXX: should use val, fix it everywhere */
 		if (!parse_long(o, ~1U, &val)) {
 			return 0;
 		}
-		ev->sign_tics = o->lex.longval;
+		ev->timesig_tics = o->lex.longval;
 	} else {
 ignore:		parse_ungetsym(o);
 		if (!parse_ukline(o)) {

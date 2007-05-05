@@ -365,8 +365,8 @@ state_eq(struct state *st, struct ev *ev) {
 			return 0;
 		}
 	} else if (st->ev.cmd == EV_TIMESIG) {
-		if (st->ev.sign_beats != ev->sign_beats ||
-		    st->ev.sign_tics != ev->sign_tics) {
+		if (st->ev.timesig_beats != ev->timesig_beats ||
+		    st->ev.timesig_tics != ev->timesig_tics) {
 			return 0;
 		}
 	} else {

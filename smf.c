@@ -319,7 +319,7 @@ smf_putmeta(struct smf *o, unsigned *used, struct song *s) {
 			smf_putc(o, used, 0x03);
 			smf_put24(o, used, pos->ev.tempo_usec24 * s->tics_per_unit / 96);
 		} else if (pos->ev.cmd == EV_TIMESIG) {
-			denom = s->tics_per_unit / pos->ev.sign_tics;
+			denom = s->tics_per_unit / pos->ev.timesig_tics;
 			switch(denom) {
 			case 1:	
 				denom = 0; 
@@ -345,10 +345,10 @@ smf_putmeta(struct smf *o, unsigned *used, struct song *s) {
 			smf_putc(o, used, 0xff);
 			smf_putc(o, used, 0x58);
 			smf_putc(o, used, 0x04);
-			smf_putc(o, used, pos->ev.sign_beats);
+			smf_putc(o, used, pos->ev.timesig_beats);
 			smf_putc(o, used, denom);
 			/* metronome tics per metro beat */
-			smf_putc(o, used, pos->ev.sign_tics);
+			smf_putc(o, used, pos->ev.timesig_tics);
 			/* metronome 1/32 notes per 24 tics */
 			smf_putc(o, used, 8 * s->tics_per_unit / 96);
 		}
@@ -619,8 +619,8 @@ smf_gettrack(struct smf *o, struct song *s, struct songtrk *t) {
 				}
 				se = seqev_new();
 				se->ev.cmd = EV_TIMESIG;
-				se->ev.sign_beats = num;
-				se->ev.sign_tics = s->tics_per_unit / (1 << den);
+				se->ev.timesig_beats = num;
+				se->ev.timesig_tics = s->tics_per_unit / (1 << den);
 				if (!smf_getc(o, &dummy)) {
 					return 0;
 				}

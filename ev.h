@@ -83,8 +83,8 @@ struct ev {
 #define cat_val		v0
 #define bend_val	v0
 #define tempo_usec24	v0
-#define sign_beats	v0
-#define sign_tics	v1
+#define timesig_beats	v0
+#define timesig_tics	v1
 	unsigned v0, v1;
 #define EV_MAXDEV	(DEFAULT_MAXNDEVS - 1)
 #define EV_MAXCH	15

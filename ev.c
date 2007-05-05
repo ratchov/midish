@@ -173,9 +173,9 @@ ev_dbg(struct ev *ev) {
 			break;
 		case EV_TIMESIG:
 			dbg_puts(" ");
-			dbg_putx(ev->sign_beats);
+			dbg_putx(ev->timesig_beats);
 			dbg_puts(" ");
-			dbg_putx(ev->sign_tics);
+			dbg_putx(ev->timesig_tics);
 			break;
 		}
 	}

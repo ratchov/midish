@@ -460,8 +460,8 @@ void
 song_metaput(struct song *o, struct ev *ev) {
 	switch(ev->cmd) {
 	case EV_TIMESIG:
-		o->beats_per_measure = ev->sign_beats;
-		o->tics_per_beat = ev->sign_tics;
+		o->beats_per_measure = ev->timesig_beats;
+		o->tics_per_beat = ev->timesig_tics;
 		break;
 	case EV_TEMPO:
 		o->tempo = ev->tempo_usec24;
