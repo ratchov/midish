@@ -34,9 +34,10 @@
 #include "default.h"
 
 #define EV_NULL		0		/* "null" or end-of-track */
-#define EV_TEMPO	0x3		/* tempo change */
-#define EV_TIMESIG	0x4		/* time signature change */
-#define EV_XRPN		0x5		/* NRPN/RPN + data entry */
+#define EV_TEMPO	0x2		/* tempo change */
+#define EV_TIMESIG	0x3		/* time signature change */
+#define EV_NRPN		0x4		/* NRPN + data entry */
+#define EV_RPN		0x5		/* RPN + data entry */
 #define EV_XCTL		0x6		/* 14bit controller */
 #define EV_XPC		0x7		/* prog/ change + bank select */
 #define EV_NOFF		0x8		/* MIDI note off */
@@ -48,7 +49,7 @@
 #define EV_BEND		0xe		/* MIDI pitch bend */
 #define EV_NUMCMD	0xf
 
-#define EV_ISVOICE(ev)	(((ev)->cmd <= EV_BEND) && ((ev)->cmd >= EV_XRPN))
+#define EV_ISVOICE(ev)	(((ev)->cmd <= EV_BEND) && ((ev)->cmd >= EV_NRPN))
 
 #define EV_ISMETA(ev)	(((ev)->cmd <= EV_TIMESIG) && ((ev)->cmd >= EV_TEMPO))
 
@@ -63,7 +64,6 @@
 #define EV_BEND_DEFAULT		0x2000	/* defaul bender value */
 #define EV_CAT_DEFAULT		0	/* default channel aftertouch value */
 #define EV_CTL_UNKNOWN		255	/* unknown controller number */
-#define EV_CTL_UNDEF		255	/* unknown controller value */
 
 /*
  * an event: structure used to store MIDI events and some
@@ -82,26 +82,18 @@ struct ev {
 #define pc_bank		v1
 #define cat_val		v0
 #define bend_val	v0
+#define rpn_num		v0
+#define rpn_val		v1
 #define tempo_usec24	v0
 #define timesig_beats	v0
 #define timesig_tics	v1
 	unsigned v0, v1;
+#define EV_UNDEF	0xffff
 #define EV_MAXDEV	(DEFAULT_MAXNDEVS - 1)
 #define EV_MAXCH	15
 #define EV_MAXB0	0x7f
 #define EV_MAXB1	0x7f
 #define EV_MAXBEND	0x3fff
-#define EV_UNDEF	0xffff
-};
-
-/*
- * context of an event; program change events depend on the last bank
- * controller and data entry controllers depend last RPN/NRPN controller.
- * So the context is always a controller, we store it here:
- */
-struct evctx {
-	unsigned char ctl_hi, ctl_lo;	/* 14bit controller of the context */
-	unsigned char val_hi, val_lo;	/* value of the above controller */
 };
 
 /*
@@ -110,17 +102,6 @@ struct evctx {
 #define EV_PHASE_FIRST		1
 #define EV_PHASE_NEXT		2
 #define EV_PHASE_LAST		4
-
-/* 
- * event priority: some events have to be played before other, ex:
- * bank changes are played before program changes
- */
-#define EV_PRIO_ANY	0
-#define EV_PRIO_PC	1
-#define EV_PRIO_BANK	2
-#define EV_PRIO_RT	3
-#define EV_PRIO_MAX	4
-
 
 /*
  * defines a range of events
@@ -132,6 +113,8 @@ struct evspec {
 #define EVSPEC_PC		3
 #define EVSPEC_CAT		4
 #define EVSPEC_BEND		5
+#define EVSPEC_XCTL		6
+#define EVSPEC_XPC		7
 	unsigned cmd;
 	unsigned dev_min, dev_max;
 	unsigned ch_min, ch_max;

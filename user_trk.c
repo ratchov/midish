@@ -145,9 +145,7 @@ user_func_trackaddev(struct exec *o, struct data **r) {
 		cons_err("beat and tic must fit in the selected measure");
 		return 0;
 	}
-	pos += beat * tpb + tic;	
-
-
+	pos += beat * tpb + tic;
 	seqptr_init(&tp, &t->track);
 	seqptr_seek(&tp, pos);
 	seqptr_evput(&tp, &ev);
@@ -520,7 +518,7 @@ user_func_trackinfo(struct exec *o, struct data **r) {
 	struct songtrk *t;
 	struct seqptr mp, tp;
 	struct evspec es;
-	struct state *st, *ctx;
+	struct state *st;
 	long quant;
 	unsigned len, count, count_next, tpb, bpm;
 
@@ -564,8 +562,7 @@ user_func_trackinfo(struct exec *o, struct data **r) {
 			if (st == NULL)
 				break;			
 			if (st->phase & EV_PHASE_FIRST) {
-				ctx = statelist_getctx(&tp.statelist, &st->ev);
-				if (state_inspec(st, &es, ctx)) {
+				if (state_inspec(st, &es)) {
 					if (len >= (unsigned)quant / 2) 
 						count++;
 					else

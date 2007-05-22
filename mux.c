@@ -87,6 +87,8 @@
 #include "rmidi.h"
 #include "sysex.h"
 #include "timo.h"
+#include "state.h"
+#include "conv.h"
 
 /* 
  * MUX_START_DELAY: 
@@ -95,7 +97,7 @@
  */
 #define MUX_START_DELAY	  (2000000UL)	
 
-unsigned mux_debug = 1;
+unsigned mux_debug = 0;
 unsigned mux_ticrate;
 unsigned long mux_ticlength, mux_curpos, mux_nextpos;
 unsigned mux_curtic;
@@ -104,6 +106,7 @@ struct sysexlist mux_sysexlist;
 struct muxops *mux_ops;
 void *mux_addr;
 
+struct statelist mux_istate, mux_ostate;
 
 void mux_dbgphase(unsigned phase);
 void mux_chgphase(unsigned phase);
@@ -111,6 +114,9 @@ void mux_chgphase(unsigned phase);
 void
 mux_init(struct muxops *ops, void *addr) {
 	struct mididev *i;
+
+	statelist_init(&mux_istate);
+	statelist_init(&mux_ostate);
 	
 	/* 
 	 * default tempo is 120 beats per minutes
@@ -156,6 +162,8 @@ mux_done(void) {
 	mux_mdep_done();
 	timo_done();
 	sysexlist_done(&mux_sysexlist);
+	statelist_done(&mux_ostate);
+	statelist_done(&mux_istate);
 }
 
 #ifdef MUX_DEBUG
@@ -257,13 +265,24 @@ void
 mux_putev(struct ev *ev) {
 	unsigned unit;
 	struct mididev *dev;
+	struct ev rev[CONV_NUMREV];
+	unsigned i, nev;
 	
+#ifdef MUX_DEBUG
+	dbg_puts("mux_putev: ");
+	ev_dbg(ev);
+	dbg_puts("\n");
+#endif
+
 	if (EV_ISVOICE(ev)) {
 		unit = ev->dev;
 		if (unit < DEFAULT_MAXNDEVS) {
 			dev = mididev_byunit[unit];
 			if (dev != NULL) {
-				rmidi_putev(RMIDI(dev), ev);
+				nev = conv_unpackev(&mux_ostate, ev, rev);
+				for (i = 0; i < nev; i++) {
+					rmidi_putev(RMIDI(dev), &rev[i]);
+				}
 			}
 		}
 	} else {
@@ -412,7 +431,7 @@ mux_startcb(unsigned unit) {
 	}
 	mux_chgphase(MUX_START);
 	if (mux_debug) {
-		dbg_puts("mux_evcb: got start event\n");
+		dbg_puts("mux_startcb: got start event\n");
 	}
 }
 
@@ -428,7 +447,7 @@ mux_stopcb(unsigned unit) {
 	}
 	mux_chgphase(MUX_STOP);
 	if (mux_debug) {
-		dbg_puts("mux_evcb: got stop\n");
+		dbg_puts("mux_startcb: got stop\n");
 	}
 	mux_ops->stop(mux_addr);
 }
@@ -452,7 +471,15 @@ mux_ackcb(unsigned unit) {
  */
 void
 mux_evcb(unsigned unit, struct ev *ev) {
-	mux_ops->ev(mux_addr, ev);
+	struct ev rev;
+#ifdef MUX_DEBUG
+	dbg_puts("mux_evcb: ");
+	ev_dbg(ev);
+	dbg_puts("\n");
+#endif
+	if (conv_packev(&mux_istate, ev, &rev)) {
+		mux_ops->ev(mux_addr, &rev);
+	}
 }
 
 /*
@@ -471,7 +498,7 @@ mux_errorcb(unsigned unit) {
 	/* 
 	 * send all sound off and ctls reset
 	 */
-	ev.cmd = EV_CTL;
+	ev.cmd = EV_XCTL;
 	ev.dev = unit;
 	ev.ctl_num = 120;		/* all sound off */
 	ev.ctl_val = 0;

@@ -39,17 +39,6 @@ struct state  {
 	struct state *next, **prev;	/* for statelist */
 	struct ev ev;			/* last event */
 	unsigned phase;			/* current phase (of the 'ev' field) */
-	unsigned char b2;		/* 7bit "hi" bits of 14bit CTLs */
-
-	/*
-	 * the state may contain a copy of the last bank
-	 * controller (for prog-change states) and the last
-	 * RPN/NRPN controller (for data entries).
-	 */
-	unsigned char ctx_b0;		/* a copy of ev.b0 of the context */
-	unsigned char ctx_b1;		/* a copy of ev.b1 of the context */
-	unsigned char ctx_b2;		/* a copy of b2 of the context */
-
 	/*
 	 * the following flags are set by statelist_update() and
 	 * statelist_outdate() and can be read by other routines,
@@ -73,13 +62,6 @@ struct state  {
 	struct seqev *pos;		/* pointer to the FIRST event */
 };
 
-/*
- * return true if the state depends on any context (ex: PCs may depend
- * on bank changes, lo/hi nibbles of 14bit controllers depend on each
- * other).
- */
-#define STATE_HASCTX(s) ((s)->ctx_b0 != EV_CTL_UNKNOWN)
-
 struct statelist {
 	/* 
 	 * instead of a simple list, we should use a hash table here,
@@ -96,18 +78,14 @@ struct statelist {
 #endif
 };
 
-#define STATE_REVMAX 4		/* num events state_cancel() & co return */
-
 void	      state_pool_init(unsigned size);
 void	      state_pool_done(void);
 struct state *state_new(void);
 void	      state_del(struct state *s);
 void	      state_dbg(struct state *s);
-void	      state_copyev(struct state *s, struct ev *ev, 
-			   unsigned phase, struct state *ctx);
-unsigned      state_match(struct state *s, struct ev *ev, struct state *st);
-unsigned      state_inspec(struct state *st, struct evspec *spec, 
-			   struct state *ctx);
+void	      state_copyev(struct state *s, struct ev *ev, unsigned phase);
+unsigned      state_match(struct state *s, struct ev *ev);
+unsigned      state_inspec(struct state *st, struct evspec *spec);
 unsigned      state_eq(struct state *s, struct ev *ev);
 unsigned      state_cancel(struct state *st, struct ev *rev);
 unsigned      state_restore(struct state *st, struct ev *rev);
@@ -120,8 +98,8 @@ void	      statelist_empty(struct statelist *o);
 void	      statelist_add(struct statelist *o, struct state *st);
 void	      statelist_rm(struct statelist *o, struct state *st);
 struct state *statelist_lookup(struct statelist *o, struct ev *ev);
-struct state *statelist_getctx(struct statelist *slist, struct ev *ev);
 struct state *statelist_update(struct statelist *statelist, struct ev *ev);
+struct state *statelist_uniq(struct statelist *slist, struct ev *ev);
 void	      statelist_outdate(struct statelist *o);
 
 #endif /* MIDISH_STATE_H */

@@ -36,6 +36,7 @@
 #include "textio.h"
 #include "saveload.h"
 #include "frame.h"
+#include "conv.h"
 
 /* ------------------------------------------------------------------- */
 
@@ -64,12 +65,18 @@ ev_output(struct ev *e, struct textout *f) {
 		case EV_CAT:
 			textout_putstr(f, "cat");
 			goto one;
-		case EV_CTL:
-			textout_putstr(f, "ctl");
+		case EV_XCTL:
+			textout_putstr(f, "xctl");
 			goto two;
-		case EV_PC:
-			textout_putstr(f, "pc");
-			goto one;
+		case EV_XPC:
+			textout_putstr(f, "xpc");
+			goto two;
+		case EV_RPN:
+			textout_putstr(f, "rpn");
+			goto two;
+		case EV_NRPN:
+			textout_putstr(f, "nrpn");
+			goto two;
 		case EV_KAT:
 			textout_putstr(f, "kat");
 			goto two;
@@ -108,7 +115,11 @@ two:
 	textout_putstr(f, " ");
 	textout_putlong(f, e->v0);
 	textout_putstr(f, " ");
-	textout_putlong(f, e->v1);
+	if (e->v1 != EV_UNDEF) {
+		textout_putlong(f, e->v1);
+	} else {
+		textout_putstr(f, "nil");
+	}
 	return;
 one:	
 	textout_putstr(f, " ");
@@ -604,7 +615,7 @@ parse_empty(struct parse *o) {
 
 
 unsigned
-parse_long(struct parse *o, unsigned long max, unsigned long *data) {
+parse_long(struct parse *o, unsigned long min, unsigned long max, unsigned long *data) {
 	if (!parse_getsym(o)) {
 		return 0;
 	}
@@ -612,8 +623,8 @@ parse_long(struct parse *o, unsigned long max, unsigned long *data) {
 		lex_err(&o->lex, "number expected");
 		return 0;
 	}
-	if (o->lex.longval > max) {
-		lex_err(&o->lex, "number to large");
+	if (o->lex.longval < min || o->lex.longval > max) {
+		lex_err(&o->lex, "number out of allowed range");
 		return 0;
 	}
 	*data = (unsigned)o->lex.longval;
@@ -642,10 +653,10 @@ parse_chan(struct parse *o, unsigned long *dev, unsigned long *ch) {
 		return 0;
 	}
 	if (o->lex.id == TOK_LBRACE) {
-		if (!parse_long(o, EV_MAXDEV, dev)) {
+		if (!parse_long(o, 0, EV_MAXDEV, dev)) {
 			return 0;
 		}
-		if (!parse_long(o, EV_MAXCH, ch)) {
+		if (!parse_long(o, 0, EV_MAXCH, ch)) {
 			return 0;
 		}
 		if (!parse_getsym(o)) {
@@ -670,7 +681,6 @@ parse_chan(struct parse *o, unsigned long *dev, unsigned long *ch) {
 	}
 }
 
-
 unsigned
 parse_ev(struct parse *o, struct ev *ev) {
 	unsigned long val, val2;
@@ -683,7 +693,14 @@ parse_ev(struct parse *o, struct ev *ev) {
 		return 0;
 	}
 	if (!ev_str2cmd(ev, o->lex.strval)) {
-		goto ignore;
+	ignore:
+		parse_ungetsym(o);
+		if (!parse_ukline(o)) {
+			return 0;
+		}
+		lex_err(&o->lex, "unknown event, ignored");
+		ev->cmd = EV_NULL;
+		return 1;
 	}
 	if (EV_ISVOICE(ev)) {
 		if (!parse_chan(o, &val, &val2)) {
@@ -691,79 +708,137 @@ parse_ev(struct parse *o, struct ev *ev) {
 		}
 		ev->dev = val;
 		ev->ch = val2;
-		if (!parse_long(o, EV_MAXB0, &val)) {
-			return 0;
-		}
-		if (ev->cmd != EV_PC && ev->cmd != EV_CAT) {
-			/*
-			 * XXX: midish version < 0.2.6 used to
-			 * generate bogus kat events (without the last
-			 * byte). As workaround, we ignore such
-			 * events, in order to allow user to load its
-			 * files. Remove this code when no more needed
-			 */
-			if (ev->cmd == EV_KAT) {
-				if (!parse_getsym(o)) {
-					return 0;
-				}
-				if (o->lex.id != TOK_NUM) {
-					parse_ungetsym(o);
-					if (!parse_nl(o)) {
-						return 0;
-					}
-					ev->cmd = EV_NULL;
-					return 1;
-				}
-				parse_ungetsym(o);
-			}
-			if (!parse_long(o, EV_MAXB1, &val2)) {
-				return 0;
-			}
-			if (ev->cmd == EV_BEND) {
-				ev->bend_val = val + (val2 << 7);
-			} else {
-				ev->v0 = val;
-				ev->v1 = val2;
-			}
-		} else {
-			ev->v0 = val;
-		}
-	} else if (ev->cmd == EV_TEMPO) {
-		if (!parse_long(o, ~1U, &val)) {
+	}
+	switch (ev->cmd) {
+	case EV_TEMPO:
+		if (!parse_long(o, TEMPO_MIN, TEMPO_MAX, &val)) {
 			return 0;
 		}
 		ev->tempo_usec24 = val;
-	} else if (ev->cmd == EV_TIMESIG) {
-		if (!parse_long(o, ~1U, &val)) {
+		break;
+	case EV_TIMESIG:
+		if (!parse_long(o, 1, TIMESIG_BEATS_MAX, &val)) {
 			return 0;
 		}
-		ev->timesig_beats = o->lex.longval; /* XXX: should use val, fix it everywhere */
-		if (!parse_long(o, ~1U, &val)) {
+		ev->timesig_beats = val;
+		if (!parse_long(o, 1, TIMESIG_TICS_MAX, &val)) {
 			return 0;
 		}
-		ev->timesig_tics = o->lex.longval;
-	} else {
-ignore:		parse_ungetsym(o);
-		if (!parse_ukline(o)) {
+		ev->timesig_tics = val;
+		break;
+	case EV_NRPN:
+	case EV_RPN:
+		if (!parse_long(o, 0, FINE_MAX, &val)) {
 			return 0;
 		}
-		lex_err(&o->lex, "unknown event, ignored");
-		ev->cmd = EV_NULL;
-		return 1;
-		
+		ev->rpn_num = val;
+		if (!parse_long(o, 0, FINE_MAX, &val)) {
+			return 0;
+		}
+		ev->rpn_val = val;
+		break;
+	case EV_XCTL:
+		if (!parse_long(o, 0, COARSE_MAX, &val)) {
+			return 0;
+		}
+		ev->ctl_num = val;
+		if (!parse_long(o, 0, FINE_MAX, &val)) {
+			return 0;
+		}
+		ev->ctl_val = val;
+		break;
+	case EV_XPC:
+		if (!parse_long(o, 0, COARSE_MAX, &val)) {
+			return 0;
+		}
+		ev->pc_prog = val;
+		if (!parse_getsym(o)) {
+			return 0;
+		}
+		if (o->lex.id == TOK_NIL) {
+			ev->pc_bank = EV_UNDEF;
+			break;
+		}
+		parse_ungetsym(o);
+		if (!parse_long(o, 0, FINE_MAX, &val)) {
+			return 0;
+		}
+		ev->pc_bank = val;
+		break;
+	case EV_NON:
+	case EV_NOFF:
+	case EV_CTL:
+		if (!parse_long(o, 0, COARSE_MAX, &val)) {
+			return 0;
+		}
+		ev->v0 = val;
+		if (!parse_long(o, 0, COARSE_MAX, &val)) {
+			return 0;
+		}
+		ev->v1 = val;
+		break;
+	case EV_KAT:
+		if (!parse_long(o, 0, COARSE_MAX, &val)) {
+			return 0;
+		}
+		ev->v0 = val;
+		/*
+		 * XXX: midish version < 0.2.6 used to
+		 * generate bogus kat events (without the last
+		 * byte). As workaround, we ignore such
+		 * events, in order to allow user to load its
+		 * files. Remove this code when no more needed
+		 */
+		if (!parse_getsym(o)) {
+			return 0;
+		}
+		if (o->lex.id != TOK_NUM) {
+			parse_ungetsym(o);
+			if (!parse_nl(o)) {
+				return 0;
+			}
+			ev->cmd = EV_NULL;
+			return 1;
+		}
+		parse_ungetsym(o);
+		if (!parse_long(o, 0, COARSE_MAX, &val)) {
+			return 0;
+		}
+		ev->v1 = val;
+		break;		
+	case EV_PC:
+	case EV_CAT:
+		if (!parse_long(o, 0, COARSE_MAX, &val)) {
+			return 0;
+		}
+		ev->v0 = val;
+		break;
+	case EV_BEND:
+		if (!parse_long(o, 0, COARSE_MAX, &val)) {
+			return 0;
+		}
+		ev->v0 = val;
+		if (!parse_long(o, 0, COARSE_MAX, &val)) {
+			return 0;
+		}
+		ev->v0 += (val << 7);
+		break;
+	default:
+		goto ignore;
 	}
 	if (!parse_nl(o)) {
 		return 0;
 	}
 	return 1;
 }
-	
 
 
 unsigned
 parse_track(struct parse *o, struct track *t) {
 	unsigned delta;
 	struct seqev *pos, *se;
+	struct statelist slist;
+	struct ev ev, rev;
 	
 	if (!parse_getsym(o)) {
 		return 0;
@@ -773,9 +848,11 @@ parse_track(struct parse *o, struct track *t) {
 		return 0;
 	}
 	track_clear(t);	
+	statelist_init(&slist);
 	pos = t->first;
 	for (;;) {
 		if (!parse_getsym(o)) {
+			statelist_done(&slist);
 			return 0;
 		}
 		if (o->lex.id == TOK_ENDLINE) {
@@ -785,23 +862,26 @@ parse_track(struct parse *o, struct track *t) {
 		} else if (o->lex.id == TOK_NUM) {
 			parse_ungetsym(o);
 			if (!parse_delta(o, &delta)) {
+				statelist_done(&slist);
 				return 0;
 			}
 			pos->delta += delta;
 		} else {
-			se = seqev_new();
 			parse_ungetsym(o);
-			if (!parse_ev(o, &se->ev)) {
-				seqev_del(se);
+			if (!parse_ev(o, &ev)) {
+				statelist_done(&slist);
 				return 0;
 			}
-			if (se->ev.cmd != EV_NULL) {
-				seqev_ins(pos, se);
-			} else {
-				seqev_del(se);
+			if (ev.cmd != EV_NULL) {
+				if (conv_packev(&slist, &ev, &rev)) {
+					se = seqev_new();
+					se->ev = rev;
+					seqev_ins(pos, se);
+				}
 			}
 		}
 	}
+	statelist_done(&slist);
 	return 1;			
 }
 
@@ -821,10 +901,10 @@ parse_rule(struct parse *o, struct filt *f) {
 		if (!parse_chan(o, &idev, &ich)) {
 			return 0;
 		}
-		if (!parse_long(o, EV_MAXB0, &keylo)) {
+		if (!parse_long(o, 0, EV_MAXB0, &keylo)) {
 			return 0;
 		}
-		if (!parse_long(o, EV_MAXB0, &keyhi)) {
+		if (!parse_long(o, 0, EV_MAXB0, &keyhi)) {
 			return 0;
 		}
 		filt_conf_keydrop(f, idev, ich, keylo, keyhi);
@@ -835,13 +915,13 @@ parse_rule(struct parse *o, struct filt *f) {
 		if (!parse_chan(o, &odev, &och)) {
 			return 0;
 		}
-		if (!parse_long(o, EV_MAXB0, &keylo)) {
+		if (!parse_long(o, 0, EV_MAXB0, &keylo)) {
 			return 0;
 		}
-		if (!parse_long(o, EV_MAXB0, &keyhi)) {
+		if (!parse_long(o, 0, EV_MAXB0, &keyhi)) {
 			return 0;
 		}
-		if (!parse_long(o, EV_MAXB0, &ukeyplus)) {
+		if (!parse_long(o, 0, EV_MAXB0, &ukeyplus)) {
 			return 0;
 		}
 		if (ukeyplus > 63) {
@@ -861,7 +941,7 @@ parse_rule(struct parse *o, struct filt *f) {
 		if (!parse_chan(o, &idev, &ich)) {
 			return 0;
 		}
-		if (!parse_long(o, EV_MAXB0, &ictl)) {
+		if (!parse_long(o, 0, EV_MAXB0, &ictl)) {
 			return 0;
 		}
 		filt_conf_ctldrop(f, idev, ich, ictl);
@@ -872,10 +952,10 @@ parse_rule(struct parse *o, struct filt *f) {
 		if (!parse_chan(o, &odev, &och)) {
 			return 0;
 		}
-		if (!parse_long(o, EV_MAXB0, &ictl)) {
+		if (!parse_long(o, 0, EV_MAXB0, &ictl)) {
 			return 0;
 		}
-		if (!parse_long(o, EV_MAXB0, &octl)) {
+		if (!parse_long(o, 0, EV_MAXB0, &octl)) {
 			return 0;
 		}
 		if (!parse_getsym(o)) {
@@ -900,15 +980,15 @@ parse_rule(struct parse *o, struct filt *f) {
 		}
 		filt_conf_chanmap(f, idev, ich, odev, och);
 	} else if (str_eq(o->lex.strval, "devdrop")) {
-		if (!parse_long(o, EV_MAXDEV, &idev)) {
+		if (!parse_long(o, 0, EV_MAXDEV, &idev)) {
 			return 0;
 		}
 		filt_conf_devdrop(f, idev);
 	} else if (str_eq(o->lex.strval, "devmap")) {
-		if (!parse_long(o, EV_MAXDEV, &idev)) {
+		if (!parse_long(o, 0, EV_MAXDEV, &idev)) {
 			return 0;
 		}
-		if (!parse_long(o, EV_MAXDEV, &odev)) {
+		if (!parse_long(o, 0, EV_MAXDEV, &odev)) {
 			return 0;
 		}
 		filt_conf_devmap(f, idev, odev);
@@ -984,13 +1064,13 @@ parse_sysex(struct parse *o, struct sysex **res) {
 						break;
 					}
 					parse_ungetsym(o);
-					if (!parse_long(o, 0xff, &val)) {
+					if (!parse_long(o, 0, 0xff, &val)) {
 						goto err1;
 					}
 					sysex_add(sx, val);
 				}
 			} else if (str_eq(o->lex.strval, "unit")) {
-				if (!parse_long(o, EV_MAXDEV, &val)) {
+				if (!parse_long(o, 0, EV_MAXDEV, &val)) {
 					goto err1;
 				}
 				sx->unit = val;
@@ -1123,7 +1203,7 @@ parse_songtrk(struct parse *o, struct song *s, struct songtrk *t) {
 					return 0;
 				}
 			} else if (str_eq(o->lex.strval, "mute")) {
-				if (!parse_long(o, 1, &val)) {
+				if (!parse_long(o, 0, 1, &val)) {
 					return 0;
 				}
 				t->mute = val;
@@ -1266,7 +1346,7 @@ parse_metro(struct parse *o, struct metro *m) {
 			break;
 		} else if (o->lex.id == TOK_IDENT) {
 			if (str_eq(o->lex.strval, "enabled")) {
-				if (!parse_long(o, 1U, &num)) {
+				if (!parse_long(o, 0, 1, &num)) {
 					return 0;
 				}
 				if (!parse_nl(o)) {
@@ -1410,7 +1490,7 @@ parse_song(struct parse *o, struct song *s) {
 					return 0;
 				}
 			} else if (str_eq(o->lex.strval, "tics_per_unit")) {
-				if (!parse_long(o, ~1U, &num)) {
+				if (!parse_long(o, 0, ~1U, &num)) {
 					return 0;
 				}
 				if ((num % 96) != 0) {
@@ -1425,7 +1505,7 @@ parse_song(struct parse *o, struct song *s) {
 				}
 				s->tics_per_unit = num;
 			} else if (str_eq(o->lex.strval, "tempo_factor")) {
-				if (!parse_long(o, ~1U, &num)) {
+				if (!parse_long(o, 0, ~1U, &num)) {
 					return 0;
 				}
 				if (!parse_nl(o)) {
@@ -1505,7 +1585,7 @@ parse_song(struct parse *o, struct song *s) {
 					return 0;
 				}
 			} else if (str_eq(o->lex.strval, "curpos")) {
-				if (!parse_long(o, ~1U, &num)) {
+				if (!parse_long(o, 0, ~1U, &num)) {
 					return 0;
 				}
 				if (!parse_nl(o)) {
@@ -1513,7 +1593,7 @@ parse_song(struct parse *o, struct song *s) {
 				}
 				s->curpos = num;
 			} else if (str_eq(o->lex.strval, "curlen")) {
-				if (!parse_long(o, ~1U, &num)) {
+				if (!parse_long(o, 0, ~1U, &num)) {
 					return 0;
 				}
 				if (!parse_nl(o)) {
@@ -1521,7 +1601,7 @@ parse_song(struct parse *o, struct song *s) {
 				}
 				s->curlen = num;
 			} else if (str_eq(o->lex.strval, "curquant")) {
-				if (!parse_long(o, ~1U, &num)) {
+				if (!parse_long(o, 0, ~1U, &num)) {
 					return 0;
 				}
 				if (num > s->tics_per_unit) {

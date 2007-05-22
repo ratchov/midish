@@ -27,13 +27,14 @@ clean:
 		rm -f -- ${PROGS} ${MIDISH_OBJS} ${RMIDISH_OBJS} \
 		*~ *.bak *.tmp *.ln *.s *.out *.core core
 
-# ---------------------------------------------- dependencies for midish ---
+# --------------------------------------------------- targets for midish ---
 
 MIDISH_OBJS = \
-cons.o data.o dbg.o ev.o exec.o filt.o frame.o lex.o main.o mdep.o metro.o \
-mididev.o mux.o name.o node.o parse.o pool.o rmidi.o saveload.o smf.o \
-song.o state.o str.o sysex.o textio.o timo.o track.o user.o \
-user_trk.o user_chan.o user_filt.o user_sx.o user_song.o user_dev.o 
+cons.o conv.o data.o dbg.o ev.o exec.o filt.o frame.o lex.o \
+main.o mdep.o metro.o mididev.o mux.o name.o node.o parse.o \
+pool.o rmidi.o saveload.o smf.o song.o state.o str.o sysex.o \
+textio.o timo.o track.o user.o user_trk.o user_chan.o \
+user_filt.o user_sx.o user_song.o user_dev.o 
 
 midish:		${MIDISH_OBJS}
 		${CC} ${LDFLAGS} ${MIDISH_OBJS} -o midish
@@ -46,7 +47,26 @@ install-midish:	midish smfplay smfrec midish.1 smfplay.1 smfrec.1 \
 		cp README manual.html ${DOC_DIR}
 		cp midishrc sample.sng ${EXAMPLES_DIR}
 
+# -------------------------------------------------- targets for rmidish ---
+
+RMIDISH_OBJS = rmidish.o
+
+rmidish:	midish ${RMIDISH_OBJS}
+		${CC} ${LDFLAGS} ${READLINE_LDFLAGS} ${RMIDISH_OBJS} \
+		-o rmidish ${READLINE_LIB}
+
+install-rmidish:rmidish
+		mkdir -p ${BIN_DIR} ${MAN1_DIR}
+		cp rmidish ${BIN_DIR}
+		cp rmidish.1 ${MAN1_DIR}
+
+rmidish.o:	rmidish.c
+		${CC} -c ${CFLAGS} ${READLINE_CFLAGS} ${READLINE_INCLUDE} $<
+
+# --------------------------------------------------------------------------
+
 cons.o:		cons.c dbg.h textio.h cons.h user.h
+conv.o:		conv.c dbg.h state.h ev.h default.h conv.h
 data.o:		data.c dbg.h str.h cons.h data.h
 dbg.o:		dbg.c dbg.h
 ev.o:		ev.c dbg.h ev.h default.h str.h
@@ -64,7 +84,7 @@ metro.o:	metro.c dbg.h mux.h metro.h ev.h default.h timo.h
 mididev.o:	mididev.c dbg.h default.h mididev.h data.h name.h str.h \
 		rmidi.h mdep.h pool.h cons.h
 mux.o:		mux.c dbg.h ev.h default.h mdep.h mux.h rmidi.h \
-		mididev.h sysex.h timo.h
+		mididev.h sysex.h timo.h state.h conv.h
 name.o:		name.c dbg.h name.h str.h
 node.o:		node.c dbg.h str.h data.h node.h exec.h name.h cons.h
 parse.o:	parse.c dbg.h textio.h lex.h data.h parse.h node.h \
@@ -75,10 +95,10 @@ rmidi.o:	rmidi.c dbg.h default.h mdep.h ev.h sysex.h mux.h \
 rmidish.o:	rmidish.c
 saveload.o:	saveload.c dbg.h name.h str.h song.h track.h ev.h \
 		default.h state.h frame.h filt.h timo.h sysex.h metro.h \
-		parse.h lex.h textio.h saveload.h
+		parse.h lex.h textio.h saveload.h conv.h
 smf.o:		smf.c dbg.h sysex.h track.h ev.h default.h state.h \
 		song.h name.h str.h frame.h filt.h timo.h metro.h smf.h \
-		cons.h
+		cons.h conv.h
 song.o:		song.c dbg.h mididev.h mux.h track.h ev.h default.h \
 		state.h frame.h filt.h timo.h song.h name.h str.h \
 		sysex.h metro.h cons.h
@@ -110,20 +130,3 @@ user_sx.o:	user_sx.c dbg.h default.h node.h exec.h name.h str.h \
 user_trk.o:	user_trk.c dbg.h default.h node.h exec.h name.h str.h \
 		data.h cons.h frame.h state.h ev.h track.h song.h filt.h \
 		timo.h sysex.h metro.h user.h saveload.h textio.h
-
-# --------------------------------------------- dependencies for rmidish ---
-
-RMIDISH_OBJS = rmidish.o
-
-rmidish:	midish ${RMIDISH_OBJS}
-		${CC} ${LDFLAGS} ${READLINE_LDFLAGS} ${RMIDISH_OBJS} \
-		-o rmidish ${READLINE_LIB}
-
-install-rmidish:rmidish
-		mkdir -p ${BIN_DIR} ${MAN1_DIR}
-		cp rmidish ${BIN_DIR}
-		cp rmidish.1 ${MAN1_DIR}
-
-rmidish.o:	rmidish.c
-		${CC} -c ${CFLAGS} ${READLINE_CFLAGS} ${READLINE_INCLUDE} $<
-

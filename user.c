@@ -253,7 +253,7 @@ exec_lookupev(struct exec *o, char *name, struct ev *ev) {
 	ev->dev = dev;
 	ev->ch = ch;
 	d = d->next;
-	max = ev->cmd == EV_BEND ? 0x3fff : 0xff;
+	max = (ev->cmd == EV_BEND) ? 0x3fff : 0x7f;
 	if (!d || d->type != DATA_LONG || d->val.num < 0 || d->val.num > max) {
 		cons_err("bad byte0 in event spec");
 		return 0;
@@ -261,7 +261,8 @@ exec_lookupev(struct exec *o, char *name, struct ev *ev) {
 	ev->v0 = d->val.num;
 	d = d->next;
 	if (ev->cmd != EV_PC && ev->cmd != EV_CAT && ev->cmd != EV_BEND) {
-		if (!d || d->type != DATA_LONG || d->val.num < 0 || d->val.num > 127) {
+		max = (ev->cmd == EV_XPC) ? 0x3fff : 0x7f;
+		if (!d || d->type != DATA_LONG || d->val.num < 0 || d->val.num > max) {
 			cons_err("bad byte1 in event spec");
 			return 0;
 		}
@@ -271,6 +272,22 @@ exec_lookupev(struct exec *o, char *name, struct ev *ev) {
 			cons_err("extra data in event spec");
 			return 0;
 		}
+	}
+
+	/*
+	 * convert all controllers to XCTLs
+	 */
+	if (ev->cmd == EV_CTL) {
+		ev->cmd = EV_XCTL;
+		ev->ctl_val <<= 7;
+	}
+	if (ev->cmd == EV_XCTL) {
+		if (ev->ctl_num == 0 || 
+		    (ev->ctl_num >= 98 && ev->ctl_num <= 101) ||
+		    (ev->ctl_num >= 32 && ev->ctl_num <= 63)) {
+			cons_err("not allowed controller number, use xpc, nrpn, rpn instead");
+		}
+		return 0;
 	}
 	return 1;
 }
@@ -733,13 +750,13 @@ user_func_shut(struct exec *o, struct data **r) {
 
 	for (dev = mididev_list; dev != NULL; dev = dev->next) {
 		for (i = 0; i < EV_MAXCH; i++) {
-			ev.cmd = EV_CTL;
+			ev.cmd = EV_XCTL;
 			ev.dev = dev->unit;		
 			ev.ch = i;
 			ev.ctl_num = 121;
 			ev.ctl_val = 0;
 			mux_putev(&ev);
-			ev.cmd = EV_CTL;		
+			ev.cmd = EV_XCTL;		
 			ev.dev = dev->unit;		
 			ev.ch = i;
 			ev.ctl_num = 123;

@@ -42,6 +42,28 @@
  */
 #define TEMPO_TO_USEC24(tempo,tpb) (60L * 24000000L / ((tempo) * (tpb)))
 
+/*
+ * special meaning controller numbers
+ */
+#define BANK_HI		0
+#define BANK_LO		32
+#define DATAENT_HI	6
+#define DATAENT_LO	38
+#define NRPN_HI		99
+#define NRPN_LO		98
+#define RPN_HI		101
+#define RPN_LO		100
+
+/*
+ * define MIN and MAX values of event parameters
+ */
+#define TEMPO_MIN		TEMPO_TO_USEC24(240, TIMESIG_TICS_MAX)
+#define TEMPO_MAX		TEMPO_TO_USEC24(20,  24)
+#define TIMESIG_TICS_MAX	240
+#define TIMESIG_BEATS_MAX	16
+#define COARSE_MAX		0x7f
+#define FINE_MAX		0x3fff
+
 /* 
  * maximum number of midi devices supported by midish 
  */

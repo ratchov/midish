@@ -341,18 +341,15 @@ seqptr_seek(struct seqptr *sp, unsigned ntics) {
 /*
  * generate an event that will suspend the frame of the given
  * state; the state is unchanged and may belong to any statelist.
- * If an event was generated, its state is returned, otherwise
- * NULL is returned.
+ * Return 1 if an event was generated.
  */
 unsigned
 seqptr_cancel(struct seqptr *sp, struct state *st) {
-	struct ev ev[STATE_REVMAX];
-	unsigned i, nev;
+	struct ev ev;
 
 	if (!EV_ISNOTE(&st->ev) && !(st->phase & EV_PHASE_LAST)) {
-		nev = state_cancel(st, ev);
-		for (i = 0; i < nev; i++) {
-			seqptr_evput(sp, &ev[i]);
+		if (state_cancel(st, &ev)) {
+			seqptr_evput(sp, &ev);
 		}
 		return 1;
 	}
@@ -362,18 +359,15 @@ seqptr_cancel(struct seqptr *sp, struct state *st) {
 /*
  * generate an event that will restore the frame of the given
  * state; the state is unchanged and may belong to any statelist.
- * If an event was generated, its state is returned, otherwise
- * NULL is returned.
+ * Return 1 if an event was generated.
  */
 unsigned
 seqptr_restore(struct seqptr *sp, struct state *st) {
-	struct ev ev[STATE_REVMAX];
-	unsigned i, nev;
+	struct ev ev;
 
 	if (!EV_ISNOTE(&st->ev) && !(st->phase & EV_PHASE_LAST)) {
-		nev = state_restore(st, ev);
-		for (i = 0; i < nev; i++) {
-			seqptr_evput(sp, &ev[i]);
+		if (state_restore(st, &ev)) {
+			seqptr_evput(sp, &ev);
 		}
 		return 1;
 	}
@@ -408,7 +402,7 @@ seqptr_rmlast(struct seqptr *sp, struct state *st) {
 		if (i == sp->pos) {
 			break;
 		}
-		if (state_match(st, &i->ev, NULL)) {
+		if (state_match(st, &i->ev)) {
 			prev = cur;
 			cur = i;
 		}
@@ -460,7 +454,7 @@ seqptr_rmprev(struct seqptr *sp, struct state *st) {
 	 */
 	i = st->pos;
 	for (;;) {
-		if (state_match(st, &i->ev, NULL)) {
+		if (state_match(st, &i->ev)) {
 			/* 
 			 * remove the event from the track
 			 * (but not the blank space)
@@ -668,7 +662,7 @@ track_move(struct track *src, unsigned start, unsigned len,
 	unsigned delta;
 	struct seqptr sp, dp;		/* current src & dst track states */
 	struct statelist slist;		/* original src track state */
-	struct state *st, *ctx;
+	struct state *st;
 
 #define TAG_KEEP	1		/* frame is not erased */
 #define TAG_COPY	2		/* frame is copied */
@@ -696,8 +690,7 @@ track_move(struct track *src, unsigned start, unsigned len,
 	 */
 	if (blank) {
 		for (st = slist.first; st != NULL; st = st->next) {
-			ctx = statelist_getctx(&slist, &st->ev);
-			if (state_inspec(st, es, ctx) &&
+			if (state_inspec(st, es) &&
 			    seqptr_cancel(&sp, st))
 				st->tag &= ~TAG_KEEP;
 		}
@@ -716,8 +709,7 @@ track_move(struct track *src, unsigned start, unsigned len,
 		if ((st->phase & EV_PHASE_FIRST) ||
 		    (st->phase & EV_PHASE_NEXT && !EV_ISNOTE(&st->ev))) {
 			st->tag &= ~TAG_COPY;
-			ctx = statelist_getctx(&slist, &st->ev);
-			if (state_inspec(st, es, ctx))
+			if (state_inspec(st, es))
 				st->tag |= TAG_COPY;
 		}
 		if (st->phase & EV_PHASE_FIRST) {
@@ -736,8 +728,7 @@ track_move(struct track *src, unsigned start, unsigned len,
 	 */
 	if (copy) {
 		for (st = slist.first; st != NULL; st = st->next) {
-			ctx = statelist_getctx(&slist, &st->ev);
-			if (!state_inspec(st, es, ctx))
+			if (!state_inspec(st, es))
 				continue;
 			if (!(st->tag & TAG_COPY) && 
 			    seqptr_restore(&dp, st)) {
@@ -761,8 +752,7 @@ track_move(struct track *src, unsigned start, unsigned len,
 		if (st == NULL)
 			break;
 		if (st->phase & EV_PHASE_FIRST) {
-			ctx = statelist_getctx(&slist, &st->ev);
-			st->tag = state_inspec(st, es, ctx) ? TAG_COPY : TAG_KEEP;
+			st->tag = state_inspec(st, es) ? TAG_COPY : TAG_KEEP;
 		}
 		if (copy && (st->tag & TAG_COPY)) {
 			seqptr_evput(&dp, &st->ev);
@@ -1072,8 +1062,9 @@ track_check(struct track *src) {
 		seqptr_ticput(&sp, delta);
 
 		st = seqptr_evdel(&sp, &slist);
-		if (st == NULL)
+		if (st == NULL) {
 			break;
+		}
 		if (st->phase & EV_PHASE_FIRST) {
 			if (st->flags & STATE_BOGUS) {
 				dbg_puts("track_check: ");
@@ -1091,7 +1082,7 @@ track_check(struct track *src) {
 		}
 		if (st->tag) {
 			/*
-			 * dont dumplicate events
+			 * dont duplicate events
 			 */
 			dst = statelist_lookup(&sp.statelist, &st->ev);
 			if (dst == NULL || !state_eq(dst, &st->ev)) {
@@ -1484,10 +1475,10 @@ track_timerm(struct track *t, unsigned measure, unsigned amount) {
 void
 track_confev(struct track *src, struct ev *ev) {
 	struct seqptr sp;
-	struct ev rev[STATE_REVMAX];
+	struct ev rev;
 	struct statelist slist;
 	struct state *s, *st;
-	unsigned i, nev, tag, tagmax, tagmin;
+	unsigned tag, tagmax, tagmin;
 
 #ifdef FRAME_DEBUG_CONF
 	dbg_puts("\ntrack_confev: starting\n");
@@ -1552,19 +1543,20 @@ track_confev(struct track *src, struct ev *ev) {
 		/*
 		 * restore the state
 		 */
-		nev = state_restore(st, rev);
-		for (i = 0; i < nev; i++) {
-			st = statelist_lookup(&sp.statelist, &rev[i]);
-			if (st && state_eq(st, &rev[i])) {
+		if (state_restore(st, &rev)) {
+			st = statelist_lookup(&sp.statelist, &rev);
+			if (st && state_eq(st, &rev)) {
 #ifdef FRAME_DEBUG_CONF
 				dbg_puts("track_confev: skipped\n");
 #endif
 				continue;
 			}
-			(void)seqptr_evput(&sp, &rev[i]);
+			(void)seqptr_evput(&sp, &rev);
 		}
 		tag++;
 	}
 	statelist_done(&slist);
 	seqptr_done(&sp);
 }
+
+

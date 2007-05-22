@@ -36,9 +36,9 @@
 #include "ev.h"
 #include "str.h"
 
-char *ev_cmdstr[EV_NUMCMD] = { 
-	"nil",		NULL,		NULL,		"tempo",
-	"timesig",	"xrpn",		"xctl",		"xpc",
+char *ev_cmdstr[EV_NUMCMD] = {
+	"nil",		NULL,		"tempo",	"timesig",
+	"nrpn",		"rpn",		"xctl",		"xpc",
 	"noff",		"non",		"kat",		"ctl",
 	"pc",		"cat",		"bend"
 };
@@ -107,7 +107,7 @@ ev_phase(struct ev *ev) {
 			phase = EV_PHASE_LAST;
 		}
 		break;
-	case EV_CTL:
+	case EV_XCTL:
 		if (!EV_CTL_ISFRAME(ev)) {
 			phase = EV_PHASE_FIRST | EV_PHASE_LAST;
 		} else {
@@ -148,6 +148,10 @@ ev_dbg(struct ev *ev) {
 		case EV_NOFF:
 		case EV_KAT:
 		case EV_CTL:
+		case EV_NRPN:
+		case EV_RPN:
+		case EV_XPC:
+		case EV_XCTL:
 			dbg_puts(" {");
 			dbg_putx(ev->dev);
 			dbg_puts(" ");

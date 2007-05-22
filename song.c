@@ -560,22 +560,18 @@ song_ticplay(struct song *o) {
  */
 void
 song_strestore(struct state *s) {
-	struct ev re[STATE_REVMAX];
-	unsigned i, nev;
+	struct ev re;
 	
 	if (!EV_ISNOTE(&s->ev)) {
-		nev = state_restore(s, re);
-		for (i = 0; i < nev; i++) {
+		if (state_restore(s, &re)) {
 			if (song_debug) {
 				dbg_puts("song_strestore: ");
 				ev_dbg(&s->ev);
 				dbg_puts(": restored -> ");
-				ev_dbg(&re[i]);
-				dbg_puts(" (");
-				dbg_putu(i);
-				dbg_puts(")\n");
+				ev_dbg(&re);
+				dbg_puts("\n");
 			}
-			mux_putev(&re[i]);
+			mux_putev(&re);
 		}
 		s->tag = 1;
 	} else {
@@ -597,12 +593,7 @@ song_confrestore(struct statelist *slist) {
 	struct state *s;
 
 	for (s = slist->first; s != NULL; s = s->next) {
-		if (STATE_HASCTX(s))
-			song_strestore(s);
-	}
-	for (s = slist->first; s != NULL; s = s->next) {
-		if (!STATE_HASCTX(s))
-			song_strestore(s);
+		song_strestore(s);
 	}
 }
 
@@ -611,22 +602,18 @@ song_confrestore(struct statelist *slist) {
  */
 void
 song_stcancel(struct state *s) {
-	struct ev ca[STATE_REVMAX];
-	unsigned i, nev;
+	struct ev ca;
 
 	if (s->tag) {
-		nev = state_cancel(s, ca);
-		for (i = 0; i < nev; i++) {
+		if (state_cancel(s, &ca)) {
 			if (song_debug) {
 				dbg_puts("song_stcancel: ");
 				ev_dbg(&s->ev);
 				dbg_puts(": canceled -> ");
-				ev_dbg(&ca[i]);
-				dbg_puts(" (");
-				dbg_putu(i);
-				dbg_puts(")\n");
+				ev_dbg(&ca);
+				dbg_puts("\n");
 			}
-				mux_putev(&ca[i]);
+			mux_putev(&ca);
 		}
 		s->tag = 0;
 	} else {

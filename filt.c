@@ -1015,12 +1015,12 @@ filt_matchrule(struct filt *o, struct rule *r, struct ev *ev) {
 			te.ch = r->och;
 			te.note_num += r->keyplus;
 			te.note_num &= 0x7f;
-			te.note_vel = r->curve[te.note_vel];
+			te.note_vel = te.note_vel;
 			goto match_pass;
 		}
 		break;
 	case RULE_CTLDROP:
-		if (ev->cmd == EV_CTL &&
+		if (ev->cmd == EV_XCTL &&
 		    ev->dev == r->idev &&
 		    ev->ch == r->ich &&
 		    ev->ctl_num == r->ictl) {
@@ -1028,7 +1028,7 @@ filt_matchrule(struct filt *o, struct rule *r, struct ev *ev) {
 		}
 		break;
 	case RULE_CTLMAP:
-		if (ev->cmd == EV_CTL &&
+		if (ev->cmd == EV_XCTL &&
 		    ev->dev == r->idev &&
 		    ev->ch == r->ich &&
 		    ev->ctl_num == r->ictl) {
@@ -1036,7 +1036,7 @@ filt_matchrule(struct filt *o, struct rule *r, struct ev *ev) {
 			te.dev = r->odev;
 			te.ch = r->och;
 			te.ctl_num = r->octl;
-			te.ctl_val = r->curve[te.ctl_val];
+			te.ctl_val = te.ctl_val;
 			goto match_pass;
 		}
 		break;
@@ -1102,21 +1102,19 @@ filt_processev(struct filt *o, struct ev *ev) {
 void
 filt_shut(struct filt *o) {
 	struct state *s, *snext;
-	struct ev ca[STATE_REVMAX];
-	unsigned i, nev;
+	struct ev ca;
 	
 	for (s = o->statelist.first; s != NULL; s = snext) {
 		snext = s->next;
-		nev = state_cancel(s, ca);
-		for (i = 0; i < nev; i++) {
+		if (state_cancel(s, &ca)) {
 			if (filt_debug) {
 				dbg_puts("filt_shut: ");
 				ev_dbg(&s->ev);
 				dbg_puts(": cancelled by: ");
-				ev_dbg(&ca[i]);
+				ev_dbg(&ca);
 				dbg_puts("\n");
 			}
-			filt_processev(o, &ca[i]);
+			filt_processev(o, &ca);
 		}
 		statelist_rm(&o->statelist, s);
 		state_del(s);
@@ -1130,12 +1128,11 @@ filt_shut(struct filt *o) {
 void
 filt_kill(struct filt *o, struct ev *ev) {
 	struct state *st, *stnext;
-	struct ev ca[STATE_REVMAX];
-	unsigned i, nev;
+	struct ev ca;
 
 	for (st = o->statelist.first; st != NULL; st = stnext) {
 		stnext = st->next;
-		if (!state_match(st, ev, NULL) ||
+		if (!state_match(st, ev) ||
 		    !(st->tag & TAG_PASS) ||
 		    st->phase & EV_PHASE_LAST) {
 			continue;
@@ -1145,9 +1142,8 @@ filt_kill(struct filt *o, struct ev *ev) {
 		 * EV_PHASE_LAST, so the state can be deleted if
 		 * necessary
 		 */
-		nev = state_cancel(st, ca);
-		for (i = 0; i < nev; i++) {
-			filt_processev(o, &ca[i]);
+		if (state_cancel(st, &ca)) {
+			filt_processev(o, &ca);
 		}
 		st->phase = EV_PHASE_LAST;
 		st->tag &= ~TAG_PASS;

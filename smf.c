@@ -40,6 +40,7 @@
 #include "smf.h"
 #include "cons.h"
 #include "frame.h"
+#include "conv.h"
 
 #define MAXTRACKNAME 100
 
@@ -301,17 +302,44 @@ smf_putheader(struct smf *o, char *hdr, unsigned len) {
 /* ------------------------------------------------------- export --- */
 
 void
-smf_putmeta(struct smf *o, unsigned *used, struct song *s) {
+smf_puttrack(struct smf *o, unsigned *used, struct song *s, struct track *t) {
 	struct seqev *pos;
-	unsigned delta, denom;
+	unsigned status, newstatus, delta, chan, denom;
+	struct ev rev[CONV_NUMREV];
+	struct statelist slist;
+	unsigned i, nev;
 	
+
+	statelist_init(&slist);
 	delta = 0;
-	for (pos = s->meta.first; pos != NULL; pos = pos->next) {
+	status = 0;
+	for (pos = t->first; pos != NULL; pos = pos->next) {
 		delta += pos->delta;
 		if (pos->ev.cmd == EV_NULL) {
 			break;
 		}
-		if (pos->ev.cmd == EV_TEMPO) {
+		if (EV_ISVOICE(&pos->ev)) {
+			nev = conv_unpackev(&slist, &pos->ev, rev); 
+			for (i = 0; i < nev; i++) {
+				smf_putvar(o, used, delta);
+				delta = 0;
+				chan = rev[i].ch;
+				newstatus = (rev[i].cmd << 4) + (chan & 0x0f);
+				if (newstatus != status) {
+					status = newstatus;
+					smf_putc(o, used, status);
+				}
+				if (rev[i].cmd == EV_BEND) {
+					smf_putc(o, used, rev[i].bend_val & 0x7f);
+					smf_putc(o, used, rev[i].bend_val >> 7);
+				} else {
+					smf_putc(o, used, rev[i].v0);
+					if (SMF_EVLEN(status) == 2) {
+						smf_putc(o, used, rev[i].v1);
+					}
+				}
+			}
+		} else if (pos->ev.cmd == EV_TEMPO) {
 			smf_putvar(o, used, delta);
 			delta = 0;
 			smf_putc(o, used, 0xff);
@@ -337,7 +365,7 @@ smf_putmeta(struct smf *o, unsigned *used, struct song *s) {
 				denom = 4;
 				break;
 			default:
-				dbg_puts("smf_putmeta: bad time signature\n");
+				dbg_puts("smf_puttrack: bad time signature\n");
 				dbg_panic();
 			}
 			smf_putvar(o, used, delta);
@@ -352,87 +380,14 @@ smf_putmeta(struct smf *o, unsigned *used, struct song *s) {
 			/* metronome 1/32 notes per 24 tics */
 			smf_putc(o, used, 8 * s->tics_per_unit / 96);
 		}
+
 	}
 	smf_putvar(o, used, delta);
 	smf_putc(o, used, 0xff);
 	smf_putc(o, used, 0x2f);
 	smf_putc(o, used, 0x00);
-	return;
+	statelist_done(&slist);
 }
-
-void
-smf_puttrk(struct smf *o, unsigned *used, struct song *s, struct songtrk *t) {
-	struct seqev *pos;
-	unsigned status, newstatus, delta, chan;
-	
-	delta = 0;
-	status = 0;
-	for (pos = t->track.first; pos != NULL; pos = pos->next) {
-		delta += pos->delta;
-		if (pos->ev.cmd == EV_NULL) {
-			break;
-		}
-		if (EV_ISVOICE(&pos->ev)) {
-			smf_putvar(o, used, delta);
-			delta = 0;
-			chan = pos->ev.ch;
-			newstatus = (pos->ev.cmd << 4) + (chan & 0x0f);
-			if (newstatus != status) {
-				status = newstatus;
-				smf_putc(o, used, status);
-			}
-			if (pos->ev.cmd == EV_BEND) {
-				smf_putc(o, used, pos->ev.bend_val & 0x7f);
-				smf_putc(o, used, pos->ev.bend_val >> 7);
-			} else {
-				smf_putc(o, used, pos->ev.v0);
-				if (SMF_EVLEN(status) == 2) {
-					smf_putc(o, used, pos->ev.v1);
-				}
-			}
-		}
-	}
-	smf_putvar(o, used, delta);
-	smf_putc(o, used, 0xff);
-	smf_putc(o, used, 0x2f);
-	smf_putc(o, used, 0x00);
-	return;
-}
-
-
-void
-smf_putchan(struct smf *o, unsigned *used, struct song *s, struct songchan *i) {
-	struct seqev *pos;
-	unsigned status, newstatus, delta;
-	
-	delta = 0;
-	status = 0;
-	for (pos = i->conf.first; pos != NULL; pos = pos->next) {
-		delta += pos->delta;
-		if (pos->ev.cmd == EV_NULL) {
-			break;
-		}
-		if (EV_ISVOICE(&pos->ev)) {
-			smf_putvar(o, used, delta);
-			delta = 0;
-			newstatus = (pos->ev.cmd << 4) + (i->ch & 0x0f);
-			if (newstatus != status) {
-				status = newstatus;
-				smf_putc(o, used, status);
-			}
-			smf_putc(o, used, pos->ev.v0);
-			if (SMF_EVLEN(status) == 2) {
-				smf_putc(o, used, pos->ev.v1);
-			}
-		}
-	}
-	smf_putvar(o, used, delta);
-	smf_putc(o, used, 0xff);
-	smf_putc(o, used, 0x2f);
-	smf_putc(o, used, 0x00);
-	return;
-}
-
 
 void
 smf_putsysex(struct smf *o, unsigned *used, struct sysex *sx) {
@@ -502,9 +457,9 @@ song_exportsmf(struct song *o, char *filename) {
 
 	/* write the tempo track */
 	used = 0;
-	smf_putmeta(&f, &used, o);
+	smf_puttrack(&f, &used, o, &o->meta);
 	smf_putheader(&f, smftype_track, used);
-	smf_putmeta(&f, NULL, o);
+	smf_puttrack(&f, NULL, o, &o->meta);
 		
 	/* write each sx */
 	SONG_FOREACH_SX(o, s) {
@@ -517,17 +472,17 @@ song_exportsmf(struct song *o, char *filename) {
 	/* write each chan */
 	SONG_FOREACH_CHAN(o, i) {
 		used = 0;
-		smf_putchan(&f, &used, o, i);
+		smf_puttrack(&f, &used, o, &i->conf);
 		smf_putheader(&f, smftype_track, used);
-		smf_putchan(&f, NULL, o, i);
+		smf_puttrack(&f, NULL, o, &i->conf);
 	}
 
 	/* write each track */
 	SONG_FOREACH_TRK(o, t) {
 		used = 0;
-		smf_puttrk(&f, &used, o, t);
+		smf_puttrack(&f, &used, o, &t->track);
 		smf_putheader(&f, smftype_track, used);
-		smf_puttrk(&f, NULL, o, t);
+		smf_puttrack(&f, NULL, o, &t->track);
 	}
 	smf_close(&f);
 	return 1;
@@ -563,9 +518,11 @@ unsigned
 smf_gettrack(struct smf *o, struct song *s, struct songtrk *t) {
 	unsigned delta, i, status, type, length, abspos;
 	unsigned tempo, num, den, dummy;
+	struct statelist slist;
 	struct songsx *songsx;
 	struct seqev *pos, *se;
 	struct sysex *sx;
+	struct ev ev, rev;
 	unsigned c;
 	
 	if (!smf_getheader(o, smftype_track)) {
@@ -576,26 +533,28 @@ smf_gettrack(struct smf *o, struct song *s, struct songtrk *t) {
 	track_clear(&t->track);
 	pos = t->track.first;
 	songsx = (struct songsx *)s->sxlist;	/* first (and unique) sysex in song */
+	statelist_init(&slist);
 	for (;;) {
 		if (o->index >= o->length) {
+			statelist_done(&slist);
 			return 1;
 		}
 		if (!smf_getvar(o, &delta)) {
-			return 0;
+			goto err;
 		}
 		abspos += delta;
 		pos->delta += delta;
 		if (!smf_getc(o, &c)) {
-			return 0;
+			goto err;;
 		}
 		if (c == 0xff) {
 			status = 0;
 			if (!smf_getc(o, &c)) {
-				return 0;
+				goto err;
 			}
 			type = c;
 			if (!smf_getvar(o, &length)) {
-				return 0;
+				goto err;
 			}
 			if (type == 0x2f && length == 0) {
 				/* end of track */
@@ -603,26 +562,24 @@ smf_gettrack(struct smf *o, struct song *s, struct songtrk *t) {
 			} else if (type == 0x51 && length == 3) {
 				/* tempo change */
 				if (!smf_get24(o, &tempo)) {
-					return 0;
+					goto err;
 				}
-				se = seqev_new();
-				se->ev.cmd = EV_TEMPO;
-				se->ev.tempo_usec24 = tempo * 96 / s->tics_per_unit;
+				ev.cmd = EV_TEMPO;
+				ev.tempo_usec24 = tempo * 96 / s->tics_per_unit;
 				goto putev;
 			} else if (type == 0x58 && length == 4) {
 				/* time signature change */
 				if (!smf_getc(o, &num)) {
-					return 0;
+					goto err;
 				}
 				if (!smf_getc(o, &den)) {
-					return 0;
+					goto err;
 				}
-				se = seqev_new();
-				se->ev.cmd = EV_TIMESIG;
-				se->ev.timesig_beats = num;
-				se->ev.timesig_tics = s->tics_per_unit / (1 << den);
+				ev.cmd = EV_TIMESIG;
+				ev.timesig_beats = num;
+				ev.timesig_tics = s->tics_per_unit / (1 << den);
 				if (!smf_getc(o, &dummy)) {
-					return 0;
+					goto err;
 				}
 				/*
 				dbg_puts("cc=");
@@ -630,7 +587,7 @@ smf_gettrack(struct smf *o, struct song *s, struct songtrk *t) {
 				dbg_puts(", dd=");
 				*/
 				if (!smf_getc(o, &dummy)) {
-					return 0;
+					goto err;
 				}
 				/*
 				dbg_putu(dummy);
@@ -641,7 +598,7 @@ smf_gettrack(struct smf *o, struct song *s, struct songtrk *t) {
 			ignoremeta:
 				for (i = 0; i < length; i++) {
 					if (!smf_getc(o, &c)) {
-						return 0;
+						goto err;
 					}
 				}
 			}
@@ -650,11 +607,11 @@ smf_gettrack(struct smf *o, struct song *s, struct songtrk *t) {
 			cons_err("raw data (status = 0xF7) not implemented");
 			status = 0;
 			if (!smf_getvar(o, &length)) {
-				return 0;
+				goto err;
 			}
 			for (i = 0; i < length; i++) {
 				if (!smf_getc(o, &c)) {
-					return 0;
+					goto err;
 				}
 			}
 		} else if (c == 0xf0) {
@@ -664,7 +621,7 @@ smf_gettrack(struct smf *o, struct song *s, struct songtrk *t) {
 			sysex_add(sx, 0xf0);
 			if (!smf_getsysex(o, sx)) {
 				sysex_del(sx);
-				return 0;
+				goto err;
 			}				
 			if (sysex_check(sx)) {
 				sysexlist_put(&songsx->sx, sx);
@@ -679,33 +636,34 @@ smf_gettrack(struct smf *o, struct song *s, struct songtrk *t) {
 		} else if (c >= 0x80 && c < 0xf0) {
 			status = c;
 			if (!smf_getc(o, &c)) {
-				return 0;
+				goto err;
 			}
 		runningstatus:
-			se = seqev_new();
-			se->ev.cmd = (status >> 4) & 0xf;
-			se->ev.dev = 0;
-			se->ev.ch = status & 0xf;
-			se->ev.v0 = c & 0x7f;
+			ev.cmd = (status >> 4) & 0xf;
+			ev.dev = 0;
+			ev.ch = status & 0xf;
+			ev.v0 = c & 0x7f;
 			if (SMF_EVLEN(status) == 2) {
 				if (!smf_getc(o, &c)) {
-					seqev_del(se);
-					return 0;
+					goto err;
 				}
 				c &= 0x7f;
-				if (se->ev.cmd == EV_BEND) {
-					se->ev.v0 += c << 7;
+				if (ev.cmd == EV_BEND) {
+					ev.v0 += c << 7;
 				} else {
-					se->ev.v1 = c;
+					ev.v1 = c;
 				}
 			}
 		putev:
-			if (se->ev.cmd == EV_NON && 
-			    se->ev.v1 == 0) {
-				se->ev.cmd = EV_NOFF;
-				se->ev.v1 = EV_NOFF_DEFAULTVEL;
+			if (ev.cmd == EV_NON && ev.note_vel == 0) {
+				ev.cmd = EV_NOFF;
+				ev.note_vel = EV_NOFF_DEFAULTVEL;
 			}
-			seqev_ins(pos, se);
+			if (conv_packev(&slist, &ev, &rev)) {
+				se = seqev_new();
+				se->ev = rev;
+				seqev_ins(pos, se);
+			}
 			/*
 			dbg_puts("ev: ");
 			dbg_putu(abspos);
@@ -716,15 +674,17 @@ smf_gettrack(struct smf *o, struct song *s, struct songtrk *t) {
 		} else if (c < 0x80) {
 			if (status == 0) {
 				cons_err("bad status");
-				return 0;
+				goto err;
 			}
 			goto runningstatus;
 		} else {
 			cons_err("bad event");
-			return 0;
+			goto err;
 		}
 	}
-	/* not reached */
+ err:
+	statelist_done(&slist);
+	return 0;
 }
 
 /*

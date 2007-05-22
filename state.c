@@ -92,20 +92,6 @@ state_del(struct state *s) {
 void
 state_dbg(struct state *s) {
 	ev_dbg(&s->ev);
-	if (s->ev.cmd == EV_CTL && !EV_CTL_IS7BIT(&s->ev)) {
-		dbg_puts(" b2=");
-		dbg_putx(s->b2);
-	}
-	if (STATE_HASCTX(s)) {
-		dbg_puts(" ctx_b0=");
-		dbg_putx(s->ctx_b0);
-		dbg_puts(" ctx_b1=");
-		dbg_putx(s->ctx_b1);
-		if (evctl_tab[s->ctx_b0].bits == EVCTL_14BIT_LO) {
-			dbg_puts(" ctx_b2=");
-			dbg_putx(s->ctx_b2);
-		}
-	}
 	if (s->flags & STATE_NEW) {
 		dbg_puts(" NEW");
 	}
@@ -130,43 +116,10 @@ state_dbg(struct state *s) {
 }
 
 /*
- * copy an event (and its context, if any) into a state. It isn't
- * enough to just copy the event; special care must be taken for
- * controller events to handle contexts for 14bit controllers and
- * reference to RPN/NRPN for data-entry controllers
+ * copy an event (and its context, if any) into a state.
  */
 void
-state_copyev(struct state *st, struct ev *ev, unsigned ph, struct state *ctx) {
-	if (ev->cmd == EV_CTL && EV_CTL_IS14BIT_LO(ev)) {
-		if (st->flags & STATE_NEW) {
-			st->flags |= STATE_BOGUS;
-			ph |= EV_PHASE_LAST;
-			goto copy_and_out;
-		}
-		if (st->ev.cmd == EV_CTL) {
-			if (EV_CTL_IS14BIT_HI(&st->ev)) {
-				st->b2 = st->ev.ctl_val;
-			}
-			if (EV_CTL_ISNRPN(&st->ev) && 
-			    EV_CTL_HI(&st->ev) != EV_CTL_HI(ev)) {
-				st->flags |= STATE_BOGUS;
-				ph |= EV_PHASE_LAST;
-				goto copy_and_out;
-			}
-		}
-	}
-	if (ctx != NULL) {
-		st->ctx_b0 = ctx->ev.v0;
-		st->ctx_b1 = ctx->ev.v1;
-		st->ctx_b2 = ctx->b2;
-		if (ctx->flags & STATE_BOGUS) {
-			st->flags |= STATE_BOGUS;
-			ph |= EV_PHASE_LAST;
-		}
-	} else {
-		st->ctx_b0 = EV_CTL_UNKNOWN;
-	}
-copy_and_out:
+state_copyev(struct state *st, struct ev *ev, unsigned ph) {
 	st->ev = *ev;
 	st->phase = ph;
 	st->flags |= STATE_CHANGED;
@@ -178,7 +131,7 @@ copy_and_out:
  * conflict between the frame and the event)
  */
 unsigned
-state_match(struct state *st, struct ev *ev, struct state *ctx) {
+state_match(struct state *st, struct ev *ev) {
 	switch (st->ev.cmd) {
 	case EV_NON:
 	case EV_NOFF:
@@ -189,46 +142,21 @@ state_match(struct state *st, struct ev *ev, struct state *ctx) {
 		    st->ev.dev != ev->dev) {
 			return 0;
 		}
-		break;		
-	case EV_CTL:
+		break;
+	case EV_XCTL:
+	case EV_NRPN:
+	case EV_RPN:
 		if (st->ev.cmd != ev->cmd ||
 		    st->ev.dev != ev->dev ||
-		    st->ev.ch != ev->ch) {
+		    st->ev.ch != ev->ch ||
+		    st->ev.v0 != ev->v0) {
 			return 0;
 		}
-		if (EV_CTL_ISNRPN(&st->ev) && EV_CTL_ISNRPN(ev)) {
-			/*
-			 * RPNs match NRPNs
-			 */
-			break;
-		}
-		if (st->ev.ctl_num != ev->ctl_num) {
-			if (EV_CTL_IS7BIT(&st->ev) || EV_CTL_IS7BIT(ev)) {
-				return 0;
-			} else {
-				if (EV_CTL_HI(&st->ev) != ev->ctl_num &&
-				    EV_CTL_HI(ev) != st->ev.ctl_num)
-					return 0;
-			}
-		}	
-		/*
-		 * if this event depends on a context then also
-		 * compare contexts. We do this only for controllers
-		 * because currently only DATAENTs dont match if thier
-		 * contexts differ
-		 */
-		if (ctx != NULL && EV_CTL_ISDATAENT(&st->ev)) {
-			if (st->ctx_b0 != EV_CTL_LO(&ctx->ev) ||
-			    st->ctx_b1 != ctx->ev.ctl_val ||
-			    st->ctx_b2 != ctx->b2) {
-				return 0;
-			}
-		}
 		break;
-
 	case EV_BEND:
 	case EV_CAT:
 	case EV_PC:
+	case EV_XPC:
 		if (st->ev.cmd != ev->cmd ||
 		    st->ev.dev != ev->dev ||
 		    st->ev.ch != ev->ch) {
@@ -258,7 +186,7 @@ state_match(struct state *st, struct ev *ev, struct state *ctx) {
  * check if the given state belongs to the event spec
  */
 unsigned
-state_inspec(struct state *st, struct evspec *spec, struct state *ctx) {
+state_inspec(struct state *st, struct evspec *spec) {
 	switch(spec->cmd) {
 	case EVSPEC_ANY:
 		goto ch;
@@ -268,6 +196,11 @@ state_inspec(struct state *st, struct evspec *spec, struct state *ctx) {
 			dbg_panic();
 		}
 		if (st->ev.cmd == EV_NON) {
+			goto b0;
+		}
+		break;
+	case EVSPEC_XCTL:
+		if (st->ev.cmd == EV_XCTL) {
 			goto b0;
 		}
 		break;
@@ -284,6 +217,11 @@ state_inspec(struct state *st, struct evspec *spec, struct state *ctx) {
 	case EVSPEC_PC:
 		if (st->ev.cmd == EV_PC) {
 			goto b1;
+		}
+		break;
+	case EVSPEC_XPC:
+		if (st->ev.cmd == EV_XPC) {
+			goto b0;
 		}
 		break;
 	case EVSPEC_BEND:
@@ -321,41 +259,15 @@ unsigned
 state_eq(struct state *st, struct ev *ev) {
 	if (EV_ISVOICE(&st->ev)) {
 		switch(st->ev.cmd) {
-		case EV_CTL:
-			if (EV_CTL_IS7BIT(ev)) {
-				if (st->ev.ctl_val != ev->ctl_val ||
-				    st->ev.ctl_num != ev->ctl_num)
-					return 0;
-			} else if (EV_CTL_IS14BIT_HI(ev)) {
-				if (EV_CTL_IS14BIT_HI(&st->ev)) {
-					if (st->ev.ctl_val != ev->ctl_val ||
-					    st->ev.ctl_num != ev->ctl_num) {
-						return 0;
-					}
-				} else {
-					if (st->b2 != ev->ctl_val ||
-					    EV_CTL_HI(&st->ev) != ev->ctl_num) {
-						return 0;
-					}
-				}
-			} else {
-				if (EV_CTL_IS14BIT_HI(&st->ev)) {
-					return 0;
-				} else {
-					if (st->ev.ctl_val != ev->ctl_val ||
-					    st->ev.ctl_num != ev->ctl_num) {
-						return 0;
-					}
-				}
-			}
-			break;
 		case EV_CAT:
+		case EV_BEND:
 		case EV_PC:
 			if (st->ev.v0 != ev->v0)
 				return 0;
 			break;
 		default:
 			if (st->ev.cmd != ev->cmd ||
+			    st->ev.v0 != ev->v0 ||
 			    st->ev.v1 != ev->v1)
 				return 0;
 			break;
@@ -405,29 +317,13 @@ state_cancel(struct state *st, struct ev *rev) {
 		rev->dev = st->ev.dev;
 		rev->ch  = st->ev.ch;
 		break;
-	case EV_CTL:
-		if (!EV_CTL_IS14BIT_LO(&st->ev)) {
-			rev->cmd = EV_CTL;
-			rev->ctl_num = st->ev.ctl_num;
-			rev->ctl_val = EV_CTL_DEFVAL(&st->ev);
-			rev->dev = st->ev.dev;
-			rev->ch = st->ev.ch;
-			return 1;
-		} else {
-			rev->cmd = EV_CTL;
-			rev->ctl_num = EV_CTL_HI(&st->ev);
-			rev->ctl_val = EV_CTL_DEFVAL(rev);
-			rev->dev = st->ev.dev;
-			rev->ch = st->ev.ch;
-			rev++;
-			rev->cmd = EV_CTL;
-			rev->ctl_num = st->ev.ctl_num;
-			rev->ctl_val = EV_CTL_DEFVAL(rev);
-			rev->dev = st->ev.dev;
-			rev->ch = st->ev.ch;
-			return 2;
-		}
-		/* not reached */
+	case EV_XCTL:
+		rev->cmd = EV_XCTL;
+		rev->ctl_num = st->ev.ctl_num;
+		rev->ctl_val = EV_CTL_DEFVAL(&st->ev);
+		rev->dev = st->ev.dev;
+		rev->ch = st->ev.ch;
+		break;
 	case EV_BEND:
 		rev->cmd = EV_BEND;
 		rev->bend_val = EV_BEND_DEFAULT;
@@ -455,8 +351,6 @@ state_cancel(struct state *st, struct ev *rev) {
  */
 unsigned
 state_restore(struct state *st, struct ev *rev) {
-	unsigned num = 0;
-
 	if (st->flags & STATE_BOGUS)
 		return 0;
 
@@ -474,62 +368,8 @@ state_restore(struct state *st, struct ev *rev) {
 		dbg_puts(": called for last event!\n");
 		return 0;
 	}
-
-	/*
-	 * if there is a context then restore it
-	 */
-	if (st->ctx_b0 != EV_CTL_UNKNOWN) {
-		if (evctl_tab[st->ctx_b0].bits == EVCTL_14BIT_LO) {
-			rev->cmd = EV_CTL;
-			rev->ctl_num = evctl_tab[st->ctx_b0].hi;
-			rev->ctl_val = st->ctx_b2;
-			rev->dev = st->ev.dev;
-			rev->ch = st->ev.ch;
-			rev++;
-			num++;
-		}
-		rev->cmd = EV_CTL;
-		rev->ctl_num = st->ctx_b0;
-		rev->ctl_val = st->ctx_b1;
-		rev->dev = st->ev.dev;
-		rev->ch = st->ev.ch;
-		rev++;
-		num++;
-	}
-	
-	switch(st->ev.cmd) {
-	case EV_CTL:
-		if (!EV_CTL_IS14BIT_LO(&st->ev)) {
-			*rev = st->ev;
-			num++;
-			return num;
-		}
-		rev->cmd = EV_CTL;
-		rev->ctl_num = EV_CTL_HI(&st->ev);
-		rev->ctl_val = st->b2;
-		rev->dev = st->ev.dev;
-		rev->ch = st->ev.ch;
-		rev++;
-		num++;
-		rev->cmd = EV_CTL;
-		rev->ctl_num = st->ev.ctl_num;
-		rev->ctl_val = st->ev.ctl_val;
-		rev->dev = st->ev.dev;
-		rev->ch = st->ev.ch;
-		rev++;
-		num++;
-		return num;
-		/* not reached */
-	case EV_PC:
-		*rev = st->ev;
-		num++;
-		return num;			
-	default:
-		*rev = st->ev;
-		num++;
-		return num;
-	}
-	/* not reached */
+	*rev = st->ev;
+	return 1;
 }
 
 
@@ -563,7 +403,7 @@ statelist_done(struct statelist *o) {
 	 * free all states
 	 */
 	for (i = o->first; i != NULL; i = inext) {
-		if (!(i->phase & EV_PHASE_LAST)) {
+		if (!(i->phase & EV_PHASE_LAST) && i->ev.cmd != EV_CTL) {
 			dbg_puts("statelist_done: ");
 			ev_dbg(&i->ev);
 			dbg_puts(": unterminated frame\n");
@@ -616,10 +456,6 @@ statelist_dup(struct statelist *o, struct statelist *src) {
 		n->ev = i->ev;
 		n->phase = i->phase;
 		n->flags = i->flags;
-		n->b2 = i->b2;
-		n->ctx_b0 = i->ctx_b0;
-		n->ctx_b1 = i->ctx_b1;
-		n->ctx_b2 = i->ctx_b2;
 		statelist_add(o, n);
 	}
 }
@@ -662,56 +498,20 @@ statelist_rm(struct statelist *o, struct state *st) {
 }
 
 /*
- * find (if any) the state that contains the context of the given
- * event
- */
-struct state *
-statelist_getctx(struct statelist *slist, struct ev *ev) {
-	struct state *i;
-
-	switch(ev->cmd) {
-	case EV_PC:
-		for (i = slist->first; i != NULL; i = i->next) {
-			if (i->ev.cmd == EV_CTL && EV_CTL_ISBANK(&i->ev) &&
-			    i->ev.ch == ev->ch &&
-			    i->ev.dev == ev->dev) {
-				return i;
-			}
-		}
-		break;
-	case EV_CTL:
-		if (!EV_CTL_ISDATAENT(ev))
-			break;
-		for (i = slist->first; i != NULL; i = i->next) {
-			if (i->ev.cmd == EV_CTL && EV_CTL_ISNRPN(&i->ev) &&
-			    i->ev.ch == ev->ch &&
-			    i->ev.dev == ev->dev) {
-				return i;
-			}
-		}
-		break;
-	default:
-		break;
-	}
-	return NULL;
-}
-
-/*
  * find the first state that matches the given event
  * return NULL if not found
  */
 struct state *
 statelist_lookup(struct statelist *o, struct ev *ev) {
-	struct state *i, *ctx;
+	struct state *i;
 #ifdef STATE_PROF
 	unsigned time = 0;
 #endif
-	ctx = statelist_getctx(o, ev);
 	for (i = o->first; i != NULL; i = i->next) {
 #ifdef STATE_PROF
 		time++;
 #endif
-		if (state_match(i, ev, ctx)) { 
+		if (state_match(i, ev)) { 
 			break;
 		}
 	}
@@ -735,13 +535,11 @@ statelist_lookup(struct statelist *o, struct ev *ev) {
  */
 struct state *
 statelist_update(struct statelist *statelist, struct ev *ev) {
-	struct state *st, *stnext, *ctx;
+	struct state *st, *stnext;
 	unsigned phase;
 #ifdef STATE_PROF
 	unsigned time = 0;
 #endif
-	ctx = statelist_getctx(statelist, ev);
-
 	/*
 	 * we scan for a matching state, if it exists but is
 	 * terminated (phase = EV_PHASE_LAST) we purge it in order to
@@ -762,7 +560,7 @@ statelist_update(struct statelist *statelist, struct ev *ev) {
 			break;
 		}
 		stnext = st->next;
-		if (state_match(st, ev, ctx)) {
+		if (state_match(st, ev)) {
 			/*
 			 * found a matching state
 			 */
@@ -842,7 +640,7 @@ statelist_update(struct statelist *statelist, struct ev *ev) {
 		 */
 		phase &=  ~EV_PHASE_FIRST;
 	}
-	state_copyev(st, ev, phase, ctx);
+	state_copyev(st, ev, phase);
 	statelist->changed = 1;
 #ifdef STATE_DEBUG
 	dbg_puts("statelist_update: updated: ");
