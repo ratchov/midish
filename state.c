@@ -199,23 +199,13 @@ state_inspec(struct state *st, struct evspec *spec) {
 			goto b0;
 		}
 		break;
-	case EVSPEC_XCTL:
-		if (st->ev.cmd == EV_XCTL) {
-			goto b0;
-		}
-		break;
-	case EVSPEC_CTL:
-		if (st->ev.cmd == EV_CTL) {
-			goto b0;
-		}
-		break;
 	case EVSPEC_CAT:
 		if (st->ev.cmd == EV_CAT) {
 			goto b1;
 		}
 		break;
-	case EVSPEC_PC:
-		if (st->ev.cmd == EV_PC) {
+	case EVSPEC_BEND:
+		if (st->ev.cmd == EV_BEND) {
 			goto b1;
 		}
 		break;
@@ -224,9 +214,19 @@ state_inspec(struct state *st, struct evspec *spec) {
 			goto b0;
 		}
 		break;
-	case EVSPEC_BEND:
-		if (st->ev.cmd == EV_BEND) {
-			goto b1;
+	case EVSPEC_NRPN:
+		if (st->ev.cmd == EV_NRPN) {
+			goto b0;
+		}
+		break;
+	case EVSPEC_RPN:
+		if (st->ev.cmd == EV_RPN) {
+			goto b0;
+		}
+		break;
+	case EVSPEC_XCTL:
+		if (st->ev.cmd == EV_XCTL) {
+			goto b0;
 		}
 		break;
 	default:

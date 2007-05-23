@@ -44,7 +44,8 @@ char *ev_cmdstr[EV_NUMCMD] = {
 };
 
 char *evspec_cmdstr[] = {
-	"any", "note", "ctl", "pc", "cat", "bend", NULL
+	"any", "note", "ctl", "pc", "cat", "bend", "nrpn", "rpn", 
+	"xpc", "xctl", NULL
 };
 
 struct evctl evctl_tab[128];
@@ -210,9 +211,9 @@ evspec_reset(struct evspec *o) {
 	o->ch_min  = 0;
 	o->ch_max  = EV_MAXCH;
 	o->b0_min  = 0;
-	o->b0_max  = EV_MAXB0;
+	o->b0_max  = FINE_MAX;
 	o->b1_min  = 0;
-	o->b1_max  = EV_MAXB1;
+	o->b1_max  = FINE_MAX;
 }
 
 void

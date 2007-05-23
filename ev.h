@@ -113,8 +113,10 @@ struct evspec {
 #define EVSPEC_PC		3
 #define EVSPEC_CAT		4
 #define EVSPEC_BEND		5
-#define EVSPEC_XCTL		6
-#define EVSPEC_XPC		7
+#define EVSPEC_NRPN		6
+#define EVSPEC_RPN		7
+#define EVSPEC_XCTL		8
+#define EVSPEC_XPC		9
 	unsigned cmd;
 	unsigned dev_min, dev_max;
 	unsigned ch_min, ch_max;
