@@ -253,7 +253,7 @@ exec_lookupev(struct exec *o, char *name, struct ev *ev) {
 	ev->dev = dev;
 	ev->ch = ch;
 	d = d->next;
-	max = (ev->cmd == EV_BEND) ? 0x3fff : 0x7f;
+	max = (ev->cmd == EV_BEND) ? FINE_MAX : COARSE_MAX;
 	if (!d || d->type != DATA_LONG || d->val.num < 0 || d->val.num > max) {
 		cons_err("bad byte0 in event spec");
 		return 0;
@@ -261,7 +261,7 @@ exec_lookupev(struct exec *o, char *name, struct ev *ev) {
 	ev->v0 = d->val.num;
 	d = d->next;
 	if (ev->cmd != EV_PC && ev->cmd != EV_CAT && ev->cmd != EV_BEND) {
-		max = (ev->cmd == EV_XPC) ? 0x3fff : 0x7f;
+		max = (ev->cmd == EV_XPC) ? FINE_MAX : COARSE_MAX;
 		if (!d || d->type != DATA_LONG || d->val.num < 0 || d->val.num > max) {
 			cons_err("bad byte1 in event spec");
 			return 0;
@@ -282,7 +282,7 @@ exec_lookupev(struct exec *o, char *name, struct ev *ev) {
 		ev->ctl_val <<= 7;
 	}
 	if (ev->cmd == EV_XCTL) {
-		if (ev->ctl_num == 0 || 
+		if (ev->ctl_num == 0 || ev->ctl_num == DATAENT_HI ||
 		    (ev->ctl_num >= 98 && ev->ctl_num <= 101) ||
 		    (ev->ctl_num >= 32 && ev->ctl_num <= 63)) {
 			cons_err("not allowed controller number, use xpc, nrpn, rpn instead");
@@ -377,14 +377,14 @@ exec_lookupevspec(struct exec *o, char *name, struct evspec *e) {
 	if (e->cmd == EVSPEC_ANY) {
 		goto toomany;
 	}
-	if (e->cmd == EVSPEC_BEND) {
-		if (!data_list2range(d, 0, EV_MAXBEND, &lo, &hi)) {
+	if (e->cmd == EVSPEC_BEND || e->cmd == EVSPEC_XCTL) {
+		if (!data_list2range(d, 0, FINE_MAX, &lo, &hi)) {
 			return 0;
 		}
 		e->b0_min = lo;
 		e->b0_max = hi;
 	} else {
-		if (!data_list2range(d, 0, EV_MAXB0, &lo, &hi)) {
+		if (!data_list2range(d, 0, COARSE_MAX, &lo, &hi)) {
 			return 0;
 		}
 		e->b0_min = lo;

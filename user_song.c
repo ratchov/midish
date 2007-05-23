@@ -645,7 +645,7 @@ user_func_ctlconf(struct exec *o, struct data **r) {
 	    !exec_lookuplong(o, "defval", &defval)) {
 		return 0;
 	}
-	if (defval < 0 || defval > (lo == EV_CTL_UNKNOWN ? 0x7f : 0x3fff)) {
+	if (defval < 0 || defval > (lo == EV_CTL_UNKNOWN ? COARSE_MAX : FINE_MAX)) {
 		cons_err("defval out of bounds");
 		return 0;
 	}

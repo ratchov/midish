@@ -280,7 +280,7 @@ rmidi_putack(struct rmidi *o) {
  */
 void
 rmidi_putev(struct rmidi *o, struct ev *ev) {
-	unsigned s, chan;
+	unsigned s;
 	
 	if (!EV_ISVOICE(ev)) {
 		return;
@@ -301,37 +301,6 @@ rmidi_putev(struct rmidi *o, struct ev *ev) {
 		}
 		rmidi_out(o, ev->bend_val & 0x7f);
 		rmidi_out(o, ev->bend_val >> 7);
-	} else if (ev->cmd == EV_XCTL) {
-		/*
-		 * XXX: handle 14bit controllers low nibbles
-		 */
-		s = ev->ch + (EV_CTL << 4);
-		if (s != o->ostatus) {
-			o->ostatus = s;
-			rmidi_out(o, s);
-		}
-		rmidi_out(o, ev->ctl_num);
-		rmidi_out(o, ev->ctl_val >> 7);
-	} else if (ev->cmd == EV_XPC) {
-		chan = ev->ch;
-		if (ev->pc_bank != o->och[chan].xbank &&
-		    ev->pc_bank != EV_UNDEF) {
-			s = chan + EV_CTL;
-			rmidi_out(o, chan + (EV_CTL << 4));
-			rmidi_out(o, 0);
-			rmidi_out(o, ev->pc_bank >> 7);
-			rmidi_out(o, chan + (EV_CTL << 4) + 32);
-			rmidi_out(o, 32);
-			rmidi_out(o, ev->pc_bank & 0x7f);
-			o->ostatus = 0;
-			o->och[chan].xbank = ev->pc_bank;
-		}
-		s = chan + (EV_PC << 4);
-		if (s != o->ostatus) {
-			o->ostatus = s;
-			rmidi_out(o, s);
-		}
-		rmidi_out(o, ev->pc_prog);		
 	} else {
 		s = ev->ch + (ev->cmd << 4);
 		if (s != o->ostatus) {

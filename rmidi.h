@@ -52,11 +52,6 @@ struct rmidi {
 	unsigned	  ostatus;		/* output running status */
 	unsigned char	  obuf[RMIDI_BUFLEN];
 	struct sysex	 *isysex;
-	struct {
-		unsigned char ctl_hi[32];
-		unsigned char xrpn_hi, dataent_hi;
-		unsigned xrpn, xbank;
-	} ich[16], och[16];
 };
 
 #define RMIDI(o) ((struct rmidi *)(o))
