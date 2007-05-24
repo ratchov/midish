@@ -155,7 +155,6 @@ state_match(struct state *st, struct ev *ev) {
 		break;
 	case EV_BEND:
 	case EV_CAT:
-	case EV_PC:
 	case EV_XPC:
 		if (st->ev.cmd != ev->cmd ||
 		    st->ev.dev != ev->dev ||
@@ -261,7 +260,6 @@ state_eq(struct state *st, struct ev *ev) {
 		switch(st->ev.cmd) {
 		case EV_CAT:
 		case EV_BEND:
-		case EV_PC:
 			if (st->ev.v0 != ev->v0)
 				return 0;
 			break;

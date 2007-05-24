@@ -86,7 +86,7 @@
 	<UL>
 	<LI><A href="#section_7_1">7.1 Note frames</A>
 	<LI><A href="#section_7_2">7.2 Pitch bend frames</A>
-	<LI><A href="#section_7_3">7.3 Controller frames</A>
+	<LI><A href="#ctl_frames">7.3 Controller frames</A>
 	<LI><A href="#section_7_4">7.4 Other frames</A>
 	</UL>
 	<LI><A href="#sysex">8 System exclusive messages</A>
@@ -1027,7 +1027,7 @@ the console).
 	result in a single frame, containing chunks of both original
 	frames.
 
-<A name="section_7_3"></A><H2>7.3 Controller frames</H2>
+<A name="ctl_frames"></A><H2>7.3 Controller frames</H2>
 
 	The way controller events are packed in a frame depend
 	on the controller type. Currently the following
@@ -1045,29 +1045,8 @@ the console).
 		<B>Frames:</B> these are controllers that have special
 		default value and that are packed in frames, similar
 		to "bend" frames. For instance modulation wheel,
-		sustain pedal. For those frame special care is taken
+		sustain pedal. For those frames special care is taken
 		in editing functions.
-
-	<LI>
-		<B>Bank:</B> this controller behave like parameter
-		controllers, except that its value is kept in memory
-		and will be used by program change events.
-
-	<LI>
-		<B>RPN/NRPN:</B> these ones behave like parameter
-		controllers too; their value is kept in memory, for
-		future use by data entry controllers.
-
-	<LI>
-		<B>Data entry:</B> this one behaves as parameter
-		controllers (single-event frame). However, the current
-		value of RPN/NRPN controller may saved/restored when a
-		data-entry controller is edited. For instance, if a
-		data-entry controller is copied, the NRPN/RPN
-		controller of the destination track (or MIDI stream)
-		is compared to the one of the data-entry frame. If
-		they aren't equal, then the NRPN/RPN of the
-		destination is changed.
 
 	</UL>
 
@@ -1075,43 +1054,30 @@ the console).
 	behavior. The <a href="#func_ctlconf">ctlconf</a> function
 	configures the controller. As arguments, it takes the name of
 	the controller (an identifier) the controller number, the
-	controller type (one of 'param', 'frame', 'bank', 'nrpn' and
-	'dataent' identifiers) and the default value of the
-	controller. For instance, following command:
+	controller precision (7 bits or 14 bits) and the default value of the
+	controller. If the default value is 'nil' (ie no default value), 
+	then the controller is considered as of type <I>parameter</I>.
+	For instance, following command:
         <PRE>
-        ctlconf expr 11 frame 127
+        ctlconf expr 11 7 127
         </PRE>
-	configures controller number 11 of type 'frame' and with 
-	default value of 127. The default value is ignored with
-	other types that 'frame'. The controller name can be
+	configures controller number 11 of type <I>frame</I> and with 
+	default value of 127. The controller name can be
 	any identifier, it can be used for other functions to
-	reference a controller. 14-bit controller are
-	defined by giving a list of two controller numbers
-	(MSB and LSB) instead of a single number. For instance:
-        <PRE>
-        ctlconf bank {0 32} bank 0
-        </PRE>
-	The <a href="#func_ctlconf">ctlconf</a> function
+	reference a controller. 
+	The <a href="#func_ctlconf">ctlinfo</a> function
 	can be used to display the current configuration
 	of all controllers:
         <PRE>
-        ctltab {
-                #
-                # name  number          type    defval
-                #
-                bank    {0 32}          bank    0
-                mod     1               frame   0
-                dataent {6 38}          dataent 0
-                vol     7               param   0
-                sustain 64              frame   0
-                nrpn    {98 99}         nrpn    0
-                rpn     {100 101}       nrpn    0
-        }
+	ctltab {
+	        #
+	        # name  number  prec    defval
+		#
+	        mod     1       7       0
+	        vol     7       7       nil
+		sustain 64      7       0
+	}
         </PRE>
-	By default Bank, Data-Entry, NRPN and RPN controllers
-	are configured. It's not recommended to change their 
-	configurations.
-	
 
 <A name="section_7_4"></A><H2>7.4 Other frames</H2>
 
@@ -1121,13 +1087,8 @@ the console).
 	that the default value is zero.
 
 	<P>
-	Program change events are not packed together, they are single
-	event frames. The state of the related bank controller is kept
-	in the frame. When a program change frame (single event) is
-	copied the current state of the bank controller of the
-	destination track (or MIDI stream) is compared to the bank of
-	the frame and if they are not equal then the bank of the
-	destination is changed.
+	Program/bank change, NRPN and RPN events are not packed
+	together, they are single event frames.
 
 <A name="sysex"></A><H1>8 System exclusive messages</H1>
 
@@ -1483,7 +1444,7 @@ the console).
 	     instead of resetting all notes/controllers. This allows
 	     midish to better share MIDI devices with other sequencers.
 	<LI> added support for 14bit controllers
-	<LI> added support for RPN/NRPN entries in channels configuration track
+	<LI> added support for RPN/NRPN midi events.
 	<LI> split format 0 MIDI files into 16 tracks (one per MIDI channel)	
 	<LI> added <TT>ctlconf</TT>, <TT>ctlunconf</TT> and <TT>ctlinfo</TT> functions
 	</UL>
@@ -1681,10 +1642,11 @@ the console).
         <UL>
         <LI> a reference from the following list:
              <TT>noff</TT>, <TT>non</TT>, <TT>kat</TT>, 
-             <TT>ctl</TT>, <TT>pc</TT>, <TT>cat</TT>, <TT>bend</TT>.
+             <TT>xctl</TT>, <TT>xpc</TT>, <TT>cat</TT>, <TT>bend</TT>
+	     <TT>rpn</TT>, <TT>nrpn</TT>.
         <LI> a channel
         <LI> a number 
-        <LI> a second number (not for <TT>pc</TT> and <TT>cat</TT>)
+        <LI> a second number (not for <TT>cat</TT> and <TT>bend</TT>)
         </UL>
                 
         Event references correspond to the following
@@ -1695,10 +1657,13 @@ the console).
         <TR>    <TD><TT>noff</TT>       <TD>note off
         <TR>    <TD><TT>non</TT>        <TD>note off
         <TR>    <TD><TT>kat</TT>        <TD>key after-touch (poly)
-        <TR>    <TD><TT>ctl</TT>        <TD>controller
-        <TR>    <TD><TT>pc</TT>         <TD>program change
+        <TR>    <TD><TT>xctl</TT>       <TD>7bit controller
+        <TR>    <TD><TT>xctl</TT>       <TD>14bit controller
+        <TR>    <TD><TT>xpc</TT>        <TD>bank and program change
         <TR>    <TD><TT>cat</TT>        <TD>channel after-touch (mono)
         <TR>    <TD><TT>bend</TT>       <TD>pitch bend
+	<TR>	<TD><TT>rpn</TT>	<TD>RPN change
+	<TR>	<TD><TT>nrpn</TT>	<TD>NRPN change
         </TABLE>
 
         <P align="left">
@@ -1710,10 +1675,10 @@ the console).
         { non {2 9} 64 100 }
         </PRE>
 
-        program change device 1, channel 3, patch 34
+        program change device 1, channel 3, patch 34, bank 1234
 
         <PRE>
-        { pc {1 3} 34 }
+        { xpc {1 3} 34 1234}
         </PRE>
 
         set controller number 7 to 99
@@ -1729,7 +1694,10 @@ the console).
         The event range is specified as a list containing:
         <UL>
         <LI> an optional reference from the following list:
-             <TT>any</TT>, <TT>note</TT>, <TT>ctl</TT>, <TT>pc</TT>, <TT>cat</TT>, <TT>bend</TT>.
+             <TT>any</TT>, <TT>note</TT>, <TT>ctl</TT>, <TT>pc</TT>, 
+	     <TT>cat</TT>, <TT>bend</TT>, <TT>rpn</TT>, <TT>nrpn</TT>
+	     <TT>xpc</TT>, <TT>xctl</TT>.
+	     
         <LI> an optional channel range specified as a list containing
                 a device number range and a midi-channel number
                 range. Number ranges are specified as two-number list
@@ -1763,6 +1731,9 @@ the console).
         { ctl bass 7 }          # match controller 7 on channel 'bass'
         { ctl bass 7 {0 64} }   # match ctl 7 on chan 'bass' with value 0->64
         { bend {} {0 0x1fff} }  # match "lower" bender
+        { xctl {} 19 }          # match 14bit controller number 19
+        { xpc  {} 21 1234 }     # match patch 21 on bank 1234
+        { nrpn {} 21 }          # NRPN 21 change
         </PRE>  
 
 
@@ -2986,14 +2957,14 @@ the console).
 <A name="section_17_8"></A><H2>17.8 Controller functions</H2>
 
 <A name="func_ctlconf"></A>
-<B><TT>ctlconf ctlname ctlnumber ctltype defval</TT></B>
+<B><TT>ctlconf ctlname ctlnumber ctlprecision defval</TT></B>
         <BLOCKQUOTE>
-	Configure controller number 'ctlnumber'. If 'ctlnumber'
-	is a two integer list, then the controller is considered
-	as 14-bit controller. 'ctltype' must be one of
-	'param', 'frame', 'bank', 'nrpn', 'dataent'. The 
-	default value is set to 'defval', it's used only for
-	controllers of type 'frame'.
+	Configure controller number 'ctlnumber' with name
+	'ctlname', precision 'ctlprecision' (7 or 14 bits)
+	and with default value 'defval'. If defval is 'nil'
+	then there is no default value and corresponding
+	controller events are not grouped into frames.
+	See sec. <A href="ctl_frames">Controller frames</A>.
         </BLOCKQUOTE>
 
 <A name="func_ctlunconf"></A>

@@ -635,36 +635,45 @@ user_func_songgetfactor(struct exec *o, struct data **r) {
 
 unsigned
 user_func_ctlconf(struct exec *o, struct data **r) {
-	char *name, *typename;
-	long defval;
-	unsigned hi, lo, type;
+	char *name;
+	unsigned num, old;
+	long defval, bits;
+	struct var *arg;
 	
 	if (!exec_lookupname(o, "name", &name) ||
-	    !exec_lookupctl(o, "ctl", &hi, &lo) ||
-	    !exec_lookupname(o, "type", &typename) ||
-	    !exec_lookuplong(o, "defval", &defval)) {
+	    !exec_lookupctl(o, "ctl", &num) ||
+	    !exec_lookuplong(o, "bits", &bits)) {
 		return 0;
 	}
-	if (defval < 0 || defval > (lo == EV_CTL_UNKNOWN ? COARSE_MAX : FINE_MAX)) {
-		cons_err("defval out of bounds");
+
+	if (bits != 7 && bits != 14) {
+		cons_err("only 7bit and 14bit precision is allowed\n");
 		return 0;
 	}
-	if (str_eq(typename, "param")) {
-		type = EVCTL_PARAM;
-	} else if (str_eq(typename, "frame")) {
-		type = EVCTL_FRAME;
-	} else if (str_eq(typename, "bank")) {
-		type = EVCTL_NRPN;
-	} else if (str_eq(typename, "nrpn")) {
-		type = EVCTL_NRPN;
-	} else if (str_eq(typename, "dataent")) {
-		type = EVCTL_DATAENT;
-	} else {
-		cons_errs(typename, "unknown ctl type");
+	if (bits == 14 && num >= 32) {
+		cons_err("only controllers 0..31 can be 14bit");
 		return 0;
 	}
-	evctl_unconf(hi);
-	evctl_conf(hi, lo, type, name, defval);
+	arg = exec_varlookup(o, "defval");
+	if (!arg) {
+		dbg_puts("user_func_ctlconf: 'defval': no such param\n");
+		return 0;
+	}
+	if (arg->data->type == DATA_NIL) {
+		defval = EV_UNDEF;
+	} else if (arg->data->type == DATA_LONG) {
+		defval = arg->data->val.num;
+		if (defval < 0 || 
+		    defval > (bits == 7 ? EV_MAXCOARSE : EV_MAXFINE)) {
+			cons_err("defval out of bounds");
+			return 0;
+		}
+	}
+	if (evctl_lookup(name, &old)) {
+		evctl_unconf(old);
+	}
+	evctl_unconf(num);
+	evctl_conf(num, name, bits == 14 ? 1 : 0, defval);
 	return 1;
 }
 
@@ -672,16 +681,16 @@ user_func_ctlconf(struct exec *o, struct data **r) {
 unsigned
 user_func_ctlunconf(struct exec *o, struct data **r) {
 	char *name;
-	unsigned hi;
+	unsigned num;
 	
 	if (!exec_lookupname(o, "name", &name)) {
 		return 0;
 	}
-	if (!evctl_lookup(name, &hi)) {
+	if (!evctl_lookup(name, &num)) {
 		cons_errs(name, "no such controller");
 		return 0;
 	}
-	evctl_unconf(hi);
+	evctl_unconf(num);
 	return 1;
 }
 
@@ -690,14 +699,13 @@ unsigned
 user_func_ctlinfo(struct exec *o, struct data **r) {
 	unsigned i;
 	struct evctl *ctl;
-	char *types[] = { "param", "frame", "bank", "nrpn", "dataent" };
 	
 	textout_putstr(tout, "ctltab {\n");
 	textout_shiftright(tout);
 	textout_indent(tout);
 	textout_putstr(tout, "#\n");
 	textout_indent(tout);
-	textout_putstr(tout, "# name\tnumber\t\ttype\tdefval\n");
+	textout_putstr(tout, "# name\tnumber\tprec\tdefval\n");
 	textout_indent(tout);
 	textout_putstr(tout, "#\n");
 	for (i = 0; i < 128; i++) {
@@ -706,20 +714,16 @@ user_func_ctlinfo(struct exec *o, struct data **r) {
 			textout_indent(tout);
 			textout_putstr(tout, ctl->name);
 			textout_putstr(tout, "\t");
-			if (ctl->bits == EVCTL_7BIT) {
-				textout_putlong(tout, i);
-				textout_putstr(tout, "\t");
+			textout_putlong(tout, i);
+			textout_putstr(tout, "\t");
+			textout_putlong(tout, ctl->isfine ? 14 : 7);
+			textout_putstr(tout, "\t");
+			if (ctl->defval == EV_UNDEF) {
+				textout_putstr(tout, "nil");
 			} else {
-				textout_putstr(tout, "{");
-				textout_putlong(tout, evctl_tab[i].hi);
-				textout_putstr(tout, " ");
-				textout_putlong(tout, evctl_tab[i].lo);
-				textout_putstr(tout, "}   ");
+				textout_putlong(tout, ctl->defval);
+
 			}
-			textout_putstr(tout, "\t");
-			textout_putstr(tout, types[ctl->type]);
-			textout_putstr(tout, "\t");
-			textout_putlong(tout, evctl_tab[i].defval);
     			textout_putstr(tout, "\n");
 		}
 	}

@@ -258,16 +258,11 @@ user_func_filtnochanmap(struct exec *o, struct data **r) {
 unsigned
 user_func_filtctldrop(struct exec *o, struct data **r) {
 	struct songfilt *f;
-	unsigned idev, ich;
-	long ictl;
+	unsigned idev, ich, ictl;
 	
 	if (!exec_lookupfilt(o, "filtname", &f) ||
 	    !exec_lookupchan_getnum(o, "inchan", &idev, &ich) ||
-	    !exec_lookuplong(o, "inctl", &ictl)) {
-		return 0;
-	}
-	if (ictl < 0 || ictl > EV_MAXB0) {
-		cons_err("filtctlmap: controllers must be between 0 and 127");
+	    !exec_lookupctl(o, "inctl", &ictl)) {
 		return 0;
 	}
 	filt_conf_ctldrop(&f->filt, idev, ich, ictl);
@@ -277,16 +272,11 @@ user_func_filtctldrop(struct exec *o, struct data **r) {
 unsigned
 user_func_filtnoctldrop(struct exec *o, struct data **r) {
 	struct songfilt *f;
-	unsigned idev, ich;
-	long ictl;
+	unsigned idev, ich, ictl;
 	
 	if (!exec_lookupfilt(o, "filtname", &f) ||
 	    !exec_lookupchan_getnum(o, "inchan", &idev, &ich) ||
-	    !exec_lookuplong(o, "inctl", &ictl)) {
-		return 0;
-	}
-	if (ictl < 0 || ictl > EV_MAXB0) {
-		cons_err("filtctlmap: controllers must be between 0 and 127");
+	    !exec_lookupctl(o, "inctl", &ictl)) {
 		return 0;
 	}
 	filt_conf_noctldrop(&f->filt, idev, ich, ictl);
@@ -296,18 +286,13 @@ user_func_filtnoctldrop(struct exec *o, struct data **r) {
 unsigned
 user_func_filtctlmap(struct exec *o, struct data **r) {
 	struct songfilt *f;
-	unsigned idev, ich, odev, och;
-	long ictl, octl;
+	unsigned idev, ich, odev, och, ictl, octl;
 	
 	if (!exec_lookupfilt(o, "filtname", &f) ||
 	    !exec_lookupchan_getnum(o, "inchan", &idev, &ich) ||
 	    !exec_lookupchan_getnum(o, "outchan", &odev, &och) ||
-	    !exec_lookuplong(o, "inctl", &ictl) || 
-	    !exec_lookuplong(o, "outctl", &octl)) {
-		return 0;
-	}
-	if (ictl < 0 || ictl > EV_MAXB0 || octl < 0 || octl > EV_MAXB0) {
-		cons_err("filtctlmap: controllers must be between 0 and 127");
+	    !exec_lookupctl(o, "inctl", &ictl) || 
+	    !exec_lookupctl(o, "outctl", &octl)) {
 		return 0;
 	}
 	filt_conf_ctlmap(&f->filt, idev, ich, odev, och, ictl, octl);
@@ -317,16 +302,11 @@ user_func_filtctlmap(struct exec *o, struct data **r) {
 unsigned
 user_func_filtnoctlmap(struct exec *o, struct data **r) {
 	struct songfilt *f;
-	unsigned odev, och;
-	long octl;
+	unsigned odev, och, octl;
 	
 	if (!exec_lookupfilt(o, "filtname", &f) ||
 	    !exec_lookupchan_getnum(o, "outchan", &odev, &och) || 
-	    !exec_lookuplong(o, "outctl", &octl)) {
-		return 0;
-	}
-	if (octl < 0 || octl > EV_MAXB0) {
-		cons_err("filtctlmap: controllers must be between 0 and 127");
+	    !exec_lookupctl(o, "outctl", &octl)) {
 		return 0;
 	}
 	filt_conf_noctlmap(&f->filt, odev, och, octl);
@@ -345,7 +325,8 @@ user_func_filtkeydrop(struct exec *o, struct data **r) {
 	    !exec_lookuplong(o, "keyend", &kend)) {
 		return 0;
 	}
-	if (kstart < 0 || kstart > EV_MAXB0 || kend < 0 || kend > EV_MAXB0) {
+	if (kstart < 0 || kstart > EV_MAXCOARSE || 
+	    kend < 0 || kend > EV_MAXCOARSE) {
 		cons_err("filtkeymap: notes must be between 0 and 127");
 		return 0;
 	}
@@ -365,7 +346,8 @@ user_func_filtnokeydrop(struct exec *o, struct data **r) {
 	    !exec_lookuplong(o, "keyend", &kend)) {
 		return 0;
 	}
-	if (kstart < 0 || kstart > EV_MAXB0 || kend < 0 || kend > EV_MAXB0) {
+	if (kstart < 0 || kstart > EV_MAXCOARSE || 
+	    kend < 0 || kend > EV_MAXCOARSE) {
 		cons_err("filtkeymap: notes must be between 0 and 127");
 		return 0;
 	}
@@ -387,11 +369,12 @@ user_func_filtkeymap(struct exec *o, struct data **r) {
 	    !exec_lookuplong(o, "keyplus", &kplus)) {
 		return 0;
 	}
-	if (kstart < 0 || kstart > EV_MAXB0 || kend < 0 || kend > EV_MAXB0) {
+	if (kstart < 0 || kstart > EV_MAXCOARSE || 
+	    kend < 0 || kend > EV_MAXCOARSE) {
 		cons_err("filtkeymap: notes must be between 0 and 127");
 		return 0;
 	}
-	if (kplus < - EV_MAXB0/2 || kplus > EV_MAXB0/2) {
+	if (kplus < - EV_MAXCOARSE / 2 || kplus > EV_MAXCOARSE / 2) {
 		cons_err("filtkeymap: transpose must be between -63 and 63");
 		return 0;
 	}
@@ -411,7 +394,8 @@ user_func_filtnokeymap(struct exec *o, struct data **r) {
 	    !exec_lookuplong(o, "keyend", &kend)) {
 		return 0;
 	}
-	if (kstart < 0 || kstart > EV_MAXB0 || kend < 0 || kend > EV_MAXB0) {
+	if (kstart < 0 || kstart > EV_MAXCOARSE || 
+	    kend < 0 || kend > EV_MAXCOARSE) {
 		cons_err("filtkeymap: notes must be between 0 and 127");
 		return 0;
 	}

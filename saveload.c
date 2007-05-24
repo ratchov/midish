@@ -728,27 +728,27 @@ parse_ev(struct parse *o, struct ev *ev) {
 		break;
 	case EV_NRPN:
 	case EV_RPN:
-		if (!parse_long(o, 0, FINE_MAX, &val)) {
+		if (!parse_long(o, 0, EV_MAXFINE, &val)) {
 			return 0;
 		}
 		ev->rpn_num = val;
-		if (!parse_long(o, 0, FINE_MAX, &val)) {
+		if (!parse_long(o, 0, EV_MAXFINE, &val)) {
 			return 0;
 		}
 		ev->rpn_val = val;
 		break;
 	case EV_XCTL:
-		if (!parse_long(o, 0, COARSE_MAX, &val)) {
+		if (!parse_long(o, 0, EV_MAXCOARSE, &val)) {
 			return 0;
 		}
 		ev->ctl_num = val;
-		if (!parse_long(o, 0, FINE_MAX, &val)) {
+		if (!parse_long(o, 0, EV_MAXFINE, &val)) {
 			return 0;
 		}
 		ev->ctl_val = val;
 		break;
 	case EV_XPC:
-		if (!parse_long(o, 0, COARSE_MAX, &val)) {
+		if (!parse_long(o, 0, EV_MAXCOARSE, &val)) {
 			return 0;
 		}
 		ev->pc_prog = val;
@@ -760,7 +760,7 @@ parse_ev(struct parse *o, struct ev *ev) {
 			break;
 		}
 		parse_ungetsym(o);
-		if (!parse_long(o, 0, FINE_MAX, &val)) {
+		if (!parse_long(o, 0, EV_MAXFINE, &val)) {
 			return 0;
 		}
 		ev->pc_bank = val;
@@ -768,17 +768,17 @@ parse_ev(struct parse *o, struct ev *ev) {
 	case EV_NON:
 	case EV_NOFF:
 	case EV_CTL:
-		if (!parse_long(o, 0, COARSE_MAX, &val)) {
+		if (!parse_long(o, 0, EV_MAXCOARSE, &val)) {
 			return 0;
 		}
 		ev->v0 = val;
-		if (!parse_long(o, 0, COARSE_MAX, &val)) {
+		if (!parse_long(o, 0, EV_MAXCOARSE, &val)) {
 			return 0;
 		}
 		ev->v1 = val;
 		break;
 	case EV_KAT:
-		if (!parse_long(o, 0, COARSE_MAX, &val)) {
+		if (!parse_long(o, 0, EV_MAXCOARSE, &val)) {
 			return 0;
 		}
 		ev->v0 = val;
@@ -801,24 +801,24 @@ parse_ev(struct parse *o, struct ev *ev) {
 			return 1;
 		}
 		parse_ungetsym(o);
-		if (!parse_long(o, 0, COARSE_MAX, &val)) {
+		if (!parse_long(o, 0, EV_MAXCOARSE, &val)) {
 			return 0;
 		}
 		ev->v1 = val;
 		break;		
 	case EV_PC:
 	case EV_CAT:
-		if (!parse_long(o, 0, COARSE_MAX, &val)) {
+		if (!parse_long(o, 0, EV_MAXCOARSE, &val)) {
 			return 0;
 		}
 		ev->v0 = val;
 		break;
 	case EV_BEND:
-		if (!parse_long(o, 0, COARSE_MAX, &val)) {
+		if (!parse_long(o, 0, EV_MAXCOARSE, &val)) {
 			return 0;
 		}
 		ev->v0 = val;
-		if (!parse_long(o, 0, COARSE_MAX, &val)) {
+		if (!parse_long(o, 0, EV_MAXCOARSE, &val)) {
 			return 0;
 		}
 		ev->v0 += (val << 7);
@@ -901,10 +901,10 @@ parse_rule(struct parse *o, struct filt *f) {
 		if (!parse_chan(o, &idev, &ich)) {
 			return 0;
 		}
-		if (!parse_long(o, 0, EV_MAXB0, &keylo)) {
+		if (!parse_long(o, 0, EV_MAXCOARSE, &keylo)) {
 			return 0;
 		}
-		if (!parse_long(o, 0, EV_MAXB0, &keyhi)) {
+		if (!parse_long(o, 0, EV_MAXCOARSE, &keyhi)) {
 			return 0;
 		}
 		filt_conf_keydrop(f, idev, ich, keylo, keyhi);
@@ -915,13 +915,13 @@ parse_rule(struct parse *o, struct filt *f) {
 		if (!parse_chan(o, &odev, &och)) {
 			return 0;
 		}
-		if (!parse_long(o, 0, EV_MAXB0, &keylo)) {
+		if (!parse_long(o, 0, EV_MAXCOARSE, &keylo)) {
 			return 0;
 		}
-		if (!parse_long(o, 0, EV_MAXB0, &keyhi)) {
+		if (!parse_long(o, 0, EV_MAXCOARSE, &keyhi)) {
 			return 0;
 		}
-		if (!parse_long(o, 0, EV_MAXB0, &ukeyplus)) {
+		if (!parse_long(o, 0, EV_MAXCOARSE, &ukeyplus)) {
 			return 0;
 		}
 		if (ukeyplus > 63) {
@@ -941,7 +941,7 @@ parse_rule(struct parse *o, struct filt *f) {
 		if (!parse_chan(o, &idev, &ich)) {
 			return 0;
 		}
-		if (!parse_long(o, 0, EV_MAXB0, &ictl)) {
+		if (!parse_long(o, 0, EV_MAXCOARSE, &ictl)) {
 			return 0;
 		}
 		filt_conf_ctldrop(f, idev, ich, ictl);
@@ -952,10 +952,10 @@ parse_rule(struct parse *o, struct filt *f) {
 		if (!parse_chan(o, &odev, &och)) {
 			return 0;
 		}
-		if (!parse_long(o, 0, EV_MAXB0, &ictl)) {
+		if (!parse_long(o, 0, EV_MAXCOARSE, &ictl)) {
 			return 0;
 		}
-		if (!parse_long(o, 0, EV_MAXB0, &octl)) {
+		if (!parse_long(o, 0, EV_MAXCOARSE, &octl)) {
 			return 0;
 		}
 		if (!parse_getsym(o)) {

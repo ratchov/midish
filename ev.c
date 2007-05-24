@@ -126,7 +126,6 @@ ev_phase(struct ev *ev) {
 			phase = EV_PHASE_LAST;		
 		}
 		break;
-	case EV_PC:
 	default:
 		phase = EV_PHASE_FIRST | EV_PHASE_LAST;
 		break;
@@ -211,9 +210,9 @@ evspec_reset(struct evspec *o) {
 	o->ch_min  = 0;
 	o->ch_max  = EV_MAXCH;
 	o->b0_min  = 0;
-	o->b0_max  = FINE_MAX;
+	o->b0_max  = EV_MAXFINE;
 	o->b1_min  = 0;
-	o->b1_max  = FINE_MAX;
+	o->b1_max  = EV_MAXFINE;
 }
 
 void
@@ -263,27 +262,14 @@ evspec_dbg(struct evspec *o) {
  * configure a controller (set the typ, name, etc...)
  */
 void
-evctl_conf(unsigned num_hi, unsigned num_lo, unsigned type, 
-	   char *name, unsigned defval) {
-	struct evctl *hi = &evctl_tab[num_hi], *lo;
+evctl_conf(unsigned num, char *name, unsigned isfine, unsigned defval) {
+	struct evctl *ctl = &evctl_tab[num];
 
 	if (name) {
-		hi->name = str_new(name);
+		ctl->name = str_new(name);
 	}
-	hi->type = type;
-	if (num_lo == EV_CTL_UNKNOWN) {
-		hi->bits = EVCTL_7BIT;
-		hi->defval = defval;
-	} else {
-		lo = &evctl_tab[num_lo];
-		lo->type = type;
-		hi->bits = EVCTL_14BIT_HI;
-		lo->bits = EVCTL_14BIT_LO;
-		hi->hi = lo->hi = num_hi;
-		hi->lo = lo->lo = num_lo;
-		hi->defval = (defval >> 7) & 0x7f;
-		lo->defval = defval & 0x7f;
-	}
+	ctl->defval = defval;
+	ctl->isfine = isfine;
 }
 
 /*
@@ -292,25 +278,14 @@ evctl_conf(unsigned num_hi, unsigned num_lo, unsigned type,
  */
 void
 evctl_unconf(unsigned i) {
-	struct evctl *hi = &evctl_tab[i], *lo;
+	struct evctl *ctl = &evctl_tab[i];
 
-	if (hi->bits != EVCTL_7BIT) {
-		lo = evctl_tab + evctl_tab[i].lo;
-		if (lo->name != NULL) {
-			str_delete(lo->name);
-			lo->name = NULL;
-		}
-		lo->type = EVCTL_PARAM;
-		lo->bits = EVCTL_7BIT;
-		lo->defval = 0;
+	if (ctl->name != NULL) {
+		str_delete(ctl->name);
+		ctl->name = NULL;
 	}
-	if (hi->name != NULL) {
-		str_delete(hi->name);
-		hi->name = NULL;
-	}
-	hi->type = EVCTL_PARAM;
-	hi->bits = EVCTL_7BIT;
-	hi->defval = 0;
+	ctl->isfine = 0;
+	ctl->defval = EV_UNDEF;
 }
 
 /*
@@ -340,22 +315,17 @@ evctl_init(void) {
 	unsigned i;
 	
 	for (i = 0; i < 128; i++) {
-		evctl_tab[i].type = EVCTL_PARAM;
-		evctl_tab[i].bits = EVCTL_7BIT;
 		evctl_tab[i].name = NULL;
-		evctl_tab[i].defval = 0;
+		evctl_tab[i].isfine = 0;
+		evctl_tab[i].defval = EV_UNDEF;
 	}
 
 	/*
 	 * some defaults, for testing ...
 	 */
-	evctl_conf(0,   32,	        EVCTL_BANK,    "bank", 0);
-	evctl_conf(6,   38,	        EVCTL_DATAENT, "dataent", 0);
-	evctl_conf(1,   EV_CTL_UNKNOWN, EVCTL_FRAME,   "mod", 0);
-	evctl_conf(7,   EV_CTL_UNKNOWN, EVCTL_PARAM,   "vol", 0);
-	evctl_conf(64,  EV_CTL_UNKNOWN, EVCTL_FRAME,   "sustain", 0);
-	evctl_conf(99,  98,	        EVCTL_NRPN,    "nrpn", 0);
-	evctl_conf(101, 100,	        EVCTL_NRPN,    "rpn", 0);
+	evctl_conf(1,   "mod", 0, 0);
+	evctl_conf(7,   "vol", 0, EV_UNDEF);
+	evctl_conf(64,  "sustain", 0, 0);
 }
 
 /*
@@ -372,3 +342,17 @@ evctl_done(void) {
 	}
 }
 
+
+/*
+ * return 1 if the controller is reserved
+ */
+unsigned
+evctl_isreserved(unsigned num) {
+	if (num == BANK_HI || num == DATAENT_HI || (num >= 32 && num < 64) ||
+	    num == RPN_HI || num == RPN_HI || 
+	    num == NRPN_HI || num == NRPN_LO) {
+		return 1;
+	} else {
+		return 0;
+	}	
+}

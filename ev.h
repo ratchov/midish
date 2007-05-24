@@ -91,9 +91,8 @@ struct ev {
 #define EV_UNDEF	0xffff
 #define EV_MAXDEV	(DEFAULT_MAXNDEVS - 1)
 #define EV_MAXCH	15
-#define EV_MAXB0	0x7f
-#define EV_MAXB1	0x7f
-#define EV_MAXBEND	0x3fff
+#define EV_MAXCOARSE	0x7f
+#define EV_MAXFINE	0x3fff
 };
 
 /*
@@ -140,53 +139,28 @@ unsigned evspec_matchev(struct evspec *o, struct ev *e);
  * event with the same number is found
  */
 struct evctl {
-#define EVCTL_PARAM	0	/* config. parameter (volume, reverb, ... ) */
-#define EVCTL_FRAME	1	/* wheels/switches with default values */
-#define EVCTL_BANK	2	/* bank (context for pc events) */
-#define EVCTL_NRPN	3	/* nrpn/rpn (context for data entries) */
-#define EVCTL_DATAENT	4	/* data entries */
-	unsigned type;		/* controller type */
-#define EVCTL_7BIT	0	/* 7bit controller */
-#define EVCTL_14BIT_HI	1	/* 7bit MSB of a 14bit controller */
-#define EVCTL_14BIT_LO	2	/* 7bit LSB of a 14bit controller */
-	unsigned bits;		/* controller bitness */
 	char *name;		/* controller name or NULL if none */
-	unsigned char defval;	/* default value if type == EVCTL_FRAME */
-	unsigned char lo;	/* LSB ctrl number if bits != EVCTL_7BIT */
-	unsigned char hi;	/* MSB ctrl number if bits != EVCTL_7BIT */
+	unsigned isfine;	/* controller bitness: 1 = 14bit, 0 = 7bit */
+	unsigned defval;	/* default value if type == EVCTL_FRAME */
 };
 
 extern	struct evctl evctl_tab[128];
 
 #define EV_CTL_ISPARAM(ev) \
-	(evctl_tab[(ev)->ctl_num].type == EVCTL_PARAM)
+	(evctl_tab[(ev)->ctl_num].defval == EV_UNDEF)
 #define EV_CTL_ISFRAME(ev) \
-	(evctl_tab[(ev)->ctl_num].type == EVCTL_FRAME)
-#define EV_CTL_ISBANK(ev) \
-	(evctl_tab[(ev)->ctl_num].type == EVCTL_BANK)
-#define EV_CTL_ISNRPN(ev) \
-	(evctl_tab[(ev)->ctl_num].type == EVCTL_NRPN)
-#define EV_CTL_ISDATAENT(ev) \
-	(evctl_tab[(ev)->ctl_num].type == EVCTL_DATAENT)
+	(evctl_tab[(ev)->ctl_num].defval != EV_UNDEF)
 #define EV_CTL_IS7BIT(ev) \
-	(evctl_tab[(ev)->ctl_num].bits == EVCTL_7BIT)
-#define EV_CTL_IS14BIT_HI(ev) \
-	(evctl_tab[(ev)->ctl_num].bits == EVCTL_14BIT_HI)
-#define EV_CTL_IS14BIT_LO(ev) \
-	(evctl_tab[(ev)->ctl_num].bits == EVCTL_14BIT_LO)
+	(!evctl_tab[(ev)->ctl_num].isfine)
 #define EV_CTL_DEFVAL(ev) \
 	(evctl_tab[(ev)->ctl_num].defval)
-#define EV_CTL_HI(ev) \
-	(evctl_tab[(ev)->ctl_num].hi)
-#define EV_CTL_LO(ev) \
-	(evctl_tab[(ev)->ctl_num].lo)
 
-void     evctl_conf(unsigned num_hi, unsigned num_lo,
-		    unsigned type, char *name, unsigned defval);
+void     evctl_conf(unsigned num, char *name, unsigned isfine, unsigned defval);
 void	 evctl_unconf(unsigned i);
 unsigned evctl_lookup(char *name, unsigned *ret);
 void	 evctl_init(void);
 void	 evctl_done(void);
+unsigned evctl_isreserved(unsigned num);
 
 
 #endif /* MIDISH_EV_H */
