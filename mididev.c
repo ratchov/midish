@@ -61,6 +61,8 @@ mididev_init(struct mididev *o, unsigned mode) {
 	o->ticrate = DEFAULT_TPU;
 	o->ticdelta = 0xdeadbeef;
 	o->mode = mode;
+	o->ixctlset = 0;	/* all input controllers are 7bit */
+	o->oxctlset = 0;
 }
 
 void

@@ -282,12 +282,10 @@ exec_lookupev(struct exec *o, char *name, struct ev *ev) {
 		ev->ctl_val <<= 7;
 	}
 	if (ev->cmd == EV_XCTL) {
-		if (ev->ctl_num == 0 || ev->ctl_num == DATAENT_HI ||
-		    (ev->ctl_num >= 98 && ev->ctl_num <= 101) ||
-		    (ev->ctl_num >= 32 && ev->ctl_num <= 63)) {
+		if (evctl_isreserved(ev->ctl_num)) {
 			cons_err("not allowed controller number, use xpc, nrpn, rpn instead");
+			return 0;
 		}
-		return 0;
 	}
 	return 1;
 }
@@ -607,6 +605,32 @@ data_list2ctl(struct data *d, unsigned *num) {
 	return 1;
 }
 
+unsigned
+data_list2ctlset(struct data *d, unsigned *res) {
+	unsigned ctlset;
+	
+	ctlset = 0;
+	while (d) {
+		if (d->type != DATA_LONG) {
+			cons_err("not-a-number in controller set");
+			return 0;
+		}
+		if (d->val.num < 0 || d->val.num >= 32) {
+			cons_err("controller number out of range 0..31");
+			return 0;
+		}
+		if (evctl_isreserved(d->val.num)) {
+			cons_erru(d->val.num, "controller number reserved");
+			return 0;
+		}
+		ctlset |= (1 << d->val.num);
+		d = d->next;	
+	}
+	*res = ctlset;
+	return 1;
+}
+
+
 /*
  * check if the pattern in data (list of integers)
  * match the beggining of the given sysex
@@ -643,6 +667,8 @@ data_matchsysex(struct data *d, struct sysex *sx, unsigned *res) {
 	*res = 1;
 	return 1;
 }
+
+
 
 
 /* ---------------------------------------- interpreter functions --- */
@@ -1192,6 +1218,12 @@ user_mainloop(void) {
 			name_newarg("tics_per_unit", NULL)));
 	exec_newbuiltin(exec, "devinfo", user_func_devinfo,
 			name_newarg("unit", NULL));
+	exec_newbuiltin(exec, "devixctl", user_func_devixctl,
+			name_newarg("unit", 
+			name_newarg("ctlset", NULL)));
+	exec_newbuiltin(exec, "devoxctl", user_func_devoxctl,
+			name_newarg("unit", 
+			name_newarg("ctlset", NULL)));
 
 	/*
 	 * run the user startup script: $HOME/.midishrc or /etc/midishrc

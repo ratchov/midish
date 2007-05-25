@@ -51,6 +51,7 @@ struct mididev {
 	unsigned sendrt;		/* send timing information */
 	unsigned isensto, osensto;	/* active sensing timeouts */
 	unsigned mode;			/* read, write */
+	unsigned ixctlset, oxctlset;	/* bitmap of 14bit controllers */
 };
 
 void mididev_init(struct mididev *o, unsigned mode);

@@ -274,20 +274,21 @@ mux_putev(struct ev *ev) {
 	dbg_puts("\n");
 #endif
 
-	if (EV_ISVOICE(ev)) {
-		unit = ev->dev;
-		if (unit < DEFAULT_MAXNDEVS) {
-			dev = mididev_byunit[unit];
-			if (dev != NULL) {
-				nev = conv_unpackev(&mux_ostate, ev, rev);
-				for (i = 0; i < nev; i++) {
-					rmidi_putev(RMIDI(dev), &rev[i]);
-				}
-			}
-		}
-	} else {
+	if (!EV_ISVOICE(ev)) {
 		dbg_puts("mux_putev: only voice events allowed\n");
 		dbg_panic();
+	}
+	unit = ev->dev;
+	if (unit >= DEFAULT_MAXNDEVS) {
+		dbg_puts("mux_putev: bogus unit number\n");
+		dbg_panic();
+	}
+	dev = mididev_byunit[unit];
+	if (dev != NULL) {
+		nev = conv_unpackev(&mux_ostate, dev->oxctlset, ev, rev);
+		for (i = 0; i < nev; i++) {
+			rmidi_putev(RMIDI(dev), &rev[i]);
+		}
 	}
 }
 
@@ -472,12 +473,13 @@ mux_ackcb(unsigned unit) {
 void
 mux_evcb(unsigned unit, struct ev *ev) {
 	struct ev rev;
+	struct mididev *dev = mididev_byunit[ev->dev];
 #ifdef MUX_DEBUG
 	dbg_puts("mux_evcb: ");
 	ev_dbg(ev);
 	dbg_puts("\n");
 #endif
-	if (conv_packev(&mux_istate, ev, &rev)) {
+	if (conv_packev(&mux_istate, dev->ixctlset, ev, &rev)) {
 		mux_ops->ev(mux_addr, &rev);
 	}
 }

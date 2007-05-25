@@ -155,6 +155,14 @@ extern	struct evctl evctl_tab[128];
 #define EV_CTL_DEFVAL(ev) \
 	(evctl_tab[(ev)->ctl_num].defval)
 
+/*
+ * return true if the given controller number is 14bit (fine)
+ * and false if it is 7bit (coarse). The 'ctlbits' is 
+ * a 32bit bitmap, it is stored in per-device basis in 
+ * mididev structure
+ */
+#define EVCTL_ISFINE(xctlset, num)	((xctlset) & (1 << (num)))
+
 void     evctl_conf(unsigned num, char *name, unsigned isfine, unsigned defval);
 void	 evctl_unconf(unsigned i);
 unsigned evctl_lookup(char *name, unsigned *ret);

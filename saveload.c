@@ -873,7 +873,7 @@ parse_track(struct parse *o, struct track *t) {
 				return 0;
 			}
 			if (ev.cmd != EV_NULL) {
-				if (conv_packev(&slist, &ev, &rev)) {
+				if (conv_packev(&slist, 0U, &ev, &rev)) {
 					se = seqev_new();
 					se->ev = rev;
 					seqev_ins(pos, se);

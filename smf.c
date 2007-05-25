@@ -319,7 +319,7 @@ smf_puttrack(struct smf *o, unsigned *used, struct song *s, struct track *t) {
 			break;
 		}
 		if (EV_ISVOICE(&pos->ev)) {
-			nev = conv_unpackev(&slist, &pos->ev, rev); 
+			nev = conv_unpackev(&slist, ~1U, &pos->ev, rev); 
 			for (i = 0; i < nev; i++) {
 				smf_putvar(o, used, delta);
 				delta = 0;
@@ -659,7 +659,7 @@ smf_gettrack(struct smf *o, struct song *s, struct songtrk *t) {
 				ev.cmd = EV_NOFF;
 				ev.note_vel = EV_NOFF_DEFAULTVEL;
 			}
-			if (conv_packev(&slist, &ev, &rev)) {
+			if (conv_packev(&slist, 0U, &ev, &rev)) {
 				se = seqev_new();
 				se->ev = rev;
 				seqev_ins(pos, se);

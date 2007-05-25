@@ -76,6 +76,7 @@ unsigned data_list2chan(struct data *o, unsigned *dev, unsigned *ch);
 unsigned data_list2range(struct data *d, unsigned min, unsigned max, unsigned *lo, unsigned *hi);
 unsigned data_matchsysex(struct data *d, struct sysex *sx, unsigned *res);
 unsigned data_list2ctl(struct data *d, unsigned *num);
+unsigned data_list2ctlset(struct data *d, unsigned *res);
 
 /* track functions */
 
@@ -209,6 +210,8 @@ unsigned user_func_devgetmaster(struct exec *o, struct data **r);
 unsigned user_func_devsendrt(struct exec *o, struct data **r);
 unsigned user_func_devticrate(struct exec *o, struct data **r);
 unsigned user_func_devinfo(struct exec *o, struct data **r);
+unsigned user_func_devixctl(struct exec *o, struct data **r);
+unsigned user_func_devoxctl(struct exec *o, struct data **r);
  
 /* misc */
 

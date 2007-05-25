@@ -1420,14 +1420,14 @@ the console).
 <A name="changes_03"></A><H2>13.2 Changes from release 0.2 to release 0.3</H2>
 
         <UL>
-        <LI> added <TT>tracktransp</TT>
+        <LI> added <TT>tracktransp</TT> to transpose tracks
 	<LI> make rmidish run midish from the same directory where
 	     rmidish is located.
 	<LI> now multiple bender events are gathered together. So track editing 
 	     functions (<TT>trackcopy</TT> &amp; friends) always leave the 
 	     bender in a neutral state.
 	<LI> improved <TT>trackcheck</TT>
-	<LI> added <TT>exit</TT> keyword
+	<LI> added <TT>exit</TT> keyword to exit midish
 	<LI> Added a 'mode' argument to <TT>devattach</TT> function. 
 	     Now devices can be used in read-only or write-only mode (allowing
 	     to use named pipes as midi devices).
@@ -1437,7 +1437,7 @@ the console).
         <LI> added tempo factor: <TT>songsetfactor</TT> and <TT>songgetfactor</TT>
 	<LI> changed all track functions to gracefully handle nested notes, overlapping
 	     controllers/benders.
-	<LI> when entering real-time mode, restore the states of all 
+	<LI> when entering real-time mode, restore states of all 
 	     controllers/benders corresponding to the current position
 	<LI> when leaving real-time mode release only notes that
 	     are sounding and reset only controllers that are touched
@@ -1446,7 +1446,10 @@ the console).
 	<LI> added support for 14bit controllers
 	<LI> added support for RPN/NRPN midi events.
 	<LI> split format 0 MIDI files into 16 tracks (one per MIDI channel)	
-	<LI> added <TT>ctlconf</TT>, <TT>ctlunconf</TT> and <TT>ctlinfo</TT> functions
+	<LI> made controller interpretation in editting functions configurable: 
+		<TT>ctlconf</TT>, <TT>ctlunconf</TT> and <TT>ctlinfo</TT>.
+	<LI> added per-device controller precision selection (7bit or 14bit): 
+		<TT>devixctl</TT> and <TT>devoxctl</TT>.
 	</UL>
 
 <A name="attributes"></A><H1>14 Project attributes</H1>
@@ -1471,6 +1474,14 @@ the console).
 	<TD>sendrt flag
 	<TD>boolean; if sendrt = true, the real-time events
 		(like start, stop, tics) are transmitted to the midi device.
+	<TR>
+	<TD>ixctlset
+	<TD>list of continuous controllers that are expected to be
+		received with 14bit precision.
+	<TR>
+	<TD>oxctlset
+	<TD>list of continuous controllers that will be transmitted
+		with 14bit precision
 	</TABLE>
 
 
@@ -2951,6 +2962,23 @@ the console).
 <B><TT>devinfo devnum</TT></B>
         <BLOCKQUOTE>
         Print some information about the midi device.
+        </BLOCKQUOTE>
+
+<A name="func_devixctl"></A>
+<B><TT>devixctl devnum list</TT></B>
+        <BLOCKQUOTE>
+        Setup the list of controllers that are expected to
+	be received as 14bit numbers (ie both coarse and fine 
+	MIDI controller messages will be expected). By default
+	only coarse values are used, if unsure 
+	let this list empty.
+        </BLOCKQUOTE>
+
+<A name="func_devoxctl"></A>
+<B><TT>devoxctl devnum list</TT></B>
+        <BLOCKQUOTE>
+        Setup the list of controllers that will be transmitted
+	as 14bit numbers (both coarse and fine MIDI controller messages).
         </BLOCKQUOTE>
 
 <A name="func_misc"></A>

@@ -207,3 +207,44 @@ user_func_devinfo(struct exec *o, struct data **r) {
 	return 1;
 }	
 
+unsigned
+user_func_devixctl(struct exec *o, struct data **r) {
+	long unit;
+	struct data *list;
+	unsigned ctlset;
+
+	if (!exec_lookuplong(o, "unit", &unit) || 
+	    !exec_lookuplist(o, "ctlset", &list)) {
+		return 0;
+	}
+	if (unit < 0 || unit >= DEFAULT_MAXNDEVS || !mididev_byunit[unit]) {
+		cons_err("no such device");
+		return 0;		
+	}
+	if (!data_list2ctlset(list, &ctlset)) {
+		return 0;
+	}
+	mididev_byunit[unit]->ixctlset = ctlset;
+	return 1;
+}
+
+unsigned
+user_func_devoxctl(struct exec *o, struct data **r) {
+	long unit;
+	struct data *list;
+	unsigned ctlset;
+
+	if (!exec_lookuplong(o, "unit", &unit) || 
+	    !exec_lookuplist(o, "ctlset", &list)) {
+		return 0;
+	}
+	if (unit < 0 || unit >= DEFAULT_MAXNDEVS || !mididev_byunit[unit]) {
+		cons_err("no such device");
+		return 0;		
+	}
+	if (!data_list2ctlset(list, &ctlset)) {
+		return 0;
+	}
+	mididev_byunit[unit]->oxctlset = ctlset;
+	return 1;
+}

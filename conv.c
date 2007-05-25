@@ -99,7 +99,9 @@ conv_getctx(struct statelist *slist, struct ev *ev, unsigned hi, unsigned lo) {
  * parameter is filled and 1 is returned.
  */
 unsigned
-conv_packev(struct statelist *l, struct ev *ev, struct ev *rev) {
+conv_packev(struct statelist *l, unsigned xctlset, 
+	    struct ev *ev, struct ev *rev) 
+{
 	unsigned num, val;
 
 	if (ev->cmd == EV_PC) {
@@ -161,14 +163,31 @@ conv_packev(struct statelist *l, struct ev *ev, struct ev *rev) {
 			rev->ctl_val = ev->ctl_val + (val << 7);
 			return 1;
 		default:
-			/* 
-			 * XXX: do something with 14bit controllers here
-			 */
+			if (ev->ctl_num < 32) {
+				if (EVCTL_ISFINE(xctlset, ev->ctl_num)) {
+					conv_setctl(l, ev);
+					break;
+				}				
+				rev->ctl_num = ev->ctl_num;
+				rev->ctl_val = ev->ctl_val << 7;
+			} else if (ev->ctl_num < 64) {
+				num = ev->ctl_num - 32;
+				if (!EVCTL_ISFINE(xctlset, num)) {
+					break;
+				}
+				val = conv_getctl(l, ev, num);
+				if (val == EV_UNDEF) {
+					break;
+				}
+				rev->ctl_num = num;
+				rev->ctl_val = ev->ctl_val + (val << 7);
+			} else {
+				rev->ctl_num = ev->ctl_num;
+				rev->ctl_val = ev->ctl_val << 7;
+			}
 			rev->cmd = EV_XCTL;
 			rev->dev = ev->dev;
 			rev->ch = ev->ch;
-			rev->ctl_num = ev->ctl_num;
-			rev->ctl_val = ev->ctl_val << 7;
 			return 1;
 		}
 		return 0;
@@ -184,17 +203,42 @@ conv_packev(struct statelist *l, struct ev *ev, struct ev *rev) {
  * filled
  */
 unsigned
-conv_unpackev(struct statelist *slist, struct ev *ev, struct ev *rev) {
-	unsigned val;
+conv_unpackev(struct statelist *slist, unsigned xctlset,
+	      struct ev *ev, struct ev *rev)
+{
+	unsigned val, hi;
 	unsigned nev = 0;
 
 	if (ev->cmd == EV_XCTL) {
-		rev->cmd = EV_CTL;
-		rev->dev = ev->dev;
-		rev->ch = ev->ch;
-		rev->ctl_num = ev->ctl_num;
-		rev->ctl_val = ev->ctl_val >> 7;
-		return 1;
+		if (ev->ctl_num < 32 && EVCTL_ISFINE(xctlset, ev->ctl_num)) {
+			hi = ev->ctl_val >> 7;
+			val = conv_getctl(slist, ev, ev->ctl_num);
+			if (val != hi || val == EV_UNDEF) {
+				rev->cmd = EV_CTL;
+				rev->dev = ev->dev;
+				rev->ch = ev->ch;
+				rev->ctl_num = ev->ctl_num;
+				rev->ctl_val = hi;
+				conv_setctl(slist, rev);
+				rev++;
+				nev++;
+			}
+			rev->cmd = EV_CTL;
+			rev->dev = ev->dev;
+			rev->ch = ev->ch;
+			rev->ctl_num = ev->ctl_num + 32;
+			rev->ctl_val = ev->ctl_val & 0x7f;
+			rev++; 
+			nev++;
+			return nev;
+		} else {
+			rev->cmd = EV_CTL;
+			rev->dev = ev->dev;
+			rev->ch = ev->ch;
+			rev->ctl_num = ev->ctl_num;
+			rev->ctl_val = ev->ctl_val >> 7;
+			return 1;
+		}
 	} else if (ev->cmd == EV_XPC) {
 		val = conv_getctx(slist, ev, BANK_HI, BANK_LO);
 		if (val != ev->pc_bank && ev->pc_bank != EV_UNDEF) {

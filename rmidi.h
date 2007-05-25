@@ -50,7 +50,7 @@ struct rmidi {
 	unsigned char	  idata[2];		/* current event's data */
 	unsigned 	  oused;		/* bytes in obuf */
 	unsigned	  ostatus;		/* output running status */
-	unsigned char	  obuf[RMIDI_BUFLEN];
+	unsigned char	  obuf[RMIDI_BUFLEN];	/* output buffer */
 	struct sysex	 *isysex;
 };
 

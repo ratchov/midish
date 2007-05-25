@@ -36,7 +36,9 @@
 struct ev;
 struct statelist;
 
-unsigned conv_packev(struct statelist *l, struct ev *ev, struct ev *rev);
-unsigned conv_unpackev(struct statelist *l, struct ev *ev, struct ev *rev);
+unsigned conv_packev(struct statelist *l, unsigned ctlbits,
+		     struct ev *ev, struct ev *rev);
+unsigned conv_unpackev(struct statelist *l, unsigned ctlbits,
+		       struct ev *ev, struct ev *rev);
 
 #endif /* MIDISH_CONV_H */
