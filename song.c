@@ -39,7 +39,7 @@
 #include "metro.h"
 #include "default.h"
 
-unsigned song_debug = 1;
+unsigned song_debug = 0;
 
 /*
  * allocate and initialise a song structure

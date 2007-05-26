@@ -381,7 +381,9 @@ filt_start(struct filt *o, struct muxops *ops, void *addr) {
 	o->ops = ops;
 	statelist_init(&o->statelist);
 	timo_add(&o->timo, FILT_TIMO);
-	dbg_puts("filt_start()\n");
+	if (filt_debug) {
+		dbg_puts("filt_start()\n");
+	}
 }
 
 
@@ -390,7 +392,9 @@ filt_start(struct filt *o, struct muxops *ops, void *addr) {
  */
 void
 filt_stop(struct filt *o) {
-	dbg_puts("filt_stop()\n");
+	if (filt_debug) {
+		dbg_puts("filt_stop()\n");
+	}
 	timo_del(&o->timo);
 	statelist_done(&o->statelist);
 	o->ops = NULL;
