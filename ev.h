@@ -140,7 +140,6 @@ unsigned evspec_matchev(struct evspec *o, struct ev *e);
  */
 struct evctl {
 	char *name;		/* controller name or NULL if none */
-	unsigned isfine;	/* controller bitness: 1 = 14bit, 0 = 7bit */
 	unsigned defval;	/* default value if type == EVCTL_FRAME */
 };
 
@@ -150,8 +149,6 @@ extern	struct evctl evctl_tab[128];
 	(evctl_tab[(ev)->ctl_num].defval == EV_UNDEF)
 #define EV_CTL_ISFRAME(ev) \
 	(evctl_tab[(ev)->ctl_num].defval != EV_UNDEF)
-#define EV_CTL_IS7BIT(ev) \
-	(!evctl_tab[(ev)->ctl_num].isfine)
 #define EV_CTL_DEFVAL(ev) \
 	(evctl_tab[(ev)->ctl_num].defval)
 
@@ -163,7 +160,7 @@ extern	struct evctl evctl_tab[128];
  */
 #define EVCTL_ISFINE(xctlset, num)	((xctlset) & (1 << (num)))
 
-void     evctl_conf(unsigned num, char *name, unsigned isfine, unsigned defval);
+void     evctl_conf(unsigned num, char *name, unsigned defval);
 void	 evctl_unconf(unsigned i);
 unsigned evctl_lookup(char *name, unsigned *ret);
 void	 evctl_init(void);

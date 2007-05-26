@@ -634,49 +634,44 @@ user_func_songgetfactor(struct exec *o, struct data **r) {
 }
 
 unsigned
-user_func_ctlconf(struct exec *o, struct data **r) {
+user_func_ctlconfx(struct exec *o, struct data **r) {
 	char *name;
-	unsigned num, old;
-	long defval, bits;
-	struct var *arg;
+	unsigned num, old, val;
 	
 	if (!exec_lookupname(o, "name", &name) ||
 	    !exec_lookupctl(o, "ctl", &num) ||
-	    !exec_lookuplong(o, "bits", &bits)) {
+	    !exec_lookupval(o, "defval", 1, &val)) {
 		return 0;
 	}
-
-	if (bits != 7 && bits != 14) {
-		cons_err("only 7bit and 14bit precision is allowed\n");
-		return 0;
-	}
-	if (bits == 14 && num >= 32) {
+	if (num >= 32) {
 		cons_err("only controllers 0..31 can be 14bit");
 		return 0;
-	}
-	arg = exec_varlookup(o, "defval");
-	if (!arg) {
-		dbg_puts("user_func_ctlconf: 'defval': no such param\n");
-		return 0;
-	}
-	if (arg->data->type == DATA_NIL) {
-		defval = EV_UNDEF;
-	} else if (arg->data->type == DATA_LONG) {
-		defval = arg->data->val.num;
-		if (defval < 0 || 
-		    defval > (bits == 7 ? EV_MAXCOARSE : EV_MAXFINE)) {
-			cons_err("defval out of bounds");
-			return 0;
-		}
 	}
 	if (evctl_lookup(name, &old)) {
 		evctl_unconf(old);
 	}
 	evctl_unconf(num);
-	evctl_conf(num, name, bits == 14 ? 1 : 0, defval);
+	evctl_conf(num, name, val);
 	return 1;
 }
 
+unsigned
+user_func_ctlconf(struct exec *o, struct data **r) {
+	char *name;
+	unsigned num, old, val;
+	
+	if (!exec_lookupname(o, "name", &name) ||
+	    !exec_lookupctl(o, "ctl", &num) ||
+	    !exec_lookupval(o, "defval", 0, &val)) {
+		return 0;
+	}
+	if (evctl_lookup(name, &old)) {
+		evctl_unconf(old);
+	}
+	evctl_unconf(num);
+	evctl_conf(num, name, val << 7);
+	return 1;
+}
 
 unsigned
 user_func_ctlunconf(struct exec *o, struct data **r) {
@@ -705,7 +700,7 @@ user_func_ctlinfo(struct exec *o, struct data **r) {
 	textout_indent(tout);
 	textout_putstr(tout, "#\n");
 	textout_indent(tout);
-	textout_putstr(tout, "# name\tnumber\tprec\tdefval\n");
+	textout_putstr(tout, "# name\tnumber\tdefval\n");
 	textout_indent(tout);
 	textout_putstr(tout, "#\n");
 	for (i = 0; i < 128; i++) {
@@ -715,8 +710,6 @@ user_func_ctlinfo(struct exec *o, struct data **r) {
 			textout_putstr(tout, ctl->name);
 			textout_putstr(tout, "\t");
 			textout_putlong(tout, i);
-			textout_putstr(tout, "\t");
-			textout_putlong(tout, ctl->isfine ? 14 : 7);
 			textout_putstr(tout, "\t");
 			if (ctl->defval == EV_UNDEF) {
 				textout_putstr(tout, "nil");

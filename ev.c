@@ -262,14 +262,13 @@ evspec_dbg(struct evspec *o) {
  * configure a controller (set the typ, name, etc...)
  */
 void
-evctl_conf(unsigned num, char *name, unsigned isfine, unsigned defval) {
+evctl_conf(unsigned num, char *name, unsigned defval) {
 	struct evctl *ctl = &evctl_tab[num];
 
 	if (name) {
 		ctl->name = str_new(name);
 	}
 	ctl->defval = defval;
-	ctl->isfine = isfine;
 }
 
 /*
@@ -284,7 +283,6 @@ evctl_unconf(unsigned i) {
 		str_delete(ctl->name);
 		ctl->name = NULL;
 	}
-	ctl->isfine = 0;
 	ctl->defval = EV_UNDEF;
 }
 
@@ -316,16 +314,15 @@ evctl_init(void) {
 	
 	for (i = 0; i < 128; i++) {
 		evctl_tab[i].name = NULL;
-		evctl_tab[i].isfine = 0;
 		evctl_tab[i].defval = EV_UNDEF;
 	}
 
 	/*
 	 * some defaults, for testing ...
 	 */
-	evctl_conf(1,   "mod", 0, 0);
-	evctl_conf(7,   "vol", 0, EV_UNDEF);
-	evctl_conf(64,  "sustain", 0, 0);
+	evctl_conf(1,   "mod", 0);
+	evctl_conf(7,   "vol", EV_UNDEF);
+	evctl_conf(64,  "sustain", 0);
 }
 
 /*

@@ -1051,15 +1051,16 @@ the console).
 	</UL>
 
 	The user can specify for each controller number the desired
-	behavior. The <a href="#func_ctlconf">ctlconf</a> function
+	behavior. 
+	The <a href="#func_ctlconf">ctlconf</a> function
 	configures the controller. As arguments, it takes the name of
-	the controller (an identifier) the controller number, the
-	controller precision (7 bits or 14 bits) and the default value of the
-	controller. If the default value is 'nil' (ie no default value), 
+	the controller (an identifier) the controller number and the 
+	default value of the controller.
+	If the default value is 'nil' (ie no default value), 
 	then the controller is considered as of type <I>parameter</I>.
 	For instance, following command:
         <PRE>
-        ctlconf expr 11 7 127
+        ctlconf expr 11 127
         </PRE>
 	configures controller number 11 of type <I>frame</I> and with 
 	default value of 127. The controller name can be
@@ -1071,11 +1072,11 @@ the console).
         <PRE>
 	ctltab {
 	        #
-	        # name  number  prec    defval
+	        # name  number  defval
 		#
-	        mod     1       7       0
-	        vol     7       7       nil
-		sustain 64      7       0
+	        mod     1       0
+	        vol     7       nil
+		sustain 64      0
 	}
         </PRE>
 
@@ -1447,7 +1448,8 @@ the console).
 	<LI> added support for RPN/NRPN midi events.
 	<LI> split format 0 MIDI files into 16 tracks (one per MIDI channel)	
 	<LI> made controller interpretation in editting functions configurable: 
-		<TT>ctlconf</TT>, <TT>ctlunconf</TT> and <TT>ctlinfo</TT>.
+		<TT>ctlconf</TT>, <TT>ctlconfx</TT>, 
+		<TT>ctlunconf</TT> and <TT>ctlinfo</TT>.
 	<LI> added per-device controller precision selection (7bit or 14bit): 
 		<TT>devixctl</TT> and <TT>devoxctl</TT>.
 	</UL>
@@ -2985,14 +2987,21 @@ the console).
 <A name="section_17_8"></A><H2>17.8 Controller functions</H2>
 
 <A name="func_ctlconf"></A>
-<B><TT>ctlconf ctlname ctlnumber ctlprecision defval</TT></B>
+<B><TT>ctlconf ctlname ctlnumber defval</TT></B>
         <BLOCKQUOTE>
 	Configure controller number 'ctlnumber' with name
-	'ctlname', precision 'ctlprecision' (7 or 14 bits)
-	and with default value 'defval'. If defval is 'nil'
+	'ctlname', and default value 'defval'. If defval is 'nil'
 	then there is no default value and corresponding
 	controller events are not grouped into frames.
 	See sec. <A href="ctl_frames">Controller frames</A>.
+        </BLOCKQUOTE>
+
+<A name="func_ctlconfx"></A>
+<B><TT>ctlconfx ctlname ctlnumber defval</TT></B>
+        <BLOCKQUOTE>
+	Same as <A href="func_ctlconfx">ctlconf</A> function, 
+	but for 14bit controllers. Thus defval is in the
+	range 0..16383.
         </BLOCKQUOTE>
 
 <A name="func_ctlunconf"></A>

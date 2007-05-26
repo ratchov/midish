@@ -68,6 +68,7 @@ unsigned exec_lookupsx(struct exec *o, char *var, struct songsx **res);
 unsigned exec_lookupev(struct exec *o, char *name, struct ev *ev);
 unsigned exec_lookupevspec(struct exec *o, char *name, struct evspec *e);
 unsigned exec_lookupctl(struct exec *o, char *var, unsigned *num);
+unsigned exec_lookupval(struct exec *o, char *n, unsigned isfine, unsigned *r);
 
 
 void	 data_print(struct data *d);
@@ -226,6 +227,7 @@ unsigned user_func_print(struct exec *o, struct data **r);
 unsigned user_func_info(struct exec *o, struct data **r);
 
 unsigned user_func_ctlconf(struct exec *o, struct data **r);
+unsigned user_func_ctlconfx(struct exec *o, struct data **r);
 unsigned user_func_ctlunconf(struct exec *o, struct data **r);
 unsigned user_func_ctlinfo(struct exec *o, struct data **r);
 

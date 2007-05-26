@@ -430,6 +430,8 @@ done:
 	return 0;
 }
 
+
+
 /*
  * find the (hi lo) couple for the 14bit controller
  * number:
@@ -516,6 +518,36 @@ data_num2chan(struct data *o, unsigned *res_dev, unsigned *res_ch) {
 	*res_dev = dev;
 	*res_ch = ch;
 	return 1;
+}
+
+/*
+ * lookup the value of the given controller
+ */
+unsigned
+exec_lookupval(struct exec *o, char *n, unsigned isfine, unsigned *r) {
+	struct var *arg;
+	unsigned max;
+
+	arg = exec_varlookup(o, n);
+	if (!arg) {
+		dbg_puts("exec_lookupval: no such var\n");
+		dbg_panic();
+	}
+	if (arg->data->type == DATA_NIL) {
+		*r = EV_UNDEF;
+		return 1;
+	} else if (arg->data->type == DATA_LONG) {
+		   max = isfine ? EV_MAXFINE : EV_MAXCOARSE;
+		   if (arg->data->val.num < 0 || arg->data->val.num > max) {
+			   cons_err("controller value out of range");
+			   return 0;
+		   }
+		   *r = arg->data->val.num;
+		   return 1;
+	} else {
+		cons_err("bad type of controller value\n");
+		return 0;
+	}
 }
 
 /*
@@ -1184,8 +1216,11 @@ user_mainloop(void) {
 	exec_newbuiltin(exec, "ctlconf", user_func_ctlconf, 
 			name_newarg("name", 
 			name_newarg("ctl", 
-			name_newarg("bits", 
-			name_newarg("defval", NULL)))));
+			name_newarg("defval", NULL))));
+	exec_newbuiltin(exec, "ctlconfx", user_func_ctlconf, 
+			name_newarg("name", 
+			name_newarg("ctl", 
+			name_newarg("defval", NULL))));
 	exec_newbuiltin(exec, "ctlunconf", user_func_ctlunconf, 
 			name_newarg("name", NULL));
 	exec_newbuiltin(exec, "ctlinfo", user_func_ctlinfo, NULL);

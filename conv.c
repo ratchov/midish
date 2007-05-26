@@ -28,6 +28,28 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * This module provides to midish events that are self-contained, and
+ * that do not depend on any context. Standard MIDI events/messages
+ * aren't context free: for instance the meaning of a data_entry
+ * controller depends of the last NRPN/RPN controller; dealing with
+ * contexts would overcomplicate most midish code (filters, tracks),
+ * that's why we define those context-free events: XCTL, NRPN, RPN,
+ * and XPC.
+ *
+ * This module make convertions between context-free events (XPC,
+ * XCTL, RPN, NRPN) and basic events (PC, CTL). For instatance a bank
+ * controller followed by a prog change will be converted to a
+ * "extended" prog change (XPC) that contains also the bank number.
+ * In order to generate XPCs whose context is the current bank number,
+ * we keep the bank number into a statelist. Similarly the current
+ * NRPN and RPN numbers are kept.
+ *
+ * To keep the state, we use the statelist_xxx() functions. However
+ * since we store only controllers, we roll simplified lookup() and
+ * update() functions.
+ */
+
 #include "dbg.h"
 #include "state.h"
 #include "conv.h"
@@ -38,6 +60,10 @@
 #define CTL_MATCH(e1, e2) \
 	((e1)->ctl_num == (e2)->ctl_num && CHAN_MATCH((e1), (e2)))
 
+/*
+ * create a state for the givent controller event. If there already
+ * one, then update it.
+ */
 void
 conv_setctl(struct statelist *slist, struct ev *ev) {
 	struct state *i;
@@ -53,6 +79,11 @@ conv_setctl(struct statelist *slist, struct ev *ev) {
 	i->ev = *ev;
 }
 
+/*
+ * return the state (the value) of the given controller number with
+ * the same channel/device as the given event. If there is no state
+ * recorded, then return EV_UNDEF
+ */
 unsigned
 conv_getctl(struct statelist *slist, struct ev *ev, unsigned num) {
 	struct state *i;
@@ -65,6 +96,10 @@ conv_getctl(struct statelist *slist, struct ev *ev, unsigned num) {
 	return EV_UNDEF;
 }
 
+/*
+ * delete the state of the given controller number with the
+ * same channel/device as the given event.
+ */
 void
 conv_rmctl(struct statelist *slist, struct ev *ev, unsigned num) {
 	struct state *i;
@@ -78,6 +113,12 @@ conv_rmctl(struct statelist *slist, struct ev *ev, unsigned num) {
 	}
 }
 
+/*
+ * return the 14bit value of a pair of (high, low) controllers with
+ * the same device/channel as the given event. If the state of of one
+ * of the high or low controllers is missing, the EV_UNDEF is
+ * returned.
+ */
 unsigned
 conv_getctx(struct statelist *slist, struct ev *ev, unsigned hi, unsigned lo) {
 	unsigned vhi, vlo;
@@ -94,9 +135,9 @@ conv_getctx(struct statelist *slist, struct ev *ev, unsigned hi, unsigned lo) {
 }
 
 /*
- * convert an old-style MIDI event (ie CTL, PC) to new-style midish
- * event (ie XCTL, NRPN, RPN, XPC). If an event is available, 'rev'
- * parameter is filled and 1 is returned.
+ * convert an old-style event (ie CTL, PC) to a context-free event (ie
+ * XCTL, NRPN, RPN, XPC). If an event is available, 'rev' parameter is
+ * filled and 1 is returned.
  */
 unsigned
 conv_packev(struct statelist *l, unsigned xctlset, 
@@ -198,9 +239,9 @@ conv_packev(struct statelist *l, unsigned xctlset,
 }
 
 /*
- * convert midish "advanced" events (XCTL, RPN, NRPN, XPC) to
- * standard controller events. Renturn the number of events 
- * filled
+ * convert a context-free event (XCTL, RPN, NRPN, XPC) to an array of
+ * old-style events (CTL, PC). Renturn the number of events filled in
+ * the array.
  */
 unsigned
 conv_unpackev(struct statelist *slist, unsigned xctlset,
