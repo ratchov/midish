@@ -310,6 +310,8 @@ conv_unpackev(struct statelist *slist, unsigned xctlset,
 	} else if (ev->cmd == EV_NRPN) {
 		val = conv_getctx(slist, ev, NRPN_HI, NRPN_LO);
 		if (val != ev->rpn_num) {
+			conv_rmctl(slist, ev, RPN_HI);
+			conv_rmctl(slist, ev, RPN_LO);
 			rev->cmd = EV_CTL;
 			rev->dev = ev->dev;
 			rev->ch = ev->ch;
@@ -343,13 +345,15 @@ conv_unpackev(struct statelist *slist, unsigned xctlset,
 		rev++;
 		nev++;
 		return nev;
-	} else if (ev->cmd == EV_NRPN) {
-		val = conv_getctx(slist, ev, NRPN_HI, NRPN_LO);
+	} else if (ev->cmd == EV_RPN) {
+		val = conv_getctx(slist, ev, RPN_HI, RPN_LO);
 		if (val != ev->rpn_num) {
+			conv_rmctl(slist, ev, NRPN_HI);
+			conv_rmctl(slist, ev, NRPN_LO);
 			rev->cmd = EV_CTL;
 			rev->dev = ev->dev;
 			rev->ch = ev->ch;
-			rev->ctl_num = NRPN_HI;
+			rev->ctl_num = RPN_HI;
 			rev->ctl_val = ev->rpn_num >> 7;
 			conv_setctl(slist, rev);
 			rev++; 
@@ -357,7 +361,7 @@ conv_unpackev(struct statelist *slist, unsigned xctlset,
 			rev->cmd = EV_CTL;
 			rev->dev = ev->dev;
 			rev->ch = ev->ch;
-			rev->ctl_num = NRPN_LO;
+			rev->ctl_num = RPN_LO;
 			rev->ctl_val = ev->rpn_num & 0x7f;
 			conv_setctl(slist, rev);
 			rev++; 
