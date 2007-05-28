@@ -61,12 +61,7 @@ void	 track_merge(struct track *dst, struct track *src);
 unsigned track_findmeasure(struct track *t, unsigned m0);
 void	 track_timeinfo(struct track *t, unsigned meas, unsigned *tic, 
 			unsigned long *usec24, unsigned *bpm, unsigned *tpb);
-void	 track_deftempo(struct track *t, unsigned tempo);
-void	 track_deftimesig(struct track *t, unsigned bpm, unsigned tpb);
 void     track_settempo(struct track *t, unsigned measure, unsigned tempo);
-void     track_timeins(struct track *t, unsigned measure, unsigned amount,
-		       unsigned bpm, unsigned tpb);
-void     track_timerm(struct track *t, unsigned measure, unsigned amount);
 void     track_move(struct track *src, unsigned start, unsigned len, 
 		    struct evspec *evspec, struct track *dst, 
 		    unsigned copy, unsigned blank);

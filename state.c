@@ -186,6 +186,9 @@ state_match(struct state *st, struct ev *ev) {
  */
 unsigned
 state_inspec(struct state *st, struct evspec *spec) {
+	if (spec == NULL) {
+		return 1;
+	}
 	switch(spec->cmd) {
 	case EVSPEC_ANY:
 		goto ch;

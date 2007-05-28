@@ -1224,11 +1224,6 @@ user_mainloop(void) {
 	exec_newbuiltin(exec, "songsettempo", user_func_songsettempo, 
 			name_newarg("measure", 
 			name_newarg("beats_per_minute", NULL)));
-	exec_newbuiltin(exec, "songdeftempo", user_func_songdeftempo, 
-			name_newarg("beats_per_minute", NULL));
-	exec_newbuiltin(exec, "songdefsig", user_func_songdefsig, 
-			name_newarg("numerator", 
-			name_newarg("denominator", NULL)));
 	exec_newbuiltin(exec, "songtimeins", user_func_songtimeins, 
 			name_newarg("from", 
 			name_newarg("amount", 

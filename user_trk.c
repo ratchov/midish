@@ -220,7 +220,6 @@ user_func_trackcut(struct exec *o, struct data **r) {
 	long from, amount, quant;
 	unsigned tic, len;
 	struct track t1, t2;
-	struct evspec es;
 	
 	if (!exec_lookuptrack(o, "trackname", &t) ||
 	    !exec_lookuplong(o, "from", &from) ||
@@ -240,12 +239,11 @@ user_func_trackcut(struct exec *o, struct data **r) {
 		tic -= quant/2;
 	}
 	
-	evspec_reset(&es);
 	track_init(&t1);
 	track_init(&t2);
-	track_move(&t->track, 0,         tic, &es, &t1, 1, 1);
-	track_move(&t->track, tic + len, ~0U, &es, &t2, 1, 1);
-	t2.first->delta += tic;
+	track_move(&t->track, 0,         tic, NULL, &t1, 1, 1);
+	track_move(&t->track, tic + len, ~0U, NULL, &t2, 1, 1);
+	track_shift(&t2, tic);
 	track_clear(&t->track);
 	track_merge(&t->track, &t1);
 	if (!track_isempty(&t2)) {
@@ -332,7 +330,6 @@ user_func_trackinsert(struct exec *o, struct data **r) {
 	long from, amount, quant;
 	unsigned tic, len;
 	struct track t1, t2;
-	struct evspec es;
 	
 	if (!exec_lookupname(o, "trackname", &trkname) ||
 	    !exec_lookuplong(o, "from", &from) ||
@@ -357,12 +354,11 @@ user_func_trackinsert(struct exec *o, struct data **r) {
 	if (tic > (unsigned)quant/2) {
 		tic -= quant/2;
 	}
-	evspec_reset(&es);
 	track_init(&t1);
 	track_init(&t2);
-	track_move(&t->track, 0,   tic, &es, &t1, 1, 1);
-	track_move(&t->track, tic, ~0U, &es, &t2, 1, 1);
-	t2.first->delta += tic + len;
+	track_move(&t->track, 0,   tic, NULL, &t1, 1, 1);
+	track_move(&t->track, tic, ~0U, NULL, &t2, 1, 1);
+	track_shift(&t2, tic + len);
 	track_clear(&t->track);
 	track_merge(&t->track, &t1);
 	if (!track_isempty(&t2)) {

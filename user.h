@@ -191,8 +191,6 @@ unsigned user_func_songimportsmf(struct exec *o, struct data **r);
 unsigned user_func_songidle(struct exec *o, struct data **r);
 unsigned user_func_songplay(struct exec *o, struct data **r);
 unsigned user_func_songrecord(struct exec *o, struct data **r);
-unsigned user_func_songdeftempo(struct exec *o, struct data **r);
-unsigned user_func_songdefsig(struct exec *o, struct data **r);
 unsigned user_func_songsettempo(struct exec *o, struct data **r);
 unsigned user_func_songtimeins(struct exec *o, struct data **r);
 unsigned user_func_songtimerm(struct exec *o, struct data **r);

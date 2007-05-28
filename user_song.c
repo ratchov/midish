@@ -533,38 +533,6 @@ user_func_songrecord(struct exec *o, struct data **r) {
 }
 
 unsigned
-user_func_songdeftempo(struct exec *o, struct data **r) {
-	long tempo;
-
-	if (!exec_lookuplong(o, "beats_per_minute", &tempo)) {
-		return 0;
-	}	
-	if (tempo < 40 || tempo > 240) {
-		cons_err("tempo must be between 40 and 240 beats per measure");
-		return 0;
-	}
-	track_deftempo(&user_song->meta, tempo);
-	return 1;
-}
-
-unsigned
-user_func_songdefsig(struct exec *o, struct data **r) {
-	long num, den;
-	
-	if (!exec_lookuplong(o, "numerator", &num) || 
-	    !exec_lookuplong(o, "denominator", &den)) {
-		return 0;
-	}
-	if (den != 1 && den != 2 && den != 4 && den != 8) {
-		cons_err("only 1, 2, 4 and 8 are supported as denominator");
-		return 0;
-	}
-	track_deftimesig(&user_song->meta, 
-			 num, user_song->tics_per_unit / den);
-	return 1;
-}
-
-unsigned
 user_func_songsettempo(struct exec *o, struct data **r) {
 	long tempo, measure;
 	
@@ -583,6 +551,10 @@ user_func_songsettempo(struct exec *o, struct data **r) {
 unsigned
 user_func_songtimeins(struct exec *o, struct data **r) {
 	long num, den, amount, from;
+	unsigned tic, len;
+	struct seqptr sp;
+	struct track t1, t2, tn;
+	struct ev ev;
 	
 	if (!exec_lookuplong(o, "from", &from) ||
 	    !exec_lookuplong(o, "amount", &amount) ||
@@ -594,22 +566,60 @@ user_func_songtimeins(struct exec *o, struct data **r) {
 		cons_err("only 1, 2, 4 and 8 are supported as denominator");
 		return 0;
 	}
-	if (amount == 0) {
-		return 1;
-	}
-	track_timeins(&user_song->meta, from, amount, 
-	    num, user_song->tics_per_unit / den);
+
+	ev.cmd = EV_TIMESIG;
+	ev.timesig_beats = num;
+	ev.timesig_tics = user_song->tics_per_unit / den;
+	tic = track_findmeasure(&user_song->meta, from);
+	len = amount * ev.timesig_beats * ev.timesig_tics;
+
+	track_init(&tn);
+	seqptr_init(&sp, &tn);
+	seqptr_ticput(&sp, tic);
+	seqptr_evput(&sp, &ev);
+	seqptr_ticput(&sp, len);
+	seqptr_done(&sp);
+
+	track_init(&t1);
+	track_init(&t2);
+	track_move(&user_song->meta, 0,   tic, NULL, &t1, 1, 1);
+	track_move(&user_song->meta, tic, ~0U, NULL, &t2, 1, 1);
+	track_shift(&t2, tic + len);
+	track_clear(&user_song->meta);
+	track_merge(&user_song->meta, &t1);
+	track_merge(&user_song->meta, &tn);
+	track_merge(&user_song->meta, &t2);
+	track_done(&t1);
+	track_done(&t2);	     
+	track_done(&tn);	
 	return 1;
 }
 
 unsigned
 user_func_songtimerm(struct exec *o, struct data **r) {
 	long amount, from;
+	unsigned tic, len;
+	struct track t1, t2;
+
 	if (!exec_lookuplong(o, "from", &from) ||
 	    !exec_lookuplong(o, "amount", &amount)) {
 		return 0;
 	}
-	track_timerm(&user_song->meta, from, amount);
+	tic = track_findmeasure(&user_song->meta, from);
+	len = track_findmeasure(&user_song->meta, from + amount) - tic;
+
+	track_init(&t1);
+	track_init(&t2);
+	track_move(&user_song->meta, 0,         tic, NULL, &t1, 1, 1);
+	track_move(&user_song->meta, tic + len, ~0U, NULL, &t2, 1, 1);
+	track_shift(&t2, tic);
+	track_clear(&user_song->meta);
+	track_merge(&user_song->meta, &t1);
+	if (!track_isempty(&t2)) {
+		track_merge(&user_song->meta, &t2);
+	}
+	track_done(&t1);
+	track_done(&t2);
 	return 1;
 }
 
