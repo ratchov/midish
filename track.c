@@ -153,6 +153,15 @@ track_chomp(struct track *o) {
 }
 
 /*
+ * shift the track origin forward
+ */
+void
+track_shift(struct track *o, unsigned ntics) {
+	o->first->delta += ntics;
+}
+
+
+/*
  * return true if an event is available on the track
  */
 unsigned
