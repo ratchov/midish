@@ -344,7 +344,7 @@ proc chorus v { let c = [songgetcurchan]; chanconfev $c {ctl $c 93 $v}; }
 #
 proc rpn addr val { 
 	let c = [songgetcurchan]
-	chanconfev $c {rpn $addr $val}
+	chanconfev $c {rpn $c $addr $val}
 }
 
 

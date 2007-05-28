@@ -1438,9 +1438,9 @@ the console).
         <LI> added tempo factor: <TT>songsetfactor</TT> and <TT>songgetfactor</TT>
 	<LI> changed all track functions to gracefully handle nested notes, overlapping
 	     controllers/benders.
-	<LI> when entering real-time mode, restore states of all 
+	<LI> when entering real-time mode, midish restores states of all 
 	     controllers/benders corresponding to the current position
-	<LI> when leaving real-time mode release only notes that
+	<LI> when leaving real-time mode midish releasse only notes that
 	     are sounding and reset only controllers that are touched
 	     instead of resetting all notes/controllers. This allows
 	     midish to better share MIDI devices with other sequencers.
@@ -2915,7 +2915,7 @@ the console).
 	is the name of the mode, it can be on if the following:
 		<UL>
 		<LI> <TT>ro</TT> - read-only, for input only devices
-		<LI> <TT>ro</TT> - write-only, for output only devices
+		<LI> <TT>wo</TT> - write-only, for output only devices
 		<LI> <TT>rw</TT> - read and write.
 		</UL>
         </BLOCKQUOTE>
