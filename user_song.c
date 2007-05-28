@@ -554,7 +554,8 @@ user_func_songsettempo(struct exec *o, struct data **r) {
 unsigned
 user_func_songtimeins(struct exec *o, struct data **r) {
 	long num, den, amount, from;
-	unsigned tic, len;
+	unsigned tic, len, tpm;
+	unsigned long usec24;
 	struct seqptr sp;
 	struct track t1, t2, tn;
 	struct ev ev;
@@ -570,15 +571,19 @@ user_func_songtimeins(struct exec *o, struct data **r) {
 		return 0;
 	}
 
-	ev.cmd = EV_TIMESIG;
-	ev.timesig_beats = num;
-	ev.timesig_tics = user_song->tics_per_unit / den;
-	tic = track_findmeasure(&user_song->meta, from);
-	len = amount * ev.timesig_beats * ev.timesig_tics;
+	tpm = user_song->tics_per_unit * num / den;
+	track_timeinfo(&user_song->meta, from, &tic, &usec24, NULL, NULL);
+	len = amount * tpm;
 
 	track_init(&tn);
 	seqptr_init(&sp, &tn);
 	seqptr_ticput(&sp, tic);
+	ev.cmd = EV_TIMESIG;
+	ev.timesig_beats = num;
+	ev.timesig_tics = user_song->tics_per_unit / den;
+	seqptr_evput(&sp, &ev);
+	ev.cmd = EV_TEMPO;
+	ev.tempo_usec24 = usec24;
 	seqptr_evput(&sp, &ev);
 	seqptr_ticput(&sp, len);
 	seqptr_done(&sp);
