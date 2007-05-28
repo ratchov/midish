@@ -66,6 +66,7 @@ song_delete(struct song *o) {
  */
 void
 song_init(struct song *o) {
+	struct seqev *se;
 	/* song parameters */
 	o->trklist = NULL;
 	o->chanlist = NULL;
@@ -93,6 +94,16 @@ song_init(struct song *o) {
 	o->curquant = 0;
 	o->curinput_dev = 0;
 	o->curinput_ch = 0;
+	/* add default timesig/tempo so that setunit() works */
+	se = seqev_new();
+	se->ev.cmd = EV_TEMPO;
+	se->ev.tempo_usec24 = TEMPO_TO_USEC24(DEFAULT_TEMPO, o->tics_per_beat);
+	seqev_ins(o->meta.first, se);
+	se = seqev_new();
+	se->ev.cmd = EV_TIMESIG;
+	se->ev.timesig_beats = DEFAULT_BPM;
+	se->ev.timesig_tics = o->tics_per_unit / DEFAULT_BPM;
+	seqev_ins(o->meta.first, se);
 }
 
 /*

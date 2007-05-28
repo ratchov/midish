@@ -67,6 +67,7 @@ void     track_move(struct track *src, unsigned start, unsigned len,
 		    unsigned copy, unsigned blank);
 void     track_quantize(struct track *src, unsigned start, unsigned len, 
 			unsigned offset, unsigned quantum, unsigned rate);
+void     track_scale(struct track *t, unsigned oldunit, unsigned newunit);
 void     track_transpose(struct track *src, unsigned start, unsigned len, 
 			 int halftones);
 void	 track_check(struct track *src);

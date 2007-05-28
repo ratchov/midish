@@ -169,7 +169,9 @@ state_match(struct state *st, struct ev *ev) {
 		}
 		break;
 	default:
-		dbg_puts("state_match: bad event type\n");
+		dbg_puts("state_match: ");
+		state_dbg(st);
+		dbg_puts(": bad event type\n");
 		dbg_panic();
 		break;
 	}

@@ -959,6 +959,50 @@ track_quantize(struct track *src, unsigned start, unsigned len,
 }
 
 /*
+ * time-scale the given track in such a way that
+ * 'oldu' tics will correspond to 'newu'
+ */
+void
+track_scale(struct track *t, unsigned oldunit, unsigned newunit) {
+	struct seqptr sp;
+	struct statelist slist;
+	struct state *st;
+	struct ev ev;
+	unsigned delta, err;
+
+	err = 0;
+	seqptr_init(&sp, t);
+	statelist_init(&slist);
+	for (;;) {
+		delta = newunit * seqptr_ticdel(&sp, ~0U, &slist) + err;
+		seqptr_ticput(&sp, delta / oldunit);
+		err = delta % oldunit;
+		st = seqptr_evdel(&sp, &slist);
+		if (st == NULL) {
+			break;
+		}
+		switch (st->ev.cmd) {
+		case EV_TEMPO:
+			ev.cmd = st->ev.cmd;
+			ev.tempo_usec24 = st->ev.tempo_usec24 * oldunit / newunit;
+			seqptr_evput(&sp, &ev);
+			break;
+		case EV_TIMESIG:
+			ev.cmd = st->ev.cmd;
+			ev.timesig_beats = st->ev.timesig_beats;
+			ev.timesig_tics = st->ev.timesig_tics * newunit / oldunit;
+			seqptr_evput(&sp, &ev);
+			break;
+		default:
+			seqptr_evput(&sp, &st->ev);
+			break;
+		}
+	}
+	statelist_done(&slist);
+	seqptr_done(&sp);
+}
+
+/*
  * transpose the given track
  */
 void

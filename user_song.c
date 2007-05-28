@@ -122,6 +122,8 @@ user_func_songgetcursysex(struct exec *o, struct data **r) {
 unsigned
 user_func_songsetunit(struct exec *o, struct data **r) {	/* tics per unit note */
 	long tpu;
+	struct songtrk *t;
+
 	if (!exec_lookuplong(o, "tics_per_unit", &tpu)) {
 		return 0;
 	}
@@ -129,10 +131,11 @@ user_func_songsetunit(struct exec *o, struct data **r) {	/* tics per unit note *
 		cons_err("songsetunit: unit must be multiple of 96 tics");
 		return 0;
 	}
-	/* XXX: should check that all tracks are empty (tempo track included) */
-	if (user_song->trklist) {
-		cons_err("WARNING: unit must be changed before any tracks are created");
+	SONG_FOREACH_TRK(user_song, t) {
+		track_scale(&t->track, user_song->tics_per_unit, tpu);
 	}
+	track_scale(&user_song->meta, user_song->tics_per_unit, tpu);
+	user_song->curquant = user_song->curquant * tpu / user_song->tics_per_unit;
 	user_song->tics_per_unit = tpu;
 	return 1;
 }

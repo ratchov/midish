@@ -160,7 +160,6 @@ track_shift(struct track *o, unsigned ntics) {
 	o->first->delta += ntics;
 }
 
-
 /*
  * return true if an event is available on the track
  */
