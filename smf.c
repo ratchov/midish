@@ -696,7 +696,7 @@ song_fix1(struct song *o) {
 	struct seqptr tp, cp;
 	struct state *st;
 	struct statelist slist;
-	struct songtrk *t;
+	struct songtrk *t, *tnext;
 	unsigned delta;
 		
 	SONG_FOREACH_TRK(o, t) {
@@ -733,9 +733,11 @@ song_fix1(struct song *o) {
 	/*
 	 * remove the first track, if there are not events
 	 */
-	t = (struct songtrk *)o->trklist;
-	if (t->track.first->ev.cmd == EV_NULL) {
-		song_trkdel(o, t);
+	for (t = (struct songtrk *)o->trklist; t != NULL; t = tnext) {
+		tnext = (struct songtrk *)t->name.next;
+		if (t->track.first->ev.cmd == EV_NULL) {
+			song_trkdel(o, t);
+		}
 	}
 }
 
