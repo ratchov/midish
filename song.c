@@ -784,7 +784,6 @@ song_rec_sysex(void *addr, struct sysex *sx) {
 		dbg_puts("song_rec_sysex:\n");
 	}
 	if (o->cursx) {
-		sx = mux_getsysex();
 		if (sx == NULL) {
 			dbg_puts("got null sx\n");
 		} else {

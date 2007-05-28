@@ -102,7 +102,6 @@ unsigned mux_ticrate;
 unsigned long mux_ticlength, mux_curpos, mux_nextpos;
 unsigned mux_curtic;
 unsigned mux_phase;
-struct sysexlist mux_sysexlist;
 struct muxops *mux_ops;
 void *mux_addr;
 
@@ -144,7 +143,6 @@ mux_init(struct muxops *ops, void *addr) {
 	mux_phase = MUX_STOP;
 	mux_ops = ops;
 	mux_addr = addr;
-	sysexlist_init(&mux_sysexlist);
 	timo_init();
 	mux_mdep_init();
 }
@@ -161,7 +159,6 @@ mux_done(void) {
 	}
 	mux_mdep_done();
 	timo_done();
-	sysexlist_done(&mux_sysexlist);
 	statelist_done(&mux_ostate);
 	statelist_done(&mux_istate);
 }
@@ -537,18 +534,11 @@ mux_run(void) {
  */
 void
 mux_sysexcb(unsigned unit, struct sysex *sysex) {
-	/* XXX: remove list put()/get() */
-	sysexlist_put(&mux_sysexlist, sysex);
 	mux_ops->sysex(mux_addr, sysex);
 }
 
 
 /* -------------------------------------- user "public" functions --- */
-
-struct sysex *
-mux_getsysex(void) {
-	return sysexlist_get(&mux_sysexlist);
-}
 
 void
 mux_flush(void) {
