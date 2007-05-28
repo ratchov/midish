@@ -210,7 +210,7 @@ state_inspec(struct state *st, struct evspec *spec) {
 		break;
 	case EVSPEC_XPC:
 		if (st->ev.cmd == EV_XPC) {
-			goto b0;
+			goto ch;
 		}
 		break;
 	case EVSPEC_NRPN:

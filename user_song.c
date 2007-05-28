@@ -533,6 +533,38 @@ user_func_songrecord(struct exec *o, struct data **r) {
 }
 
 unsigned
+user_func_songdeftempo(struct exec *o, struct data **r) {
+	long tempo;
+
+	if (!exec_lookuplong(o, "beats_per_minute", &tempo)) {
+		return 0;
+	}	
+	if (tempo < 40 || tempo > 240) {
+		cons_err("tempo must be between 40 and 240 beats per measure");
+		return 0;
+	}
+	track_deftempo(&user_song->meta, tempo);
+	return 1;
+}
+
+unsigned
+user_func_songdefsig(struct exec *o, struct data **r) {
+	long num, den;
+	
+	if (!exec_lookuplong(o, "numerator", &num) || 
+	    !exec_lookuplong(o, "denominator", &den)) {
+		return 0;
+	}
+	if (den != 1 && den != 2 && den != 4 && den != 8) {
+		cons_err("only 1, 2, 4 and 8 are supported as denominator");
+		return 0;
+	}
+	track_deftimesig(&user_song->meta, 
+			 num, user_song->tics_per_unit / den);
+	return 1;
+}
+
+unsigned
 user_func_songsettempo(struct exec *o, struct data **r) {
 	long tempo, measure;
 	

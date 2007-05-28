@@ -253,25 +253,35 @@ exec_lookupev(struct exec *o, char *name, struct ev *ev) {
 	ev->dev = dev;
 	ev->ch = ch;
 	d = d->next;
-	max = (ev->cmd == EV_BEND) ? EV_MAXFINE : EV_MAXCOARSE;
+	if (ev->cmd == EV_BEND || ev->cmd == EV_NRPN || ev->cmd == EV_RPN) {
+		max = EV_MAXFINE; 
+	} else {
+		max = EV_MAXCOARSE;
+	}
 	if (!d || d->type != DATA_LONG || d->val.num < 0 || d->val.num > max) {
 		cons_err("bad byte0 in event spec");
 		return 0;
 	}
 	ev->v0 = d->val.num;
 	d = d->next;
-	if (ev->cmd != EV_PC && ev->cmd != EV_CAT && ev->cmd != EV_BEND) {
-		max = (ev->cmd == EV_XPC) ? EV_MAXFINE : EV_MAXCOARSE;
-		if (!d || d->type != DATA_LONG || d->val.num < 0 || d->val.num > max) {
-			cons_err("bad byte1 in event spec");
-			return 0;
-		}
-		ev->v1 = d->val.num;
-	} else {
+	if (ev->cmd == EV_PC || ev->cmd == EV_CAT || ev->cmd == EV_BEND) {
 		if (d) {
 			cons_err("extra data in event spec");
 			return 0;
 		}
+	} else {
+		if (ev->cmd == EV_XPC || ev->cmd == EV_XCTL ||
+		    ev->cmd == EV_NRPN || ev->cmd == EV_RPN) {
+			max = EV_MAXFINE;
+		} else {
+			max = EV_MAXCOARSE;
+		}
+		if (!d || d->type != DATA_LONG || 
+		    d->val.num < 0 || d->val.num > max) {
+			cons_err("bad byte1 in event spec");
+			return 0;
+		}
+		ev->v1 = d->val.num;
 	}
 
 	/*
@@ -286,6 +296,10 @@ exec_lookupev(struct exec *o, char *name, struct ev *ev) {
 			cons_err("not allowed controller number, use xpc, nrpn, rpn instead");
 			return 0;
 		}
+	}
+	if (ev->cmd == EV_PC) {
+		ev->cmd = EV_XPC;
+		ev->pc_bank = EV_UNDEF;
 	}
 	return 1;
 }
@@ -413,7 +427,7 @@ exec_lookupevspec(struct exec *o, char *name, struct evspec *e) {
 		goto toomany;
 	}
 
-done:
+ done:
 	/*
 	 * convert PC->XPC and CTL->XCTL
 	 */
@@ -424,6 +438,9 @@ done:
 		e->b1_min =  (e->b1_min << 7) & 0x3fff;
 		e->b1_max = ((e->b1_max << 7) & 0x3fff) | 0x7f;
 	}
+	dbg_puts("evspec: ");
+	evspec_dbg(e);
+	dbg_puts("\n");
 	return 1;
  toomany:
 	cons_err("too many ranges/values in event spec");
@@ -1009,6 +1026,9 @@ user_mainloop(void) {
 	exec_newbuiltin(exec, "chanconfev", user_func_chanconfev,
 			name_newarg("channame",
 			name_newarg("event", NULL)));
+	exec_newbuiltin(exec, "chanunconfev", user_func_chanunconfev,
+			name_newarg("channame",
+			name_newarg("evspec", NULL)));
 	exec_newbuiltin(exec, "chansetcurinput", user_func_chansetcurinput, 
 			name_newarg("channame", 
 			name_newarg("inputchan", NULL)));
@@ -1204,6 +1224,11 @@ user_mainloop(void) {
 	exec_newbuiltin(exec, "songsettempo", user_func_songsettempo, 
 			name_newarg("measure", 
 			name_newarg("beats_per_minute", NULL)));
+	exec_newbuiltin(exec, "songdeftempo", user_func_songdeftempo, 
+			name_newarg("beats_per_minute", NULL));
+	exec_newbuiltin(exec, "songdefsig", user_func_songdefsig, 
+			name_newarg("numerator", 
+			name_newarg("denominator", NULL)));
 	exec_newbuiltin(exec, "songtimeins", user_func_songtimeins, 
 			name_newarg("from", 
 			name_newarg("amount", 

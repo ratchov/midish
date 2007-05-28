@@ -193,6 +193,19 @@ user_func_chanconfev(struct exec *o, struct data **r) {
 }
 
 unsigned
+user_func_chanunconfev(struct exec *o, struct data **r) {
+	struct songchan *c;
+	struct evspec es;
+	
+	if (!exec_lookupchan_getref(o, "channame", &c) ||
+	    !exec_lookupevspec(o, "evspec", &es)) {
+		return 0;
+	}
+	track_unconfev(&c->conf, &es);
+	return 1;
+}
+
+unsigned
 user_func_chaninfo(struct exec *o, struct data **r) {
 	struct songchan *c;
 	

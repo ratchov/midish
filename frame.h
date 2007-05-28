@@ -57,19 +57,16 @@ void	      seqptr_seek(struct seqptr *sp, unsigned ntics);
 struct state *seqptr_getsign(struct seqptr *sp, unsigned *bpm, unsigned *tpb);
 struct state *seqptr_gettempo(struct seqptr *sp, unsigned long *usec24);
 
+void	 track_merge(struct track *dst, struct track *src);
 unsigned track_findmeasure(struct track *t, unsigned m0);
 void	 track_timeinfo(struct track *t, unsigned meas, unsigned *tic, 
 			unsigned long *usec24, unsigned *bpm, unsigned *tpb);
-void	 track_merge(struct track *dst, struct track *src);
+void	 track_deftempo(struct track *t, unsigned tempo);
+void	 track_deftimesig(struct track *t, unsigned bpm, unsigned tpb);
 void     track_settempo(struct track *t, unsigned measure, unsigned tempo);
 void     track_timeins(struct track *t, unsigned measure, unsigned amount,
 		       unsigned bpm, unsigned tpb);
 void     track_timerm(struct track *t, unsigned measure, unsigned amount);
-void	 track_insert(struct track *t, unsigned start, unsigned len);
-void	 track_copy(struct track *src, unsigned start, unsigned len, 
-		    struct evspec *es, struct track *dst);
-void	 track_blank(struct track *src, unsigned start, 
-		     unsigned len, struct evspec *es);
 void     track_move(struct track *src, unsigned start, unsigned len, 
 		    struct evspec *evspec, struct track *dst, 
 		    unsigned copy, unsigned blank);
@@ -79,5 +76,6 @@ void     track_transpose(struct track *src, unsigned start, unsigned len,
 			 int halftones);
 void	 track_check(struct track *src);
 void     track_confev(struct track *src, struct ev *ev);
+void	 track_unconfev(struct track *src, struct evspec *es);
 
 #endif /* MIDISH_FRAME_H */

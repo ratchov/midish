@@ -45,7 +45,7 @@ char *ev_cmdstr[EV_NUMCMD] = {
 
 char *evspec_cmdstr[] = {
 	"any", "note", "ctl", "pc", "cat", "bend", "nrpn", "rpn", 
-	"xpc", "xctl", NULL
+	"xctl", "xpc", NULL
 };
 
 struct evctl evctl_tab[128];

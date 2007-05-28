@@ -1228,6 +1228,61 @@ track_timeinfo(struct track *t, unsigned meas, unsigned *abs,
 }
 
 /*
+ * change the last tempo event to the given one; if non, 
+ * add a new tempo event
+ */
+void
+track_deftempo(struct track *t, unsigned tempo) {
+	struct ev ev;
+	struct seqptr sp;
+	struct state *st;
+	unsigned tpb;
+	unsigned long usec24;
+
+	seqptr_init(&sp, t);
+	(void)seqptr_ticskip(&sp, ~0U);
+	seqptr_getsign(&sp, NULL, &tpb);
+	usec24 = TEMPO_TO_USEC24(tempo, tpb);
+
+	ev.cmd = EV_TEMPO;
+	st = statelist_lookup(&sp.statelist, &ev);
+	if (st && !(st->flags & STATE_CHANGED)) {
+		st->pos->ev.tempo_usec24 = usec24;
+	} else {
+		ev.tempo_usec24 = usec24;
+		(void)seqptr_evput(&sp, &ev);
+	}
+	seqptr_done(&sp);
+}
+
+/*
+ * change the last tempo event to the given one; if non, 
+ * add a new tempo event
+ */
+void
+track_deftimesig(struct track *t, unsigned bpm, unsigned tpb) {
+	struct ev ev;
+	struct seqptr sp;
+	struct state *st;
+
+	seqptr_init(&sp, t);
+	(void)seqptr_ticskip(&sp, ~0U);
+
+	ev.cmd = EV_TIMESIG;
+	st = statelist_lookup(&sp.statelist, &ev);
+	if (st && !(st->flags & STATE_CHANGED)) {
+		st->pos->ev.timesig_beats = bpm;
+		st->pos->ev.timesig_tics = bpm;
+	} else {
+		ev.timesig_beats = bpm;
+		ev.timesig_tics = tpb;
+		(void)seqptr_evput(&sp, &ev);
+	}
+	seqptr_done(&sp);
+}
+
+
+/*
  * go to the given measure and set the tempo
  */
 void
@@ -1469,94 +1524,76 @@ track_timerm(struct track *t, unsigned measure, unsigned amount) {
 }
 
 /*
- * add an event to the first event of a track (config track), if there
- * is such an event, then replace it.
+ * add an event to the first given "config" track, if there is such an
+ * event, then replace it.
  */
 void
 track_confev(struct track *src, struct ev *ev) {
 	struct seqptr sp;
-	struct ev rev;
 	struct statelist slist;
-	struct state *s, *st;
-	unsigned tag, tagmax, tagmin;
+	struct state *st;
 
-#ifdef FRAME_DEBUG_CONF
-	dbg_puts("\ntrack_confev: starting\n");
-#endif
 	if (ev_phase(ev) != (EV_PHASE_FIRST | EV_PHASE_LAST)) {
 		dbg_puts("track_confev: ");
-		ev_dbg(&st->ev);
+		ev_dbg(ev);
 		dbg_puts(": bad phase, ignored");
 		dbg_puts("\n");
 		return;
 	}
+
 	seqptr_init(&sp, src);
 	statelist_init(&slist);
-	
+       
 	/*
-	 * delete the track, keeping state of all frames we tag states
-	 * with a serial number, so we can keep track of the order in
-	 * which they are updated
+	 * rewrite the track, removing frames matching the event
 	 */
-	tagmax = 0;
 	for (;;) {
 		(void)seqptr_ticdel(&sp, ~0U, &slist);
 		st = seqptr_evdel(&sp, &slist);
 		if (st == NULL)
 			break;
-		st->tag = tagmax++;
-	}
-
-#ifdef FRAME_DEBUG_CONF
-	dbg_puts("track_confev: updating\n");
-#endif
-
-	/*
-	 * update the state for 'ev'
-	 */
-	st = statelist_update(&slist, ev);
-	st->tag = tagmax++;
-		
-	/*
-	 * dump events. We have to dump them while respecting update
-	 * order (older states first, newer states last) Since
-	 * statelists are small and this routine is never called in
-	 * real-time, it doesn't matter if its slow.
-	 */
-	for (tagmin = 0; tagmin < tagmax; tagmin = tag) {
-		/*
-		 * find the next state with tag > tagmin
-		 */
-		st = NULL;
-		tag = tagmax;
-		for (s = slist.first; s != NULL; s = s->next) {
-			if (s->tag >= tagmin && s->tag < tag) {
-				st = s;
-				tag = s->tag;
-			}
+		if (st->phase & EV_PHASE_FIRST) {
+			st->tag = state_match(st, ev) ? 0 : 1;
 		}
-#ifdef FRAME_DEBUG_CONF
-		dbg_puts("track_confev: dumping: ");
-		state_dbg(st);
-		dbg_puts("\n");
-#endif
-		/*
-		 * restore the state
-		 */
-		if (state_restore(st, &rev)) {
-			st = statelist_lookup(&sp.statelist, &rev);
-			if (st && state_eq(st, &rev)) {
-#ifdef FRAME_DEBUG_CONF
-				dbg_puts("track_confev: skipped\n");
-#endif
-				continue;
-			}
-			(void)seqptr_evput(&sp, &rev);
+		if (st->tag) {
+			seqptr_evput(&sp, &st->ev);
 		}
-		tag++;
+
 	}
+	seqptr_evput(&sp, ev);
 	statelist_done(&slist);
 	seqptr_done(&sp);
 }
 
+/*
+ * remove a set of events from the "config" track
+ */
+void
+track_unconfev(struct track *src, struct evspec *es) {
+	struct statelist slist;
+	struct seqptr sp;
+	struct state *st;
+
+	seqptr_init(&sp, src);
+	statelist_init(&slist);
+       
+	/*
+	 * rewrite the track, removing frames matching the spec
+	 */
+	for (;;) {
+		(void)seqptr_ticdel(&sp, ~0U, &slist);
+		st = seqptr_evdel(&sp, &slist);
+		if (st == NULL)
+			break;
+		if (st->phase & EV_PHASE_FIRST) {
+			st->tag = state_inspec(st, es) ? 0 : 1;
+		}
+		if (st->tag) {
+			seqptr_evput(&sp, &st->ev);
+		}
+
+	}
+	statelist_done(&slist);
+	seqptr_done(&sp);
+}
 
