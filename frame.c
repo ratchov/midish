@@ -483,11 +483,11 @@ seqptr_rmprev(struct seqptr *sp, struct state *st) {
 
 
 /*
- * merge "low priority" event: 
- * check that the event of state "s1" doen't conflict with
- * event in thate "s2". If so, then it is put in the
- * track. Else "s1" is tagged as silent so a next call
- * to this routine will just skip it
+ * merge "low priority" event: check that the event of state "s1"
+ * doen't conflict with event in thate "s2". If so, then it is put in
+ * the track. Else "s1" is tagged as silent so a next call to this
+ * routine will just skip it. This routine must be called before
+ * seqptr_evmerge2() within the same tic.
  */
 void
 seqptr_evmerge1(struct seqptr *pd, struct state *s1, struct state *s2) {
@@ -515,11 +515,11 @@ seqptr_evmerge1(struct seqptr *pd, struct state *s1, struct state *s2) {
 }
 
 /*
- * merge "high priority" event:
- * check that the event of state "s2" doesn't conflict with
- * events of state "s1". If so, then put it on the track. If
- * there is conflict then discard events related to "s1" and
- * put "s2"
+ * merge "high priority" event: check that the event of state "s2"
+ * doesn't conflict with events of state "s1". If so, then put it on
+ * the track. If there is conflict then discard events related to "s1"
+ * and put "s2". This routine must not be called before
+ * seqptr_evmerge1() within the same tick.
  */
 void
 seqptr_evmerge2(struct seqptr *pd, struct state *s1, struct state *s2) {

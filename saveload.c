@@ -66,8 +66,19 @@ ev_output(struct ev *e, struct textout *f) {
 			textout_putstr(f, "cat");
 			goto one;
 		case EV_XCTL:
-			textout_putstr(f, "xctl");
-			goto two;
+			if (e->ctl_num < 32) {
+				textout_putstr(f, "xctl");
+				goto two;
+			} else {
+				textout_putstr(f, "ctl");
+				textout_putstr(f, " ");
+				chan_output(e->dev, e->ch, f);
+				textout_putstr(f, " ");
+				textout_putlong(f, e->ctl_num);
+				textout_putstr(f, " ");
+				textout_putlong(f, e->ctl_val >> 7);
+			}
+			break;
 		case EV_XPC:
 			textout_putstr(f, "xpc");
 			goto two;
