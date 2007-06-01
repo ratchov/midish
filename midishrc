@@ -312,7 +312,7 @@ proc xvp bank patch {
 	let chan = [songgetcurchan]
 	chanconfev $chan { xpc $chan ($patch - 1) (87 * 128 + (64 + $bank - 1)) }
 }
-proc xvr bank rhythm { 
+proc xvr bank patch { 
 	let chan = [songgetcurchan]
 	chanconfev $chan { xpc $chan ($patch - 1) (86 * 128 + (64 + $bank - 1)) }
 }
