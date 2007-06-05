@@ -139,7 +139,7 @@
 	<LI><A href="#midishrc">18 Sample midishrc-file</A>
 	<LI><A href="#example">19 Example sessions</A>
 	<UL>
-	<LI><A href="#section_19_1">19.1 Example - midi filtering</A>
+	<LI><A href="#section_19_1">19.1 Example - MIDI filtering</A>
 	<LI><A href="#section_19_2">19.2 Example - recording a track</A>
 	</UL>
 	</UL>
@@ -158,17 +158,18 @@
         Important features:
 
         <UL>
-        <LI>    multiple MIDI devices handling
-        <LI>    synchronisation to external midi devices
         <LI>    real-time MIDI filtering/routing (controller mapping, keyboard splitting, ...)
         <LI>    track recording, metronome
-        <LI>    basic track editing (insert, copy, delete, ...)
+        <LI>    track editing (insert, copy, delete, ...)
         <LI>    progressive track quantisation
+        <LI>    multiple MIDI devices handling
+        <LI>    synchronisation to external MIDI devices
         <LI>    import and export of standard MIDI files
         <LI>    tempo and time-signature changes
         <LI>    system exclusive messages handling
         </UL>
 
+	<P>
         Midish is open-source software distributed under
         a 2-clause BSD-style license.
 
@@ -176,15 +177,15 @@
 
         Requirements:
         <UL>
-        <LI>    a midi sound module 
-        <LI>    a midi keyboard
-        <LI>    a POSIX unix-like operating system with "raw" midi support.
-                Midish works on OpenBSD (its development platform)
+        <LI>    a MIDI sound module 
+        <LI>    a MIDI keyboard
+        <LI>    a POSIX unix-like operating system with "raw" MIDI support.
+                Works on OpenBSD (its development platform)
                 and Linux.
         <LI>    the readline(3) library
         </UL>
 
-        (without any midi-devices Midish will be probably useless).
+        (without any MIDI devices midish will be probably useless).
         <P>
         To install midish:
 
@@ -226,7 +227,7 @@
         typing '<TT>cp midishrc /etc</TT>' in your shell.
         <LI>
         Read the documentation and modify <TT>/etc/midishrc</TT> in order 
-        to choose the default midi device by using the '<TT>devattach</TT>' 
+        to choose the default MIDI device by using the '<TT>devattach</TT>' 
         function (example: '<TT>devattach 0 "/dev/rmidi3" rw</TT>', see next section)
         </OL>
 
@@ -239,7 +240,7 @@
         Once midish started, the interpreter prompts
         for commands. 
 
-        Then, it can be used to configure midi-devices, 
+        Then, it can be used to configure MIDI devices, 
         create tracks, define channel/controller mappings,
         route events from one device to another, play/record a song etc.
 
@@ -262,7 +263,7 @@
         This mode is used to configure the sequencing engine:
         create and manage tracks, define filtering rules
         start/stop recording, etc...
-        Midi devices aren't used, they are let closed in order to
+        MIDI devices aren't used, they are let closed in order to
         let other applications to use them.
 
         <P>
@@ -278,30 +279,30 @@
 Midish uses the following objects to represent a project:
 
 <UL>
-<LI><B>Midi devices:</B><BR>
-        these are actual midi devices (keyboards, sound modules,
+<LI><B>MIDI devices:</B><BR>
+        these are actual MIDI devices (keyboards, sound modules,
         external sequencers...) from which events are received and/or to which
         they are sent. 
 
 <LI><B>Filters:</B><BR>
-        a filter is a set of rules that says which midi event to discard
+        a filter is a set of rules that says which MIDI event to discard
         and how to transform incoming events. The filter also "sanitises" the
-        input midi stream by removing nested notes, duplicate controllers and
+        input MIDI stream by removing nested notes, duplicate controllers and
         other anomalies. 
 
 <LI><B>Channels:</B><BR>
-        a channel is an a output {device&nbsp;midi-channel} pair that
+        a channel is an a output <TT>{device&nbsp;midichannel}</TT> pair that
         represent an instrument. A channel holds some properties like patch
         number, volume, reverb depth or other controllers. 
 
 <LI><B>Tracks:</B><BR>
-        tracks represent pieces of music: they hold midi voice events
+        tracks represent pieces of music: they hold MIDI voice events
         (notes, controllers ...). Tracks aren't bound to a particular
         channel and can contain events from any channel. 
 
 <LI><B>Sysex banks:</B> <BR>
         a sysex bank is a set of system exclusive messages. They
-        will be sent to midi devices when performance mode is entered. 
+        will be sent to MIDI devices when performance mode is entered. 
 
 <LI><B>The "meta-track":</B><BR> 
         it is a particular hidden track that contains
@@ -317,27 +318,27 @@ in prompt mode by issuing interactively commands.
 
 <P>
 Performance mode is used to play/record the project. When performance
-mode is entered, midi devices are opened, and all sysex messages and
+mode is entered, MIDI devices are opened, and all sysex messages and
 channel configuration events are sent to them. There are three
 performance modes:
 
 <UL>
 <LI><B>"Idle" mode</B><BR>
-        The midi input passes through the <I>current filter</I>
+        The MIDI input passes through the <I>current filter</I>
         and the result is sent to the midi output. No tracks are
         played or recorded.
         <PRE>                                   
         +---------+             +------------+          +----------+
         |         |             |            |          |          |
-        | midi in |------------>|   filter   |--------->| midi out |
+        | MIDI in |------------>|   filter   |--------->| MIDI out |
         |         |             |            |          |          |
         +---------+             +------------+          +----------+
         </PRE>
 
 <LI><B>Play mode</B><BR>
-        The midi input passes through the <I>current filter</I>
+        The MIDI input passes through the <I>current filter</I>
         the result is mixed with the currently played tracks
-        and finally sent to the midi output. No tracks are recorded.
+        and finally sent to the MIDI output. No tracks are recorded.
         <PRE>                                   
                                 +--------------+            
                                 | track_1 play |---\
@@ -351,16 +352,16 @@ performance modes:
                                                    |
         +---------+             +------------+     |    +----------+
         |         |             |            |     \--->|          |
-        | midi in |------------>|   filter   |--------->| midi out |
+        | MIDI in |------------>|   filter   |--------->| MIDI out |
         |         |             |            |          |          |
         +---------+             +------------+          +----------+
         </PRE>
 
 <LI><B>Record mode</B><BR>
-        The midi input passes through the <I>current filter</I>
+        The MIDI input passes through the <I>current filter</I>
         and is recorded to the <I>current track</I>. 
         The result is mixed with the currently played tracks
-        and finally sent to the midi output. System exclusive
+        and finally sent to the MIDI output. System exclusive
         messages are recorded to the <I>current sysex</I> without
         being passed through the filter.
         <PRE>                                   
@@ -376,7 +377,7 @@ performance modes:
                                                    |
         +---------+             +------------+     |    +----------+
         |         |             |            |     \--->|          |
-        | midi in |-----+------>|   filter   |----+---->| midi out |
+        | MIDI in |-----+------>|   filter   |----+---->| MIDI out |
         |         |     |       |            |    |     |          |
         +---------+     |       +------------+    |     +----------+
                         |                         |
@@ -398,8 +399,8 @@ the console).
 
 	Suppose that there are two devices:
 		<UL>
-		<LI><TT>/dev/rmidi4</TT> - a midi sound module
-		<LI><TT>/dev/rmidi3</TT> - a midi keyboard
+		<LI><TT>/dev/rmidi4</TT> - a MIDI sound module
+		<LI><TT>/dev/rmidi3</TT> - a MIDI keyboard
 		</UL>
 	Thus, the <TT>/etc/midishrc</TT> file contains the
 	following lines:
@@ -455,10 +456,10 @@ the console).
 	
 <A name="dev"></A><H1>2 Devices setup</H1>
 
-        In midish, midi-devices are numbered from 0 to 15.
-        Each midi-device has its "slot number". For instance, 
-        suppose that there is a midi sound module known as
-        <TT>/dev/rmidi3</TT> and a midi keyboard known as
+        In midish, MIDI devices are numbered from 0 to 15.
+        Each MIDI device has its "slot number". For instance, 
+        suppose that there is a MIDI sound module known as
+        <TT>/dev/rmidi3</TT> and a MIDI keyboard known as
         <TT>/dev/rmidi4</TT>.
 
         The following commands will configure the module as 
@@ -493,14 +494,14 @@ the console).
 <A name="chan"></A><H1>3 Channels</H1>
 
         Because midish handles multiple devices, instead of
-        using midi-channels, it uses device/midi-channel pairs
+        using MIDI channels, it uses device / MIDI channel pairs
         to represent instruments.
         
-        So <I>channel</I> refers the device/midi-channel pair.
+        So <I>channel</I> refers the device / MIDI channel pair.
         
         Channels are handled by two-item lists, like this:
         <PRE>
-        {0 1}                   # device 0, midi-channel 1
+        {0 1}                   # device 0, MIDI channel 1
         </PRE>
         Channels can also be named, as follows:
         <PRE>
@@ -518,7 +519,7 @@ the console).
 
         Such events are sent to the output when performance mode is entered,
         for instance just before playback is started. This approach avoids
-        flooding midi devices with "slow" events (like
+        flooding MIDI devices with "slow" events (like
         program changes).       
         
         <P>
@@ -549,9 +550,9 @@ the console).
 <A name="filt"></A><H1>4 Filtering/routing</H1>
 
         <P> 
-        Midish supports midi filtering: a <I>filter</I> 
-        transforms incoming midi events and send them to the
-        output. The filter also "sanitises" the input midi stream
+        Midish supports MIDI filtering: a <I>filter</I> 
+        transforms incoming MIDI events and send them to the
+        output. The filter also "sanitises" the input MIDI stream
         by removing nested notes, duplicate controllers and other
         anomalies.
 
@@ -579,7 +580,7 @@ the console).
         If no filters are defined or if there is no current filter 
         then, in performance mode, input is sent to the output as-is.
 
-        The current filter processes input midi events in the
+        The current filter processes input MIDI events in the
         following order:
         <OL>
         <LI>    First, input events are checked for inconsistencies: nested
@@ -660,7 +661,7 @@ the console).
 <A name="section_4_2_1"></A><H3>4.2.1 Device redirections</H3>
 
         The following example defines a filter that routes events from
-        device number 1 (the midi keyboard) to device number 0
+        device number 1 (the MIDI keyboard) to device number 0
         (the sound module).
         <PRE>
         filtnew mydevmap                # define filter 'mydevmap'
@@ -853,25 +854,25 @@ the console).
         
         <P>
         A track is a piece of music, namely an ordered in time list 
-        of midi events. In play mode, midish play simultaneously
+        of MIDI events. In play mode, midish play simultaneously
         all defined tracks, in record-mode it plays all defined tracks
         and records the current track.
         
         <P>
         Tracks aren't assigned to any particular device/channel; a track
-        can contain midi data from any device/channel. A track can have its 
-        <I>current filter</I>; in this case, midi events
+        can contain MIDI data from any device/channel. A track can have its 
+        <I>current filter</I>; in this case, MIDI events
         are passed through that filter before being recorded. If the
         track has no current filter, then the song current
         filter is used instead. If there is neither track current
-        filter nor song current filter, then midi events
+        filter nor song current filter, then MIDI events
         from all devices are recorded as-is.
 
 <A name="section_6_1"></A><H2>6.1 Recording a track without a filter</H2>
 
         <P>
         The following defines a track and record events
-        as-is from all midi devices:
+        as-is from all MIDI devices:
         <PRE>
         tracknew mytrack
         songrecord
@@ -967,8 +968,8 @@ the console).
 
 <A name="section_6_5"></A><H2>6.5 Checking a track</H2>
 
-        It is possible that a midi device transmits 
-        bogus midi data. The following scans the track 
+        It is possible that a MIDI device transmits 
+        bogus MIDI data. The following scans the track 
         and removes bogus notes
         and unused controller events:
         <PRE>
@@ -1094,9 +1095,9 @@ the console).
 <A name="sysex"></A><H1>8 System exclusive messages</H1>
 
         Midish can send system exclusive messages
-        to midi devices before starting performance mode.
+        to MIDI devices before starting performance mode.
         Typically, this feature can be used to change 
-        the configuration of the midi devices. System
+        the configuration of MIDI devices. System
         exclusive ('sysex') messages are stored into 
         named banks. To create a sysex bank named <TT>mybank</TT>:
         <PRE>
@@ -1106,7 +1107,7 @@ the console).
         <PRE>
         sysexadd mybank 0 {0xF0 0x7E 0x7F 0x09 0x01 0xF7}
         </PRE>  
-        This will store the "General-Midi ON" messages into the
+        This will store the "General-MIDI ON" messages into the
         bank. The second argument (here "0") is the device number
         to which the message will be sent when performance mode
         is entered. To send the latter messages to 
@@ -1116,7 +1117,7 @@ the console).
         songidle
         </PRE>
         Sysex messages can be recorded from
-        midi devices, this is useful to save "bulk dumps"
+        MIDI devices, this is useful to save "bulk dumps"
         from synthesisers. Sysex messages are automatically
         recorded on the <I>current bank</I>. So, to record
         a sysex:
@@ -1192,7 +1193,7 @@ the console).
         </PRE>
 
         <P>
-        The device and the midi channel of a channel definition
+        The device and the MIDI channel of a channel definition
         can be obtained as follows:
         <PRE>
         print [changetch mydrums]       # print midi chan number
@@ -1235,9 +1236,9 @@ the console).
 
         <P>
         Standard MIDI files type 0 or 1 can be imported. Each
-        track in the standard midi file corresponds to a track in midish.
+        track in the standard MIDI file corresponds to a track in midish.
         Tracks are named <TT>trk00</TT>, <TT>trk01</TT>, ... 
-        All midi events are assigned to device number 0. Only the following
+        All MIDI events are assigned to device number 0. Only the following
         meta events are handled:
                 <UL>
                 <LI> tempo changes
@@ -1251,13 +1252,13 @@ the console).
         </PRE>
         
         <P>
-        Midish songs can be exported into standard midi files.
+        Midish songs can be exported into standard MIDI files.
         Tempo changes and time signature changes are exported
-        to a meta-track (first track of the midi file). Each
+        to a meta-track (first track of the MIDI file). Each
         channel definition is exported as a track containing
         the channel configuration events. Voice tracks
         are exported as is in separate tracks. Note that device 
-        numbers of midi events are not stored in the midi file
+        numbers of MIDI events are not stored in the MIDI file
         because the file format does not allow this.    
         Example:
         <PRE>
@@ -1366,7 +1367,7 @@ the console).
                 <TT>filtnoctlmap</TT>,
                 <TT>filtnokeydrop</TT> and
                 <TT>filtnokeymap</TT>.
-        <LI> added support for external midi synchronisation,
+        <LI> added support for external MIDI synchronisation,
              added <TT>devsetmaster</TT>, <TT>devgetmaster</TT>
              and <TT>devsendrt</TT>
         <LI> added 
@@ -1400,7 +1401,7 @@ the console).
         <LI> removed support for gnu readline(3) library from midish, 
                 and created the <TT>rmidish</TT> utility, a front-end
                 to midish using the readline(3) library.        
-        <LI> added filters the ability to limit midi traffic
+        <LI> added filters the ability to limit MIDI traffic
                 (one controller, one bender, one aftertouch per tic)
         <LI> make the filter drop duplicate controllers, pitch bends and
                 aftertouches
@@ -1415,7 +1416,7 @@ the console).
                 <TT>changetcurinput</TT> and
                 <TT>chansetcurinput</TT>.
         <LI> added <TT>trackchanlist</TT> and improved <TT>songinfo</TT>        
-	<LI> added a midi file player and recorder: smfplay(1) and smfrec(1)
+	<LI> added a MIDI file player and recorder: smfplay(1) and smfrec(1)
         </UL>
 
 <A name="changes_03"></A><H2>13.2 Changes from release 0.2 to release 0.3</H2>
@@ -1431,7 +1432,7 @@ the console).
 	<LI> added <TT>exit</TT> keyword to exit midish
 	<LI> Added a 'mode' argument to <TT>devattach</TT> function. 
 	     Now devices can be used in read-only or write-only mode (allowing
-	     to use named pipes as midi devices).
+	     to use named pipes as MIDI devices).
 	<LI> added basic support for the MIDI "Active Sensing" feature
 	<LI> make metronome click audible with non-percusive patches
 	<LI> save metronome settings
@@ -1445,7 +1446,7 @@ the console).
 	     instead of resetting all notes/controllers. This allows
 	     midish to better share MIDI devices with other sequencers.
 	<LI> added support for 14bit controllers
-	<LI> added support for RPN/NRPN midi events.
+	<LI> added support for RPN/NRPN MIDI events.
 	<LI> split format 0 MIDI files into 16 tracks (one per MIDI channel)	
 	<LI> made controller interpretation in editting functions configurable: 
 		<TT>ctlconf</TT>, <TT>ctlconfx</TT>, 
@@ -1471,11 +1472,11 @@ the console).
 	<TR>
 	<TD>ticrate
 	<TD>number of tic per unit note, default is 96, which corresponds
-		to the midi standard
+		to the MIDI standard
 	<TR>
 	<TD>sendrt flag
 	<TD>boolean; if sendrt = true, the real-time events
-		(like start, stop, tics) are transmitted to the midi device.
+		(like start, stop, tics) are transmitted to the MIDI device.
 	<TR>
 	<TD>ixctlset
 	<TD>list of continuous controllers that are expected to be
@@ -1501,7 +1502,7 @@ the console).
 	<TD>identifier used to reference the channel
 	<TR>
 	<TD>{dev&nbsp;chan}
-	<TD>device and midi channel to which midi events are sent
+	<TD>device and MIDI channel to which MIDI events are sent
 	<TR>
 	<TD>conf
 	<TD>events that are sent when performance mode is entered
@@ -1527,7 +1528,7 @@ the console).
 	<TD>identifier used to reference the fitler
 	<TR>
 	<TD>rules set
-	<TD>set of rules that handle midi events
+	<TD>set of rules that handle MIDI events
 	<TR>
 	<TD>current channel
 	<TD>default channel. This value isn't used in real-time, 
@@ -1592,8 +1593,8 @@ the console).
 	<TD>a track containing tempo changes and time signature changes
 	<TR>
 	<TD>tics_per_unit
-	<TD>number of midi tics per unit note, the default value is 96
-		 which corresponds to the midi standard.
+	<TD>number of MIDI tics per unit note, the default value is 96
+		 which corresponds to the MIDI standard.
 	<TR>
 	<TD>tempo_factor
 	<TD>number by which the tempo is multiplied
@@ -1663,10 +1664,10 @@ the console).
         </UL>
                 
         Event references correspond to the following
-        midi events:
+        MIDI events:
         <P align="center">
         <TABLE border="1">
-	<TR>	<TH>ref. name		<TH>midi event
+	<TR>	<TH>ref. name		<TH>MIDI event
         <TR>    <TD><TT>noff</TT>       <TD>note off
         <TR>    <TD><TT>non</TT>        <TD>note off
         <TR>    <TD><TT>kat</TT>        <TD>key after-touch (poly)
@@ -1712,7 +1713,7 @@ the console).
 	     <TT>xpc</TT>, <TT>xctl</TT>.
 	     
         <LI> an optional channel range specified as a list containing
-                a device number range and a midi-channel number
+                a device number range and a MIDI channel number
                 range. Number ranges are specified as two-number list
                 like this <TT>{12 34}</TT>. Channel name matches an unique channel.
         <LI> an optional  number range, specified as a list
@@ -2252,7 +2253,7 @@ the console).
 <B><TT>channew channelname { device midichan }</TT></B>
         <BLOCKQUOTE>
         create an new channel named <TT>channelname</TT>
-        and assigned the given device and midi channel.
+        and assigned the given device and MIDI channel.
         </BLOCKQUOTE>
 
 <A name="func_chanset"></A>
@@ -2283,7 +2284,7 @@ the console).
 <A name="func_changetch"></A>
 <B><TT>changetch channelname</TT></B>
         <BLOCKQUOTE>
-        return the midi channel number of channel named
+        return the MIDI channel number of channel named
         <TT>channelname</TT>
         </BLOCKQUOTE>
 
@@ -2498,7 +2499,7 @@ the console).
 <B><TT>filtchanmap filtname inputchan outputchan</TT></B>
         <BLOCKQUOTE>
         route all events from channel <TT>inputchan</TT> 
-        (ie device/midi-channel pair)
+        (ie device/channel pair)
         to channel <TT>outputchan</TT>. If multiple channel maps are 
         defined for the same input channel then events are 
         duplicated
@@ -2625,7 +2626,7 @@ the console).
         <BLOCKQUOTE>
         add to sysex bank <TT>sysexname</TT>
         an new sysex message. <TT>data</TT> is a list containing the
-        midi system exclusive message and <TT>unit</TT> is the device number to which
+        MIDI system exclusive message and <TT>unit</TT> is the device number to which
         the message will be sent
         </BLOCKQUOTE>
 
@@ -2641,7 +2642,7 @@ the console).
 <A name="func_songidle"></A>
 <B><TT>songidle</TT></B>
         <BLOCKQUOTE>
-        put midi input to the midi output,
+        put MIDI input to the MIDI output,
         data passes through the current filter (if any)
         or through the current track's filter (if any).
         </BLOCKQUOTE>
@@ -2667,7 +2668,7 @@ the console).
 <A name="func_sendraw"></A>
 <B><TT>sendraw device arrayofbytes</TT></B>
         <BLOCKQUOTE>
-        send raw midi data to device number '<TT>device</TT>',
+        send raw MIDI data to device number '<TT>device</TT>',
         can be used to send system exclusive messages,
         example:
         <PRE>
@@ -2796,7 +2797,7 @@ the console).
         tics per unit (1 unit = 4 quarter notes).  the
         unit shall be changed before creating any tracks. 
         The default is 96 tics per unit, which is the
-        default of the midi standard.
+        default of the MIDI standard.
         </BLOCKQUOTE>
 
 <A name="func_songgetunit"></A>
@@ -2884,15 +2885,15 @@ the console).
 <A name="func_songexportsmf"></A>
 <B><TT>songexportsmf filename</TT></B>
         <BLOCKQUOTE>
-        save the song into a standard midi file, <TT>filename</TT>
+        save the song into a standard MIDI file, <TT>filename</TT>
         is a quoted string.
         </BLOCKQUOTE>
 
 <A name="func_songimportsmf"></A>
 <B><TT>songimportsmf filename</TT></B>
         <BLOCKQUOTE>
-        load the song from a standard midi file, <TT>filename</TT>
-        is a quoted string. Currently only midi file "type 1" is
+        load the song from a standard MIDI file, <TT>filename</TT>
+        is a quoted string. Currently only MIDI file "type 1" is
         supported.
         </BLOCKQUOTE>
 
@@ -2909,7 +2910,7 @@ the console).
 <A name="func_devattach"></A>
 <B><TT>devattach devnum filename mode</TT></B>
         <BLOCKQUOTE>
-        attach midi device <TT>filename</TT> as
+        attach MIDI device <TT>filename</TT> as
         device number <TT>devnum</TT>; <TT>filename</TT>
         is a quoted string. The <TT>mode</TT> argument
 	is the name of the mode, it can be on if the following:
@@ -2945,17 +2946,17 @@ the console).
 <A name="func_devsendrt"></A>
 <B><TT>devsendrt devnum bool</TT></B>
         <BLOCKQUOTE>
-        If <TT>bool</TT> is true, the real-time information (midi tics, 
-        midi start and midi trop events) will be transmitted to device
+        If <TT>bool</TT> is true, the real-time information (MIDI tics, 
+        MIDI start and MIDI trop events) will be transmitted to device
         number <TT>devnum</TT>. 
-        Otherwise no real-time midi events are transmitted.
+        Otherwise no real-time MIDI events are transmitted.
         </BLOCKQUOTE>
         
 <A name="func_devticrate"></A>
 <B><TT>devticrate devnum ticrate</TT></B>
         <BLOCKQUOTE>
         set the number of tics per unit note that are transmitted
-        to the midi device if "sendrt" feature is active. Default
+        to the MIDI device if "sendrt" feature is active. Default
         value is 96 tics. This is the standard MIDI value and
         its not recommended to change it.
         </BLOCKQUOTE>
@@ -2963,7 +2964,7 @@ the console).
 <A name="func_devinfo"></A>
 <B><TT>devinfo devnum</TT></B>
         <BLOCKQUOTE>
-        Print some information about the midi device.
+        Print some information about the MIDI device.
         </BLOCKQUOTE>
 
 <A name="func_devixctl"></A>
@@ -3066,7 +3067,7 @@ the console).
         If <TT>val=0</TT> the corresponding debug-info are
         turned off. <TT>flag</TT> can be: 
         <UL>
-        <LI><TT>rmidi</TT> - show raw midi traffic on stderr
+        <LI><TT>rmidi</TT> - show raw MIDI traffic on stderr
         <LI><TT>filt</TT> - show events passing through the current filter 
         <LI><TT>song</TT> - show start/stop events
         </UL>
@@ -3323,7 +3324,7 @@ the console).
         <B><TT>gmp patch</TT></B> 
                 <BLOCKQUOTE>
                 configures the current channel
-                to use general midi patch number <TT>patch</TT>.
+                to use general MIDI patch number <TT>patch</TT>.
                 (this will send program change event when
                 performance mode is entered).
                 </BLOCKQUOTE>
@@ -3363,7 +3364,7 @@ the console).
 
 <A name="example"></A><H1>19 Example sessions</H1>
 
-<A name="section_19_1"></A><H2>19.1 Example - midi filtering</H2>
+<A name="section_19_1"></A><H2>19.1 Example - MIDI filtering</H2>
         
         The following session show how to 
         configure a keyboard split:
