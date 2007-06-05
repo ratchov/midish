@@ -586,7 +586,7 @@ the console).
         <LI>    First, input events are checked for inconsistencies: nested
                 note-on, orphaned note-off and duplicate controller, bender
                 and aftertouch events are removed. 
-                Zero-length notes are lengthened to one "tic".
+                Zero-length notes are lengthened to one "tick".
                 The rate of controller, bender and aftertouch events is 
                 normalised in order not to flood output devices.
 
@@ -767,18 +767,18 @@ the console).
         <P>
         In midish, time is split in <I>measures</I>. Each measure
         is split in <I>beats</I> and each beat is split in 
-        <I>tics</I>. The <I>tic</I> is the fundamental
-        time unit in midish. Duration of tics is fixed
+        <I>ticks</I>. The <I>tick</I> is the fundamental
+        time unit in midish. Duration of ticks is fixed
         by the <I>tempo</I>. By default midish uses:
                 <UL>
-                <LI>24 tics per beat
+                <LI>24 ticks per beat
                 <LI>4 beats per measure
                 <LI>120 beats per minute
                 </UL>
         From the musical point of view, a beat often corresponds to
         a quarter note, to an eight note etc... 
         By default 
-        an unit note corresponds to 96 tics, thus by default
+        an unit note corresponds to 96 ticks, thus by default
         one beat corresponds to one quarter note, i.e. 
         the time signature is 4/4.
         
@@ -906,7 +906,7 @@ the console).
         <UL>
         <LI> start measure
         <LI> number of measures
-        <LI> precision/quantum (in tics).
+        <LI> precision/quantum (in ticks).
         </UL>
         For instance to blank measure number 3 of
         track <TT>mypiano</TT>:
@@ -914,7 +914,7 @@ the console).
         trackblank mypiano 3 1 (96 / 16) {}
         </PRE>
         the 3-rd argument set the precision to sixteenth note
-        (assuming 96 tics per unit note). This
+        (assuming 96 ticks per unit note). This
         means that notes position is rounded to the nearest 16-th note
         before being removed.
         This is useful, because often recorded notes
@@ -1182,7 +1182,7 @@ the console).
         <P>
         Current values can be obtained as follows:
         <PRE>
-        print [songgetunit]             # tics per unit note
+        print [songgetunit]             # ticks per unit note
         print [songgetcurpos]           # print current position
         print [songgetcurlen]        # print current selection length
         print [songgetcurfilt]          # current filter
@@ -1402,7 +1402,7 @@ the console).
                 and created the <TT>rmidish</TT> utility, a front-end
                 to midish using the readline(3) library.        
         <LI> added filters the ability to limit MIDI traffic
-                (one controller, one bender, one aftertouch per tic)
+                (one controller, one bender, one aftertouch per tick)
         <LI> make the filter drop duplicate controllers, pitch bends and
                 aftertouches
         <LI> added global and per filter current channel: 
@@ -1470,13 +1470,13 @@ the console).
 	<TD>unit number
 	<TD>integer that is used to reference the device
 	<TR>
-	<TD>ticrate
-	<TD>number of tic per unit note, default is 96, which corresponds
+	<TD>tickrate
+	<TD>number of tick per unit note, default is 96, which corresponds
 		to the MIDI standard
 	<TR>
 	<TD>sendrt flag
 	<TD>boolean; if sendrt = true, the real-time events
-		(like start, stop, tics) are transmitted to the MIDI device.
+		(like start, stop, ticks) are transmitted to the MIDI device.
 	<TR>
 	<TD>ixctlset
 	<TD>list of continuous controllers that are expected to be
@@ -1592,8 +1592,8 @@ the console).
 	<TD>meta track
 	<TD>a track containing tempo changes and time signature changes
 	<TR>
-	<TD>tics_per_unit
-	<TD>number of MIDI tics per unit note, the default value is 96
+	<TD>ticks_per_unit
+	<TD>number of MIDI ticks per unit note, the default value is 96
 		 which corresponds to the MIDI standard.
 	<TR>
 	<TD>tempo_factor
@@ -1636,7 +1636,7 @@ the console).
 		editing functions.
 	<TR>
 	<TD>curquant
-	<TD>current quatisation step in tics. 
+	<TD>current quatisation step in ticks. 
 		This value isn't used in real-time, 
 		however it can be used as default value for
 		the track editing functions
@@ -2133,11 +2133,11 @@ the console).
         </BLOCKQUOTE>
         
 <A name="func_trackaddev"></A>
-<B><TT>trackaddev trackname measure beat tic ev</TT></B>
+<B><TT>trackaddev trackname measure beat tick ev</TT></B>
         <BLOCKQUOTE>
         put the event <TT>ev</TT> on track <TT>trackname</TT>
         at the position given by <TT>measure</TT>,
-        <TT>beat</TT> and <TT>tic</TT>
+        <TT>beat</TT> and <TT>tick</TT>
         </BLOCKQUOTE>
 
 <A name="func_tracksetcurfilt"></A>
@@ -2160,7 +2160,7 @@ the console).
         <BLOCKQUOTE>
         check the whole track for orphaned notes,
         nested notes and other anomalies; also
-        removes multiple controllers in the same tic
+        removes multiple controllers in the same tick
         </BLOCKQUOTE>
 
 <A name="func_trackcut"></A>
@@ -2680,17 +2680,17 @@ the console).
 <A name="section_17_6"></A><H2>17.6 Song functions</H2>
 
 <A name="func_songsetcurquant"></A>
-<B><TT>songsetcurquant tics</TT></B>
+<B><TT>songsetcurquant ticks</TT></B>
         <BLOCKQUOTE>
-        set the number of tics in the time scale 
+        set the number of ticks in the time scale 
         (for quantisation, track editing...). 
         Currently this value is not used in real-time.
         </BLOCKQUOTE>
 
 <A name="func_songgetcurquant"></A>
-<B><TT>songgetcurquant tics</TT></B>
+<B><TT>songgetcurquant ticks</TT></B>
         <BLOCKQUOTE>
-        get the number of tics in the time scale.
+        get the number of ticks in the time scale.
         </BLOCKQUOTE>
 
 <A name="func_songsetcurpos"></A>
@@ -2794,16 +2794,16 @@ the console).
 <B><TT>songsetunit tpu</TT></B>
         <BLOCKQUOTE>
         set the time resolution of the sequencer to <TT>tpu</TT>
-        tics per unit (1 unit = 4 quarter notes).  the
+        ticks per unit (1 unit = 4 quarter notes).  the
         unit shall be changed before creating any tracks. 
-        The default is 96 tics per unit, which is the
+        The default is 96 ticks per unit, which is the
         default of the MIDI standard.
         </BLOCKQUOTE>
 
 <A name="func_songgetunit"></A>
 <B><TT>songgetunit</TT></B>
         <BLOCKQUOTE>
-        return the number of tics per unit note
+        return the number of ticks per unit note
         </BLOCKQUOTE>
 
 <A name="func_songsetfactor"></A>
@@ -2946,7 +2946,7 @@ the console).
 <A name="func_devsendrt"></A>
 <B><TT>devsendrt devnum bool</TT></B>
         <BLOCKQUOTE>
-        If <TT>bool</TT> is true, the real-time information (MIDI tics, 
+        If <TT>bool</TT> is true, the real-time information (MIDI ticks, 
         MIDI start and MIDI trop events) will be transmitted to device
         number <TT>devnum</TT>. 
         Otherwise no real-time MIDI events are transmitted.
@@ -2955,9 +2955,9 @@ the console).
 <A name="func_devticrate"></A>
 <B><TT>devticrate devnum ticrate</TT></B>
         <BLOCKQUOTE>
-        set the number of tics per unit note that are transmitted
+        set the number of ticks per unit note that are transmitted
         to the MIDI device if "sendrt" feature is active. Default
-        value is 96 tics. This is the standard MIDI value and
+        value is 96 ticks. This is the standard MIDI value and
         its not recommended to change it.
         </BLOCKQUOTE>
         
