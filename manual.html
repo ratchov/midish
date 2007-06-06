@@ -34,10 +34,12 @@
 <HTML>
 <HEAD>
 <TITLE>midish 0.3 - User's manual and tutorial</TITLE>
+<STYLE type="text/css">
+</STYLE>
 <META http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
 <META name="language" content="en">
 </HEAD>
-<BODY bgcolor="white" text="black" link="blue" vlink="navy">
+<BODY>
 
 <!-- toc_begin - automatically generated, don't modify -->
 <h1>Table of contents</h1>
@@ -202,20 +204,20 @@
        	Edit Makefile and change the readline(3) options in Makefile
 
         <LI> 
-        Compile midish, just type '<TT>make all</TT>', this will build
+        Compile midish, just type "<TT>make all</TT>", this will build
         midish and rmidish, the readline(3) front-end to midish.
 
         <LI>
         Install binaries, documentation and examples by
-        typing '<TT>make install</TT>'. They are copied as follows:
+        typing "<TT>make install</TT>". They are copied as follows:
         <UL>
-        <LI> binaries in '<TT>PREFIX/bin</TT>'
-        <LI> manual pages in '<TT>PREFIX/man/man1</TT>'
-        <LI> html documentation in '<TT>PREFIX/share/doc/midish</TT>'
-        <LI> example files in '<TT>PREFIX/share/examples/midish</TT>'
-        where '<TT>PREFIX</TT>' is by default '<TT>/usr/local</TT>'.
-        To change this, set the '<TT>PREFIX</TT>' variable in
-        '<TT>Makefile</TT>', for instance: 
+        <LI> binaries in <TT>PREFIX/bin</TT>
+        <LI> manual pages in <TT>PREFIX/man/man1</TT>
+        <LI> html documentation in <TT>PREFIX/share/doc/midish</TT>
+        <LI> example files in <TT>PREFIX/share/examples/midish</TT>
+        where <TT>PREFIX</TT> is by default <TT>/usr/local</TT>.
+        To change this, set the <TT>PREFIX</TT> variable in
+        <TT>Makefile</TT>, for instance: 
 
         <PRE>
         make PREFIX=$HOME install
@@ -224,11 +226,15 @@
         <LI>
         If there isn't a <TT>/etc/midishrc</TT> file, 
 	then copy the sample file by
-        typing '<TT>cp midishrc /etc</TT>' in your shell.
+        typing "<TT>cp midishrc /etc</TT>" in your shell.
         <LI>
         Read the documentation and modify <TT>/etc/midishrc</TT> in order 
-        to choose the default MIDI device by using the '<TT>devattach</TT>' 
-        function (example: '<TT>devattach 0 "/dev/rmidi3" rw</TT>', see next section)
+        to choose the default MIDI device by using the <TT>devattach</TT>
+        function, example:
+	<PRE>
+	devattach 0 "/dev/rmidi3" rw
+	</PRE>
+	see next section for details.
         </OL>
 
 
@@ -313,7 +319,7 @@ Midish uses the following objects to represent a project:
         metronome configuration, the current selection... 
 </UL>
 
-The above objects are grouped in a ''project'' (a song) and manipulated
+The above objects are grouped in a <I>project</I> (a song) and manipulated
 in prompt mode by issuing interactively commands.
 
 <P>
@@ -409,19 +415,19 @@ the console).
 	devattach 1 "/dev/rmidi3" rw	# attach the keyboard as dev number 1
 	</PRE>
 	
-	the 'rw' means that the device will be opened in
+	the <TT>rw<TT> means that the device will be opened in
 	read-write mode. 
 	The following session shows how to  record a simple track.
-	First, we define a filter  named '<TT>piano</TT>' that
+	First, we define a filter  named <TT>piano</TT> that
 	routes events from device 1, channel 0 (input channel of
 	the keyboard) to device 0, channel 5  (output channel of
 	the sound module). Then we create a new track
-	'<TT>pi1</TT>', we start recording and we save the song
+	<TT>pi1</TT>, we start recording and we save the song
 	into a file.
 	<PRE>
-	1> filtnew piano			# create filter 'piano'
+	1> filtnew piano			# create filter "piano"
 	2> filtchanmap piano {1 0} {0 5}	# dev=1,ch=0 -> dev=0,ch=5
-	3> tracknew pi1				# create track 'pi1'
+	3> tracknew pi1				# create track "pi1"
 	4> songrecord				# start recording
 	press control-C to finish
 
@@ -524,7 +530,7 @@ the console).
         
         <P>
         For instance;
-        to select patch 34 on channel '<TT>mybass</TT>', attach
+        to select patch 34 on channel <TT>mybass</TT>, attach
         a "program change" event:
         <PRE>
         chanconfev mybass { pc mybass 32 }
@@ -640,7 +646,7 @@ the console).
         <P>
         Filters are defined as follows:
         <PRE>
-        filtnew myfilt                  # define filter 'myfilt'
+        filtnew myfilt                  # define filter "myfilt"
         </PRE>
         initially the filter is empty and will send input to output
         as-is. 
@@ -664,7 +670,7 @@ the console).
         device number 1 (the MIDI keyboard) to device number 0
         (the sound module).
         <PRE>
-        filtnew mydevmap                # define filter 'mydevmap'
+        filtnew mydevmap                # define filter "mydevmap"
         filtdevmap mydevmap 1 0         # make it route device 1 -> device 0
         </PRE>
         To test the filter, start performance mode:
@@ -680,7 +686,7 @@ the console).
         (first channel of the keyboard) to device 0, channel 9 
         (default drum channel of the sound module).
         <PRE>
-        filtnew mydrums                 # define filter 'mydrums'
+        filtnew mydrums                 # define filter "mydrums"
         filtchanmap mydrums {1 0} {0 9} # route dev/chan {1 0} to {0 9}
         </PRE>
         The device/channel pair is in braces. The first <TT>{1 0}</TT>
@@ -726,7 +732,7 @@ the console).
         (one octave) notes on device 1, channel 0 (keyboard) and
         sends them on device 0 channel 2 (sound-module).
         <PRE>
-        filtnew mypiano                 # define filter 'mypiano'
+        filtnew mypiano                 # define filter "mypiano"
         filtchanmap mypiano {1 0} {0 2} # route dev/chan {1 0} to {0 9}
         filtkeymap  mypiano {1 0} {0 2} 0 127 12
         </PRE>
@@ -1057,7 +1063,7 @@ the console).
 	configures the controller. As arguments, it takes the name of
 	the controller (an identifier) the controller number and the 
 	default value of the controller.
-	If the default value is 'nil' (ie no default value), 
+	If the default value is <TT>nil</TT> (ie no default value), 
 	then the controller is considered as of type <I>parameter</I>.
 	For instance, following command:
         <PRE>
@@ -1098,7 +1104,7 @@ the console).
         to MIDI devices before starting performance mode.
         Typically, this feature can be used to change 
         the configuration of MIDI devices. System
-        exclusive ('sysex') messages are stored into 
+        exclusive (aka "sysex") messages are stored into 
         named banks. To create a sysex bank named <TT>mybank</TT>:
         <PRE>
         sysexnew mybank
@@ -1164,8 +1170,8 @@ the console).
         <PRE>
         songinfo                        # summary
         songtimeinfo                    # tempo changes
-        chaninfo mydrums                # list config. events in 'mydrums'
-        filtinfo myfilt                 # list rules in 'myfilt'
+        chaninfo mydrums                # list config. events in "mydrums"
+        filtinfo myfilt                 # list rules in "myfilt"
         trackinfo mytrack (96 / 16) {}  # list number of events per measure
         devinfo 0                       # device properties
         </PRE>
@@ -1188,8 +1194,8 @@ the console).
         print [songgetcurfilt]          # current filter
         print [songgetcurtrack]         # current track
         print [songgetcursysex]
-        print [trackgetcurfilt mypiano] # current filter of track 'mypiano'
-        print [filtgetcurchan mysplit]  # current channel of filter 'mysplit'
+        print [trackgetcurfilt mypiano] # current filter of track "mypiano"
+        print [filtgetcurchan mysplit]  # current channel of filter "mysplit"
         </PRE>
 
         <P>
@@ -1281,8 +1287,8 @@ the console).
         references to tracks, channels and filters, like:
         
         <PRE>
-        let x = 53              # store 53 into 'x'
-        print $x                # prints '53'
+        let x = 53              # store 53 into "x"
+        print $x                # prints "53"
         </PRE>
         
         The <TT>let</TT> keyword is used to assign values to 
@@ -1347,8 +1353,8 @@ the console).
 <A name="changes_02"></A><H2>13.1 Changes from release 0.1 to release 0.2</H2>
 
         <UL>
-        <LI> added '<TT>device</TT>' parameter to '<TT>sendraw</TT>'
-        <LI> removed '<TT>filtchangein</TT>' and added
+        <LI> added <TT>device</TT> parameter to <TT>sendraw</TT>
+        <LI> removed <TT>filtchangein</TT> and added
 		<TT>filtchgich</TT>, <TT>filtchgidev</TT>,
 		<TT>filtswapich</TT>, <TT>filtswapidev</TT>,
 		<TT>filtchgoch</TT>, <TT>filtchgodev</TT>,
@@ -1430,7 +1436,7 @@ the console).
 	     bender in a neutral state.
 	<LI> improved <TT>trackcheck</TT>
 	<LI> added <TT>exit</TT> keyword to exit midish
-	<LI> Added a 'mode' argument to <TT>devattach</TT> function. 
+	<LI> Added a <TT>mode</TT> argument to <TT>devattach</TT> function. 
 	     Now devices can be used in read-only or write-only mode (allowing
 	     to use named pipes as MIDI devices).
 	<LI> added basic support for the MIDI "Active Sensing" feature
@@ -1731,7 +1737,7 @@ the console).
         <PRE>
         {}                      # match everything
         { any }                 # match everything
-        { any bass }            # match anything on channel 'bass'
+        { any bass }            # match anything on channel "bass"
         { any {1 4} }           # match anything on device 1, channel 4
         { any {1 {}} }          # match anything on device 1, any channel
         { any {{} 9} }          # match anything on any device and channel 9
@@ -1741,10 +1747,10 @@ the console).
         { note {0 {3 5}} }      # match notes on device 0, channel 3, 4, 5
         { note {} {0 64} }      # match notes between 0 an 64
         { note {} 60 {80 127} } # match note 60 with velocity between 80 an 127
-        { ctl bass }            # match controllers on channel 'bass'
-        { ctl bass 7 }          # match controller 7 on channel 'bass'
+        { ctl bass }            # match controllers on channel "bass"
+        { ctl bass 7 }          # match controller 7 on channel "bass"
         { ctl bass 7 {0 64} }   # match ctl 7 on chan 'bass' with value 0->64
-        { bend {} {0 0x1fff} }  # match "lower" bender
+        { bend {} {0 0x1fff} }  # match lower bender
         { xctl {} 19 }          # match 14bit controller number 19
         { xpc  {} 21 1234 }     # match patch 21 on bank 1234
         { nrpn {} 21 }          # NRPN 21 change
@@ -1760,7 +1766,7 @@ the console).
         <LI> Identifiers:
                 <BR>
                 an identifier is a sequence of up to 32
-                characters, digits and underscores ('<TT>_</TT>').
+                characters, digits and underscores ("<TT>_</TT>").
                 However, an identifier cannot start with a
                 digit. Examples:
         <PRE>
@@ -1798,19 +1804,19 @@ the console).
 
         <LI> Operators, separators etc...
                 <BR>
-                sequences of meta-characters like '<TT>(</TT>', '<TT>)</TT>', 
-                '<TT>+</TT>', '<TT>$</TT>', newline character, 
-                '<TT>;</TT>',  etc... 
+                sequences of meta-characters like "<TT>(</TT>", "<TT>)</TT>", 
+                "<TT>+</TT>", "<TT>$</TT>", newline character, 
+                "<TT>;</TT>",  etc... 
 
         <LI> Comments 
                 <BR>
-                comments are ignored, they start with '<TT>#</TT>' 
+                comments are ignored, they start with "<TT>#</TT>" 
                 and end with the new line
                 character.
 
         </UL>
 
-        Multiple lines ending with '<TT>\</TT>' are parsed as a 
+        Multiple lines ending with "<TT>\</TT>" are parsed as a 
         single line. Anything else generates a "bad token" error.
 
 
@@ -1820,7 +1826,7 @@ the console).
         Any input line can be ether a function definition or a
         statement. 
 
-        Most statements end with the '<TT>;</TT>'
+        Most statements end with the "<TT>;</TT>"
         character.  However, in order to improve
         interactivity, the newline character can be used
         instead. Thus, the newline character cannot be
@@ -1864,7 +1870,7 @@ the console).
 
         the <TT>else</TT> and the second block are
         not mandatory. Note that since newline
-        character is interpreted as a '<TT>;</TT>', the
+        character is interpreted as a "<TT>;</TT>", the
         line cannot be broken in an arbitrary
         way. If the expression following the <TT>if</TT>
         keyword is true the first block is executed,
@@ -1894,7 +1900,7 @@ the console).
         </PRE>
 
         the block is executed for each value
-        of the list to which '<TT>$i</TT>' is set.
+        of the list to which "<TT>$i</TT>" is set.
 
         <LI>
         A return statement. The return statement ends
@@ -1935,12 +1941,12 @@ the console).
 
         <P>
         Variable are referenced by their identifier. 
-        Value of a variable is obtained with the '<TT>$</TT>'
+        Value of a variable is obtained with the "<TT>$</TT>"
         character.
 
         <PRE>
-        let i = 123             # puts 123 in 'i'
-        print $i                # prints the value of 'i'
+        let i = 123             # puts 123 in i
+        print $i                # prints the value of i
         </PRE>
 
         The following operators are recognised:
@@ -2116,14 +2122,14 @@ the console).
 <A name="func_trackdelete"></A>
 <B><TT>trackdelete trackname</TT></B>
         <BLOCKQUOTE>
-        delete existing track '<TT>trackname</TT>'.
+        delete existing track <TT>trackname</TT>.
         Current track cannot be deleted.
         </BLOCKQUOTE>
 
 <A name="func_trackreaname"></A>
 <B><TT>trackrename trackname newname</TT></B>
         <BLOCKQUOTE>
-        rename track '<TT>trackname</TT>' to '<TT>newname</TT>'
+        rename track <TT>trackname</TT> to <TT>newname</TT>
         </BLOCKQUOTE>
 
 <A name="func_trackexists"></A>
@@ -2201,7 +2207,7 @@ the console).
         <BLOCKQUOTE>
         quantise <TT>amount</TT> measures of the track
         <TT>trackname</TT> from measure <TT>from</TT>. Note positions
-	are rounded to the nearest tick multiple of the 'quantum'
+	are rounded to the nearest tick multiple of the <TT>quantum</TT>
         argument; the later must be larger than 4 ticks.
 	Rate must be between 0 and 100: 0 means no
         quantisation and 100 means full quantisation.
@@ -2211,7 +2217,7 @@ the console).
 <B><TT>tracktransp trackname start length halftones quantum evspec</TT></B>
         <BLOCKQUOTE>
         transpose note events of measures within the [start; start + len]
-	interval by 'halftones' half tones. Only events matching
+	interval by <TT>halftones</TT> half tones. Only events matching
         the <TT>evspec</TT> argument are transposed (see event
         <A href="#ev_evspec">ranges</A>)
         </BLOCKQUOTE>
@@ -2266,13 +2272,13 @@ the console).
 <A name="func_chandelete"></A>
 <B><TT>chandelete channame</TT></B>
         <BLOCKQUOTE>
-        delete existing channel '<TT>channame</TT>'.
+        delete existing channel <TT>channame</TT>.
         </BLOCKQUOTE>
 
 <A name="func_chanrename"></A>
 <B><TT>chanrename channame newname</TT></B>
         <BLOCKQUOTE>
-        rename channel '<TT>channame</TT>' to '<TT>newname</TT>'
+        rename channel <TT>channame</TT> to <TT>newname</TT>
         </BLOCKQUOTE>
 
 <A name="func_chanexists"></A>
@@ -2338,14 +2344,14 @@ the console).
 <A name="func_filtdelete"></A>
 <B><TT>filtdelete filtname</TT></B>
         <BLOCKQUOTE>
-        delete existing filter '<TT>filtname</TT>'.
+        delete existing filter <TT>filtname</TT>.
         Current filter and filters used by tracks cannot be deleted.
         </BLOCKQUOTE>
 
 <A name="func_filtrename"></A>
 <B><TT>filtrename filtname newname</TT></B>
         <BLOCKQUOTE>
-        rename filter '<TT>filtname</TT>' to '<TT>newname</TT>'
+        rename filter <TT>filtname</TT> to <TT>newname</TT>
         </BLOCKQUOTE>
 
 <A name="func_filtexists"></A>
@@ -2587,13 +2593,13 @@ the console).
 <B><TT>sysexdelete sysexname</TT></B>
         <BLOCKQUOTE>
         delete the bank of sysex messages named <TT>sysexname</TT>.
-        Current 'sysex' cannot be deleted.
+        Current sysex cannot be deleted.
         </BLOCKQUOTE>
 
 <A name="func_sysexrename"></A>
 <B><TT>sysexrename sysexname newname</TT></B>
         <BLOCKQUOTE>
-        rename sysex bank '<TT>sysexname</TT>' to '<TT>newname</TT>'
+        rename sysex bank <TT>sysexname</TT> to <TT>newname</TT>
         </BLOCKQUOTE>
 
 <A name="func_sysexexists"></A>
@@ -2668,7 +2674,7 @@ the console).
 <A name="func_sendraw"></A>
 <B><TT>sendraw device arrayofbytes</TT></B>
         <BLOCKQUOTE>
-        send raw MIDI data to device number '<TT>device</TT>',
+        send raw MIDI data to device number <TT>device</TT>,
         can be used to send system exclusive messages,
         example:
         <PRE>
@@ -2714,7 +2720,7 @@ the console).
 <A name="func_songsetcurlen"></A>
 <B><TT>songsetcurlen length</TT></B>
         <BLOCKQUOTE>
-        set the length of the current selection to '<TT>length</TT>' measures.
+        set the length of the current selection to <TT>length</TT> measures.
         </BLOCKQUOTE>
 
 <A name="func_songgetcurlen"></A>
@@ -2747,7 +2753,7 @@ the console).
 <B><TT>songgetcurfilt</TT></B>
         <BLOCKQUOTE>
         return the current filter
-        or <TT>'nil'</TT> if none
+        or <TT>nil</TT> if none
         </BLOCKQUOTE>
 
 <A name="func_songsetcursysex"></A>
@@ -2761,7 +2767,7 @@ the console).
 <B><TT>songgetcursysex</TT></B>
         <BLOCKQUOTE>
         return the current sysex bank
-        or <TT>'nil'</TT> if none
+        or <TT>nil</TT> if none
         </BLOCKQUOTE>
 
 <A name="func_songsetcurchan"></A>
@@ -2774,7 +2780,7 @@ the console).
 <B><TT>songgetcurchan</TT></B>
         <BLOCKQUOTE>
         return the name of the current channel 
-        or <TT>'nil'</TT> if none
+        or <TT>nil</TT> if none
         </BLOCKQUOTE>
 
 <A name="func_chansetcurinput"></A>
@@ -2990,8 +2996,9 @@ the console).
 <A name="func_ctlconf"></A>
 <B><TT>ctlconf ctlname ctlnumber defval</TT></B>
         <BLOCKQUOTE>
-	Configure controller number 'ctlnumber' with name
-	'ctlname', and default value 'defval'. If defval is 'nil'
+	Configure controller number <TT>ctlnumber</TT> with name
+	<TT>ctlname</TT>, and default value <TT>defval</TT>. 
+	If defval is <TT>nil</TT>
 	then there is no default value and corresponding
 	controller events are not grouped into frames.
 	See sec. <A href="ctl_frames">Controller frames</A>.
@@ -3008,7 +3015,7 @@ the console).
 <A name="func_ctlunconf"></A>
 <B><TT>ctlconf ctlname</TT></B>
         <BLOCKQUOTE>
-	Unconfigure the given controller. 'ctlname' is
+	Unconfigure the given controller. <TT>ctlname</TT> is
 	the identifier that was used with 
 	<A href="#func_ctlconf">ctlconf</A>
         </BLOCKQUOTE>
@@ -3110,7 +3117,7 @@ the console).
 		performance mode. 
 		It will be  used as default
 		value when tracks are created.
-		The value of the default track is reset to 'nil'
+		The value of the default track is reset to <TT>nil</TT>
 		(no default track).
 		The current channel and the current input 
 		that were used the last time
@@ -3349,16 +3356,16 @@ the console).
                         
         <B><TT>rpn addr val</TT></B> 
                 <BLOCKQUOTE>
-		set registered parameter number (RPN) 'addr'
-		for the current channel to 'val'. Both 'addr' 
-		and 'val' are integers in the range 0..16383.
+		set registered parameter number (RPN) <TT>addr</TT>
+		for the current channel to <TT>val</TT>. Both <TT>addr</TT>
+		and <TT>val</TT> are integers in the range 0..16383.
                 </BLOCKQUOTE>
 
         <B><TT>nrpn addr val</TT></B> 
                 <BLOCKQUOTE>
-		set not registered parameter number (NRPN) 'addr'
-		for the current channel to 'val'. Both 'addr' 
-		and 'val' are integers in the range 0..16383.
+		set not registered parameter number (NRPN) <TT>addr</TT>
+		for the current channel to <TT>val</TT>. Both <TT>addr</TT>
+		and <TT>val</TT> are integers in the range 0..16383.
                 </BLOCKQUOTE>
 
 
