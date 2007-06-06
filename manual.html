@@ -533,7 +533,7 @@ the console).
         to select patch 34 on channel <TT>mybass</TT>, attach
         a "program change" event:
         <PRE>
-        chanconfev mybass { pc mybass 32 }
+        chanconfev mybass {pc mybass 32}
         </PRE>
         the list-argument gives the event to attach to the channel.
         See the <A href="#ev_ev">event</A> section for
@@ -542,13 +542,13 @@ the console).
         <P>     
         To set the volume (controller 7) of this channel to 120:
         <PRE>
-        chanconfev mybass { ctl mybass 7 120 }
+        chanconfev mybass {ctl mybass 7 120}
         </PRE>
         If several events of the same type are attached
         then just the last one is kept. So, the following
         will change the volume to 125 by replacing the above event:
         <PRE>
-        chanconfev mybass { ctl mybass 7 125 }
+        chanconfev mybass {ctl mybass 7 125}
         </PRE>
 
 	
@@ -1302,7 +1302,7 @@ the console).
         us create a procedure named "<TT>i</TT>" that just replaces
         <TT>songidle</TT> in order to avoid typing its name.
         <PRE>
-        proc i { songidle; }
+        proc i {songidle;}
         </PRE>
         The <TT>proc</TT> keyword is followed by the procedure
         name and then follows a list of statements between
@@ -1514,7 +1514,8 @@ the console).
 	<TD>events that are sent when performance mode is entered
 	<TR>
 	<TD>curinput
-	<TD>default input {dev&nbsp;chan} pair. This value isn't used in
+	<TD>default input <TT>{dev&nbsp;chan}</TT> pair. 
+		This value isn't used in
 		real-time, however it can be used as default
 		value when adding new rules to a filter
 		that uses this channel.
@@ -1648,7 +1649,8 @@ the console).
 		the track editing functions
 	<TR>
 	<TD>curinput
-	<TD>default input {dev&nbsp;chan} pair. This value isn't used in
+	<TD>default input <tt>{dev&nbsp;chan}</tt> pair. 
+	        This value isn't used in
 		real-time, however it can be uses as default
 		value when adding new values to a filter
 		that uses this channel.
@@ -1692,20 +1694,20 @@ the console).
         note-on event on device 2, channel 9, note 64 with velocity 100:
 
         <PRE>
-        { non {2 9} 64 100 }
+        {non {2 9} 64 100}
         </PRE>
 
         program change device 1, channel 3, patch 34, bank 1234
 
         <PRE>
-        { xpc {1 3} 34 1234}
+        {xpc {1 3} 34 1234}
         </PRE>
 
         set controller number 7 to 99
         on device/channel drums:
 
         <PRE>
-        { ctl drums 7 99 }
+        {ctl drums 7 99}
         </PRE>
 
 <A name="ev_evspec"></A><H2>15.2 Event ranges specification</H2>
@@ -1894,7 +1896,7 @@ the console).
         A loop over a list:
 
         <PRE>
-        for i in { "bli" "bla" "blu" } {
+        for i in {"bli" "bla" "blu"} {
                 print $i;
         }
         </PRE>
@@ -2058,7 +2060,7 @@ the console).
         called with a single argument <TT>mytrack</TT>.
 
         <PRE>
-        { "bla" 3 zer }
+        {"bla" 3 zer}
         </PRE>
 
         is a list containing the string <TT>"bla"</TT> the integer
@@ -2067,7 +2069,7 @@ the console).
         braces, a more complicated example is:
 
         <PRE>
-        { "hello" 1+2*3 mytrack $i [myproc] { a b c } } 
+        {"hello" 1+2*3 mytrack $i [myproc] {a b c}} 
         </PRE>
 
 
@@ -2256,14 +2258,14 @@ the console).
 <A name="section_17_2"></A><H2>17.2 Channel functions</H2>
 
 <A name="func_channew"></A>
-<B><TT>channew channelname { device midichan }</TT></B>
+<B><TT>channew channelname {dev midichan}</TT></B>
         <BLOCKQUOTE>
         create an new channel named <TT>channelname</TT>
         and assigned the given device and MIDI channel.
         </BLOCKQUOTE>
 
 <A name="func_chanset"></A>
-<B><TT>chanset channelname { dev, midichan }</TT></B>
+<B><TT>chanset channelname {dev midichan}</TT></B>
         <BLOCKQUOTE>
         set the device/channel pair of an existing
 	channel named <TT>channelname</TT>.
@@ -2678,7 +2680,7 @@ the console).
         can be used to send system exclusive messages,
         example:
         <PRE>
-        sendraw 0 { 0xF0 0x7E 0x7F 0x09 0x01 0xF7 }
+        sendraw 0 {0xF0 0x7E 0x7F 0x09 0x01 0xF7}
         </PRE>
         </BLOCKQUOTE>
 
@@ -3094,7 +3096,7 @@ the console).
         contains a lot of examples of procedure definitions.
         
         <P>
-	<B><TT>ci { dev chan }</TT></B>
+	<B><TT>ci {dev chan}</TT></B>
                 <BLOCKQUOTE>
                 set the current input device/channel pair.
 		It will be used as default value
