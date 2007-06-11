@@ -1,0 +1,11 @@
+{
+	meta {
+		timesig 5 12
+		600
+		timesig 5 24
+		1200
+		timesig 5 12
+		600
+		timesig 4 24
+	}
+}

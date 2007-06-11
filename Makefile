@@ -17,15 +17,26 @@ MAN1_DIR = ${PREFIX}/man/man1
 DOC_DIR = ${PREFIX}/share/doc/midish
 EXAMPLES_DIR = ${PREFIX}/share/examples/midish
 
-PROGS = midish rmidish mkcurves
+#
+# programs to build and install
+#
+PROGS = midish rmidish
 
-all:		midish rmidish
+all:		${PROGS}
 
-install:	install-midish install-rmidish
+install:	${PROGS}
+		mkdir -p ${BIN_DIR} ${MAN1_DIR} ${DOC_DIR} ${EXAMPLES_DIR}
+		cp ${PROGS} smfplay smfrec ${BIN_DIR}
+		cp ${PROGS:=.1} smfplay.1 smfrec.1 ${MAN1_DIR}
+		cp README manual.html ${DOC_DIR}
+		cp midishrc sample.sng ${EXAMPLES_DIR}
+
+check:		midish
+		cd regress && ./run-test *.cmd
 
 clean:
-		rm -f -- ${PROGS} ${MIDISH_OBJS} ${RMIDISH_OBJS} \
-		*~ *.bak *.tmp *.ln *.s *.out *.core core
+		rm -f -- ${PROGS} *.o *~ *.bak *.tmp *.ln *.s *.out *.core core
+		cd regress && rm -f -- *~ *.tmp? *.core *.log *.diff *.orig *.rej
 
 # --------------------------------------------------- targets for midish ---
 
@@ -39,31 +50,11 @@ user_filt.o user_sx.o user_song.o user_dev.o
 midish:		${MIDISH_OBJS}
 		${CC} ${LDFLAGS} ${MIDISH_OBJS} -o midish
 
-install-midish:	midish smfplay smfrec midish.1 smfplay.1 smfrec.1 \
-		README manual.html midishrc sample.sng
-		mkdir -p ${BIN_DIR} ${MAN1_DIR} ${DOC_DIR} ${EXAMPLES_DIR}
-		cp midish smfplay smfrec ${BIN_DIR}
-		cp midish.1 smfplay.1 smfrec.1 ${MAN1_DIR}
-		cp README manual.html ${DOC_DIR}
-		cp midishrc sample.sng ${EXAMPLES_DIR}
+rmidish:	rmidish.c midish
+		${CC} ${CFLAGS} ${READLINE_CFLAGS} ${READLINE_INCLUDE} rmidish.c \
+		${LDFLAGS} ${READLINE_LDFLAGS} -o rmidish ${READLINE_LIB}
 
-# -------------------------------------------------- targets for rmidish ---
-
-RMIDISH_OBJS = rmidish.o
-
-rmidish:	midish ${RMIDISH_OBJS}
-		${CC} ${LDFLAGS} ${READLINE_LDFLAGS} ${RMIDISH_OBJS} \
-		-o rmidish ${READLINE_LIB}
-
-install-rmidish:rmidish
-		mkdir -p ${BIN_DIR} ${MAN1_DIR}
-		cp rmidish ${BIN_DIR}
-		cp rmidish.1 ${MAN1_DIR}
-
-rmidish.o:	rmidish.c
-		${CC} -c ${CFLAGS} ${READLINE_CFLAGS} ${READLINE_INCLUDE} $<
-
-# --------------------------------------------------------------------------
+# ---------------------------------------------------------- dependencies ---
 
 cons.o:		cons.c dbg.h textio.h cons.h user.h
 conv.o:		conv.c dbg.h state.h ev.h default.h conv.h
@@ -92,7 +83,6 @@ parse.o:	parse.c dbg.h textio.h lex.h data.h parse.h node.h \
 pool.o:		pool.c dbg.h pool.h
 rmidi.o:	rmidi.c dbg.h default.h mdep.h ev.h sysex.h mux.h \
 		rmidi.h mididev.h
-rmidish.o:	rmidish.c
 saveload.o:	saveload.c dbg.h name.h str.h song.h track.h ev.h \
 		default.h state.h frame.h filt.h timo.h sysex.h metro.h \
 		parse.h lex.h textio.h saveload.h conv.h

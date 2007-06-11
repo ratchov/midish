@@ -1,0 +1,60 @@
+#!/bin/sh
+
+#
+# for each command line argument, run the assocated test,
+# as follows:
+#
+#	- load the expected result $testname.res and 
+#	  save it in $testname.tmp1
+#
+#	- run $testname.cmd and save the actual result 
+#	  in $testname.tmp2
+#
+#	- check that there is no difference between 
+#	  actual and expected results. If there is difference
+#	  the test is failed and $testname.diff and
+#	  $testname.log files are kept.
+#
+
+#set -x
+
+if [ -n "$*" ]; then
+	list=$*
+else		
+	list=*.cmd
+fi
+
+#
+# loop over all tests
+#
+for i in $list; do
+	i=${i%.cmd}
+	(echo	songload \"$i.res\"\;				\
+		songsave \"$i.tmp1\"\;				\
+			| ../midish -b >$i.log 2>&1 )		\
+	&&							\
+	(echo	exec     \"$i.cmd\"\;				\
+		songsave \"$i.tmp2\"\;				\
+			| ../midish -b >>$i.log 2>&1 )		\
+	&&							\
+	diff -u $i.tmp1 $i.tmp2 >$i.diff 2>>$i.log
+	if [ "$?" -eq 0 ]; then
+		echo $i: passed
+		rm -- $i.tmp1 $i.tmp2 $i.diff $i.log
+	else
+		echo $i: FAILED
+		failed="$failed $i"
+	fi
+done
+
+#
+# print summary, and set exit code
+#
+echo >&2
+if [ -n "$failed" ]; then
+	echo Tests failed: $failed >&2
+	exit 1
+else
+	echo Tests passed
+	exit 0
+fi
