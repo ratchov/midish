@@ -447,7 +447,32 @@ exec_lookupevspec(struct exec *o, char *name, struct evspec *e) {
 	return 0;
 }
 
-
+/*
+ * convert a 'struct data' to a controller number
+ */
+unsigned
+data_getctl(struct data *d, unsigned *num) {
+    	if (d->type == DATA_LONG) {
+		if (d->val.num < 0 || d->val.num > EV_MAXCOARSE) {
+			cons_err("7bit ctl number out of bounds");
+			return 0;
+		}
+		if (evctl_isreserved(d->val.num)) {
+			cons_err("controller is reserved for bank, rpn, nrpn");
+			return 0;
+		}
+		*num = d->val.num;
+	} else if (d->type == DATA_REF) {
+		if (!evctl_lookup(d->val.ref, num)) {
+			cons_errs(d->val.ref, "no such controller\n");
+			return 0;
+		}
+	} else {
+		cons_err("number or identifier expected in ctl spec");
+		return 0;
+	}
+	return 1;
+}
 
 /*
  * find the (hi lo) couple for the 14bit controller
@@ -464,7 +489,7 @@ exec_lookupctl(struct exec *o, char *var, unsigned *num) {
 		dbg_puts("exec_lookupctl: no such var\n");
 		dbg_panic();
 	}
-	return data_list2ctl(arg->data, num);
+	return data_getctl(arg->data, num);
 }
 
 /*
@@ -630,30 +655,8 @@ data_list2range(struct data *d, unsigned min, unsigned max,
 }
 
 /*
- * convert a data to a pair of integers
- * data can be:
- * 	- a liste of 2 integers
- *	- a single integer (then min = max)
+ * convert a list to bitmap of continuous controllers
  */
-unsigned
-data_list2ctl(struct data *d, unsigned *num) {
-    	if (d->type == DATA_LONG) {
-		if (d->val.num < 0 || d->val.num > EV_MAXCOARSE) {
-			cons_err("7bit ctl number out of bounds");
-			return 0;
-		}
-		if (evctl_isreserved(d->val.num)) {
-			cons_err("controller is reserved for bank, rpn, nrpn");
-			return 0;
-		}
-		*num = d->val.num;
-	} else {
-		cons_err("number expected in ctl spec");
-		return 0;
-	}
-	return 1;
-}
-
 unsigned
 data_list2ctlset(struct data *d, unsigned *res) {
 	unsigned ctlset;

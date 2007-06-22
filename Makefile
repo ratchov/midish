@@ -38,7 +38,7 @@ clean:
 		rm -f -- ${PROGS} *.o *~ *.bak *.tmp *.ln *.s *.out *.core core
 		cd regress && rm -f -- *~ *.tmp? *.core *.log *.diff *.orig *.rej
 
-# --------------------------------------------------- targets for midish ---
+# ---------------------------------------------------------- dependencies ---
 
 MIDISH_OBJS = \
 cons.o conv.o data.o dbg.o ev.o exec.o filt.o frame.o lex.o \
@@ -53,8 +53,6 @@ midish:		${MIDISH_OBJS}
 rmidish:	rmidish.c midish
 		${CC} ${CFLAGS} ${READLINE_CFLAGS} ${READLINE_INCLUDE} rmidish.c \
 		${LDFLAGS} ${READLINE_LDFLAGS} -o rmidish ${READLINE_LIB}
-
-# ---------------------------------------------------------- dependencies ---
 
 cons.o:		cons.c dbg.h textio.h cons.h user.h
 conv.o:		conv.c dbg.h state.h ev.h default.h conv.h
