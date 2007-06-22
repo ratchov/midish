@@ -63,6 +63,33 @@ unsigned user_flag_verb = 0;
 /* -------------------------------------------------- some tools --- */
 
 /*
+ * convert a 'struct data' to a controller number
+ */
+unsigned
+data_getctl(struct data *d, unsigned *num) {
+    	if (d->type == DATA_LONG) {
+		if (d->val.num < 0 || d->val.num > EV_MAXCOARSE) {
+			cons_err("7bit ctl number out of bounds");
+			return 0;
+		}
+		if (evctl_isreserved(d->val.num)) {
+			cons_err("controller is reserved for bank, rpn, nrpn");
+			return 0;
+		}
+		*num = d->val.num;
+	} else if (d->type == DATA_REF) {
+		if (!evctl_lookup(d->val.ref, num)) {
+			cons_errs(d->val.ref, "no such controller\n");
+			return 0;
+		}
+	} else {
+		cons_err("number or identifier expected in ctl spec");
+		return 0;
+	}
+	return 1;
+}
+
+/*
  * execute a script from a file in the 'exec' environnement
  * the script has acces to the global variables, but
  * not to the local variables of the calling proc. Thus
@@ -222,7 +249,7 @@ unsigned
 exec_lookupev(struct exec *o, char *name, struct ev *ev) {
 	struct var *arg;
 	struct data *d;
-	unsigned dev, ch, max;
+	unsigned dev, ch, max, num;
 
 	arg = exec_varlookup(o, name);
 	if (!arg) {
@@ -253,16 +280,23 @@ exec_lookupev(struct exec *o, char *name, struct ev *ev) {
 	ev->dev = dev;
 	ev->ch = ch;
 	d = d->next;
-	if (ev->cmd == EV_BEND || ev->cmd == EV_NRPN || ev->cmd == EV_RPN) {
-		max = EV_MAXFINE; 
+	if (ev->cmd == EV_XCTL || ev->cmd == EV_CTL) {
+		if (!d || !data_getctl(d, &num)) {
+			return 0;
+		}
+		ev->ctl_num = num;
 	} else {
-		max = EV_MAXCOARSE;
+		if (ev->cmd == EV_BEND || ev->cmd == EV_NRPN || ev->cmd == EV_RPN) {
+			max = EV_MAXFINE; 
+		} else {
+			max = EV_MAXCOARSE;
+		}
+		if (!d || d->type != DATA_LONG || d->val.num < 0 || d->val.num > max) {
+			cons_err("bad byte0 in event spec");
+			return 0;
+		}
+		ev->v0 = d->val.num;
 	}
-	if (!d || d->type != DATA_LONG || d->val.num < 0 || d->val.num > max) {
-		cons_err("bad byte0 in event spec");
-		return 0;
-	}
-	ev->v0 = d->val.num;
 	d = d->next;
 	if (ev->cmd == EV_PC || ev->cmd == EV_CAT || ev->cmd == EV_BEND) {
 		if (d) {
@@ -285,17 +319,11 @@ exec_lookupev(struct exec *o, char *name, struct ev *ev) {
 	}
 
 	/*
-	 * convert all controllers to XCTLs
+	 * convert all CTL -> XCTL and PC -> XPC
 	 */
 	if (ev->cmd == EV_CTL) {
 		ev->cmd = EV_XCTL;
 		ev->ctl_val <<= 7;
-	}
-	if (ev->cmd == EV_XCTL) {
-		if (evctl_isreserved(ev->ctl_num)) {
-			cons_err("not allowed controller number, use xpc, nrpn, rpn instead");
-			return 0;
-		}
 	}
 	if (ev->cmd == EV_PC) {
 		ev->cmd = EV_XPC;
@@ -445,33 +473,6 @@ exec_lookupevspec(struct exec *o, char *name, struct evspec *e) {
  toomany:
 	cons_err("too many ranges/values in event spec");
 	return 0;
-}
-
-/*
- * convert a 'struct data' to a controller number
- */
-unsigned
-data_getctl(struct data *d, unsigned *num) {
-    	if (d->type == DATA_LONG) {
-		if (d->val.num < 0 || d->val.num > EV_MAXCOARSE) {
-			cons_err("7bit ctl number out of bounds");
-			return 0;
-		}
-		if (evctl_isreserved(d->val.num)) {
-			cons_err("controller is reserved for bank, rpn, nrpn");
-			return 0;
-		}
-		*num = d->val.num;
-	} else if (d->type == DATA_REF) {
-		if (!evctl_lookup(d->val.ref, num)) {
-			cons_errs(d->val.ref, "no such controller\n");
-			return 0;
-		}
-	} else {
-		cons_err("number or identifier expected in ctl spec");
-		return 0;
-	}
-	return 1;
 }
 
 /*
