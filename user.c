@@ -417,17 +417,25 @@ exec_lookupevspec(struct exec *o, char *name, struct evspec *e) {
 	if (e->cmd == EVSPEC_ANY) {
 		goto toomany;
 	}
-	if (e->cmd == EVSPEC_BEND || e->cmd == EVSPEC_XCTL || 
-	    e->cmd == EVSPEC_NRPN || e->cmd == EVSPEC_RPN) {
-		max = EV_MAXFINE;
+	if ((e->cmd == EVSPEC_CTL || e->cmd == EV_XCTL) && d->type == DATA_REF) {
+		if (!data_getctl(d, &hi)) {
+			return 0;
+		}
+		e->b0_min = hi;
+		e->b0_max = hi;
 	} else {
-		max = EV_MAXCOARSE;
+		if (e->cmd == EVSPEC_BEND || e->cmd == EVSPEC_XCTL || 
+		    e->cmd == EVSPEC_NRPN || e->cmd == EVSPEC_RPN) {
+			max = EV_MAXFINE;
+		} else {
+			max = EV_MAXCOARSE;
+		}	
+		if (!data_list2range(d, 0, max, &lo, &hi)) {
+			return 0;
+		}
+		e->b0_min = lo;
+		e->b0_max = hi;
 	}
-	if (!data_list2range(d, 0, max, &lo, &hi)) {
-		return 0;
-	}
-	e->b0_min = lo;
-	e->b0_max = hi;
 
 	/*
 	 * find the second parameter range
@@ -639,7 +647,7 @@ data_list2range(struct data *d, unsigned min, unsigned max,
 		} 
 		if (!d->next || d->next->next || 
 		    d->type != DATA_LONG || d->next->type != DATA_LONG) {
-			cons_err("exactly 0 ore 2 numbers expected in range spec");
+			cons_err("exactly 0 or 2 numbers expected in range spec");
 			return 0;
 		}
 		*lo = d->val.num;
