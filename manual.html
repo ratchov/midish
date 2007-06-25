@@ -1429,6 +1429,7 @@ the console).
 
         <UL>
         <LI>added <TT>tracktransp</TT> to transpose tracks
+        <LI>added <TT>trackmerge</TT> to merge two tracks
 	<LI>make rmidish run midish from the same directory where
 	     rmidish is located.
 	<LI>now multiple bender events are gathered together. So track editing 
@@ -2225,6 +2226,12 @@ the console).
         <A href="#ev_evspec">ranges</A>)
         </BLOCKQUOTE>
 
+<A name="func_trackmerge"></A>
+<B><TT>trackmerge source dest</TT></B>
+        <BLOCKQUOTE>
+        merge all frames from <tt>source</tt> track into <tt>dest</tt> 
+	track
+        </BLOCKQUOTE>
 
 <A name="func_tracksetmute"></A>
 <B><TT>tracksetmute trackname muteflag</TT></B>
@@ -2317,6 +2324,7 @@ the console).
 <B><TT>chanunconfev channelname evspec</TT></B>
         <BLOCKQUOTE>
 	remove events matching <tt>evspec</tt>
+	(see event <A href="#ev_evspec">ranges</A>)
         from the configuration of the channel
         </BLOCKQUOTE>
 
