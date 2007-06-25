@@ -37,8 +37,8 @@
 #define VERSION "midish version 0.3"
 
 /*
- * convert tempo (beats per minute)
- * to tic length (number of 24-th of microsecond)
+ * convert tempo (beats per minute) to tic length (number of 24-th of
+ * microsecond)
  */
 #define TEMPO_TO_USEC24(tempo,tpb) (60L * 24000000L / ((tempo) * (tpb)))
 
@@ -83,8 +83,8 @@
 #define DEFAULT_MAXNTRACKPTRS	100
 
 /*
- * maximum number of filter states (roughly
- * maximum number of simultaneous notes
+ * maximum number of filter states (roughly maximum number of
+ * simultaneous notes
  */
 #define DEFAULT_MAXNSTATES	10000
 
@@ -94,8 +94,7 @@
 #define DEFAULT_MAXNSYSEXS	2000
 
 /*
- * maximum number of chunks (each sysex is
- * a set of chunks)
+ * maximum number of chunks (each sysex is a set of chunks)
  */
 #define DEFAULT_MAXNCHUNKS	(DEFAULT_MAXNSYSEXS * 2)
 
@@ -125,20 +124,18 @@
 #define DEFAULT_USEC24		TEMPO_TO_USEC24(DEFAULT_TEMPO, DEFAULT_TPB)
 
 /*
- * number of milliseconds to wait between
- * the instrumet config is sent and the playback is stared
+ * number of milliseconds to wait between the instrumet config is sent
+ * and the playback is stared
  */
 #define DEFAULT_CHANWAIT	200
 
 /*
- * nmber of milliseconds to wait after 
- * each sysex message is sent
+ * nmber of milliseconds to wait after each sysex message is sent
  */
 #define DEFAULT_SXWAIT		20
 
 /*
- * metronome click length in 24-th of microsecond
- * (30ms)
+ * metronome click length in 24-th of microsecond (30ms)
  */
 #define DEFAULT_METRO_CLICKLEN	(24 * 1000 * 30)
 

@@ -35,7 +35,7 @@
 void metro_tocb(void *);
 
 /*
- * initialises the metronome with some defaults
+ * initialize the metronome with some defaults
  */
 void
 metro_init(struct metro *o) {

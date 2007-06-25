@@ -182,10 +182,6 @@ node_exec_binary(struct node *o, struct exec *x, struct data **r,
 	return RESULT_OK;
 }
 
-
-/* ------------------------------------------------------------------ */
-
-
 /*
  * execute a procedure definition: just check arguments
  * and move the tree into a proc structure

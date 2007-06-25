@@ -31,7 +31,7 @@
 #ifndef MIDISH_RMIDI_H
 #define MIDISH_RMIDI_H
 
-#define RMIDI_BUFLEN		0x400
+#define RMIDI_BUFLEN	0x400
 
 #include "mdep.h"
 #include "mididev.h"

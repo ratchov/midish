@@ -38,9 +38,9 @@
 unsigned mem_nalloc = 0, mem_nfree = 0, mem_debug = 0;
 
 /*
- * following routines are used to output debug info, use them
- * instead of fprintf(stderr, ...) because the will be turned
- * to no-op in stable version
+ * following routines are used to output debug info, use them instead
+ * of fprintf(stderr, ...) because the will be turned to no-op in
+ * stable version
  */
 
 void
@@ -59,8 +59,8 @@ dbg_putu(unsigned long n) {
 }
 
 /*
- * abort the execution of the program after a fatal error,
- * we should put code here to backup user data
+ * abort the execution of the program after a fatal error, we should
+ * put code here to backup user data
  */
 void
 dbg_panic(void) {
@@ -68,8 +68,7 @@ dbg_panic(void) {
 }
 
 /*
- * return a random number, will be used to randomize memory
- * bocks
+ * return a random number, will be used to randomize memory bocks
  */
 unsigned
 mem_rnd(void) {
@@ -120,9 +119,9 @@ mem_alloc(unsigned n) {
 }
 
 /*
- * free a memory block. Also check that the header and the
- * trailer werent changed and randomise the block, so that
- * the block is not usable once freed
+ * free a memory block. Also check that the header and the trailer
+ * werent changed and randomise the block, so that the block is not
+ * usable once freed
  */
 void
 mem_free(void *mem) {

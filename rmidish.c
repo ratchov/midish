@@ -47,9 +47,9 @@ sendline(char *buf) {
 }
 
 /*
- * wait for midish to become ready
- * read the stdout of midish and print everything
- * to the real stdout, stop reading when midish issues "+ready\n"
+ * wait for midish to become ready read the stdout of midish and print
+ * everything to the real stdout, stop reading when midish issues
+ * "+ready\n"
  */
 void
 waitready(void) {
@@ -68,11 +68,10 @@ waitready(void) {
 }
 
 /*
- * setup a pair of pipes, (stdin and stdout of midish)
- * and start midish.
+ * setup a pair of pipes, (stdin and stdout of midish) and start
+ * midish.
  *
- * since midish uses SIGINT, it is also necessary
- * to catch SIGINT
+ * since midish uses SIGINT, it is also necessary to catch SIGINT
  */
 void
 startmidish(void) {

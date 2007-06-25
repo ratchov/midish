@@ -58,7 +58,7 @@ struct smf {
 };
 
 /*
- * open a standard midi file and initialise
+ * open a standard midi file and initialize
  * the smf structure
  */
 unsigned
@@ -183,11 +183,10 @@ smf_getheader(struct smf *o, char *hdr) {
 }
 
 /*
- * in smf_put* routines there is a 'unsigned *used' argument
- * if (used == NULL) then data is not written in the smf
- * structure, only *user is incremented by the number
- * of bytes that would be written otherwise.
- * This is used to determine chunk's length
+ * in smf_putxxx routines there is a 'unsigned *used' argument if
+ * (used == NULL) then data is not written in the smf structure, only
+ * *user is incremented by the number of bytes that would be written
+ * otherwise.  This is used to determine chunk's length
  */
 void
 smf_put32(struct smf *o, unsigned *used, unsigned val) {
@@ -261,7 +260,7 @@ smf_putc(struct smf *o, unsigned *used, unsigned val) {
 
 void
 smf_putvar(struct smf *o, unsigned *used, unsigned val) {
-#define MAXBYTES (5)			/* 32bit / 7bit = 4bytes + 4bit */
+#define MAXBYTES 5			/* 32bit / 7bit = 4bytes + 4bit */
 	unsigned char buf[MAXBYTES];
 	unsigned index = 0, bits;
 	for (bits = 7; bits < MAXBYTES * 7; bits += 7) {
@@ -449,19 +448,25 @@ song_exportsmf(struct song *o, char *filename) {
 		nsx++;
 	}
 
-	/* write the header */
+	/* 
+	 * write the header 
+	 */
 	smf_putheader(&f, smftype_header, 6);
 	smf_put16(&f, NULL, 1);				/* format = 1 */
 	smf_put16(&f, NULL, nsx + ntrks + nchan + 1);	/* +1 -> meta track */
 	smf_put16(&f, NULL, o->tics_per_unit / 4);		/* tics per quarter */
 
-	/* write the tempo track */
+	/* 
+	 * write the tempo track 
+	 */
 	used = 0;
 	smf_puttrack(&f, &used, o, &o->meta);
 	smf_putheader(&f, smftype_track, used);
 	smf_puttrack(&f, NULL, o, &o->meta);
 		
-	/* write each sx */
+	/* 
+	 * write each sx 
+	 */
 	SONG_FOREACH_SX(o, s) {
 		used = 0;
 		smf_putsx(&f, &used, o, s);
@@ -469,7 +474,9 @@ song_exportsmf(struct song *o, char *filename) {
 		smf_putsx(&f, NULL, o, s);
 	}	
 					
-	/* write each chan */
+	/* 
+	 * write each chan 
+	 */
 	SONG_FOREACH_CHAN(o, i) {
 		used = 0;
 		smf_puttrack(&f, &used, o, &i->conf);
@@ -477,7 +484,9 @@ song_exportsmf(struct song *o, char *filename) {
 		smf_puttrack(&f, NULL, o, &i->conf);
 	}
 
-	/* write each track */
+	/*
+	 * write each track 
+	 */
 	SONG_FOREACH_TRK(o, t) {
 		used = 0;
 		smf_puttrack(&f, &used, o, &t->track);
@@ -700,7 +709,9 @@ song_fix1(struct song *o) {
 	unsigned delta;
 		
 	SONG_FOREACH_TRK(o, t) {
-		/* move meta events into meta track */
+		/* 
+		 * move meta events into meta track 
+		 */
 		delta = 0;
 		track_init(&copy);
 		seqptr_init(&cp, &copy);
@@ -805,11 +816,6 @@ song_importsmf(char *filename) {
 	struct songsx *sx;
 	struct smf f;
 	
-	/*
-	cons_err("not implemented");
-	return 0;
-	*/
-	
 	if (!smf_open(&f, filename, "r")) {
 		goto bad1;
 	}
@@ -856,8 +862,9 @@ song_importsmf(char *filename) {
 	}
 	
 	
-	/* TODO: move sysex messages into separate songsx */
-	
+	/* 
+	 * TODO: move sysex messages into separate songsx 
+	 */	
 	return o;
 	
 bad3:	song_delete(o);

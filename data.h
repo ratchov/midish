@@ -37,8 +37,8 @@
 struct name;
 
 /*
- * the following represents a "value" for the interpreter.
- * all types use the same strucure
+ * the following represents a "value" for the interpreter. all types
+ * use the same strucure
  */
 struct data {
 #define DATA_NIL	0

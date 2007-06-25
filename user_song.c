@@ -29,8 +29,8 @@
  */
 
 /*
- * implements songxxx built-in functions
- * available through the interpreter
+ * implements songxxx built-in functions available through the
+ * interpreter
  *
  * each function is described in the manual.html file
  */
@@ -120,7 +120,7 @@ user_func_songgetcursysex(struct exec *o, struct data **r) {
 }
 
 unsigned
-user_func_songsetunit(struct exec *o, struct data **r) {	/* tics per unit note */
+user_func_songsetunit(struct exec *o, struct data **r) {
 	long tpu;
 	struct songtrk *t;
 
@@ -141,7 +141,7 @@ user_func_songsetunit(struct exec *o, struct data **r) {	/* tics per unit note *
 }
 
 unsigned
-user_func_songgetunit(struct exec *o, struct data **r) {	/* tics per unit note */
+user_func_songgetunit(struct exec *o, struct data **r) {
 	*r = data_newlong(user_song->tics_per_unit);
 	return 1;
 }
@@ -292,8 +292,9 @@ user_func_songinfo(struct exec *o, struct data **r) {
 	unsigned i, count;
 	unsigned dev, ch;
 	
-	/* print info about channels */	
-
+	/* 
+	 * print info about channels 
+	 */
 	textout_putstr(tout, "chanlist {\n");
 	textout_shiftright(tout);
 	textout_indent(tout);
@@ -319,8 +320,9 @@ user_func_songinfo(struct exec *o, struct data **r) {
 	textout_shiftleft(tout);
 	textout_putstr(tout, "}\n");
 
-	/* print info about filters */	
-
+	/*
+	 * print info about filters
+	 */
 	textout_putstr(tout, "filtlist {\n");
 	textout_shiftright(tout);
 	textout_indent(tout);
@@ -340,8 +342,9 @@ user_func_songinfo(struct exec *o, struct data **r) {
 	textout_shiftleft(tout);
 	textout_putstr(tout, "}\n");
 
-	/* print info about tracks */
-
+	/* 
+	 * print info about tracks
+	 */
 	textout_putstr(tout, "tracklist {\n");
 	textout_shiftright(tout);
 	textout_indent(tout);
@@ -385,8 +388,9 @@ user_func_songinfo(struct exec *o, struct data **r) {
 	textout_shiftleft(tout);
 	textout_putstr(tout, "}\n");
 
-	/* print info about sysex banks */	
-
+	/*
+	 * print info about sysex banks
+	 */
 	textout_putstr(tout, "sysexlist {\n");
 	textout_shiftright(tout);
 	textout_indent(tout);
@@ -406,8 +410,9 @@ user_func_songinfo(struct exec *o, struct data **r) {
 	textout_shiftleft(tout);
 	textout_putstr(tout, "}\n");
 	
-	/* print current values */
-
+	/*
+	 * print current values
+	 */
 	textout_putstr(tout, "curchan ");
 	song_getcurchan(user_song, &c);
 	if (c) {
@@ -742,36 +747,7 @@ user_func_ctlunconf(struct exec *o, struct data **r) {
 
 unsigned
 user_func_ctlinfo(struct exec *o, struct data **r) {
-	unsigned i;
-	struct evctl *ctl;
-	
-	textout_putstr(tout, "ctltab {\n");
-	textout_shiftright(tout);
-	textout_indent(tout);
-	textout_putstr(tout, "#\n");
-	textout_indent(tout);
-	textout_putstr(tout, "# name\tnumber\tdefval\n");
-	textout_indent(tout);
-	textout_putstr(tout, "#\n");
-	for (i = 0; i < 128; i++) {
-		ctl = &evctl_tab[i];
-		if (ctl->name) {
-			textout_indent(tout);
-			textout_putstr(tout, ctl->name);
-			textout_putstr(tout, "\t");
-			textout_putlong(tout, i);
-			textout_putstr(tout, "\t");
-			if (ctl->defval == EV_UNDEF) {
-				textout_putstr(tout, "nil");
-			} else {
-				textout_putlong(tout, ctl->defval);
-
-			}
-    			textout_putstr(tout, "\n");
-		}
-	}
-	textout_shiftleft(tout);
-	textout_putstr(tout, "}\n");
+	evctltab_output(evctl_tab, tout);
 	return 1;
 }
 

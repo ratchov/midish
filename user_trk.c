@@ -29,11 +29,11 @@
  */
 
 /*
- * implements trackxxx built-in functions
- * available through the interpreter.
+ * implements trackxxx built-in functions available through the
+ * interpreter.
  *
- * for more details about what does each function, refer
- * to manual.html
+ * for more details about what does each function, refer to
+ * manual.html
  */
 
 #include "dbg.h"

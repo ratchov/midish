@@ -30,12 +30,10 @@
 
 /*
  * states are structures used to hold events like notes, last values
- * of controllers, the current value of the bender, etc...  states
- * also contain "extentions" to MIDI events, like the last bank value
- * for prog-changes, nrpn/rpn for data entries etc...
+ * of controllers, the current value of the bender, etc...
  * 
  * states are linked to a list (statelist structure), so that the list
- * contains the complete state of the a MIDI stream (ie all sounding
+ * contains the complete state of the MIDI stream (ie all sounding
  * notes, states of all controllers etc...)
  *
  * statelist structures are used in the real-time filter, so we use a
@@ -45,19 +43,6 @@
  * 20 states. Currently we use a singly linked list, but for
  * performance reasons we shoud use a hash table in the future.
  *
- * TODO:
- *
- *	state_xxx() routines seem over-complicated. That's because
- *	ceraint events (PCs, data-entry controllers, all 14bit
- *	controllers) cannot be interpreted out of their context (like
- *	bank controllers for PCs). Since most of the code uses state
- *	strucures (as opposed to bare events), it could be nice to
- *	define states without dependencies between them and remove
- *	completely the even structure. For instance the PC state could
- *	contain its bank data entries could contain RPN/NRPNs
- *	etc... This will largely simplify state_xxx() routines and
- *	make everything faster and easier to maintain.
- *	
  */
  
 #include "dbg.h"
@@ -116,7 +101,7 @@ state_dbg(struct state *s) {
 }
 
 /*
- * copy an event (and its context, if any) into a state.
+ * copy an event into a state.
  */
 void
 state_copyev(struct state *st, struct ev *ev, unsigned ph) {
@@ -377,7 +362,7 @@ state_restore(struct state *st, struct ev *rev) {
 
 
 /*
- * initialise an empty state list
+ * initialize an empty state list
  */
 void
 statelist_init(struct statelist *o) {
@@ -406,6 +391,10 @@ statelist_done(struct statelist *o) {
 	 * free all states
 	 */
 	for (i = o->first; i != NULL; i = inext) {
+		/*
+		 * check that we didn't forgot to cancel some states
+		 * the EV_CTL case is here for conv_xxx() functions
+		 */
 		if (!(i->phase & EV_PHASE_LAST) && i->ev.cmd != EV_CTL) {
 			dbg_puts("statelist_done: ");
 			ev_dbg(&i->ev);
@@ -533,7 +522,7 @@ statelist_lookup(struct statelist *o, struct ev *ev) {
  * is the first event of the frame, then create a new state.
  *
  * we dont reuse existing states, but instead we purge them and we
- * allocating new ones, so that states that are updated go to the
+ * allocate new ones, so that states that are often updated go to the
  * beginning of the list.
  */
 struct state *

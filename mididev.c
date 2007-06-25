@@ -29,9 +29,8 @@
  */
 
 /* 
- * mididev is a generic midi device structure
- * it doesn't containt any device-specific fields
- * and shoud be extended by other structures
+ * mididev is a generic midi device structure it doesn't contain any
+ * device-specific fields and shoud be extended by other structures
  *
  * this module also, manages a global list of generic
  * midi devices
@@ -149,5 +148,3 @@ mididev_detach(unsigned unit) {
 	dbg_panic();
 	return 0;
 }
-
-

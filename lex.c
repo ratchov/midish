@@ -192,7 +192,7 @@ lex_str2long(struct lex *o, unsigned base) {
 			return 0;
 		}
 		o->longval = (hi << BITS) + lo;
-	}	
+	}
 #undef BITS
 #undef LOWORD
 #undef HIWORD
@@ -423,4 +423,3 @@ lex_dbg(struct lex *o) {
 		break;
 	}
 }
-

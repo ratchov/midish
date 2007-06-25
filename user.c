@@ -29,8 +29,8 @@
  */
 
 /*
- * implements misc built-in functions
- * available through the interpreter
+ * implements misc built-in functions available through the
+ * interpreter
  *
  * each function is described in the manual.html file
  */
@@ -63,37 +63,10 @@ unsigned user_flag_verb = 0;
 /* -------------------------------------------------- some tools --- */
 
 /*
- * convert a 'struct data' to a controller number
- */
-unsigned
-data_getctl(struct data *d, unsigned *num) {
-    	if (d->type == DATA_LONG) {
-		if (d->val.num < 0 || d->val.num > EV_MAXCOARSE) {
-			cons_err("7bit ctl number out of bounds");
-			return 0;
-		}
-		if (evctl_isreserved(d->val.num)) {
-			cons_err("controller is reserved for bank, rpn, nrpn");
-			return 0;
-		}
-		*num = d->val.num;
-	} else if (d->type == DATA_REF) {
-		if (!evctl_lookup(d->val.ref, num)) {
-			cons_errs(d->val.ref, "no such controller\n");
-			return 0;
-		}
-	} else {
-		cons_err("number or identifier expected in ctl spec");
-		return 0;
-	}
-	return 1;
-}
-
-/*
- * execute a script from a file in the 'exec' environnement
- * the script has acces to the global variables, but
- * not to the local variables of the calling proc. Thus
- * it can be safely used in a procedure
+ * execute the script in the given file inside the 'exec' environment.
+ * the script has acces to all global variables, but not to the local
+ * variables of the calling proc. Thus it can be safely used from a
+ * procedure
  */
 unsigned
 exec_runfile(struct exec *exec, char *filename) {
@@ -122,8 +95,8 @@ exec_runfile(struct exec *exec, char *filename) {
 }
 
 /*
- * find the pointer to the songtrk contained in 'var'
- * ('var' must be a reference)
+ * find the pointer to the songtrk contained in 'var' ('var' must be a
+ * reference)
  */
 unsigned
 exec_lookuptrack(struct exec *o, char *var, struct songtrk **res) {
@@ -164,9 +137,8 @@ exec_lookupchan_getnum(struct exec *o, char *var,
 }
 
 /*
- * find the pointer to an existing songchan
- * that is referenced by 'var'.
- * ('var' must be a reference)
+ * find the pointer to an existing songchan that is referenced by
+ * 'var'.  ('var' must be a reference)
  */
 unsigned
 exec_lookupchan_getref(struct exec *o, char *var, struct songchan **res) {
@@ -193,8 +165,8 @@ exec_lookupchan_getref(struct exec *o, char *var, struct songchan **res) {
 }
 
 /*
- * find the pointer to the songfilt contained in 'var'
- * ('var' must be a reference)
+ * find the pointer to the songfilt contained in 'var' ('var' must be
+ * a reference)
  */
 unsigned
 exec_lookupfilt(struct exec *o, char *var, struct songfilt **res) {
@@ -213,8 +185,8 @@ exec_lookupfilt(struct exec *o, char *var, struct songfilt **res) {
 }
 
 /*
- * find the pointer to the songsx contained in 'var'
- * ('var' must be a reference)
+ * find the pointer to the songsx contained in 'var' ('var' must be a
+ * reference)
  */
 unsigned
 exec_lookupsx(struct exec *o, char *var, struct songsx **res) {
@@ -242,6 +214,10 @@ exec_lookupsx(struct exec *o, char *var, struct songsx **res) {
  * 	- { cat chan xxx }
  * 	- { pc chan xxx }
  * 	- { bend chan xxx }
+ *	- { xctl chan xxx yyy }
+ *	- { xpc chan xxx yyy }
+ *	- { rpn chan xxx yyy }
+ *	- { nrpn chan xxx yyy }
  * where 'chan' is in the same as in lookupchan_getnum
  * and 'xxx' and 'yyy' are integers
  */
@@ -336,7 +312,7 @@ exec_lookupev(struct exec *o, char *name, struct ev *ev) {
  * fill the evspec with the one referenced by var.
  * var is of this form
  * 	- { [type [chanrange [xxxrange [yyyrange]]]] }	
- * (brackets mean optionnal)
+ * (brackets mean argument is optionnal)
  */
 unsigned
 exec_lookupevspec(struct exec *o, char *name, struct evspec *e) {
@@ -502,7 +478,7 @@ exec_lookupctl(struct exec *o, char *var, unsigned *num) {
 }
 
 /*
- * print a data to the user console
+ * print a struct data to the console
  */
 void
 data_print(struct data *d) {
@@ -628,7 +604,7 @@ data_list2chan(struct data *o, unsigned *res_dev, unsigned *res_ch) {
 }
 
 /*
- * convert a data to a pair of integers
+ * convert a struct data to a pair of integers
  * data can be:
  * 	- a liste of 2 integers
  *	- a single integer (then min = max)
@@ -729,24 +705,34 @@ data_matchsysex(struct data *d, struct sysex *sx, unsigned *res) {
 	return 1;
 }
 
-
-
-
-/* ---------------------------------------- interpreter functions --- */
-
-/* 
- * XXX: for testing 
+/*
+ * convert a 'struct data' to a controller number
  */
 unsigned
-user_func_ev(struct exec *o, struct data **r) {
-	struct evspec ev;
-	if (!exec_lookupevspec(o, "ev", &ev)) {
+data_getctl(struct data *d, unsigned *num) {
+    	if (d->type == DATA_LONG) {
+		if (d->val.num < 0 || d->val.num > EV_MAXCOARSE) {
+			cons_err("7bit ctl number out of bounds");
+			return 0;
+		}
+		if (evctl_isreserved(d->val.num)) {
+			cons_err("controller is reserved for bank, rpn, nrpn");
+			return 0;
+		}
+		*num = d->val.num;
+	} else if (d->type == DATA_REF) {
+		if (!evctl_lookup(d->val.ref, num)) {
+			cons_errs(d->val.ref, "no such controller\n");
+			return 0;
+		}
+	} else {
+		cons_err("number or identifier expected in ctl spec");
 		return 0;
 	}
-	evspec_dbg(&ev);
-	dbg_puts("\n");
 	return 1;
 }
+
+/* ---------------------------------------- interpreter functions --- */
 
 unsigned
 user_func_panic(struct exec *o, struct data **r) {
@@ -928,8 +914,6 @@ user_mainloop(void) {
 	/*
 	 * register built-in functions 
 	 */
-	exec_newbuiltin(exec, "ev", user_func_ev, 
-			name_newarg("ev", NULL));
 	exec_newbuiltin(exec, "print", user_func_print, 
 			name_newarg("value", NULL));
 	exec_newbuiltin(exec, "exec", user_func_exec, 

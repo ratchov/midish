@@ -37,7 +37,7 @@
 struct metro {
 	unsigned enabled;	/* 0 = off, 1 = on */
 	struct ev hi, lo;	/* high and low click note-on events */
-	struct ev *ev;		/* event that is sounding (or NULL) */
+	struct ev *ev;		/* event currently sounding (or NULL) */
 	struct timo to;		/* timeout for the noteoff */
 };
 

@@ -92,8 +92,9 @@
 
 /* 
  * MUX_START_DELAY: 
- * delay between the START event and the first TIC
- * in 24ths of a micro second, here we use 1 tic at 30bpm
+ *
+ * delay between the START event and the first TIC in 24ths of a micro
+ * second, here we use 1 tic at 30bpm
  */
 #define MUX_START_DELAY	  (2000000UL)	
 
@@ -118,9 +119,8 @@ mux_init(struct muxops *ops, void *addr) {
 	statelist_init(&mux_ostate);
 	
 	/* 
-	 * default tempo is 120 beats per minutes
-	 * with 24 tics per beat
-	 * (time unit = 24th of microsecond)
+	 * default tempo is 120 beats per minutes with 24 tics per
+	 * beat (time unit = 24th of microsecond)
 	 */
 	mux_ticlength = TEMPO_TO_USEC24(DEFAULT_TEMPO, DEFAULT_TPB);
 	
@@ -205,9 +205,8 @@ mux_chgphase(unsigned phase) {
 }
 
 /*
- * Send a TIC to all devices that transmit
- * real-time events. The tic is only send if
- * the device tic_per_unit permits it.
+ * send a TIC to all devices that transmit real-time events. The tic
+ * is only sent if the device tic_per_unit permits it.
  */
 void
 mux_sendtic(void) {
@@ -225,7 +224,7 @@ mux_sendtic(void) {
 }
 
 /*
- * Similar to sendtic, but sends a START event
+ * similar to sendtic, but sends a START event
  */
 void
 mux_sendstart(void) {
@@ -235,8 +234,9 @@ mux_sendstart(void) {
 		if (i->sendrt && i != mididev_master) {
 			i->ticdelta = i->ticrate;
 			/*
-			 * send a tic just before the start event
-			 * in order to notify that we are the master
+			 * send a spirious tick just before the start
+			 * event in order to notify that we are the
+			 * master
 			 */
 			rmidi_puttic(RMIDI(i));
 			rmidi_putstart(RMIDI(i));
@@ -245,7 +245,7 @@ mux_sendstart(void) {
 }
 
 /*
- * similar to sendtic, but sends a STOP event
+ * similar to sendtic, but send a STOP event
  */
 void
 mux_sendstop(void) {
@@ -482,8 +482,8 @@ mux_evcb(unsigned unit, struct ev *ev) {
 }
 
 /*
- * called if an error is detected.
- * currently we send an all note off and all ctls reset
+ * called if an error is detected. currently we send an all note off
+ * and all ctls reset
  *
  * XXX: these controllers should be handled by the filter
  *	they should shutdown recorded states following filtering

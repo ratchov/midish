@@ -31,9 +31,20 @@
 /*
  * a seqptr structure points to a location of the associated track and
  * can move forward, read events and write events. The location is
- * defined by the current tic and the current event within the tic. In
- * some sense a seqptr structure is for a track what is a head for a
- * tape.
+ * defined by the current tic and the current event within the
+ * tick. In some sense a seqptr structure is for a track what is a
+ * head for a tape.
+ *
+ * The seqptr structure contain a cursor (a pos/delta pair) which is
+ * used to walk through the track as follows:
+ *
+ *    -	In play mode, the field 'o->pos' points to the event to be
+ *	played. The 'delta' field contains the number of ticks elapsed
+ *	since the last played event. Thus when o->delta reaches
+ *	o->pos->delta, the event is to be played.
+ *
+ *    -	In record mode, the field 'o->pos' points to the next event
+ *	that the event being recorded.
  *
  * It maintains a "state list" that contains the complete state of the
  * track at the current postion: the list of all sounding notes, the
@@ -157,7 +168,7 @@
 #include "frame.h"
 
 /*
- * initialise a seqptr structure at the beginning of 
+ * initialize a seqptr structure at the beginning of 
  * the given track.
  */
 void
@@ -180,9 +191,9 @@ seqptr_done(struct seqptr *sp) {
 }
 
 /* 
- * return the state structure of the next available event
- * or NULL if there is no next event in the current tick.
- * The state list is updated accordingly.
+ * return the state structure of the next available event or NULL if
+ * there is no next event in the current tick.  The state list is
+ * updated accordingly.
  */
 struct state *
 seqptr_evget(struct seqptr *sp) {
@@ -202,9 +213,9 @@ seqptr_evget(struct seqptr *sp) {
 }
 
 /*
- * delete the next event from the track. If the 'slist'
- * argument is non NULL, then the state is updated as
- * it was read with seqptr_evget
+ * delete the next event from the track. If the 'slist' argument is
+ * not NULL, then the state is updated as it was read with
+ * seqptr_evget
  */
 struct state *
 seqptr_evdel(struct seqptr *sp, struct statelist *slist) {
@@ -230,9 +241,8 @@ seqptr_evdel(struct seqptr *sp, struct statelist *slist) {
 }
 
 /*
- * insert an event and put the cursor just after it,
- * the state list is updated and the state of the 
- * new event is returned.
+ * insert an event and put the cursor just after it, the state list is
+ * updated and the state of the new event is returned.
  */
 struct state *
 seqptr_evput(struct seqptr *sp, struct ev *ev) {
@@ -274,8 +284,8 @@ seqptr_ticskip(struct seqptr *sp, unsigned max) {
 }
 
 /*
- * remove blank space at the current position, 
- * same semantics as seqptr_ticskip()
+ * remove blank space at the current position, same semantics as
+ * seqptr_ticskip()
  */
 unsigned
 seqptr_ticdel(struct seqptr *sp, unsigned max, struct statelist *slist) {
@@ -328,7 +338,7 @@ seqptr_skip(struct seqptr *sp, unsigned ntics) {
 
 /*
  * move forward 'ntics', if the end-of-track is reached then fill with
- * blank space. Used for writeing on a track
+ * blank space. Used for writing on a track
  */
 void
 seqptr_seek(struct seqptr *sp, unsigned ntics) {
@@ -339,9 +349,9 @@ seqptr_seek(struct seqptr *sp, unsigned ntics) {
 
 
 /*
- * generate an event that will suspend the frame of the given
- * state; the state is unchanged and may belong to any statelist.
- * Return 1 if an event was generated.
+ * generate an event that will suspend the frame of the given state;
+ * the state is unchanged and may belong to any statelist.  Return 1
+ * if an event was generated.
  */
 unsigned
 seqptr_cancel(struct seqptr *sp, struct state *st) {
@@ -376,9 +386,9 @@ seqptr_restore(struct seqptr *sp, struct state *st) {
 
 
 /*
- * erase the event contained in the given state. Everything happens
- * as the event never existed on the track. Returns the new state, 
- * or NULL if there is no more state.
+ * erase the event contained in the given state. Everything happens as
+ * the event never existed on the track. Returns the new state, or
+ * NULL if there is no more state.
  */
 struct state *
 seqptr_rmlast(struct seqptr *sp, struct state *st) {

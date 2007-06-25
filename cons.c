@@ -40,7 +40,7 @@ unsigned cons_breakcnt, cons_ready;
 
 /* 
  * if there is a keyboard interrupt (control-C), return 1 and clear
- * the interupt flag
+ * the interrupt flag
  */
 unsigned
 cons_break(void) {
@@ -66,8 +66,8 @@ cons_done(void) {
 }
 
 /*
- * same as fgetc(stdin), but if midish is started with the verb flag,
- * print "+ready\n" to stdout and flush it/ this is useful to
+ * Same as fgetc(stdin), but if midish is started with the verb flag,
+ * print "+ready\n" to stdout and flush it. This is useful to
  * front-ends that open midish in a pair of pipes
  */
 int

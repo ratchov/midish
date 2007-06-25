@@ -153,8 +153,8 @@ sysex_dbg(struct sysex *o) {
 }
 
 /*
- * check that the sysex message (1) starts with 0xf0, (2) ends
- * with 0xf7 and (3) doesn't contain any status bytes.
+ * check that the sysex message (1) starts with 0xf0, (2) ends with
+ * 0xf7 and (3) doesn't contain any status bytes.
  */
 unsigned
 sysex_check(struct sysex *o) {
@@ -193,7 +193,7 @@ sysex_check(struct sysex *o) {
 }
 
 /*
- * initialise a list of sysex messages
+ * initialize a list of sysex messages
  */
 void
 sysexlist_init(struct sysexlist *o) {

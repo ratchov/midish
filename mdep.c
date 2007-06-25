@@ -95,7 +95,6 @@ cons_mdep_done(void) {
 	}
 }
 
-
 /*
  * open midi devices
  */
@@ -247,9 +246,10 @@ mux_mdep_run(void) {
 }
 
 /* 
- * sleep for 'millisecs' milliseconds
- * useful when sending system exclusive messages
- * IMPORTANT : must never be called inside mux_run() 
+ * sleep for 'millisecs' milliseconds useful when sending system
+ * exclusive messages
+ *
+ * IMPORTANT : must never be called from inside mux_run()
  */
 void 
 mux_sleep(unsigned millisecs) {

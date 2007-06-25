@@ -182,4 +182,3 @@ pool_del(struct pool *o, void *p) {
 	e->next = o->first;
 	o->first = e;
 }
-

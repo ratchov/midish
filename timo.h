@@ -33,9 +33,10 @@
 
 struct timo {
 	struct timo *next;
-	unsigned val, set;
-	void (*cb)(void *addr);
-	void *arg;
+	unsigned val;			/* time to wait before the callback */
+	unsigned set;			/* true if the timeout is set */
+	void (*cb)(void *arg);		/* routine to call on expiration */
+	void *arg;			/* argument to give to 'cb' */
 };
 
 void timo_set(struct timo *o, void (*cb)(void *), void *arg);

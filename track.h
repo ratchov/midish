@@ -41,7 +41,7 @@ struct seqev {
 };
 
 struct track {
-	struct seqev eot;		/* the end-of-track event */
+	struct seqev eot;		/* end-of-track event */
 	struct seqev *first;		/* head of the event list */
 };
 

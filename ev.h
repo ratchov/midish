@@ -39,7 +39,7 @@
 #define EV_NRPN		0x4		/* NRPN + data entry */
 #define EV_RPN		0x5		/* RPN + data entry */
 #define EV_XCTL		0x6		/* 14bit controller */
-#define EV_XPC		0x7		/* prog/ change + bank select */
+#define EV_XPC		0x7		/* prog change + bank select */
 #define EV_NOFF		0x8		/* MIDI note off */
 #define EV_NON		0x9		/* MIDI note on */
 #define EV_KAT		0xa		/* MIDI key after-toutch */
@@ -68,7 +68,7 @@
 /*
  * an event: structure used to store MIDI events and some
  * midish-sepcific events (tempo changes, etc...). This structure have
- * to be kept as small as possiblea, because its used to store events
+ * to be kept as small as possible, because its used to store events
  * on tracks, that may contain a lot of events
  */
 struct ev {
@@ -103,7 +103,7 @@ struct ev {
 #define EV_PHASE_LAST		4
 
 /*
- * defines a range of events
+ * range of events
  */
 struct evspec {
 #define EVSPEC_ANY		0
@@ -166,6 +166,5 @@ unsigned evctl_lookup(char *name, unsigned *ret);
 void	 evctl_init(void);
 void	 evctl_done(void);
 unsigned evctl_isreserved(unsigned num);
-
 
 #endif /* MIDISH_EV_H */

@@ -29,10 +29,10 @@
  */
 
 /*
- * the data structure is used to store values of user variables,
- * (used by the interpreter, see node.c). This module implements
- * basic methods to manipulate data structures and the arithmetic
- * primitives used by the interpreter.
+ * the data structure is used to store values of user variables, (used
+ * by the interpreter, see node.c). This module implements basic
+ * methods to manipulate data structures and the arithmetic primitives
+ * used by the interpreter.
  *
  * currently allowed data types are
  *	- 'nil' (ie no value)
@@ -49,8 +49,7 @@
 #include "data.h"
 
 /*
- * allocate a new data structure and
- * initialise it as 'nil'
+ * allocate a new data structure and initialize it as 'nil'
  */
 struct data *
 data_newnil(void) {
@@ -62,8 +61,7 @@ data_newnil(void) {
 }
 
 /*
- * allocate a new data structure and
- * initialise with the given long integer
+ * allocate a new data structure and initialize with the given integer
  */
 struct data *
 data_newlong(long val) {
@@ -75,8 +73,8 @@ data_newlong(long val) {
 }
 
 /*
- * allocate a new data structure and
- * initialise with (a copy of) the given string
+ * allocate a new data structure and initialize with (a copy of) the
+ * given string
  */
 struct data *
 data_newstring(char *val) {
@@ -88,8 +86,8 @@ data_newstring(char *val) {
 }
 
 /*
- * allocate a new data structure and
- * initialise with (a copy of) the given reference
+ * allocate a new data structure and initialize with (a copy of) the
+ * given reference
  */
 struct data *
 data_newref(char *val) {
@@ -102,10 +100,9 @@ data_newref(char *val) {
 
 
 /*
- * allocate a new data structure and
- * initialise with the given list (not copied).
- * The list argument is the first item of a linked
- * list of data structures
+ * allocate a new data structure and initialize with the given list
+ * (not copied).  The list argument is the first item of a linked list
+ * of data structures
  */
 struct data *
 data_newlist(struct data *list) {
@@ -117,8 +114,8 @@ data_newlist(struct data *list) {
 }
 
 /*
- * allocate a new data structure and
- * initialise with the given user type
+ * allocate a new data structure and initialize with the given user
+ * type
  */
 struct data *
 data_newuser(void *addr) {
@@ -130,8 +127,8 @@ data_newuser(void *addr) {
 }
 
 /*
- * return the number of data structures contained
- * in the given data structure
+ * return the number of data structures contained in the given data
+ * structure
  */
 unsigned
 data_numitem(struct data *o) {
@@ -148,9 +145,8 @@ data_numitem(struct data *o) {
 }
 
 /*
- * add to the end of given 'o' data structure (must be of
- * type DATA_LIST) the given data structure
- * (can be of any type)
+ * add to the end of given 'o' data structure (must be of type
+ * DATA_LIST) the given data structure (can be of any type)
  */
 void
 data_listadd(struct data *o, struct data *v) {
@@ -164,8 +160,7 @@ data_listadd(struct data *o, struct data *v) {
 }
 
 /*
- * remove the given data struct from the
- * given list
+ * remove the given data struct from the given list
  */
 void
 data_listremove(struct data *o, struct data *v) {
@@ -184,8 +179,7 @@ data_listremove(struct data *o, struct data *v) {
 }
 
 /*
- * clear a data structure and set it
- * to by of type 'DATA_NIL'
+ * clear a data structure and set it to by of type 'DATA_NIL'
  */
 void
 data_clear(struct data *o) {
@@ -266,8 +260,7 @@ data_dbg(struct data *o) {
 }
 
 /*
- * copy src into dst
- * never fails
+ * copy src into dst, never fails
  */
 void
 data_assign(struct data *dst, struct data *src) {
@@ -312,8 +305,7 @@ data_assign(struct data *dst, struct data *src) {
 
 
 /*
- * return 1 if op1 et op2 are identical, 
- * 0 overwise
+ * return 1 if op1 et op2 are identical, 0 overwise
  */
 unsigned
 data_id(struct data *op1, struct data *op2) {
@@ -382,8 +374,8 @@ data_eval(struct data *o) {
 
 
 /*
- * Each of the following routines appies an unary operator
- * to the first argument. Returs 1 on success, 0 on failure
+ * Each of the following routines appies an unary operator to the
+ * first argument. Return 1 on success, 0 on failure
  */
 
 unsigned
@@ -422,10 +414,9 @@ data_not(struct data *op1) {
 
 
 /*
- * Each of the following routines calculates the 
- * result of a binary oprator applied to the couple
- * of arguments and stores the result in the first argument.
- * Returs 1 on success, 0 on failure
+ * Each of the following routines calculates the result of a binary
+ * oprator applied to the couple of arguments and stores the result in
+ * the first argument. Return 1 on success, 0 on failure
  */
 unsigned 
 data_add(struct data *op1, struct data *op2) {

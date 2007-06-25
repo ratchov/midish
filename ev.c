@@ -75,17 +75,17 @@ ev_str2cmd(struct ev *ev, char *str) {
 }
 
 /*
- * return the phase of the event within 
- * a frame:
- *	- EV_PHASE_FIRST is set if the event can be the
- * 	  first event in a sequence (example: note-on,  
- *	  bender != 0x4000)
- *	- EV_PHASE_NEXT is set if the given event can be the next
- * 	  event in a frame after a 'first event' but not the last
- * 	  one (example: key after-touch, beder != 0x4000)
- *	- EV_PHASE_LAST is set if the given event can be the last
- * 	  event in a frame (example: note-off, any unknown 
- *	  controller)
+ * return the phase of the event within a frame:
+ *
+ *    -	EV_PHASE_FIRST is set if the event can be the first event in a
+ *	sequence (example: note-on, bender != 0x4000)
+ *
+ *    -	EV_PHASE_NEXT is set if the given event can be the next event
+ *	in a frame after a 'first event' but not the last one
+ *	(example: key after-touch, beder != 0x4000)
+ *
+ *    -	EV_PHASE_LAST is set if the given event can be the last event
+ *	in a frame (example: note-off, any unknown controller)
  */
 unsigned
 ev_phase(struct ev *ev) {
@@ -259,7 +259,7 @@ evspec_dbg(struct evspec *o) {
 }
 
 /*
- * configure a controller (set the typ, name, etc...)
+ * configure a controller (set the name and default value)
  */
 void
 evctl_conf(unsigned num, char *name, unsigned defval) {
@@ -272,8 +272,8 @@ evctl_conf(unsigned num, char *name, unsigned defval) {
 }
 
 /*
- * unconfigure a controller (clear its name, set
- * its type to "unknown")
+ * unconfigure a controller (clear its name unset set its default
+ * value tu "unknown")
  */
 void
 evctl_unconf(unsigned i) {
@@ -287,8 +287,8 @@ evctl_unconf(unsigned i) {
 }
 
 /*
- * find the controller number corresponding the given
- * controller name. Return 1 if found, 0 if not
+ * find the controller number corresponding the given controller
+ * name. Return 1 if found, 0 if not
  */
 unsigned
 evctl_lookup(char *name, unsigned *ret) {
@@ -306,7 +306,7 @@ evctl_lookup(char *name, unsigned *ret) {
 }
 
 /*
- * initialise the controller table
+ * initialize the controller table
  */
 void
 evctl_init(void) {

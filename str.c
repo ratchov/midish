@@ -29,19 +29,18 @@
  */
 
 /*
- * simple string manupulation functions. A NULL pointer
- * is considered as a "non-sense" string, and cannot be used
- * with str_new() and str_delete(). Non-sense strings
- * cannot be compared and have no length
+ * simple string manupulation functions. A NULL pointer is considered
+ * as a "non-sense" string, and cannot be used with str_new() and
+ * str_delete(). Non-sense strings cannot be compared and have no
+ * length
  */
  
 #include "dbg.h"
 #include "str.h"
 
 /*
- * allocate a new string and copy the string from
- * the given argument into the allocated buffer 
- * the argument cannot be NULL.
+ * allocate a new string and copy the string from the given argument
+ * into the allocated buffer the argument cannot be NULL.
  */
 char *
 str_new(char *val) {
@@ -61,8 +60,8 @@ str_new(char *val) {
 }
 
 /*
- * free a string allocated with str_new()
- * can't be used on NULL pointer
+ * free a string allocated with str_new() can't be used on NULL
+ * pointer
  */
 void
 str_delete(char *s) {
@@ -74,8 +73,8 @@ str_delete(char *s) {
 }
 
 /*
- * print the string to stderr; can
- * be safely used even if the string is NULL
+ * print the string to stderr; can be safely used even if the string
+ * is NULL
  */
 void
 str_dbg(char *s) {
@@ -87,9 +86,8 @@ str_dbg(char *s) {
 }
 
 /*
- * return 1 if the two strings are identical
- * and 0 otherwise. Two zero-length strings are
- * considered identical.
+ * return 1 if the two strings are identical and 0 otherwise. Two
+ * zero-length strings are considered identical.
  */
 unsigned
 str_eq(char *s1, char *s2) {	

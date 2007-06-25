@@ -419,6 +419,40 @@ metro_output(struct metro *o, struct textout *f) {
 }
 
 void
+evctltab_output(struct evctl *tab, struct textout *f) {
+	unsigned i;
+	struct evctl *ctl;
+	
+	textout_putstr(f, "ctltab {\n");
+	textout_shiftright(f);
+	textout_indent(f);
+	textout_putstr(f, "#\n");
+	textout_indent(f);
+	textout_putstr(f, "# name\tnumber\tdefval\n");
+	textout_indent(f);
+	textout_putstr(f, "#\n");
+	for (i = 0; i < 128; i++) {
+		ctl = &tab[i];
+		if (ctl->name) {
+			textout_indent(f);
+			textout_putstr(f, ctl->name);
+			textout_putstr(f, "\t");
+			textout_putlong(f, i);
+			textout_putstr(f, "\t");
+			if (ctl->defval == EV_UNDEF) {
+				textout_putstr(f, "nil");
+			} else {
+				textout_putlong(f, ctl->defval);
+
+			}
+    			textout_putstr(f, "\n");
+		}
+	}
+	textout_shiftleft(f);
+	textout_putstr(f, "}\n");
+}
+
+void
 song_output(struct song *o, struct textout *f) {
 	struct songtrk *t;
 	struct songchan *i;

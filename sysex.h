@@ -33,14 +33,14 @@
 
 struct chunk {
 	struct chunk *next;
-	unsigned used;
+	unsigned used;			/* bytes used in 'data' */
 #define CHUNK_SIZE	0x100
 	unsigned char data[CHUNK_SIZE];
 };
 
 struct sysex {
 	struct sysex *next;
-	unsigned unit;
+	unsigned unit;			/* device number */
 	struct chunk *first, *last;
 };
 

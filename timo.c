@@ -31,9 +31,7 @@
 /* 
  * trivial timeouts implementation. 
  * 
- * A timeout is used to schedule the call to a routine 
- * (the callback).
- * 
+ * A timeout is used to schedule the call of a routine (the callback).
  */
 
 #include "dbg.h"
@@ -44,8 +42,8 @@ struct timo *timo_queue;
 unsigned timo_abstime;
 
 /*
- * initialise a timeout structure, arguments are 
- * callback and argument that will be passed to the callback
+ * initialise a timeout structure, arguments are callback and argument
+ * that will be passed to the callback
  */
 void
 timo_set(struct timo *o, void (*cb)(void *), void *arg) {
@@ -55,8 +53,8 @@ timo_set(struct timo *o, void (*cb)(void *), void *arg) {
 }
 
 /*
- * schedule the callback in 'delta' 24-th of microseconds. The
- * timeout must not be already scheduled
+ * schedule the callback in 'delta' 24-th of microseconds. The timeout
+ * must not be already scheduled
  */
 void
 timo_add(struct timo *o, unsigned delta) {
@@ -121,6 +119,11 @@ timo_update(unsigned delta) {
 	 * remove from the queue and run expired timeouts
 	 */
 	while (timo_queue != NULL) {
+		/* 
+		 * there is no overflow here because + and - are
+		 * modulo 2^32, they are the same for both signed and
+		 * unsigned integers
+		 */
 		diff = timo_queue->val - timo_abstime;
 		if (diff > 0)
 			break;

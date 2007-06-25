@@ -51,9 +51,9 @@ struct rule {
 #define RULE_DEVDROP	8
 	unsigned type;
 	/*
-	 * parametes of the rule not all are used by all types of rules, 
-	 * but we dont make an 'union' because some routine manipulate
-	 * multiple rules
+	 * parametes of the rule not all are used by all types of
+	 * rules, but we dont make an 'union' because ceratain
+	 * routines manipulate multiple rules
 	 */
 	unsigned idev, odev;	/* input and output devices */
 	unsigned ich, och;	/* input and output midi channels */

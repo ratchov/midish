@@ -34,9 +34,9 @@
 #include "str.h"
 
 /*
- * a name is an entry in a simple list of strings
- * the string buffer is owned by the name, so it need
- * not to be allocated if name_xxx routines are used
+ * a name is an entry in a simple list of strings the string buffer is
+ * owned by the name, so it need not to be allocated if name_xxx
+ * routines are used
  */
 struct name {
 	char *str;

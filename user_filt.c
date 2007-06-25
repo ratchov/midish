@@ -29,8 +29,8 @@
  */
 
 /*
- * implements filtxxx built-in functions
- * available through the interpreter
+ * implements filtxxx built-in functions available through the
+ * interpreter
  *
  * each function is described in the manual.html file
  */

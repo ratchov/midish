@@ -32,9 +32,8 @@
 #define MIDISH_POOL_H
 
 /*
- * entry of the pool. Any real pool entry is
- * cast to this structure by the pool code. The
- * actual size of a pool entry is in 'itemsize'
+ * entry from the pool. Any real pool entry is cast to this structure
+ * by the pool code. The actual size of a pool entry is in 'itemsize'
  * field of the pool structure
  */
 struct poolent {
@@ -42,9 +41,8 @@ struct poolent {
 };
 
 /*
- * the pool is a linked list of 'itemnum' blocks
- * of size 'itemsize'. The pool name is for
- * debugging prurposes only
+ * the pool is a linked list of 'itemnum' blocks of size
+ * 'itemsize'. The pool name is for debugging prurposes only
  */
 struct pool {
 	unsigned char *data;	/* memory block of the pool */

@@ -29,8 +29,8 @@
  */
 
 /*
- * rmidi extends mididev and implements
- * raw midi devices (ie BSD/Linux/OSS-compatible devices)
+ * rmidi extends mididev and implements raw midi devices (ie
+ * BSD/Linux/OSS-compatible devices)
  *
  * basically, this modules converts midi bytes (ie 'unsigned char') to
  * midi events (struct ev) and calls mux_xxx callbacks to handle midi
@@ -336,4 +336,3 @@ rmidi_sendraw(struct rmidi *o, unsigned char *buf, unsigned len) {
 	 */
 	o->ostatus = 0;
 }
-

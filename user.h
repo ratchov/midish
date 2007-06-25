@@ -55,7 +55,7 @@ void user_printlong(long);
 void user_error(char *);
 unsigned user_getopts(int *pargc, char ***pargv);
 
-/* useful convertion functions */
+/* useful conversion functions */
 
 unsigned exec_runfile(struct exec *exec, char *filename);
 unsigned exec_runrcfile(struct exec *exec);
@@ -71,13 +71,14 @@ unsigned exec_lookupctl(struct exec *o, char *var, unsigned *num);
 unsigned exec_lookupval(struct exec *o, char *n, unsigned isfine, unsigned *r);
 
 
-void	 data_print(struct data *d);
+void data_print(struct data *d);
 unsigned data_num2chan(struct data *o, unsigned *dev, unsigned *ch);
 unsigned data_list2chan(struct data *o, unsigned *dev, unsigned *ch);
 unsigned data_list2range(struct data *d, unsigned min, unsigned max, unsigned *lo, unsigned *hi);
 unsigned data_matchsysex(struct data *d, struct sysex *sx, unsigned *res);
 unsigned data_list2ctl(struct data *d, unsigned *num);
 unsigned data_list2ctlset(struct data *d, unsigned *res);
+unsigned data_getctl(struct data *d, unsigned *num);
 
 /* track functions */
 

@@ -33,6 +33,7 @@
 
 struct textout;
 struct ev;
+struct evctl;
 struct track;
 struct filt;
 struct rule;
@@ -50,6 +51,7 @@ void songtrk_output(struct songtrk *o, struct textout *f);
 void songchan_output(struct songchan *o, struct textout *f);
 void songfilt_output(struct songfilt *o, struct textout *f);
 void songsx_output(struct songsx *o, struct textout *f);
+void evctltab_output(struct evctl *tab, struct textout *f);
 void song_output(struct song *o, struct textout *f);
 
 void track_save(struct track *o, char *name);

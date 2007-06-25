@@ -42,7 +42,7 @@
 unsigned song_debug = 0;
 
 /*
- * allocate and initialise a song structure
+ * allocate and initialize a song structure
  */
 struct song *
 song_new(void) {
@@ -62,12 +62,15 @@ song_delete(struct song *o) {
 }
 
 /*
- * initialise the given song
+ * initialize the given song
  */
 void
 song_init(struct song *o) {
 	struct seqev *se;
-	/* song parameters */
+
+	/* 
+	 * song parameters 
+	 */
 	o->trklist = NULL;
 	o->chanlist = NULL;
 	o->filtlist = NULL;
@@ -75,16 +78,25 @@ song_init(struct song *o) {
 	o->tics_per_unit = DEFAULT_TPU;
 	track_init(&o->meta);
 	track_init(&o->rec);
-	/* runtime play record parameters */
+
+	/* 
+	 * runtime play record parameters 
+	 */
 	o->filt = NULL;
-	o->tics_per_beat = o->tics_per_unit / DEFAULT_BPM;
-	o->beats_per_measure = DEFAULT_BPM;
-	o->tempo = TEMPO_TO_USEC24(DEFAULT_TEMPO, o->tics_per_beat);
+	o->tpb = o->tics_per_unit / DEFAULT_BPM;
+	o->bpm = DEFAULT_BPM;
+	o->tempo = TEMPO_TO_USEC24(DEFAULT_TEMPO, o->tpb);
 	o->tempo_factor = 0x100;
-	/* metronome */
+
+	/* 
+	 * metronome 
+	 */
 	metro_init(&o->metro);
 	o->tic = o->beat = o->measure = 0;
-	/* defaults */
+	
+	/* 
+	 * defaults 
+	 */
 	o->curtrk = NULL;
 	o->curfilt = NULL;
 	o->cursx = NULL;
@@ -94,10 +106,13 @@ song_init(struct song *o) {
 	o->curquant = 0;
 	o->curinput_dev = 0;
 	o->curinput_ch = 0;
-	/* add default timesig/tempo so that setunit() works */
+
+	/* 
+	 * add default timesig/tempo so that setunit() works 
+	 */
 	se = seqev_new();
 	se->ev.cmd = EV_TEMPO;
-	se->ev.tempo_usec24 = TEMPO_TO_USEC24(DEFAULT_TEMPO, o->tics_per_beat);
+	se->ev.tempo_usec24 = TEMPO_TO_USEC24(DEFAULT_TEMPO, o->tpb);
 	seqev_ins(o->meta.first, se);
 	se = seqev_new();
 	se->ev.cmd = EV_TIMESIG;
@@ -463,7 +478,6 @@ song_playsysex(struct song *o) {
 	}
 }
 
-
 /*
  * play a meta event
  */
@@ -471,8 +485,8 @@ void
 song_metaput(struct song *o, struct ev *ev) {
 	switch(ev->cmd) {
 	case EV_TIMESIG:
-		o->beats_per_measure = ev->timesig_beats;
-		o->tics_per_beat = ev->timesig_tics;
+		o->bpm = ev->timesig_beats;
+		o->tpb = ev->timesig_tics;
 		break;
 	case EV_TEMPO:
 		o->tempo = ev->tempo_usec24;
@@ -484,7 +498,7 @@ song_metaput(struct song *o, struct ev *ev) {
 }
 
 /*
- * move all track pointers 1 tic forward. Return true if at least one
+ * move all track pointers 1 tick forward. Return true if at least one
  * track moved forward and 0 if no track moved forward (ie end of the
  * song was track reached)
  *
@@ -501,10 +515,10 @@ song_ticskip(struct song *o) {
 	 */
 	(void)seqptr_ticskip(&o->metaptr, 1);
 	o->tic++;
-	if (o->tic >= o->tics_per_beat) {
+	if (o->tic >= o->tpb) {
 		o->tic = 0;
 		o->beat++;
-		if (o->beat >= o->beats_per_measure) {
+		if (o->beat >= o->bpm) {
 			o->beat = 0;
 			o->measure++;
 		}
@@ -528,7 +542,7 @@ song_ticskip(struct song *o) {
 }
 
 /*
- * play the data corresponding to the current tick used by playcb and
+ * play data corresponding to the current tick used by playcb and
  * recordcb.
  */
 void
@@ -870,10 +884,10 @@ struct muxops filtops = {
 };
 
 /*
- * setup everything to start play/record: the current filter,
- * go to the current position, etc... must be called with the
- * mux initialised. The 'cb' parameter is a function that
- * will be called for each input event. 
+ * setup everything to start play/record: the current filter, go to
+ * the current position, etc... must be called with the mux
+ * initialized. The 'cb' parameter is a function that will be called
+ * for each input event.
  */
 void
 song_start(struct song *o, struct muxops *ops, unsigned countdown) {
@@ -899,8 +913,8 @@ song_start(struct song *o, struct muxops *ops, unsigned countdown) {
 	o->measure = o->curpos >= countdown ? o->curpos - countdown : 0;
 	o->beat = 0;
 	o->tic = 0;	
-	o->beats_per_measure = DEFAULT_BPM;
-	o->tics_per_beat = DEFAULT_TPB;
+	o->bpm = DEFAULT_BPM;
+	o->tpb = DEFAULT_TPB;
 	o->tempo = TEMPO_TO_USEC24(DEFAULT_TEMPO, DEFAULT_TPB);
 
 	/*
@@ -909,14 +923,14 @@ song_start(struct song *o, struct muxops *ops, unsigned countdown) {
 	 */
 	tic = track_findmeasure(&o->meta, o->measure);
 	off = o->curquant / 2;
-	if (off > o->tics_per_beat) 
-		off = o->tics_per_beat;
+	if (off > o->tpb) 
+		off = o->tpb;
 	if (off > tic)
 		off = tic;
 	if (o->measure > 0 && off > 0) {
 		tic -= off;
-		o->tic = o->tics_per_beat - off;
-		o->beat = o->beats_per_measure - 1;
+		o->tic = o->tpb - off;
+		o->beat = o->bpm - 1;
 		o->measure--;
 	}
 	
@@ -973,9 +987,8 @@ song_start(struct song *o, struct muxops *ops, unsigned countdown) {
 }
 
 /*
- * stop play/record: undo song_start and things
- * done during the play/record process. Must be called
- * with the mux initialised
+ * stop play/record: undo song_start and things done during the
+ * play/record process. Must be called with the mux initialised
  */
 void
 song_stop(struct song *o) {
@@ -1005,7 +1018,7 @@ song_stop(struct song *o) {
 }
 
 /*
- * play the song initialise the midi/timer and start the event loop
+ * play the song initialize the midi/timer and start the event loop
  */
 void
 song_play(struct song *o) {
@@ -1048,7 +1061,7 @@ song_record(struct song *o) {
 }
 
 /*
- * moves inputs events directly to the output
+ * move input events directly to the output
  */
 void
 song_idle(struct song *o) {

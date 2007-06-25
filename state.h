@@ -66,8 +66,9 @@ struct statelist {
 	/* 
 	 * instead of a simple list, we should use a hash table here,
 	 * but statistics on real-life cases seem to show that lookups
-	 * are very fast thanks to the state ordering (avg lookup
-	 * time is around 1-2 iterations)
+	 * are very fast thanks to the state ordering (average lookup
+	 * time is around 1-2 iterations for a common MIDI file), so
+	 * we keep using a simple list
 	 */
 	struct state *first;	/* head of the state list */
 	unsigned changed;	/* if changed within this tick */

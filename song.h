@@ -42,20 +42,10 @@
 #include "sysex.h"
 #include "metro.h"
 
-struct songchan {
-	struct name name;
-	struct track conf;
-	/* device and midichan of the donc chan */
-	unsigned dev, ch;
-	/* default source dev/chan */
-	unsigned curinput_dev, curinput_ch;		
-};
-
-struct songfilt {
-	struct name name;
-	struct filt filt;
-	struct songchan *curchan;
-};
+struct songtrk;
+struct songchan;
+struct songfilt;
+struct songsx;
 
 struct songtrk {
 	struct name name;		/* identifier + list entry */
@@ -65,39 +55,58 @@ struct songtrk {
 	unsigned mute;
 };
 
+struct songchan {
+	struct name name;		/* identifier + list entry */
+	struct track conf;		/* data to send on initialization */	
+	unsigned dev, ch;		/* dev/chan of the chan */
+	unsigned curinput_dev;		/* defaults for filter creation */
+	unsigned curinput_ch;
+};
+
+struct songfilt {
+	struct name name;		/* identifier + list entry */
+	struct filt filt;		/* filter rules */
+	struct songchan *curchan;	/* defaults for new rules */
+};
+
 struct songsx {
-	struct name name;
-	struct sysexlist sx;
+	struct name name;		/* identifier + list entry */
+	struct sysexlist sx;		/* list of sysex messages */
 };
 
 struct song {
-	/* music-related fields, should be saved */
-	struct track meta;			/* tempo track */
-	struct seqptr metaptr;
-	struct name *trklist;
-	struct name *chanlist;
-	struct name *filtlist;
-	struct name *sxlist;
-	unsigned tics_per_unit;			/* global time resulution */
-	/* real-time parameters */
-	unsigned long tempo;			/* 24th of usec per tic */
-	unsigned beats_per_measure, tics_per_beat;
-	unsigned tempo_factor;			/* tempo = tempo * factor / 200 */
-	struct track rec;
-	struct seqptr recptr;
-	struct filt *filt;
-	struct muxops *ops;
-	/* metronome stuff */
-	struct metro metro;
-	unsigned measure, beat, tic;
-	/* defautls */
-	struct songtrk *curtrk;
-	struct songfilt *curfilt;
-	struct songchan *curchan;
-	struct songsx *cursx;
-	unsigned curpos;
-	unsigned curquant, curlen;
-	unsigned curinput_dev, curinput_ch;		
+	/* 
+	 * music-related fields that should be saved 
+	 */
+	struct track meta;		/* tempo track */
+	struct name *trklist;		/* list of tracks */
+	struct name *chanlist;		/* list of channels */
+	struct name *filtlist;		/* list of fiters */
+	struct name *sxlist;		/* list of system exclive banks */
+	unsigned tics_per_unit;		/* number of tics in an unit note */
+	unsigned tempo_factor;		/* tempo := tempo * factor / 256 */
+	struct songtrk *curtrk;		/* default track */
+	struct songfilt *curfilt;	/* default filter */
+	struct songchan *curchan;	/* default channel */
+	struct songsx *cursx;		/* default sysex bank */
+	unsigned curpos;		/* default position (in measures) */
+	unsigned curquant;		/* default quantization step */
+	unsigned curlen;		/* selection length */
+	unsigned curinput_dev;		/* default input device */
+	unsigned curinput_ch;		/* default midi channel */
+	struct metro metro;		/* metonome conf. */
+
+	/* 
+	 * temporary variables used in real-time operations
+	 */
+	struct seqptr metaptr;		/* cur. pos in meta track */
+	unsigned long tempo;		/* cur tempo in 24th of usec per tic */
+	unsigned bpm, tpb;		/* cur time signature */
+	struct track rec;		/* track being recorded */
+	struct seqptr recptr;		/* cur position in 'rec' track */
+	struct filt *filt;		/* cur filter */
+	struct muxops *ops;		/* cur real-time operation */
+	unsigned measure, beat, tic;	/* cur position (for metronome) */
 };
 
 #define SONG_FOREACH_TRK(s, i)				\
@@ -140,7 +149,7 @@ void song_filtdel(struct song *o, struct songfilt *f);
 
 struct songsx *song_sxnew(struct song *o, char *name);
 struct songsx *song_sxlookup(struct song *o, char *name);
-void           song_sxdel(struct song *o, struct songsx *t);
+void song_sxdel(struct song *o, struct songsx *t);
 
 void song_getcursx(struct song *o, struct songsx **r);
 void song_setcursx(struct song *o, struct songsx *x);
@@ -153,18 +162,10 @@ void song_setcurchan(struct song *o, struct songchan *c);
 void song_getcurinput(struct song *o, unsigned *dev, unsigned *ch);
 void song_setcurinput(struct song *o, unsigned dev, unsigned ch);
 
-unsigned song_measuretotic(struct song *o, unsigned);
-
 void song_playconf(struct song *o);
-void song_nexttic(struct song *o);
-void song_playtic(struct song *o);
-unsigned song_finished(struct song *o);
 void song_record(struct song *o);
 void song_play(struct song *o);
 void song_idle(struct song *o);
-
-void song_rt_setup(struct song *o);
-void song_rt_seek(struct song *o, unsigned rewind);
 
 extern unsigned song_debug;
 

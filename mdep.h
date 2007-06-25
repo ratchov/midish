@@ -32,14 +32,13 @@
 #define MIDISH_MDEP_H
 
 /*
- * machine-dependent midi device structure for
- * raw (oss-like) devices
+ * machine-dependent midi device structure for raw (oss-like) devices
  */
 struct rmidi_mdep {
-	char *path;		/* path to "/dev/rmidi4" */
+	char *path;		/* path to device node (eg "/dev/rmidi4") */
 	int fd;			/* file descriptor when opened */
-	unsigned idying;	/* input no more working */
-	unsigned odying;	/* output no more working */
+	unsigned idying;	/* input is no more working */
+	unsigned odying;	/* output is no more working */
 };
 
 #endif /* MIDISH_MDEP_H */

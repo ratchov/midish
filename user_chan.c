@@ -29,8 +29,8 @@
  */
 
 /*
- * implements chanxxx built-in functions
- * available through the interpreter
+ * implements chanxxx built-in functions available through the
+ * interpreter
  *
  * each function is described in the manual.html file
  */

@@ -29,7 +29,7 @@
  */
 
 /*
- * a track (struct track *o) is a singly linked list of
+ * a track (struct track *o) is a linked list of
  * events. Each event (struct seqev) is made by 
  *	- a midi event (struct ev)
  *	- the number of tics before the event is to be played
@@ -38,20 +38,9 @@
  * after the last event (if any), there is always an end-of-track event
  * in the list.
  *
- *	- each clock tic marks the begining of a delta
- *	- each event (struct ev) is played after delta tics
+ *	- each clock tick marks the begining of a delta
+ *	- each event (struct ev) is played after delta ticks
  *
- * a seqptr represents the position of a cursor on the track In play
- * mode, the field 'o->pos' points to the event to be played. The
- * 'delta' field contains the number of tics elapsed since the last
- * played event. Thus when o->delta reaches o->pos->delta, the event
- * is to be played.
- *
- * In record mode, the field 'o->pos' points to the next event that
- * the event being recorded.
- *
- * The seqptr structure contain a cursor (a pos/delta pair) which is
- * used to walk through the track.
  */
 
 #include "dbg.h"
@@ -169,9 +158,9 @@ seqev_avail(struct seqev *pos) {
 }
 
 /*
- * insert an event (stored in an already allocated seqev
- * structure) just before the event of the given position
- * (the delta field of the given event is ignored)
+ * insert an event (stored in an already allocated seqev structure)
+ * just before the event of the given position (the delta field of the
+ * given event is ignored)
  */
 void
 seqev_ins(struct seqev *pos, struct seqev *se) {
@@ -217,7 +206,7 @@ track_numev(struct track *o) {
 }
 
 /*
- * return the number of tics in the track
+ * return the number of ticks in the track
  * ie its length (eot included, of course)
  */
 unsigned
