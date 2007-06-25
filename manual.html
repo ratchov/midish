@@ -415,7 +415,7 @@ the console).
 	devattach 1 "/dev/rmidi3" rw	# attach the keyboard as dev number 1
 	</PRE>
 	
-	the <TT>rw<TT> means that the device will be opened in
+	the <TT>rw</TT> means that the device will be opened in
 	read-write mode. 
 	The following session shows how to  record a simple track.
 	First, we define a filter  named <TT>piano</TT> that
@@ -1428,37 +1428,38 @@ the console).
 <A name="changes_03"></A><H2>13.2 Changes from release 0.2 to release 0.3</H2>
 
         <UL>
-        <LI> added <TT>tracktransp</TT> to transpose tracks
-	<LI> make rmidish run midish from the same directory where
+        <LI>added <TT>tracktransp</TT> to transpose tracks
+	<LI>make rmidish run midish from the same directory where
 	     rmidish is located.
-	<LI> now multiple bender events are gathered together. So track editing 
+	<LI>now multiple bender events are gathered together. So track editing 
 	     functions (<TT>trackcopy</TT> &amp; friends) always leave the 
 	     bender in a neutral state.
-	<LI> improved <TT>trackcheck</TT>
-	<LI> added <TT>exit</TT> keyword to exit midish
-	<LI> Added a <TT>mode</TT> argument to <TT>devattach</TT> function. 
+	<LI>improved <TT>trackcheck</TT>
+	<LI>added <TT>exit</TT> keyword to exit midish
+	<LI>Added a <TT>mode</TT> argument to <TT>devattach</TT> function. 
 	     Now devices can be used in read-only or write-only mode (allowing
 	     to use named pipes as MIDI devices).
-	<LI> added basic support for the MIDI "Active Sensing" feature
-	<LI> make metronome click audible with non-percusive patches
-	<LI> save metronome settings
-        <LI> added tempo factor: <TT>songsetfactor</TT> and <TT>songgetfactor</TT>
-	<LI> changed all track functions to gracefully handle nested notes, overlapping
+	<LI>added basic support for the MIDI "Active Sensing" feature
+	<LI>make metronome click audible with non-percusive patches
+	<LI>save metronome settings
+        <LI>added tempo factor: <TT>songsetfactor</TT> and <TT>songgetfactor</TT>
+	<LI>changed all track functions to gracefully handle nested notes, overlapping
 	     controllers/benders.
-	<LI> when entering real-time mode, midish restores states of all 
+	<LI>when entering real-time mode, midish restores states of all 
 	     controllers/benders corresponding to the current position
-	<LI> when leaving real-time mode midish releasse only notes that
+	<LI>when leaving real-time mode midish releasse only notes that
 	     are sounding and reset only controllers that are touched
 	     instead of resetting all notes/controllers. This allows
 	     midish to better share MIDI devices with other sequencers.
-	<LI> added support for 14bit controllers
-	<LI> added support for RPN/NRPN MIDI events.
-	<LI> split format 0 MIDI files into 16 tracks (one per MIDI channel)	
-	<LI> made controller interpretation in editting functions configurable: 
+	<LI>added support for 14bit controllers
+	<LI>added support for RPN/NRPN MIDI events.
+	<LI>split format 0 MIDI files into 16 tracks (one per MIDI channel)	
+	<LI>made controller interpretation in editting functions configurable: 
 		<TT>ctlconf</TT>, <TT>ctlconfx</TT>, 
 		<TT>ctlunconf</TT> and <TT>ctlinfo</TT>.
-	<LI> added per-device controller precision selection (7bit or 14bit): 
+	<LI>added per-device controller precision selection (7bit or 14bit): 
 		<TT>devixctl</TT> and <TT>devoxctl</TT>.
+	<li>added <tt>chanunconfev</tt> function to remove an event from a channel
 	</UL>
 
 <A name="attributes"></A><H1>14 Project attributes</H1>
@@ -2310,6 +2311,13 @@ the console).
         channel <TT>channelname</TT>, typically used set
         the program, volume, depth etc... The channel
         of the event is not used.
+        </BLOCKQUOTE>
+
+<A name="func_chanunconfev"></A>
+<B><TT>chanunconfev channelname evspec</TT></B>
+        <BLOCKQUOTE>
+	remove events matching <tt>evspec</tt>
+        from the configuration of the channel
         </BLOCKQUOTE>
 
 <A name="func_chaninfo"></A>
@@ -3456,7 +3464,7 @@ the console).
 <HR>
 <SMALL><EM>
 Copyright (c) 2003-2007 Alexandre Ratchov<BR>
-Last updated may 26, 2007
+Last updated jun 25, 2007
 </EM></SMALL>
 
 </BODY>
