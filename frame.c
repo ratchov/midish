@@ -153,9 +153,9 @@
 
 /*
  * TODO:
- *	- seqptr_merge1() and seqptr_merge2 are currently broken for
- *	  nrpn/rpn. They are supposed to use seqptr_restore() and
- *	  seqptr_cancel()
+ *
+ *	- seqptr_merge1() and seqptr_merge2 are supposed to use
+ *	  seqptr_restore() and seqptr_cancel()
  *
  *	- seqptr_cancel() and seqptr_restore() shouldn't
  *	  write new events if the current state is
