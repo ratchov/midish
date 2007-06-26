@@ -51,8 +51,8 @@ struct muxops {
 	void (*sysex)(void *, struct sysex *);
 };
 
-void mux_init(struct muxops *ops, void *addr);
-void mux_done(void);
+void mux_open(struct muxops *ops, void *addr);
+void mux_close(void);
 void mux_run(void);
 void mux_sleep(unsigned millisecs);
 void mux_flush(void);
@@ -65,8 +65,8 @@ void mux_chgticrate(unsigned tpu);
 void mux_startwait(void);
 void mux_stopwait(void);
 
-void mux_mdep_init(void);
-void mux_mdep_done(void);
+void mux_mdep_open(void);
+void mux_mdep_close(void);
 void mux_mdep_run(void);
 
 void mux_timercb(unsigned long delta);

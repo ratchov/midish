@@ -948,7 +948,7 @@ song_start(struct song *o, struct muxops *ops, unsigned countdown) {
 	seqptr_seek(&o->recptr, tic);
 
 	o->ops = ops;
-	mux_init(&filtops, o);
+	mux_open(&filtops, o);
 
 	/*
 	 * send sysex messages and channel config messages
@@ -1007,7 +1007,7 @@ song_stop(struct song *o) {
 		song_confcancel(&t->trackptr.statelist);
 	}
 	mux_flush();	
-	mux_done();
+	mux_close();
 
 	SONG_FOREACH_TRK(o, t) {
 		statelist_empty(&t->trackptr.statelist);

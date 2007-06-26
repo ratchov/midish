@@ -99,10 +99,8 @@ cons_mdep_done(void) {
  * open midi devices
  */
 void
-mux_mdep_init(void) {
+mux_mdep_open(void) {
 	struct sigaction sa;
-	struct mididev *i;
-	int mode;
 
 	/*
 	 * ignore SIGPIPE, because we handle write errors
@@ -112,50 +110,14 @@ mux_mdep_init(void) {
 		perror("mux_mdep_init: sigaction");
 		exit(1);
 	}
-	
-	for (i = mididev_list; i != NULL; i = i->next) {
-		if (i->mode == MIDIDEV_MODE_IN) {
-			mode = O_RDONLY;
-		} else if (i->mode == MIDIDEV_MODE_OUT) {
-			mode = O_WRONLY;
-		} else if (i->mode == (MIDIDEV_MODE_IN | MIDIDEV_MODE_OUT)) {
-			mode = O_RDWR;
-		} else {
-			dbg_puts("mux_mdep_init: not allowed mode\n");
-			dbg_panic();
-			mode = 0;
-		}
-		RMIDI(i)->mdep.fd = open(RMIDI(i)->mdep.path, mode, 0666);
-		if (RMIDI(i)->mdep.fd < 0) {
-			perror(RMIDI(i)->mdep.path);
-			RMIDI(i)->mdep.idying = 1;
-			RMIDI(i)->mdep.odying = 1;
-		} else {
-			RMIDI(i)->mdep.idying = 0;
-			RMIDI(i)->mdep.odying = 0;
-		}		
-	}
 }
 
 /*
  * close midi devices
  */
 void
-mux_mdep_done(void) {
+mux_mdep_close(void) {
 	struct sigaction sa;
-	struct mididev *i;
-
-	for (i = mididev_list; i != NULL; i = i->next) {
-		if (RMIDI(i)->mdep.fd < 0) {
-			continue;
-		}
-		while(close(RMIDI(i)->mdep.fd) < 0) {
-			if (errno != EINTR) {
-				perror(RMIDI(i)->mdep.path);
-				break;
-			}
-		}
-	}
 
 	sa.sa_handler = SIG_DFL;
 	if (sigaction(SIGPIPE, &sa, NULL) < 0) {
@@ -262,12 +224,52 @@ mux_sleep(unsigned millisecs) {
 	}
 }
 
+/*
+ * open an already initialized midi device
+ */
 void
-rmidi_mdep_init(struct rmidi *o) {
+rmidi_open(struct rmidi *o) {
+	int mode;
+
+	if (o->mididev.mode == MIDIDEV_MODE_IN) {
+		mode = O_RDONLY;
+	} else if (o->mididev.mode == MIDIDEV_MODE_OUT) {
+		mode = O_WRONLY;
+	} else if (o->mididev.mode == (MIDIDEV_MODE_IN | MIDIDEV_MODE_OUT)) {
+		mode = O_RDWR;
+	} else {
+		dbg_puts("rmidi_open: not allowed mode\n");
+		dbg_panic();
+		mode = 0;
+	}
+	o->mdep.fd = open(o->mdep.path, mode, 0666);
+	if (o->mdep.fd < 0) {
+		perror(o->mdep.path);
+		o->mdep.idying = 1;
+		o->mdep.odying = 1;
+		return;
+	}
+	o->mdep.idying = 0;
+	o->mdep.odying = 0;
+	o->oused = 0;
+	o->istatus = o->ostatus = 0;
+	o->isysex = NULL;
 }
 
+/*
+ * close the given midi device
+ */
 void
-rmidi_mdep_done(struct rmidi *o) {
+rmidi_close(struct rmidi *o) {
+	if (o->mdep.fd < 0) {
+		return;
+	}
+	while(close(o->mdep.fd) < 0) {
+		if (errno != EINTR) {
+			perror(o->mdep.path);
+			break;
+		}
+	}
 }
 
 /*

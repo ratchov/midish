@@ -112,7 +112,7 @@ void mux_dbgphase(unsigned phase);
 void mux_chgphase(unsigned phase);
 
 void
-mux_init(struct muxops *ops, void *addr) {
+mux_open(struct muxops *ops, void *addr) {
 	struct mididev *i;
 
 	statelist_init(&mux_istate);
@@ -132,10 +132,12 @@ mux_init(struct muxops *ops, void *addr) {
 	/*
 	 * reset tic counters of devices 
 	 */
+	mux_mdep_open();
 	for (i = mididev_list; i != NULL; i = i->next) {
 		i->ticdelta = i->ticrate;
 		i->isensto = 0;
 		i->osensto = MIDIDEV_OSENSTO;
+		rmidi_open(RMIDI(i));
 	}
 
 	mux_curpos = 0;
@@ -144,20 +146,21 @@ mux_init(struct muxops *ops, void *addr) {
 	mux_ops = ops;
 	mux_addr = addr;
 	timo_init();
-	mux_mdep_init();
 }
 
 void
-mux_done(void) {
+mux_close(void) {
 	struct mididev *i;
+
 	mux_flush();
 	for (i = mididev_list; i != NULL; i = i->next) {
 		if (RMIDI(i)->isysex) {
 			dbg_puts("lost incomplete sysex\n");
 			sysex_del(RMIDI(i)->isysex);
 		}
+		rmidi_close(RMIDI(i));
 	}
-	mux_mdep_done();
+	mux_mdep_close();
 	timo_done();
 	statelist_done(&mux_ostate);
 	statelist_done(&mux_istate);

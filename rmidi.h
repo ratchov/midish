@@ -68,9 +68,8 @@ void rmidi_puttic(struct rmidi *);
 void rmidi_putack(struct rmidi *);
 void rmidi_putev(struct rmidi *, struct ev *);
 void rmidi_sendraw(struct rmidi *, unsigned char *, unsigned);
-
-void rmidi_mdep_init(struct rmidi *);
-void rmidi_mdep_done(struct rmidi *);
+void rmidi_open(struct rmidi *);
+void rmidi_close(struct rmidi *);
 
 void rmidi_inputcb(struct rmidi *, unsigned char *, unsigned);
 

@@ -93,7 +93,6 @@ rmidi_init(struct rmidi *o, unsigned mode) {
 	o->istatus = o->ostatus = 0;
 	o->isysex = NULL;
 	mididev_init(&o->mididev, mode);
-	rmidi_mdep_init(o);
 }
 
 void 
@@ -101,7 +100,6 @@ rmidi_done(struct rmidi *o) {
 	if (o->oused != 0) {
 		dbg_puts("rmidi_done: output buffer is not empty, continuing...\n");
 	}
-	rmidi_mdep_done(o);
 	mididev_done(&o->mididev);
 }
 
