@@ -43,14 +43,41 @@
 struct ev;
 struct sysex;
 
+/*
+ * lists of call-backs the user provides to handle events, they are
+ * called in the event loop while mux_run() is looping
+ */
 struct muxops {
+	/*
+	 * called when the very first clock tick arrived
+	 */
 	void (*start)(void *);
+
+	/*
+	 * called at the end of the event loop
+	 */
 	void (*stop)(void *);
+
+	/*
+	 * called when the clock moved one tick forward
+	 */
 	void (*move)(void *);
+
+	/*
+	 * called when an event was received
+	 */
 	void (*ev)(void *, struct ev *);
+
+	/*
+	 * called when a sysex message was received
+	 */
 	void (*sysex)(void *, struct sysex *);
 };
 
+/*
+ * public functions usable the rest of the code to send/receive events
+ * and to manipulate the clock
+ */
 void mux_open(struct muxops *ops, void *addr);
 void mux_close(void);
 void mux_run(void);
@@ -65,10 +92,9 @@ void mux_chgticrate(unsigned tpu);
 void mux_startwait(void);
 void mux_stopwait(void);
 
-void mux_mdep_open(void);
-void mux_mdep_close(void);
-void mux_mdep_run(void);
-
+/*
+ * call-backs called by midi device drivers
+ */
 void mux_timercb(unsigned long delta);
 void mux_startcb(unsigned unit);
 void mux_stopcb(unsigned unit);
@@ -77,7 +103,5 @@ void mux_ackcb(unsigned unit);
 void mux_evcb(unsigned, struct ev *ev);
 void mux_sysexcb(unsigned unit, struct sysex *);
 void mux_errorcb(unsigned unit);
-
-extern unsigned mux_ticsperunit;
 
 #endif /* MIDISH_MUX_H */

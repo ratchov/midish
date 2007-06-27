@@ -100,7 +100,6 @@ void	      statelist_add(struct statelist *o, struct state *st);
 void	      statelist_rm(struct statelist *o, struct state *st);
 struct state *statelist_lookup(struct statelist *o, struct ev *ev);
 struct state *statelist_update(struct statelist *statelist, struct ev *ev);
-struct state *statelist_uniq(struct statelist *slist, struct ev *ev);
 void	      statelist_outdate(struct statelist *o);
 
 #endif /* MIDISH_STATE_H */

@@ -821,11 +821,6 @@ song_filt_stop(void *addr) {
 void
 song_filt_move(void *addr) {
 	struct song *o = (struct song *)addr;
-	/*
-	  if (o->filt && ev->cmd == EV_TIC) {
-	  filt_timercb(o->filt);
-	  }
-	*/
 	o->ops->move(addr);
 }
 
@@ -1085,4 +1080,3 @@ song_idle(struct song *o) {
 	mux_run();	
 	song_stop(o);
 }
-

@@ -32,8 +32,9 @@
  * mididev is a generic midi device structure it doesn't contain any
  * device-specific fields and shoud be extended by other structures
  *
- * this module also, manages a global list of generic
- * midi devices
+ * this module also, manages a global table of generic midi
+ * devices. The table is indexed by the device "unit" number, the
+ * same that is stored in the event structure
  */
 
 #include "dbg.h"
@@ -43,13 +44,14 @@
 #include "name.h"
 #include "rmidi.h"
 #include "pool.h"
-
 #include "cons.h"
 
-/* -------------------------------------------- device management --- */
+struct mididev *mididev_list, *mididev_master;
+struct mididev *mididev_byunit[DEFAULT_MAXNDEVS];
 
-unsigned mididev_ticrate;	/* global tics per unit */
-
+/*
+ * initialize the device independent part of the device structure
+ */
 void
 mididev_init(struct mididev *o, unsigned mode) {
 	/* 
@@ -64,15 +66,17 @@ mididev_init(struct mididev *o, unsigned mode) {
 	o->oxctlset = 0;
 }
 
+/*
+ * release the device independent part of the device structure: for
+ * future use
+ */
 void
 mididev_done(struct mididev *o) {
 }
 
-/* -------------------------------------------- device list stuff --- */
-
-struct mididev *mididev_list, *mididev_master;
-struct mididev *mididev_byunit[DEFAULT_MAXNDEVS];
-
+/*
+ * initialize the device table
+ */
 void
 mididev_listinit(void) {
 	unsigned i;
@@ -83,6 +87,9 @@ mididev_listinit(void) {
 	mididev_master = NULL;	/* no master, use internal clock */
 }
 
+/*
+ * unregister all entries of the device table
+ */
 void
 mididev_listdone(void) {
 	unsigned i;
@@ -99,6 +106,9 @@ mididev_listdone(void) {
 	mididev_list = NULL;
 }
 
+/*
+ * register a new device number (ie "unit")
+ */
 unsigned
 mididev_attach(unsigned unit, char *path, unsigned mode) {
 	struct mididev *dev;
@@ -120,6 +130,9 @@ mididev_attach(unsigned unit, char *path, unsigned mode) {
 	return 1;
 }
 
+/*
+ * unregister the given device number
+ */
 unsigned
 mididev_detach(unsigned unit) {
 	struct mididev **i, *dev;

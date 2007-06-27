@@ -32,7 +32,6 @@
 #define MIDISH_TRACK_H
 
 #include "ev.h"
-#include "state.h"
 
 struct seqev {
 	unsigned delta;
@@ -51,8 +50,6 @@ struct seqev *seqev_new(void);
 void	      seqev_del(struct seqev *p);	
 void	      seqev_dump(struct seqev *i);
 
-struct track *track_new(void);
-void	      track_delete(struct track *o);
 void	      track_init(struct track *o);
 void	      track_done(struct track *o);
 void	      track_dump(struct track *o);
@@ -69,6 +66,5 @@ void	      seqev_rm(struct seqev *pos);
 
 void	      track_setchan(struct track *src, unsigned dev, unsigned ch);
 void	      track_chanmap(struct track *o, char *map);
-
 
 #endif /* MIDISH_TRACK_H */

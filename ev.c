@@ -50,6 +50,9 @@ char *evspec_cmdstr[] = {
 
 struct evctl evctl_tab[128];
 
+/*
+ * return the 'name' of the given event
+ */
 char *
 ev_getstr(struct ev *ev) {
 	if (ev->cmd >= EV_NUMCMD) {
@@ -62,6 +65,9 @@ ev_getstr(struct ev *ev) {
 	return ev_cmdstr[ev->cmd];
 }
 
+/*
+ * find the event EV_XXX constant corresponding to the given string
+ */
 unsigned
 ev_str2cmd(struct ev *ev, char *str) {
 	unsigned i;
@@ -133,6 +139,9 @@ ev_phase(struct ev *ev) {
 	return phase;
 }
 
+/*
+ * dump the event structure on stderr, for debug purposes
+ */
 void
 ev_dbg(struct ev *ev) {
 	char *cmdstr;
@@ -185,10 +194,10 @@ ev_dbg(struct ev *ev) {
 	}
 }
 
-
-/* ------------------------------------------------------------------ */
-
-
+/*
+ * find the EVSPEC_XXX constant corresponding to
+ * the given string
+ */
 unsigned
 evspec_str2cmd(struct evspec *ev, char *str) {
 	unsigned i;
@@ -202,6 +211,9 @@ evspec_str2cmd(struct evspec *ev, char *str) {
 	return 0;
 }
 
+/*
+ * reset the evspec structure with "select any event"
+ */
 void
 evspec_reset(struct evspec *o) {
 	o->cmd = EVSPEC_ANY;
@@ -215,6 +227,9 @@ evspec_reset(struct evspec *o) {
 	o->b1_max  = EV_MAXFINE;
 }
 
+/*
+ * dump the event structure on stderr (debug purposes)
+ */
 void
 evspec_dbg(struct evspec *o) {
 	unsigned i;
@@ -338,7 +353,6 @@ evctl_done(void) {
 		}
 	}
 }
-
 
 /*
  * return 1 if the controller is reserved

@@ -31,7 +31,21 @@
 /* 
  * trivial timeouts implementation. 
  * 
- * A timeout is used to schedule the call of a routine (the callback).
+ * A timeout is used to schedule the call of a routine (the callback)
+ * there is a global list of timeouts that is processed inside the
+ * event loop ie mux_run(). Timeouts work as follows:
+ *
+ *	first the timo structure must be initialized with timo_set()
+ *
+ *	then the timeout is scheduled (only once) with timo_add()
+ *
+ *	if the timeout expires, the call-back is called; then it can
+ *	be scheduled again if needed. It's OK to reschedule it again
+ *	from the callback
+ *
+ *	the timeout can be aborted with timo_del(), it is OK to try to
+ *	abort a timout that has expired
+ *
  */
 
 #include "dbg.h"

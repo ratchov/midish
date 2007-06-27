@@ -85,8 +85,6 @@ sysex_pool_done(void) {
 	pool_done(&sysex_pool);
 }
 
-/* --------------------------------------------- sysex management --- */
-
 /*
  * create an empty sysex message
  */

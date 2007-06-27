@@ -108,9 +108,19 @@ void *mux_addr;
 
 struct statelist mux_istate, mux_ostate;
 
+/*
+ * the following are defined in mdep.c
+ */
+void mux_mdep_open(void);
+void mux_mdep_close(void);
+void mux_mdep_run(void);
+
 void mux_dbgphase(unsigned phase);
 void mux_chgphase(unsigned phase);
 
+/*
+ * initialize all structures and open all midi devices
+ */
 void
 mux_open(struct muxops *ops, void *addr) {
 	struct mididev *i;
@@ -148,6 +158,9 @@ mux_open(struct muxops *ops, void *addr) {
 	timo_init();
 }
 
+/*
+ * release all structures and close midi devices
+ */
 void
 mux_close(void) {
 	struct mididev *i;
@@ -195,6 +208,9 @@ mux_dbgphase(unsigned phase) {
 }
 #endif
 
+/*
+ * change the current phase
+ */
 void
 mux_chgphase(unsigned phase) {
 #ifdef MUX_DEBUG
@@ -261,6 +277,10 @@ mux_sendstop(void) {
 	}
 }
 
+/*
+ * send the given voice event to the appropriate device, no
+ * other routines should be used to send events
+ */
 void
 mux_putev(struct ev *ev) {
 	unsigned unit;
@@ -292,6 +312,10 @@ mux_putev(struct ev *ev) {
 	}
 }
 
+/*
+ * send bytes to the given device, typically used to send
+ * sysex messages
+ */
 void
 mux_sendraw(unsigned unit, unsigned char *buf, unsigned len) {
 	struct mididev *dev;
@@ -308,6 +332,10 @@ mux_sendraw(unsigned unit, unsigned char *buf, unsigned len) {
 	rmidi_sendraw(RMIDI(dev), buf, len);
 }
 
+/*
+ * call-back called every time the clock changed, the argument
+ * contains the number of 24th of seconds elapsed since the last call
+ */
 void
 mux_timercb(unsigned long delta) {
 	struct mididev *dev;
@@ -392,7 +420,7 @@ mux_timercb(unsigned long delta) {
 }
 
 /*
- * called when a MIDI TICK is received
+ * called when a MIDI TICK is received from an external device
  */
 void
 mux_ticcb(unsigned unit) {
@@ -421,7 +449,7 @@ mux_ticcb(unsigned unit) {
 }
 
 /*
- * called when a MIDI START event is received
+ * called when a MIDI START event is received from an external device
  */
 void
 mux_startcb(unsigned unit) {
@@ -437,7 +465,7 @@ mux_startcb(unsigned unit) {
 }
 
 /*
- * called when a MIDI STOP event is received
+ * called when a MIDI STOP event is received from an external device
  */
 void
 mux_stopcb(unsigned unit) {
@@ -454,7 +482,7 @@ mux_stopcb(unsigned unit) {
 }
 
 /*
- * called when a MIDI Active-sensing is received
+ * called when a MIDI Active-sensing is received from an external device
  */
 void
 mux_ackcb(unsigned unit) {
@@ -468,7 +496,7 @@ mux_ackcb(unsigned unit) {
 }
 
 /*
- * called when a MIDI voice event is received
+ * called when a MIDI voice event is received from an external device
  */
 void
 mux_evcb(unsigned unit, struct ev *ev) {
@@ -517,6 +545,10 @@ mux_errorcb(unsigned unit) {
 	mux_flush();
 }
 
+/*
+ * loops forever (actually until interrupt is received) and process
+ * all events
+ */
 void
 mux_run(void) {
 	mux_mdep_run();
@@ -533,16 +565,16 @@ mux_run(void) {
 
 
 /*
- * called when an sysex has been received
+ * called when an sysex has been received from an external device
  */
 void
 mux_sysexcb(unsigned unit, struct sysex *sysex) {
 	mux_ops->sysex(mux_addr, sysex);
 }
 
-
-/* -------------------------------------- user "public" functions --- */
-
+/*
+ * flush all devices
+ */
 void
 mux_flush(void) {
 	struct mididev *dev;
@@ -551,11 +583,18 @@ mux_flush(void) {
 	}
 }
 
+/*
+ * return the current phase
+ */
 unsigned
 mux_getphase(void) {
 	return mux_phase;
 }
 
+/*
+ * change the tempo, the argument is tic length in 24th of
+ * microseconds
+ */
 void
 mux_chgtempo(unsigned long ticlength) {
 	if (mux_phase == MUX_FIRST || mux_phase == MUX_NEXT) {
@@ -565,16 +604,28 @@ mux_chgtempo(unsigned long ticlength) {
 	mux_ticlength = ticlength;
 }
 
+/*
+ * change the number of ticks per unit note; that's used to know for
+ * instance that 1 of "our"ticks equals 2 ticks on that device...
+ */
 void
 mux_chgticrate(unsigned tpu) {
 	mux_ticrate = tpu;
 }
 
+/*
+ * start waiting for a MIDI START event (or start immediately if
+ * we're the clock master)
+ */
 void
 mux_startwait(void) {
 	mux_chgphase(MUX_STARTWAIT);
 }
 
+/*
+ * start waiting for a MIDI STOP event (or stop immediately if we're
+ * the clock master)
+ */
 void
 mux_stopwait(void) {
 	mux_chgphase(MUX_STOPWAIT);

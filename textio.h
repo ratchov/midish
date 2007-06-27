@@ -40,7 +40,6 @@ struct textin *textin_new(char *filename);
 void textin_delete(struct textin *o);
 unsigned textin_getchar(struct textin *o, int *c);
 void textin_getpos(struct textin *o, unsigned *line, unsigned *col);
-void textin_setprompt(struct textin *o, char *prompt);
 
 struct textout *textout_new(char *filename);
 void textout_delete(struct textout *o);
