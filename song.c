@@ -993,6 +993,8 @@ song_start(struct song *o, struct muxops *ops, unsigned countdown) {
 void
 song_stop(struct song *o) {
 	struct songtrk *t;
+	struct state *st;
+	struct ev ev;
 
 	if (o->filt) {
 		filt_shut(o->filt);
@@ -1012,6 +1014,16 @@ song_stop(struct song *o) {
 	SONG_FOREACH_TRK(o, t) {
 		statelist_empty(&t->trackptr.statelist);
 		seqptr_done(&t->trackptr);
+	}
+
+	/*
+	 * if there is no filter for recording there may be
+	 * unterminated frames, so finalize them.
+	 */
+	for (st = o->recptr.statelist.first; st != NULL; st = st->next) {
+		if (!(st->phase & EV_PHASE_LAST) && state_cancel(st, &ev)) {
+			seqptr_evput(&o->recptr, &ev);
+		}
 	}
 	seqptr_done(&o->recptr);
 	seqptr_done(&o->metaptr);
