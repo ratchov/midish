@@ -227,6 +227,8 @@ unsigned user_func_debug(struct exec *o, struct data **r);
 unsigned user_func_exec(struct exec *o, struct data **r);
 unsigned user_func_print(struct exec *o, struct data **r);
 unsigned user_func_info(struct exec *o, struct data **r);
+unsigned user_func_proclist(struct exec *o, struct data **r);
+unsigned user_func_builtinlist(struct exec *o, struct data **r);
 
 unsigned user_func_ctlconf(struct exec *o, struct data **r);
 unsigned user_func_ctlconfx(struct exec *o, struct data **r);

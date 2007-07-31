@@ -897,6 +897,38 @@ user_func_sendraw(struct exec *o, struct data **r) {
 }
 
 unsigned
+user_func_proclist(struct exec *o, struct data **r) {
+	struct proc *i;
+	struct data *d, *n;
+
+	d = data_newlist(NULL);
+	PROC_FOREACH(i, o->procs) {
+		if (i->code->vmt == &node_vmt_slist) {
+			n = data_newref(i->name.str);
+			data_listadd(d, n);
+		}
+	}
+	*r = d;
+	return 1;
+}
+
+unsigned
+user_func_builtinlist(struct exec *o, struct data **r) {
+	struct proc *i;
+	struct data *d, *n;
+
+	d = data_newlist(NULL);
+	PROC_FOREACH(i, o->procs) {
+		if (i->code->vmt == &node_vmt_builtin) {
+			n = data_newref(i->name.str);
+			data_listadd(d, n);
+		}
+	}
+	*r = d;
+	return 1;
+}
+
+unsigned
 user_mainloop(void) {
 	struct parse *parse;
 	struct exec *exec;
@@ -1250,6 +1282,8 @@ user_mainloop(void) {
 	exec_newbuiltin(exec, "sendraw", user_func_sendraw, 
 			name_newarg("device", 
 			name_newarg("list", NULL)));
+	exec_newbuiltin(exec, "proclist", user_func_proclist, NULL);
+	exec_newbuiltin(exec, "builtinlist", user_func_builtinlist, NULL);
 
 	exec_newbuiltin(exec, "devattach", user_func_devattach,
 			name_newarg("unit", 
