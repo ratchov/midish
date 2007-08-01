@@ -74,6 +74,7 @@ void
 timo_add(struct timo *o, unsigned delta) {
 	struct timo **i;
 	unsigned val;
+	int diff;
 
 #ifdef TIMO_DEBUG
 	if (o->set) {
@@ -86,8 +87,12 @@ timo_add(struct timo *o, unsigned delta) {
 	}
 #endif
 	val = timo_abstime + delta;
-	for (i = &timo_queue; *i != NULL && (*i)->val <= val; i = &(*i)->next)
-		; /* nothing */
+	for (i = &timo_queue; *i != NULL; i = &(*i)->next) {
+		diff = (*i)->val - val;
+		if (diff > 0) {
+			break;
+		}
+	}
 	o->set = 1;
 	o->val = val;
 	o->next = *i;
