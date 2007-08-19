@@ -81,7 +81,7 @@
 	<LI><A href="#section_6_1">6.1 Recording a track without a filter</A>
 	<LI><A href="#section_6_2">6.2 Recording a track with a filter</A>
 	<LI><A href="#section_6_3">6.3 Basic editing of a track</A>
-	<LI><A href="#section_6_4">6.4 Track quantisation</A>
+	<LI><A href="#section_6_4">6.4 Track quantization</A>
 	<LI><A href="#section_6_5">6.5 Checking a track</A>
 	</UL>
 	<LI><A href="#frames">7 Frames, more about filtering and editing</A>
@@ -144,6 +144,7 @@
 	<LI><A href="#section_19_1">19.1 Example - MIDI filtering</A>
 	<LI><A href="#section_19_2">19.2 Example - recording a track</A>
 	</UL>
+	<LI><A href="#section_20">20 Thanks</A>
 	</UL>
 <!-- toc_end -->
 
@@ -163,9 +164,9 @@
         <LI>    real-time MIDI filtering/routing (controller mapping, keyboard splitting, ...)
         <LI>    track recording, metronome
         <LI>    track editing (insert, copy, delete, ...)
-        <LI>    progressive track quantisation
+        <LI>    progressive track quantization
         <LI>    multiple MIDI devices handling
-        <LI>    synchronisation to external MIDI devices
+        <LI>    synchronization to external MIDI devices
         <LI>    import and export of standard MIDI files
         <LI>    tempo and time-signature changes
         <LI>    system exclusive messages handling
@@ -292,7 +293,7 @@ Midish uses the following objects to represent a project:
 
 <LI><B>Filters:</B><BR>
         a filter is a set of rules that says which MIDI event to discard
-        and how to transform incoming events. The filter also "sanitises" the
+        and how to transform incoming events. The filter also "sanitizes" the
         input MIDI stream by removing nested notes, duplicate controllers and
         other anomalies. 
 
@@ -558,7 +559,7 @@ the console).
         <P> 
         Midish supports MIDI filtering: a <I>filter</I> 
         transforms incoming MIDI events and send them to the
-        output. The filter also "sanitises" the input MIDI stream
+        output. The filter also "sanitizes" the input MIDI stream
         by removing nested notes, duplicate controllers and other
         anomalies.
 
@@ -594,7 +595,7 @@ the console).
                 and aftertouch events are removed. 
                 Zero-length notes are lengthened to one "tick".
                 The rate of controller, bender and aftertouch events is 
-                normalised in order not to flood output devices.
+                normalized in order not to flood output devices.
 
         <LI>    The input event is checked against all <I>voice rules</I>
                 and the resulting events (if any) are sent to the output of
@@ -620,7 +621,7 @@ the console).
         </OL>
 
         <P>
-        The following diagram summarises the event path through the filter:
+        The following diagram summarizes the event path through the filter:
         <PRE>
                 +------------+  
                 |   voice    | match
@@ -925,7 +926,7 @@ the console).
         before being removed.
         This is useful, because often recorded notes
         doesn't start exactly on the measure boundary. The precision
-        argument makes possible to edit a track that is not quantised.
+        argument makes possible to edit a track that is not quantized.
         The latest argument (empty list) selects the events to be 
         deleted (see section <A href="#ev_evspec">event ranges</A>).
 
@@ -957,18 +958,18 @@ the console).
         copied (see section <A href="#ev_evspec">event ranges</A>).
         
 
-<A name="section_6_4"></A><H2>6.4 Track quantisation</H2>
+<A name="section_6_4"></A><H2>6.4 Track quantization</H2>
 
-        A track can be quantised by rounding note-positions
+        A track can be quantized by rounding note-positions
         to the nearest exact position. The following
-        will quantise 4 measures starting at measure number
+        will quantize 4 measures starting at measure number
         3 by rounding notes to the nearest quarter note.
         <PRE>
         trackquant mypiano 3 4 (96 / 4) 75
         </PRE>
-        The last arguments gives the percent of quantisation.
-        100% means full quantisation and 0% leans no
-        quantisation at all. This is useful because full quantisation
+        The last arguments gives the percent of quantization.
+        100% means full quantization and 0% leans no
+        quantization at all. This is useful because full quantization
         often sound to regular especially on acoustic patches.
         
 
@@ -1124,7 +1125,7 @@ the console).
         </PRE>
         Sysex messages can be recorded from
         MIDI devices, this is useful to save "bulk dumps"
-        from synthesisers. Sysex messages are automatically
+        from synthesizers. Sysex messages are automatically
         recorded on the <I>current bank</I>. So, to record
         a sysex:
         <PRE>
@@ -1373,7 +1374,7 @@ the console).
                 <TT>filtnoctlmap</TT>,
                 <TT>filtnokeydrop</TT> and
                 <TT>filtnokeymap</TT>.
-        <LI> added support for external MIDI synchronisation,
+        <LI> added support for external MIDI synchronization,
              added <TT>devsetmaster</TT>, <TT>devgetmaster</TT>
              and <TT>devsendrt</TT>
         <LI> added 
@@ -1441,21 +1442,21 @@ the console).
 	     Now devices can be used in read-only or write-only mode (allowing
 	     to use named pipes as MIDI devices).
 	<LI>added basic support for the MIDI "Active Sensing" feature
-	<LI>make metronome click audible with non-percusive patches
+	<LI>make metronome click audible with non-percussive patches
 	<LI>save metronome settings
         <LI>added tempo factor: <TT>songsetfactor</TT> and <TT>songgetfactor</TT>
 	<LI>changed all track functions to gracefully handle nested notes, overlapping
 	     controllers/benders.
 	<LI>when entering real-time mode, midish restores states of all 
 	     controllers/benders corresponding to the current position
-	<LI>when leaving real-time mode midish releasse only notes that
+	<LI>when leaving real-time mode midish release only notes that
 	     are sounding and reset only controllers that are touched
 	     instead of resetting all notes/controllers. This allows
 	     midish to better share MIDI devices with other sequencers.
 	<LI>added support for 14bit controllers
 	<LI>added support for RPN/NRPN MIDI events.
 	<LI>split format 0 MIDI files into 16 tracks (one per MIDI channel)	
-	<LI>made controller interpretation in editting functions configurable: 
+	<LI>made controller interpretation in editing functions configurable: 
 		<TT>ctlconf</TT>, <TT>ctlconfx</TT>, 
 		<TT>ctlunconf</TT> and <TT>ctlinfo</TT>.
 	<LI>added per-device controller precision selection (7bit or 14bit): 
@@ -1467,12 +1468,12 @@ the console).
 
 <A name="section_14_1"></A><H2>14.1 Device attributes</H2>
 
-	The following table summarises the device attributes:
+	The following table summarizes the device attributes:
 	
 	<P align="center">
 	<TABLE border="1">
 	<TR>
-	<TH>attrubute
+	<TH>attribute
 	<TH>description
 	<TR>
 	<TD>unit number
@@ -1498,12 +1499,12 @@ the console).
 
 <A name="section_14_2"></A><H2>14.2 Channel attributes</H2>
 
-	The following table summarises the channel attributes:
+	The following table summarizes the channel attributes:
 	
 	<P align="center">
 	<TABLE border="1">
 	<TR>
-	<TH>attrubute
+	<TH>attribute
 	<TH>description
 	<TR>
 	<TD>name
@@ -1525,16 +1526,16 @@ the console).
 
 <A name="section_14_3"></A><H2>14.3 Filter attributes</H2>
 
-	The following table summarises the filter attributes:
+	The following table summarizes the filter attributes:
 	
 	<P align="center">
 	<TABLE border="1">
 	<TR>
-	<TH>attrubute
+	<TH>attribute
 	<TH>description
 	<TR>
 	<TD>name
-	<TD>identifier used to reference the fitler
+	<TD>identifier used to reference the filter
 	<TR>
 	<TD>rules set
 	<TD>set of rules that handle MIDI events
@@ -1548,12 +1549,12 @@ the console).
 
 <A name="section_14_4"></A><H2>14.4 Track attributes</H2>
 
-	The following table summarises the track attributes:
+	The following table summarizes the track attributes:
 	
 	<P align="center">
 	<TABLE border="1">
 	<TR>
-	<TH>attrubute
+	<TH>attribute
 	<TH>description
 	<TR>
 	<TD>name
@@ -1565,18 +1566,18 @@ the console).
 	<TD>current filter
 	<TD>default filter. The track is recorded
 		with this filter. If there is no current filter, 
-		then is is recorded with the song's default fitler.
+		then is is recorded with the song's default filter.
 	</TABLE>
 
 
 <A name="section_14_5"></A><H2>14.5 Sysex attributes</H2>
 
-	The following table summarises the sysex back attributes:
+	The following table summarizes the sysex back attributes:
 	
 	<P align="center">
 	<TABLE border="1">
 	<TR>
-	<TH>attrubute
+	<TH>attribute
 	<TH>description
 	<TR>
 	<TD>name
@@ -1590,12 +1591,12 @@ the console).
 
 <A name="section_14_6"></A><H2>14.6 Song attributes</H2>
 
-	The following table summarises the song attributes:
+	The following table summarizes the song attributes:
 	
 	<P align="center">
 	<TABLE border="1">
 	<TR>
-	<TH>attrubute
+	<TH>attribute
 	<TH>description
 	<TR>
 	<TD>meta track
@@ -1613,11 +1614,11 @@ the console).
 	<TD>if the metronome = true, then the metronome is audible
 	<TR>
 	<TD>metro_hi
-	<TD>a note-on event that is sent on the begining of every measure
+	<TD>a note-on event that is sent on the beginning of every measure
 		if the metronome is enabled
 	<TR>
 	<TD>metro_lo
-	<TD>a note-on event that is sent on the begining of every beat
+	<TD>a note-on event that is sent on the beginning of every beat
 		if the metronome is enabled
 	<TR>
 	<TD>curtrack
@@ -1625,7 +1626,7 @@ the console).
 	<TR>
 	<TD>curfilt
 	<TD>default filter. The filter with which the 
-		default trach is recorded if it hasn't its 
+		default track is recorded if it hasn't its 
 		default filter.
 	<TR>
 	<TD>curchan
@@ -1645,7 +1646,7 @@ the console).
 		editing functions.
 	<TR>
 	<TD>curquant
-	<TD>current quatisation step in ticks. 
+	<TD>current quantization step in ticks. 
 		This value isn't used in real-time, 
 		however it can be used as default value for
 		the track editing functions
@@ -1953,7 +1954,7 @@ the console).
         print $i                # prints the value of i
         </PRE>
 
-        The following operators are recognised:
+        The following operators are recognized:
 
         <P align="center">
         <TABLE border="1">
@@ -2019,7 +2020,7 @@ the console).
 
         <TR>    <TD><TT>==</TT>
                 <TD>equal
-                <TD rowspan="2">left to righ
+                <TD rowspan="2">left to right
 
         <TR>    <TD><TT>!=</TT>
                 <TD>not equal
@@ -2209,12 +2210,12 @@ the console).
 <A name="func_trackquant"></A>
 <B><TT>trackquant trackname from amount rate quantum</TT></B>
         <BLOCKQUOTE>
-        quantise <TT>amount</TT> measures of the track
+        quantize <TT>amount</TT> measures of the track
         <TT>trackname</TT> from measure <TT>from</TT>. Note positions
 	are rounded to the nearest tick multiple of the <TT>quantum</TT>
         argument; the later must be larger than 4 ticks.
 	Rate must be between 0 and 100: 0 means no
-        quantisation and 100 means full quantisation.
+        quantization and 100 means full quantization.
         </BLOCKQUOTE>
 
 <A name="func_tracktransp"></A>
@@ -2707,7 +2708,7 @@ the console).
 <B><TT>songsetcurquant ticks</TT></B>
         <BLOCKQUOTE>
         set the number of ticks in the time scale 
-        (for quantisation, track editing...). 
+        (for quantization, track editing...). 
         Currently this value is not used in real-time.
         </BLOCKQUOTE>
 
@@ -2724,7 +2725,7 @@ the console).
         the measure <TT>measure</TT>. Record and playback
         will start a that position.
 	This corresponds also
-	to the start postition of the current selection.
+	to the start position of the current selection.
         </BLOCKQUOTE>
 
 <A name="func_songgetcurpos"></A>
@@ -2732,7 +2733,7 @@ the console).
         <BLOCKQUOTE>
         return the current measure ie the
         current song position pointer. This corresponds
-	to the start postition of the current selection.
+	to the start position of the current selection.
         </BLOCKQUOTE>
 
 <A name="func_songsetcurlen"></A>
@@ -2971,7 +2972,7 @@ the console).
 <B><TT>devsendrt devnum bool</TT></B>
         <BLOCKQUOTE>
         If <TT>bool</TT> is true, the real-time information (MIDI ticks, 
-        MIDI start and MIDI trop events) will be transmitted to device
+        MIDI start and MIDI stop events) will be transmitted to device
         number <TT>devnum</TT>. 
         Otherwise no real-time MIDI events are transmitted.
         </BLOCKQUOTE>
@@ -3225,7 +3226,7 @@ the console).
 
         <B><TT>n denominator</TT></B>
                 <BLOCKQUOTE>
-                set the current note length for quantisation
+                set the current note length for quantization
                 to <TT>denominator</TT>, 4 means quarter-note, 
                 8 means eighth-note, 16 means sixteenth-note etc...
 		This value will be used by track editing functions.
@@ -3233,9 +3234,9 @@ the console).
                 
         <B><TT>q rate</TT></B>
                 <BLOCKQUOTE>
-                quantise the current selection of 
-                the current track (rate=100 means full quantisation
-		and rate=0 means no quantisation).
+                quantize the current selection of 
+                the current track (rate=100 means full quantization
+		and rate=0 means no quantization).
                 </BLOCKQUOTE>
                 
         <B><TT>cut amount</TT></B>
@@ -3463,16 +3464,30 @@ the console).
 	filter that will route events from the
 	keyboard to the drum channel.  Then we define 
         a new track named <TT>dr1</TT> an we start recording.
-        Then, we set the quantisation step to 16 
+        Then, we set the quantization step to 16 
         (sixteenth note), we select the first 32 measures of 
-        the track and we quantise them. Finally,
+        the track and we quantize them. Finally,
 	we start playback and we save the song into a file.
 
 
+<A name="section_20"></A><H1>20 Thanks</H1>
+
+Many thanks to all who contributed (new features, bug fixes, bug
+reports, packaging efforts and other improvements): 
+
+Julien Claassen, 
+Karim Saddem,
+Marcell Mars,
+Richard L. Hamilton
+Samuel Mimram,
+and
+Will Woodruff.
+
+<P>
 <HR>
 <SMALL><EM>
 Copyright (c) 2003-2007 Alexandre Ratchov<BR>
-Last updated jun 25, 2007
+Last updated aug 19, 2007
 </EM></SMALL>
 
 </BODY>
