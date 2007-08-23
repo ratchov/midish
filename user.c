@@ -450,9 +450,6 @@ exec_lookupevspec(struct exec *o, char *name, struct evspec *e) {
 		e->b1_min =  (e->b1_min << 7) & 0x3fff;
 		e->b1_max = ((e->b1_max << 7) & 0x3fff) | 0x7f;
 	}
-	dbg_puts("evspec: ");
-	evspec_dbg(e);
-	dbg_puts("\n");
 	return 1;
  toomany:
 	cons_err("too many ranges/values in event spec");
@@ -827,7 +824,7 @@ user_func_shut(struct exec *o, struct data **r) {
 	struct ev ev;
 	struct mididev *dev;
 
-	mux_open(NULL, NULL);
+	mux_open();
 
 	for (dev = mididev_list; dev != NULL; dev = dev->next) {
 		for (i = 0; i < EV_MAXCH; i++) {
@@ -886,7 +883,7 @@ user_func_sendraw(struct exec *o, struct data **r) {
 		}
 	}
 	
-	mux_open(NULL, NULL);
+	mux_open();
 	for (i = arg->data->val.list; i != NULL; i = i->next) {
 		byte = i->val.num;
 		mux_sendraw(device, &byte, 1);

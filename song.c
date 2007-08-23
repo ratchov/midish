@@ -39,7 +39,7 @@
 #include "metro.h"
 #include "default.h"
 
-unsigned song_debug = 0;
+unsigned song_debug = 1;
 
 /*
  * allocate and initialize a song structure
@@ -666,217 +666,104 @@ song_confcancel(struct statelist *slist) {
 
 /* --------------------------------------------------------------------- */
 
+/*
+ * call-back called when the first midi tick arrives
+ */
 void
-song_idle_start(void *addr) {	
+song_startcb(struct song *o) {	
 	if (song_debug) {
-		dbg_puts("song_idle_start:\n");
+		dbg_puts("song_startcb:\n");
+	}
+	if (o->mode & SONG_PLAY) {
+		song_ticplay(o);
+		mux_flush();
 	}
 }
 
+/*
+ * call-back called when the midi clock stopped
+ */
 void
-song_idle_stop(void *addr) {	
-	if (song_debug) {
-		dbg_puts("song_idle_stop:\n");
-	}
-}
-
-void
-song_idle_move(void *addr) {
-	/* nothing to do */
-}
-
-void
-song_idle_ev(void *addr, struct ev *ev) {
-	if (EV_ISVOICE(ev)) {
-		mux_putev(ev);
-		
-	}
-}
-
-void
-song_idle_sysex(void *addr, struct sysex *sx) {
-	if (song_debug) {
-		dbg_puts("song_idle_sysex:\n");
-	}
-}
-
-void
-song_play_start(void *addr) {	
-	struct song *o = (struct song *)addr;
-
-	if (song_debug) {
-		dbg_puts("song_play_start:\n");
-	}
-	song_ticplay(o);
-	mux_flush();
-}
-
-void
-song_play_stop(void *addr) {	
-	if (song_debug) {
-		dbg_puts("song_play_stop:\n");
-	}
-}
-
-void
-song_play_move(void *addr) {
-	struct song *o = (struct song *)addr;
-
-	if (!song_ticskip(o)) {
-		mux_stopwait();
-	}
-	song_ticplay(o);
-	mux_flush();
-}
-
-void
-song_play_ev(void *addr, struct ev *ev) {
-	if (EV_ISVOICE(ev)) {
-		mux_putev(ev);
-		
-	}
-}
-
-void
-song_play_sysex(void *addr, struct sysex *sx) {
-	if (song_debug) {
-		dbg_puts("song_play_sysex:\n");
-	}
-}
-
-void
-song_rec_start(void *addr) {	
-	struct song *o = (struct song *)addr;
-
-	if (song_debug) {
-		dbg_puts("song_rec_start:\n");
-	}
-	song_ticplay(o);
-	mux_flush();
-}
-
-void
-song_rec_stop(void *addr) {	
+song_stopcb(struct song *o) {	
 	if (song_debug) {
 		dbg_puts("song_rec_stop:\n");
 	}
 }
 
+/*
+ * call-back, called when the midi clock moved one tick forward
+ */
 void
-song_rec_move(void *addr) {
-	struct song *o = (struct song *)addr;
+song_movecb(struct song *o) {
 	unsigned delta;
 
-	while (seqptr_evget(&o->recptr))
-		; /* nothing */
-	delta = seqptr_ticskip(&o->recptr, 1);
-	if (delta == 0)
-		seqptr_ticput(&o->recptr, 1);
-	(void)song_ticskip(o);
-	song_ticplay(o);
+	if (o->mode & SONG_REC) {
+		while (seqptr_evget(&o->recptr))
+			; /* nothing */
+		delta = seqptr_ticskip(&o->recptr, 1);
+		if (delta == 0)
+			seqptr_ticput(&o->recptr, 1);
+	}
+	if (o->mode & SONG_PLAY) {
+		(void)song_ticskip(o);
+		song_ticplay(o);
+	}
 	mux_flush();
 }
 
+/*
+ * call-back called when a midi event arrives
+ */
 void
-song_rec_ev(void *addr, struct ev *ev) {
-	struct song *o = (struct song *)addr;
+song_evcb(struct song *o, struct ev *ev) {
+	struct ev filtout[FILT_MAXNRULES];
+	unsigned i, nev;
 
 	if (!EV_ISVOICE(ev)) {
-		return;
-	}
-	if (mux_getphase() >= MUX_START) {
-		(void)seqptr_evput(&o->recptr, ev);
-	}
-	mux_putev(ev);
-}
-
-void
-song_rec_sysex(void *addr, struct sysex *sx) {
-	struct song *o = (struct song *)addr;
-
-	if (song_debug) {
-		dbg_puts("song_rec_sysex:\n");
-	}
-	if (o->cursx) {
-		if (sx == NULL) {
-			dbg_puts("got null sx\n");
-		} else {
-			sysexlist_put(&o->cursx->sx, sx);
-		}
-	}
-}
-
-void
-song_filt_start(void *addr) {
-	struct song *o = (struct song *)addr;
-	o->ops->start(addr);
-}
-
-void
-song_filt_stop(void *addr) {	
-	struct song *o = (struct song *)addr;
-	o->ops->stop(addr);
-}
-
-void
-song_filt_move(void *addr) {
-	struct song *o = (struct song *)addr;
-	o->ops->move(addr);
-}
-
-void
-song_filt_ev(void *addr, struct ev *ev) {
-	struct song *o = (struct song *)addr;
-	
-	if (!EV_ISVOICE(ev)) {
-		o->ops->ev(o, ev);
 		return;
 	}
 	if (o->filt) {
-		filt_evcb(o->filt, ev);
+		nev = filt_do(o->filt, ev, filtout);
 	} else {
-		o->ops->ev(o, ev);
+		filtout[0] = *ev;
+		nev = 1;
 	}
-	mux_flush();
+	if (o->mode & SONG_REC) {
+		if (mux_getphase() >= MUX_START) {
+			for (i = 0; i < nev; i++) {
+				if (filtout[i].cmd == EV_NULL) {
+					continue;
+				}
+				(void)seqptr_evput(&o->recptr, &filtout[i]);
+			}
+		}
+	}
+	for (i = 0; i < nev; i++) {
+		if (filtout[i].cmd == EV_NULL) {
+			continue;
+		}
+		mux_putev(ev);
+	}
 }
 
+/*
+ * call-back called when a sysex message arrives
+ */
 void
-song_filt_sysex(void *addr, struct sysex *sx) {
-	struct song *o = (struct song *)addr;
-	o->ops->sysex(addr, sx);
+song_sysexcb(struct song *o, struct sysex *sx) {
+	if (song_debug) {
+		dbg_puts("song_sysexcb:\n");
+	}
+	if (o->mode & SONG_REC) {
+		if (o->cursx) {
+			if (sx == NULL) {
+				dbg_puts("got null sx\n");
+			} else {
+				sysexlist_put(&o->cursx->sx, sx);
+			}
+		}
+	}
 }
-
-struct muxops idleops = {
-	song_idle_start,
-	song_idle_stop,
-	song_idle_move,
-	song_idle_ev,
-	song_idle_sysex
-};
-
-struct muxops playops = {
-	song_play_start,
-	song_play_stop,
-	song_play_move,
-	song_play_ev,
-	song_play_sysex
-};
-
-struct muxops recops = {
-	song_rec_start,
-	song_rec_stop,
-	song_rec_move,
-	song_rec_ev,
-	song_rec_sysex
-};
-
-struct muxops filtops = {
-	song_filt_start,
-	song_filt_stop,
-	song_filt_move,
-	song_filt_ev,
-	song_filt_sysex
-};
 
 /*
  * setup everything to start play/record: the current filter, go to
@@ -885,11 +772,13 @@ struct muxops filtops = {
  * for each input event.
  */
 void
-song_start(struct song *o, struct muxops *ops, unsigned countdown) {
+song_start(struct song *o, unsigned mode, unsigned countdown) {
 	struct songfilt *f;
 	struct songtrk *t;
 	unsigned tic, off;
 	struct state *s;
+
+	o->mode = mode;
 
 	/*
 	 * check for the current filter
@@ -942,8 +831,7 @@ song_start(struct song *o, struct muxops *ops, unsigned countdown) {
 	seqptr_init(&o->recptr, &o->rec);
 	seqptr_seek(&o->recptr, tic);
 
-	o->ops = ops;
-	mux_open(&filtops, o);
+	mux_open();
 
 	/*
 	 * send sysex messages and channel config messages
@@ -975,9 +863,6 @@ song_start(struct song *o, struct muxops *ops, unsigned countdown) {
 			s->tag = 0;
 		}
 	}
-	if (o->filt) {
-		filt_start(o->filt, ops, o);
-	}
 	mux_flush();	
 }
 
@@ -991,10 +876,6 @@ song_stop(struct song *o) {
 	struct state *st;
 	struct ev ev;
 
-	if (o->filt) {
-		filt_shut(o->filt);
-		filt_stop(o->filt);
-	}
 	metro_shut(&o->metro);	
 
 	/*
@@ -1029,7 +910,7 @@ song_stop(struct song *o) {
  */
 void
 song_play(struct song *o) {
-	song_start(o, &playops, 0);
+	song_start(o, SONG_PLAY, 0);
 	
 	if (song_debug) {
 		dbg_puts("song_play: starting loop, waiting for a start event...\n");
@@ -1053,7 +934,7 @@ song_record(struct song *o) {
 		dbg_puts("song_record: no current track or current track is muted\n");
 	}
 
-	song_start(o, &recops, 1);
+	song_start(o, SONG_PLAY | SONG_REC, 1);
 	if (song_debug) {
 		dbg_puts("song_record: started loop, waiting for a start event...\n");
 	}
@@ -1072,7 +953,7 @@ song_record(struct song *o) {
  */
 void
 song_idle(struct song *o) {
-	song_start(o, &idleops, 0);
+	song_start(o, 0, 0);
 	
 	if (song_debug) {
 		dbg_puts("song_idle: started loop...\n");

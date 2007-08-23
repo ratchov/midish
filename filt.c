@@ -31,8 +31,8 @@
 /*
  * filt.c
  *
- * a stateful midi filter. It's used to drop/rewrite some events, 
- * transpose notes etc... 
+ * a simple midi filter. Rewrites input events according a set
+ * of user-configurable rules.
  *
  */
  
@@ -42,57 +42,12 @@
 #include "pool.h"
 #include "mux.h"
 
-#define TAG_PASS 1
-#define TAG_PENDING 2
-
-/*
- * timeout for throtteling: 1 tick at 60 bpm
- */
-#define FILT_TIMO TEMPO_TO_USEC24(120,24)
-
 unsigned filt_debug = 0;
 
-/* ------------------------------------------------------------------ */
 
-unsigned char filt_curve_id[128] = {
-	0,	1,	2,	3,	4,	5,	6,	7,
-	8,	9,	10,	11,	12,	13,	14,	15,
-	16,	17,	18,	19,	20,	21,	22,	23,
-	24,	25,	26,	27,	28,	29,	30,	31,
-	32,	33,	34,	35,	36,	37,	38,	39,
-	40,	41,	42,	43,	44,	45,	46,	47,
-	48,	49,	50,	51,	52,	53,	54,	55,
-	56,	57,	58,	59,	60,	61,	62,	63,
-	64,	65,	66,	67,	68,	69,	70,	71,
-	72,	73,	74,	75,	76,	77,	78,	79,
-	80,	81,	82,	83,	84,	85,	86,	87,
-	88,	89,	90,	91,	92,	93,	94,	95,
-	96,	97,	98,	99,	100,	101,	102,	103,
-	104,	105,	106,	107,	108,	109,	110,	111,
-	112,	113,	114,	115,	116,	117,	118,	119,
-	120,	121,	122,	123,	124,	125,	126,	127
-};
-
-unsigned char filt_curve_inv[128] = {
-	127,	126,	125,	124,	123,	122,	121,	120,
-	119,	118,	117,	116,	115,	114,	113,	112,
-	111,	110,	109,	108,	107,	106,	105,	104,
-	103,	102,	101,	100,	99,	98,	97,	96,
-	95,	94,	93,	92,	91,	90,	89,	88,
-	87,	86,	85,	84,	83,	82,	81,	80,
-	79,	78,	77,	76,	75,	74,	73,	72,
-	71,	70,	69,	68,	67,	66,	65,	64,
-	63,	62,	61,	60,	59,	58,	57,	56,
-	55,	54,	53,	52,	51,	50,	49,	48,
-	47,	46,	45,	44,	43,	42,	41,	40,
-	39,	38,	37,	36,	35,	34,	33,	32,
-	31,	30,	29,	28,	27,	26,	25,	24,
-	23,	22,	21,	20,	19,	18,	17,	16,
-	15,	14,	13,	12,	11,	10,	9,	8,
-	7,	6,	5,	4,	3,	2,	1,	0
-};
-
-
+/*
+ * dump the rule on stderr (debug purposes)
+ */
 void
 rule_dbg(struct rule *o) {
 	switch(o->type) {
@@ -153,6 +108,102 @@ rule_dbg(struct rule *o) {
 			dbg_putu(o->keyplus);
 		}
 	}
+}
+
+/*
+ * try to apply the rule to an event; if the rule matches then
+ * fill 'rev' (with EV_NULL if it's a drop rule) and return 1 
+ * else return 0
+ */
+unsigned
+rule_do(struct rule *r, struct ev *in, struct ev *out) {
+	switch(r->type) {
+	case RULE_DEVDROP:
+		if (in->dev == r->idev) {
+			goto match_drop;
+		}
+		break;
+	case RULE_DEVMAP:
+		if (in->dev == r->idev) {
+			*out = *in;
+			out->dev = r->odev;
+			goto match_pass;
+		}
+		break;
+	case RULE_CHANDROP:
+		if (in->dev == r->idev &&
+		    in->ch == r->ich) {
+			goto match_drop;
+		}
+		break;
+	case RULE_CHANMAP:
+		if (in->dev == r->idev && 
+		    in->ch == r->ich) {
+			*out = *in;
+			out->dev = r->odev;
+			out->ch = r->och;
+			goto match_pass;
+		}
+		break;
+	case RULE_KEYDROP:
+		if (EV_ISNOTE(in) && 
+		    in->dev == r->idev && 
+		    in->ch == r->ich && 
+		    in->note_num >= r->keylo &&
+		    in->note_num <= r->keyhi) {
+			goto match_drop;
+		}
+		break;
+	case RULE_KEYMAP:
+		if (EV_ISNOTE(in) && 
+		    in->dev == r->idev && 
+		    in->ch == r->ich && 
+		    in->note_num >= r->keylo &&
+		    in->note_num <= r->keyhi) {
+			*out = *in;
+			out->dev = r->odev;
+			out->ch = r->och;
+			out->note_num += r->keyplus;
+			out->note_num &= 0x7f;
+			goto match_pass;
+		}
+		break;
+	case RULE_CTLDROP:
+		if (in->cmd == EV_XCTL &&
+		    in->dev == r->idev &&
+		    in->ch == r->ich &&
+		    in->ctl_num == r->ictl) {
+			goto match_drop;
+		}
+		break;
+	case RULE_CTLMAP:
+		if (in->cmd == EV_XCTL &&
+		    in->dev == r->idev &&
+		    in->ch == r->ich &&
+		    in->ctl_num == r->ictl) {
+			*out = *in;
+			out->dev = r->odev;
+			out->ch = r->och;
+			out->ctl_num = r->octl;
+			goto match_pass;
+		}
+		break;
+	}
+	return 0;
+
+match_drop:
+	out->cmd = EV_NULL;
+match_pass:
+	if (filt_debug) {
+		dbg_puts("rule_apply: ");
+		rule_dbg(r);
+		dbg_puts(": ");
+		ev_dbg(in);
+		dbg_puts(" -> ");		
+		ev_dbg(out);
+		dbg_puts("\n");
+	}
+	return 1;
 }
 
 void
@@ -325,13 +376,9 @@ void filt_timocb(void *);
  */
 void
 filt_init(struct filt *o) {
-	o->ops = NULL;
-	o->addr = NULL;	
-	o->active = 1;
 	o->voice_rules = NULL;
 	o->chan_rules = NULL;
 	o->dev_rules = NULL;
-	timo_set(&o->timo, filt_timocb, o);
 }
 
 /*
@@ -362,47 +409,74 @@ filt_reset(struct filt *o) {
  */
 void
 filt_done(struct filt *o) {
-#ifdef FILT_DEBUG
-	if (o->ops != NULL) {
-		dbg_puts("filt_done: call filt_stop first.\n");
-	}
-#endif
 	filt_reset(o);
 }
 
 
 /*
- * configure a filter so that output events are passed to the given
- * callback (see filt_processev)
+ * match event against all rules, return the number of events
+ * filled
  */
-void
-filt_start(struct filt *o, struct muxops *ops, void *addr) {
-	o->addr = addr;
-	o->ops = ops;
-	statelist_init(&o->statelist);
-	timo_add(&o->timo, FILT_TIMO);
-	if (filt_debug) {
-		dbg_puts("filt_start()\n");
+unsigned
+filt_do(struct filt *o, struct ev *in, struct ev *out) {
+	unsigned match;
+	struct rule *i;
+
+	match = 0;
+	for (i = o->voice_rules; i != NULL; i = i->next) {
+		if (match >= FILT_MAXNRULES) {
+			return match;
+		}
+		match += rule_do(i, in, out + match);
 	}
+	if (!match) {
+		for (i = o->chan_rules; i != NULL; i = i->next) {
+			if (match >= FILT_MAXNRULES) {
+				return match;
+			}
+			match += rule_do(i, in, out + match);
+		}
+		if (!match) {
+			for (i = o->dev_rules; i != NULL; i = i->next) {
+				if (match >= FILT_MAXNRULES) {
+					return match;
+				}
+				match += rule_do(i, in, out + match);
+			}
+			if (!match) {
+				*out = *in;
+				if (filt_debug) {
+					dbg_puts("filt_do: default > ");
+					ev_dbg(out);
+					dbg_puts("\n");
+				}
+				return 1;
+			}
+		}
+	}
+	return match;
 }
 
 
 /*
- * unconfigure a filter
+ * return the number of rules on the filter
  */
-void
-filt_stop(struct filt *o) {
-	if (filt_debug) {
-		dbg_puts("filt_stop()\n");
+unsigned
+filt_nrules(struct filt *o) {
+	struct rule *r;
+	unsigned n = 0;
+
+	for (r = o->voice_rules; r != NULL; r = r->next) {
+		n++;
 	}
-	timo_del(&o->timo);
-	statelist_done(&o->statelist);
-	o->ops = NULL;
-	o->addr = NULL;	
+	for (r = o->chan_rules; r != NULL; r = r->next) {
+		n++;
+	}
+	for (r = o->dev_rules; r != NULL; r = r->next) {
+		n++;
+	}
+	return n;
 }
-
-
-/* ------------------------------------- configuration management --- */
 
 /* 
  * configure the filt to drop 
@@ -425,6 +499,9 @@ filt_conf_devdrop(struct filt *o, unsigned idev) {
 		} else {
 			i = &(*i)->next;
 		}
+	}
+	if (filt_nrules(o) >= FILT_MAXNRULES) {
+		return;
 	}
 	r = (struct rule *)mem_alloc(sizeof(struct rule));
 	r->type = RULE_DEVDROP;
@@ -478,6 +555,9 @@ filt_conf_devmap(struct filt *o,
 			i = &(*i)->next;
 		}
 	}
+	if (filt_nrules(o) >= FILT_MAXNRULES) {
+		return;
+	}
 	r = (struct rule *)mem_alloc(sizeof(struct rule));
 	r->type = RULE_DEVMAP;
 	r->idev = idev;
@@ -530,6 +610,9 @@ filt_conf_chandrop(struct filt *o, unsigned idev, unsigned ich) {
 			i = &(*i)->next;
 		}
 	}
+	if (filt_nrules(o) >= FILT_MAXNRULES) {
+		return;
+	}
 	r = (struct rule *)mem_alloc(sizeof(struct rule));
 	r->type = RULE_CHANDROP;
 	r->idev = idev;
@@ -579,6 +662,9 @@ filt_conf_chanmap(struct filt *o, unsigned idev, unsigned ich,
 		} else {
 			i = &(*i)->next;
 		}
+	}
+	if (filt_nrules(o) >= FILT_MAXNRULES) {
+		return;
 	}
 	r = (struct rule *)mem_alloc(sizeof(struct rule));
 	r->type = RULE_CHANMAP;
@@ -631,6 +717,9 @@ filt_conf_ctldrop(struct filt *o,
 		} else{
 			i = &(*i)->next;
 		}
+	}
+	if (filt_nrules(o) >= FILT_MAXNRULES) {
+		return;
 	}
 	r = (struct rule *)mem_alloc(sizeof(struct rule));
 	r->type = RULE_CTLDROP;
@@ -685,6 +774,9 @@ filt_conf_ctlmap(struct filt *o,
 			i = &(*i)->next;
 		}
 	}
+	if (filt_nrules(o) >= FILT_MAXNRULES) {
+		return;
+	}
 	r = (struct rule *)mem_alloc(sizeof(struct rule));
 	r->type = RULE_CTLMAP;
 	r->idev = idev;
@@ -693,7 +785,6 @@ filt_conf_ctlmap(struct filt *o,
 	r->och = och;
 	r->ictl = ictl;
 	r->octl = octl;
-	r->curve = filt_curve_id;
 	r->next = o->voice_rules;
 	o->voice_rules = r;
 }
@@ -742,6 +833,9 @@ filt_conf_keydrop(struct filt *o, unsigned idev, unsigned ich,
 		} else {
 			i = &(*i)->next;
 		}
+	}
+	if (filt_nrules(o) >= FILT_MAXNRULES) {
+		return;
 	}
 	r = (struct rule *)mem_alloc(sizeof(struct rule));
 	r->type = RULE_KEYDROP;
@@ -806,6 +900,9 @@ filt_conf_keymap(struct filt *o,
 			i = &(*i)->next;
 		}
 	}
+	if (filt_nrules(o) >= FILT_MAXNRULES) {
+		return;
+	}
 	r = (struct rule *)mem_alloc(sizeof(struct rule));
 	r->type = RULE_KEYMAP;
 	r->idev = idev;
@@ -815,7 +912,6 @@ filt_conf_keymap(struct filt *o,
 	r->keylo = keylo;
 	r->keyhi = keyhi;
 	r->keyplus = keyplus;
-	r->curve = filt_curve_id;
 	r->next = o->voice_rules;
 	o->voice_rules = r;
 }
@@ -961,285 +1057,3 @@ filt_conf_swapodev(struct filt *o, unsigned olddev, unsigned newdev) {
 	}
 }
 
-/* ----------------------------------------------- real-time part --- */
-
-/* 
- * executes the given rule; if the event matches the rule then
- * pass it and return 1, else retrun 0
- */
-unsigned
-filt_matchrule(struct filt *o, struct rule *r, struct ev *ev) {
-	struct ev te;
-		
-	switch(r->type) {
-	case RULE_DEVDROP:
-		if (ev->dev == r->idev) {
-			goto match_drop;
-		}
-		break;	
-	case RULE_DEVMAP:
-		if (ev->dev == r->idev) {
-			te = *ev;
-			te.dev = r->odev;
-			goto match_pass;
-		}
-		break;
-	case RULE_CHANDROP:
-		if (ev->dev == r->idev &&
-		    ev->ch == r->ich) {
-			goto match_drop;
-		}
-		break;
-	case RULE_CHANMAP:
-		if (ev->dev == r->idev && 
-		    ev->ch == r->ich) {
-			te = *ev;
-			te.dev = r->odev;
-			te.ch = r->och;
-			goto match_pass;
-		}
-		break;
-	case RULE_KEYDROP:
-		if (EV_ISNOTE(ev) && 
-		    ev->dev == r->idev && 
-		    ev->ch == r->ich && 
-		    ev->note_num >= r->keylo &&
-		    ev->note_num <= r->keyhi) {
-			goto match_drop;
-		}
-		break;
-	case RULE_KEYMAP:
-		if (EV_ISNOTE(ev) && 
-		    ev->dev == r->idev && 
-		    ev->ch == r->ich && 
-		    ev->note_num >= r->keylo &&
-		    ev->note_num <= r->keyhi) {
-			te = *ev;
-			te.dev = r->odev;
-			te.ch = r->och;
-			te.note_num += r->keyplus;
-			te.note_num &= 0x7f;
-			te.note_vel = te.note_vel;
-			goto match_pass;
-		}
-		break;
-	case RULE_CTLDROP:
-		if (ev->cmd == EV_XCTL &&
-		    ev->dev == r->idev &&
-		    ev->ch == r->ich &&
-		    ev->ctl_num == r->ictl) {
-			goto match_drop;
-		}
-		break;
-	case RULE_CTLMAP:
-		if (ev->cmd == EV_XCTL &&
-		    ev->dev == r->idev &&
-		    ev->ch == r->ich &&
-		    ev->ctl_num == r->ictl) {
-			te = *ev;
-			te.dev = r->odev;
-			te.ch = r->och;
-			te.ctl_num = r->octl;
-			te.ctl_val = te.ctl_val;
-			goto match_pass;
-		}
-		break;
-	}			
-	return 0;
-
-match_pass:
-	if (filt_debug) {
-		dbg_puts("filt_matchrule: ");
-		rule_dbg(r);
-		dbg_puts(" > ");		
-		ev_dbg(&te);
-		dbg_puts("\n");
-	}
-	o->ops->ev(o->addr, &te);
-	return 1;
-match_drop:
-	if (filt_debug) {
-		dbg_puts("filt_matchrule: ");
-		rule_dbg(r);
-		dbg_puts("\n");
-	}
-	return 1;
-}
-
-
-/*
- * match event against all rules
- */
-void
-filt_processev(struct filt *o, struct ev *ev) {
-	unsigned match;
-	struct rule *i;
-
-	match = 0;
-	for (i = o->voice_rules; i != NULL; i = i->next) {
-		match |= filt_matchrule(o, i, ev);
-	}
-	if (!match) {
-		for (i = o->chan_rules; i != NULL; i = i->next) {
-			match |= filt_matchrule(o, i, ev);
-		}
-		if (!match) {
-			for (i = o->dev_rules; i != NULL; i = i->next) {
-				match |= filt_matchrule(o, i, ev);
-			}
-			if (!match) {
-				if (filt_debug) {
-					dbg_puts("filt_processev: default > ");
-					ev_dbg(ev);
-					dbg_puts("\n");
-				}
-				o->ops->ev(o->addr, ev);
-			}
-		}
-	}
-}
-
-/*
- * shuts all notes and restores the default values
- * of the modified controllers, the bender etc...
- */
-void
-filt_shut(struct filt *o) {
-	struct state *s, *snext;
-	struct ev ca;
-	
-	for (s = o->statelist.first; s != NULL; s = snext) {
-		snext = s->next;
-		if (state_cancel(s, &ca)) {
-			if (filt_debug) {
-				dbg_puts("filt_shut: ");
-				ev_dbg(&s->ev);
-				dbg_puts(": cancelled by: ");
-				ev_dbg(&ca);
-				dbg_puts("\n");
-			}
-			filt_processev(o, &ca);
-		}
-		statelist_rm(&o->statelist, s);
-		state_del(s);
-	}
-}
-
-/*
- * kill all tagged frames matching the given event (because a bogus
- * event was received)
- */
-void
-filt_kill(struct filt *o, struct ev *ev) {
-	struct state *st, *stnext;
-	struct ev ca;
-
-	for (st = o->statelist.first; st != NULL; st = stnext) {
-		stnext = st->next;
-		if (!state_match(st, ev) ||
-		    !(st->tag & TAG_PASS) ||
-		    st->phase & EV_PHASE_LAST) {
-			continue;
-		}
-		/*
-		 * cancel/untag the frame and change the phase to
-		 * EV_PHASE_LAST, so the state can be deleted if
-		 * necessary
-		 */
-		if (state_cancel(st, &ca)) {
-			filt_processev(o, &ca);
-		}
-		st->phase = EV_PHASE_LAST;
-		st->tag &= ~TAG_PASS;
-		dbg_puts("filt_kill: ");
-		ev_dbg(&st->ev);
-		dbg_puts(": killed\n");
-	}
-}
-
-/*
- * give an event to the filter for processing
- */
-void
-filt_evcb(struct filt *o, struct ev *ev) {
-	struct state *st;
-	
-	if (filt_debug) {
-		dbg_puts("filt_run: ");
-		ev_dbg(ev);
-		dbg_puts("\n");
-	}
-#ifdef FILT_DEBUG
-	if (o->ops == NULL) {
-		dbg_puts("filt_evcb: ops = NULL, bad initialisation\n");
-		dbg_panic();
-	}
-	if (!EV_ISVOICE(ev)) {
-		dbg_puts("filt_evcb: only voice events allowed\n");
-		dbg_panic();
-	}
-#endif
-
-	/*
-	 * create/update state for this event
-	 */
-	st = statelist_update(&o->statelist, ev);
-	if (st->phase & EV_PHASE_FIRST) {
-		if (st->flags & STATE_NEW)
-			st->nevents = 0;
-		/*
-		 * XXX: have to do something with the rule set here
-		 */
-		st->tag = o->active ? TAG_PASS : 0;
-		if (st->flags & (STATE_BOGUS | STATE_NESTED)) {
-			if (filt_debug) {
-				dbg_puts("filt_evcb: ");
-				ev_dbg(ev);
-				dbg_puts(": bogus/nested frame\n");
-			}
-			filt_kill(o, ev);
-		}
-	}
-
-	/*
-	 * nothing to do with silent (not selected) frames
-	 */
-	if (!(st->tag & TAG_PASS))
-		return;
-
-	/*
-	 * throttling: if we played more than MAXEV 
-	 * events skip this event only if it doesnt change the
-	 * phase of the frame
-	 */
-	if (st->nevents > FILT_MAXEV &&
-	    (st->phase == EV_PHASE_NEXT || 
-	     st->phase == (EV_PHASE_FIRST | EV_PHASE_LAST))) {
-		st->tag |= TAG_PENDING;
-		return;
-	}
-
-	filt_processev(o, &st->ev);
-	st->nevents++;
-}
-
-/*
- * timeout: outdate all events, so throttling will enable
- * output again.
- */
-void
-filt_timocb(void *addr) {
-	struct filt *o = (struct filt *)addr;
-	struct state *i;
-
-	statelist_outdate(&o->statelist);
-	for (i = o->statelist.first; i != NULL; i = i->next) {
-		i->nevents = 0;
-		if (i->tag & TAG_PENDING) {
-			i->tag &= ~TAG_PENDING;
-			filt_processev(o, &i->ev);
-			i->nevents++;
-		}
-	}
-	timo_add(&o->timo, FILT_TIMO);
-}

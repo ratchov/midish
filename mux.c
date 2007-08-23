@@ -90,6 +90,8 @@
 #include "state.h"
 #include "conv.h"
 
+#include "norm.h"
+
 /* 
  * MUX_START_DELAY: 
  *
@@ -103,10 +105,10 @@ unsigned mux_ticrate;
 unsigned long mux_ticlength, mux_curpos, mux_nextpos;
 unsigned mux_curtic;
 unsigned mux_phase;
-struct muxops *mux_ops;
 void *mux_addr;
 
 struct statelist mux_istate, mux_ostate;
+struct norm mux_norm;
 
 /*
  * the following are defined in mdep.c
@@ -122,11 +124,13 @@ void mux_chgphase(unsigned phase);
  * initialize all structures and open all midi devices
  */
 void
-mux_open(struct muxops *ops, void *addr) {
+mux_open(void) {
 	struct mididev *i;
 
+	timo_init();
 	statelist_init(&mux_istate);
 	statelist_init(&mux_ostate);
+	norm_start(&mux_norm);
 	
 	/* 
 	 * default tempo is 120 beats per minutes with 24 tics per
@@ -153,9 +157,6 @@ mux_open(struct muxops *ops, void *addr) {
 	mux_curpos = 0;
 	mux_nextpos = 0;
 	mux_phase = MUX_STOP;
-	mux_ops = ops;
-	mux_addr = addr;
-	timo_init();
 }
 
 /*
@@ -174,9 +175,10 @@ mux_close(void) {
 		rmidi_close(RMIDI(i));
 	}
 	mux_mdep_close();
-	timo_done();
+	norm_stop(&mux_norm);
 	statelist_done(&mux_ostate);
 	statelist_done(&mux_istate);
+	timo_done();
 }
 
 #ifdef MUX_DEBUG
@@ -300,7 +302,9 @@ mux_putev(struct ev *ev) {
 	}
 	unit = ev->dev;
 	if (unit >= DEFAULT_MAXNDEVS) {
-		dbg_puts("mux_putev: bogus unit number\n");
+		dbg_puts("mux_putev: bogus unit number: ");
+		ev_dbg(ev);
+		dbg_puts("\n");
 		dbg_panic();
 	}
 	dev = mididev_byunit[unit];
@@ -393,7 +397,7 @@ mux_timercb(unsigned long delta) {
 			if (mux_debug) {
 				dbg_puts("mux_timercb: generated stop\n");
 			}
-			mux_ops->stop(mux_addr);
+			song_stopcb(user_song);
 			mux_sendstop();
 			mux_flush();
 		}
@@ -409,10 +413,10 @@ mux_timercb(unsigned long delta) {
 			mux_sendtic();
 			if (mux_phase == MUX_NEXT) {
 				mux_curtic++;
-				mux_ops->move(mux_addr);
+				song_movecb(user_song);
 			} else if (mux_phase == MUX_FIRST) {
 				mux_curtic = 0;
-				mux_ops->start(mux_addr);
+				song_startcb(user_song);
 			}
 			mux_flush();	
 		}
@@ -437,10 +441,10 @@ mux_ticcb(unsigned unit) {
 		}
 		if (mux_phase == MUX_NEXT) {
 			mux_curtic++;
-			mux_ops->move(mux_addr);
+			song_movecb(user_song);
 		} else if (mux_phase == MUX_FIRST) {
 			mux_curtic = 0;
-			mux_ops->start(mux_addr);
+			song_startcb(user_song);
 		}
 		/* XXX: where is the flush ?! */
 		mididev_master->ticdelta -= mididev_master->ticrate;
@@ -478,7 +482,7 @@ mux_stopcb(unsigned unit) {
 	if (mux_debug) {
 		dbg_puts("mux_startcb: got stop\n");
 	}
-	mux_ops->stop(mux_addr);
+	song_stopcb(user_song);
 }
 
 /*
@@ -508,7 +512,7 @@ mux_evcb(unsigned unit, struct ev *ev) {
 	dbg_puts("\n");
 #endif
 	if (conv_packev(&mux_istate, dev->ixctlset, ev, &rev)) {
-		mux_ops->ev(mux_addr, &rev);
+		norm_evcb(&mux_norm, &rev);
 	}
 }
 
@@ -534,13 +538,13 @@ mux_errorcb(unsigned unit) {
 	ev.ctl_val = 0;
 	for (i = 0; i <= EV_MAXCH; i++) {
 		ev.ch = i;
-		mux_ops->ev(mux_addr, &ev);
+		norm_evcb(&mux_norm, &ev);
 	}
 	ev.ctl_num = 121;		/* all ctl reset */
 	ev.ctl_val = 0;
 	for (i = 0; i <= EV_MAXCH; i++) {
 		ev.ch = i;
-		mux_ops->ev(mux_addr, &ev);
+		norm_evcb(&mux_norm, &ev);
 	}
 	mux_flush();
 }
@@ -556,7 +560,7 @@ mux_run(void) {
 	if (!mididev_master) {
 		if (mux_phase > MUX_START && mux_phase < MUX_STOP) {
 			mux_chgphase(MUX_STOP);
-			mux_ops->stop(mux_addr);
+			song_stopcb(user_song);
 			mux_sendstop();
 			mux_flush();
 		}
@@ -569,7 +573,7 @@ mux_run(void) {
  */
 void
 mux_sysexcb(unsigned unit, struct sysex *sysex) {
-	mux_ops->sysex(mux_addr, sysex);
+	song_sysexcb(user_song, sysex);
 }
 
 /*

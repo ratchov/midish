@@ -28,41 +28,28 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <stdio.h>
-#include <math.h>
+#ifndef MIDISH_NORM_H
+#define MIDISH_NORM_H
 
-unsigned
-f_id(unsigned x) {
-	return x;
-}
+#include "state.h"
+#include "timo.h"
 
+struct norm {
+	/*
+	 * used in real-time only
+	 */
+	struct statelist statelist;		/* state of the normilizer */
+	struct timo timo;			/* for throtteling */	
+};
 
-unsigned
-f_inv(unsigned x) {
-	return 127 - x;
-}
+#define NORM_MAXEV	1			/* max events per time slice */
 
-void
-mkcurve(char *name, unsigned (*f)(unsigned)) {
-	unsigned i;
-	printf("unsigned char filt_curve_%s[128] = {\n\t", name);
+void norm_start(struct norm *);
+void norm_shut(struct norm *);
+void norm_stop(struct norm *);
+void norm_evcb(struct norm *o, struct ev *ev);
+void norm_timercb(struct norm *o);
 
-	for (i = 0; i < 128; i++) {
-		printf("%u", f(i));
-		if (i == 127) {
-			printf("\n};\n\n");
-		} else if (i % 8 == 7) {
-			printf(",\n\t");
-		} else {
-			printf(",\t");
-		}
-	}
-}
+extern unsigned norm_debug;
 
-int
-main(void) {
-	mkcurve("id", f_id);
-	mkcurve("inv", f_inv);
-	return 0;
-}
-
+#endif /* MIDISH_NORM_H */
