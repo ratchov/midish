@@ -742,7 +742,7 @@ song_evcb(struct song *o, struct ev *ev) {
 		if (filtout[i].cmd == EV_NULL) {
 			continue;
 		}
-		mux_putev(ev);
+		mux_putev(&filtout[i]);
 	}
 }
 
