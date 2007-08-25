@@ -50,9 +50,11 @@
 #include "state.h"
 
 struct pool state_pool;
+unsigned state_serial;
 
 void
 state_pool_init(unsigned size) {
+	state_serial = 0;
 	pool_init(&state_pool, "state", sizeof(struct state), size);
 }
 
@@ -368,6 +370,7 @@ void
 statelist_init(struct statelist *o) {
 	o->first = NULL;
 	o->changed = 0;
+	o->serial = state_serial++;
 #ifdef STATE_PROF
 	o->lookup_n = 0;
 	o->lookup_time = 0;
@@ -409,7 +412,9 @@ statelist_done(struct statelist *o) {
 	/*
 	 * display profiling statistics
 	 */
-	dbg_puts("statelist_done: lookup: num=");
+	dbg_puts("statelist_done: serial=");
+	dbg_putu(o->serial);
+	dbg_puts(" lookup: num=");
 	dbg_putu(o->lookup_n);
 	if (o->lookup_n != 0) {
 		mean = 100 * o->lookup_time / o->lookup_n;

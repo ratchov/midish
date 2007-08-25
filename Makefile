@@ -42,10 +42,10 @@ clean:
 
 MIDISH_OBJS = \
 cons.o conv.o data.o dbg.o ev.o exec.o filt.o frame.o lex.o \
-main.o mdep.o metro.o mididev.o mux.o name.o node.o norm.o parse.o \
-pool.o rmidi.o saveload.o smf.o song.o state.o str.o sysex.o \
-textio.o timo.o track.o user.o user_trk.o user_chan.o \
-user_filt.o user_sx.o user_song.o user_dev.o
+main.o mdep.o metro.o mididev.o mixout.o mux.o name.o node.o \
+norm.o parse.o pool.o rmidi.o saveload.o smf.o song.o state.o \
+str.o sysex.o textio.o timo.o track.o user.o user_trk.o \
+user_chan.o user_filt.o user_sx.o user_song.o user_dev.o
 
 midish:		${MIDISH_OBJS}
 		${CC} ${LDFLAGS} ${MIDISH_OBJS} -o midish
@@ -69,8 +69,10 @@ main.o:		main.c dbg.h str.h cons.h ev.h default.h mux.h track.h \
 mdep.o:		mdep.c default.h mux.h rmidi.h mdep.h mididev.h cons.h \
 		user.h exec.h name.h str.h dbg.h
 metro.o:	metro.c dbg.h mux.h metro.h ev.h default.h timo.h
-mididev.o:	mididev.c dbg.h default.h mididev.h data.h name.h str.h \
-		rmidi.h mdep.h pool.h cons.h
+mididev.o:	mididev.c dbg.h default.h mididev.h rmidi.h mdep.h \
+		pool.h cons.h str.h
+mixout.o:	mixout.c dbg.h ev.h default.h filt.h pool.h mux.h timo.h \
+		state.h
 mux.o:		mux.c dbg.h ev.h default.h mdep.h mux.h rmidi.h \
 		mididev.h sysex.h timo.h state.h conv.h norm.h
 name.o:		name.c dbg.h name.h str.h
@@ -90,7 +92,7 @@ smf.o:		smf.c dbg.h sysex.h track.h ev.h default.h song.h name.h \
 		conv.h
 song.o:		song.c dbg.h mididev.h mux.h track.h ev.h default.h \
 		frame.h state.h filt.h song.h name.h str.h sysex.h \
-		metro.h timo.h cons.h
+		metro.h timo.h cons.h mixout.h
 state.o:	state.c dbg.h pool.h state.h ev.h default.h
 str.o:		str.c dbg.h str.h
 sysex.o:	sysex.c dbg.h sysex.h default.h pool.h

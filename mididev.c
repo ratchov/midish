@@ -40,11 +40,10 @@
 #include "dbg.h"
 #include "default.h"
 #include "mididev.h"
-#include "data.h"
-#include "name.h"
 #include "rmidi.h"
 #include "pool.h"
 #include "cons.h"
+#include "str.h"
 
 struct mididev *mididev_list, *mididev_master;
 struct mididev *mididev_byunit[DEFAULT_MAXNDEVS];

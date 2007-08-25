@@ -38,6 +38,7 @@
 #include "cons.h"		/* cons_errxxx */
 #include "metro.h"
 #include "default.h"
+#include "mixout.h"
 
 unsigned song_debug = 1;
 
@@ -445,7 +446,7 @@ song_playconf(struct song *o) {
 			if (EV_ISVOICE(&ev)) {
 				ev.dev = i->dev;
 				ev.ch = i->ch;
-				mux_putev(&ev);
+				mixout_putev(&ev, cp.statelist.serial);
 			} else {
 				dbg_puts("song_playconf: event not implemented : ");
 				dbg_putx(ev.cmd);
@@ -550,12 +551,14 @@ song_ticplay(struct song *o) {
 	struct songtrk *i;
 	struct state *st;
 	struct ev ev;
+	unsigned id;
 	
 	while ((st = seqptr_evget(&o->metaptr))) {
 		song_metaput(o, &st->ev);
 	}
 	metro_tic(&o->metro, o->beat, o->tic);
 	SONG_FOREACH_TRK(o, i) {
+		id = i->trackptr.statelist.serial;
 		while ((st = seqptr_evget(&i->trackptr))) {
 			ev = st->ev;
 			if (EV_ISVOICE(&ev)) {
@@ -563,7 +566,7 @@ song_ticplay(struct song *o) {
 					st->tag = 1;
 				if (!i->mute) {
 					if (st->tag) {
-						mux_putev(&ev);
+						mixout_putev(&ev, id);
 					} else if (song_debug) {
 						dbg_puts("song_ticplay: ");
 						ev_dbg(&ev);
@@ -579,36 +582,6 @@ song_ticplay(struct song *o) {
 	}
 }
 
-
-/*
- * restore the given frame and tag it appropriately
- */
-void
-song_strestore(struct state *s) {
-	struct ev re;
-	
-	if (!EV_ISNOTE(&s->ev)) {
-		if (state_restore(s, &re)) {
-			if (song_debug) {
-				dbg_puts("song_strestore: ");
-				ev_dbg(&s->ev);
-				dbg_puts(": restored -> ");
-				ev_dbg(&re);
-				dbg_puts("\n");
-			}
-			mux_putev(&re);
-		}
-		s->tag = 1;
-	} else {
-		if (song_debug) {
-			dbg_puts("song_strestore: ");
-			ev_dbg(&s->ev);
-			dbg_puts(": not restored (not tagged)\n");
-		}
-		s->tag = 0;
-	}
-}
-
 /*
  * restore all frames in the given statelist. First, restore events
  * that have context, then the rest.
@@ -616,40 +589,31 @@ song_strestore(struct state *s) {
 void
 song_confrestore(struct statelist *slist) {
 	struct state *s;
-
+	struct ev re;
+	
 	for (s = slist->first; s != NULL; s = s->next) {
-		song_strestore(s);
-	}
-}
-
-/*
- * cancel the given frame
- */
-void
-song_stcancel(struct state *s) {
-	struct ev ca;
-
-	if (s->tag) {
-		if (state_cancel(s, &ca)) {
-			if (song_debug) {
-				dbg_puts("song_stcancel: ");
-				ev_dbg(&s->ev);
-				dbg_puts(": canceled -> ");
-				ev_dbg(&ca);
-				dbg_puts("\n");
+		if (!EV_ISNOTE(&s->ev)) {
+			if (state_restore(s, &re)) {
+				if (song_debug) {
+					dbg_puts("song_strestore: ");
+					ev_dbg(&s->ev);
+					dbg_puts(": restored -> ");
+					ev_dbg(&re);
+					dbg_puts("\n");
+				}
+				mixout_putev(&re, slist->serial);
 			}
-			mux_putev(&ca);
-		}
-		s->tag = 0;
-	} else {
-		if (song_debug) {
-			dbg_puts("song_stcancel: ");
-			ev_dbg(&s->ev);
-			dbg_puts(": not canceled (no tag)\n");
+			s->tag = 1;
+		} else {
+			if (song_debug) {
+				dbg_puts("song_strestore: ");
+				ev_dbg(&s->ev);
+				dbg_puts(": not restored (not tagged)\n");
+			}
+			s->tag = 0;
 		}
 	}
 }
-
 
 /*
  * cancel all frames in the given state list
@@ -657,9 +621,29 @@ song_stcancel(struct state *s) {
 void
 song_confcancel(struct statelist *slist) {
 	struct state *s;
+	struct ev ca;
+
 
 	for (s = slist->first; s != NULL; s = s->next) {
-		song_stcancel(s);
+		if (s->tag) {
+			if (state_cancel(s, &ca)) {
+				if (song_debug) {
+					dbg_puts("song_stcancel: ");
+					ev_dbg(&s->ev);
+					dbg_puts(": canceled -> ");
+					ev_dbg(&ca);
+					dbg_puts("\n");
+				}
+				mixout_putev(&ca, slist->serial);
+			}
+			s->tag = 0;
+		} else {
+			if (song_debug) {
+				dbg_puts("song_stcancel: ");
+				ev_dbg(&s->ev);
+				dbg_puts(": not canceled (no tag)\n");
+			}
+		}
 	}
 }
 
@@ -742,7 +726,7 @@ song_evcb(struct song *o, struct ev *ev) {
 		if (filtout[i].cmd == EV_NULL) {
 			continue;
 		}
-		mux_putev(&filtout[i]);
+		mixout_putev(&filtout[i], 0);
 	}
 }
 
@@ -832,6 +816,7 @@ song_start(struct song *o, unsigned mode, unsigned countdown) {
 	seqptr_seek(&o->recptr, tic);
 
 	mux_open();
+	mixout_start();
 
 	/*
 	 * send sysex messages and channel config messages
@@ -884,6 +869,7 @@ song_stop(struct song *o) {
 	SONG_FOREACH_TRK(o, t) {
 		song_confcancel(&t->trackptr.statelist);
 	}
+	mixout_stop();
 	mux_flush();	
 	mux_close();
 

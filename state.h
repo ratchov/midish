@@ -34,6 +34,7 @@
 #include "ev.h"
 
 struct seqev;
+struct statelist;
 
 struct state  {
 	struct state *next, **prev;	/* for statelist */
@@ -54,8 +55,9 @@ struct state  {
 	/*
 	 * the following are general purpose fields that are ignored
 	 * by state_xxx() and statelist_xxx() routines. Other
-	 * subsystems (seqptr, filt, ...) use them for various
-	 * purposes
+	 * subsystems (seqptr, filt, ...) use them privately for
+	 * various purposes. See specific modules to get their various
+	 * significances.
 	 */
 	unsigned tag;			/* user-defined tag */
 	unsigned tic;			/* absolute tic of the FIRST event */
@@ -72,6 +74,7 @@ struct statelist {
 	 */
 	struct state *first;	/* head of the state list */
 	unsigned changed;	/* if changed within this tick */
+	unsigned serial;	/* unique ID */
 #ifdef STATE_PROF
 	unsigned lookup_n;	/* number of lookups */
 	unsigned lookup_max;	/* max lookup time */
