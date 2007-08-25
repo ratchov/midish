@@ -825,7 +825,6 @@ user_func_shut(struct exec *o, struct data **r) {
 	struct mididev *dev;
 
 	mux_open();
-
 	for (dev = mididev_list; dev != NULL; dev = dev->next) {
 		for (i = 0; i < EV_MAXCH; i++) {
 			ev.cmd = EV_XCTL;
@@ -846,9 +845,7 @@ user_func_shut(struct exec *o, struct data **r) {
 			ev.bend_val = EV_BEND_DEFAULT;
 			mux_putev(&ev);
 		}
-	}
-	
-	mux_flush();
+	}	
 	mux_close();
 	return 1;
 }
@@ -888,7 +885,6 @@ user_func_sendraw(struct exec *o, struct data **r) {
 		byte = i->val.num;
 		mux_sendraw(device, &byte, 1);
 	}
-	mux_flush();
 	mux_close();
 	return 1;
 }

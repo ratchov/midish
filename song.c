@@ -728,6 +728,7 @@ song_evcb(struct song *o, struct ev *ev) {
 		}
 		mixout_putev(&filtout[i], 0);
 	}
+	mux_flush();
 }
 
 /*
@@ -870,7 +871,6 @@ song_stop(struct song *o) {
 		song_confcancel(&t->trackptr.statelist);
 	}
 	mixout_stop();
-	mux_flush();	
 	mux_close();
 
 	SONG_FOREACH_TRK(o, t) {

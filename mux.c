@@ -166,6 +166,7 @@ void
 mux_close(void) {
 	struct mididev *i;
 
+	norm_stop(&mux_norm);
 	mux_flush();
 	for (i = mididev_list; i != NULL; i = i->next) {
 		if (RMIDI(i)->isysex) {
@@ -175,7 +176,6 @@ mux_close(void) {
 		rmidi_close(RMIDI(i));
 	}
 	mux_mdep_close();
-	norm_stop(&mux_norm);
 	statelist_done(&mux_ostate);
 	statelist_done(&mux_istate);
 	timo_done();
@@ -446,7 +446,6 @@ mux_ticcb(unsigned unit) {
 			mux_curtic = 0;
 			song_startcb(user_song);
 		}
-		/* XXX: where is the flush ?! */
 		mididev_master->ticdelta -= mididev_master->ticrate;
 	}
 	mididev_master->ticdelta += mux_ticrate;
