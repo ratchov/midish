@@ -179,6 +179,8 @@ state_inspec(struct state *st, struct evspec *spec) {
 		return 1;
 	}
 	switch(spec->cmd) {
+	case EVSPEC_EMPTY:
+		return 0;
 	case EVSPEC_ANY:
 		goto ch;
 	case EVSPEC_NOTE:
@@ -187,17 +189,17 @@ state_inspec(struct state *st, struct evspec *spec) {
 			dbg_panic();
 		}
 		if (st->ev.cmd == EV_NON) {
-			goto b0;
+			goto v0;
 		}
 		break;
 	case EVSPEC_CAT:
 		if (st->ev.cmd == EV_CAT) {
-			goto b1;
+			goto v1;
 		}
 		break;
 	case EVSPEC_BEND:
 		if (st->ev.cmd == EV_BEND) {
-			goto b1;
+			goto v1;
 		}
 		break;
 	case EVSPEC_XPC:
@@ -207,17 +209,17 @@ state_inspec(struct state *st, struct evspec *spec) {
 		break;
 	case EVSPEC_NRPN:
 		if (st->ev.cmd == EV_NRPN) {
-			goto b0;
+			goto v0;
 		}
 		break;
 	case EVSPEC_RPN:
 		if (st->ev.cmd == EV_RPN) {
-			goto b0;
+			goto v0;
 		}
 		break;
 	case EVSPEC_XCTL:
 		if (st->ev.cmd == EV_XCTL) {
-			goto b0;
+			goto v0;
 		}
 		break;
 	default:
@@ -225,12 +227,12 @@ state_inspec(struct state *st, struct evspec *spec) {
 	}
 	return 0;
 
-b1:	if (st->ev.v1 < spec->b1_min ||
-	    st->ev.v1 > spec->b1_max) {
+v1:	if (st->ev.v1 < spec->v1_min ||
+	    st->ev.v1 > spec->v1_max) {
 		return 0;
 	}
-b0:	if (st->ev.v0 < spec->b0_min ||
-	    st->ev.v0 > spec->b0_max) {
+v0:	if (st->ev.v0 < spec->v0_min ||
+	    st->ev.v0 > spec->v0_max) {
 		return 0;
 	}
 ch:	if (st->ev.dev < spec->dev_min ||

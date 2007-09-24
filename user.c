@@ -319,7 +319,7 @@ exec_lookupevspec(struct exec *o, char *name, struct evspec *e) {
 	struct var *arg;
 	struct data *d;
 	struct songchan *i;
-	unsigned lo, hi, max;
+	unsigned lo, hi, min, max;
 
 	arg = exec_varlookup(o, name);
 	if (!arg) {
@@ -344,7 +344,11 @@ exec_lookupevspec(struct exec *o, char *name, struct evspec *e) {
 	    !evspec_str2cmd(e, d->val.ref)) {
 		cons_err("bad status in event spec");
 		return 0;
-	}	
+	}
+	e->v0_min = evinfo[e->cmd].v0_min;
+	e->v0_max = evinfo[e->cmd].v0_max;
+	e->v1_min = evinfo[e->cmd].v1_min;
+	e->v1_max = evinfo[e->cmd].v1_max;
 
 	/*
 	 * find the {device channel} pair
@@ -352,6 +356,9 @@ exec_lookupevspec(struct exec *o, char *name, struct evspec *e) {
 	d = d->next;
 	if (!d) {
 		goto done;
+	}
+	if ((evinfo[e->cmd].flags & (EV_HAS_DEV | EV_HAS_CH)) == 0) {
+		goto toomany;
 	}
 	if (d->type == DATA_REF) {
 		i = song_chanlookup(user_song, d->val.ref);
@@ -381,6 +388,9 @@ exec_lookupevspec(struct exec *o, char *name, struct evspec *e) {
 			cons_err("bad channel range spec");
 			return 0;
 		}
+	} else {
+		cons_err("list or ref expected as channel range spec");
+		return 0;
 	}
 
 	/*
@@ -390,27 +400,20 @@ exec_lookupevspec(struct exec *o, char *name, struct evspec *e) {
 	if (!d) {
 		goto done;
 	}
-	if (e->cmd == EVSPEC_ANY) {
+	if ((evinfo[e->cmd].flags & EV_HAS_V0) == 0) {
 		goto toomany;
 	}
 	if ((e->cmd == EVSPEC_CTL || e->cmd == EV_XCTL) && d->type == DATA_REF) {
 		if (!data_getctl(d, &hi)) {
 			return 0;
 		}
-		e->b0_min = hi;
-		e->b0_max = hi;
+		e->v0_min = e->v0_max = hi;
 	} else {
-		if (e->cmd == EVSPEC_BEND || e->cmd == EVSPEC_XCTL || 
-		    e->cmd == EVSPEC_NRPN || e->cmd == EVSPEC_RPN) {
-			max = EV_MAXFINE;
-		} else {
-			max = EV_MAXCOARSE;
-		}	
-		if (!data_list2range(d, 0, max, &lo, &hi)) {
+		if (!data_list2range(d, e->v0_min, e->v0_max, &min, &max)) {
 			return 0;
 		}
-		e->b0_min = lo;
-		e->b0_max = hi;
+		e->v0_min = min;
+		e->v0_max = max;
 	}
 
 	/*
@@ -420,20 +423,14 @@ exec_lookupevspec(struct exec *o, char *name, struct evspec *e) {
 	if (!d) {
 		goto done;
 	}
-	if ((e->cmd == EVSPEC_PC || e->cmd == EVSPEC_CAT || 
-	     e->cmd == EVSPEC_BEND)) {
+	if ((evinfo[e->cmd].flags & EV_HAS_V1) == 0) {
 		goto toomany;
 	}
-	if (e->cmd == EVSPEC_CTL || e->cmd == EVSPEC_NOTE) {
-		max = EV_MAXCOARSE;
-	} else {
-		max = EV_MAXFINE;
-	}
-	if (!data_list2range(d, 0, max, &lo, &hi)) {
+	if (!data_list2range(d, e->v1_min, e->v1_max, &min, &max)) {
 		return 0;
 	}
-	e->b1_min = lo;
-	e->b1_max = hi;
+	e->v1_min = min;
+	e->v1_max = max;
 	d = d->next;
 	if (d) {
 		goto toomany;
@@ -445,11 +442,18 @@ exec_lookupevspec(struct exec *o, char *name, struct evspec *e) {
 	 */
 	if (e->cmd == EVSPEC_PC) {
 		e->cmd = EVSPEC_XPC;
+		e->v1_min = evinfo[e->cmd].v1_min;
+		e->v1_max = evinfo[e->cmd].v1_max;
 	} else if (e->cmd == EVSPEC_CTL) {
 		e->cmd = EVSPEC_XCTL;
-		e->b1_min =  (e->b1_min << 7) & 0x3fff;
-		e->b1_max = ((e->b1_max << 7) & 0x3fff) | 0x7f;
+		e->v1_min =  (e->v1_min << 7) & 0x3fff;
+		e->v1_max = ((e->v1_max << 7) & 0x3fff) | 0x7f;
 	}
+	/*
+	dbg_puts("lookupevspec: ");
+	evspec_dbg(e);
+	dbg_puts("\n");
+	*/
 	return 1;
  toomany:
 	cons_err("too many ranges/values in event spec");

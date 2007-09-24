@@ -36,16 +36,67 @@
 #include "ev.h"
 #include "str.h"
 
-char *ev_cmdstr[EV_NUMCMD] = {
-	"nil",		NULL,		"tempo",	"timesig",
-	"nrpn",		"rpn",		"xctl",		"xpc",
-	"noff",		"non",		"kat",		"ctl",
-	"pc",		"cat",		"bend"
-};
-
-char *evspec_cmdstr[] = {
-	"any", "note", "ctl", "pc", "cat", "bend", "nrpn", "rpn", 
-	"xctl", "xpc", NULL
+struct evinfo evinfo[EV_NUMCMD] = {
+	{ "nil", "any",	
+	  EV_HAS_DEV | EV_HAS_CH,		
+	  0, 0, 0, 0
+	},
+	{ NULL,	"empty",	
+	  0,		
+	  0, 0, 0, 0
+	},
+	{ "tempo", NULL,	
+	  EV_HAS_V0,	
+	  TEMPO_MIN, TEMPO_MAX, 0, 0 
+	},
+	{ "timesig", NULL,	
+	  EV_HAS_V0 | EV_HAS_V1,
+	  1, 16, 1, 32
+	},
+	{ "nrpn", "nrpn",
+	  EV_HAS_DEV | EV_HAS_CH | EV_HAS_V0 | EV_HAS_V1, 
+	  0, EV_MAXFINE, 0, EV_MAXFINE 
+	},
+	{ "rpn", "rpn", 
+	  EV_HAS_DEV | EV_HAS_CH | EV_HAS_V0 | EV_HAS_V1, 
+	  0, EV_MAXFINE, 0, EV_MAXFINE 
+	},
+	{ "xctl", "xctl",
+	  EV_HAS_DEV | EV_HAS_CH | EV_HAS_V0 | EV_HAS_V1, 
+	  0, EV_MAXCOARSE, 0, EV_MAXFINE 
+	},
+	{ "xpc", "xpc",
+	  EV_HAS_DEV | EV_HAS_CH | EV_HAS_V0 | EV_HAS_V1, 
+	  0, EV_MAXCOARSE, 0, EV_MAXFINE 
+	},
+	{ "noff", NULL,
+	  EV_HAS_DEV | EV_HAS_CH | EV_HAS_V0 | EV_HAS_V1, 
+	  0, EV_MAXCOARSE, 0, EV_MAXCOARSE 
+	},
+	{ "non", "note",
+	  EV_HAS_DEV | EV_HAS_CH | EV_HAS_V0 | EV_HAS_V1, 
+	  0, EV_MAXCOARSE, 0, EV_MAXCOARSE 
+	},
+	{ "kat", NULL,
+	  EV_HAS_DEV | EV_HAS_CH | EV_HAS_V0 | EV_HAS_V1, 
+	  0, EV_MAXCOARSE, 0, EV_MAXCOARSE 
+	},
+	{ "ctl", "ctl",
+	  EV_HAS_DEV | EV_HAS_CH | EV_HAS_V0 | EV_HAS_V1, 
+	  0, EV_MAXCOARSE, 0, EV_MAXCOARSE 
+	},
+	{ "pc", "pc",
+	  EV_HAS_DEV | EV_HAS_CH | EV_HAS_V0,
+	  0, EV_MAXCOARSE, 0, 0
+	},
+	{ "cat", "cat",
+	  EV_HAS_DEV | EV_HAS_CH | EV_HAS_V0,
+	  0, EV_MAXCOARSE, 0, 0
+	},
+	{ "bend", "bend",
+	  EV_HAS_DEV | EV_HAS_CH | EV_HAS_V0,
+	  0, EV_MAXFINE, 0, 0
+	}
 };
 
 struct evctl evctl_tab[128];
@@ -62,7 +113,7 @@ ev_getstr(struct ev *ev) {
 		dbg_panic();
 		*/
 	}
-	return ev_cmdstr[ev->cmd];
+	return evinfo[ev->cmd].ev;
 }
 
 /*
@@ -72,7 +123,7 @@ unsigned
 ev_str2cmd(struct ev *ev, char *str) {
 	unsigned i;
 	for (i = 0; i < EV_NUMCMD; i++) {
-		if (ev_cmdstr[i] && str_eq(ev_cmdstr[i], str)) {
+		if (evinfo[i].ev && str_eq(evinfo[i].ev, str)) {
 			ev->cmd = i;
 			return 1;
 		}
@@ -202,8 +253,8 @@ unsigned
 evspec_str2cmd(struct evspec *ev, char *str) {
 	unsigned i;
 
-	for (i = 0; evspec_cmdstr[i]; i++) {
-		if (str_eq(evspec_cmdstr[i], str)) {
+	for (i = 0; i < EV_NUMCMD + 1; i++) {
+		if (evinfo[i].spec != NULL && str_eq(evinfo[i].spec, str)) {
 			ev->cmd = i;
 			return 1;
 		}
@@ -221,10 +272,10 @@ evspec_reset(struct evspec *o) {
 	o->dev_max = EV_MAXDEV;
 	o->ch_min  = 0;
 	o->ch_max  = EV_MAXCH;
-	o->b0_min  = 0;
-	o->b0_max  = EV_MAXFINE;
-	o->b1_min  = 0;
-	o->b1_max  = EV_MAXFINE;
+	o->v0_min  = 0xdeadbeef;
+	o->v0_max  = 0xdeadbeef;
+	o->v1_min  = 0xdeadbeef;
+	o->v1_max  = 0xdeadbeef;
 }
 
 /*
@@ -236,41 +287,106 @@ evspec_dbg(struct evspec *o) {
 	
 	i = 0;
 	for (;;) {
-		if (evspec_cmdstr[i] == 0) {
-			dbg_puts("unknown");
+		if (i == EV_NUMCMD + 1) {
+			dbg_puts("unk(");
+			dbg_putu(o->cmd);
+			dbg_puts(")");
 			break;
 		}
 		if (o->cmd == i) {
-			dbg_puts(evspec_cmdstr[i]);
+			if (evinfo[i].spec == NULL) {
+				dbg_puts("bad(");
+				dbg_putu(o->cmd);
+				dbg_puts(")");
+			} else {
+				dbg_puts(evinfo[i].spec);
+			}
 			break;
 		}
 		i++;
 	}
-	dbg_puts(" ");
-	dbg_putu(o->dev_min);
-	dbg_puts(":");
-	dbg_putu(o->dev_max);
-		
-	dbg_puts(" ");
-	dbg_putu(o->ch_min);
-	dbg_puts(":");
-	dbg_putu(o->ch_max);
-
-	if (o->cmd != EVSPEC_ANY) {
+	if (evinfo[o->cmd].flags & EV_HAS_DEV) {
 		dbg_puts(" ");
-		dbg_putu(o->b0_min);
+		dbg_putu(o->dev_min);
 		dbg_puts(":");
-		dbg_putu(o->b0_max);
-
-		if (o->cmd != EVSPEC_CAT && 
-		    o->cmd != EVSPEC_PC &&
-		    o->cmd != EVSPEC_BEND) {
-			dbg_puts(" ");
-			dbg_putu(o->b1_min);
-			dbg_puts(":");
-			dbg_putu(o->b1_max);
-		}
+		dbg_putu(o->dev_max);
 	}
+	if (evinfo[o->cmd].flags & EV_HAS_CH) {
+		dbg_puts(" ");
+		dbg_putu(o->ch_min);
+		dbg_puts(":");
+		dbg_putu(o->ch_max);
+	}
+	if (evinfo[o->cmd].flags & EV_HAS_V0) {
+		dbg_puts(" ");
+		dbg_putu(o->v0_min);
+		dbg_puts(":");
+		dbg_putu(o->v0_max);
+	}	
+	if (evinfo[o->cmd].flags & EV_HAS_V1) {
+		dbg_puts(" ");
+		dbg_putu(o->v1_min);
+		dbg_puts(":");
+		dbg_putu(o->v1_max);
+	}
+}
+
+/*
+ * compute intersection of two event specs, i.e. the set of events
+ * that are common to both evspecs. If there are no such events,
+ * return 0 and res is not set
+ *
+ * XXX: shouldn't we return 'void' and set res->cmd to EVSPEC_EMPTY
+ * if there is no intersectin?
+ */
+unsigned
+evspec_intersec(struct evspec *es1, struct evspec *es2, struct evspec *res) {
+#define MIN(x, y) ((x) < (y) ? (x) : (y))
+#define MAX(x, y) ((x) > (y) ? (x) : (y))
+	if (es1->cmd == EVSPEC_ANY || es1->cmd == es2->cmd) {
+		res->cmd = es2->cmd;
+	} else if (es2->cmd == EVSPEC_ANY) {
+		res->cmd = es1->cmd;
+	} else {
+		res->cmd = EVSPEC_EMPTY;
+		return 0;
+	}
+	if (res->cmd == EVSPEC_EMPTY) {
+		return 0;
+	}
+	res->dev_min = MIN(es1->dev_min, es2->dev_min);
+	res->dev_max = MAX(es1->dev_max, es2->dev_max);
+	if (res->dev_min > res->dev_max) {
+		res->cmd = EVSPEC_EMPTY;
+		return 0;
+	}
+	res->ch_min = MIN(es1->ch_min, es2->ch_min);
+	res->ch_max = MAX(es1->ch_max, es2->ch_max);
+	if (res->ch_min > res->ch_max) {
+		res->cmd = EVSPEC_EMPTY;
+		return 0;
+	}
+	res->v0_min = MIN(es1->v0_min, es2->v0_min);
+	res->v0_max = MAX(es1->v0_max, es2->v0_max);
+	if (res->v0_min > res->v0_max) {
+		res->cmd = EVSPEC_EMPTY;
+		return 0;
+	}
+	if (res->cmd == EVSPEC_ANY) {
+		dbg_puts("evspec_intersec: bogus cmd = any\n");
+		dbg_panic();
+	}
+	if (res->cmd == EVSPEC_BEND || res->cmd == EVSPEC_CAT ||
+	    res->cmd == EVSPEC_PC) {
+		return 1;
+	}
+	res->v1_min = MIN(es1->v1_min, es2->v1_min);
+	res->v1_max = MAX(es1->v1_max, es2->v1_max);
+	if (res->v1_min > res->v1_max) {
+		res->cmd = EVSPEC_EMPTY;
+		return 0;
+	}
+	return 1;
 }
 
 /*

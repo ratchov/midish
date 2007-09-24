@@ -102,26 +102,51 @@ struct ev {
 #define EV_PHASE_NEXT		2
 #define EV_PHASE_LAST		4
 
+
 /*
- * range of events
+ * range of events, the cmd argument is the event type. To facilitate
+ * matching 'struct ev' agains 'struct evspec', we try (when possible)
+ * to use the same constants. Currently this works for all events
+ * except EV_NON, EV_KAT, EV_NOFF, which all correspond to EVSPEC_NOTE
  */
 struct evspec {
-#define EVSPEC_ANY		0
-#define EVSPEC_NOTE		1
-#define EVSPEC_CTL		2
-#define EVSPEC_PC		3
-#define EVSPEC_CAT		4
-#define EVSPEC_BEND		5
-#define EVSPEC_NRPN		6
-#define EVSPEC_RPN		7
-#define EVSPEC_XCTL		8
-#define EVSPEC_XPC		9
+#define EVSPEC_ANY		EV_NULL
+#define EVSPEC_EMPTY		1
+#define EVSPEC_NOTE		EV_NON
+#define EVSPEC_CTL		EV_CTL
+#define EVSPEC_PC		EV_PC
+#define EVSPEC_CAT		EV_CAT
+#define EVSPEC_BEND		EV_BEND
+#define EVSPEC_NRPN		EV_NRPN
+#define EVSPEC_RPN		EV_RPN
+#define EVSPEC_XCTL		EV_XCTL
+#define EVSPEC_XPC		EV_XPC
 	unsigned cmd;
-	unsigned dev_min, dev_max;
-	unsigned ch_min, ch_max;
-	unsigned b0_min, b0_max;
-	unsigned b1_min, b1_max;
+	unsigned dev_min, dev_max;	/* except for EMPTY */
+	unsigned ch_min, ch_max;	/* except for EMPTY */
+	unsigned v0_min, v0_max;	/* except for EMPTY, ANY */
+	unsigned v1_min, v1_max;	/* except for EMPTY, ANY, CAT, PC */
 };
+
+
+/*
+ * we use a static array (indexed by 'cmd') of the following
+ * structures to lookup for events properties
+ */ 
+struct evinfo {
+	char *ev, *spec;
+#define EV_HAS_DEV	1	/* ev->dev is used */
+#define EV_HAS_CH	2	/* ev->ch is used */ 
+#define EV_HAS_V0	4	/* ev->v0 is used */
+#define EV_HAS_V1	8	/* ev->v1 is used */
+	unsigned flags;		/* bitmap of above */
+	unsigned v0_min;	/* min ev->v0 */
+	unsigned v0_max;	/* max ev->v0 */
+	unsigned v1_min;	/* min ev->v1 */
+	unsigned v1_max;	/* max ev->v1 */
+};
+
+extern struct evinfo evinfo[EV_NUMCMD];
 
 void	 ev_dbg(struct ev *ev);
 unsigned ev_prio(struct ev *ev);
@@ -132,6 +157,7 @@ unsigned evspec_str2cmd(struct evspec *ev, char *str);
 void	 evspec_dbg(struct evspec *o);
 void	 evspec_reset(struct evspec *o);
 unsigned evspec_matchev(struct evspec *o, struct ev *e);
+unsigned evspec_intersec(struct evspec *, struct evspec *, struct evspec *);
 
 /*
  * describes a controller number; this structures defines
