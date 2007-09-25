@@ -104,6 +104,7 @@
 	<UL>
 	<LI><A href="#changes_02">13.1 Changes from release 0.1 to release 0.2</A>
 	<LI><A href="#changes_03">13.2 Changes from release 0.2 to release 0.3</A>
+	<LI><A href="#changes_04">13.3 Changes from release 0.3 to release 0.4</A>
 	</UL>
 	<LI><A href="#attributes">14 Project attributes</A>
 	<UL>
@@ -832,6 +833,16 @@ the console).
         metroswitch 1           # switch the metronome on
         songplay                # test it
         </PRE>
+
+	<p>
+	To get the time signature at any given measure number, 
+	the 'songgetsign' function can be used. It returns 
+	the denominator and the numerator in a two integer list.
+	For instance, 
+	to print the time signature at measure number 17:
+	<pre>
+        print [songgetsign 17]
+	</pre>
         
 <A name="section_5_3"></A><H2>5.3 Tempo changes</H2>
         
@@ -844,6 +855,15 @@ the console).
         songsettempo 0 100
         songsettempo 2 180
         </PRE>
+
+	<p>
+	To get the tempo at any given measure number, 
+	the 'songgettempo' function can be used. It returns 
+	the tempo in beats per minute. For instance, 
+	to print the tempo at measure number 17:
+	<pre>
+        print [songgettempo 17]
+	</pre>
 
 
 <A name="section_5_4"></A><H2>5.4 Moving within the song</H2>
@@ -1463,6 +1483,18 @@ the console).
 		<TT>devixctl</TT> and <TT>devoxctl</TT>.
 	<li>added <tt>chanunconfev</tt> function to remove an event from a channel
 	</UL>
+
+<A name="changes_04"></A><H2>13.3 Changes from release 0.3 to release 0.4</H2>
+
+        <UL>
+        <LI>added <TT>songgetsign</TT> and <tt>songgettempo</tt>
+	    functions returning time signature and tempo respectively
+	    at any measure number
+	<li>added output MIDI merger, to avoid conflicts
+	    between tracks and MIDI input
+	<li>continuous controllers are merged more
+	    intelligently in performance mode, avoiding clipping
+	</ul>
 
 <A name="attributes"></A><H1>14 Project attributes</H1>
 
@@ -2875,6 +2907,20 @@ the console).
         <BLOCKQUOTE>
         print the meta-track (tempo changes, time signature
         changes
+        </BLOCKQUOTE>
+
+<A name="func_songgettempo"></A>
+<B><TT>songgettempo measurenum</TT></B>
+        <BLOCKQUOTE>
+	Return the tempo at the given measure number. The unit
+	is beats per minute.
+        </BLOCKQUOTE>
+
+<A name="func_songgetsign"></A>
+<B><TT>songgettempo measurenum</TT></B>
+        <BLOCKQUOTE>
+	Return the time signature at the given measure number. The result
+	is a two number list: numerator and denominator.
         </BLOCKQUOTE>
 
 <A name="func_songinfo"></A>

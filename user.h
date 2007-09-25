@@ -196,6 +196,8 @@ unsigned user_func_songsettempo(struct exec *o, struct data **r);
 unsigned user_func_songtimeins(struct exec *o, struct data **r);
 unsigned user_func_songtimerm(struct exec *o, struct data **r);
 unsigned user_func_songtimeinfo(struct exec *o, struct data **r);
+unsigned user_func_songgettempo(struct exec *o, struct data **r);
+unsigned user_func_songgetsign(struct exec *o, struct data **r);
 unsigned user_func_songsetcursysex(struct exec *o, struct data **r);
 unsigned user_func_songgetcursysex(struct exec *o, struct data **r);
 unsigned user_func_songsetcurchan(struct exec *o, struct data **r);

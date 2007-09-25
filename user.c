@@ -1258,6 +1258,10 @@ user_mainloop(void) {
 			name_newarg("from", 
 			name_newarg("amount", NULL)));
 	exec_newbuiltin(exec, "songtimeinfo", user_func_songtimeinfo, NULL);
+	exec_newbuiltin(exec, "songgettempo", user_func_songgettempo, 
+			name_newarg("from", NULL));
+	exec_newbuiltin(exec, "songgetsign", user_func_songgetsign, 
+			name_newarg("from", NULL));
 	exec_newbuiltin(exec, "ctlconf", user_func_ctlconf, 
 			name_newarg("name", 
 			name_newarg("ctl", 

@@ -659,6 +659,36 @@ user_func_songsetcurinput(struct exec *o, struct data **r) {
 }
 
 unsigned
+user_func_songgettempo(struct exec *o, struct data **r) {
+	long from;
+	unsigned tic, bpm, tpb;
+	unsigned long usec24;
+	
+	if (!exec_lookuplong(o, "from", &from)) {
+		return 0;
+	}
+	track_timeinfo(&user_song->meta, from, &tic, &usec24, &bpm, &tpb);
+	*r = data_newlong(60L * 24000000L / (usec24 * tpb));
+	return 1;
+}
+
+unsigned
+user_func_songgetsign(struct exec *o, struct data **r) {
+	long from;
+	unsigned tic, bpm, tpb;
+	unsigned long usec24;
+	
+	if (!exec_lookuplong(o, "from", &from)) {
+		return 0;
+	}
+	track_timeinfo(&user_song->meta, from, &tic, &usec24, &bpm, &tpb);
+	*r = data_newlist(NULL);
+	data_listadd(*r, data_newlong(bpm));
+	data_listadd(*r, data_newlong(user_song->tics_per_unit / tpb));
+	return 1;
+}
+
+unsigned
 user_func_songgetcurinput(struct exec *o, struct data **r) {
 	unsigned dev, ch;
 	song_getcurinput(user_song, &dev, &ch);  
