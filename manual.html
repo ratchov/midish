@@ -34,8 +34,6 @@
 <HTML>
 <HEAD>
 <TITLE>midish 0.4 - User's manual and tutorial</TITLE>
-<STYLE type="text/css">
-</STYLE>
 <META http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
 <META name="language" content="en">
 </HEAD>
@@ -338,7 +336,7 @@ performance modes:
         <PRE>                                   
         +---------+             +------------+          +----------+
         |         |             |            |          |          |
-        | MIDI in |------------>|   filter   |--------->| MIDI out |
+        | MIDI in |-------------|   filter   |---------&gt;| MIDI out |
         |         |             |            |          |          |
         +---------+             +------------+          +----------+
         </PRE>
@@ -359,8 +357,8 @@ performance modes:
                                 +--------------+   |
                                                    |
         +---------+             +------------+     |    +----------+
-        |         |             |            |     \--->|          |
-        | MIDI in |------------>|   filter   |--------->| MIDI out |
+        |         |             |            |     \---&gt;|          |
+        | MIDI in |------------&gt;|   filter   |---------&gt;| MIDI out |
         |         |             |            |          |          |
         +---------+             +------------+          +----------+
         </PRE>
@@ -384,14 +382,14 @@ performance modes:
                                 +--------------+   |
                                                    |
         +---------+             +------------+     |    +----------+
-        |         |             |            |     \--->|          |
-        | MIDI in |-----+------>|   filter   |----+---->| MIDI out |
+        |         |             |            |     \---&gt;|          |
+        | MIDI in |-----+------&gt;|   filter   |----+----&gt;| MIDI out |
         |         |     |       |            |    |     |          |
         +---------+     |       +------------+    |     +----------+
                         |                         |
                         |                         |     +----------------+
-                        |       +--------------+  \---->| track_X record |
-                        \------>| sysex record |        +----------------+
+                        |       +--------------+  \----&gt;| track_X record |
+                        \------&gt;| sysex record |        +----------------+
                                 +--------------+
         </PRE>
 </UL>
@@ -427,10 +425,10 @@ the console).
 	<TT>pi1</TT>, we start recording and we save the song
 	into a file.
 	<PRE>
-	1> filtnew piano			# create filter "piano"
-	2> filtchanmap piano {1 0} {0 5}	# dev=1,ch=0 -> dev=0,ch=5
-	3> tracknew pi1				# create track "pi1"
-	4> songrecord				# start recording
+	1&gt; filtnew piano			# create filter "piano"
+	2&gt; filtchanmap piano {1 0} {0 5}	# dev=1,ch=0 -&gt; dev=0,ch=5
+	3&gt; tracknew pi1				# create track "pi1"
+	4&gt; songrecord				# start recording
 	press control-C to finish
 
 	--interrupt--
@@ -444,10 +442,10 @@ the console).
 	by using the simple procedures (or macros) defined in the 
 	default <TT>/etc/midishrc</TT>.
 	<PRE>
-	1> ci {1 0}			# select default input {dev, chan}
-	2> ni piano {0 5}		# create piano on dev=0, chan=5
-	3> nt pi1 			# new track named "pi1"
-	4> r				# start recording
+	1&gt; ci {1 0}			# select default input {dev, chan}
+	2&gt; ni piano {0 5}		# create piano on dev=0, chan=5
+	3&gt; nt pi1 			# new track named "pi1"
+	4&gt; r				# start recording
 	press control-C to finish
 
 	--interrupt--
@@ -626,22 +624,22 @@ the console).
         <PRE>
                 +------------+  
                 |   voice    | match
-        in ---->|            |-----------------------------------------> out
+        in ----&gt;|            |-----------------------------------------&gt; out
                 |   rules    |
                 +------------+
               doesn't |         +------------+
                 match |         |  channel   | match
-                      \-------->|            |-------------------------> out
+                      \--------&gt;|            |-------------------------&gt; out
                                 |   rules    |
                                 +------------+
                               doesn't |         +------------+
                                 match |         |   device   | match
-                                      \-------->|            |---------> out
+                                      \--------&gt;|            |---------&gt; out
                                                 |   rules    |
                                                 +------------+
                                               doesn't | 
                                                 match | 
-                                                      \----------------> out
+                                                      \----------------&gt; out
         
         </PRE>
         
@@ -1211,7 +1209,7 @@ the console).
         <PRE>
         print [songgetunit]             # ticks per unit note
         print [songgetcurpos]           # print current position
-        print [songgetcurlen]        # print current selection length
+        print [songgetcurlen]           # print current selection length
         print [songgetcurfilt]          # current filter
         print [songgetcurtrack]         # current track
         print [songgetcursysex]
@@ -1714,7 +1712,7 @@ the console).
         <TR>    <TD><TT>noff</TT>       <TD>note off
         <TR>    <TD><TT>non</TT>        <TD>note off
         <TR>    <TD><TT>kat</TT>        <TD>key after-touch (poly)
-        <TR>    <TD><TT>xctl</TT>       <TD>7bit controller
+        <TR>    <TD><TT>ctl</TT>        <TD>7bit controller
         <TR>    <TD><TT>xctl</TT>       <TD>14bit controller
         <TR>    <TD><TT>xpc</TT>        <TD>bank and program change
         <TR>    <TD><TT>cat</TT>        <TD>channel after-touch (mono)
@@ -1783,11 +1781,9 @@ the console).
         { note {0 {}} }         # match notes on device 0
         { note {0 {3 5}} }      # match notes on device 0, channel 3, 4, 5
         { note {} {0 64} }      # match notes between 0 an 64
-        { note {} 60 {80 127} } # match note 60 with velocity between 80 an 127
         { ctl bass }            # match controllers on channel "bass"
         { ctl bass 7 }          # match controller 7 on channel "bass"
-        { ctl bass 7 {0 64} }   # match ctl 7 on chan 'bass' with value 0->64
-        { bend {} {0 0x1fff} }  # match lower bender
+        { bend {} }             # match bender
         { xctl {} 19 }          # match 14bit controller number 19
         { xpc  {} 21 1234 }     # match patch 21 on bank 1234
         { nrpn {} 21 }          # NRPN 21 change
@@ -3455,29 +3451,29 @@ the console).
         configure a keyboard split:
                 
         <PRE>
-        1> channew bass {0 5}
-        2> chanconfev bass {pc bass 33}
-        3> channew piano {0 6}
-        4> chanconfev piano {pc piano 2}
-        5> filtnew split
-        6> filtchanmap split {1 0} bass 
-        7> filtchanmap split {1 0} piano
-        8> filtkeymap  split {1 0} bass   0  63 (-12)
-        9> filtkeymap  split {1 0} piano 64 127 0   
-        10> filtinfo split
+        1&gt; channew bass {0 5}
+        2&gt; chanconfev bass {pc bass 33}
+        3&gt; channew piano {0 6}
+        4&gt; chanconfev piano {pc piano 2}
+        5&gt; filtnew split
+        6&gt; filtchanmap split {1 0} bass 
+        7&gt; filtchanmap split {1 0} piano
+        8&gt; filtkeymap  split {1 0} bass   0  63 (-12)
+        9&gt; filtkeymap  split {1 0} piano 64 127 0   
+        10&gt; filtinfo split
         {
                 keymap {1 0} {0 2} 65 127 0 id
                 keymap {1 0} {0 1} 0 64 116 id
                 chanmap {1 0} {0 2}
                 chanmap {1 0} {0 1}
         }
-        11> songidle
+        11&gt; songidle
         press enter to finish
         ^C
         -- interrupt --
 
-        12> songsave "piano-bass"
-	13>
+        12&gt; songsave "piano-bass"
+	13&gt;
         </PRE>
 
         First we define 2 named-channels 
@@ -3496,25 +3492,25 @@ the console).
         record a track. It uses the procedures defined
 	in the default <TT>/etc/midishrc</TT>.
         <PRE>
-	1> ci {1 0}
-	2> ni drums {0 9}
-	3> nt dr1
-	4> tempo 90
-	5> r
+	1&gt; ci {1 0}
+	2&gt; ni drums {0 9}
+	3&gt; nt dr1
+	4&gt; tempo 90
+	5&gt; r
 	press control-C to finish
 
 	--interrupt--
 
-	6> n 16
-	7> sel 32
-	8> q 75
-	9> p
+	6&gt; n 16
+	7&gt; sel 32
+	8&gt; q 75
+	9&gt; p
 	press control-C to finish
 
 	--interrupt--
 
-	10> save "myrhythm"
-	11> 
+	10&gt; save "myrhythm"
+	11&gt; 
         </PRE>
         first, we set the default input channel to {1 0}
 	(default channel of the keyboard). Then, we	
@@ -3546,7 +3542,7 @@ Will Woodruff.
 <HR>
 <SMALL><EM>
 Copyright (c) 2003-2007 Alexandre Ratchov<BR>
-Last updated sep 25, 2007
+Last updated sep 28, 2007
 </EM></SMALL>
 
 </BODY>
