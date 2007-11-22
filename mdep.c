@@ -329,7 +329,7 @@ unsigned
 user_getopts(int *pargc, char ***pargv) {
 	int ch;
 
-	while ((ch = getopt(*pargc, *pargv, "bv")) != -1) {
+	while ((ch = getopt(*pargc, *pargv, "bhv")) != -1) {
 		switch (ch) {
 		case 'b':
 			user_flag_batch = 1;
@@ -345,7 +345,7 @@ user_getopts(int *pargc, char ***pargv) {
 	*pargv += optind;
 	if (*pargc >= 1) {
 	err:
-		fputs("usage: midish [-bv]\n", stderr);
+		fputs("usage: midish [-bhv]\n", stderr);
 		return 0;
 	}
 	return 1;
