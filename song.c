@@ -506,9 +506,8 @@ song_metaput(struct song *o, struct ev *ev) {
  * Note that must be no events available on any track, in other words,
  * this routine must be called after song_ticplay()
  */
-unsigned
+void
 song_ticskip(struct song *o) {
-	unsigned tic;
 	struct songtrk *i;
 
 	/* 
@@ -535,11 +534,9 @@ song_ticskip(struct song *o) {
 		dbg_puts("\n");
 	}
 #endif
-	tic = 1;
 	SONG_FOREACH_TRK(o, i) {
-		tic += seqptr_ticskip(&i->trackptr, 1);
+		(void)seqptr_ticskip(&i->trackptr, 1);
 	}
-	return tic;
 }
 
 /*
