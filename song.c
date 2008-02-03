@@ -553,6 +553,17 @@ song_ticplay(struct song *o) {
 	struct ev ev;
 	unsigned id;
 	
+	/*
+	 * provide song-position feedback
+	 */
+	if (song_debug && o->tic == 0) {
+		dbg_puts("song_play: measure[");
+		dbg_putu(o->measure + 1);
+		dbg_puts(",");
+		dbg_putu(o->beat + 1);
+		dbg_puts("]\n");
+	}
+
 	while ((st = seqptr_evget(&o->metaptr))) {
 		song_metaput(o, &st->ev);
 	}
