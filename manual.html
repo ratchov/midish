@@ -137,13 +137,14 @@
 	<LI><A href="#section_17_8">17.8 Controller functions</A>
 	<LI><A href="#section_17_9">17.9 Misc. functions</A>
 	</UL>
-	<LI><A href="#midishrc">18 Sample midishrc-file</A>
-	<LI><A href="#example">19 Example sessions</A>
+	<LI><A href="#section_18">18 Using midish in other programs</A>
+	<LI><A href="#midishrc">19 Sample midishrc-file</A>
+	<LI><A href="#example">20 Example sessions</A>
 	<UL>
-	<LI><A href="#section_19_1">19.1 Example - MIDI filtering</A>
-	<LI><A href="#section_19_2">19.2 Example - recording a track</A>
+	<LI><A href="#section_20_1">20.1 Example - MIDI filtering</A>
+	<LI><A href="#section_20_2">20.2 Example - recording a track</A>
 	</UL>
-	<LI><A href="#section_20">20 Thanks</A>
+	<LI><A href="#section_21">21 Thanks</A>
 	</UL>
 <!-- toc_end -->
 
@@ -3159,9 +3160,63 @@ the console).
 	Return a list of all builtin commands.
 	</BLOCKQUOTE>
 
+<A name="section_18"></A><h1>18 Using midish in other programs</h1>
 
+	<p>
+	A program that wants to use a midish feature, may start midish
+	and issue commands on its standard input. Then, the standard
+	output of midish could be parsed so the program can obtain the
+	desired information (if any).
+
+	<p>
+	To ease this process, the midish binary can be
+	started with the <b>-v</b> flag; in this case it will write
+	additionnal information on its standard output, allowing the
+	caller to be notified of changes of the state of midish. The
+	information is written on a single line starting with the
+	<b>+</b> sign, as follows:
+
+	<ul>
+	<li><b>+ready</b><br> means that midish is ready to
+	parse and execute a new line. A front-end should
+	always wait for this string before issuing any command.
+
+	<li><b>+pos measure beat tick</b><br> is written 
+	during performace mode on every beat, it gives the current
+	song position.
+	</ul>
+
+	<p>
+	No midish function (like <a href="#func_print">print</a>) can
+	generate a line starting with the <b>+</b> sign, so it is safe
+	to assume that such lines are synchronization lines and not
+	the output of a function.  Furthermore, such lines will never
+	appear in the middle of the output of a function.  Additionnal
+	information may be available in the same format in future
+	versions of midish; thus front-ends should be able to ignore
+	unknown lines starting with <b>+</b>.
+
+	<p>
+	Generally, any front-end should use a loop similar
+	to the following:
+
+	<pre>
+	while (!eof) {
+		command = get_command_from_user();
+		wait_for("+ready");
+		write_to_midish_stdin(command);
+		result = parse_midish_stdout();
+		do_something(result);
+	}
+	</pre>
+
+	<p>
+	To stop performace mode, a SIGINT signal must be sent to the
+	midish process.  The rmidish program shipped with midish
+	source tar-balls is a trivial front-end that illustrates how
+	to implement such a loop.
         
-<A name="midishrc"></A><H1>18 Sample midishrc-file</H1>
+<A name="midishrc"></A><H1>19 Sample midishrc-file</H1>
         
         <P>
         The sample midishrc file shipped in the source tar-balls
@@ -3443,9 +3498,9 @@ the console).
                 </BLOCKQUOTE>
 
 
-<A name="example"></A><H1>19 Example sessions</H1>
+<A name="example"></A><H1>20 Example sessions</H1>
 
-<A name="section_19_1"></A><H2>19.1 Example - MIDI filtering</H2>
+<A name="section_20_1"></A><H2>20.1 Example - MIDI filtering</H2>
         
         The following session show how to 
         configure a keyboard split:
@@ -3486,7 +3541,7 @@ the console).
         on note number 64 (note E3), the bass is 
         transposed by -12 half-tones (one octave).
 
-<A name="section_19_2"></A><H2>19.2 Example - recording a track</H2>
+<A name="section_20_2"></A><H2>20.2 Example - recording a track</H2>
 
         The following session show how to
         record a track. It uses the procedures defined
@@ -3525,7 +3580,7 @@ the console).
 	we start playback and we save the song into a file.
 
 
-<A name="section_20"></A><H1>20 Thanks</H1>
+<A name="section_21"></A><H1>21 Thanks</H1>
 
 Many thanks to all who contributed (new features, bug fixes, bug
 reports, packaging efforts and other improvements): 

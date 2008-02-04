@@ -53,10 +53,17 @@ sendline(char *buf) {
  */
 void
 waitready(void) {
+	unsigned m, b, t;
+
 	for (;;) {
 		if (fgets(linebuf, LINELENGTH, midish_stdout) == NULL) {
 			/* midish terminanted */
 			exit(0);
+		}
+		if (sscanf(linebuf, "+pos %u %u %u", &m, &b, &t) == 3) {
+			fprintf(stdout, "\r[%04u %02u]", m, b);
+			fflush(stdout);
+			continue;
 		}
 		if (strcmp(linebuf, "+ready\n") == 0) {
 			/* midish is now waiting for new commands */

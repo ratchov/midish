@@ -89,6 +89,18 @@ cons_getc(void) {
 }
 
 /*
+ * print song position
+ */
+void
+cons_putpos(unsigned measure, unsigned beat, unsigned tic)
+{
+	if (user_flag_verb && tic == 0) {
+		fprintf(stdout, "+pos %u %u %u\n", measure, beat, tic);
+		fflush(stdout);
+	}	
+}
+
+/*
  * follows routines that report user non-fatal errors please use them
  * instead of dbg_xxx (the later are only for debugging)
  */

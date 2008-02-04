@@ -61,7 +61,7 @@ void mixout_timocb(void *);
 
 struct statelist mixout_slist;
 struct timo mixout_timo;
-unsigned mixout_debug = 1;
+unsigned mixout_debug = 0;
 
 void
 mixout_start(void) {

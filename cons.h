@@ -38,6 +38,7 @@ void cons_mdep_done(void);
 int  cons_mdep_getc(void);
 int  cons_getc(void);
 unsigned cons_break(void);
+void cons_putpos(unsigned measure, unsigned beat, unsigned tic);
 
 void cons_err(char *mesg);
 void cons_errs(char *s, char *mesg);

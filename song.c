@@ -40,7 +40,7 @@
 #include "default.h"
 #include "mixout.h"
 
-unsigned song_debug = 1;
+unsigned song_debug = 0;
 
 /*
  * allocate and initialize a song structure
@@ -560,6 +560,8 @@ song_ticplay(struct song *o) {
 		dbg_putu(o->beat + 1);
 		dbg_puts("]\n");
 	}
+
+	cons_putpos(o->measure, o->beat, o->tic);
 
 	while ((st = seqptr_evget(&o->metaptr))) {
 		song_metaput(o, &st->ev);
