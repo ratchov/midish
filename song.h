@@ -169,6 +169,8 @@ void song_playconf(struct song *o);
 void song_record(struct song *o);
 void song_play(struct song *o);
 void song_idle(struct song *o);
+void song_stop(struct song *o);
+unsigned song_try(struct song *o);
 
 extern unsigned song_debug;
 

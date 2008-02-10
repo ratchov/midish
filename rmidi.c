@@ -87,22 +87,6 @@ rmidi_delete(struct rmidi *o) {
 	mem_free(o);
 }
 
-void 
-rmidi_init(struct rmidi *o, unsigned mode) {	
-	o->oused = 0;
-	o->istatus = o->ostatus = 0;
-	o->isysex = NULL;
-	mididev_init(&o->mididev, mode);
-}
-
-void 
-rmidi_done(struct rmidi *o) {
-	if (o->oused != 0) {
-		dbg_puts("rmidi_done: output buffer is not empty, continuing...\n");
-	}
-	mididev_done(&o->mididev);
-}
-
 unsigned rmidi_evlen[] = { 2, 2, 2, 2, 1, 1, 2, 0 };
 #define RMIDI_EVLEN(status) (rmidi_evlen[((status) >> 4) & 7])
 

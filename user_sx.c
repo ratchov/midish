@@ -54,6 +54,9 @@ user_func_sysexlist(struct exec *o, struct data **r) {
 	struct data *d, *n;
 	struct songsx *i;
 
+	if (!song_try(user_song)) {
+		return 0;
+	}
 	d = data_newlist(NULL);
 	SONG_FOREACH_SX(user_song, i) {
 		n = data_newref(i->name.str);
@@ -68,6 +71,9 @@ user_func_sysexnew(struct exec *o, struct data **r) {
 	char *name;
 	struct songsx *i;
 	
+	if (!song_try(user_song)) {
+		return 0;
+	}
 	if (!exec_lookupname(o, "sysexname", &name)) {
 		return 0;
 	}
@@ -83,6 +89,10 @@ user_func_sysexnew(struct exec *o, struct data **r) {
 unsigned
 user_func_sysexdelete(struct exec *o, struct data **r) {
 	struct songsx *c;
+
+	if (!song_try(user_song)) {
+		return 0;
+	}
 	if (!exec_lookupsx(o, "sysexname", &c)) {
 		return 0;
 	}
@@ -95,6 +105,9 @@ user_func_sysexrename(struct exec *o, struct data **r) {
 	struct songsx *c;
 	char *name;
 	
+	if (!song_try(user_song)) {
+		return 0;
+	}
 	if (!exec_lookupsx(o, "sysexname", &c) ||
 	    !exec_lookupname(o, "newname", &name)) {
 		return 0;
@@ -112,6 +125,10 @@ unsigned
 user_func_sysexexists(struct exec *o, struct data **r) {
 	char *name;
 	struct songsx *i;
+
+	if (!song_try(user_song)) {
+		return 0;
+	}
 	if (!exec_lookupname(o, "sysexname", &name)) {
 		return 0;
 	}
@@ -126,6 +143,9 @@ user_func_sysexinfo(struct exec *o, struct data **r) {
 	struct sysex *e;
 	unsigned i;
 	
+	if (!song_try(user_song)) {
+		return 0;
+	}
 	if (!exec_lookupsx(o, "sysexname", &c)) {
 		return 0;
 	}
@@ -163,6 +183,9 @@ user_func_sysexclear(struct exec *o, struct data **r) {
 	struct data *d;
 	unsigned match;
 	
+	if (!song_try(user_song)) {
+		return 0;
+	}
 	if (!exec_lookupsx(o, "sysexname", &c) ||
 	    !exec_lookuplist(o, "data", &d)) {
 		return 0;
@@ -197,6 +220,9 @@ user_func_sysexsetunit(struct exec *o, struct data **r) {
 	unsigned match;
 	long unit;
 	
+	if (!song_try(user_song)) {
+		return 0;
+	}
 	if (!exec_lookupsx(o, "sysexname", &c) ||
 	    !exec_lookuplong(o, "unit", &unit) ||
 	    !exec_lookuplist(o, "data", &d)) {
@@ -228,6 +254,9 @@ user_func_sysexadd(struct exec *o, struct data **r) {
 	struct var *arg;
 	long unit;
 	
+	if (!song_try(user_song)) {
+		return 0;
+	}
 	if (!exec_lookupsx(o, "sysexname", &c) || 
 	    !exec_lookuplong(o, "unit", &unit)) {
 		return 0;
@@ -271,4 +300,3 @@ user_func_sysexadd(struct exec *o, struct data **r) {
 	}	
 	return 1;
 }
-

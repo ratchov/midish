@@ -73,7 +73,7 @@ proc transpose halftones {
 # do nothing, just echo trough the configuration of the current track
 #
 proc i  {
-	songidle;
+	songidle
 }
 
 #
@@ -91,6 +91,13 @@ proc p  {
 proc r  { 
 	metroswitch 1
 	songrecord
+}
+
+#
+# stop idle/play/record
+#
+proc s  {
+	songstop
 }
 
 #

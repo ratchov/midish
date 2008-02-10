@@ -91,6 +91,7 @@
 #include "conv.h"
 
 #include "norm.h"
+#include "mixout.h"
 
 /* 
  * MUX_START_DELAY: 
@@ -100,6 +101,7 @@
  */
 #define MUX_START_DELAY	  (2000000UL)	
 
+unsigned mux_isopen = 0;
 unsigned mux_debug = 0;
 unsigned mux_ticrate;
 unsigned long mux_ticlength, mux_curpos, mux_nextpos;
@@ -110,12 +112,12 @@ void *mux_addr;
 struct statelist mux_istate, mux_ostate;
 struct norm mux_norm;
 
+void mux_sendstop(void);
 /*
  * the following are defined in mdep.c
  */
 void mux_mdep_open(void);
 void mux_mdep_close(void);
-void mux_mdep_run(void);
 
 void mux_dbgphase(unsigned phase);
 void mux_chgphase(unsigned phase);
@@ -130,6 +132,7 @@ mux_open(void) {
 	timo_init();
 	statelist_init(&mux_istate);
 	statelist_init(&mux_ostate);
+	mixout_start();
 	norm_start(&mux_norm);
 	
 	/* 
@@ -146,6 +149,7 @@ mux_open(void) {
 	/*
 	 * reset tic counters of devices 
 	 */
+	mux_isopen = 1;
 	mux_mdep_open();
 	for (i = mididev_list; i != NULL; i = i->next) {
 		i->ticdelta = i->ticrate;
@@ -166,7 +170,16 @@ void
 mux_close(void) {
 	struct mididev *i;
 
+	if (!mididev_master) {
+		if (mux_phase > MUX_START && mux_phase < MUX_STOP) {
+			mux_chgphase(MUX_STOP);
+			song_stopcb(user_song);
+			mux_sendstop();
+			mux_flush();
+		}
+	}
 	norm_stop(&mux_norm);
+	mixout_stop();
 	mux_flush();
 	for (i = mididev_list; i != NULL; i = i->next) {
 		if (RMIDI(i)->isysex) {
@@ -176,6 +189,7 @@ mux_close(void) {
 		rmidi_close(RMIDI(i));
 	}
 	mux_mdep_close();
+	mux_isopen = 0;
 	statelist_done(&mux_ostate);
 	statelist_done(&mux_istate);
 	timo_done();
@@ -547,25 +561,6 @@ mux_errorcb(unsigned unit) {
 	}
 	mux_flush();
 }
-
-/*
- * loops forever (actually until interrupt is received) and process
- * all events
- */
-void
-mux_run(void) {
-	mux_mdep_run();
-	
-	if (!mididev_master) {
-		if (mux_phase > MUX_START && mux_phase < MUX_STOP) {
-			mux_chgphase(MUX_STOP);
-			song_stopcb(user_song);
-			mux_sendstop();
-			mux_flush();
-		}
-	}
-}
-
 
 /*
  * called when an sysex has been received from an external device

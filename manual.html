@@ -262,25 +262,32 @@
         print "hello world"
         </PRE>
 
-        Midish has two modes: <I>prompt mode</I> and <I>performance mode</I>.
-
         <P>
-        In prompt mode, midish interactively waits for commands
-        from the command-line. 
-        This mode is used to configure the sequencing engine:
-        create and manage tracks, define filtering rules
-        start/stop recording, etc...
-        MIDI devices aren't used, they are let closed in order to
-        let other applications to use them.
+        Once MIDI devices are setup, one of the performance modes 
+	can be started or stopped with one of the following commands:
+	<ul> 
 
-        <P>
-        In performance mode, midish processes midi input/output
-        in real-time.
-        Commands cannot be issued on the command-line.
-        This mode is typically used for playback and record.
-        To stop performance mode, hit control-C (or send an interrupt
-        signal (SIGINT) to midish).     
+	<li>
+	songidle - open MIDI devices but do nothing, just process
+	input and send it to the output.
 
+	<li>
+	songplay - open MIDI devices and start playback
+
+	<li>
+	songrecord - open MIDI devices and start playback and
+	recording
+
+	<li>
+	songstop - stop one of the above and close MIDI devices.
+	</ul>
+
+	In performance mode certain features are not available (like
+	most editing functions).
+
+	Thus performance mode should be disabled; furthermore MIDI
+	devices are closed and thus are available to other
+	applications.
 
 <A name="section_1_4"></A><H2>1.4 How does it work</H2>
 Midish uses the following objects to represent a project:
@@ -396,10 +403,10 @@ performance modes:
 </UL>
         
 The above performance modes are started respectively with
-<TT>songidle</TT>, <TT>songplay</TT>, <TT>songrecord</TT>. Performance
-mode is blocking (no commands can be issued on the prompt). To return
-again to prompt mode, send a interrupt signal (SIGINT) to midish (hit control-C on
-the console).
+<TT>songidle</TT>, <TT>songplay</TT>, <TT>songrecord</TT>.
+
+Certain functions are not available during performance mode; to stop
+it, use the <TT>songstop</TT> function.
 
 
 <A name="section_1_5"></A><H2>1.5 An example</H2>
@@ -430,12 +437,9 @@ the console).
 	2&gt; filtchanmap piano {1 0} {0 5}	# dev=1,ch=0 -&gt; dev=0,ch=5
 	3&gt; tracknew pi1				# create track "pi1"
 	4&gt; songrecord				# start recording
-	press control-C to finish
-
-	--interrupt--
-
-	5> songsave "mysong"			# save the song into a file
-	6>					# EOF (control-D) to quit
+	5&gt; songstop				# stop recording
+	6&gt; songsave "mysong"			# save the song into a file
+	7&gt;					# EOF (control-D) to quit
 	</PRE>
 	
 	<P>
@@ -447,12 +451,9 @@ the console).
 	2&gt; ni piano {0 5}		# create piano on dev=0, chan=5
 	3&gt; nt pi1 			# new track named "pi1"
 	4&gt; r				# start recording
-	press control-C to finish
-
-	--interrupt--
-
-	5> save "mysong"		# save to file "mysong"
-	6>				# EOF (control-D) to quit
+	5&gt; s				# stop recording
+	6&gt; save "mysong"		# save to file "mysong"
+	7&gt;				# EOF (control-D) to quit
 	</PRE>
 	
 	<P>
@@ -490,9 +491,9 @@ the console).
         <PRE>
         songload "sample.sng"
         songplay
+	songstop
         </PRE>
         
-        (hit control-C to stop playback).
         When the configuration is setup, put the "devattach" 
         commands in the user's <TT>$HOME/.midishrc</TT>. It will be
         automatically executed the next time midish is run.
@@ -678,7 +679,7 @@ the console).
         <PRE>
         songidle
         </PRE>
-        (hit control-C to stop performance mode).
+	(type "songstop" to stop performance mode).
         
 <A name="section_4_2_2"></A><H3>4.2.2 Channel maps</H3>
 
@@ -696,7 +697,7 @@ the console).
         <PRE>
         songidle
         </PRE>
-        (hit control-C to stop performance mode). 
+	(type "songstop" to stop performance mode).
         Playing on channel 0 of the keyboard will make
         sound channel 9 of the sound-module.
 
@@ -798,6 +799,7 @@ the console).
         <PRE>
         metroswitch 1           # switch the metronome on
         songplay                # start playback
+	songstop		# stop
         </PRE>
         The metronome has two kind of click-sound:
         <UL>
@@ -825,12 +827,14 @@ the console).
         songtimeins 2 5 6 8     # 8/6 at measure 2 during 5 measures
         metroswitch 1           # switch the metronome on
         songplay                # test it
+	songstop
         </PRE>
         To suppress measure number 2 (the first 6/8 measure)
         <PRE>
         songtimerm  2 1         # remove 1 measure starting a measure 2
         metroswitch 1           # switch the metronome on
         songplay                # test it
+	songstop
         </PRE>
 
 	<p>
@@ -902,10 +906,12 @@ the console).
         <PRE>
         tracknew mytrack
         songrecord
+	songstop
         </PRE>
         tracks are played as follows:
         <PRE>
         songplay
+	songstop
         </PRE>
         However, with the above configuration this will not
         work as expected because events from the input
@@ -2719,6 +2725,13 @@ the console).
 	the actual position on which recording starts.
         </BLOCKQUOTE>
 
+<A name="func_songplay"></A>
+<B><TT>songstop</TT></B>
+        <BLOCKQUOTE>
+        stop <tt>songidle</tt>, <tt>songplay</tt> or
+	<tt>songrecord</tt> functions.
+        </BLOCKQUOTE>
+
 <A name="func_sendraw"></A>
 <B><TT>sendraw device arrayofbytes</TT></B>
         <BLOCKQUOTE>
@@ -3523,12 +3536,9 @@ the console).
                 chanmap {1 0} {0 1}
         }
         11&gt; songidle
-        press enter to finish
-        ^C
-        -- interrupt --
-
-        12&gt; songsave "piano-bass"
-	13&gt;
+	12&gt; songstop
+        13&gt; songsave "piano-bass"
+	14&gt;
         </PRE>
 
         First we define 2 named-channels 
@@ -3552,20 +3562,14 @@ the console).
 	3&gt; nt dr1
 	4&gt; tempo 90
 	5&gt; r
-	press control-C to finish
-
-	--interrupt--
-
-	6&gt; n 16
-	7&gt; sel 32
-	8&gt; q 75
-	9&gt; p
-	press control-C to finish
-
-	--interrupt--
-
-	10&gt; save "myrhythm"
-	11&gt; 
+	6&gt; s
+	7&gt; n 16
+	8&gt; sel 32
+	9&gt; q 75
+	10&gt; p
+	11&gt; s
+	12&gt; save "myrhythm"
+	13&gt; 
         </PRE>
         first, we set the default input channel to {1 0}
 	(default channel of the keyboard). Then, we	

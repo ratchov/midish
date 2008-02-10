@@ -80,7 +80,7 @@ cons_getc(void) {
 		}
 		cons_ready = 0;
 	}
-	c = fgetc(stdin);
+	c = cons_mdep_getc();
 	if (c == '\n') {
 		cons_ready = 1;
 	}

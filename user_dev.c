@@ -54,6 +54,9 @@ user_func_devlist(struct exec *o, struct data **r) {
 	struct data *d, *n;
 	struct mididev *i;
 
+	if (!song_try(user_song)) {
+		return 0;
+	}
 	d = data_newlist(NULL);
 	for (i = mididev_list; i != NULL; i = i->next) {
 		n = data_newlong(i->unit);
@@ -69,6 +72,9 @@ user_func_devattach(struct exec *o, struct data **r) {
 	char *path, *modename;
 	unsigned mode;
 	
+	if (!song_try(user_song)) {
+		return 0;
+	}
 	if (!exec_lookuplong(o, "unit", &unit) || 
 	    !exec_lookupstring(o, "path", &path) ||
 	    !exec_lookupname(o, "mode", &modename)) {
@@ -90,6 +96,10 @@ user_func_devattach(struct exec *o, struct data **r) {
 unsigned
 user_func_devdetach(struct exec *o, struct data **r) {
 	long unit;
+
+	if (!song_try(user_song)) {
+		return 0;
+	}
 	if (!exec_lookuplong(o, "unit", &unit)) {
 		return 0;
 	}
@@ -101,6 +111,9 @@ user_func_devsetmaster(struct exec *o, struct data **r) {
 	struct var *arg;
 	long unit;
 	
+	if (!song_try(user_song)) {
+		return 0;
+	}
 	arg = exec_varlookup(o, "unit");
 	if (!arg) {
 		dbg_puts("user_func_devsetmaster: no such var\n");
@@ -125,6 +138,10 @@ user_func_devsetmaster(struct exec *o, struct data **r) {
 
 unsigned
 user_func_devgetmaster(struct exec *o, struct data **r) {
+
+	if (!song_try(user_song)) {
+		return 0;
+	}
 	if (mididev_master) {
 		*r = data_newlong(mididev_master->unit);
 	} else {
@@ -137,6 +154,9 @@ unsigned
 user_func_devsendrt(struct exec *o, struct data **r) {
 	long unit, sendrt;
 
+	if (!song_try(user_song)) {
+		return 0;
+	}
 	if (!exec_lookuplong(o, "unit", &unit) || 
 	    !exec_lookupbool(o, "sendrt", &sendrt)) {
 		return 0;
@@ -153,6 +173,9 @@ unsigned
 user_func_devticrate(struct exec *o, struct data **r) {
 	long unit, tpu;
 	
+	if (!song_try(user_song)) {
+		return 0;
+	}
 	if (!exec_lookuplong(o, "unit", &unit) || 
 	    !exec_lookuplong(o, "tics_per_unit", &tpu)) {
 		return 0;
@@ -173,6 +196,9 @@ unsigned
 user_func_devinfo(struct exec *o, struct data **r) {
 	long unit;
 	
+	if (!song_try(user_song)) {
+		return 0;
+	}
 	if (!exec_lookuplong(o, "unit", &unit)) {
 		return 0;
 	}
@@ -213,6 +239,9 @@ user_func_devixctl(struct exec *o, struct data **r) {
 	struct data *list;
 	unsigned ctlset;
 
+	if (!song_try(user_song)) {
+		return 0;
+	}
 	if (!exec_lookuplong(o, "unit", &unit) || 
 	    !exec_lookuplist(o, "ctlset", &list)) {
 		return 0;
@@ -234,6 +263,9 @@ user_func_devoxctl(struct exec *o, struct data **r) {
 	struct data *list;
 	unsigned ctlset;
 
+	if (!song_try(user_song)) {
+		return 0;
+	}
 	if (!exec_lookuplong(o, "unit", &unit) || 
 	    !exec_lookuplist(o, "ctlset", &list)) {
 		return 0;

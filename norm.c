@@ -82,6 +82,7 @@ norm_stop(struct norm *o) {
 	if (norm_debug) {
 		dbg_puts("norm_stop()\n");
 	}
+	norm_shut(o);
 	timo_del(&o->timo);
 	statelist_done(&o->statelist);
 }

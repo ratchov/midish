@@ -799,6 +799,10 @@ user_func_info(struct exec *o, struct data **r) {
 unsigned
 user_func_metroswitch(struct exec *o, struct data **r) {
 	long onoff;
+
+	if (!song_try(user_song)) {
+		return 0;
+	}
 	if (!exec_lookuplong(o, "onoff", &onoff)) {
 		return 0;
 	}	
@@ -809,6 +813,10 @@ user_func_metroswitch(struct exec *o, struct data **r) {
 unsigned
 user_func_metroconf(struct exec *o, struct data **r) {
 	struct ev evhi, evlo;
+
+	if (!song_try(user_song)) {
+		return 0;
+	}
 	if (!exec_lookupev(o, "eventhi", &evhi) ||
 	    !exec_lookupev(o, "eventlo", &evlo)) {
 		return 0;
@@ -828,6 +836,9 @@ user_func_shut(struct exec *o, struct data **r) {
 	struct ev ev;
 	struct mididev *dev;
 
+	if (!song_try(user_song)) {
+		return 0;
+	}
 	mux_open();
 	for (dev = mididev_list; dev != NULL; dev = dev->next) {
 		for (i = 0; i < EV_MAXCH; i++) {
@@ -861,6 +872,9 @@ user_func_sendraw(struct exec *o, struct data **r) {
 	unsigned char byte;
 	long device;
 	
+	if (!song_try(user_song)) {
+		return 0;
+	}
 	arg = exec_varlookup(o, "list");
 	if (!arg) {
 		dbg_puts("user_func_sendraw: 'list': no such param\n");
@@ -1245,6 +1259,7 @@ user_mainloop(void) {
 	exec_newbuiltin(exec, "songidle", user_func_songidle, NULL);
 	exec_newbuiltin(exec, "songplay", user_func_songplay, NULL);
 	exec_newbuiltin(exec, "songrecord", user_func_songrecord, NULL);
+	exec_newbuiltin(exec, "songstop", user_func_songstop, NULL);
 	exec_newbuiltin(exec, "songsetunit", user_func_songsetunit, NULL);
 	exec_newbuiltin(exec, "songsettempo", user_func_songsettempo, 
 			name_newarg("measure", 

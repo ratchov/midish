@@ -56,6 +56,9 @@ user_func_tracklist(struct exec *o, struct data **r) {
 	struct data *d, *n;
 	struct songtrk *i;
 
+	if (!song_try(user_song)) {
+		return 0;
+	}
 	d = data_newlist(NULL);
 	SONG_FOREACH_TRK(user_song, i) {
 		n = data_newref(i->name.str);
@@ -70,6 +73,9 @@ user_func_tracknew(struct exec *o, struct data **r) {
 	char *trkname;
 	struct songtrk *t;
 	
+	if (!song_try(user_song)) {
+		return 0;
+	}
 	if (!exec_lookupname(o, "trackname", &trkname)) {
 		return 0;
 	}
@@ -85,6 +91,10 @@ user_func_tracknew(struct exec *o, struct data **r) {
 unsigned
 user_func_trackdelete(struct exec *o, struct data **r) {
 	struct songtrk *t;
+
+	if (!song_try(user_song)) {
+		return 0;
+	}
 	if (!exec_lookuptrack(o, "trackname", &t)) {
 		return 0;
 	}
@@ -97,6 +107,9 @@ user_func_trackrename(struct exec *o, struct data **r) {
 	struct songtrk *t;
 	char *name;
 	
+	if (!song_try(user_song)) {
+		return 0;
+	}
 	if (!exec_lookuptrack(o, "trackname", &t) ||
 	    !exec_lookupname(o, "newname", &name)) {
 		return 0;
@@ -115,6 +128,9 @@ user_func_trackexists(struct exec *o, struct data **r) {
 	char *name;
 	struct songtrk *t;
 	
+	if (!song_try(user_song)) {
+		return 0;
+	}
 	if (!exec_lookupname(o, "trackname", &name)) {
 		return 0;
 	}
@@ -131,6 +147,9 @@ user_func_trackaddev(struct exec *o, struct data **r) {
 	struct songtrk *t;
 	unsigned pos, bpm, tpb;
 
+	if (!song_try(user_song)) {
+		return 0;
+	}
 	if (!exec_lookuptrack(o, "trackname", &t) || 
 	    !exec_lookuplong(o, "measure", &measure) || 
 	    !exec_lookuplong(o, "beat", &beat) || 
@@ -159,6 +178,9 @@ user_func_tracksetcurfilt(struct exec *o, struct data **r) {
 	struct songfilt *f;
 	struct var *arg;
 	
+	if (!song_try(user_song)) {
+		return 0;
+	}
 	if (!exec_lookuptrack(o, "trackname", &t)) {
 		return 0;
 	}	
@@ -186,6 +208,9 @@ unsigned
 user_func_trackgetcurfilt(struct exec *o, struct data **r) {
 	struct songtrk *t;
 	
+	if (!song_try(user_song)) {
+		return 0;
+	}
 	if (!exec_lookuptrack(o, "trackname", &t)) {
 		return 0;
 	}
@@ -202,6 +227,9 @@ user_func_trackcheck(struct exec *o, struct data **r) {
 	char *trkname;
 	struct songtrk *t;
 	
+	if (!song_try(user_song)) {
+		return 0;
+	}
 	if (!exec_lookupname(o, "trackname", &trkname)) {
 		return 0;
 	}
@@ -221,6 +249,9 @@ user_func_trackcut(struct exec *o, struct data **r) {
 	unsigned tic, len;
 	struct track t1, t2;
 	
+	if (!song_try(user_song)) {
+		return 0;
+	}
 	if (!exec_lookuptrack(o, "trackname", &t) ||
 	    !exec_lookuplong(o, "from", &from) ||
 	    !exec_lookuplong(o, "amount", &amount) ||
@@ -261,6 +292,9 @@ user_func_trackblank(struct exec *o, struct data **r) {
 	long from, amount, quant;
 	unsigned tic, len;
 	
+	if (!song_try(user_song)) {
+		return 0;
+	}
 	if (!exec_lookuptrack(o, "trackname", &t) ||
 	    !exec_lookuplong(o, "from", &from) ||
 	    !exec_lookuplong(o, "amount", &amount) ||
@@ -291,6 +325,9 @@ user_func_trackcopy(struct exec *o, struct data **r) {
 	long from, where, amount, quant;
 	unsigned tic, tic2, len;
 	
+	if (!song_try(user_song)) {
+		return 0;
+	}
 	if (!exec_lookuptrack(o, "trackname", &t) ||
 	    !exec_lookuplong(o, "from", &from) ||
 	    !exec_lookuplong(o, "amount", &amount) ||
@@ -331,6 +368,9 @@ user_func_trackinsert(struct exec *o, struct data **r) {
 	unsigned tic, len;
 	struct track t1, t2;
 	
+	if (!song_try(user_song)) {
+		return 0;
+	}
 	if (!exec_lookupname(o, "trackname", &trkname) ||
 	    !exec_lookuplong(o, "from", &from) ||
 	    !exec_lookuplong(o, "amount", &amount) ||
@@ -373,6 +413,9 @@ unsigned
 user_func_trackmerge(struct exec *o, struct data **r) {
 	struct songtrk *src, *dst;
 
+	if (!song_try(user_song)) {
+		return 0;
+	}
 	if (!exec_lookuptrack(o, "source", &src) ||
 	    !exec_lookuptrack(o, "dest", &dst)) {
 		return 0;
@@ -389,6 +432,9 @@ user_func_trackquant(struct exec *o, struct data **r) {
 	unsigned start, len, offset;
 	long quant, rate;
 	
+	if (!song_try(user_song)) {
+		return 0;
+	}
 	if (!exec_lookupname(o, "trackname", &trkname) ||
 	    !exec_lookuplong(o, "from", &from) ||
 	    !exec_lookuplong(o, "amount", &amount) ||
@@ -431,6 +477,9 @@ user_func_tracktransp(struct exec *o, struct data **r) {
 	unsigned tic, len;
 	struct evspec es;
 	
+	if (!song_try(user_song)) {
+		return 0;
+	}
 	if (!exec_lookuptrack(o, "trackname", &t) ||
 	    !exec_lookuplong(o, "from", &from) ||
 	    !exec_lookuplong(o, "amount", &amount) ||
@@ -461,6 +510,9 @@ user_func_tracksetmute(struct exec *o, struct data **r) {
 	struct songtrk *t;
 	long flag;
 	
+	if (!song_try(user_song)) {
+		return 0;
+	}
 	if (!exec_lookuptrack(o, "trackname", &t) ||
 	    !exec_lookupbool(o, "muteflag", &flag)) {
 		return 0;
@@ -473,6 +525,9 @@ unsigned
 user_func_trackgetmute(struct exec *o, struct data **r) {
 	struct songtrk *t;
 	
+	if (!song_try(user_song)) {
+		return 0;
+	}
 	if (!exec_lookuptrack(o, "trackname", &t)) {
 		return 0;
 	}
@@ -488,6 +543,9 @@ user_func_trackchanlist(struct exec *o, struct data **r) {
 	char map[DEFAULT_MAXNCHANS];
 	unsigned i;
 	
+	if (!song_try(user_song)) {
+		return 0;
+	}
 	if (!exec_lookuptrack(o, "trackname", &t)) {
 		return 0;
 	}
@@ -518,6 +576,9 @@ user_func_trackinfo(struct exec *o, struct data **r) {
 	long quant;
 	unsigned len, count, count_next, tpb, bpm;
 
+	if (!song_try(user_song)) {
+		return 0;
+	}
 	if (!exec_lookuptrack(o, "trackname", &t) ||
 	    !exec_lookuplong(o, "quantum", &quant) ||
 	    !exec_lookupevspec(o, "evspec", &es)) {

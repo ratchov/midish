@@ -72,6 +72,7 @@ song_init(struct song *o) {
 	/* 
 	 * song parameters 
 	 */
+	o->mode = 0;
 	o->trklist = NULL;
 	o->chanlist = NULL;
 	o->filtlist = NULL;
@@ -127,6 +128,9 @@ song_init(struct song *o) {
  */
 void
 song_done(struct song *o) {
+	if (mux_isopen) {
+		song_stop(o);
+	}
 	while (o->trklist) {
 		song_trkdel(o, (struct songtrk *)o->trklist);
 	}
@@ -827,7 +831,6 @@ song_start(struct song *o, unsigned mode, unsigned countdown) {
 	seqptr_seek(&o->recptr, tic);
 
 	mux_open();
-	mixout_start();
 
 	/*
 	 * send sysex messages and channel config messages
@@ -880,7 +883,6 @@ song_stop(struct song *o) {
 	SONG_FOREACH_TRK(o, t) {
 		song_confcancel(&t->trackptr.statelist);
 	}
-	mixout_stop();
 	mux_close();
 
 	SONG_FOREACH_TRK(o, t) {
@@ -899,6 +901,15 @@ song_stop(struct song *o) {
 	}
 	seqptr_done(&o->recptr);
 	seqptr_done(&o->metaptr);
+
+	if (o->mode & SONG_REC) {
+		song_getcurtrk(o, &t);
+		if (t) {
+			track_merge(&o->curtrk->track, &o->rec);
+		}
+	}
+	track_clear(&o->rec);
+	o->mode = 0;
 }
 
 /*
@@ -912,9 +923,6 @@ song_play(struct song *o) {
 		dbg_puts("song_play: starting loop, waiting for a start event...\n");
 	}
 	mux_startwait();
-	mux_run();
-	
-	song_stop(o);
 }
 
 /*
@@ -935,13 +943,6 @@ song_record(struct song *o) {
 		dbg_puts("song_record: started loop, waiting for a start event...\n");
 	}
 	mux_startwait();
-	mux_run();
-	song_stop(o);
-	
-	if (t) {
-		track_merge(&o->curtrk->track, &o->rec);
-	}
-	track_clear(&o->rec);
 }
 
 /*
@@ -954,6 +955,14 @@ song_idle(struct song *o) {
 	if (song_debug) {
 		dbg_puts("song_idle: started loop...\n");
 	}
-	mux_run();	
-	song_stop(o);
+}
+
+unsigned
+song_try(struct song *o)
+{
+	if (mux_isopen) {
+		cons_err("song in use, use songstop to release it");
+		return 0;
+	}
+	return 1;
 }

@@ -56,6 +56,7 @@ struct sysex;
  */
 struct song;
 extern struct song *user_song;
+extern unsigned mux_isopen;
 void song_startcb(struct song *);
 void song_stopcb(struct song *);
 void song_movecb(struct song *);

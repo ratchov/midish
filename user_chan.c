@@ -55,6 +55,9 @@ user_func_chanlist(struct exec *o, struct data **r) {
 	struct data *d, *n;
 	struct songchan *i;
 
+	if (!song_try(user_song)) {
+		return 0;
+	}
 	d = data_newlist(NULL);
 	SONG_FOREACH_CHAN(user_song, i) {
 		n = data_newref(i->name.str);
@@ -70,6 +73,9 @@ user_func_channew(struct exec *o, struct data **r) {
 	struct songchan *i;
 	unsigned dev, ch;
 	
+	if (!song_try(user_song)) {
+		return 0;
+	}
 	if (!exec_lookupname(o, "channame", &name) ||
 	    !exec_lookupchan_getnum(o, "channum", &dev, &ch)) {
 		return 0;
@@ -95,6 +101,10 @@ user_func_channew(struct exec *o, struct data **r) {
 unsigned
 user_func_chandelete(struct exec *o, struct data **r) {
 	struct songchan *c;
+
+	if (!song_try(user_song)) {
+		return 0;
+	}
 	if (!exec_lookupchan_getref(o, "channame", &c)) {
 		return 0;
 	}
@@ -107,6 +117,9 @@ user_func_chanrename(struct exec *o, struct data **r) {
 	struct songchan *c;
 	char *name;
 	
+	if (!song_try(user_song)) {
+		return 0;
+	}
 	if (!exec_lookupchan_getref(o, "channame", &c) ||
 	    !exec_lookupname(o, "newname", &name)) {
 		return 0;
@@ -125,6 +138,9 @@ user_func_chanexists(struct exec *o, struct data **r) {
 	struct songchan *i;
 	unsigned dev, ch;
 	
+	if (!song_try(user_song)) {
+		return 0;
+	}
 	if (!exec_lookupchan_getnum(o, "channame", &dev, &ch)) {
 		return 0;
 	}
@@ -138,6 +154,9 @@ user_func_chanset(struct exec *o, struct data **r) {
 	struct songchan *c, *i;
 	unsigned dev, ch;
 	
+	if (!song_try(user_song)) {
+		return 0;
+	}
 	if (!exec_lookupchan_getref(o, "channame", &c) ||
 	    !exec_lookupchan_getnum(o, "channum", &dev, &ch)) {
 		return 0;
@@ -157,6 +176,9 @@ unsigned
 user_func_changetch(struct exec *o, struct data **r) {
 	struct songchan *i;
 	
+	if (!song_try(user_song)) {
+		return 0;
+	}
 	if (!exec_lookupchan_getref(o, "channame", &i)) {
 		return 0;
 	}
@@ -168,6 +190,9 @@ unsigned
 user_func_changetdev(struct exec *o, struct data **r) {
 	struct songchan *i;
 	
+	if (!song_try(user_song)) {
+		return 0;
+	}
 	if (!exec_lookupchan_getref(o, "channame", &i)) {
 		return 0;
 	}
@@ -180,6 +205,9 @@ user_func_chanconfev(struct exec *o, struct data **r) {
 	struct songchan *c;
 	struct ev ev;
 	
+	if (!song_try(user_song)) {
+		return 0;
+	}
 	if (!exec_lookupchan_getref(o, "channame", &c) ||
 	    !exec_lookupev(o, "event", &ev)) {
 		return 0;
@@ -197,6 +225,9 @@ user_func_chanunconfev(struct exec *o, struct data **r) {
 	struct songchan *c;
 	struct evspec es;
 	
+	if (!song_try(user_song)) {
+		return 0;
+	}
 	if (!exec_lookupchan_getref(o, "channame", &c) ||
 	    !exec_lookupevspec(o, "evspec", &es)) {
 		return 0;
@@ -209,6 +240,9 @@ unsigned
 user_func_chaninfo(struct exec *o, struct data **r) {
 	struct songchan *c;
 	
+	if (!song_try(user_song)) {
+		return 0;
+	}
 	if (!exec_lookupchan_getref(o, "channame", &c)) {
 		return 0;
 	}
@@ -223,6 +257,9 @@ user_func_chansetcurinput(struct exec *o, struct data **r) {
 	struct songchan *c;
 	struct data *l;
 	
+	if (!song_try(user_song)) {
+		return 0;
+	}
 	if (!exec_lookupchan_getref(o, "channame", &c) ||
 	    !exec_lookuplist(o, "inputchan", &l)) {
 		return 0;
@@ -240,6 +277,9 @@ unsigned
 user_func_changetcurinput(struct exec *o, struct data **r) {
 	struct songchan *c;
 	
+	if (!song_try(user_song)) {
+		return 0;
+	}
 	if (!exec_lookupchan_getref(o, "channame", &c)) {
 		return 0;
 	}

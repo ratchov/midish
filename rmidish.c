@@ -29,11 +29,6 @@ char midish_path[PATH_MAX];
 #define LINELENGTH 10000
 char linebuf[LINELENGTH + 1];
 unsigned linenum;
-	
-void
-sighandler(int s) {
-	kill(midish_pid, s);
-}
 
 /*
  * send a line to stdin of midish
@@ -61,13 +56,16 @@ waitready(void) {
 			exit(0);
 		}
 		if (sscanf(linebuf, "+pos %u %u %u", &m, &b, &t) == 3) {
-			fprintf(stdout, "\r[%04u %02u]", m, b);
-			fflush(stdout);
+			/*fprintf(stdout, "\r[%04u %02u]", m, b);
+			fflush(stdout);*/
 			continue;
 		}
 		if (strcmp(linebuf, "+ready\n") == 0) {
 			/* midish is now waiting for new commands */
 			break;
+		}
+		if (linebuf[0] == '+') {
+			continue;
 		}
 		fprintf(stdout, "%s", linebuf);
 	}
@@ -83,7 +81,6 @@ waitready(void) {
 void
 startmidish(void) {
 	int ipipe[2], opipe[2];
-	struct sigaction sa;
 	
 	/*
 	 * allocate pipes and fork
@@ -128,13 +125,6 @@ startmidish(void) {
 	midish_stdin = fdopen(ipipe[1], "w");
 	if (midish_stdin == NULL) {
 		perror("fdopen(midish_stdin)");
-		exit(1);
-	}
-	sa.sa_handler = sighandler;
-	sigemptyset(&sa.sa_mask);
-	sa.sa_flags = SA_RESTART;
-	if (sigaction(SIGINT, &sa, NULL) < 0) {
-		perror("sigaction");
 		exit(1);
 	}
 	linenum = 1;

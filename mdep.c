@@ -63,36 +63,39 @@
 #endif
 
 #define MIDI_BUFSIZE	1024
+#define CONS_BUFSIZE	1024
+#define MAXFDS		(DEFAULT_MAXNDEVS + 1)
 
-void
-cons_mdep_sighandler(int s) {
-	if (s == SIGINT) {
-		cons_breakcnt++;
+nfds_t ifds = 0;
+struct timeval tv, tv_last;
+struct pollfd pfds[MAXFDS];
+
+char cons_buf[CONS_BUFSIZE];
+unsigned cons_index, cons_len, cons_eof;
+struct pollfd *cons_pfd;
+
+struct pollfd *
+mdep_polladd(int fd)
+{
+	struct pollfd *pfd;
+
+	if (ifds >= MAXFDS) {
+		dbg_puts("mdep_polladd: max fds reached\n");
+		dbg_panic();
 	}
+	pfd = &pfds[ifds++];
+	pfd->fd = fd;
+	pfd->events = POLLIN;
+	return pfd;
 }
 
 void
-cons_mdep_init(void) {
-	struct sigaction sa;
+mdep_pollrm(struct pollfd *pfd)
+{
+	unsigned i;
 
-	sa.sa_handler = cons_mdep_sighandler;
-	sigemptyset(&sa.sa_mask);
-	sa.sa_flags = SA_RESTART;
-	if (sigaction(SIGINT, &sa, NULL) < 0) {
-		perror("cons_mdep_init: sigaction");
-		exit(1);
-	}
-}
-
-void
-cons_mdep_done(void) {
-	struct sigaction sa;
-
-	sa.sa_handler = SIG_DFL;
-	if (sigaction(SIGINT, &sa, NULL) < 0) {
-		perror("cons_mdep_done: sigaction");
-		exit(1);
-	}
+	for (i = pfd - pfds + 1; i < MAXFDS; i++)
+		pfds[i - 1] = pfds[i];
 }
 
 /*
@@ -100,14 +103,8 @@ cons_mdep_done(void) {
  */
 void
 mux_mdep_open(void) {
-	struct sigaction sa;
-
-	/*
-	 * ignore SIGPIPE, because we handle write errors
-	 */
-	sa.sa_handler = SIG_IGN;
-	if (sigaction(SIGPIPE, &sa, NULL) < 0) {
-		perror("mux_mdep_init: sigaction");
+	if (gettimeofday(&tv_last, NULL) < 0) {
+		perror("mux_mdep_open: initial gettimeofday() failed");
 		exit(1);
 	}
 }
@@ -117,78 +114,47 @@ mux_mdep_open(void) {
  */
 void
 mux_mdep_close(void) {
-	struct sigaction sa;
-
-	sa.sa_handler = SIG_DFL;
-	if (sigaction(SIGPIPE, &sa, NULL) < 0) {
-		perror("mux_mdep_done: sigaction");
-		exit(1);
-	}
 }
 
-/*
- * loop and call appropriate call-backs when input is available
- */
 void
-mux_mdep_run(void) {
-	nfds_t ifds;
+mux_mdep_wait(void)
+{
 	int res;
-	struct timeval tv, tv_last;
-	struct pollfd fds[DEFAULT_MAXNDEVS];
-	struct mididev *dev, *index2dev[DEFAULT_MAXNDEVS];
+	struct pollfd *pfd;
+	struct mididev *dev;
 	static unsigned char midibuf[MIDI_BUFSIZE];
 	long delta_usec;
-	unsigned i;
 
-	ifds = 0;
-	for (dev = mididev_list; dev != NULL; dev = dev->next) {
-		if (!(dev->mode & MIDIDEV_MODE_IN)) {
-			continue;
-		}
-		fds[ifds].fd = RMIDI(dev)->mdep.fd;
-		fds[ifds].events = POLLIN;
-		index2dev[ifds] = dev;
-		ifds++;
-	}
-		
-	if (gettimeofday(&tv_last, NULL) < 0) {
-		perror("mux_run: initial gettimeofday() failed\n");
+	res = poll(pfds, ifds, mux_isopen ? 1 : -1);
+	if (res < 0) {
+		perror("mux_run: poll failed");
 		exit(1);
 	}
-
-	cons_err("press control-C to finish");
-	while (!cons_break()) {
-		res = poll(fds, ifds, 1); 		/* 1ms timeout */
-		if (res < 0) {
-			if (errno == EINTR) {
+	for (dev = mididev_list; dev != NULL; dev = dev->next) {
+		pfd = RMIDI(dev)->mdep.pfd;
+		if (pfd == NULL)
+			continue;
+		if (pfd->revents & POLLIN) {
+			res = read(pfd->fd, midibuf, MIDI_BUFSIZE);
+			if (res < 0) {
+				perror(RMIDI(dev)->mdep.path);
+				RMIDI(dev)->mdep.idying = 1;
+				mux_errorcb(dev->unit);
 				continue;
 			}
-			perror("mux_run: poll failed");
-			return;
-		}
-		
-		for (i = 0; i < ifds; i++) {
-			if (fds[i].revents & POLLIN) {
-				dev = index2dev[i];
-				res = read(fds[i].fd, midibuf, MIDI_BUFSIZE);
-				if (res < 0) {
-					perror(RMIDI(dev)->mdep.path);
-					RMIDI(dev)->mdep.idying = 1;
-					mux_errorcb(dev->unit);
-					continue;
-				}
-				if (dev->isensto > 0) {
-					dev->isensto = MIDIDEV_ISENSTO;
-				}
-				rmidi_inputcb(RMIDI(dev), midibuf, res);
+			if (dev->isensto > 0) {
+				dev->isensto = MIDIDEV_ISENSTO;
 			}
+			rmidi_inputcb(RMIDI(dev), midibuf, res);
 		}
-		
+	}
+	
+	if (mux_isopen) {
 		if (gettimeofday(&tv, NULL) < 0) {
 			perror("mux_run: gettimeofday failed");
 			return;
 		}
-
+		
 		/*
 		 * number of micro-seconds between now and the last
 		 * time we called poll(). Warning: because of system
@@ -205,6 +171,19 @@ mux_mdep_run(void) {
 			mux_timercb(24 * delta_usec);
 		}
 	}
+	
+	if ((cons_pfd->revents & POLLIN) && (cons_index == cons_len)) {
+		res = read(STDIN_FILENO, cons_buf, CONS_BUFSIZE);
+		if (res < 0) {
+			perror("stdin");
+			cons_eof = 1;
+		}
+		if (res == 0) {
+			cons_eof = 1;
+		}
+		cons_len = res;
+		cons_index = 0;
+	}
 }
 
 /* 
@@ -216,9 +195,6 @@ mux_mdep_run(void) {
 void 
 mux_sleep(unsigned millisecs) {
 	while (poll(NULL, (nfds_t)0, millisecs) < 0) {
-		if (errno == EINTR) {
-			continue;
-		}
 		perror("mux_sleep: poll failed");
 		exit(1);
 	}
@@ -254,8 +230,10 @@ rmidi_open(struct rmidi *o) {
 	o->oused = 0;
 	o->istatus = o->ostatus = 0;
 	o->isysex = NULL;
+	if (o->mididev.mode & MIDIDEV_MODE_IN)
+		o->mdep.pfd = mdep_polladd(o->mdep.fd);
 }
-
+ 
 /*
  * close the given midi device
  */
@@ -264,12 +242,36 @@ rmidi_close(struct rmidi *o) {
 	if (o->mdep.fd < 0) {
 		return;
 	}
-	while(close(o->mdep.fd) < 0) {
-		if (errno != EINTR) {
-			perror(o->mdep.path);
-			break;
-		}
+	if (o->mididev.mode & MIDIDEV_MODE_IN)
+		mdep_pollrm(o->mdep.pfd);
+	close(o->mdep.fd);
+}
+
+/*
+ * create/register the new device
+ */
+void 
+rmidi_init(struct rmidi *o, unsigned mode) {
+	o->mdep.fd = -1;
+	o->mdep.pfd = NULL;
+	o->oused = 0;
+	o->istatus = o->ostatus = 0;
+	o->isysex = NULL;
+	mididev_init(&o->mididev, mode);
+}
+
+/*
+ * unregister/destroy the given device
+ */
+void 
+rmidi_done(struct rmidi *o) {
+	if (mux_isopen) {
+		rmidi_close(o);
 	}
+	if (o->oused != 0) {
+		dbg_puts("rmidi_done: output buffer is not empty, continuing...\n");
+	}
+	mididev_done(&o->mididev);
 }
 
 /*
@@ -297,6 +299,29 @@ rmidi_flush(struct rmidi *o) {
 		}
 	}
 	o->oused = 0;
+}
+
+void
+cons_mdep_init(void)
+{
+	cons_index = 0;
+	cons_len = 0;
+	cons_eof = 0;
+	cons_pfd = mdep_polladd(STDIN_FILENO);
+}
+
+void
+cons_mdep_done(void)
+{
+	mdep_pollrm(cons_pfd);
+}
+
+int
+cons_mdep_getc(void)
+{
+	while (cons_index == cons_len && !cons_eof)
+		mux_mdep_wait();
+	return cons_eof ? EOF : cons_buf[cons_index++];
 }
 
 /*
