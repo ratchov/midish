@@ -632,6 +632,7 @@ user_func_songstop(struct exec *o, struct data **r) {
 		return 1;
 	}
 	song_stop(user_song);
+	cons_putpos(user_song->curpos, 0, 0);
 	return 1;
 }
 
