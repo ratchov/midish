@@ -115,7 +115,8 @@ user_filt.o:	user_filt.c dbg.h default.h node.h exec.h name.h str.h \
 		sysex.h metro.h timo.h user.h saveload.h textio.h
 user_song.o:	user_song.c dbg.h default.h node.h exec.h name.h str.h \
 		data.h cons.h frame.h state.h ev.h song.h track.h filt.h \
-		sysex.h metro.h timo.h user.h smf.h saveload.h textio.h
+		sysex.h metro.h timo.h user.h smf.h saveload.h textio.h \
+		mux.h
 user_sx.o:	user_sx.c dbg.h default.h node.h exec.h name.h str.h \
 		data.h cons.h song.h track.h ev.h frame.h state.h filt.h \
 		sysex.h metro.h timo.h user.h saveload.h textio.h

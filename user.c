@@ -1341,6 +1341,8 @@ user_mainloop(void) {
 		return 0;
 	}
 
+	cons_putpos(user_song->curpos, 0, 0);
+
 	root = NULL;
 	data = NULL;
 	for (;;) {

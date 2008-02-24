@@ -48,7 +48,7 @@
 #include "smf.h"
 #include "saveload.h"
 #include "textio.h"
-
+#include "mux.h"
 
 
 unsigned
@@ -179,6 +179,7 @@ user_func_songsetcurpos(struct exec *o, struct data **r) {
 		return 0;
 	}
 	user_song->curpos = measure;
+	cons_putpos(measure, 0, 0);
 	return 1;
 }
 
@@ -537,6 +538,7 @@ user_func_songsave(struct exec *o, struct data **r) {
 unsigned
 user_func_songload(struct exec *o, struct data **r) {
 	char *filename;		
+	unsigned res;
 
 	if (!song_try(user_song)) {
 		return 0;
@@ -546,7 +548,9 @@ user_func_songload(struct exec *o, struct data **r) {
 	}
 	song_done(user_song);
 	song_init(user_song);
-	return song_load(user_song, filename);
+	res = song_load(user_song, filename);
+	cons_putpos(user_song->curpos, 0, 0);
+	return res;
 }
 
 unsigned
@@ -556,6 +560,7 @@ user_func_songreset(struct exec *o, struct data **r) {
 	}
 	song_done(user_song);
 	song_init(user_song);
+	cons_putpos(user_song->curpos, 0, 0);
 	return 1;
 }
 
@@ -589,6 +594,7 @@ user_func_songimportsmf(struct exec *o, struct data **r) {
 	}
 	song_delete(user_song);
 	user_song = sng;
+	cons_putpos(user_song->curpos, 0, 0);
 	return 1;
 }
 
@@ -621,7 +627,7 @@ user_func_songrecord(struct exec *o, struct data **r) {
 
 unsigned
 user_func_songstop(struct exec *o, struct data **r) {
-	if (user_song->mode == 0) {
+	if (!mux_isopen) {
 		cons_err("nothing to stop, ignored");
 		return 1;
 	}

@@ -94,8 +94,13 @@ mdep_pollrm(struct pollfd *pfd)
 {
 	unsigned i;
 
-	for (i = pfd - pfds + 1; i < MAXFDS; i++)
+	if (ifds == 0) {
+		dbg_puts("mdep_pollrm: no fd to remove\n");
+		dbg_panic();
+	}
+	for (i = pfd - pfds + 1; i < ifds; i++)
 		pfds[i - 1] = pfds[i];
+	ifds--;
 }
 
 /*
