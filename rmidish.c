@@ -297,7 +297,7 @@ main(int argc, char *argv[]) {
 		fprintf(stderr, "midish file name too long\n");
 		exit(1);
 	}
-	memcpy(path + dirlen, MIDISH, filelen);
+	memcpy(path + dirlen, MIDISH, filelen + 1);
 	
 	/*
 	 * if stdin or stdout is not a tty, then dont start the front end,
