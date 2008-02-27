@@ -68,7 +68,7 @@ struct evinfo evinfo[EV_NUMCMD] = {
 	},
 	{ "xctl", "xctl",
 	  EV_HAS_DEV | EV_HAS_CH,
-	  2, 2,
+	  2, 1,
 	  0, EV_MAXCOARSE, 0, EV_MAXFINE 
 	},
 	{ "xpc", "xpc",
@@ -301,7 +301,7 @@ evspec_dbg(struct evspec *o) {
 	
 	i = 0;
 	for (;;) {
-		if (i == EV_NUMCMD + 1) {
+		if (i == EV_NUMCMD) {
 			dbg_puts("unk(");
 			dbg_putu(o->cmd);
 			dbg_puts(")");
