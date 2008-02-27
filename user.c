@@ -400,10 +400,11 @@ exec_lookupevspec(struct exec *o, char *name, struct evspec *e) {
 	if (!d) {
 		goto done;
 	}
-	if ((evinfo[e->cmd].flags & EV_HAS_V0) == 0) {
+	if (evinfo[e->cmd].nranges < 1) {
 		goto toomany;
 	}
-	if ((e->cmd == EVSPEC_CTL || e->cmd == EV_XCTL) && d->type == DATA_REF) {
+	if ((e->cmd == EVSPEC_CTL || e->cmd == EV_XCTL) && 
+	    d->type == DATA_REF) {
 		if (!data_getctl(d, &hi)) {
 			return 0;
 		}
@@ -417,13 +418,14 @@ exec_lookupevspec(struct exec *o, char *name, struct evspec *e) {
 	}
 
 	/*
-	 * find the second parameter range
+	 * find the second parameter range; we desallow CTL/XCTL values
+	 * in order not to interefere with states
 	 */
 	d = d->next;
 	if (!d) {
 		goto done;
 	}
-	if ((evinfo[e->cmd].flags & EV_HAS_V1) == 0) {
+	if (evinfo[e->cmd].nranges < 2) {
 		goto toomany;
 	}
 	if (!data_list2range(d, e->v1_min, e->v1_max, &min, &max)) {
@@ -435,7 +437,6 @@ exec_lookupevspec(struct exec *o, char *name, struct evspec *e) {
 	if (d) {
 		goto toomany;
 	}
-
  done:
 	/*
 	 * convert PC->XPC and CTL->XCTL

@@ -34,6 +34,25 @@
  * a simple midi filter. Rewrites input events according a set
  * of user-configurable rules.
  *
+ * each rule determines determines how events are transformed
+ * (actually "routed"). There is a source event spec and a destination
+ * event spec: any event matching the source event spec is rewritten
+ * to match the destination event spec. Both source and destination
+ * evsepcs must describe the same king of events.
+ */
+
+/*
+ * TODO
+ *
+ * filt_conf_xxxdrop 
+ *
+ *	can be made generic, just remove input mapping rules
+ *	and why not just restrict them by removing a subset
+ *	in 'from' ?
+ *	
+ * filt_conf_xxxmap
+ *
+ *	same remarks
  */
  
 #include "dbg.h"
@@ -41,9 +60,59 @@
 #include "filt.h"
 #include "pool.h"
 #include "mux.h"
+#include "cons.h"
 
-unsigned filt_debug = 0;
+unsigned filt_debug = 1;
 
+unsigned
+filt_evmap(struct evspec *from, struct evspec *to, 
+	   struct ev *in, struct ev *out) 
+{
+	if (from->cmd == EVSPEC_ANY) {
+		out->cmd = in->cmd;
+		out->v0 = in->v0;
+		out->v1 = in->v1;
+		goto ch;
+	} else if (from->cmd == EVSPEC_NOTE) {
+		if (!EV_ISNOTE(in)) {
+			return 0;
+		}
+		out->cmd = in->cmd;
+		out->v1 = in->v1;
+		goto v0;
+	} else if (from->cmd == in->cmd) {
+		out->cmd = to->cmd;
+		if (in->cmd == EV_BEND || in->cmd == EV_CAT) {
+			out->v0 = in->v0;
+			goto ch;
+		} else {
+			goto v0;
+		}
+	} else {
+		return 0;
+	}
+ v0:
+	if (in->v0 < from->v0_min ||
+	    in->v0 > from->v0_max) {
+		return 0;
+	}
+	out->v0 = in->v0 + to->v0_min - from->v0_min;
+ ch:
+	if (in->dev < from->dev_min ||
+	    in->dev > from->dev_max ||
+	    in->ch < from->ch_min ||
+	    in->ch > from->ch_max) {
+		return 0;
+	}
+	out->dev = in->dev + to->dev_min - from->dev_min;
+	out->ch = in->ch + to->ch_min - from->ch_min;
+	dbg_puts("filt_evmap: ");
+	ev_dbg(in);
+	dbg_puts(" ->");
+	ev_dbg(out);
+	dbg_puts("\n");
+	return 1;
+}
 
 /*
  * dump the rule on stderr (debug purposes)

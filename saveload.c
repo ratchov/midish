@@ -139,7 +139,39 @@ one:
 	textout_putlong(f, e->v0);
 	return;
 }
-	
+
+void
+evspec_output(struct evspec *o, struct textout *f) {
+	textout_putstr(f, evinfo[o->cmd].spec);
+	textout_putstr(f, " {");
+	textout_putlong(f, o->dev_min);
+	textout_putstr(f, " ");
+	textout_putlong(f, o->dev_max);
+		
+	textout_putstr(f, "} {");
+	textout_putlong(f, o->ch_min);
+	textout_putstr(f, " ");
+	textout_putlong(f, o->ch_max);
+	textout_putstr(f, "}");
+
+	if (o->cmd != EVSPEC_ANY) {
+		textout_putstr(f, " {");
+		textout_putlong(f, o->v0_min);
+		textout_putstr(f, " ");
+		textout_putlong(f, o->v0_max);
+		textout_putstr(f, "}");
+
+		if (o->cmd != EVSPEC_CAT && 
+		    o->cmd != EVSPEC_PC &&
+		    o->cmd != EVSPEC_BEND) {
+			textout_putstr(f, " {");
+			textout_putlong(f, o->v1_min);
+			textout_putstr(f, " ");
+			textout_putlong(f, o->v1_max);
+			textout_putstr(f, "}");
+		}
+	}
+}
 
 void
 track_output(struct track *t, struct textout *f) {

@@ -110,8 +110,8 @@ struct ev {
  * except EV_NON, EV_KAT, EV_NOFF, which all correspond to EVSPEC_NOTE
  */
 struct evspec {
-#define EVSPEC_ANY		EV_NULL
-#define EVSPEC_EMPTY		1
+#define EVSPEC_EMPTY		EV_NULL
+#define EVSPEC_ANY		1
 #define EVSPEC_NOTE		EV_NON
 #define EVSPEC_CTL		EV_CTL
 #define EVSPEC_PC		EV_PC
@@ -135,11 +135,11 @@ struct evspec {
  */ 
 struct evinfo {
 	char *ev, *spec;
-#define EV_HAS_DEV	1	/* ev->dev is used */
-#define EV_HAS_CH	2	/* ev->ch is used */ 
-#define EV_HAS_V0	4	/* ev->v0 is used */
-#define EV_HAS_V1	8	/* ev->v1 is used */
+#define EV_HAS_DEV	0x01	/* if ev->dev is used */
+#define EV_HAS_CH	0x02	/* if ev->ch is used */ 
 	unsigned flags;		/* bitmap of above */
+	unsigned nparams;	/* number of params (ie v0, v1) used */
+	unsigned nranges;	/* number of ranges (ie v0, v1) used */
 	unsigned v0_min;	/* min ev->v0 */
 	unsigned v0_max;	/* max ev->v0 */
 	unsigned v1_min;	/* min ev->v1 */
@@ -157,7 +157,7 @@ unsigned evspec_str2cmd(struct evspec *ev, char *str);
 void	 evspec_dbg(struct evspec *o);
 void	 evspec_reset(struct evspec *o);
 unsigned evspec_matchev(struct evspec *o, struct ev *e);
-unsigned evspec_intersec(struct evspec *, struct evspec *, struct evspec *);
+unsigned evspec_isec(struct evspec *, struct evspec *);
 
 /*
  * describes a controller number; this structures defines

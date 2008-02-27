@@ -194,27 +194,27 @@ state_inspec(struct state *st, struct evspec *spec) {
 		break;
 	case EVSPEC_CAT:
 		if (st->ev.cmd == EV_CAT) {
-			goto v1;
+			goto ch;
 		}
 		break;
 	case EVSPEC_BEND:
 		if (st->ev.cmd == EV_BEND) {
-			goto v1;
+			goto ch;
 		}
 		break;
 	case EVSPEC_XPC:
 		if (st->ev.cmd == EV_XPC) {
-			goto ch;
+			goto v1;
 		}
 		break;
 	case EVSPEC_NRPN:
 		if (st->ev.cmd == EV_NRPN) {
-			goto v0;
+			goto v1;
 		}
 		break;
 	case EVSPEC_RPN:
 		if (st->ev.cmd == EV_RPN) {
-			goto v0;
+			goto v1;
 		}
 		break;
 	case EVSPEC_XCTL:
