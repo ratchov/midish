@@ -34,11 +34,11 @@
  * a simple midi filter. Rewrites input events according a set
  * of user-configurable rules.
  *
- * each rule determines determines how events are transformed
+ * each rule determine how events are transformed
  * (actually "routed"). There is a source event spec and a destination
  * event spec: any event matching the source event spec is rewritten
  * to match the destination event spec. Both source and destination
- * evsepcs must describe the same king of events.
+ * evspecs must describe the same kind of events.
  */
 
 /*
