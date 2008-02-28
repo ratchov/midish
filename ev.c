@@ -350,7 +350,7 @@ evspec_dbg(struct evspec *o) {
  */
 unsigned
 evspec_isec(struct evspec *es1, struct evspec *es2) {
-	if (es1->cmd == EVSPEC_EMPTY || es1->cmd == EVSPEC_EMPTY) {
+	if (es1->cmd == EVSPEC_EMPTY || es2->cmd == EVSPEC_EMPTY) {
 		return 0;
 	}
 	if (es1->cmd != EVSPEC_ANY && 
@@ -383,6 +383,55 @@ evspec_isec(struct evspec *es1, struct evspec *es2) {
 	    evinfo[es2->cmd].nranges > 1) {
 		if (es1->v1_min > es2->v1_max ||
 		    es1->v1_max < es2->v1_min) {
+			return 0;
+		}
+	}
+	return 1;
+}
+
+/*
+ * check if the first evspec is included in the second one
+ * note: any evspec includes itself
+ */
+unsigned
+evspec_in(struct evspec *es1, struct evspec *es2) {
+	if (es1->cmd == EVSPEC_EMPTY) {
+		return 1;
+	}
+	if (es2->cmd == EVSPEC_EMPTY) {
+		return 0;
+	}
+	if (es1->cmd == EVSPEC_ANY && es2->cmd != EVSPEC_ANY) {
+		return 0;
+	}
+	if (es1->cmd != EVSPEC_ANY && es2->cmd != es1->cmd) {
+		return 0;
+	}
+	if ((evinfo[es1->cmd].flags & EV_HAS_DEV) &&
+	    (evinfo[es2->cmd].flags & EV_HAS_DEV)) {
+		if (es1->dev_min < es2->dev_min ||
+		    es1->dev_max > es2->dev_max) {
+			return 0;
+		}
+	}
+	if ((evinfo[es1->cmd].flags & EV_HAS_CH) &&
+	    (evinfo[es2->cmd].flags & EV_HAS_CH)) {
+		if (es1->ch_min < es2->ch_min ||
+		    es1->ch_max > es2->ch_max) {
+			return 0;
+		}
+	}
+	if (evinfo[es1->cmd].nranges > 0 &&
+	    evinfo[es2->cmd].nranges > 0) {
+		if (es1->v0_min < es2->v0_min ||
+		    es1->v0_max > es2->v0_max) {
+			return 0;
+		}
+	}
+	if (evinfo[es1->cmd].nranges > 1 &&
+	    evinfo[es2->cmd].nranges > 1) {
+		if (es1->v1_min < es2->v1_min ||
+		    es1->v1_max > es2->v1_max) {
 			return 0;
 		}
 	}

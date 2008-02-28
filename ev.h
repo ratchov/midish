@@ -158,6 +158,7 @@ void	 evspec_dbg(struct evspec *o);
 void	 evspec_reset(struct evspec *o);
 unsigned evspec_matchev(struct evspec *o, struct ev *e);
 unsigned evspec_isec(struct evspec *, struct evspec *);
+unsigned evspec_in(struct evspec *, struct evspec *);
 
 /*
  * describes a controller number; this structures defines
