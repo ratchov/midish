@@ -62,7 +62,7 @@
 #include "mux.h"
 #include "cons.h"
 
-unsigned filt_debug = 1;
+unsigned filt_debug = 0;
 
 unsigned
 filt_evmap(struct evspec *from, struct evspec *to, 
