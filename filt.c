@@ -34,25 +34,6 @@
  * a simple midi filter. Rewrites input events according a set
  * of user-configurable rules.
  *
- * each rule determine how events are transformed
- * (actually "routed"). There is a source event spec and a destination
- * event spec: any event matching the source event spec is rewritten
- * to match the destination event spec. Both source and destination
- * evspecs must describe the same kind of events.
- */
-
-/*
- * TODO
- *
- * filt_conf_xxxdrop 
- *
- *	can be made generic, just remove input mapping rules
- *	and why not just restrict them by removing a subset
- *	in 'from' ?
- *	
- * filt_conf_xxxmap
- *
- *	same remarks
  */
  
 #include "dbg.h"
@@ -64,412 +45,82 @@
 
 unsigned filt_debug = 0;
 
-unsigned
-filt_evmap(struct evspec *from, struct evspec *to, 
-	   struct ev *in, struct ev *out) 
+void
+rule_dbg(struct evspec *from, struct  evspec *to)
 {
-	if (from->cmd == EVSPEC_ANY) {
-		out->cmd = in->cmd;
-		out->v0 = in->v0;
-		out->v1 = in->v1;
-		goto ch;
-	} else if (from->cmd == EVSPEC_NOTE) {
-		if (!EV_ISNOTE(in)) {
-			return 0;
-		}
-		out->cmd = in->cmd;
-		out->v1 = in->v1;
-		goto v0;
-	} else if (from->cmd == in->cmd) {
-		out->cmd = to->cmd;
-		if (in->cmd == EV_BEND || in->cmd == EV_CAT) {
-			out->v0 = in->v0;
-			goto ch;
-		} else {
-			goto v0;
-		}
-	} else {
-		return 0;
-	}
- v0:
-	if (in->v0 < from->v0_min ||
-	    in->v0 > from->v0_max) {
-		return 0;
-	}
-	out->v0 = in->v0 + to->v0_min - from->v0_min;
- ch:
-	if (in->dev < from->dev_min ||
-	    in->dev > from->dev_max ||
-	    in->ch < from->ch_min ||
-	    in->ch > from->ch_max) {
-		return 0;
-	}
-	out->dev = in->dev + to->dev_min - from->dev_min;
-	out->ch = in->ch + to->ch_min - from->ch_min;
-	dbg_puts("filt_evmap: ");
-	ev_dbg(in);
-	dbg_puts(" ->");
-	ev_dbg(out);
-	dbg_puts("\n");
-	return 1;
+	evspec_dbg(from);
+	dbg_puts(" > ");
+	evspec_dbg(to);
 }
 
 /*
- * dump the rule on stderr (debug purposes)
+ * transform "in" matching "from" range into "out" matching "to"
+ * range, this routine is supposed to be fast since it's called for
+ * each incoming event.
+ * 
+ * from/to _must_ have the same dev/chl/v0/v1 ranges.
  */
 void
-rule_dbg(struct rule *o) {
-	switch(o->type) {
-	case RULE_DEVDROP:
-		dbg_puts("devdrop");
-		break;
-	case RULE_DEVMAP:
-		dbg_puts("devmap");
-		break;
-	case RULE_CHANDROP:
-		dbg_puts("chandrop");
-		break;
-	case RULE_CHANMAP:
-		dbg_puts("chanmap");
-		break;
-	case RULE_KEYDROP:
-		dbg_puts("keydrop");
-		break;
-	case RULE_KEYMAP:
-		dbg_puts("keymap");
-		break;
-	case RULE_CTLDROP:
-		dbg_puts("ctldrop");
-		break;
-	case RULE_CTLMAP:
-		dbg_puts("ctlmap");
-		break;
-	default:
-		dbg_puts("unknown");
-		break;
+filt_mapev(struct evspec *from, struct evspec *to, 
+    struct ev *in, struct ev *out) 
+{
+	*out = *in;
+	if (to->cmd != EVSPEC_ANY && to->cmd != EVSPEC_NOTE)
+		out->cmd = to->cmd;
+	if ((evinfo[from->cmd].flags & EV_HAS_DEV) &&
+	    (evinfo[in->cmd].flags & EV_HAS_DEV)) {
+		out->dev += to->dev_min - from->dev_min;
 	}
-	dbg_puts(" idev=");
-	dbg_putu(o->idev);	
-	dbg_puts(" odev=");
-	dbg_putu(o->odev);
-	if (o->type != RULE_DEVDROP && o->type != RULE_DEVMAP) {
-		dbg_puts(" ich=");
-		dbg_putu(o->ich);
-		dbg_puts(" och=");
-		dbg_putu(o->och);
+	if ((evinfo[from->cmd].flags & EV_HAS_CH) &&
+	    (evinfo[in->cmd].flags & EV_HAS_CH)) {
+		out->ch += to->ch_min - from->ch_min;
 	}
-	if (o->type == RULE_CTLDROP || o->type == RULE_CTLMAP) {
-		dbg_puts(" ictl=");
-		dbg_putu(o->ictl);
-		dbg_puts(" octl=");
-		dbg_putu(o->octl);
+	if (evinfo[from->cmd].nranges > 0 &&
+	    evinfo[in->cmd].nranges > 0) {
+		out->v0 += to->v0_min - from->v0_min;
 	}
-	if (o->type == RULE_KEYDROP || o->type == RULE_KEYMAP) {
-		dbg_puts(" keyhi=");
-		dbg_putu(o->keyhi);
-		dbg_puts(" keylo=");
-		dbg_putu(o->keylo);
-		dbg_puts(" keyplus=");
-		if (o->keyplus < 0) {
-			dbg_puts("-");
-			dbg_putu(-o->keyplus);
-		} else {
-			dbg_putu(o->keyplus);
-		}
+	if (evinfo[from->cmd].nranges > 1 &&
+	    evinfo[in->cmd].nranges > 1) {
+		out->v1 += to->v1_min - from->v1_min;
 	}
-}
-
-/*
- * try to apply the rule to an event; if the rule matches then
- * fill 'rev' (with EV_NULL if it's a drop rule) and return 1 
- * else return 0
- */
-unsigned
-rule_do(struct rule *r, struct ev *in, struct ev *out) {
-	switch(r->type) {
-	case RULE_DEVDROP:
-		if (in->dev == r->idev) {
-			goto match_drop;
-		}
-		break;
-	case RULE_DEVMAP:
-		if (in->dev == r->idev) {
-			*out = *in;
-			out->dev = r->odev;
-			goto match_pass;
-		}
-		break;
-	case RULE_CHANDROP:
-		if (in->dev == r->idev &&
-		    in->ch == r->ich) {
-			goto match_drop;
-		}
-		break;
-	case RULE_CHANMAP:
-		if (in->dev == r->idev && 
-		    in->ch == r->ich) {
-			*out = *in;
-			out->dev = r->odev;
-			out->ch = r->och;
-			goto match_pass;
-		}
-		break;
-	case RULE_KEYDROP:
-		if (EV_ISNOTE(in) && 
-		    in->dev == r->idev && 
-		    in->ch == r->ich && 
-		    in->note_num >= r->keylo &&
-		    in->note_num <= r->keyhi) {
-			goto match_drop;
-		}
-		break;
-	case RULE_KEYMAP:
-		if (EV_ISNOTE(in) && 
-		    in->dev == r->idev && 
-		    in->ch == r->ich && 
-		    in->note_num >= r->keylo &&
-		    in->note_num <= r->keyhi) {
-			*out = *in;
-			out->dev = r->odev;
-			out->ch = r->och;
-			out->note_num += r->keyplus;
-			out->note_num &= 0x7f;
-			goto match_pass;
-		}
-		break;
-	case RULE_CTLDROP:
-		if (in->cmd == EV_XCTL &&
-		    in->dev == r->idev &&
-		    in->ch == r->ich &&
-		    in->ctl_num == r->ictl) {
-			goto match_drop;
-		}
-		break;
-	case RULE_CTLMAP:
-		if (in->cmd == EV_XCTL &&
-		    in->dev == r->idev &&
-		    in->ch == r->ich &&
-		    in->ctl_num == r->ictl) {
-			*out = *in;
-			out->dev = r->odev;
-			out->ch = r->och;
-			out->ctl_num = r->octl;
-			goto match_pass;
-		}
-		break;
-	}
-	return 0;
-
-match_drop:
-	out->cmd = EV_NULL;
-match_pass:
 	if (filt_debug) {
-		dbg_puts("rule_apply: ");
-		rule_dbg(r);
+		dbg_puts("filt_mapev: ");
+		rule_dbg(from, to);
 		dbg_puts(": ");
 		ev_dbg(in);
-		dbg_puts(" -> ");		
+		dbg_puts(" -> ");
 		ev_dbg(out);
 		dbg_puts("\n");
 	}
-	return 1;
 }
-
-void
-rule_chgich(struct rule *o, unsigned olddev, unsigned oldch, 
-    unsigned newdev, unsigned newch) {
-	switch(o->type) {
-	case RULE_CHANDROP:
-	case RULE_CHANMAP:
-	case RULE_KEYDROP:
-	case RULE_KEYMAP:
-	case RULE_CTLDROP:
-	case RULE_CTLMAP:
-		if (o->idev == olddev && o->ich == oldch) {
-			o->idev = newdev;
-			o->ich = newch;
-		}
-		break;
-	default:
-		break;
-	}
-}
-
-
-void
-rule_chgidev(struct rule *o, unsigned olddev, unsigned newdev) {
-	switch(o->type) {
-	case RULE_CHANDROP:
-	case RULE_CHANMAP:
-	case RULE_KEYDROP:
-	case RULE_KEYMAP:
-	case RULE_CTLDROP:
-	case RULE_CTLMAP:
-	case RULE_DEVDROP:
-	case RULE_DEVMAP:
-		if (o->idev == olddev) {
-			o->idev = newdev;
-		}
-		break;
-	default:
-		break;
-	}
-}
-
-void
-rule_swapich(struct rule *o, unsigned olddev, unsigned oldch, 
-    unsigned newdev, unsigned newch) {
-	switch(o->type) {
-	case RULE_CHANDROP:
-	case RULE_CHANMAP:
-	case RULE_KEYDROP:
-	case RULE_KEYMAP:
-	case RULE_CTLDROP:
-	case RULE_CTLMAP:
-		if (o->idev == newdev && o->ich == newch) {
-			o->ich = oldch;			
-			o->idev = olddev;			
-		} else if (o->idev == olddev && o->ich == oldch) {
-			o->idev = newdev;
-			o->ich = newch;
-		}
-		break;
-	default:
-		break;
-	}
-}
-
-
-void
-rule_swapidev(struct rule *o, unsigned olddev, unsigned newdev) {
-	switch(o->type) {
-	case RULE_CHANDROP:
-	case RULE_CHANMAP:
-	case RULE_KEYDROP:
-	case RULE_KEYMAP:
-	case RULE_CTLDROP:
-	case RULE_CTLMAP:
-	case RULE_DEVDROP:
-	case RULE_DEVMAP:
-		if (o->idev == olddev) {
-			o->idev = newdev;
-		} else if (o->idev == newdev) {
-			o->idev = olddev;
-		}
-		break;
-	default:
-		break;
-	}
-}
-
-
-void
-rule_chgoch(struct rule *o, unsigned olddev, unsigned oldch, 
-    unsigned newdev, unsigned newch) {
-	switch(o->type) {
-	case RULE_CHANMAP:
-	case RULE_KEYMAP:
-	case RULE_CTLMAP:
-		if (o->odev == olddev && o->och == oldch) {
-			o->odev = newdev;
-			o->och = newch;
-		}
-		break;
-	default:
-		break;
-	}
-}
-
-
-void
-rule_chgodev(struct rule *o, unsigned olddev, unsigned newdev) {
-	switch(o->type) {
-	case RULE_CHANMAP:
-	case RULE_KEYMAP:
-	case RULE_CTLMAP:
-	case RULE_DEVMAP:
-		if (o->odev == olddev) {
-			o->odev = newdev;
-		}
-		break;
-	default:
-		break;
-	}
-}
-
-void
-rule_swapoch(struct rule *o, unsigned olddev, unsigned oldch, 
-    unsigned newdev, unsigned newch) {
-	switch(o->type) {
-	case RULE_CHANMAP:
-	case RULE_KEYMAP:
-	case RULE_CTLMAP:
-		if (o->odev == newdev && o->och == newch) {
-			o->och = oldch;			
-			o->odev = olddev;			
-		} else if (o->odev == olddev && o->och == oldch) {
-			o->odev = newdev;
-			o->och = newch;
-		}
-		break;
-	default:
-		break;
-	}
-}
-
-
-void
-rule_swapodev(struct rule *o, unsigned olddev, unsigned newdev) {
-	switch(o->type) {
-	case RULE_CHANMAP:
-	case RULE_KEYMAP:
-	case RULE_CTLMAP:
-	case RULE_DEVMAP:
-		if (o->odev == olddev) {
-			o->odev = newdev;
-		} else if (o->odev == newdev) {
-			o->odev = olddev;
-		}
-		break;
-	default:
-		break;
-	}
-}
-
-/* --------------------------------------------------------------------- */
-
-void filt_timocb(void *);
 
 /* 
- * initialise a filter
+ * initialize a filter
  */
 void
-filt_init(struct filt *o) {
-	o->voice_rules = NULL;
-	o->chan_rules = NULL;
-	o->dev_rules = NULL;
+filt_init(struct filt *o)
+{
+	o->srclist = NULL;
 }
 
 /*
- * removes all filtering rules and all states
+ * remove all filtering rules and all states
  */
 void
-filt_reset(struct filt *o) {
-	struct rule *r;
-	while (o->voice_rules) {
-		r = o->voice_rules;
-		o->voice_rules = r->next;
-		mem_free(r); 
-	}
-	while (o->chan_rules) {
-		r = o->chan_rules;
-		o->chan_rules = r->next;
-		mem_free(r); 
-	}
-	while (o->dev_rules) {
-		r = o->dev_rules;
-		o->dev_rules = r->next;
-		mem_free(r); 
+filt_reset(struct filt *o)
+{
+	struct filtsrc *s;
+	struct filtdst *d;
+
+	while (o->srclist) {
+		s = o->srclist;
+		while (s->dstlist) {
+			d = s->dstlist;
+			s->dstlist = d->next;
+			mem_free(d); 
+		}
+		o->srclist = s->next;
+		mem_free(s); 
 	}
 }
 
@@ -477,162 +128,270 @@ filt_reset(struct filt *o) {
  * destroy a filter
  */
 void
-filt_done(struct filt *o) {
+filt_done(struct filt *o)
+{
 	filt_reset(o);
+	o->srclist = (void *)0xdeadbeef;
 }
-
 
 /*
- * match event against all rules, return the number of events
- * filled
+ * match event against all sources and for each source
+ * generate output events
  */
 unsigned
-filt_do(struct filt *o, struct ev *in, struct ev *out) {
-	unsigned match;
-	struct rule *i;
+filt_do(struct filt *o, struct ev *in, struct ev *out)
+{
+	struct filtsrc *s;
+	struct filtdst *d;
+	unsigned nev;
 
-	match = 0;
-	for (i = o->voice_rules; i != NULL; i = i->next) {
-		if (match >= FILT_MAXNRULES) {
-			return match;
-		}
-		match += rule_do(i, in, out + match);
+	for (s = o->srclist;; s = s->next) {
+		if (s == NULL)
+			return 0;
+		if (evspec_matchev(&s->es, in))
+			break;
 	}
-	if (!match) {
-		for (i = o->chan_rules; i != NULL; i = i->next) {
-			if (match >= FILT_MAXNRULES) {
-				return match;
-			}
-			match += rule_do(i, in, out + match);
-		}
-		if (!match) {
-			for (i = o->dev_rules; i != NULL; i = i->next) {
-				if (match >= FILT_MAXNRULES) {
-					return match;
-				}
-				match += rule_do(i, in, out + match);
-			}
-			if (!match) {
-				*out = *in;
-				if (filt_debug) {
-					dbg_puts("filt_do: default > ");
-					ev_dbg(out);
-					dbg_puts("\n");
-				}
-				return 1;
-			}
-		}
+	nev = 0;
+	for (d = s->dstlist; d != NULL; d = d->next) {
+		filt_mapev(&s->es, &d->es, in, out);
+		nev++;
+		out++;
 	}
-	return match;
+	return nev;
 }
-
 
 /*
- * return the number of rules on the filter
- */
-unsigned
-filt_nrules(struct filt *o) {
-	struct rule *r;
-	unsigned n = 0;
-
-	for (r = o->voice_rules; r != NULL; r = r->next) {
-		n++;
-	}
-	for (r = o->chan_rules; r != NULL; r = r->next) {
-		n++;
-	}
-	for (r = o->dev_rules; r != NULL; r = r->next) {
-		n++;
-	}
-	return n;
-}
-
-/* 
- * configure the filt to drop 
- * events from a particular device 
- * - if the same drop-rule exists then do nothing
- * - remove map-rules with the same idev
+ * remove all rules that are included in the from->to argument.
  */
 void
-filt_conf_devdrop(struct filt *o, unsigned idev) {
-	struct rule **i, *r;
-	
-	i = &o->dev_rules;
-	while (*i) {
-		if (((*i)->type == RULE_DEVDROP || 
-		     (*i)->type == RULE_DEVMAP) &&
-		    (*i)->idev == idev) {
-			r = *i;
-			*i = r->next;
-			mem_free(r);
-		} else {
-			i = &(*i)->next;
+filt_mapdel(struct filt *f, struct evspec *from, struct evspec *to)
+{
+	struct filtsrc *s, **ps;
+	struct filtdst *d, **pd;
+
+	for (ps = &f->srclist; (s = *ps) != NULL;) {
+		if (evspec_in(&s->es, from)) {
+			for (pd = &s->dstlist; (d = *pd) != NULL;) {
+				if (evspec_in(&d->es, to)) {
+					if (filt_debug) {
+						dbg_puts("filt_mapdel: ");
+						rule_dbg(&s->es, &d->es);
+						dbg_puts(": removed\n");
+					}
+					*pd = d->next;
+					mem_free(d);
+					continue;
+				}
+				pd = &d->next;
+			}
+		}	
+		if (s->dstlist == NULL) {
+			if (filt_debug) {
+				dbg_puts("filt_mapdel: ");
+				evspec_dbg(&s->es);
+				dbg_puts(": empty, removed\n");
+			}
+			*ps = s->next;
+			mem_free(s);
+			continue;
 		}
+		ps = &s->next;
 	}
-	if (filt_nrules(o) >= FILT_MAXNRULES) {
-		return;
-	}
-	r = (struct rule *)mem_alloc(sizeof(struct rule));
-	r->type = RULE_DEVDROP;
-	r->idev = idev;
-	r->next = o->dev_rules;
-	o->dev_rules = r;
 }
 
 /* 
- * configure the filt not to drop 
- * events from a particular device 
+ * add a new rule to map events in "from" range to events in "to" range
+ */
+void
+filt_mapnew(struct filt *f, struct evspec *from, struct evspec *to)
+{
+	struct filtsrc *s, **ps;
+	struct filtdst *d, **pd;
+
+	if (filt_debug) {
+		dbg_puts("filt_mapnew: adding ");
+		rule_dbg(from, to);
+		dbg_puts("\n");
+	}
+
+	/*
+	 * check if ranges are ok
+	 */
+	if (to->cmd != EVSPEC_EMPTY) {
+		if (from->cmd != to->cmd) {
+			cons_err("use the same cmd for 'from' and 'to' args");
+			return;
+		}
+		if (evinfo[from->cmd].flags & EV_HAS_DEV &&
+		    from->dev_max - from->dev_min != to->dev_max - to->dev_min) {
+			cons_err("dev ranges must have the same size");
+			return;
+		}
+		if (evinfo[from->cmd].flags & EV_HAS_CH &&
+		    from->ch_max - from->ch_min != to->ch_max - to->ch_min) {
+			cons_err("chan ranges must have the same size");
+			return;
+		}
+		if (evinfo[from->cmd].nranges >= 1 &&
+		    from->v0_max - from->v0_min != to->v0_max - to->v0_min) {
+			cons_err("v0 ranges must have the same size");
+			return;
+		}
+		if (evinfo[from->cmd].nranges >= 2 &&
+		    from->v1_max - from->v1_min != to->v1_max - to->v1_min) {
+			cons_err("v1 ranges must have the same size");
+			return;
+		}
+	}
+
+	/*
+	 * delete existing mappings that may have conflicting sources
+	 */
+	for (ps = &f->srclist; (s = *ps) != NULL;) {
+		if (evspec_isec(&s->es, from) &&
+		    !evspec_in(&s->es, from) && 
+		    !evspec_in(from, &s->es)) {
+			for (pd = &s->dstlist; (d = *pd) != NULL;) {
+				if (filt_debug) {
+					dbg_puts("filt_mapnew: ");
+					rule_dbg(&s->es, &d->es);
+					dbg_puts(": src intersect\n");
+				}
+				*pd = d->next;
+				mem_free(d);
+			}
+			*ps = s->next;
+			mem_free(s);
+			continue;
+		}
+		ps = &s->next;
+	}
+
+	/*
+	 * find the correct place where to insert the source
+	 */
+	for (ps = &f->srclist;;) {
+		s = *ps;
+		if (s == NULL) {
+			if (filt_debug)
+				dbg_puts("filt_mapnew: no match\n");
+			break;
+		} else if (evspec_eq(from, &s->es)) {
+			if (filt_debug)
+				dbg_puts("filt_mapnew: exact match\n");
+			goto add_dst;
+		} else if (evspec_in(from, &s->es)) {
+			if (filt_debug) {
+				dbg_puts("filt_mapnew: ");
+				evspec_dbg(from);
+				dbg_puts(" in ");
+				evspec_dbg(&s->es);
+				dbg_puts("\n");
+			}
+			break;
+		} else if (evspec_isec(from, &s->es)) {
+			if (filt_debug) {
+				dbg_puts("filt_mapnew: ");
+				evspec_dbg(&s->es);
+				dbg_puts(": intersection\n");
+			}
+			while (s->dstlist) {
+				d = s->dstlist;
+				s->dstlist = d->next;
+				mem_free(d); 
+			}
+			*ps = s->next;
+			mem_free(s); 
+			continue;
+		} else {
+			if (filt_debug) {
+				dbg_puts("filt_mapnew: ");
+				evspec_dbg(from);
+				dbg_puts(": skipped\n");
+			}
+		}
+		ps = &s->next;
+	}
+	s = (struct filtsrc *)mem_alloc(sizeof(struct filtsrc));
+	s->es = *from;
+	s->next = *ps;
+	s->dstlist = NULL;
+	*ps = s;
+
+ add_dst:
+	/*
+	 * remove conflicting destinations for the same source
+	 */
+	for (pd = &s->dstlist; (d = *pd) != NULL;) {
+		if (evspec_isec(&d->es, to) ||
+		    to->cmd == EVSPEC_EMPTY ||
+		    d->es.cmd == EVSPEC_EMPTY) {
+			if (filt_debug) {
+				dbg_puts("filt_mapnew: ");
+				rule_dbg(&s->es, &d->es);
+				dbg_puts(": src intersect\n");
+			}
+			*pd = d->next;
+			mem_free(d);
+			continue;
+		}
+		pd = &d->next;
+	}
+	/*
+	 * add the new destination to the end of the list,
+	 * in order to obtain the same order as the order in
+	 * which rules are added
+	 */
+	d = (struct filtdst *)mem_alloc(sizeof(struct filtdst));
+	d->es = *to;
+	for (pd = &s->dstlist; *pd != NULL; pd = &(*pd)->next) {
+		/* nothing */
+	}
+	d->next = NULL;
+	*pd = d;
+}
+
+/* 
+ * configure the filt to drop events from a particular device
+ */
+void
+filt_conf_devdrop(struct filt *o, unsigned idev)
+{
+	struct evspec from, to;
+
+	evspec_reset(&from);
+	from.dev_min = from.dev_max = idev;
+	to.cmd = EVSPEC_EMPTY;	
+	filt_mapnew(o, &from, &to);
+}
+
+/* 
+ * configure the filt not to drop events from a particular device
  */ 
 void
-filt_conf_nodevdrop(struct filt *o, unsigned idev) {
-	struct rule **i, *r;
-	
-	i = &o->dev_rules;
-	while (*i) {
-		if ((*i)->type == RULE_DEVDROP &&
-		    (*i)->idev == idev) {
-			r = *i;
-			*i = r->next;
-			mem_free(r);
-		} else {
-			i = &(*i)->next;
-		}
-	}
+filt_conf_nodevdrop(struct filt *o, unsigned idev)
+{
+	struct evspec from, to;
+
+	evspec_reset(&from);
+	from.dev_min = from.dev_max = idev;
+	to.cmd = EVSPEC_EMPTY;	
+	filt_mapdel(o, &from, &to);
 }
 
 /* 
- * configure the filter to map one device to another 
- * - if the same map-rule exists dont add new one
- * - remove maps with the same output dev
- * - remove drops with the same input
+ * configure the filter to map one device to another
  */
 void
-filt_conf_devmap(struct filt *o,
-    unsigned idev, unsigned odev) {
-	struct rule **i, *r;
-	
-	i = &o->dev_rules;
-	while (*i != NULL) {
-		if (((*i)->type == RULE_DEVMAP && 
-		     (*i)->odev == odev) ||
-		    ((*i)->type == RULE_DEVDROP && 
-		     (*i)->idev == idev)) {
-		  	r = *i;
-			*i = r->next;
-			mem_free(r);
-		} else {
-			i = &(*i)->next;
-		}
-	}
-	if (filt_nrules(o) >= FILT_MAXNRULES) {
-		return;
-	}
-	r = (struct rule *)mem_alloc(sizeof(struct rule));
-	r->type = RULE_DEVMAP;
-	r->idev = idev;
-	r->odev = odev;
-	r->next = o->dev_rules;
-	o->dev_rules = r;
+filt_conf_devmap(struct filt *o, unsigned idev, unsigned odev)
+{
+	struct evspec from, to;
+
+	evspec_reset(&from);
+	evspec_reset(&to);
+	from.dev_min = from.dev_max = idev;
+	to.dev_min = to.dev_max = odev;
+	filt_mapnew(o, &from, &to);
 }
 
 /* 
@@ -640,489 +399,373 @@ filt_conf_devmap(struct filt *o,
  * any devices to the given one
  */
 void
-filt_conf_nodevmap(struct filt *o, unsigned odev) {
-	struct rule **i, *r;
-	
-	i = &o->dev_rules;
-	while (*i != NULL) {
-		if ((*i)->type == RULE_DEVMAP && 
-		    (*i)->odev == odev) {
-			r = *i;
-			*i = r->next;
-			mem_free(r);
-		} else {
-			i = &(*i)->next;
-		}
-	}
+filt_conf_nodevmap(struct filt *o, unsigned odev)
+{
+	struct evspec from, to;
+
+	evspec_reset(&from);
+	evspec_reset(&to);
+	to.dev_min = to.dev_max = odev;
+	filt_mapdel(o, &from, &to);
 }
 
 /*
- * configure the filter to drop a particular 
- * channel
+ * configure the filter to drop a particular channel
  */
 void
-filt_conf_chandrop(struct filt *o, unsigned idev, unsigned ich) {
-	struct rule **i, *r;
-	
-	i = &o->chan_rules;
-	while (*i) {
-		if (((*i)->type == RULE_CHANDROP && 
-		     (*i)->idev == idev &&
-		     (*i)->ich == ich) ||
-		    ((*i)->type == RULE_CHANMAP && 
-		     (*i)->idev == idev &&
-		     (*i)->ich == ich)) {
-			r = *i;
-			*i = r->next;
-			mem_free(r);
-		} else {
-			i = &(*i)->next;
-		}
-	}
-	if (filt_nrules(o) >= FILT_MAXNRULES) {
-		return;
-	}
-	r = (struct rule *)mem_alloc(sizeof(struct rule));
-	r->type = RULE_CHANDROP;
-	r->idev = idev;
-	r->ich = ich;
-	r->next = o->chan_rules;
-	o->chan_rules = r;	
+filt_conf_chandrop(struct filt *o, unsigned idev, unsigned ich)
+{
+	struct evspec from, to;
+
+	evspec_reset(&from);
+	from.dev_min = from.dev_max = idev;
+	from.ch_min = from.ch_max = ich;
+	to.cmd = EVSPEC_EMPTY;	
+	filt_mapnew(o, &from, &to);
 }
 
 /*
- * configure the filter to drop a particular 
- * channel
+ * configure the filter to drop a particular channel
  */
 void
-filt_conf_nochandrop(struct filt *o, unsigned idev, unsigned ich) {
-	struct rule **i, *r;
-	
-	i = &o->chan_rules;
-	while (*i) {
-		if ((*i)->type == RULE_CHANDROP && 
-		    (*i)->idev == idev &&
-		    (*i)->ich == ich) {
-			r = *i;
-			*i = r->next;
-			mem_free(r);
-		} else {
-			i = &(*i)->next;
-		}
-	}
+filt_conf_nochandrop(struct filt *o, unsigned idev, unsigned ich)
+{
+	struct evspec from, to;
+
+	evspec_reset(&from);
+	from.dev_min = from.dev_max = idev;
+	from.ch_min = from.ch_max = ich;
+	to.cmd = EVSPEC_EMPTY;	
+	filt_mapdel(o, &from, &to);
 }
 
 void
 filt_conf_chanmap(struct filt *o, unsigned idev, unsigned ich,
-    unsigned odev, unsigned och) {
-	struct rule **i, *r;
-	
-	i = &o->chan_rules;
-	while (*i != NULL) {
-		if (((*i)->type == RULE_CHANMAP && 
-		     (*i)->odev == odev &&
-		     (*i)->och == och) ||
-		    ((*i)->type == RULE_CHANDROP && 
-		     (*i)->idev == idev &&
-		     (*i)->ich == ich)) {
-			r = *i;
-			*i = r->next;
-			mem_free(r);
-		} else {
-			i = &(*i)->next;
-		}
-	}
-	if (filt_nrules(o) >= FILT_MAXNRULES) {
-		return;
-	}
-	r = (struct rule *)mem_alloc(sizeof(struct rule));
-	r->type = RULE_CHANMAP;
-	r->idev = idev;
-	r->ich = ich;
-	r->odev = odev;
-	r->och = och;
-	r->next = o->chan_rules;
-	o->chan_rules = r;
+    unsigned odev, unsigned och)
+{
+	struct evspec from, to;
+
+	evspec_reset(&from);
+	evspec_reset(&to);
+	from.dev_min = from.dev_max = idev;
+	from.ch_min = from.ch_max = ich;
+	to.dev_min = to.dev_max = odev;
+	to.ch_min = to.ch_max = och;
+	filt_mapnew(o, &from, &to);
 }
 
 void
-filt_conf_nochanmap(struct filt *o, unsigned odev, unsigned och ) {
-	struct rule **i, *r;
-	
-	i = &o->chan_rules;
-	while (*i != NULL) {
-		if ((*i)->type == RULE_CHANMAP && 
-		    (*i)->odev == odev &&
-		    (*i)->och == och) {
-			r = *i;
-			*i = r->next;
-			mem_free(r);
-		} else {
-			i = &(*i)->next;
-		}
-	}
+filt_conf_nochanmap(struct filt *o, unsigned odev, unsigned och)
+{
+	struct evspec from, to;
+
+	evspec_reset(&from);
+	evspec_reset(&to);
+	to.dev_min = to.dev_max = odev;
+	to.ch_min = to.ch_max = och;
+	filt_mapdel(o, &from, &to);
 }
 
 
 void
-filt_conf_ctldrop(struct filt *o, 
-    unsigned idev, unsigned ich, unsigned ictl) {
-	struct rule **i, *r;
-	
-	i = &o->voice_rules;
-	while (*i) {
-		if (((*i)->type == RULE_CTLDROP && 
-		     (*i)->idev == idev && 
-		     (*i)->ich == ich && 
-		     (*i)->ictl == ictl) 
-		     ||
-		    ((*i)->type == RULE_CTLMAP && 
-		     (*i)->idev == idev && 
-		     (*i)->ich == ich && 
-		     (*i)->ictl == ictl)) {
-			r = *i;
-			*i = r->next;
-			mem_free(r);
-		} else{
-			i = &(*i)->next;
-		}
-	}
-	if (filt_nrules(o) >= FILT_MAXNRULES) {
-		return;
-	}
-	r = (struct rule *)mem_alloc(sizeof(struct rule));
-	r->type = RULE_CTLDROP;
-	r->idev = idev;
-	r->ich = ich;
-	r->ictl = ictl;
-	r->next = o->voice_rules;
-	o->voice_rules = r;
+filt_conf_ctldrop(struct filt *o, unsigned idev, unsigned ich, unsigned ictl)
+{
+	struct evspec from, to;
+
+	evspec_reset(&from);
+	from.cmd = EVSPEC_XCTL;
+	from.dev_min = from.dev_max = idev;
+	from.ch_min = from.ch_max = ich;
+	from.v0_min = from.v0_max = ictl;
+	to.cmd = EVSPEC_EMPTY;	
+	filt_mapnew(o, &from, &to);
 }
 
 void
-filt_conf_noctldrop(struct filt *o, 
-    unsigned idev, unsigned ich, unsigned ictl) {
-	struct rule **i, *r;
-	
-	i = &o->voice_rules;
-	while (*i) {
-		if ((*i)->type == RULE_CTLDROP && 
-		    (*i)->idev == idev && 
-		    (*i)->ich == ich && 
-		    (*i)->ictl == ictl) {
-			r = *i;
-			*i = r->next;
-			mem_free(r);
-		} else {
-			i = &(*i)->next;
-		}
-	}
+filt_conf_noctldrop(struct filt *o, unsigned idev, unsigned ich, unsigned ictl)
+{
+	struct evspec from, to;
+
+	evspec_reset(&from);
+	from.cmd = EVSPEC_XCTL;
+	from.dev_min = from.dev_max = idev;
+	from.ch_min = from.ch_max = ich;
+	from.v0_min = from.v0_max = ictl;
+	to.cmd = EVSPEC_EMPTY;	
+	filt_mapdel(o, &from, &to);
 }
 
 void
 filt_conf_ctlmap(struct filt *o, 
     unsigned idev, unsigned ich, unsigned odev, unsigned och, 
-    unsigned ictl, unsigned octl) {
-	struct rule **i, *r;
-	
-	i = &o->voice_rules;
-	while (*i != NULL) {
-		if (((*i)->type == RULE_CTLMAP && 
-		     (*i)->odev == odev && 
-		     (*i)->och == och && 
-		     (*i)->octl == octl) 
-		     ||
-		    ((*i)->type == RULE_CTLDROP &&
-		     (*i)->idev == idev && 
-		     (*i)->ich == ich && 
-		     (*i)->ictl == ictl)) {
-			r = *i;
-			*i = r->next;
-			mem_free(r);
-		} else {
-			i = &(*i)->next;
-		}
-	}
-	if (filt_nrules(o) >= FILT_MAXNRULES) {
-		return;
-	}
-	r = (struct rule *)mem_alloc(sizeof(struct rule));
-	r->type = RULE_CTLMAP;
-	r->idev = idev;
-	r->ich = ich;
-	r->odev = odev;
-	r->och = och;
-	r->ictl = ictl;
-	r->octl = octl;
-	r->next = o->voice_rules;
-	o->voice_rules = r;
+    unsigned ictl, unsigned octl)
+{
+	struct evspec from, to;
+
+	evspec_reset(&from);
+	evspec_reset(&to);
+	from.cmd = EVSPEC_CTL;
+	from.dev_min = from.dev_max = idev;
+	from.ch_min = from.ch_max = ich;
+	from.v0_min = from.v0_max = ictl;
+	to.cmd = EVSPEC_CTL;
+	to.dev_min = to.dev_max = odev;
+	to.ch_min = to.ch_max = och;
+	to.v0_min = to.v0_max = octl;
+	filt_mapnew(o, &from, &to);
 }
 
 void
 filt_conf_noctlmap(struct filt *o, 
-    unsigned odev, unsigned och, unsigned octl) {
-	struct rule **i, *r;
-	
-	i = &o->voice_rules;
-	while (*i != NULL) {
-		if ((*i)->type == RULE_CTLMAP && 
-		    (*i)->odev == odev && 
-		    (*i)->och == och && 
-		    (*i)->octl == octl) {
-			r = *i;
-			*i = r->next;
-			mem_free(r);
-		} else {
-			i = &(*i)->next;
-		}
-	}
+    unsigned odev, unsigned och, unsigned octl)
+{
+	struct evspec from, to;
+
+	evspec_reset(&from);
+	evspec_reset(&to);
+	to.cmd = EVSPEC_CTL;
+	to.dev_min = to.dev_max = odev;
+	to.ch_min = to.ch_max = och;
+	to.v0_min = to.v0_max = octl;
+	filt_mapdel(o, &from, &to);
 }
 
 void
 filt_conf_keydrop(struct filt *o, unsigned idev, unsigned ich, 
-    unsigned keylo, unsigned keyhi) {
-	struct rule **i, *r;
-	
-	i = &o->voice_rules;
-	while (*i) {
-		if (((*i)->type == RULE_KEYDROP && 
-		     (*i)->idev == idev && 
-		     (*i)->ich == ich && 
-		     keyhi >= (*i)->keylo && 
-		     keylo <= (*i)->keyhi) 
-		     ||
-		    ((*i)->type == RULE_KEYMAP && 
-		     (*i)->idev == idev && 
-		     (*i)->ich == ich && 
-		     keyhi >= (*i)->keylo && 
-		     keylo <= (*i)->keyhi)) {
-		    	r = *i;
-			*i = r->next;
-			mem_free(r);
-		} else {
-			i = &(*i)->next;
-		}
-	}
-	if (filt_nrules(o) >= FILT_MAXNRULES) {
-		return;
-	}
-	r = (struct rule *)mem_alloc(sizeof(struct rule));
-	r->type = RULE_KEYDROP;
-	r->idev = idev;
-	r->ich = ich;
-	r->keylo = keylo;
-	r->keyhi = keyhi;
-	r->next = o->voice_rules;
-	o->voice_rules = r;
+    unsigned keylo, unsigned keyhi)
+{
+	struct evspec from, to;
+
+	evspec_reset(&from);
+	from.cmd = EVSPEC_NOTE;
+	from.dev_min = from.dev_max = idev;
+	from.ch_min = from.ch_max = ich;
+	from.v0_min = keylo;
+	from.v0_max = keyhi;
+	to.cmd = EVSPEC_EMPTY;	
+	filt_mapnew(o, &from, &to);
 }
 
-
-/*
- * if there is intersection with existing rules
- * then remove them
- */
 void
 filt_conf_nokeydrop(struct filt *o, unsigned idev, unsigned ich, 
-    unsigned keylo, unsigned keyhi) {
-	struct rule **i, *r;
-	
-	i = &o->voice_rules;
-	while (*i) {
-		if ((*i)->type == RULE_KEYDROP && 
-		    (*i)->idev == idev && 
-		    (*i)->ich == ich && 
-		    keyhi >= (*i)->keylo && 
-		    keylo <= (*i)->keyhi) {
-		    	r = *i;
-			*i = r->next;
-			mem_free(r);
-		} else {
-			i = &(*i)->next;
-		}
-	}
+    unsigned keylo, unsigned keyhi)
+{
+	struct evspec from, to;
+
+	evspec_reset(&from);
+	from.cmd = EVSPEC_NOTE;
+	from.dev_min = from.dev_max = idev;
+	from.ch_min = from.ch_max = ich;
+	from.v0_min = keylo;
+	from.v0_max = keyhi;
+	to.cmd = EVSPEC_EMPTY;	
+	filt_mapdel(o, &from, &to);
 }
 
 
 void
 filt_conf_keymap(struct filt *o, 
     unsigned idev, unsigned ich, unsigned odev, unsigned och, 
-    unsigned keylo, unsigned keyhi, int keyplus) {
-	struct rule **i, *r;
-	
-	i = &o->voice_rules;
-	while (*i) {
-		if (((*i)->type == RULE_KEYMAP && 
-		     (*i)->odev == odev && 
-		     (*i)->och == och && 
-		     keyhi >= (*i)->keylo && 
-		     keylo <= (*i)->keyhi)
-		     ||
-		    ((*i)->type == RULE_KEYDROP && 
-		     (*i)->idev == idev && 
-		     (*i)->ich == ich && 
-		     keyhi >= (*i)->keylo && 
-		     keylo <= (*i)->keyhi)) {
-		    	r = *i;
-			*i = r->next;
-			mem_free(r);
-		} else {
-			i = &(*i)->next;
-		}
-	}
-	if (filt_nrules(o) >= FILT_MAXNRULES) {
-		return;
-	}
-	r = (struct rule *)mem_alloc(sizeof(struct rule));
-	r->type = RULE_KEYMAP;
-	r->idev = idev;
-	r->ich = ich;
-	r->odev = odev;
-	r->och = och;
-	r->keylo = keylo;
-	r->keyhi = keyhi;
-	r->keyplus = keyplus;
-	r->next = o->voice_rules;
-	o->voice_rules = r;
-}
+    unsigned keylo, unsigned keyhi, int keyplus)
+{
+	struct evspec from, to;
 
+	if ((int)keyhi + keyplus > EV_MAXCOARSE)
+		keyhi = EV_MAXCOARSE - keyplus;
+	if ((int)keylo + keyplus < 0)
+		keylo = -keyplus;
+	if (keylo >= keyhi)
+		return;
+
+	evspec_reset(&from);
+	evspec_reset(&to);
+	from.cmd = EVSPEC_NOTE;
+	from.dev_min = from.dev_max = idev;
+	from.ch_min = from.ch_max = ich;
+	from.v0_min = keylo;
+	from.v0_max = keyhi;
+	to.cmd = EVSPEC_NOTE;
+	to.dev_min = to.dev_max = odev;
+	to.ch_min = to.ch_max = och;
+	to.v0_min = keylo + keyplus;
+	to.v0_max = keyhi + keyplus;
+	filt_mapnew(o, &from, &to);
+}
 
 void
 filt_conf_nokeymap(struct filt *o, unsigned odev, unsigned och, 
-    unsigned keylo, unsigned keyhi) {
-	struct rule **i, *r;
+    unsigned keylo, unsigned keyhi)
+{
+	struct evspec from, to;
+
+	evspec_reset(&from);
+	evspec_reset(&to);
+	to.cmd = EVSPEC_NOTE;
+	to.dev_min = to.dev_max = odev;
+	to.ch_min = to.ch_max = och;
+	to.v0_min = keylo;
+	to.v0_max = keyhi;
+	filt_mapdel(o, &from, &to);
+}
+
+void
+filt_conf_chgich(struct filt *o, unsigned olddev, unsigned oldch,
+    unsigned newdev, unsigned newch)
+{
+	struct filtsrc *i;
 	
-	i = &o->voice_rules;
-	while (*i) {
-		if ((*i)->type == RULE_KEYMAP && 
-		    (*i)->odev == odev && 
-		    (*i)->och == och && 
-		    keyhi >= (*i)->keylo && 
-		    keylo <= (*i)->keyhi) {
-		    	r = *i;
-			*i = r->next;
-			mem_free(r);
-		} else {
-			i = &(*i)->next;
+	for (i = o->srclist; i != NULL; i = i->next) {
+		if (i->es.dev_min != i->es.dev_max ||
+		    i->es.ch_min != i->es.ch_max) {
+			continue;
+		}
+		if (i->es.dev_min == olddev &&
+		    i->es.ch_min == oldch) {
+			i->es.dev_min = i->es.dev_max = newdev;
+			i->es.ch_min = i->es.ch_max = newch;
 		}
 	}
 }
 
 
 void
-filt_conf_chgich(struct filt *o, 
-    unsigned olddev, unsigned oldch, unsigned newdev, unsigned newch) {
-	struct rule *i;
+filt_conf_chgidev(struct filt *o, unsigned olddev, unsigned newdev)
+{
+	struct filtsrc *i;
 	
-	for (i = o->voice_rules; i != NULL; i = i->next) {
-		rule_chgich(i, olddev, oldch, newdev, newch);
-	}
-	for (i = o->chan_rules; i != NULL; i = i->next) {
-		rule_chgich(i, olddev, oldch, newdev, newch);
+	for (i = o->srclist; i != NULL; i = i->next) {
+		if (i->es.dev_min != i->es.dev_max) {
+			continue;
+		}
+		if (i->es.dev_min == olddev) {
+			i->es.dev_min = i->es.dev_max = newdev;
+		}
 	}
 }
 
 
 void
-filt_conf_chgidev(struct filt *o, unsigned olddev, unsigned newdev) {
-	struct rule *i;
+filt_conf_swapich(struct filt *o, unsigned olddev, unsigned oldch,
+    unsigned newdev, unsigned newch)
+{
+	struct filtsrc *i;
 	
-	for (i = o->voice_rules; i != NULL; i = i->next) {
-		rule_chgidev(i, olddev, newdev);
-	}
-	for (i = o->chan_rules; i != NULL; i = i->next) {
-		rule_chgidev(i, olddev, newdev);
-	}
-	for (i = o->dev_rules; i != NULL; i = i->next) {
-		rule_chgidev(i, olddev, newdev);
+	for (i = o->srclist; i != NULL; i = i->next) {
+		if (i->es.dev_min != i->es.dev_max ||
+		    i->es.ch_min != i->es.ch_max) {
+			continue;
+		}
+		if (i->es.dev_min == newdev && i->es.ch_min == newch) {
+			i->es.dev_min = i->es.dev_max = olddev;
+			i->es.ch_min = i->es.ch_max = oldch;
+		} else if (i->es.dev_min == olddev && i->es.ch_min == oldch) {
+			i->es.dev_min = i->es.dev_max = newdev;
+			i->es.ch_min = i->es.ch_max = newch;
+		}
 	}
 }
 
 
 void
-filt_conf_swapich(struct filt *o, 
-    unsigned olddev, unsigned oldch, unsigned newdev, unsigned newch) {
-	struct rule *i;
+filt_conf_swapidev(struct filt *o, unsigned olddev, unsigned newdev)
+{
+	struct filtsrc *i;
 	
-	for (i = o->voice_rules; i != NULL; i = i->next) {
-		rule_swapich(i, olddev, oldch, newdev, newch);
+	for (i = o->srclist; i != NULL; i = i->next) {
+		if (i->es.dev_min != i->es.dev_max) {
+			continue;
+		}
+		if (i->es.dev_min == newdev) {
+			i->es.dev_min = i->es.dev_max = olddev;
+		} else if (i->es.dev_min == olddev) {
+			i->es.dev_min = i->es.dev_max = newdev;
+		}
 	}
-	for (i = o->chan_rules; i != NULL; i = i->next) {
-		rule_swapich(i, olddev, oldch, newdev, newch);
+}
+
+void
+filt_conf_chgoch(struct filt *o, unsigned olddev, unsigned oldch,
+    unsigned newdev, unsigned newch)
+{
+	struct filtsrc *s;
+	struct filtdst *d;
+	
+	for (s = o->srclist; s != NULL; s = s->next) {
+		for (d = s->dstlist; d != NULL; d = d->next) {
+			if (d->es.dev_min != d->es.dev_max ||
+			    d->es.ch_min != d->es.ch_max) {
+				continue;
+			}
+			if (d->es.dev_min == olddev && d->es.ch_min == oldch) {
+				d->es.dev_min = d->es.dev_max = newdev;
+				d->es.ch_min = d->es.ch_max = newch;
+			}
+		}
 	}
 }
 
 
 void
-filt_conf_swapidev(struct filt *o, unsigned olddev, unsigned newdev) {
-	struct rule *i;
+filt_conf_chgodev(struct filt *o, unsigned olddev, unsigned newdev)
+{
+	struct filtsrc *s;
+	struct filtdst *d;
 	
-	for (i = o->voice_rules; i != NULL; i = i->next) {
-		rule_swapidev(i, olddev, newdev);
-	}
-	for (i = o->chan_rules; i != NULL; i = i->next) {
-		rule_swapidev(i, olddev, newdev);
-	}
-	for (i = o->dev_rules; i != NULL; i = i->next) {
-		rule_swapidev(i, olddev, newdev);
-	}
-}
-
-void
-filt_conf_chgoch(struct filt *o, 
-    unsigned olddev, unsigned oldch, unsigned newdev, unsigned newch) {
-	struct rule *i;
-	
-	for (i = o->voice_rules; i != NULL; i = i->next) {
-		rule_chgoch(i, olddev, oldch, newdev, newch);
-	}
-	for (i = o->chan_rules; i != NULL; i = i->next) {
-		rule_chgoch(i, olddev, oldch, newdev, newch);
+	for (s = o->srclist; s != NULL; s = s->next) {
+		for (d = s->dstlist; d != NULL; d = d->next) {
+			if (d->es.dev_min != d->es.dev_max) {
+				continue;
+			}
+			if (d->es.dev_min == olddev) {
+				d->es.dev_min = d->es.dev_max = newdev;
+			}
+		}
 	}
 }
 
 
 void
-filt_conf_chgodev(struct filt *o, unsigned olddev, unsigned newdev) {
-	struct rule *i;
+filt_conf_swapoch(struct filt *o, unsigned olddev, unsigned oldch,
+    unsigned newdev, unsigned newch)
+{
+	struct filtsrc *s;
+	struct filtdst *d;
 	
-	for (i = o->voice_rules; i != NULL; i = i->next) {
-		rule_chgodev(i, olddev, newdev);
-	}
-	for (i = o->chan_rules; i != NULL; i = i->next) {
-		rule_chgodev(i, olddev, newdev);
-	}
-	for (i = o->dev_rules; i != NULL; i = i->next) {
-		rule_chgodev(i, olddev, newdev);
+	for (s = o->srclist; s != NULL; s = s->next) {
+		for (d = s->dstlist; d != NULL; d = d->next) {
+			if (d->es.dev_min != d->es.dev_max ||
+			    d->es.ch_min != d->es.ch_max) {
+				continue;
+			}
+			if (d->es.dev_min == newdev &&
+			    d->es.ch_min == newch) {
+				d->es.dev_min = d->es.dev_max = olddev;
+				d->es.ch_min = d->es.ch_max = oldch;
+			} else if (d->es.dev_min == olddev && 
+			    d->es.ch_min == oldch) {
+				d->es.dev_min = d->es.dev_max = newdev;
+				d->es.ch_min = d->es.ch_max = newch;
+			}
+		}
 	}
 }
-
 
 void
-filt_conf_swapoch(struct filt *o, 
-    unsigned olddev, unsigned oldch, unsigned newdev, unsigned newch) {
-	struct rule *i;
+filt_conf_swapodev(struct filt *o, unsigned olddev, unsigned newdev)
+{
+	struct filtsrc *s;
+	struct filtdst *d;
 	
-	for (i = o->voice_rules; i != NULL; i = i->next) {
-		rule_swapoch(i, olddev, oldch, newdev, newch);
-	}
-	for (i = o->chan_rules; i != NULL; i = i->next) {
-		rule_swapoch(i, olddev, oldch, newdev, newch);
+	for (s = o->srclist; s != NULL; s = s->next) {
+		for (d = s->dstlist; d != NULL; d = d->next) {
+			if (d->es.dev_min != d->es.dev_max) {
+				continue;
+			}
+			if (d->es.dev_min == newdev) {
+				d->es.dev_min = d->es.dev_max = olddev;
+			} else if (d->es.dev_min == olddev) {
+				d->es.dev_min = d->es.dev_max = newdev;
+			}
+		}
 	}
 }
-
-
-void
-filt_conf_swapodev(struct filt *o, unsigned olddev, unsigned newdev) {
-	struct rule *i;
-	
-	for (i = o->voice_rules; i != NULL; i = i->next) {
-		rule_swapodev(i, olddev, newdev);
-	}
-	for (i = o->chan_rules; i != NULL; i = i->next) {
-		rule_swapodev(i, olddev, newdev);
-	}
-	for (i = o->dev_rules; i != NULL; i = i->next) {
-		rule_swapodev(i, olddev, newdev);
-	}
-}
-

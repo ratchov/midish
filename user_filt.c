@@ -642,6 +642,34 @@ user_func_filtswapodev(struct exec *o, struct data **r) {
 }
 
 unsigned
+user_func_filtevmap(struct exec *o, struct data **r) {
+	struct songfilt *f;
+	struct evspec from, to;
+	
+	if (!exec_lookupfilt(o, "filtname", &f) ||
+	    !exec_lookupevspec(o, "from", &from) ||
+	    !exec_lookupevspec(o, "to", &to)) {
+		return 0;
+	}
+	filt_mapnew(&f->filt, &from, &to);
+	return 1;
+}
+
+unsigned
+user_func_filtevunmap(struct exec *o, struct data **r) {
+	struct songfilt *f;
+	struct evspec from, to;
+	
+	if (!exec_lookupfilt(o, "filtname", &f) ||
+	    !exec_lookupevspec(o, "from", &from) ||
+	    !exec_lookupevspec(o, "to", &to)) {
+		return 0;
+	}
+	filt_mapdel(&f->filt, &from, &to);
+	return 1;
+}
+
+unsigned
 user_func_filtsetcurchan(struct exec *o, struct data **r) {
 	struct songfilt *f;
 	struct songchan *c;

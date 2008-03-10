@@ -157,6 +157,7 @@ unsigned evspec_str2cmd(struct evspec *ev, char *str);
 void	 evspec_dbg(struct evspec *o);
 void	 evspec_reset(struct evspec *o);
 unsigned evspec_matchev(struct evspec *o, struct ev *e);
+unsigned evspec_eq(struct evspec *, struct evspec *);
 unsigned evspec_isec(struct evspec *, struct evspec *);
 unsigned evspec_in(struct evspec *, struct evspec *);
 

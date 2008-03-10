@@ -450,11 +450,11 @@ exec_lookupevspec(struct exec *o, char *name, struct evspec *e) {
 		e->v1_min =  (e->v1_min << 7) & 0x3fff;
 		e->v1_max = ((e->v1_max << 7) & 0x3fff) | 0x7f;
 	}
-	/*
+	
 	dbg_puts("lookupevspec: ");
 	evspec_dbg(e);
 	dbg_puts("\n");
-	*/
+	
 	return 1;
  toomany:
 	cons_err("too many ranges/values in event spec");
@@ -1187,6 +1187,14 @@ user_mainloop(void) {
 			name_newarg("filtname",
 			name_newarg("olddev", 
 			name_newarg("newdev", NULL))));
+	exec_newbuiltin(exec, "filtevmap", user_func_filtevmap,
+			name_newarg("filtname",
+			name_newarg("from", 
+			name_newarg("to", NULL))));
+	exec_newbuiltin(exec, "filtevunmap", user_func_filtevunmap,
+			name_newarg("filtname",
+			name_newarg("from", 
+			name_newarg("to", NULL))));
 	exec_newbuiltin(exec, "filtsetcurchan", user_func_filtsetcurchan, 
 			name_newarg("filtname", 
 			name_newarg("channame", NULL)));

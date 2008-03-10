@@ -141,35 +141,30 @@ one:
 }
 
 void
+range_output(unsigned min, unsigned max, struct textout *f)
+{
+	textout_putlong(f, min);
+	if (min != max) {
+		textout_putstr(f, ":");
+		textout_putlong(f, max);
+	}
+}
+
+void
 evspec_output(struct evspec *o, struct textout *f) {
 	textout_putstr(f, evinfo[o->cmd].spec);
 	textout_putstr(f, " {");
-	textout_putlong(f, o->dev_min);
+	range_output(o->dev_min, o->dev_max, f);
 	textout_putstr(f, " ");
-	textout_putlong(f, o->dev_max);
-		
-	textout_putstr(f, "} {");
-	textout_putlong(f, o->ch_min);
-	textout_putstr(f, " ");
-	textout_putlong(f, o->ch_max);
+	range_output(o->ch_min, o->ch_max, f);
 	textout_putstr(f, "}");
-
-	if (o->cmd != EVSPEC_ANY) {
-		textout_putstr(f, " {");
-		textout_putlong(f, o->v0_min);
+	if (evinfo[o->cmd].nranges >= 1) {
 		textout_putstr(f, " ");
-		textout_putlong(f, o->v0_max);
-		textout_putstr(f, "}");
-
-		if (o->cmd != EVSPEC_CAT && 
-		    o->cmd != EVSPEC_PC &&
-		    o->cmd != EVSPEC_BEND) {
-			textout_putstr(f, " {");
-			textout_putlong(f, o->v1_min);
-			textout_putstr(f, " ");
-			textout_putlong(f, o->v1_max);
-			textout_putstr(f, "}");
-		}
+		range_output(o->v0_min, o->v0_max, f);
+	}	
+	if (evinfo[o->cmd].nranges >= 2) {
+		textout_putstr(f, " ");
+		range_output(o->v1_min, o->v1_max, f);
 	}
 }
 
@@ -199,93 +194,30 @@ track_output(struct track *t, struct textout *f) {
 	textout_putstr(f, "}");
 }
 
-
-void
-rule_output(struct rule *o, struct textout *f) {
-	textout_indent(f);
-	switch(o->type) {
-	case RULE_DEVDROP:
-		textout_putstr(f, "devdrop ");		
-		textout_putlong(f, o->idev);
-		break;
-	case RULE_DEVMAP:
-		textout_putstr(f, "devmap ");		
-		textout_putlong(f, o->idev);
-		textout_putstr(f, " ");
-		textout_putlong(f, o->odev);
-		break;
-	case RULE_CHANDROP:
-		textout_putstr(f, "chandrop ");		
-		chan_output(o->idev, o->ich, f);
-		break;
-	case RULE_CHANMAP:
-		textout_putstr(f, "chanmap ");		
-		chan_output(o->idev, o->ich, f);
-		textout_putstr(f, " ");
-		chan_output(o->odev, o->och, f);
-		break;
-	case RULE_CTLDROP:
-		textout_putstr(f, "ctldrop ");		
-		chan_output(o->idev, o->ich, f);
-		textout_putstr(f, " ");
-		textout_putlong(f, o->ictl);
-		break;
-	case RULE_CTLMAP:
-		textout_putstr(f, "ctlmap ");		
-		chan_output(o->idev, o->ich, f);
-		textout_putstr(f, " ");
-		chan_output(o->odev, o->och, f);
-		textout_putstr(f, " ");
-		textout_putlong(f, o->ictl);
-		textout_putstr(f, " ");
-		textout_putlong(f, o->octl);
-		textout_putstr(f, " ");
-		textout_putstr(f, "id");
-		break;
-	case RULE_KEYDROP:
-		textout_putstr(f, "keydrop ");		
-		chan_output(o->idev, o->ich, f);
-		textout_putstr(f, " ");
-		textout_putlong(f, o->keylo);
-		textout_putstr(f, " ");
-		textout_putlong(f, o->keyhi);
-		break;
-	case RULE_KEYMAP:
-		textout_putstr(f, "keymap ");		
-		chan_output(o->idev, o->ich, f);
-		textout_putstr(f, " ");
-		chan_output(o->odev, o->och, f);
-		textout_putstr(f, " ");
-		textout_putlong(f, o->keylo);
-		textout_putstr(f, " ");
-		textout_putlong(f, o->keyhi);
-		textout_putstr(f, " ");
-		textout_putlong(f, o->keyplus & 0x7f);
-		textout_putstr(f, " ");
-		textout_putstr(f, "id");
-		break;
-	default:
-		dbg_puts("rule_output: ignoring unknown rule\n");
-	}
-	textout_putstr(f, "\n");
-}
-
 void
 filt_output(struct filt *o, struct textout *f) {
-	struct rule *i;
+	struct filtsrc *s, *snext;
+	struct filtdst *d;
 	textout_putstr(f, "{\n");
 	textout_shiftright(f);
 	
-	for (i = o->dev_rules; i != NULL; i = i->next) {
-		rule_output(i, f);
-	}
-	for (i = o->chan_rules; i != NULL; i = i->next) {
-		rule_output(i, f);
-	}
-	for (i = o->voice_rules; i != NULL; i = i->next) {
-		rule_output(i, f);
-	}
-	
+	snext = 0;
+	for (;;) {
+		if (snext == o->srclist)
+			break;
+		for (s = o->srclist; s->next != snext; s = s->next) {
+			/* nothing */
+		}
+		for (d = s->dstlist; d != NULL; d = d->next) {
+			textout_indent(f);
+			textout_putstr(f, "evmap ");
+			evspec_output(&s->es, f);
+			textout_putstr(f, " > ");
+			evspec_output(&d->es, f);
+			textout_putstr(f, "\n");
+		}
+		snext = s;
+	}	
 	textout_shiftleft(f);
 	textout_indent(f);
 	textout_putstr(f, "}");
@@ -613,8 +545,9 @@ parse_ukline(struct parse *o) {
 	if (!parse_getsym(o)) {
 		return 0;
 	}
-	if (o->lex.id != TOK_IDENT && o->lex.id != TOK_NUM && o->lex.id != TOK_ENDLINE) {
-		lex_err(&o->lex, "identifier, number, newline or '}' expected");
+	if (o->lex.id != TOK_IDENT && o->lex.id != TOK_NUM && 
+	    o->lex.id != TOK_ENDLINE) {
+		lex_err(&o->lex, "ident, number, newline or '}' expected");
 		return 0;
 	}
 	parse_ungetsym(o);
@@ -962,10 +895,80 @@ parse_track(struct parse *o, struct track *t) {
 	return 1;			
 }
 
+unsigned
+parse_range(struct parse *o, unsigned min, unsigned max,
+    unsigned *rmin, unsigned *rmax)
+{
+	unsigned long tmin, tmax;
+
+	if (!parse_long(o, min, max, &tmin))
+		return 0;
+	if (!parse_getsym(o))
+		return 0;
+	if (o->lex.id != TOK_COLON) {
+		parse_ungetsym(o);
+		*rmin = *rmax = tmin;
+		return 1;
+	}
+	if (!parse_long(o, min, max, &tmax))
+		return 0;
+	*rmin = tmin;
+	*rmax = tmax;
+	return 1;
+}
+
+unsigned
+parse_evspec(struct parse *o, struct evspec *es)
+{
+	struct evinfo *info;
+
+	if (!parse_getsym(o)) {
+		return 0;
+	}
+	if (o->lex.id != TOK_IDENT) {
+		lex_err(&o->lex, "event spec name expected");
+		return 0;
+	}
+	if (!evspec_str2cmd(es, o->lex.strval)) {
+		return 0;
+	}
+	info = &evinfo[es->cmd];
+	if (!parse_getsym(o)) {
+		return 0;
+	}
+	if (o->lex.id != TOK_LBRACE) {
+		lex_err(&o->lex, "'{' expected");
+		return 0;
+	}
+	if (!parse_range(o, 0, EV_MAXDEV, &es->dev_min, &es->dev_max) ||
+	    !parse_range(o, 0, EV_MAXCH, &es->ch_min, &es->ch_max))
+		return 0;
+	if (!parse_getsym(o)) {
+		return 0;
+	}
+	if (o->lex.id != TOK_RBRACE) {
+		lex_err(&o->lex, "'}' expected");
+		return 0;
+	}
+	if (info->nranges == 0) {
+		return 1;
+	}
+	if (!parse_range(o, 0, info->v0_max, &es->v0_min, &es->v0_max)) {
+		return 0;
+	}
+	if (info->nranges == 1) {
+		return 1;
+	}
+	if (!parse_range(o, 0, info->v1_max, &es->v1_min, &es->v1_max)) {
+		return 0;
+	}
+	return 1;
+}
 
 unsigned
 parse_rule(struct parse *o, struct filt *f) {
 	unsigned long idev, ich, odev, och, ictl, octl, keylo, keyhi, ukeyplus;
+	struct evspec from, to;
 	int keyplus;
 	if (!parse_getsym(o)) {
 		return 0;
@@ -1069,6 +1072,21 @@ parse_rule(struct parse *o, struct filt *f) {
 			return 0;
 		}
 		filt_conf_devmap(f, idev, odev);
+	} else if (str_eq(o->lex.strval, "evmap")) {
+		if (!parse_evspec(o, &from)) {
+			return 0;
+		}
+		if (!parse_getsym(o)) {
+			return 0;
+		}
+		if (o->lex.id != TOK_GT) {
+			lex_err(&o->lex, "'>' expected");
+			return 0;
+		}
+		if (!parse_evspec(o, &to)) {
+			return 0;
+		}
+		filt_mapnew(f, &from, &to);
 	} else {
 		parse_ungetsym(o);
 		if (!parse_ukline(o)) {

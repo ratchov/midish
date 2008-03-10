@@ -31,46 +31,39 @@
 #ifndef MIDISH_FILT_H
 #define MIDISH_FILT_H
 
+#include "ev.h"
 
-struct rule {
-	struct rule *next;
 /*
- * filtering rule types
+ * destination to which the output event is mapped
  */
-#define RULE_CTLMAP	1
-#define RULE_CTLDROP	2
-#define RULE_KEYMAP	3
-#define RULE_KEYDROP	4
-#define RULE_CHANMAP	5
-#define RULE_CHANDROP	6
-#define RULE_DEVMAP	7
-#define RULE_DEVDROP	8
-	unsigned type;
-	/*
-	 * parametes of the rule not all are used by all types of
-	 * rules, but we dont make an 'union' because ceratain
-	 * routines manipulate multiple rules
-	 */
-	unsigned idev, odev;	/* input and output devices */
-	unsigned ich, och;	/* input and output midi channels */
-	unsigned ictl, octl;	/* input and output controllers */
-	unsigned keylo, keyhi;	/* keyboard range */
-	int keyplus;		/* halftones to transpose */
+struct filtdst {
+	struct evspec es;
+	struct filtdst *next;
+};
+
+/*
+ * source against which the input event is matched
+ */
+struct filtsrc {
+	struct evspec es;		/* events by this entry */
+	struct filtdst *dstlist;	/* destinations for this source */
+	struct filtsrc *next;		/* next source in the list */
 };
 
 #define FILT_MAXNRULES 32
 
 struct filt {
-	/* 
-	 * config of the filter: singly linked list of rules
-	 */
-	struct rule *voice_rules, *chan_rules, *dev_rules;
+	struct filtsrc *srclist;
 };
 
 void filt_init(struct filt *);
 void filt_done(struct filt *);
 void filt_reset(struct filt *);
 unsigned filt_do(struct filt *o, struct ev *in, struct ev *out);
+void filt_mapnew(struct filt *, struct evspec *, struct  evspec *);
+void filt_mapdel(struct filt *, struct evspec *, struct  evspec *);
+
+extern unsigned filt_debug;
 
 void filt_conf_devdrop(struct filt *o, unsigned idev);
 void filt_conf_nodevdrop(struct filt *o, unsigned idev);
@@ -96,7 +89,5 @@ void filt_conf_chgoch(struct filt *o, unsigned olddev, unsigned oldch, unsigned 
 void filt_conf_chgodev(struct filt *o, unsigned olddev, unsigned newdev);
 void filt_conf_swapoch(struct filt *o, unsigned olddev, unsigned oldch, unsigned newdev, unsigned newch);
 void filt_conf_swapodev(struct filt *o, unsigned olddev, unsigned newdev);
-
-extern unsigned filt_debug;
 
 #endif /* MIDISH_FILT_H */

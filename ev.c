@@ -37,7 +37,7 @@
 #include "str.h"
 
 struct evinfo evinfo[EV_NUMCMD] = {
-	{ "nil", "nil",	
+	{ "nil", "none",	
 	  0, 0,
 	  0, 0, 0, 0
 	},
@@ -267,7 +267,7 @@ unsigned
 evspec_str2cmd(struct evspec *ev, char *str) {
 	unsigned i;
 
-	for (i = 0; i < EV_NUMCMD + 1; i++) {
+	for (i = 0; i < EV_NUMCMD; i++) {
 		if (evinfo[i].spec != NULL && str_eq(evinfo[i].spec, str)) {
 			ev->cmd = i;
 			return 1;
@@ -345,6 +345,86 @@ evspec_dbg(struct evspec *o) {
 	}
 }
 
+/* 
+ * check if the given state belongs to the event spec
+ */
+unsigned
+evspec_matchev(struct evspec *es, struct ev *ev) {
+	if (es->cmd == EVSPEC_EMPTY)
+		return 0;
+	if (es->cmd == EVSPEC_NOTE && !EV_ISNOTE(ev))
+		return 0;
+	if (es->cmd != EVSPEC_ANY) {
+		if (es->cmd == EVSPEC_NOTE) {
+			if (!EV_ISNOTE(ev))
+				return 0;
+		} else {
+			if (es->cmd != ev->cmd)
+				return 0;
+		}
+	}
+	if ((evinfo[es->cmd].flags & EV_HAS_DEV) &&
+	    (evinfo[ev->cmd].flags & EV_HAS_DEV)) {
+		if (ev->dev < es->dev_min ||
+		    ev->dev > es->dev_max)
+			return 0;
+	}
+	if ((evinfo[es->cmd].flags & EV_HAS_CH) &&
+	    (evinfo[ev->cmd].flags & EV_HAS_CH)) {
+		if (ev->ch < es->ch_min ||
+		    ev->ch > es->ch_max)
+			return 0;
+	}
+	if (evinfo[es->cmd].nranges > 0 &&
+	    evinfo[ev->cmd].nranges > 0) {
+		if (ev->v0 < es->v0_min ||
+		    ev->v0 > es->v0_max)
+			return 0;
+	}	
+	if (evinfo[es->cmd].nranges > 1 &&
+	    evinfo[ev->cmd].nranges > 1) {
+		if (ev->v1 < es->v1_min ||
+		    ev->v1 > es->v1_max)
+			return 0;
+	}
+	return 1;
+}
+
+/*
+ * check if both sets are the same
+ */
+unsigned
+evspec_eq(struct evspec *es1, struct evspec *es2) {
+	if (es1->cmd != es2->cmd) {
+		return 0;
+	}
+	if (evinfo[es1->cmd].flags & EV_HAS_DEV) {
+		if (es1->dev_min != es2->dev_min ||
+		    es1->dev_max != es2->dev_max) {
+			return 0;
+		}
+	}
+	if (evinfo[es1->cmd].flags & EV_HAS_CH) {
+		if (es1->ch_min != es2->ch_min ||
+		    es1->ch_max != es2->ch_max) {
+			return 0;
+		}
+	}
+	if (evinfo[es1->cmd].nranges > 0) {
+		if (es1->v0_min != es2->v0_min ||
+		    es1->v0_max != es2->v0_max) {
+			return 0;
+		}
+	}
+	if (evinfo[es1->cmd].nranges > 1) {
+		if (es1->v1_min != es2->v1_min ||
+		    es1->v1_max != es2->v1_max) {
+			return 0;
+		}
+	}
+	return 1;
+}
+
 /*
  * check if there is intersection between two evspecs
  */
@@ -404,7 +484,7 @@ evspec_in(struct evspec *es1, struct evspec *es2) {
 	if (es1->cmd == EVSPEC_ANY && es2->cmd != EVSPEC_ANY) {
 		return 0;
 	}
-	if (es1->cmd != EVSPEC_ANY && es2->cmd != es1->cmd) {
+	if (es2->cmd != EVSPEC_ANY && es2->cmd != es1->cmd) {
 		return 0;
 	}
 	if ((evinfo[es1->cmd].flags & EV_HAS_DEV) &&

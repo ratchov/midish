@@ -2634,6 +2634,24 @@ it, use the <TT>songstop</TT> function.
         in the range <TT>keystart..keyend</TT> to channel <TT>outchan</TT>.
         </BLOCKQUOTE>
 
+<A name="func_filtevmap"></A>
+<B><TT>filtevmap filtname evspec1 evspec2</TT></B>
+        <BLOCKQUOTE>
+	make the filter <tt>filtname</tt>
+	convert events matching evspec1 (source) into events matching
+	evspec2 (destination).
+	Both evspec1 and evspec2 must have the same number of devices,
+	channels, notes, controllers etc..	
+        </BLOCKQUOTE>
+
+<A name="func_filtevunmap"></A>
+<B><TT>filtevunmap filtname evspec1 evspec2</TT></B>
+        <BLOCKQUOTE>
+	remove event maps from filter <tt>filtname</tt>. Any
+	mapping with source included in evspec1 and destination
+	inluded in evspec2 is deleted.
+        </BLOCKQUOTE>
+
 <A name="func_sysex"></A>
 <A name="section_17_4"></A><H2>17.4 System exclusive messages functions</H2>
 

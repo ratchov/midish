@@ -60,7 +60,7 @@ data.o:		data.c dbg.h str.h cons.h data.h
 dbg.o:		dbg.c dbg.h
 ev.o:		ev.c dbg.h ev.h default.h str.h
 exec.o:		exec.c dbg.h exec.h name.h str.h data.h node.h cons.h
-filt.o:		filt.c dbg.h ev.h default.h filt.h pool.h mux.h
+filt.o:		filt.c dbg.h ev.h default.h filt.h pool.h mux.h cons.h
 frame.o:	frame.c dbg.h track.h ev.h default.h frame.h state.h
 lex.o:		lex.c dbg.h lex.h str.h textio.h cons.h
 main.o:		main.c dbg.h str.h cons.h ev.h default.h mux.h track.h \
@@ -84,7 +84,6 @@ parse.o:	parse.c dbg.h textio.h lex.h data.h parse.h node.h \
 pool.o:		pool.c dbg.h pool.h
 rmidi.o:	rmidi.c dbg.h default.h mdep.h ev.h sysex.h mux.h \
 		rmidi.h mididev.h
-rmidish.o:	rmidish.c
 saveload.o:	saveload.c dbg.h name.h str.h song.h track.h ev.h \
 		default.h frame.h state.h filt.h sysex.h metro.h timo.h \
 		parse.h lex.h textio.h saveload.h conv.h
@@ -104,22 +103,22 @@ user.o:		user.c dbg.h default.h node.h exec.h name.h str.h data.h \
 		cons.h textio.h lex.h parse.h mux.h mididev.h track.h \
 		ev.h song.h frame.h state.h filt.h sysex.h metro.h \
 		timo.h user.h smf.h saveload.h rmidi.h mdep.h
+user_trk.o:	user_trk.c dbg.h default.h node.h exec.h name.h str.h \
+		data.h cons.h frame.h state.h ev.h track.h song.h filt.h \
+		sysex.h metro.h timo.h user.h saveload.h textio.h
 user_chan.o:	user_chan.c dbg.h default.h node.h exec.h name.h str.h \
 		data.h cons.h frame.h state.h ev.h track.h song.h filt.h \
 		sysex.h metro.h timo.h user.h saveload.h textio.h
-user_dev.o:	user_dev.c dbg.h default.h node.h exec.h name.h str.h \
-		data.h cons.h mididev.h song.h track.h ev.h frame.h \
-		state.h filt.h sysex.h metro.h timo.h user.h textio.h
 user_filt.o:	user_filt.c dbg.h default.h node.h exec.h name.h str.h \
+		data.h cons.h song.h track.h ev.h frame.h state.h filt.h \
+		sysex.h metro.h timo.h user.h saveload.h textio.h
+user_sx.o:	user_sx.c dbg.h default.h node.h exec.h name.h str.h \
 		data.h cons.h song.h track.h ev.h frame.h state.h filt.h \
 		sysex.h metro.h timo.h user.h saveload.h textio.h
 user_song.o:	user_song.c dbg.h default.h node.h exec.h name.h str.h \
 		data.h cons.h frame.h state.h ev.h song.h track.h filt.h \
 		sysex.h metro.h timo.h user.h smf.h saveload.h textio.h \
 		mux.h
-user_sx.o:	user_sx.c dbg.h default.h node.h exec.h name.h str.h \
-		data.h cons.h song.h track.h ev.h frame.h state.h filt.h \
-		sysex.h metro.h timo.h user.h saveload.h textio.h
-user_trk.o:	user_trk.c dbg.h default.h node.h exec.h name.h str.h \
-		data.h cons.h frame.h state.h ev.h track.h song.h filt.h \
-		sysex.h metro.h timo.h user.h saveload.h textio.h
+user_dev.o:	user_dev.c dbg.h default.h node.h exec.h name.h str.h \
+		data.h cons.h mididev.h song.h track.h ev.h frame.h \
+		state.h filt.h sysex.h metro.h timo.h user.h textio.h

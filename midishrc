@@ -60,13 +60,30 @@ proc nt name {
 # some filter rules
 #
 proc ctldrop ic {
-	filtctldrop [songgetcurfilt] [songgetcurinput] $ic
+	let i = [songgetcurinput]
+	let c = [songgetcurchan]
+	filtevmap [songgetcurfilt] {ctl $i $ic} {none}
 }
 proc ctlmap ic oc {
-	filtctlmap [songgetcurfilt] [songgetcurinput] [songgetcurchan] $ic $oc
+	let i = [songgetcurinput]
+	let o = [songgetcurchan]
+	filtevmap [songgetcurfilt] {ctl $i $ic} {ctl $o $oc}
 }
-proc transpose halftones {
-	filtkeymap [songgetcurfilt] [songgetcurinput] [songgetcurchan] 0 127 $halftones
+proc transpose plus {
+	let i = [songgetcurinput]
+	let o = [songgetcurchan]
+	#let lo = 0;
+	#let hi = 127;
+	#filtevunmap [songgetcurfilt] {} {note $i}
+	#if ($hi + $plus > 127) {
+	#	let hi = $hi - $plus
+	#}
+	#if ($lo + $plus < 0) {
+	#	let lo = $lo - $plus
+	#}
+	#filtevmap [songgetcurfilt] {note $i {$lo $hi}} {note $c {$lo + $plus $hi + $plus}}
+	filtnokeymap [songgetcurfilt] $o 0 127
+	filtkeymap   [songgetcurfilt] $i $o 0 127 $plus
 }
 
 #
