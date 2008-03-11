@@ -608,43 +608,64 @@ filt_conf_nokeymap(struct filt *o, unsigned odev, unsigned och,
 	filt_mapdel(o, &from, &to);
 }
 
+struct filtsrc *
+filt_movelist(struct filt *o)
+{
+	struct filtsrc *list, *s;
+
+	for (list = NULL; (s = o->srclist) != NULL;) {
+		o->srclist = s->next;
+		s->next = list;
+		list = s;
+	}
+	return list;
+}
+
 void
 filt_conf_chgich(struct filt *o, unsigned olddev, unsigned oldch,
     unsigned newdev, unsigned newch)
 {
-	struct filtsrc *i;
-	
-	for (i = o->srclist; i != NULL; i = i->next) {
-		if (i->es.dev_min != i->es.dev_max ||
-		    i->es.ch_min != i->es.ch_max) {
-			continue;
+	struct filtsrc *s, *list;
+	struct filtdst *d;
+
+	list = filt_movelist(o);
+	while ((s = list) != NULL) {
+		if (s->es.dev_min == s->es.dev_max &&
+		    s->es.dev_min == olddev &&
+		    s->es.ch_min == s->es.ch_max &&
+		    s->es.ch_min == oldch) {
+			s->es.dev_min = s->es.dev_max = newdev;
+			s->es.ch_min = s->es.ch_max = newch;
 		}
-		if (i->es.dev_min == olddev &&
-		    i->es.ch_min == oldch) {
-			i->es.dev_min = i->es.dev_max = newdev;
-			i->es.ch_min = i->es.ch_max = newch;
+		while ((d = s->dstlist) != NULL) {
+			filt_mapnew(o, &s->es, &d->es);
+			s->dstlist = d->next;
+			mem_free(d);		    
 		}
+		list = s->next;
+		mem_free(s);
 	}
 }
-
 
 void
 filt_conf_chgidev(struct filt *o, unsigned olddev, unsigned newdev)
 {
-	struct filtsrc *i;
-	
-	/* XXX: this is broken, if we change any parameter, the rule position
-	 * must be reevaluated. So we must clear the rule list and use mapnew()
-	 * to readd all rules
-	 */
+	struct filtsrc *s, *list;
+	struct filtdst *d;
 
-	for (i = o->srclist; i != NULL; i = i->next) {
-		if (i->es.dev_min != i->es.dev_max) {
-			continue;
+	list = filt_movelist(o);
+	while ((s = list) != NULL) {
+		if (s->es.dev_min == s->es.dev_max &&
+		    s->es.dev_min == olddev) {
+			s->es.dev_min = s->es.dev_max = newdev;
 		}
-		if (i->es.dev_min == olddev) {
-			i->es.dev_min = i->es.dev_max = newdev;
+		while ((d = s->dstlist) != NULL) {
+			filt_mapnew(o, &s->es, &d->es);
+			s->dstlist = d->next;
+			mem_free(d);		    
 		}
+		list = s->next;
+		mem_free(s);
 	}
 }
 
@@ -653,38 +674,55 @@ void
 filt_conf_swapich(struct filt *o, unsigned olddev, unsigned oldch,
     unsigned newdev, unsigned newch)
 {
-	struct filtsrc *i;
-	
-	for (i = o->srclist; i != NULL; i = i->next) {
-		if (i->es.dev_min != i->es.dev_max ||
-		    i->es.ch_min != i->es.ch_max) {
-			continue;
+	struct filtsrc *s, *list;
+	struct filtdst *d;
+
+	list = filt_movelist(o);
+	while ((s = list) != NULL) {
+		if (s->es.dev_min == s->es.dev_max &&
+		    s->es.ch_min == s->es.ch_max) {
+			if (s->es.dev_min == newdev && 
+			    s->es.ch_min == newch) {
+				s->es.dev_min = s->es.dev_max = olddev;
+				s->es.ch_min = s->es.ch_max = oldch;
+			} else if (s->es.dev_min == olddev && 
+			    s->es.ch_min == oldch) {
+				s->es.dev_min = s->es.dev_max = newdev;
+				s->es.ch_min = s->es.ch_max = newch;
+			}
 		}
-		if (i->es.dev_min == newdev && i->es.ch_min == newch) {
-			i->es.dev_min = i->es.dev_max = olddev;
-			i->es.ch_min = i->es.ch_max = oldch;
-		} else if (i->es.dev_min == olddev && i->es.ch_min == oldch) {
-			i->es.dev_min = i->es.dev_max = newdev;
-			i->es.ch_min = i->es.ch_max = newch;
+		while ((d = s->dstlist) != NULL) {
+			filt_mapnew(o, &s->es, &d->es);
+			s->dstlist = d->next;
+			mem_free(d);		    
 		}
+		list = s->next;
+		mem_free(s);
 	}
 }
-
 
 void
 filt_conf_swapidev(struct filt *o, unsigned olddev, unsigned newdev)
 {
-	struct filtsrc *i;
-	
-	for (i = o->srclist; i != NULL; i = i->next) {
-		if (i->es.dev_min != i->es.dev_max) {
-			continue;
+	struct filtsrc *s, *list;
+	struct filtdst *d;
+
+	list = filt_movelist(o);
+	while ((s = list) != NULL) {
+		if (s->es.dev_min == s->es.dev_max) {
+			if (s->es.dev_min == newdev) {
+				s->es.dev_min = s->es.dev_max = olddev;
+			} else if (s->es.dev_min == olddev) {
+				s->es.dev_min = s->es.dev_max = newdev;
+			}
 		}
-		if (i->es.dev_min == newdev) {
-			i->es.dev_min = i->es.dev_max = olddev;
-		} else if (i->es.dev_min == olddev) {
-			i->es.dev_min = i->es.dev_max = newdev;
+		while ((d = s->dstlist) != NULL) {
+			filt_mapnew(o, &s->es, &d->es);
+			s->dstlist = d->next;
+			mem_free(d);		    
 		}
+		list = s->next;
+		mem_free(s);
 	}
 }
 
@@ -692,20 +730,25 @@ void
 filt_conf_chgoch(struct filt *o, unsigned olddev, unsigned oldch,
     unsigned newdev, unsigned newch)
 {
-	struct filtsrc *s;
+	struct filtsrc *s, *list;
 	struct filtdst *d;
-	
-	for (s = o->srclist; s != NULL; s = s->next) {
-		for (d = s->dstlist; d != NULL; d = d->next) {
-			if (d->es.dev_min != d->es.dev_max ||
-			    d->es.ch_min != d->es.ch_max) {
-				continue;
-			}
-			if (d->es.dev_min == olddev && d->es.ch_min == oldch) {
+
+	list = filt_movelist(o);
+	while ((s = list) != NULL) {
+		while ((d = s->dstlist) != NULL) {
+			if (d->es.dev_min == d->es.dev_max &&
+			    d->es.dev_min == olddev &&
+			    d->es.ch_min == d->es.ch_max &&
+			    d->es.ch_min == oldch) {
 				d->es.dev_min = d->es.dev_max = newdev;
 				d->es.ch_min = d->es.ch_max = newch;
 			}
+			filt_mapnew(o, &s->es, &d->es);
+			s->dstlist = d->next;
+			mem_free(d);		    
 		}
+		list = s->next;
+		mem_free(s);
 	}
 }
 
@@ -713,18 +756,22 @@ filt_conf_chgoch(struct filt *o, unsigned olddev, unsigned oldch,
 void
 filt_conf_chgodev(struct filt *o, unsigned olddev, unsigned newdev)
 {
-	struct filtsrc *s;
+	struct filtsrc *s, *list;
 	struct filtdst *d;
-	
-	for (s = o->srclist; s != NULL; s = s->next) {
-		for (d = s->dstlist; d != NULL; d = d->next) {
-			if (d->es.dev_min != d->es.dev_max) {
-				continue;
-			}
-			if (d->es.dev_min == olddev) {
+
+	list = filt_movelist(o);
+	while ((s = list) != NULL) {
+		while ((d = s->dstlist) != NULL) {
+			if (d->es.dev_min == d->es.dev_max &&
+			    d->es.dev_min == olddev) {
 				d->es.dev_min = d->es.dev_max = newdev;
 			}
+			filt_mapnew(o, &s->es, &d->es);
+			s->dstlist = d->next;
+			mem_free(d);		    
 		}
+		list = s->next;
+		mem_free(s);
 	}
 }
 
@@ -733,44 +780,54 @@ void
 filt_conf_swapoch(struct filt *o, unsigned olddev, unsigned oldch,
     unsigned newdev, unsigned newch)
 {
-	struct filtsrc *s;
+	struct filtsrc *s, *list;
 	struct filtdst *d;
-	
-	for (s = o->srclist; s != NULL; s = s->next) {
-		for (d = s->dstlist; d != NULL; d = d->next) {
-			if (d->es.dev_min != d->es.dev_max ||
-			    d->es.ch_min != d->es.ch_max) {
-				continue;
+
+	list = filt_movelist(o);
+	while ((s = list) != NULL) {
+		while ((d = s->dstlist) != NULL) {
+			if (d->es.dev_min == d->es.dev_max &&
+			    d->es.ch_min == d->es.ch_max) {
+				if (d->es.dev_min == newdev && 
+				    d->es.ch_min == newch) {
+					d->es.dev_min = d->es.dev_max = olddev;
+					d->es.ch_min = d->es.ch_max = oldch;
+				} else if (d->es.dev_min == olddev && 
+				    d->es.ch_min == oldch) {
+					d->es.dev_min = d->es.dev_max = newdev;
+					d->es.ch_min = d->es.ch_max = newch;
+				}
 			}
-			if (d->es.dev_min == newdev &&
-			    d->es.ch_min == newch) {
-				d->es.dev_min = d->es.dev_max = olddev;
-				d->es.ch_min = d->es.ch_max = oldch;
-			} else if (d->es.dev_min == olddev && 
-			    d->es.ch_min == oldch) {
-				d->es.dev_min = d->es.dev_max = newdev;
-				d->es.ch_min = d->es.ch_max = newch;
-			}
+			filt_mapnew(o, &s->es, &d->es);
+			s->dstlist = d->next;
+			mem_free(d);		    
 		}
+		list = s->next;
+		mem_free(s);
 	}
 }
 
 void
 filt_conf_swapodev(struct filt *o, unsigned olddev, unsigned newdev)
 {
-	struct filtsrc *s;
+	struct filtsrc *s, *list;
 	struct filtdst *d;
-	
-	for (s = o->srclist; s != NULL; s = s->next) {
-		for (d = s->dstlist; d != NULL; d = d->next) {
-			if (d->es.dev_min != d->es.dev_max) {
-				continue;
+
+	list = filt_movelist(o);
+	while ((s = list) != NULL) {
+		while ((d = s->dstlist) != NULL) {
+			if (d->es.dev_min == d->es.dev_max) {
+				if (d->es.dev_min == newdev) {
+					d->es.dev_min = d->es.dev_max = olddev;
+				} else if (d->es.dev_min == olddev) {
+					d->es.dev_min = d->es.dev_max = newdev;
+				}
 			}
-			if (d->es.dev_min == newdev) {
-				d->es.dev_min = d->es.dev_max = olddev;
-			} else if (d->es.dev_min == olddev) {
-				d->es.dev_min = d->es.dev_max = newdev;
-			}
+			filt_mapnew(o, &s->es, &d->es);
+			s->dstlist = d->next;
+			mem_free(d);		    
 		}
+		list = s->next;
+		mem_free(s);
 	}
 }
