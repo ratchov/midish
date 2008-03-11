@@ -97,7 +97,8 @@ mididev_listdone(void) {
 	for (i = 0; i < DEFAULT_MAXNDEVS; i++) {
 		dev = mididev_byunit[i];
 		if (dev != NULL) {
-			rmidi_done(RMIDI(dev));
+			str_delete(RMIDI(dev)->mdep.path);
+			rmidi_delete(RMIDI(dev));
 			mididev_byunit[i] = NULL;
 		}
 	}

@@ -1414,7 +1414,8 @@ user_mainloop(void) {
 	parse_delete(parse);
 	exec_delete(exec);
 	song_delete(user_song);
-	user_song = NULL;	
+	user_song = NULL;
+	mididev_listdone();
 	return exitcode;
 }
 
