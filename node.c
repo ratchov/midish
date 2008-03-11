@@ -471,6 +471,29 @@ node_exec_list(struct node *o, struct exec *x, struct data **r) {
 	return RESULT_OK;
 }
 
+/* 
+ * built a range from two integers
+ */
+unsigned
+node_exec_range(struct node *o, struct exec *x, struct data **r) {
+	struct data *min, *max;
+
+	if (!node_exec(o->list, x, &min))
+		return RESULT_ERR;	
+	if (!node_exec(o->list->next, x, &max))
+		return RESULT_ERR;
+	if (min->type != DATA_LONG || max->type != DATA_LONG) {
+		cons_err("cannot create a range with non integers");
+		return RESULT_ERR;
+	}
+	if (min->val.num > max->val.num) {
+		cons_err("max > min, cant create a valid range");
+		return RESULT_ERR;
+	}
+	*r = data_newrange(min->val.num, max->val.num);
+	return RESULT_OK;
+}
+
 unsigned
 node_exec_eq(struct node *o, struct exec *x, struct data **r) {
 	return node_exec_binary(o, x, r, data_eq);
@@ -593,6 +616,7 @@ node_vmt_exit = { "exit", node_exec_exit },
 node_vmt_assign = { "assign", node_exec_assign },
 node_vmt_nop = { "nop", node_exec_nop },
 node_vmt_list = { "list", node_exec_list},
+node_vmt_range = { "range", node_exec_range},
 node_vmt_eq = { "eq", node_exec_eq },
 node_vmt_neq = { "neq", node_exec_neq },
 node_vmt_le = { "le", node_exec_le },

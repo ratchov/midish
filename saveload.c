@@ -145,7 +145,7 @@ range_output(unsigned min, unsigned max, struct textout *f)
 {
 	textout_putlong(f, min);
 	if (min != max) {
-		textout_putstr(f, ":");
+		textout_putstr(f, "..");
 		textout_putlong(f, max);
 	}
 }
@@ -153,11 +153,14 @@ range_output(unsigned min, unsigned max, struct textout *f)
 void
 evspec_output(struct evspec *o, struct textout *f) {
 	textout_putstr(f, evinfo[o->cmd].spec);
-	textout_putstr(f, " {");
-	range_output(o->dev_min, o->dev_max, f);
-	textout_putstr(f, " ");
-	range_output(o->ch_min, o->ch_max, f);
-	textout_putstr(f, "}");
+	if ((evinfo[o->cmd].flags & EV_HAS_DEV) && 
+	    (evinfo[o->cmd].flags & EV_HAS_CH)) {
+		textout_putstr(f, " {");
+		range_output(o->dev_min, o->dev_max, f);
+		textout_putstr(f, " ");
+		range_output(o->ch_min, o->ch_max, f);
+		textout_putstr(f, "}");
+	}
 	if (evinfo[o->cmd].nranges >= 1) {
 		textout_putstr(f, " ");
 		range_output(o->v0_min, o->v0_max, f);
@@ -905,7 +908,7 @@ parse_range(struct parse *o, unsigned min, unsigned max,
 		return 0;
 	if (!parse_getsym(o))
 		return 0;
-	if (o->lex.id != TOK_COLON) {
+	if (o->lex.id != TOK_RANGE) {
 		parse_ungetsym(o);
 		*rmin = *rmax = tmin;
 		return 1;
@@ -933,22 +936,24 @@ parse_evspec(struct parse *o, struct evspec *es)
 		return 0;
 	}
 	info = &evinfo[es->cmd];
-	if (!parse_getsym(o)) {
-		return 0;
-	}
-	if (o->lex.id != TOK_LBRACE) {
-		lex_err(&o->lex, "'{' expected");
-		return 0;
-	}
-	if (!parse_range(o, 0, EV_MAXDEV, &es->dev_min, &es->dev_max) ||
-	    !parse_range(o, 0, EV_MAXCH, &es->ch_min, &es->ch_max))
-		return 0;
-	if (!parse_getsym(o)) {
-		return 0;
-	}
-	if (o->lex.id != TOK_RBRACE) {
-		lex_err(&o->lex, "'}' expected");
-		return 0;
+	if ((info->flags & EV_HAS_DEV) && (info->flags & EV_HAS_CH)) {
+		if (!parse_getsym(o)) {
+			return 0;
+		}
+		if (o->lex.id != TOK_LBRACE) {
+			lex_err(&o->lex, "'{' expected");
+			return 0;
+		}
+		if (!parse_range(o, 0, EV_MAXDEV, &es->dev_min, &es->dev_max) ||
+		    !parse_range(o, 0, EV_MAXCH, &es->ch_min, &es->ch_max))
+			return 0;
+		if (!parse_getsym(o)) {
+			return 0;
+		}
+		if (o->lex.id != TOK_RBRACE) {
+			lex_err(&o->lex, "'}' expected");
+			return 0;
+		}
 	}
 	if (info->nranges == 0) {
 		return 1;

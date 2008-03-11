@@ -613,8 +613,33 @@ parse_or(struct parse *o, struct node **n) {
 }
 
 unsigned
+parse_exprange(struct parse *o, struct node **n) {
+	if (!parse_or(o, n)) {
+		return 0;
+	}
+	if (!parse_getsym(o)) {
+		return 0;
+	}
+	if (o->lex.id == TOK_RANGE) {
+		node_replace(n, node_new(&node_vmt_range, NULL));
+		if (!parse_or(o, &(*n)->list->next)) {
+			return 0;
+		}
+		if (!parse_getsym(o)) {
+			return 0;
+		}
+		if (o->lex.id == TOK_RANGE) {
+			parse_recover(o, "too many '..' for range");
+			return 0;
+		}
+	}
+	parse_ungetsym(o);
+	return 1;
+}
+
+unsigned
 parse_expr(struct parse *o, struct node **n) {
-	return parse_or(o, n);
+	return parse_exprange(o, n);
 }
 
 unsigned

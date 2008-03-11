@@ -47,6 +47,7 @@ struct data {
 #define DATA_REF	3
 #define DATA_LIST	4
 #define DATA_USER	5
+#define DATA_RANGE	6	
 	unsigned type;			/* type of the value */
 	union {
 		char *str;		/* if string */
@@ -54,6 +55,10 @@ struct data {
 		struct data *list;	/* if a list of values */
 		char *ref;		/* if a reference (name) */
 		void *user;		/* user defined */
+		struct {		/* a range */
+			unsigned min;
+			unsigned max;
+		} range;
 	} val;
 	struct data *next;
 };
@@ -64,6 +69,7 @@ struct data *data_newstring(char *);
 struct data *data_newref(char *);
 struct data *data_newlist(struct data *);
 struct data *data_newuser(void *);
+struct data *data_newrange(unsigned, unsigned);
 void	     data_delete(struct data *o);
 void	     data_setfield(struct data *dst, char *field);
 void	     data_dbg(struct data *);

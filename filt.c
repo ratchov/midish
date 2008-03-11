@@ -633,6 +633,11 @@ filt_conf_chgidev(struct filt *o, unsigned olddev, unsigned newdev)
 {
 	struct filtsrc *i;
 	
+	/* XXX: this is broken, if we change any parameter, the rule position
+	 * must be reevaluated. So we must clear the rule list and use mapnew()
+	 * to readd all rules
+	 */
+
 	for (i = o->srclist; i != NULL; i = i->next) {
 		if (i->es.dev_min != i->es.dev_max) {
 			continue;

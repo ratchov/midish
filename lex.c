@@ -58,6 +58,7 @@ struct tokdef lex_op[] = {
 	{ TOK_RSHIFT, 		">>"		},
 	{ TOK_AND, 		"&&"		},
 	{ TOK_OR, 		"||"		},
+	{ TOK_RANGE,		".."		},
 	{ TOK_ASSIGN,		"=" 		},
 	{ TOK_PLUS,		"+" 		},
 	{ TOK_MINUS,		"-" 		},

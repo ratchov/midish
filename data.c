@@ -127,6 +127,19 @@ data_newuser(void *addr) {
 }
 
 /*
+ * allocate a new data structure and initialize with the given range
+ */
+struct data *
+data_newrange(unsigned min, unsigned max) {
+	struct data *o;
+	o = data_newnil();
+	o->type = DATA_RANGE;
+	o->val.range.min = min;
+	o->val.range.max = max;
+	return o;
+}
+
+/*
  * return the number of data structures contained in the given data
  * structure
  */
@@ -200,6 +213,7 @@ data_clear(struct data *o) {
 	case DATA_LONG:
 	case DATA_NIL:
 	case DATA_USER:
+	case DATA_RANGE:
 		break;
 	default:
 		dbg_puts("data_clear: unknown type\n");
@@ -253,6 +267,11 @@ data_dbg(struct data *o) {
 		}
 		dbg_puts("}");
 		break;
+	case DATA_RANGE:
+		dbg_putu(o->val.range.min);
+		dbg_puts(":");
+		dbg_putu(o->val.range.max);
+		break;
 	default:
 		dbg_puts("(unknown type)");
 		break;
@@ -297,6 +316,11 @@ data_assign(struct data *dst, struct data *src) {
 			*j = n;
 		}
 		break;
+	case DATA_RANGE:
+		dst->type = DATA_RANGE;
+		dst->val.range.min = src->val.range.min;
+		dst->val.range.max = src->val.range.max;
+		break;
 	default:
 		dbg_puts("data_assign: bad data type\n");
 		dbg_panic();
@@ -336,6 +360,10 @@ data_id(struct data *op1, struct data *op2) {
 		}
 		/* not reached */
 		break;
+	case DATA_RANGE:
+		return op1->val.range.min == op2->val.range.min &&
+		    op1->val.range.max == op2->val.range.max;
+		break;
 	default:
 		dbg_puts("data_id: bad data types\n");
 		dbg_panic();
@@ -364,6 +392,8 @@ data_eval(struct data *o) {
 		return 1;
 	case DATA_LIST:
 		return o->val.list != NULL ? 1 : 0;
+	case DATA_RANGE:
+		return 1;
 	default:
 		dbg_puts("data_eval: bad data type\n");
 		dbg_panic();

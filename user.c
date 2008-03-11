@@ -516,6 +516,11 @@ data_print(struct data *d) {
 		}
 		textout_putstr(tout, "}");
 		break;
+	case DATA_RANGE:
+		textout_putlong(tout, d->val.range.min);
+		textout_putstr(tout, ":");
+		textout_putlong(tout, d->val.range.max);
+		break;
 	default:
 		dbg_puts("data_print: unknown type\n");
 		break;
@@ -630,8 +635,11 @@ data_list2range(struct data *d, unsigned min, unsigned max,
 		}
 		*lo = d->val.num;
 		*hi = d->next->val.num;
+	} else if (d->type == DATA_RANGE) {
+		*lo = d->val.range.min;
+		*hi = d->val.range.max;
 	} else {
-		cons_err("list or number expected in range spec");
+		cons_err("range or number expected in range spec");
 		return 0;
 	}
 	if (*lo < min || *lo > max || *hi < min || *hi > max || *lo > *hi) {
