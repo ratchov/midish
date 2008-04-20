@@ -66,42 +66,11 @@
 #define CONS_BUFSIZE	1024
 #define MAXFDS		(DEFAULT_MAXNDEVS + 1)
 
-nfds_t ifds = 0;
 struct timeval tv, tv_last;
-struct pollfd pfds[MAXFDS];
 
 char cons_buf[CONS_BUFSIZE];
 unsigned cons_index, cons_len, cons_eof;
 struct pollfd *cons_pfd;
-
-struct pollfd *
-mdep_polladd(int fd)
-{
-	struct pollfd *pfd;
-
-	if (ifds >= MAXFDS) {
-		dbg_puts("mdep_polladd: max fds reached\n");
-		dbg_panic();
-	}
-	pfd = &pfds[ifds++];
-	pfd->fd = fd;
-	pfd->events = POLLIN;
-	return pfd;
-}
-
-void
-mdep_pollrm(struct pollfd *pfd)
-{
-	unsigned i;
-
-	if (ifds == 0) {
-		dbg_puts("mdep_pollrm: no fd to remove\n");
-		dbg_panic();
-	}
-	for (i = pfd - pfds + 1; i < ifds; i++)
-		pfds[i - 1] = pfds[i];
-	ifds--;
-}
 
 /*
  * open midi devices
@@ -125,12 +94,27 @@ void
 mux_mdep_wait(void)
 {
 	int res;
-	struct pollfd *pfd;
+	nfds_t nfds;
+	struct pollfd *pfd, pfds[MAXFDS];
 	struct mididev *dev;
 	static unsigned char midibuf[MIDI_BUFSIZE];
 	long delta_usec;
 
-	res = poll(pfds, ifds, mux_isopen ? 1 : -1);
+	nfds = 0;
+	cons_pfd = &pfds[nfds++];
+	cons_pfd->fd = STDIN_FILENO;
+	cons_pfd->events = POLLIN;
+	for (dev = mididev_list; dev != NULL; dev = dev->next) {
+		if (!(dev->mode & MIDIDEV_MODE_IN)) {
+			RMIDI(dev)->mdep.pfd = NULL;
+			continue;
+		}
+		pfd = &pfds[nfds++];
+		pfd->fd = RMIDI(dev)->mdep.fd;
+		pfd->events = POLLIN;
+		RMIDI(dev)->mdep.pfd = pfd;
+	}
+	res = poll(pfds, nfds, mux_isopen ? 1 : -1);
 	if (res < 0) {
 		perror("mux_run: poll failed");
 		exit(1);
@@ -235,8 +219,6 @@ rmidi_open(struct rmidi *o) {
 	o->oused = 0;
 	o->istatus = o->ostatus = 0;
 	o->isysex = NULL;
-	if (o->mididev.mode & MIDIDEV_MODE_IN)
-		o->mdep.pfd = mdep_polladd(o->mdep.fd);
 }
  
 /*
@@ -247,8 +229,6 @@ rmidi_close(struct rmidi *o) {
 	if (o->mdep.fd < 0) {
 		return;
 	}
-	if (o->mididev.mode & MIDIDEV_MODE_IN)
-		mdep_pollrm(o->mdep.pfd);
 	close(o->mdep.fd);
 }
 
@@ -312,13 +292,11 @@ cons_mdep_init(void)
 	cons_index = 0;
 	cons_len = 0;
 	cons_eof = 0;
-	cons_pfd = mdep_polladd(STDIN_FILENO);
 }
 
 void
 cons_mdep_done(void)
 {
-	mdep_pollrm(cons_pfd);
 }
 
 int
