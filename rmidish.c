@@ -324,7 +324,7 @@ main(int argc, char *argv[]) {
 	rl_callback_handler_install("[----:--]> ", userline);
 	waitready();
 	while (!quit) {
-		n = poll(pfds, 2, INFTIM);
+		n = poll(pfds, 2, -1);
 		if (pfds[0].revents & POLLIN) {
 			/*
 			 * got characters on the console,
