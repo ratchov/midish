@@ -38,6 +38,7 @@
 
 struct evinfo evinfo[EV_NUMCMD] = {
 	{ "nil", "none",	
+	  0,
 	  0, 0,
 	  0, 0, 0, 0
 	},
