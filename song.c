@@ -790,15 +790,14 @@ song_start(struct song *o, unsigned mode, unsigned countdown) {
 	}
 
 	/*
-	 * set the current position and the default
+	 * set the current position and the current
 	 * signature and tempo
 	 */
 	o->measure = o->curpos >= countdown ? o->curpos - countdown : 0;
 	o->beat = 0;
 	o->tic = 0;	
-	o->bpm = DEFAULT_BPM;
-	o->tpb = DEFAULT_TPB;
-	o->tempo = TEMPO_TO_USEC24(DEFAULT_TEMPO, DEFAULT_TPB);
+	track_timeinfo(&o->meta, o->measure,
+	    &tic, &o->tempo, &o->bpm, &o->tpb);
 
 	/*
 	 * slightly shift start position, so notes
