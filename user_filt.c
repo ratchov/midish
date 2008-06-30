@@ -670,6 +670,54 @@ user_func_filtevunmap(struct exec *o, struct data **r) {
 }
 
 unsigned
+user_func_filtchgxxx(struct exec *o, struct data **r, int input, int swap)
+{
+	struct songfilt *f;
+	struct evspec from, to;
+	
+	if (!song_try(user_song)) {
+		return 0;
+	}
+	if (!exec_lookupfilt(o, "filtname", &f) ||
+	    !exec_lookupevspec(o, "from", &from) ||
+	    !exec_lookupevspec(o, "to", &to)) {
+		return 0;
+	}
+	if (evspec_isec(&from, &to)) {
+		cons_err("\"from\" and \"to\" event ranges must be disjoint");
+	}
+	if (input)
+		filt_chgin(&f->filt, &from, &to, swap);
+	else 
+		filt_chgout(&f->filt, &from, &to, swap);
+	return 1;
+}
+
+unsigned
+user_func_filtchgin(struct exec *o, struct data **r)
+{
+	return user_func_filtchgxxx(o, r, 1, 0);
+}
+
+unsigned
+user_func_filtchgout(struct exec *o, struct data **r)
+{
+	return user_func_filtchgxxx(o, r, 0, 0);
+}
+
+unsigned
+user_func_filtswapin(struct exec *o, struct data **r)
+{
+	return user_func_filtchgxxx(o, r, 1, 1);
+}
+
+unsigned
+user_func_filtswapout(struct exec *o, struct data **r)
+{
+	return user_func_filtchgxxx(o, r, 0, 1);
+}
+
+unsigned
 user_func_filtsetcurchan(struct exec *o, struct data **r) {
 	struct songfilt *f;
 	struct songchan *c;

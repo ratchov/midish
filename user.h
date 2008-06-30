@@ -166,6 +166,10 @@ unsigned user_func_filtswapoch(struct exec *o, struct data **r);
 unsigned user_func_filtswapodev(struct exec *o, struct data **r);
 unsigned user_func_filtevmap(struct exec *o, struct data **r);
 unsigned user_func_filtevunmap(struct exec *o, struct data **r);
+unsigned user_func_filtchgin(struct exec *o, struct data **r);
+unsigned user_func_filtchgout(struct exec *o, struct data **r);
+unsigned user_func_filtswapgin(struct exec *o, struct data **r);
+unsigned user_func_filtswapout(struct exec *o, struct data **r);
 unsigned user_func_filtsetcurchan(struct exec *o, struct data **r);
 unsigned user_func_filtgetcurchan(struct exec *o, struct data **r);
 

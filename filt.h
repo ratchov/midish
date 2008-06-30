@@ -62,6 +62,8 @@ void filt_reset(struct filt *);
 unsigned filt_do(struct filt *o, struct ev *in, struct ev *out);
 void filt_mapnew(struct filt *, struct evspec *, struct  evspec *);
 void filt_mapdel(struct filt *, struct evspec *, struct  evspec *);
+void filt_chgin(struct filt *, struct evspec *, struct evspec *, int);
+void filt_chgout(struct filt *, struct evspec *, struct evspec *, int);
 
 extern unsigned filt_debug;
 

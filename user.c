@@ -1203,6 +1203,14 @@ user_mainloop(void) {
 			name_newarg("filtname",
 			name_newarg("from", 
 			name_newarg("to", NULL))));
+	exec_newbuiltin(exec, "filtchgin", user_func_filtchgin,
+			name_newarg("filtname",
+			name_newarg("from", 
+			name_newarg("to", NULL))));
+	exec_newbuiltin(exec, "filtchgout", user_func_filtchgout,
+			name_newarg("filtname",
+			name_newarg("from", 
+			name_newarg("to", NULL))));
 	exec_newbuiltin(exec, "filtsetcurchan", user_func_filtsetcurchan, 
 			name_newarg("filtname", 
 			name_newarg("channame", NULL)));

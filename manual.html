@@ -2652,6 +2652,36 @@ it, use the <TT>songstop</TT> function.
 	inluded in evspec2 is deleted.
         </BLOCKQUOTE>
 
+<A name="func_filtchgin"></A>
+<B><TT>filtchgin filtname evspec1 evspec2</TT></B>
+        <BLOCKQUOTE>
+	for all rules whose input set is included in <TT>evspec1</TT>
+        change the input set to match <TT>evspec2</TT>.
+        </BLOCKQUOTE>
+
+<A name="func_filtchgout"></A>
+<B><TT>filtchgout filtname evspec1 evspec2</TT></B>
+        <BLOCKQUOTE>
+	for all rules whose output set is included in <TT>evspec1</TT>
+        change the output set to match <TT>evspec2</TT>.
+        </BLOCKQUOTE>
+
+<A name="func_filtswapin"></A>
+<B><TT>filtswapin filtname evspec1 evspec2</TT></B>
+        <BLOCKQUOTE>
+	for all rules whose input set is included in <TT>evspec1</TT>
+        (respectively <tt>evspec2</tt>) change the input set to match 
+	<TT>evspec2</TT> (respectively <tt>evspec1</tt>).
+        </BLOCKQUOTE>
+
+<A name="func_filtswapout"></A>
+<B><TT>filtswapout filtname evspec1 evspec2</TT></B>
+        <BLOCKQUOTE>
+	for all rules whose output set is included in <TT>evspec1</TT>
+        (respectively <tt>evspec2</tt>) change the output set to match 
+	<TT>evspec2</TT> (respectively <tt>evspec1</tt>).
+        </BLOCKQUOTE>
+
 <A name="func_sysex"></A>
 <A name="section_17_4"></A><H2>17.4 System exclusive messages functions</H2>
 
@@ -3619,7 +3649,7 @@ Will Woodruff.
 <HR>
 <SMALL><EM>
 Copyright (c) 2003-2008 Alexandre Ratchov<BR>
-Last updated feb 4, 2008
+Last updated jun 30, 2008
 </EM></SMALL>
 
 </BODY>
