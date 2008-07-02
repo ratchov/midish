@@ -82,5 +82,7 @@ unsigned blt_ctlconf(struct exec *, struct data **);
 unsigned blt_ctlconfx(struct exec *, struct data **);
 unsigned blt_ctlunconf(struct exec *, struct data **);
 unsigned blt_ctlinfo(struct exec *, struct data **);
+unsigned blt_metro(struct exec *, struct data **);
+unsigned blt_metrocf(struct exec *, struct data **);
 
 #endif /* MIDISH_BUILTIN_H */

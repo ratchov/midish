@@ -904,6 +904,7 @@ song_start(struct song *o, unsigned mode, unsigned countdown)
 			s->tag = 0;
 		}
 	}
+	metro_setmode(&o->metro, o->mode);
 	mux_flush();
 }
 
@@ -918,7 +919,7 @@ song_stop(struct song *o)
 	struct state *st;
 	struct ev ev;
 
-	metro_shut(&o->metro);
+	metro_setmode(&o->metro, 0);
 
 	/*
 	 * stop sounding notes

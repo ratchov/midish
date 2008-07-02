@@ -769,41 +769,6 @@ user_func_info(struct exec *o, struct data **r)
 	return 1;
 }
 
-unsigned
-user_func_metroswitch(struct exec *o, struct data **r)
-{
-	long onoff;
-
-	if (!song_try(usong)) {
-		return 0;
-	}
-	if (!exec_lookuplong(o, "onoff", &onoff)) {
-		return 0;
-	}
-	usong->metro.enabled = onoff;
-	return 1;
-}
-
-unsigned
-user_func_metroconf(struct exec *o, struct data **r)
-{
-	struct ev evhi, evlo;
-
-	if (!song_try(usong)) {
-		return 0;
-	}
-	if (!exec_lookupev(o, "eventhi", &evhi) ||
-	    !exec_lookupev(o, "eventlo", &evlo)) {
-		return 0;
-	}
-	if (evhi.cmd != EV_NON && evlo.cmd != EV_NON) {
-		cons_err("note-on event expected");
-		return 0;
-	}
-	usong->metro.hi = evhi;
-	usong->metro.lo = evlo;
-	return 1;
-}
 
 unsigned
 user_func_shut(struct exec *o, struct data **r)
@@ -1288,9 +1253,9 @@ user_mainloop(void)
 			name_newarg("name", NULL));
 	exec_newbuiltin(exec, "ctlinfo", blt_ctlinfo, NULL);
 
-	exec_newbuiltin(exec, "metroswitch", user_func_metroswitch,
+	exec_newbuiltin(exec, "m", blt_metro,
 			name_newarg("onoff", NULL));
-	exec_newbuiltin(exec, "metroconf", user_func_metroconf,
+	exec_newbuiltin(exec, "metrocf", blt_metrocf,
 			name_newarg("eventhi",
 			name_newarg("eventlo", NULL)));
 	exec_newbuiltin(exec, "shut", user_func_shut, NULL);

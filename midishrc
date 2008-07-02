@@ -175,13 +175,6 @@ proc solo {
 }
 
 #
-# save the song
-#
-proc save filename {
-	songsave $filename
-}
-
-#
 # insert measures in the meta-track
 #
 proc timeins amount numerator denominator {

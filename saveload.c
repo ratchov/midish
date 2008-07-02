@@ -373,12 +373,22 @@ songfilt_output(struct songfilt *o, struct textout *f)
 void
 metro_output(struct metro *o, struct textout *f)
 {
+	char *mstr;
+
+	if (o->mask & SONG_PLAY) {
+		mstr = "on";
+	} else if (o->mask & SONG_REC) {
+		mstr = "rec";
+	} else {
+		mstr = "off";
+	}
+
 	textout_putstr(f, "{\n");
 	textout_shiftright(f);
 
 	textout_indent(f);
-	textout_putstr(f, "enabled ");
-	textout_putlong(f, o->enabled);
+	textout_putstr(f, "mask\t");
+	textout_putstr(f, mstr);
 	textout_putstr(f, "\n");
 
 	textout_indent(f);
@@ -1461,8 +1471,8 @@ parse_songsx(struct parse *o, struct song *s, struct songsx *g)
 unsigned
 parse_metro(struct parse *o, struct metro *m)
 {
-	unsigned long num;
 	struct ev ev;
+	unsigned mask;
 
 	if (!parse_getsym(o)) {
 		return 0;
@@ -1481,13 +1491,23 @@ parse_metro(struct parse *o, struct metro *m)
 			break;
 		} else if (o->lex.id == TOK_IDENT) {
 			if (str_eq(o->lex.strval, "enabled")) {
-				if (!parse_long(o, 0, 1, &num)) {
+				if (!parse_getsym(o)) {
 					return 0;
 				}
 				if (!parse_nl(o)) {
 					return 0;
 				}
-				m->enabled = num;
+			} else if (str_eq(o->lex.strval, "mask")) {
+				if (!parse_getsym(o)) {
+					return 0;
+				}
+				if (!metro_str2mask(m, o->lex.strval, &mask)) {
+					lex_err(&o->lex, "skipped unknown metronome mask");
+				}
+				metro_setmask(m, mask);
+				if (!parse_nl(o)) {
+					return 0;
+				}
 			} else if (str_eq(o->lex.strval, "lo")) {
 				if (!parse_ev(o, &ev)) {
 					return 0;

@@ -1030,3 +1030,39 @@ blt_ctlinfo(struct exec *o, struct data **r)
 	evctltab_output(evctl_tab, tout);
 	return 1;
 }
+
+unsigned
+blt_metro(struct exec *o, struct data **r)
+{
+	char *mstr;
+	unsigned mask;
+
+	if (!exec_lookupname(o, "onoff", &mstr)) {
+		return 0;
+	}
+	if (!metro_str2mask(&usong->metro, mstr, &mask)) {
+		cons_err("m: metro must be 'on', 'off' or 'rec'");
+		return 0;
+	}
+	metro_setmask(&usong->metro, mask);
+	return 1;
+}
+
+unsigned
+blt_metrocf(struct exec *o, struct data **r)
+{
+	struct ev evhi, evlo;
+
+	if (!exec_lookupev(o, "eventhi", &evhi) ||
+	    !exec_lookupev(o, "eventlo", &evlo)) {
+		return 0;
+	}
+	if (evhi.cmd != EV_NON && evlo.cmd != EV_NON) {
+		cons_err("note-on event expected");
+		return 0;
+	}
+	metro_shut(&usong->metro);
+	usong->metro.hi = evhi;
+	usong->metro.lo = evlo;
+	return 1;
+}
