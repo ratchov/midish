@@ -2,8 +2,8 @@
  * Copyright (c) 2003-2007 Alexandre Ratchov <alex@caoua.org>
  * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without 
- * modification, are permitted provided that the following conditions 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
  * are met:
  *
  * 	- Redistributions of source code must retain the above
@@ -45,7 +45,7 @@
  * ID is zero, and has precedence over tracks).
  *
  */
- 
+
 #include "dbg.h"
 #include "ev.h"
 #include "filt.h"
@@ -64,7 +64,7 @@ struct timo mixout_timo;
 unsigned mixout_debug = 0;
 
 void
-mixout_start(void) 
+mixout_start(void)
 {
 	statelist_init(&mixout_slist);
 	timo_set(&mixout_timo, mixout_timocb, NULL);
@@ -75,7 +75,7 @@ mixout_start(void)
 }
 
 void
-mixout_stop(void) 
+mixout_stop(void)
 {
 	if (mixout_debug) {
 		dbg_puts("mixout_stop()\n");
@@ -85,7 +85,7 @@ mixout_stop(void)
 }
 
 void
-mixout_putev(struct ev *ev, unsigned id) 
+mixout_putev(struct ev *ev, unsigned id)
 {
 	struct state *os;
 	struct ev ca;
@@ -115,7 +115,7 @@ mixout_putev(struct ev *ev, unsigned id)
 		}
 		dbg_puts("mixout_putev: ");
 		ev_dbg(ev);
-		dbg_puts(" won\n");		
+		dbg_puts(" won\n");
 	}
 	os = statelist_update(&mixout_slist, ev);
 	os->tag = id;
@@ -125,7 +125,7 @@ mixout_putev(struct ev *ev, unsigned id)
 
 
 void
-mixout_timocb(void *addr) 
+mixout_timocb(void *addr)
 {
 	struct state *i, *inext;
 

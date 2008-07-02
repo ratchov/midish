@@ -2,8 +2,8 @@
  * Copyright (c) 2003-2007 Alexandre Ratchov <alex@caoua.org>
  * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without 
- * modification, are permitted provided that the following conditions 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
  * are met:
  *
  * 	- Redistributions of source code must retain the above
@@ -38,7 +38,7 @@ void metro_tocb(void *);
  * initialize the metronome with some defaults
  */
 void
-metro_init(struct metro *o) 
+metro_init(struct metro *o)
 {
 	o->enabled = 1;
 	o->hi.cmd = EV_NON;
@@ -59,16 +59,16 @@ metro_init(struct metro *o)
  * free the metronome
  */
 void
-metro_done(struct metro *o) 
+metro_done(struct metro *o)
 {
 	/* nothing for now */
 }
 
 /*
  * callback that sends the note-off event of the click
- */ 
+ */
 void
-metro_tocb(void *addr) 
+metro_tocb(void *addr)
 {
 	struct metro *o = (struct metro *)addr;
 	struct ev ev;
@@ -92,12 +92,12 @@ metro_tocb(void *addr)
  * note: the output is not flushed
  */
 void
-metro_tic(struct metro *o, unsigned beat, unsigned tic) 
+metro_tic(struct metro *o, unsigned beat, unsigned tic)
 {
 	if (o->enabled && tic == 0) {
 		/*
 		 * if the last metronome click is sounding
-		 * abord the timeout and stop the click 
+		 * abord the timeout and stop the click
 		 */
 		if (o->ev) {
 			dbg_puts("metro_tic: nested clicks\n");
@@ -121,7 +121,7 @@ metro_tic(struct metro *o, unsigned beat, unsigned tic)
  * send the note off event of the click (if any)
  */
 void
-metro_shut(struct metro *o) 
+metro_shut(struct metro *o)
 {
 	if (o->ev) {
 		timo_del(&o->to);

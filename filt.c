@@ -2,8 +2,8 @@
  * Copyright (c) 2003-2007 Alexandre Ratchov <alex@caoua.org>
  * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without 
- * modification, are permitted provided that the following conditions 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
  * are met:
  *
  * 	- Redistributions of source code must retain the above
@@ -35,7 +35,7 @@
  * of user-configurable rules.
  *
  */
- 
+
 #include "dbg.h"
 #include "ev.h"
 #include "filt.h"
@@ -60,8 +60,8 @@ rule_dbg(struct evspec *from, struct  evspec *to)
  * supposed to be fast since it's called for each incoming event.
  */
 void
-filt_mapev(struct evspec *from, struct evspec *to, 
-    struct ev *in, struct ev *out) 
+filt_mapev(struct evspec *from, struct evspec *to,
+    struct ev *in, struct ev *out)
 {
 	*out = *in;
 	if (to->cmd != EVSPEC_ANY && to->cmd != EVSPEC_NOTE)
@@ -100,8 +100,8 @@ filt_mapev(struct evspec *from, struct evspec *to,
  * semantics and constraints.
  */
 void
-filt_mapspec(struct evspec *from, struct evspec *to, 
-    struct evspec *in, struct evspec *out) 
+filt_mapspec(struct evspec *from, struct evspec *to,
+    struct evspec *in, struct evspec *out)
 {
 	*out = *in;
 	if (to->cmd != EVSPEC_ANY && to->cmd != EVSPEC_NOTE)
@@ -137,7 +137,7 @@ filt_mapspec(struct evspec *from, struct evspec *to,
 	}
 }
 
-/* 
+/*
  * initialize a filter
  */
 void
@@ -160,10 +160,10 @@ filt_reset(struct filt *o)
 		while (s->dstlist) {
 			d = s->dstlist;
 			s->dstlist = d->next;
-			mem_free(d); 
+			mem_free(d);
 		}
 		o->srclist = s->next;
-		mem_free(s); 
+		mem_free(s);
 	}
 }
 
@@ -227,7 +227,7 @@ filt_mapdel(struct filt *f, struct evspec *from, struct evspec *to)
 				}
 				pd = &d->next;
 			}
-		}	
+		}
 		if (s->dstlist == NULL) {
 			if (filt_debug) {
 				dbg_puts("filt_mapdel: ");
@@ -242,7 +242,7 @@ filt_mapdel(struct filt *f, struct evspec *from, struct evspec *to)
 	}
 }
 
-/* 
+/*
  * add a new rule to map events in "from" range to events in "to" range
  */
 void
@@ -292,7 +292,7 @@ filt_mapnew(struct filt *f, struct evspec *from, struct evspec *to)
 	 */
 	for (ps = &f->srclist; (s = *ps) != NULL;) {
 		if (evspec_isec(&s->es, from) &&
-		    !evspec_in(&s->es, from) && 
+		    !evspec_in(&s->es, from) &&
 		    !evspec_in(from, &s->es)) {
 			for (pd = &s->dstlist; (d = *pd) != NULL;) {
 				if (filt_debug) {
@@ -341,10 +341,10 @@ filt_mapnew(struct filt *f, struct evspec *from, struct evspec *to)
 			while (s->dstlist) {
 				d = s->dstlist;
 				s->dstlist = d->next;
-				mem_free(d); 
+				mem_free(d);
 			}
 			*ps = s->next;
-			mem_free(s); 
+			mem_free(s);
 			continue;
 		} else {
 			if (filt_debug) {
@@ -394,7 +394,7 @@ filt_mapnew(struct filt *f, struct evspec *from, struct evspec *to)
 	*pd = d;
 }
 
-/* 
+/*
  * configure the filt to drop events from a particular device
  */
 void
@@ -404,13 +404,13 @@ filt_conf_devdrop(struct filt *o, unsigned idev)
 
 	evspec_reset(&from);
 	from.dev_min = from.dev_max = idev;
-	to.cmd = EVSPEC_EMPTY;	
+	to.cmd = EVSPEC_EMPTY;
 	filt_mapnew(o, &from, &to);
 }
 
-/* 
+/*
  * configure the filt not to drop events from a particular device
- */ 
+ */
 void
 filt_conf_nodevdrop(struct filt *o, unsigned idev)
 {
@@ -418,11 +418,11 @@ filt_conf_nodevdrop(struct filt *o, unsigned idev)
 
 	evspec_reset(&from);
 	from.dev_min = from.dev_max = idev;
-	to.cmd = EVSPEC_EMPTY;	
+	to.cmd = EVSPEC_EMPTY;
 	filt_mapdel(o, &from, &to);
 }
 
-/* 
+/*
  * configure the filter to map one device to another
  */
 void
@@ -437,8 +437,8 @@ filt_conf_devmap(struct filt *o, unsigned idev, unsigned odev)
 	filt_mapnew(o, &from, &to);
 }
 
-/* 
- * configure the filter not to map 
+/*
+ * configure the filter not to map
  * any devices to the given one
  */
 void
@@ -463,7 +463,7 @@ filt_conf_chandrop(struct filt *o, unsigned idev, unsigned ich)
 	evspec_reset(&from);
 	from.dev_min = from.dev_max = idev;
 	from.ch_min = from.ch_max = ich;
-	to.cmd = EVSPEC_EMPTY;	
+	to.cmd = EVSPEC_EMPTY;
 	filt_mapnew(o, &from, &to);
 }
 
@@ -478,7 +478,7 @@ filt_conf_nochandrop(struct filt *o, unsigned idev, unsigned ich)
 	evspec_reset(&from);
 	from.dev_min = from.dev_max = idev;
 	from.ch_min = from.ch_max = ich;
-	to.cmd = EVSPEC_EMPTY;	
+	to.cmd = EVSPEC_EMPTY;
 	filt_mapdel(o, &from, &to);
 }
 
@@ -520,7 +520,7 @@ filt_conf_ctldrop(struct filt *o, unsigned idev, unsigned ich, unsigned ictl)
 	from.dev_min = from.dev_max = idev;
 	from.ch_min = from.ch_max = ich;
 	from.v0_min = from.v0_max = ictl;
-	to.cmd = EVSPEC_EMPTY;	
+	to.cmd = EVSPEC_EMPTY;
 	filt_mapnew(o, &from, &to);
 }
 
@@ -534,13 +534,13 @@ filt_conf_noctldrop(struct filt *o, unsigned idev, unsigned ich, unsigned ictl)
 	from.dev_min = from.dev_max = idev;
 	from.ch_min = from.ch_max = ich;
 	from.v0_min = from.v0_max = ictl;
-	to.cmd = EVSPEC_EMPTY;	
+	to.cmd = EVSPEC_EMPTY;
 	filt_mapdel(o, &from, &to);
 }
 
 void
-filt_conf_ctlmap(struct filt *o, 
-    unsigned idev, unsigned ich, unsigned odev, unsigned och, 
+filt_conf_ctlmap(struct filt *o,
+    unsigned idev, unsigned ich, unsigned odev, unsigned och,
     unsigned ictl, unsigned octl)
 {
 	struct evspec from, to;
@@ -559,7 +559,7 @@ filt_conf_ctlmap(struct filt *o,
 }
 
 void
-filt_conf_noctlmap(struct filt *o, 
+filt_conf_noctlmap(struct filt *o,
     unsigned odev, unsigned och, unsigned octl)
 {
 	struct evspec from, to;
@@ -574,7 +574,7 @@ filt_conf_noctlmap(struct filt *o,
 }
 
 void
-filt_conf_keydrop(struct filt *o, unsigned idev, unsigned ich, 
+filt_conf_keydrop(struct filt *o, unsigned idev, unsigned ich,
     unsigned keylo, unsigned keyhi)
 {
 	struct evspec from, to;
@@ -585,12 +585,12 @@ filt_conf_keydrop(struct filt *o, unsigned idev, unsigned ich,
 	from.ch_min = from.ch_max = ich;
 	from.v0_min = keylo;
 	from.v0_max = keyhi;
-	to.cmd = EVSPEC_EMPTY;	
+	to.cmd = EVSPEC_EMPTY;
 	filt_mapnew(o, &from, &to);
 }
 
 void
-filt_conf_nokeydrop(struct filt *o, unsigned idev, unsigned ich, 
+filt_conf_nokeydrop(struct filt *o, unsigned idev, unsigned ich,
     unsigned keylo, unsigned keyhi)
 {
 	struct evspec from, to;
@@ -601,14 +601,14 @@ filt_conf_nokeydrop(struct filt *o, unsigned idev, unsigned ich,
 	from.ch_min = from.ch_max = ich;
 	from.v0_min = keylo;
 	from.v0_max = keyhi;
-	to.cmd = EVSPEC_EMPTY;	
+	to.cmd = EVSPEC_EMPTY;
 	filt_mapdel(o, &from, &to);
 }
 
 
 void
-filt_conf_keymap(struct filt *o, 
-    unsigned idev, unsigned ich, unsigned odev, unsigned och, 
+filt_conf_keymap(struct filt *o,
+    unsigned idev, unsigned ich, unsigned odev, unsigned och,
     unsigned keylo, unsigned keyhi, int keyplus)
 {
 	struct evspec from, to;
@@ -636,7 +636,7 @@ filt_conf_keymap(struct filt *o,
 }
 
 void
-filt_conf_nokeymap(struct filt *o, unsigned odev, unsigned och, 
+filt_conf_nokeymap(struct filt *o, unsigned odev, unsigned och,
     unsigned keylo, unsigned keyhi)
 {
 	struct evspec from, to;
@@ -683,7 +683,7 @@ filt_chgin(struct filt *o, struct evspec *from, struct evspec *to, int swap)
 		while ((d = s->dstlist) != NULL) {
 			filt_mapnew(o, &newspec, &d->es);
 			s->dstlist = d->next;
-			mem_free(d);		    
+			mem_free(d);
 		}
 		list = s->next;
 		mem_free(s);
@@ -709,7 +709,7 @@ filt_chgout(struct filt *o, struct evspec *from, struct evspec *to, int swap)
 			}
 			filt_mapnew(o, &s->es, &newspec);
 			s->dstlist = d->next;
-			mem_free(d);		    
+			mem_free(d);
 		}
 		list = s->next;
 		mem_free(s);

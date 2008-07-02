@@ -2,8 +2,8 @@
  * Copyright (c) 2003-2007 Alexandre Ratchov <alex@caoua.org>
  * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without 
- * modification, are permitted provided that the following conditions 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
  * are met:
  *
  * 	- Redistributions of source code must retain the above
@@ -52,7 +52,7 @@ unsigned smf_evlen[] = { 2, 2, 2, 2, 1, 1, 2, 0 };
 
 /* --------------------------------------------- chunk read/write --- */
 
-struct smf 
+struct smf
 {
 	FILE *file;
 	unsigned length, index;		/* current chunk length/position */
@@ -63,7 +63,7 @@ struct smf
  * the smf structure
  */
 unsigned
-smf_open(struct smf *o, char *path, char *mode) 
+smf_open(struct smf *o, char *path, char *mode)
 {
 	o->file = fopen(path, mode);
 	if (!o->file) {
@@ -72,14 +72,14 @@ smf_open(struct smf *o, char *path, char *mode)
 	}
 	o->length = 0;
 	o->index = 0;
-	return 1;	
+	return 1;
 }
 
 /*
  * close the file
  */
 void
-smf_close(struct smf *o) 
+smf_close(struct smf *o)
 {
 	fclose(o->file);
 }
@@ -88,7 +88,7 @@ smf_close(struct smf *o)
  * read a 32bit fixed-size number, return 0 on error
  */
 unsigned
-smf_get32(struct smf *o, unsigned *val) 
+smf_get32(struct smf *o, unsigned *val)
 {
 	unsigned char buf[4];
 	if (o->index + 4 > o->length || fread(buf, 1, 4, o->file) != 4) {
@@ -104,7 +104,7 @@ smf_get32(struct smf *o, unsigned *val)
  * read a 24bit fixed-size number, return 0 on error
  */
 unsigned
-smf_get24(struct smf *o, unsigned *val) 
+smf_get24(struct smf *o, unsigned *val)
 {
 	unsigned char buf[4];
 	if (o->index + 3 > o->length || fread(buf, 1, 3, o->file) != 3) {
@@ -120,7 +120,7 @@ smf_get24(struct smf *o, unsigned *val)
  * read a 16bit fixed-size number, return 0 on error
  */
 unsigned
-smf_get16(struct smf *o, unsigned *val) 
+smf_get16(struct smf *o, unsigned *val)
 {
 	unsigned char buf[4];
 	if (o->index + 2 > o->length || fread(buf, 1, 2, o->file) != 2) {
@@ -136,7 +136,7 @@ smf_get16(struct smf *o, unsigned *val)
  * read a 8bit fixed-size number, return 0 on error
  */
 unsigned
-smf_getc(struct smf *o, unsigned *res) 
+smf_getc(struct smf *o, unsigned *res)
 {
 	int c;
 	if (o->index + 1 > o->length || (c = fgetc(o->file)) < 0) {
@@ -152,7 +152,7 @@ smf_getc(struct smf *o, unsigned *res)
  * read a variable length number, return 0 on error
  */
 unsigned
-smf_getvar(struct smf *o, unsigned *val) 
+smf_getvar(struct smf *o, unsigned *val)
 {
 	int c;
 	unsigned bits;
@@ -188,7 +188,7 @@ smf_getvar(struct smf *o, unsigned *val)
  * return 0 on error
  */
 unsigned
-smf_getheader(struct smf *o, char *hdr) 
+smf_getheader(struct smf *o, char *hdr)
 {
 	char buf[4];
 	unsigned len;
@@ -226,7 +226,7 @@ smf_getheader(struct smf *o, char *hdr)
  * put a fixed-size 32-bit number
  */
 void
-smf_put32(struct smf *o, unsigned *used, unsigned val) 
+smf_put32(struct smf *o, unsigned *used, unsigned val)
 {
 	unsigned char buf[4];
 	if (used) {
@@ -249,7 +249,7 @@ smf_put32(struct smf *o, unsigned *used, unsigned val)
  * put a fixed-size 24-bit number
  */
 void
-smf_put24(struct smf *o, unsigned *used, unsigned val) 
+smf_put24(struct smf *o, unsigned *used, unsigned val)
 {
 	unsigned char buf[4];
 	if (used) {
@@ -271,7 +271,7 @@ smf_put24(struct smf *o, unsigned *used, unsigned val)
  * put a fixed-size 16-bit number
  */
 void
-smf_put16(struct smf *o, unsigned *used, unsigned val) 
+smf_put16(struct smf *o, unsigned *used, unsigned val)
 {
 	unsigned char buf[4];
 	if (used) {
@@ -293,7 +293,7 @@ smf_put16(struct smf *o, unsigned *used, unsigned val)
  * put a fixed-size 8-bit number
  */
 void
-smf_putc(struct smf *o, unsigned *used, unsigned val) 
+smf_putc(struct smf *o, unsigned *used, unsigned val)
 {
 	if (used) {
 		(*used) ++;
@@ -312,7 +312,7 @@ smf_putc(struct smf *o, unsigned *used, unsigned val)
  * put a variable length number
  */
 void
-smf_putvar(struct smf *o, unsigned *used, unsigned val) 
+smf_putvar(struct smf *o, unsigned *used, unsigned val)
 {
 #define MAXBYTES 5			/* 32bit / 7bit = 4bytes + 4bit */
 	unsigned char buf[MAXBYTES];
@@ -346,7 +346,7 @@ smf_putvar(struct smf *o, unsigned *used, unsigned val)
  * put the given chunk header with the given magic and size field
  */
 void
-smf_putheader(struct smf *o, char *hdr, unsigned len) 
+smf_putheader(struct smf *o, char *hdr, unsigned len)
 {
 	fwrite(hdr, 1, 4, o->file);
 	o->length = 4;
@@ -360,14 +360,14 @@ smf_putheader(struct smf *o, char *hdr, unsigned len)
  * store a track in the smf
  */
 void
-smf_puttrack(struct smf *o, unsigned *used, struct song *s, struct track *t) 
+smf_puttrack(struct smf *o, unsigned *used, struct song *s, struct track *t)
 {
 	struct seqev *pos;
 	unsigned status, newstatus, delta, chan, denom;
 	struct ev rev[CONV_NUMREV];
 	struct statelist slist;
 	unsigned i, nev;
-	
+
 
 	statelist_init(&slist);
 	delta = 0;
@@ -378,7 +378,7 @@ smf_puttrack(struct smf *o, unsigned *used, struct song *s, struct track *t)
 			break;
 		}
 		if (EV_ISVOICE(&pos->ev)) {
-			nev = conv_unpackev(&slist, ~1U, &pos->ev, rev); 
+			nev = conv_unpackev(&slist, ~1U, &pos->ev, rev);
 			for (i = 0; i < nev; i++) {
 				smf_putvar(o, used, delta);
 				delta = 0;
@@ -408,16 +408,16 @@ smf_puttrack(struct smf *o, unsigned *used, struct song *s, struct track *t)
 		} else if (pos->ev.cmd == EV_TIMESIG) {
 			denom = s->tics_per_unit / pos->ev.timesig_tics;
 			switch(denom) {
-			case 1:	
-				denom = 0; 
+			case 1:
+				denom = 0;
 				break;
 			case 2:
 				denom = 1;
 				break;
-			case 4: 
+			case 4:
 				denom = 2;
 				break;
-			case 8: 
+			case 8:
 				denom = 3;
 				break;
 			case 16:
@@ -452,11 +452,11 @@ smf_puttrack(struct smf *o, unsigned *used, struct song *s, struct track *t)
  * store a sysex in the smf
  */
 void
-smf_putsysex(struct smf *o, unsigned *used, struct sysex *sx) 
+smf_putsysex(struct smf *o, unsigned *used, struct sysex *sx)
 {
 	struct chunk *c;
 	unsigned i, first;
-		
+
 	first = 1;
 	for (c = sx->first; c != NULL; c = c->next) {
 		for (i = 0; i < c->used; i++) {
@@ -473,11 +473,11 @@ smf_putsysex(struct smf *o, unsigned *used, struct sysex *sx)
  * store a sysex back in the smf
  */
 void
-smf_putsx(struct smf *o, unsigned *used, struct song *s, struct songsx *songsx) 
+smf_putsx(struct smf *o, unsigned *used, struct song *s, struct songsx *songsx)
 {
 	unsigned sysexused;
 	struct sysex *sx;
-	
+
 	for (sx = songsx->sx.first; sx != NULL; sx = sx->next) {
 		sysexused = 0;
 		smf_putvar(o, used, 0);
@@ -489,14 +489,14 @@ smf_putsx(struct smf *o, unsigned *used, struct song *s, struct songsx *songsx)
 	smf_putvar(o, used, 0);
 	smf_putc(o, used, 0xff);
 	smf_putc(o, used, 0x2f);
-	smf_putc(o, used, 0x00);		
+	smf_putc(o, used, 0x00);
 }
 
 /*
  * open the smf and store the whole song
  */
 unsigned
-song_exportsmf(struct song *o, char *filename) 
+song_exportsmf(struct song *o, char *filename)
 {
 	struct smf f;
 	struct songtrk *t;
@@ -520,34 +520,34 @@ song_exportsmf(struct song *o, char *filename)
 		nsx++;
 	}
 
-	/* 
-	 * write the header 
+	/*
+	 * write the header
 	 */
 	smf_putheader(&f, smftype_header, 6);
 	smf_put16(&f, NULL, 1);				/* format = 1 */
 	smf_put16(&f, NULL, nsx + ntrks + nchan + 1);	/* +1 -> meta track */
 	smf_put16(&f, NULL, o->tics_per_unit / 4);		/* tics per quarter */
 
-	/* 
-	 * write the tempo track 
+	/*
+	 * write the tempo track
 	 */
 	used = 0;
 	smf_puttrack(&f, &used, o, &o->meta);
 	smf_putheader(&f, smftype_track, used);
 	smf_puttrack(&f, NULL, o, &o->meta);
-		
-	/* 
-	 * write each sx 
+
+	/*
+	 * write each sx
 	 */
 	SONG_FOREACH_SX(o, s) {
 		used = 0;
 		smf_putsx(&f, &used, o, s);
 		smf_putheader(&f, smftype_track, used);
 		smf_putsx(&f, NULL, o, s);
-	}	
-					
-	/* 
-	 * write each chan 
+	}
+
+	/*
+	 * write each chan
 	 */
 	SONG_FOREACH_CHAN(o, i) {
 		used = 0;
@@ -557,7 +557,7 @@ song_exportsmf(struct song *o, char *filename)
 	}
 
 	/*
-	 * write each track 
+	 * write each track
 	 */
 	SONG_FOREACH_TRK(o, t) {
 		used = 0;
@@ -569,14 +569,14 @@ song_exportsmf(struct song *o, char *filename)
 	return 1;
 }
 
-/* 
+/*
  * parse '0xF0 varlen data data ... data 0xF7'
  */
 unsigned
-smf_getsysex(struct smf *o, struct sysex *sx) 
+smf_getsysex(struct smf *o, struct sysex *sx)
 {
 	unsigned i, length, c;
-	
+
 	if (!smf_getvar(o, &length)) {
 		return 0;
 	}
@@ -593,7 +593,7 @@ smf_getsysex(struct smf *o, struct sysex *sx)
  * parse a track 'varlen event varlen event ... varlen event'
  */
 unsigned
-smf_gettrack(struct smf *o, struct song *s, struct songtrk *t) 
+smf_gettrack(struct smf *o, struct song *s, struct songtrk *t)
 {
 	unsigned delta, i, status, type, length, abspos;
 	unsigned tempo, num, den, dummy;
@@ -603,7 +603,7 @@ smf_gettrack(struct smf *o, struct song *s, struct songtrk *t)
 	struct sysex *sx;
 	struct ev ev, rev;
 	unsigned c;
-	
+
 	if (!smf_getheader(o, smftype_track)) {
 		return 0;
 	}
@@ -701,7 +701,7 @@ smf_gettrack(struct smf *o, struct song *s, struct songtrk *t)
 			if (!smf_getsysex(o, sx)) {
 				sysex_del(sx);
 				goto err;
-			}				
+			}
 			if (sysex_check(sx)) {
 				sysexlist_put(&songsx->sx, sx);
 			} else {
@@ -748,8 +748,8 @@ smf_gettrack(struct smf *o, struct song *s, struct songtrk *t)
 			dbg_putu(abspos);
 			dbg_puts(" ");
 			ev_dbg(&ev);
-			dbg_puts("\n");			
-			*/			
+			dbg_puts("\n");
+			*/
 		} else if (c < 0x80) {
 			if (status == 0) {
 				cons_err("bad status");
@@ -767,10 +767,10 @@ smf_gettrack(struct smf *o, struct song *s, struct songtrk *t)
 }
 
 /*
- * fix song imported from format 1 smf 
+ * fix song imported from format 1 smf
  */
 void
-song_fix1(struct song *o) 
+song_fix1(struct song *o)
 {
 	struct track copy;
 	struct seqptr tp, cp;
@@ -778,10 +778,10 @@ song_fix1(struct song *o)
 	struct statelist slist;
 	struct songtrk *t, *tnext;
 	unsigned delta;
-		
+
 	SONG_FOREACH_TRK(o, t) {
-		/* 
-		 * move meta events into meta track 
+		/*
+		 * move meta events into meta track
 		 */
 		delta = 0;
 		track_init(&copy);
@@ -828,9 +828,9 @@ song_fix1(struct song *o)
  * to the meta-track then split it creating one track per channel
  */
 void
-song_fix0(struct song *o) 
+song_fix0(struct song *o)
 {
-	char trackname[MAXTRACKNAME];	
+	char trackname[MAXTRACKNAME];
 	struct seqptr tp, cp;
 	struct state *st;
 	struct statelist slist;
@@ -882,15 +882,15 @@ song_fix0(struct song *o)
  * open the smf and load the whole file
  */
 struct song *
-song_importsmf(char *filename) 
+song_importsmf(char *filename)
 {
 	struct song *o;
 	struct songtrk *t;
 	unsigned format, ntrks, timecode, i;
-	char trackname[MAXTRACKNAME];	
+	char trackname[MAXTRACKNAME];
 	struct songsx *sx;
 	struct smf f;
-	
+
 	if (!smf_open(&f, filename, "r")) {
 		goto bad1;
 	}
@@ -914,12 +914,12 @@ song_importsmf(char *filename)
 		cons_err("SMPTE timecode is not supported");
 		goto bad2;
 	}
-	
+
 	o = song_new();
 	o->tics_per_unit = timecode * 4;   /* timecode = tics per quarter */
 	sx = song_sxnew(o, "sx");
 	o->cursx = sx;
-	
+
 	for (i = 0; i < ntrks; i++) {
 		snprintf(trackname, MAXTRACKNAME, "trk%02u", i);
 		t = song_trknew(o, trackname);
@@ -929,19 +929,19 @@ song_importsmf(char *filename)
 		track_check(&t->track);
 	}
 	smf_close(&f);
-	
+
 	if (format == 0) {
 		song_fix0(o);
 	} else if (format == 1) {
 		song_fix1(o);
 	}
-	
-	
-	/* 
-	 * TODO: move sysex messages into separate songsx 
-	 */	
+
+
+	/*
+	 * TODO: move sysex messages into separate songsx
+	 */
 	return o;
-	
+
 bad3:	song_delete(o);
 bad2:	smf_close(&f);
 bad1:	return 0;

@@ -2,8 +2,8 @@
  * Copyright (c) 2003-2007 Alexandre Ratchov <alex@caoua.org>
  * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without 
- * modification, are permitted provided that the following conditions 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
  * are met:
  *
  * 	- Redistributions of source code must retain the above
@@ -33,7 +33,7 @@
 #include "dbg.h"
 
 #define MAGIC_ALLOC	13942
-#define MAGIC_FREE	59811	
+#define MAGIC_FREE	59811
 
 unsigned mem_nalloc = 0, mem_nfree = 0, mem_debug = 0;
 
@@ -44,19 +44,19 @@ unsigned mem_nalloc = 0, mem_nfree = 0, mem_debug = 0;
  */
 
 void
-dbg_puts(char *msg) 
+dbg_puts(char *msg)
 {
 	fputs(msg, stderr);
 }
 
 void
-dbg_putx(unsigned long n) 
+dbg_putx(unsigned long n)
 {
 	fprintf(stderr, "%lx", n);
 }
 
 void
-dbg_putu(unsigned long n) 
+dbg_putu(unsigned long n)
 {
 	fprintf(stderr, "%lu", n);
 }
@@ -66,7 +66,7 @@ dbg_putu(unsigned long n)
  * put code here to backup user data
  */
 void
-dbg_panic(void) 
+dbg_panic(void)
 {
 	abort();
 }
@@ -75,7 +75,7 @@ dbg_panic(void)
  * return a random number, will be used to randomize memory bocks
  */
 unsigned
-mem_rnd(void) 
+mem_rnd(void)
 {
 	static unsigned seed = 1989123;
 	seed = (seed * 1664525) + 1013904223;
@@ -90,17 +90,17 @@ mem_rnd(void)
  * trailer to detect writes outside the block boundaries.
  */
 void *
-mem_alloc(unsigned n) 
+mem_alloc(unsigned n)
 {
 	unsigned i, *buf;
-	
+
 	if (n == 0) {
 		dbg_puts("mem_alloc: nbytes = 0\n");
 		dbg_panic();
 	}
 
 	n = 4 +	(n + sizeof(unsigned) - 1) / sizeof(unsigned);
-	
+
 	buf = (unsigned *)malloc(n * sizeof(unsigned));
 
 	if (buf == NULL) {
@@ -118,9 +118,9 @@ mem_alloc(unsigned n)
 	buf[1] = n;		/* size of the bloc */
 	buf[2] = mem_rnd();	/* a random number */
 	buf[n - 1] = buf[2];
-	
-	mem_nalloc++;	
-	
+
+	mem_nalloc++;
+
 	return buf + 3;
 }
 
@@ -130,12 +130,12 @@ mem_alloc(unsigned n)
  * usable once freed
  */
 void
-mem_free(void *mem) 
+mem_free(void *mem)
 {
 	unsigned *buf, n;
 	unsigned i;
 
-	buf = (unsigned *)mem - 3; 
+	buf = (unsigned *)mem - 3;
 	n = buf[1];
 
 	if (buf[0] == MAGIC_FREE) {
@@ -147,12 +147,12 @@ mem_free(void *mem)
 		dbg_puts("mem_free: block header corrupt\n");
 		dbg_panic();
 	}
-	
+
 	if (buf[2] != buf[n - 1]) {
 		dbg_puts("mem_free: block corrupt\n");
 		dbg_panic();
 	}
-	
+
 	for (i = 3; i < n; i++) {
 		buf[i] = mem_rnd();
 	}
@@ -163,7 +163,7 @@ mem_free(void *mem)
 }
 
 void
-mem_stats(void) 
+mem_stats(void)
 {
 	if (mem_debug) {
 		dbg_puts("mem_stats: used=");

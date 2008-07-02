@@ -2,8 +2,8 @@
 .\" Copyright (c) 2003-2007 Alexandre Ratchov <alex@caoua.org>
 .\" All rights reserved.
 .\"
-.\" Redistribution and use in source and binary forms, with or without 
-.\" modification, are permitted provided that the following conditions 
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
 .\" are met:
 .\"
 .\" 	- Redistributions of source code must retain the above
@@ -14,7 +14,7 @@
 .\" 	  copyright notice, this list of conditions and the
 .\" 	  following disclaimer in the documentation and/or other
 .\" 	  materials provided with the distribution.
-.\" 
+.\"
 .\" THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
 .\" "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
 .\" LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -26,7 +26,7 @@
 .\" THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 .\" (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 .\" OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-.\" 
+.\"
 .Dd June 25, 2006
 .Dt MIDISH 1
 .Os
@@ -41,7 +41,7 @@ Midish is a MIDI sequencer/filter implemented as an interactive
 command-line interpreter
 (users wanting to use midish interactively may consider using the
 .Xr rmidish 1
-utility). 
+utility).
 Here are some of its features:
 .Pp
 .Bl -bullet -compact
@@ -64,11 +64,11 @@ System exclusive messages handling
 The options are as follows:
 .Bl -tag -width "-b "
 .It Fl b
-Do not process 
-.Pa "$HOME/.midishrc" 
+Do not process
+.Pa "$HOME/.midishrc"
 or
 .Pa "/etc/midishrc"
-and stop on the first error on the standard input. 
+and stop on the first error on the standard input.
 Useful for scripting
 .It Fl h
 Print usage information.
@@ -77,27 +77,27 @@ Print additionnal info before each line of input, useful to
 front-ends and for dubugging.
 .El
 .Pp
-Once midish started, the interpreter 
-processes the 
-.Pa "$HOME/.midishrc" 
+Once midish started, the interpreter
+processes the
+.Pa "$HOME/.midishrc"
 file (or
 .Pa "/etc/midishrc"
 if the later dosn't exist)
 and starts prompting for commands.
 Certain commands (such as playback, recording) are
-blocking, they can be resumed by sending an interrupt signal to 
+blocking, they can be resumed by sending an interrupt signal to
 .Nm
 (SIGINT or ^C on ttys).
-For further information about the syntax of 
+For further information about the syntax of
 .Nm
-refer to the 
+refer to the
 .Dq Midish user's manual .
 .Sh FILES
 .Bl -tag -width "$HOME/.midishrc" -compact
 .It Pa "$HOME/.midishrc"
 startup script
 .It Pa "/etc/midishrc"
-startup script (if 
+startup script (if
 .Pa "$HOME/.midishrc"
 doesn't exist)
 .It Pa "/dev/rmidiN"

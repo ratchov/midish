@@ -2,8 +2,8 @@
  * Copyright (c) 2003-2007 Alexandre Ratchov <alex@caoua.org>
  * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without 
- * modification, are permitted provided that the following conditions 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
  * are met:
  *
  * 	- Redistributions of source code must retain the above
@@ -38,12 +38,12 @@
 
 unsigned cons_breakcnt, cons_ready;
 
-/* 
+/*
  * if there is a keyboard interrupt (control-C), return 1 and clear
  * the interrupt flag
  */
 unsigned
-cons_break(void) 
+cons_break(void)
 {
 	if (cons_breakcnt > 0) {
 		cons_breakcnt = 0;
@@ -55,7 +55,7 @@ cons_break(void)
 }
 
 void
-cons_init(void) 
+cons_init(void)
 {
 	cons_ready = 1;
 	cons_breakcnt = 0;
@@ -63,7 +63,7 @@ cons_init(void)
 }
 
 void
-cons_done(void) 
+cons_done(void)
 {
 	cons_mdep_done();
 }
@@ -74,7 +74,7 @@ cons_done(void)
  * front-ends that open midish in a pair of pipes
  */
 int
-cons_getc(void) 
+cons_getc(void)
 {
 	int c;
 	if (cons_ready) {
@@ -101,7 +101,7 @@ cons_putpos(unsigned measure, unsigned beat, unsigned tic)
 	if (user_flag_verb && tic == 0) {
 		fprintf(stdout, "+pos %u %u %u\n", measure, beat, tic);
 		fflush(stdout);
-	}	
+	}
 }
 
 /*
@@ -110,37 +110,37 @@ cons_putpos(unsigned measure, unsigned beat, unsigned tic)
  */
 
 void
-cons_err(char *mesg) 
+cons_err(char *mesg)
 {
 	fprintf(stderr, "%s\n", mesg);
 }
 
 void
-cons_errs(char *s, char *mesg) 
+cons_errs(char *s, char *mesg)
 {
 	fprintf(stderr, "%s: %s\n", s, mesg);
 }
 
 void
-cons_erru(unsigned long u, char *mesg) 
+cons_erru(unsigned long u, char *mesg)
 {
 	fprintf(stderr, "%lu: %s\n", u, mesg);
 }
 
 void
-cons_errss(char *s0, char *s1, char *mesg) 
+cons_errss(char *s0, char *s1, char *mesg)
 {
 	fprintf(stderr, "%s: %s: %s\n", s0, s1, mesg);
 }
 
 void
-cons_errsu(char *s, unsigned long u, char *mesg) 
+cons_errsu(char *s, unsigned long u, char *mesg)
 {
 	fprintf(stderr, "%s: %lu: %s\n", s, u, mesg);
 }
 
 void
-cons_erruu(unsigned long u0, unsigned long u1, char *mesg) 
+cons_erruu(unsigned long u0, unsigned long u1, char *mesg)
 {
 	fprintf(stderr, "%lu.%lu: %s\n", u0, u1, mesg);
 }

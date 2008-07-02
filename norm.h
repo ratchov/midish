@@ -2,8 +2,8 @@
  * Copyright (c) 2003-2007 Alexandre Ratchov <alex@caoua.org>
  * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without 
- * modification, are permitted provided that the following conditions 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
  * are met:
  *
  * 	- Redistributions of source code must retain the above
@@ -39,7 +39,7 @@ struct norm {
 	 * used in real-time only
 	 */
 	struct statelist statelist;		/* state of the normilizer */
-	struct timo timo;			/* for throtteling */	
+	struct timo timo;			/* for throtteling */
 };
 
 #define NORM_MAXEV	1			/* max events per time slice */

@@ -2,8 +2,8 @@
  * Copyright (c) 2003-2007 Alexandre Ratchov <alex@caoua.org>
  * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without 
- * modification, are permitted provided that the following conditions 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
  * are met:
  *
  * 	- Redistributions of source code must retain the above
@@ -56,8 +56,8 @@ struct var {
 #define VAR_FOREACH(i,list)			\
 	for (i = (struct var *)(list);		\
 	     i != NULL;				\
-	     i = (struct var *)(i->name.next)) 
-	
+	     i = (struct var *)(i->name.next))
+
 
 /*
  * a procedure is a name, a list of argument names
@@ -72,12 +72,12 @@ struct proc {
 #define PROC_FOREACH(i,list)			\
 	for (i = (struct proc *)(list);		\
 	     i != NULL;				\
-	     i = (struct proc *)(i->name.next)) 
-	
+	     i = (struct proc *)(i->name.next))
+
 /*
  * exec is the interpreter's environment
  */
- 
+
 struct exec {
 	struct name *globals;	/* list of global variables */
 	struct name **locals;	/* pointer to list of local variables */

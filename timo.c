@@ -2,8 +2,8 @@
  * Copyright (c) 2003-2007 Alexandre Ratchov <alex@caoua.org>
  * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without 
- * modification, are permitted provided that the following conditions 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
  * are met:
  *
  * 	- Redistributions of source code must retain the above
@@ -28,9 +28,9 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/* 
- * trivial timeouts implementation. 
- * 
+/*
+ * trivial timeouts implementation.
+ *
  * A timeout is used to schedule the call of a routine (the callback)
  * there is a global list of timeouts that is processed inside the
  * event loop ie mux_run(). Timeouts work as follows:
@@ -60,7 +60,7 @@ unsigned timo_abstime;
  * that will be passed to the callback
  */
 void
-timo_set(struct timo *o, void (*cb)(void *), void *arg) 
+timo_set(struct timo *o, void (*cb)(void *), void *arg)
 {
 	o->cb = cb;
 	o->arg = arg;
@@ -72,7 +72,7 @@ timo_set(struct timo *o, void (*cb)(void *), void *arg)
  * must not be already scheduled
  */
 void
-timo_add(struct timo *o, unsigned delta) 
+timo_add(struct timo *o, unsigned delta)
 {
 	struct timo **i;
 	unsigned val;
@@ -105,10 +105,10 @@ timo_add(struct timo *o, unsigned delta)
  * abort a scheduled timeout
  */
 void
-timo_del(struct timo *o) 
+timo_del(struct timo *o)
 {
 	struct timo **i;
-	
+
 	for (i = &timo_queue; *i != NULL; i = &(*i)->next) {
 		if (*i == o) {
 			*i = o->next;
@@ -128,11 +128,11 @@ timo_del(struct timo *o)
  * calls expired timeouts
  */
 void
-timo_update(unsigned delta) 
+timo_update(unsigned delta)
 {
 	struct timo *to;
 	int diff;
-	
+
 	/*
 	 * update time reference
 	 */
@@ -142,7 +142,7 @@ timo_update(unsigned delta)
 	 * remove from the queue and run expired timeouts
 	 */
 	while (timo_queue != NULL) {
-		/* 
+		/*
 		 * there is no overflow here because + and - are
 		 * modulo 2^32, they are the same for both signed and
 		 * unsigned integers
@@ -161,7 +161,7 @@ timo_update(unsigned delta)
  * initialize timeout queue
  */
 void
-timo_init(void) 
+timo_init(void)
 {
 	timo_queue = NULL;
 	timo_abstime = 0;
@@ -171,7 +171,7 @@ timo_init(void)
  * destroy timeout queue
  */
 void
-timo_done(void) 
+timo_done(void)
 {
 #ifdef TIMO_DEBUG
 	if (timo_queue != NULL) {

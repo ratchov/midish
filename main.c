@@ -2,8 +2,8 @@
  * Copyright (c) 2003-2007 Alexandre Ratchov <alex@caoua.org>
  * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without 
- * modification, are permitted provided that the following conditions 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
  * are met:
  *
  * 	- Redistributions of source code must retain the above
@@ -46,10 +46,10 @@
 
 
 int
-main(int argc, char **argv) 
+main(int argc, char **argv)
 {
 	unsigned exitcode;
-	
+
 	if (!user_getopts(&argc, &argv)) {
 		return 1;
 	}
@@ -62,9 +62,9 @@ main(int argc, char **argv)
 	chunk_pool_init(DEFAULT_MAXNCHUNKS);
 	sysex_pool_init(DEFAULT_MAXNSYSEXS);
 	mididev_listinit();
-		
+
 	exitcode = user_mainloop();
-	
+
 	mididev_listdone();
 	sysex_pool_done();
 	chunk_pool_done();
@@ -73,7 +73,7 @@ main(int argc, char **argv)
 	evctl_done();
 	textio_done();
 	cons_done();
-	
+
 	mem_stats();
 	return exitcode ? 0 : 1;
 }

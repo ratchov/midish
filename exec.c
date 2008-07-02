@@ -2,8 +2,8 @@
  * Copyright (c) 2003-2007 Alexandre Ratchov <alex@caoua.org>
  * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without 
- * modification, are permitted provided that the following conditions 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
  * are met:
  *
  * 	- Redistributions of source code must retain the above
@@ -29,7 +29,7 @@
  */
 
 /*
- * this module implements the execution environment of scripts: 
+ * this module implements the execution environment of scripts:
  * variables lists, procedure lists and various primitives
  * to handle them.
  *
@@ -55,9 +55,9 @@
 /*
  * create a new variable with the given name and value
  * and insert it on the given variable list
- */	 
+ */
 struct var *
-var_new(struct name **list, char *name, struct data *data) 
+var_new(struct name **list, char *name, struct data *data)
 {
 	struct var *o;
 	o = (struct var *)mem_alloc(sizeof(struct var));
@@ -71,7 +71,7 @@ var_new(struct name **list, char *name, struct data *data)
  * delete the given variable from the given list
  */
 void
-var_delete(struct name **list, struct var *o) 
+var_delete(struct name **list, struct var *o)
 {
 	name_remove(list, (struct name *)o);
 	if (o->data != NULL) {
@@ -85,7 +85,7 @@ var_delete(struct name **list, struct var *o)
  * print "name = value" on stderr
  */
 void
-var_dbg(struct var *o) 
+var_dbg(struct var *o)
 {
 	str_dbg(o->name.str);
 	dbg_puts(" = ");
@@ -99,7 +99,7 @@ var_dbg(struct var *o)
  * delete all variables and clear the given list
  */
 void
-var_empty(struct name **list) 
+var_empty(struct name **list)
 {
 	while (*list != NULL) {
 		var_delete(list, (struct var *)*list);
@@ -110,7 +110,7 @@ var_empty(struct name **list)
  * allocate a new procedure with the given name
  */
 struct proc *
-proc_new(char *name) 
+proc_new(char *name)
 {
 	struct proc *o;
 	o = (struct proc *)mem_alloc(sizeof(struct proc));
@@ -124,7 +124,7 @@ proc_new(char *name)
  * delete the given procedure: free name, arguments and code
  */
 void
-proc_delete(struct proc *o) 
+proc_delete(struct proc *o)
 {
 	node_delete(o->code);
 	name_empty(&o->args);
@@ -136,7 +136,7 @@ proc_delete(struct proc *o)
  * free all procedures and clear the given list
  */
 void
-proc_empty(struct name **first) 
+proc_empty(struct name **first)
 {
 	struct name *i;
 	while (*first) {
@@ -153,7 +153,7 @@ proc_empty(struct name **first)
  *	code_tree
  */
 void
-proc_dbg(struct proc *o) 
+proc_dbg(struct proc *o)
 {
 	struct name *i;
 	str_dbg(o->name.str);
@@ -172,12 +172,12 @@ proc_dbg(struct proc *o)
 	dbg_puts(")\n");
 	node_dbg(o->code, 0);
 }
-		
+
 /*
  * create a new empty execution environment
  */
 struct exec *
-exec_new(void) 
+exec_new(void)
 {
 	struct exec *o;
 	o = (struct exec *)mem_alloc(sizeof(struct exec));
@@ -194,7 +194,7 @@ exec_new(void)
  * called inside a procedure
  */
 void
-exec_delete(struct exec *o) 
+exec_delete(struct exec *o)
 {
 	if (o->depth != 0) {
 		dbg_puts("exec_done: depth != 0\n");
@@ -212,7 +212,7 @@ exec_delete(struct exec *o)
  * global list.
  */
 struct var *
-exec_varlookup(struct exec *o, char *name) 
+exec_varlookup(struct exec *o, char *name)
 {
 	struct name *var;
 
@@ -233,7 +233,7 @@ exec_varlookup(struct exec *o, char *name)
  * find the procedure with the given name
  */
 struct proc *
-exec_proclookup(struct exec *o, char *name) 
+exec_proclookup(struct exec *o, char *name)
 {
 	return (struct proc *)name_lookup(&o->procs, name);
 }
@@ -245,7 +245,7 @@ void
 exec_newbuiltin(struct exec *o, char *name,
     unsigned func(struct exec *, struct data **), struct name *args) {
 	struct proc *newp;
-	
+
 	newp = proc_new(name);
 	newp->args = args;
 	newp->code = node_new(&node_vmt_builtin, data_newuser((void *)func));
@@ -256,7 +256,7 @@ exec_newbuiltin(struct exec *o, char *name,
  * add a new global variable in the exec environment
  */
 void
-exec_newvar(struct exec *o, char *name, struct data *val) 
+exec_newvar(struct exec *o, char *name, struct data *val)
 {
 	var_new(&o->globals, name, val);
 }
@@ -268,7 +268,7 @@ exec_newvar(struct exec *o, char *name, struct data *val)
  *	...
  */
 void
-exec_dumpprocs(struct exec *o) 
+exec_dumpprocs(struct exec *o)
 {
 	struct proc *p;
 	struct name *n;
@@ -280,7 +280,7 @@ exec_dumpprocs(struct exec *o)
 			dbg_puts(n->str);
 			if (n->next) {
 				dbg_puts(", ");
-			}		
+			}
 		}
 		dbg_puts(")\n");
 	}
@@ -293,7 +293,7 @@ exec_dumpprocs(struct exec *o)
  *	...
  */
 void
-exec_dumpvars(struct exec *o) 
+exec_dumpvars(struct exec *o)
 {
 	struct var *v;
 	VAR_FOREACH(v, o->globals) {
@@ -305,10 +305,10 @@ exec_dumpvars(struct exec *o)
 }
 
 /*
- * find a variable with the given name with value of type DATA_REF 
+ * find a variable with the given name with value of type DATA_REF
  */
-unsigned 
-exec_lookupname(struct exec *o, char *name, char **val) 
+unsigned
+exec_lookupname(struct exec *o, char *name, char **val)
 {
 	struct var *var;
 	var = exec_varlookup(o, name);
@@ -324,7 +324,7 @@ exec_lookupname(struct exec *o, char *name, char **val)
  * find a variable with the given name with value of type DATA_STRING
  */
 unsigned
-exec_lookupstring(struct exec *o, char *name, char **val) 
+exec_lookupstring(struct exec *o, char *name, char **val)
 {
 	struct var *var;
 	var = exec_varlookup(o, name);
@@ -341,7 +341,7 @@ exec_lookupstring(struct exec *o, char *name, char **val)
  * find a variable with the given name with value of type DATA_LONG
  */
 unsigned
-exec_lookuplong(struct exec *o, char *name, long *val) 
+exec_lookuplong(struct exec *o, char *name, long *val)
 {
 	struct var *var;
 	var = exec_varlookup(o, name);
@@ -357,7 +357,7 @@ exec_lookuplong(struct exec *o, char *name, long *val)
  * find a variable with the given name with value of type DATA_LIST
  */
 unsigned
-exec_lookuplist(struct exec *o, char *name, struct data **val) 
+exec_lookuplist(struct exec *o, char *name, struct data **val)
 {
 	struct var *var;
 	var = exec_varlookup(o, name);
@@ -374,11 +374,11 @@ exec_lookuplist(struct exec *o, char *name, struct data **val)
  * a boolean and return it
  */
 unsigned
-exec_lookupbool(struct exec *o, char *name, long *val) 
+exec_lookupbool(struct exec *o, char *name, long *val)
 {
 	struct var *var;
 	unsigned res;
-	
+
 	var = exec_varlookup(o, name);
 	if (var == NULL) {
 		cons_errss(o->procname, name, "no such bool");

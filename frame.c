@@ -2,8 +2,8 @@
  * Copyright (c) 2003-2007 Alexandre Ratchov <alex@caoua.org>
  * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without 
- * modification, are permitted provided that the following conditions 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
  * are met:
  *
  * 	- Redistributions of source code must retain the above
@@ -57,7 +57,7 @@
  *	there is no low-level primitives for moving forward, instead
  *	reading primitives should be used (and the result should be
  *	ignored). That's because the state list have to be kept up to
- *	date. Thus there is no way to go backward. 
+ *	date. Thus there is no way to go backward.
  *
  * Reading:
  *
@@ -87,7 +87,7 @@
  *	updated as events and blank space were read with
  *	seqptr_evget() and seqptr_ticskip()
  *
- * 
+ *
  * Common errors and pitfals
  * -------------------------
  *
@@ -109,13 +109,13 @@
  *
  *	- when rewriting a track one must use a separate statelist
  *	  for events being removed, so the seqptr->statelist is used for
- *	  writing new events. When starting rewriting a track on a 
+ *	  writing new events. When starting rewriting a track on a
  *	  given position, be sure to initialise the 'deleted events'
- *	  statelist with statelist_dup(), and not statelist_init(). 
+ *	  statelist with statelist_dup(), and not statelist_init().
  *	  Example:
  *
  *		seqptr_skip(&sp, pos);
- *		statelist_dup(&slist); 
+ *		statelist_dup(&slist);
  *		for (;;) {
  *			seqptr_evdel(&sp, &slist);
  *			...
@@ -147,7 +147,7 @@
  *
  *			st = seqptr_evdel(&sp, &slist);
  *			seqptr_evput(&sp, st->ev);
- *		} 
+ *		}
  *
  */
 
@@ -168,11 +168,11 @@
 #include "frame.h"
 
 /*
- * initialize a seqptr structure at the beginning of 
+ * initialize a seqptr structure at the beginning of
  * the given track.
  */
 void
-seqptr_init(struct seqptr *sp, struct track *t) 
+seqptr_init(struct seqptr *sp, struct track *t)
 {
 	statelist_init(&sp->statelist);
 	sp->pos = t->first;
@@ -184,7 +184,7 @@ seqptr_init(struct seqptr *sp, struct track *t)
  * release the seqptr structure, free statelist etc...
  */
 void
-seqptr_done(struct seqptr *sp) 
+seqptr_done(struct seqptr *sp)
 {
 	statelist_done(&sp->statelist);
 	sp->pos = (void *)0xdeadbeef;
@@ -192,13 +192,13 @@ seqptr_done(struct seqptr *sp)
 	sp->tic = 0;
 }
 
-/* 
+/*
  * return the state structure of the next available event or NULL if
  * there is no next event in the current tick.  The state list is
  * updated accordingly.
  */
 struct state *
-seqptr_evget(struct seqptr *sp) 
+seqptr_evget(struct seqptr *sp)
 {
 	struct state *st;
 
@@ -221,7 +221,7 @@ seqptr_evget(struct seqptr *sp)
  * seqptr_evget
  */
 struct state *
-seqptr_evdel(struct seqptr *sp, struct statelist *slist) 
+seqptr_evdel(struct seqptr *sp, struct statelist *slist)
 {
 	struct state *st;
 	struct seqev *next;
@@ -231,7 +231,7 @@ seqptr_evdel(struct seqptr *sp, struct statelist *slist)
 	}
 	if (slist)
 		st = statelist_update(slist, &sp->pos->ev);
-	else 
+	else
 		st = NULL;
 	next = sp->pos->next;
 	next->delta += sp->pos->delta;
@@ -249,10 +249,10 @@ seqptr_evdel(struct seqptr *sp, struct statelist *slist)
  * updated and the state of the new event is returned.
  */
 struct state *
-seqptr_evput(struct seqptr *sp, struct ev *ev) 
+seqptr_evput(struct seqptr *sp, struct ev *ev)
 {
 	struct seqev *se;
-	
+
 	se = seqev_new();
 	se->ev = *ev;
 	se->delta = sp->delta;
@@ -273,10 +273,10 @@ seqptr_evput(struct seqptr *sp, struct ev *ev)
  * terminated events are purged
  */
 unsigned
-seqptr_ticskip(struct seqptr *sp, unsigned max) 
+seqptr_ticskip(struct seqptr *sp, unsigned max)
 {
 	unsigned ntics;
-	
+
 	ntics = sp->pos->delta - sp->delta;
 	if (ntics > max) {
 		ntics = max;
@@ -294,7 +294,7 @@ seqptr_ticskip(struct seqptr *sp, unsigned max)
  * seqptr_ticskip()
  */
 unsigned
-seqptr_ticdel(struct seqptr *sp, unsigned max, struct statelist *slist) 
+seqptr_ticdel(struct seqptr *sp, unsigned max, struct statelist *slist)
 {
 	unsigned ntics;
 
@@ -313,7 +313,7 @@ seqptr_ticdel(struct seqptr *sp, unsigned max, struct statelist *slist)
  * insert blank space at the current position
  */
 void
-seqptr_ticput(struct seqptr *sp, unsigned ntics) 
+seqptr_ticput(struct seqptr *sp, unsigned ntics)
 {
 	if (ntics > 0) {
 		sp->pos->delta += ntics;
@@ -327,15 +327,15 @@ seqptr_ticput(struct seqptr *sp, unsigned ntics)
  * move forward 'ntics', if the end-of-track is reached then return
  * the number of reamaining tics. Used for reading on a track
  */
-unsigned 
-seqptr_skip(struct seqptr *sp, unsigned ntics) 
+unsigned
+seqptr_skip(struct seqptr *sp, unsigned ntics)
 {
 	unsigned delta;
 	while (ntics > 0) {
 		while (seqptr_evget(sp))
 			; /* nothing */
 		delta = seqptr_ticskip(sp, ntics);
-		/* 
+		/*
 		 * check if the end of the track was reached
 		 */
 		if (delta == 0)
@@ -350,7 +350,7 @@ seqptr_skip(struct seqptr *sp, unsigned ntics)
  * blank space. Used for writing on a track
  */
 void
-seqptr_seek(struct seqptr *sp, unsigned ntics) 
+seqptr_seek(struct seqptr *sp, unsigned ntics)
 {
 	ntics = seqptr_skip(sp, ntics);
 	if (ntics > 0)
@@ -364,7 +364,7 @@ seqptr_seek(struct seqptr *sp, unsigned ntics)
  * if an event was generated.
  */
 unsigned
-seqptr_cancel(struct seqptr *sp, struct state *st) 
+seqptr_cancel(struct seqptr *sp, struct state *st)
 {
 	struct ev ev;
 
@@ -383,7 +383,7 @@ seqptr_cancel(struct seqptr *sp, struct state *st)
  * Return 1 if an event was generated.
  */
 unsigned
-seqptr_restore(struct seqptr *sp, struct state *st) 
+seqptr_restore(struct seqptr *sp, struct state *st)
 {
 	struct ev ev;
 
@@ -403,7 +403,7 @@ seqptr_restore(struct seqptr *sp, struct state *st)
  * NULL if there is no more state.
  */
 struct state *
-seqptr_rmlast(struct seqptr *sp, struct state *st) 
+seqptr_rmlast(struct seqptr *sp, struct state *st)
 {
 	struct seqev *i, *prev, *cur, *next;
 
@@ -430,7 +430,7 @@ seqptr_rmlast(struct seqptr *sp, struct state *st)
 			cur = i;
 		}
 	}
-	/* 
+	/*
 	 * remove the event from the track
 	 * (but not the blank space)
 	 */
@@ -463,7 +463,7 @@ seqptr_rmlast(struct seqptr *sp, struct state *st)
  * track. Returns always NULL, for consistency with seqptr_rmlast().
  */
 struct state *
-seqptr_rmprev(struct seqptr *sp, struct state *st) 
+seqptr_rmprev(struct seqptr *sp, struct state *st)
 {
 	struct seqev *i, *next;
 
@@ -479,7 +479,7 @@ seqptr_rmprev(struct seqptr *sp, struct state *st)
 	i = st->pos;
 	for (;;) {
 		if (state_match(st, &i->ev)) {
-			/* 
+			/*
 			 * remove the event from the track
 			 * (but not the blank space)
 			 */
@@ -514,7 +514,7 @@ seqptr_rmprev(struct seqptr *sp, struct state *st)
  * seqptr_evmerge2() within the same tic.
  */
 void
-seqptr_evmerge1(struct seqptr *pd, struct state *s1, struct state *s2) 
+seqptr_evmerge1(struct seqptr *pd, struct state *s1, struct state *s2)
 {
 	/*
 	 * ignore bogus events
@@ -547,7 +547,7 @@ seqptr_evmerge1(struct seqptr *pd, struct state *s1, struct state *s2)
  * seqptr_evmerge1() within the same tick.
  */
 void
-seqptr_evmerge2(struct seqptr *pd, struct state *s1, struct state *s2) 
+seqptr_evmerge2(struct seqptr *pd, struct state *s1, struct state *s2)
 {
 	struct state *sd;
 
@@ -572,7 +572,7 @@ seqptr_evmerge2(struct seqptr *pd, struct state *s1, struct state *s2)
 				dbg_panic();
 			}
 			if (EV_ISNOTE(&s2->ev)) {
-				if (!(s1->phase & EV_PHASE_LAST)) 
+				if (!(s1->phase & EV_PHASE_LAST))
 					sd = seqptr_rmprev(pd, sd);
 			} else {
 				if (s1->flags & STATE_CHANGED)
@@ -582,8 +582,8 @@ seqptr_evmerge2(struct seqptr *pd, struct state *s1, struct state *s2)
 		}
 		s2->tag = 1;
 	} else if (s2->phase & EV_PHASE_NEXT) {
-		/* 
-		 * nothing to do, conflicts already handled 
+		/*
+		 * nothing to do, conflicts already handled
 		 */
 	} else if (s2->phase & EV_PHASE_LAST) {
 		if (s1 && !EV_ISNOTE(&s1->ev)) {
@@ -606,9 +606,9 @@ seqptr_evmerge2(struct seqptr *pd, struct state *s1, struct state *s2)
 /*
  * Merge track "src" (high priority) in track "dst" (low prority)
  * resolving all conflicts, so that "dst" is consistent.
- */	
+ */
 void
-track_merge(struct track *dst, struct track *src) 
+track_merge(struct track *dst, struct track *src)
 {
 	struct state *s1, *s2;
 	struct seqptr p2, pd;
@@ -618,7 +618,7 @@ track_merge(struct track *dst, struct track *src)
 	seqptr_init(&pd, dst);
 	seqptr_init(&p2, src);
 	statelist_init(&orglist);
-	
+
 	for (;;) {
 		/*
 		 * remove all events from 'dst' and put them back on
@@ -646,7 +646,7 @@ track_merge(struct track *dst, struct track *src)
 			s1 = statelist_lookup(&orglist, &s2->ev);
 			seqptr_evmerge2(&pd, s1, s2);
 		}
-		
+
 		/*
 		 * move to the next non empty tick: the next tic is the
 		 * smaller position of the next event of each track
@@ -654,7 +654,7 @@ track_merge(struct track *dst, struct track *src)
 		delta1 = pd.pos->delta - pd.delta;
 		delta2 = p2.pos->delta - p2.delta;
 		if (delta1 > 0) {
-			deltad = delta1; 
+			deltad = delta1;
 			if (delta2 > 0 && delta2 < deltad)
 				deltad = delta2;
 		} else if (delta2 > 0) {
@@ -679,12 +679,12 @@ track_merge(struct track *dst, struct track *src)
  * consistent: notes are always completely copied/moved/erased and
  * controllers (and other) are cut when necessary
  *
- * if the 'copy' flag is set, then the selection is copied in 
+ * if the 'copy' flag is set, then the selection is copied in
  * track 'dst'. If 'blank' flag is set, then the selection is
  * cleanly removed from the 'src' track
  */
 void
-track_move(struct track *src, unsigned start, unsigned len, 
+track_move(struct track *src, unsigned start, unsigned len,
     struct evspec *es, struct track *dst, unsigned copy, unsigned blank) {
 	unsigned delta;
 	struct seqptr sp, dp;		/* current src & dst track states */
@@ -701,7 +701,7 @@ track_move(struct track *src, unsigned start, unsigned len,
 		seqptr_init(&dp, dst);
 	}
 	seqptr_init(&sp, src);
-	
+
 	/*
 	 * go to the start position and tag all frames as
 	 * not being copied and not being erased
@@ -711,7 +711,7 @@ track_move(struct track *src, unsigned start, unsigned len,
 	for (st = slist.first; st != NULL; st = st->next) {
        		st->tag = TAG_KEEP;
 	}
-	
+
 	/*
 	 * cancel/tag frames that will be erased (blank only)
 	 */
@@ -748,7 +748,7 @@ track_move(struct track *src, unsigned start, unsigned len,
 			seqptr_evput(&sp, &st->ev);
 		}
 	}
-	
+
 	/*
 	 * in the copy, restore frames that weren't updated by the
 	 * first tic.
@@ -757,13 +757,13 @@ track_move(struct track *src, unsigned start, unsigned len,
 		for (st = slist.first; st != NULL; st = st->next) {
 			if (!state_inspec(st, es))
 				continue;
-			if (!(st->tag & TAG_COPY) && 
+			if (!(st->tag & TAG_COPY) &&
 			    seqptr_restore(&dp, st)) {
 				st->tag |= TAG_COPY;
 			}
 		}
 	}
-	
+
 	/*
 	 * tag/copy/erase frames during 'len' tics
 	 */
@@ -788,7 +788,7 @@ track_move(struct track *src, unsigned start, unsigned len,
 			seqptr_evput(&sp, &st->ev);
 		}
 	}
-	
+
 	/*
 	 * cancel all copied frames (that are tagged).
 	 * cancelled frames are untagged, so they will stop
@@ -823,7 +823,7 @@ track_move(struct track *src, unsigned start, unsigned len,
 		if (!blank || (st->tag & TAG_KEEP)) {
 			seqptr_evput(&sp, &st->ev);
 		}
-			
+
 	}
 
 	/*
@@ -834,7 +834,7 @@ track_move(struct track *src, unsigned start, unsigned len,
 			st->tag |= TAG_KEEP;
 		}
 	}
-	
+
 	/*
 	 * copy frames for whose state couldn't be
 	 * canceled (note events)
@@ -858,7 +858,7 @@ track_move(struct track *src, unsigned start, unsigned len,
 			seqptr_evput(&sp, &st->ev);
 		}
 	}
-	
+
 	statelist_done(&slist);
 	seqptr_done(&sp);
 	if (copy) {
@@ -882,7 +882,7 @@ track_quantize(struct track *src, unsigned start, unsigned len,
 	struct seqptr sp, qp;
 	struct state *st;
 	struct statelist slist;
-	unsigned remaind; 
+	unsigned remaind;
 	unsigned fluct, notes;
 	int ofs;
 
@@ -912,7 +912,7 @@ track_quantize(struct track *src, unsigned start, unsigned len,
 	for (;;) {
 		delta = seqptr_ticdel(&sp, start + len - tic, &slist);
 		seqptr_ticput(&sp, delta);
-		tic += delta;	
+		tic += delta;
 		if (tic >= start + len)
 			break;
 		st = seqptr_evdel(&sp, &slist);
@@ -949,7 +949,7 @@ track_quantize(struct track *src, unsigned start, unsigned len,
 		} else {
 			seqptr_evput(&sp, &st->ev);
 		}
-	}	    
+	}
 
 	/*
 	 * finish quantised (tagged) events
@@ -990,7 +990,7 @@ track_quantize(struct track *src, unsigned start, unsigned len,
  * 'oldu' tics will correspond to 'newu'
  */
 void
-track_scale(struct track *t, unsigned oldunit, unsigned newunit) 
+track_scale(struct track *t, unsigned oldunit, unsigned newunit)
 {
 	struct seqptr sp;
 	struct statelist slist;
@@ -1034,7 +1034,7 @@ track_scale(struct track *t, unsigned oldunit, unsigned newunit)
  * transpose the given track
  */
 void
-track_transpose(struct track *src, unsigned start, unsigned len, int halftones) 
+track_transpose(struct track *src, unsigned start, unsigned len, int halftones)
 {
 	unsigned delta, tic;
 	struct track qt;
@@ -1068,7 +1068,7 @@ track_transpose(struct track *src, unsigned start, unsigned len, int halftones)
 		seqptr_ticput(&qp, delta);
 		tic += delta;
 		if (tic >= start + len)
-			break;		
+			break;
 		st = seqptr_evdel(&sp, &slist);
 		if (st == NULL)
 			break;
@@ -1083,7 +1083,7 @@ track_transpose(struct track *src, unsigned start, unsigned len, int halftones)
 		} else {
 			seqptr_evput(&sp, &st->ev);
 		}
-	}	    
+	}
 
 	/*
 	 * finish transposed (tagged) frames
@@ -1117,7 +1117,7 @@ track_transpose(struct track *src, unsigned start, unsigned len, int halftones)
  * check (and fix) the given track for inconsistencies
  */
 void
-track_check(struct track *src) 
+track_check(struct track *src)
 {
 	struct seqptr sp;
 	struct state *dst, *st, *stnext;
@@ -1170,7 +1170,7 @@ track_check(struct track *src)
 	}
 
 	/*
-	 * undo (erase) all unterminated frames 
+	 * undo (erase) all unterminated frames
 	 */
 	for (st = sp.statelist.first; st != NULL; st = stnext) {
 		stnext = st->next;
@@ -1196,14 +1196,14 @@ track_check(struct track *src)
  * get the current tempo (at the current position)
  */
 struct state *
-seqptr_getsign(struct seqptr *sp, unsigned *bpm, unsigned *tpb) 
+seqptr_getsign(struct seqptr *sp, unsigned *bpm, unsigned *tpb)
 {
 	struct ev ev;
 	struct state *st;
 
 	ev.cmd = EV_TIMESIG;
 	st = statelist_lookup(&sp->statelist, &ev);
-	if (bpm) 
+	if (bpm)
 		*bpm = (st == NULL) ? DEFAULT_BPM : st->ev.timesig_beats;
 	if (tpb)
 		*tpb = (st == NULL) ? DEFAULT_TPB : st->ev.timesig_tics;
@@ -1214,7 +1214,7 @@ seqptr_getsign(struct seqptr *sp, unsigned *bpm, unsigned *tpb)
  * get the current tempo (at the current position)
  */
 struct state *
-seqptr_gettempo(struct seqptr *sp, unsigned long *usec24) 
+seqptr_gettempo(struct seqptr *sp, unsigned long *usec24)
 {
 	struct ev ev;
 	struct state *st;
@@ -1233,10 +1233,10 @@ seqptr_gettempo(struct seqptr *sp, unsigned long *usec24)
  * (only on premature end-of-track)
  */
 unsigned
-seqptr_skipmeasure(struct seqptr *sp, unsigned meas) 
+seqptr_skipmeasure(struct seqptr *sp, unsigned meas)
 {
 	unsigned m, bpm, tpb, tics_per_meas, delta;
-	
+
 	for (m = 0; m < meas; m++) {
 		while (seqptr_evget(sp)) {
 			/* nothing */
@@ -1255,7 +1255,7 @@ seqptr_skipmeasure(struct seqptr *sp, unsigned meas)
  * meta-events from the given track
  */
 unsigned
-track_findmeasure(struct track *t, unsigned m) 
+track_findmeasure(struct track *t, unsigned m)
 {
 	struct seqptr sp;
 	unsigned tic;
@@ -1281,7 +1281,7 @@ track_findmeasure(struct track *t, unsigned m)
  * corresponding to the given measure number
  */
 void
-track_timeinfo(struct track *t, unsigned meas, unsigned *abs, 
+track_timeinfo(struct track *t, unsigned meas, unsigned *abs,
     unsigned long *usec24, unsigned *bpm, unsigned *tpb) {
 	struct seqptr sp;
 	unsigned tic;
@@ -1309,7 +1309,7 @@ track_timeinfo(struct track *t, unsigned meas, unsigned *abs,
  * go to the given measure and set the tempo
  */
 void
-track_settempo(struct track *t, unsigned measure, unsigned tempo) 
+track_settempo(struct track *t, unsigned measure, unsigned tempo)
 {
 	struct seqptr sp;
 	struct state *st;
@@ -1361,7 +1361,7 @@ track_settempo(struct track *t, unsigned measure, unsigned tempo)
 		st = seqptr_evdel(&sp, &slist);
 		if (st == NULL)
 			break;
-		if (st->ev.cmd != EV_TEMPO || 
+		if (st->ev.cmd != EV_TEMPO ||
 		    st->ev.tempo_usec24 != usec24) {
 			usec24 = st->ev.tempo_usec24;
 			seqptr_evput(&sp, &st->ev);
@@ -1376,7 +1376,7 @@ track_settempo(struct track *t, unsigned measure, unsigned tempo)
  * event, then replace it.
  */
 void
-track_confev(struct track *src, struct ev *ev) 
+track_confev(struct track *src, struct ev *ev)
 {
 	struct seqptr sp;
 	struct statelist slist;
@@ -1392,7 +1392,7 @@ track_confev(struct track *src, struct ev *ev)
 
 	seqptr_init(&sp, src);
 	statelist_init(&slist);
-       
+
 	/*
 	 * rewrite the track, removing frames matching the event
 	 */
@@ -1418,7 +1418,7 @@ track_confev(struct track *src, struct ev *ev)
  * remove a set of events from the "config" track
  */
 void
-track_unconfev(struct track *src, struct evspec *es) 
+track_unconfev(struct track *src, struct evspec *es)
 {
 	struct statelist slist;
 	struct seqptr sp;
@@ -1426,7 +1426,7 @@ track_unconfev(struct track *src, struct evspec *es)
 
 	seqptr_init(&sp, src);
 	statelist_init(&slist);
-       
+
 	/*
 	 * rewrite the track, removing frames matching the spec
 	 */

@@ -2,8 +2,8 @@
  * Copyright (c) 2003-2007 Alexandre Ratchov <alex@caoua.org>
  * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without 
- * modification, are permitted provided that the following conditions 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
  * are met:
  *
  * 	- Redistributions of source code must retain the above
@@ -52,19 +52,19 @@ struct pool chunk_pool;
 struct pool sysex_pool;
 
 void
-chunk_pool_init(unsigned size) 
+chunk_pool_init(unsigned size)
 {
 	pool_init(&chunk_pool, "chunk", sizeof(struct chunk), size);
 }
 
 void
-chunk_pool_done(void) 
+chunk_pool_done(void)
 {
 	pool_done(&chunk_pool);
 }
 
 struct chunk *
-chunk_new(void) 
+chunk_new(void)
 {
 	struct chunk *o;
 	o = (struct chunk *)pool_new(&chunk_pool);
@@ -74,19 +74,19 @@ chunk_new(void)
 }
 
 void
-chunk_del(struct chunk *o) 
+chunk_del(struct chunk *o)
 {
 	pool_del(&chunk_pool, o);
 }
 
 void
-sysex_pool_init(unsigned size) 
+sysex_pool_init(unsigned size)
 {
 	pool_init(&sysex_pool, "sysex", sizeof(struct sysex), size);
 }
 
 void
-sysex_pool_done(void) 
+sysex_pool_done(void)
 {
 	pool_done(&sysex_pool);
 }
@@ -95,7 +95,7 @@ sysex_pool_done(void)
  * create an empty sysex message
  */
 struct sysex *
-sysex_new(unsigned unit) 
+sysex_new(unsigned unit)
 {
 	struct sysex *o;
 	o = (struct sysex *)pool_new(&sysex_pool);
@@ -110,7 +110,7 @@ sysex_new(unsigned unit)
  * itself
  */
 void
-sysex_del(struct sysex *o) 
+sysex_del(struct sysex *o)
 {
 	struct chunk *i, *inext;
 	for (i = o->first; i != NULL; i = inext) {
@@ -124,10 +124,10 @@ sysex_del(struct sysex *o)
  * add a byte to the message
  */
 void
-sysex_add(struct sysex *o, unsigned data) 
+sysex_add(struct sysex *o, unsigned data)
 {
 	struct chunk *ck;
-		
+
 	ck = o->last;
 	if (!ck) {
 		ck = o->first = o->last = chunk_new();
@@ -144,7 +144,7 @@ sysex_add(struct sysex *o, unsigned data)
  * dump the sysex message on stderr
  */
 void
-sysex_dbg(struct sysex *o) 
+sysex_dbg(struct sysex *o)
 {
 	struct chunk *ck;
 	unsigned i;
@@ -165,14 +165,14 @@ sysex_dbg(struct sysex *o)
  * 0xf7 and (3) doesn't contain any status bytes.
  */
 unsigned
-sysex_check(struct sysex *o) 
+sysex_check(struct sysex *o)
 {
-	unsigned status, data;	
+	unsigned status, data;
 	struct chunk *ck;
 	unsigned i;
-	
-	
-	status = 0; 
+
+
+	status = 0;
 	for (ck = o->first; ck != NULL; ck = ck->next) {
 		for (i = 0; i < ck->used; i++) {
 			data = ck->data[i];
@@ -205,7 +205,7 @@ sysex_check(struct sysex *o)
  * initialize a list of sysex messages
  */
 void
-sysexlist_init(struct sysexlist *o) 
+sysexlist_init(struct sysexlist *o)
 {
 	o->first = NULL;
 	o->lastptr = &o->first;
@@ -215,10 +215,10 @@ sysexlist_init(struct sysexlist *o)
  * destroy the list
  */
 void
-sysexlist_done(struct sysexlist *o) 
+sysexlist_done(struct sysexlist *o)
 {
 	struct sysex *i, *inext;
-	
+
 	for (i = o->first; i != NULL; i = inext) {
 		inext = i->next;
 		sysex_del(i);
@@ -231,7 +231,7 @@ sysexlist_done(struct sysexlist *o)
  * put a sysex message at the end of the list
  */
 void
-sysexlist_put(struct sysexlist *o, struct sysex *e) 
+sysexlist_put(struct sysexlist *o, struct sysex *e)
 {
 	e->next = NULL;
 	*o->lastptr = e;
@@ -242,7 +242,7 @@ sysexlist_put(struct sysexlist *o, struct sysex *e)
  * detach the first sysex message on the list
  */
 struct sysex *
-sysexlist_get(struct sysexlist *o) 
+sysexlist_get(struct sysexlist *o)
 {
 	struct sysex *e;
 	if (o->first) {
@@ -253,14 +253,14 @@ sysexlist_get(struct sysexlist *o)
 		}
 		return e;
 	}
-	return 0;		
+	return 0;
 }
 
 /*
  * dump a sysex list on stderr
  */
 void
-sysexlist_dbg(struct sysexlist *o) 
+sysexlist_dbg(struct sysexlist *o)
 {
 	struct sysex *e;
 	unsigned i;

@@ -2,8 +2,8 @@
  * Copyright (c) 2003-2007 Alexandre Ratchov <alex@caoua.org>
  * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without 
- * modification, are permitted provided that the following conditions 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
  * are met:
  *
  * 	- Redistributions of source code must retain the above
@@ -30,7 +30,7 @@
 
 /*
  * a track (struct track *o) is a linked list of
- * events. Each event (struct seqev) is made by 
+ * events. Each event (struct seqev) is made by
  *	- a midi event (struct ev)
  *	- the number of tics before the event is to be played
  *
@@ -50,32 +50,32 @@
 struct pool seqev_pool;
 
 void
-seqev_pool_init(unsigned size) 
+seqev_pool_init(unsigned size)
 {
 	pool_init(&seqev_pool, "seqev", sizeof(struct seqev), size);
 }
 
 void
-seqev_pool_done(void) 
+seqev_pool_done(void)
 {
 	pool_done(&seqev_pool);
 }
 
 
 struct seqev *
-seqev_new(void) 
+seqev_new(void)
 {
 	return (struct seqev *)pool_new(&seqev_pool);
 }
 
 void
-seqev_del(struct seqev *se) 
+seqev_del(struct seqev *se)
 {
 	pool_del(&seqev_pool, se);
 }
 
 void
-seqev_dump(struct seqev *i) 
+seqev_dump(struct seqev *i)
 {
 	dbg_putu(i->delta);
 	dbg_puts("\t");
@@ -86,7 +86,7 @@ seqev_dump(struct seqev *i)
  * initialise the track
  */
 void
-track_init(struct track *o) 
+track_init(struct track *o)
 {
 	o->eot.ev.cmd = EV_NULL;
 	o->eot.delta = 0;
@@ -99,10 +99,10 @@ track_init(struct track *o)
  * free a track
  */
 void
-track_done(struct track *o) 
+track_done(struct track *o)
 {
 	struct seqev *i, *inext;
-	
+
 	for (i = o->first;  i != &o->eot;  i = inext) {
 		inext = i->next;
 		seqev_del(i);
@@ -116,11 +116,11 @@ track_done(struct track *o)
  * dump the track on stderr, for debugging purposes
  */
 void
-track_dump(struct track *o) 
+track_dump(struct track *o)
 {
 	struct seqev *i;
 	unsigned tic = 0, num = 0;
-	
+
 	for (i = o->first; i != NULL; i = i->next) {
 		tic += i->delta;
 		dbg_putu(num);
@@ -134,10 +134,10 @@ track_dump(struct track *o)
 }
 
 /*
- * return true if the track is empty 
+ * return true if the track is empty
  */
 unsigned
-track_isempty(struct track *o) 
+track_isempty(struct track *o)
 {
 	return o->first->ev.cmd == EV_NULL && o->first->delta == 0;
 }
@@ -146,7 +146,7 @@ track_isempty(struct track *o)
  * remove trailing blank space
  */
 void
-track_chomp(struct track *o) 
+track_chomp(struct track *o)
 {
 	o->eot.delta = 0;
 }
@@ -155,7 +155,7 @@ track_chomp(struct track *o)
  * shift the track origin forward
  */
 void
-track_shift(struct track *o, unsigned ntics) 
+track_shift(struct track *o, unsigned ntics)
 {
 	o->first->delta += ntics;
 }
@@ -164,7 +164,7 @@ track_shift(struct track *o, unsigned ntics)
  * return true if an event is available on the track
  */
 unsigned
-seqev_avail(struct seqev *pos) 
+seqev_avail(struct seqev *pos)
 {
 	return (pos->ev.cmd != EV_NULL);
 }
@@ -175,7 +175,7 @@ seqev_avail(struct seqev *pos)
  * given event is ignored)
  */
 void
-seqev_ins(struct seqev *pos, struct seqev *se) 
+seqev_ins(struct seqev *pos, struct seqev *se)
 {
 	se->delta = pos->delta;
 	pos->delta = 0;
@@ -190,13 +190,13 @@ seqev_ins(struct seqev *pos, struct seqev *se)
  * remove the event (but not blank space) on the given position
  */
 void
-seqev_rm(struct seqev *pos) 
+seqev_rm(struct seqev *pos)
 {
 #ifdef TRACK_DEBUG
 	if (pos->ev.cmd == EV_NULL) {
 		dbg_puts("seqev_rm: unexpected end of track\n");
 		dbg_panic();
-	}	
+	}
 #endif
 	pos->next->delta += pos->delta;
 	pos->delta = 0;
@@ -209,11 +209,11 @@ seqev_rm(struct seqev *pos)
  * return the number of events in the track
  */
 unsigned
-track_numev(struct track *o) 
+track_numev(struct track *o)
 {
 	unsigned n;
 	struct seqev *i;
-	
+
 	n = 0;
 	for(i = o->first; i != &o->eot; i = i->next) n++;
 
@@ -225,12 +225,12 @@ track_numev(struct track *o)
  * ie its length (eot included, of course)
  */
 unsigned
-track_numtic(struct track *o) 
+track_numtic(struct track *o)
 {
 	unsigned ntics;
 	struct seqev *i;
 	ntics = 0;
-	for(i = o->first; i != NULL; i = i->next) 
+	for(i = o->first; i != NULL; i = i->next)
 		ntics += i->delta;
 	return ntics;
 }
@@ -240,10 +240,10 @@ track_numtic(struct track *o)
  * remove all events from the track
  */
 void
-track_clear(struct track *o) 
+track_clear(struct track *o)
 {
 	struct seqev *i, *inext;
-	
+
 	for (i = o->first;  i != &o->eot;  i = inext) {
 		inext = i->next;
 		seqev_del(i);
@@ -258,7 +258,7 @@ track_clear(struct track *o)
  * all voice events
  */
 void
-track_setchan(struct track *src, unsigned dev, unsigned ch) 
+track_setchan(struct track *src, unsigned dev, unsigned ch)
 {
 	struct seqev *i;
 
@@ -274,11 +274,11 @@ track_setchan(struct track *src, unsigned dev, unsigned ch)
  * fill a map of used channels/devices
  */
 void
-track_chanmap(struct track *o, char *map) 
+track_chanmap(struct track *o, char *map)
 {
 	struct seqev *se;
 	unsigned dev, ch, i;
-	
+
 	for (i = 0; i < DEFAULT_MAXNCHANS; i++) {
 		map[i] = 0;
 	}

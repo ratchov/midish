@@ -2,8 +2,8 @@
  * Copyright (c) 2003-2007 Alexandre Ratchov <alex@caoua.org>
  * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without 
- * modification, are permitted provided that the following conditions 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
  * are met:
  *
  * 	- Redistributions of source code must retain the above
@@ -52,7 +52,7 @@
 
 #define MIDISH "midish"
 
-struct midish 
+struct midish
 {
 	int pid;				/* pid of midish */
 	int sin;				/* stdin of midish */
@@ -71,7 +71,7 @@ int
 midish_open(struct midish *p, char *path)
 {
 	int ipipe[2], opipe[2];
-	
+
 	/*
 	 * allocate pipes and fork
 	 */
@@ -272,18 +272,18 @@ userline(char *rl)
 	midish_puts(&midish, "\n");
 	waitready();
 	free(rl);
-	
+
 }
 
 
 int
-main(int argc, char *argv[]) 
+main(int argc, char *argv[])
 {
 	char path[PATH_MAX];
 	unsigned dirlen, filelen;
 	struct pollfd pfds[2];
 	int n;
-	
+
 	/*
 	 * determine the complete path of the midish executable
 	 */
@@ -300,7 +300,7 @@ main(int argc, char *argv[])
 		exit(1);
 	}
 	memcpy(path + dirlen, MIDISH, filelen + 1);
-	
+
 	/*
 	 * if stdin or stdout is not a tty, then dont start the front end,
 	 * just execute midish
@@ -311,12 +311,12 @@ main(int argc, char *argv[])
 		}
 		exit(1);
 	}
-	
+
 	if (midish_open(&midish, path) < 0) {
 		exit(1);
 	}
 	fprintf(stderr, "send EOF character (control-D) to quit\n");
-	
+
 	pfds[0].fd = STDIN_FILENO;
 	pfds[0].events = POLLIN;
 

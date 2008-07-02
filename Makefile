@@ -8,7 +8,7 @@ READLINE_INCLUDE = -I/usr/local/include # path to header files
 READLINE_LIB = -lreadline -ltermcap	# list of readline libraries
 
 #
-# binaries, documentation, man pages and examples will be installed in 
+# binaries, documentation, man pages and examples will be installed in
 # ${BIN_DIR}, ${MAN1_DIR}, ${DOC_DIR} and ${EXAMPLES_DIR}
 #
 PREFIX = /usr/local

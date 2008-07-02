@@ -2,8 +2,8 @@
  * Copyright (c) 2003-2007 Alexandre Ratchov <alex@caoua.org>
  * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without 
- * modification, are permitted provided that the following conditions 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
  * are met:
  *
  * 	- Redistributions of source code must retain the above
@@ -30,7 +30,7 @@
 
 /*
  * simple lexical analyser: just converts a string into a stream of
- * tokens. 
+ * tokens.
  */
 
 #include "dbg.h"
@@ -49,7 +49,7 @@
 
 /* ----------------------------------------------------- tokdefs --- */
 
-struct tokdef lex_op[] = 
+struct tokdef lex_op[] =
 {
 	{ TOK_EQ, 		"=="		},
 	{ TOK_NEQ, 		"!="		},
@@ -88,7 +88,7 @@ struct tokdef lex_op[] =
 	{ 0,			NULL		}
 };
 
-struct tokdef lex_kw[] = 
+struct tokdef lex_kw[] =
 {
 	{ TOK_IF,		"if" 		},
 	{ TOK_ELSE,		"else" 		},
@@ -103,7 +103,7 @@ struct tokdef lex_kw[] =
 };
 
 unsigned
-lex_init(struct lex *o, char *filename) 
+lex_init(struct lex *o, char *filename)
 {
 	o->lookchar = -1;
 	o->in = textin_new(filename);
@@ -114,13 +114,13 @@ lex_init(struct lex *o, char *filename)
 }
 
 void
-lex_done(struct lex *o) 
+lex_done(struct lex *o)
 {
 	textin_delete(o->in);
 }
 
 unsigned
-lex_getchar(struct lex *o, int *c) 
+lex_getchar(struct lex *o, int *c)
 {
 	if (o->lookchar < 0) {
 		textin_getpos(o->in, &o->line, &o->col);
@@ -135,7 +135,7 @@ lex_getchar(struct lex *o, int *c)
 }
 
 void
-lex_ungetchar(struct lex *o, int c) 
+lex_ungetchar(struct lex *o, int c)
 {
 	if (o->lookchar >= 0) {
 		dbg_puts("lex_ungetchar: lookchar already set\n");
@@ -145,16 +145,16 @@ lex_ungetchar(struct lex *o, int c)
 }
 
 void
-lex_err(struct lex *o, char *msg) 
+lex_err(struct lex *o, char *msg)
 {
 	cons_erruu(o->line + 1, o->col + 1, msg);
 }
 
 void
-lex_recover(struct lex *o, char *msg) 
+lex_recover(struct lex *o, char *msg)
 {
 	int c;
-	
+
 	lex_err(o, msg);
 	for (;;) {
 		if (!lex_getchar(o, &c)) {
@@ -174,7 +174,7 @@ lex_recover(struct lex *o, char *msg)
  * convert string to number in any base between 2 and 36
  */
 unsigned
-lex_str2long(struct lex *o, unsigned base) 
+lex_str2long(struct lex *o, unsigned base)
 {
 	char *p;
 	unsigned digit;
@@ -210,11 +210,11 @@ lex_str2long(struct lex *o, unsigned base)
 }
 
 unsigned
-lex_scan(struct lex *o) 
+lex_scan(struct lex *o)
 {
 	int c, cn;
 	unsigned i, base;
-	
+
 	for (;;) {
 		if (!lex_getchar(o, &c)) {
 			return 0;
@@ -242,7 +242,7 @@ lex_scan(struct lex *o)
 				continue;
 			} else if (c == CHAR_EOF) {
 				lex_ungetchar(o, c);
-				continue;				
+				continue;
 			}
 			lex_ungetchar(o, c);
 			lex_recover(o, "newline exected after '\\'");
@@ -273,10 +273,10 @@ lex_scan(struct lex *o)
 				if (!lex_getchar(o, &c)) {
 					return 0;
 				}
-				/* 
+				/*
 				 * dont strip \n embedded in strings in order
 				 * not to break error recovering code in the parsers
-				 */				 
+				 */
 				if (!IS_PRINTABLE(c)) {
 					lex_ungetchar(o, c);
 					lex_recover(o, "non printable char in string constant");
@@ -313,7 +313,7 @@ lex_scan(struct lex *o)
 						lex_recover(o, "bad hex constant");
 						return 0;
 					}
-				} 
+				}
 			}
 
 			i = 0;
@@ -331,7 +331,7 @@ lex_scan(struct lex *o)
 				if (!lex_getchar(o, &c)) {
 					return 0;
 				}
-			}			
+			}
 			if (!lex_str2long(o, base)) {
 				return 0;
 			}
@@ -362,7 +362,7 @@ lex_scan(struct lex *o)
 					o->id = lex_kw[i].id;
 					return 1;
 				}
-			}			
+			}
 			o->id = TOK_IDENT;
 			return 1;
 		}
@@ -391,10 +391,10 @@ lex_scan(struct lex *o)
 }
 
 void
-lex_dbg(struct lex *o) 
+lex_dbg(struct lex *o)
 {
 	struct tokdef *t;
-	
+
 	if (o->id == 0) {
 		dbg_puts("NULL");
 		return;
@@ -414,7 +414,7 @@ lex_dbg(struct lex *o)
 			return;
 		}
 	}
-	switch(o->id) {		
+	switch(o->id) {
 	case TOK_IDENT:
 		dbg_puts("IDENT{");
 		dbg_puts(o->strval);
@@ -429,7 +429,7 @@ lex_dbg(struct lex *o)
 		dbg_puts("STRING{\"");
 		dbg_puts(o->strval);
 		dbg_puts("\"}");
-		break;			
+		break;
 	default:
 		dbg_puts("UNKNOWN");
 		break;

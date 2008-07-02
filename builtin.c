@@ -2,8 +2,8 @@
  * Copyright (c) 2003-2007 Alexandre Ratchov <alex@caoua.org>
  * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without 
- * modification, are permitted provided that the following conditions 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
  * are met:
  *
  * 	- Redistributions of source code must retain the above
@@ -44,10 +44,10 @@
 #include "mux.h"
 
 unsigned
-blt_ev(struct exec *o, struct data **r) 
+blt_ev(struct exec *o, struct data **r)
 {
 	struct evspec es;
-	
+
 	if (!song_try(usong)) {
 		return 0;
 	}

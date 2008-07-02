@@ -2,8 +2,8 @@
  * Copyright (c) 2003-2007 Alexandre Ratchov <alex@caoua.org>
  * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without 
- * modification, are permitted provided that the following conditions 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
  * are met:
  *
  * 	- Redistributions of source code must retain the above
@@ -32,7 +32,7 @@
  * this module implements the tree containing interpreter code. Each
  * node of the tree represents one instruction.
  */
- 
+
 #include "dbg.h"
 #include "str.h"
 #include "data.h"
@@ -41,7 +41,7 @@
 #include "cons.h"
 
 struct node *
-node_new(struct node_vmt *vmt, struct data *data) 
+node_new(struct node_vmt *vmt, struct data *data)
 {
 	struct node *o;
 	o = (struct node *)mem_alloc(sizeof(struct node));
@@ -52,7 +52,7 @@ node_new(struct node_vmt *vmt, struct data *data)
 }
 
 void
-node_delete(struct node *o) 
+node_delete(struct node *o)
 {
 	struct node *i, *inext;
 	if (o == NULL) {
@@ -69,12 +69,12 @@ node_delete(struct node *o)
 }
 
 void
-node_dbg(struct node *o, unsigned depth) 
+node_dbg(struct node *o, unsigned depth)
 {
 #define NODE_MAXDEPTH 30
 	static char str[2 * NODE_MAXDEPTH + 1] = "";
 	struct node *i;
-	
+
 	dbg_puts(str);
 	dbg_puts(o != NULL && o->next != NULL ? "+-" : "\\-");
 	if (o == NULL) {
@@ -102,14 +102,14 @@ node_dbg(struct node *o, unsigned depth)
 
 
 void
-node_insert(struct node **n, struct node *e) 
+node_insert(struct node **n, struct node *e)
 {
 	e->next = *n;
 	*n = e;
 }
 
 void
-node_replace(struct node **n, struct node *e) 
+node_replace(struct node **n, struct node *e)
 {
 	if (e->list != NULL) {
 		dbg_puts("node_replace: e->list != NULL\n");
@@ -130,7 +130,7 @@ node_replace(struct node **n, struct node *e)
  * 3) in expressions (add, ...) *r == NULL if and only if ERROR
  */
 unsigned
-node_exec(struct node *o, struct exec *x, struct data **r) 
+node_exec(struct node *o, struct exec *x, struct data **r)
 {
 	unsigned result;
 	if (x->depth == EXEC_MAXDEPTH) {
@@ -152,8 +152,8 @@ node_exec(struct node *o, struct exec *x, struct data **r)
  * execute an unary operator ( '-', '!', '~')
  */
 unsigned
-node_exec_unary(struct node *o, struct exec *x, struct data **r, 
-	unsigned (*func)(struct data *)) { 
+node_exec_unary(struct node *o, struct exec *x, struct data **r,
+	unsigned (*func)(struct data *)) {
 	if (node_exec(o->list, x, r) == RESULT_ERR) {
 		return RESULT_ERR;
 	}
@@ -168,7 +168,7 @@ node_exec_unary(struct node *o, struct exec *x, struct data **r,
  */
 unsigned
 node_exec_binary(struct node *o, struct exec *x, struct data **r,
-	unsigned (*func)(struct data *, struct data *)) { 
+	unsigned (*func)(struct data *, struct data *)) {
 	struct data *lhs;
 	if (node_exec(o->list, x, r) == RESULT_ERR) {
 		return RESULT_ERR;
@@ -193,7 +193,7 @@ node_exec_binary(struct node *o, struct exec *x, struct data **r,
  * and move the tree into a proc structure
  */
 unsigned
-node_exec_proc(struct node *o, struct exec *x, struct data **r) 
+node_exec_proc(struct node *o, struct exec *x, struct data **r)
 {
 	struct proc *p;
 	struct node *a;
@@ -223,7 +223,7 @@ node_exec_proc(struct node *o, struct exec *x, struct data **r)
 }
 
 unsigned
-node_exec_alist(struct node *o, struct exec *x, struct data **r) 
+node_exec_alist(struct node *o, struct exec *x, struct data **r)
 {
 	dbg_puts("node_exec_alist should not be executed\n");
 	return RESULT_ERR;
@@ -233,14 +233,14 @@ node_exec_alist(struct node *o, struct exec *x, struct data **r)
  * execute a list of statements
  */
 unsigned
-node_exec_slist(struct node *o, struct exec *x, struct data **r) 
+node_exec_slist(struct node *o, struct exec *x, struct data **r)
 {
 	struct node *i;
 	unsigned result;
-	
+
 	for (i = o->list; i != NULL; i = i->next) {
 		result = node_exec(i, x, r);
-		if (result != RESULT_OK) {		
+		if (result != RESULT_OK) {
 			/* stop on ERR, BREAK, CONTINUE, RETURN, EXIT */
 			return result;
 		}
@@ -253,7 +253,7 @@ node_exec_slist(struct node *o, struct exec *x, struct data **r)
  * if the function didn't set 'r', then set it to 'nil'
  */
 unsigned
-node_exec_builtin(struct node *o, struct exec *x, struct data **r) 
+node_exec_builtin(struct node *o, struct exec *x, struct data **r)
 {
 
 	if (!((unsigned (*)(struct exec *, struct data **))
@@ -263,14 +263,14 @@ node_exec_builtin(struct node *o, struct exec *x, struct data **r)
 	if (!*r) {
 		*r = data_newnil();
 	}
-	return RESULT_OK;		
+	return RESULT_OK;
 }
 
 /*
- * return a constant 
+ * return a constant
  */
 unsigned
-node_exec_cst(struct node *o, struct exec *x, struct data **r) 
+node_exec_cst(struct node *o, struct exec *x, struct data **r)
 {
 	*r = data_newnil();
 	data_assign(*r, o->data);
@@ -281,10 +281,10 @@ node_exec_cst(struct node *o, struct exec *x, struct data **r)
  * return the value of the variable (in the node)
  */
 unsigned
-node_exec_var(struct node *o, struct exec *x, struct data **r) 
+node_exec_var(struct node *o, struct exec *x, struct data **r)
 {
 	struct var *v;
-	
+
 	v = exec_varlookup(x, o->data->val.ref);
 	if (v == NULL) {
 		cons_errss(x->procname, o->data->val.ref, "no such variable");
@@ -300,10 +300,10 @@ node_exec_var(struct node *o, struct exec *x, struct data **r)
  * (used to ignore return values of calls)
  */
 unsigned
-node_exec_ignore(struct node *o, struct exec *x, struct data **r) 
+node_exec_ignore(struct node *o, struct exec *x, struct data **r)
 {
 	unsigned result;
-	
+
 	result = node_exec(o->list, x, r);
 	if (result == RESULT_ERR || result == RESULT_EXIT) {
 		return result;
@@ -317,7 +317,7 @@ node_exec_ignore(struct node *o, struct exec *x, struct data **r)
  * call a procedure
  */
 unsigned
-node_exec_call(struct node *o, struct exec *x, struct data **r) 
+node_exec_call(struct node *o, struct exec *x, struct data **r)
 {
 	struct proc *p;
 	struct name **oldlocals, *newlocals;
@@ -325,10 +325,10 @@ node_exec_call(struct node *o, struct exec *x, struct data **r)
 	struct node *argv;
 	char *procname_save;
 	unsigned result;
-	
+
 	newlocals = NULL;
 	result = RESULT_ERR;
-	
+
 	p = exec_proclookup(x, o->data->val.ref);
 	if (p == NULL) {
 		cons_errs(o->data->val.ref, "no such proc");
@@ -350,7 +350,7 @@ node_exec_call(struct node *o, struct exec *x, struct data **r)
 	if (argv != NULL) {
 		cons_errs(o->data->val.ref, "to many arguments");
 		goto finish;
-	}	
+	}
 	oldlocals = x->locals;
 	x->locals = &newlocals;
 	procname_save = x->procname;
@@ -372,7 +372,7 @@ finish:
 }
 
 unsigned
-node_exec_if(struct node *o, struct exec *x, struct data **r) 
+node_exec_if(struct node *o, struct exec *x, struct data **r)
 {
 	unsigned cond, result;
 	if (node_exec(o->list, x, r) == RESULT_ERR) {
@@ -396,7 +396,7 @@ node_exec_if(struct node *o, struct exec *x, struct data **r)
 }
 
 unsigned
-node_exec_for(struct node *o, struct exec *x, struct data **r) 
+node_exec_for(struct node *o, struct exec *x, struct data **r)
 {
 	unsigned result;
 	struct data *list, *i;
@@ -428,8 +428,8 @@ node_exec_for(struct node *o, struct exec *x, struct data **r)
 	return result;
 }
 
-unsigned 
-node_exec_return(struct node *o, struct exec *x, struct data **r) 
+unsigned
+node_exec_return(struct node *o, struct exec *x, struct data **r)
 {
 	if (node_exec(o->list, x, r) == RESULT_ERR) {
 		return RESULT_ERR;
@@ -437,14 +437,14 @@ node_exec_return(struct node *o, struct exec *x, struct data **r)
 	return RESULT_RETURN;
 }
 
-unsigned 
-node_exec_exit(struct node *o, struct exec *x, struct data **r) 
+unsigned
+node_exec_exit(struct node *o, struct exec *x, struct data **r)
 {
 	return RESULT_EXIT;
 }
 
 unsigned
-node_exec_assign(struct node *o, struct exec *x, struct data **r) 
+node_exec_assign(struct node *o, struct exec *x, struct data **r)
 {
 	struct var *v;
 	struct data *expr;
@@ -462,24 +462,24 @@ node_exec_assign(struct node *o, struct exec *x, struct data **r)
 	return RESULT_OK;
 }
 
-/* 
+/*
  * do nothing
  */
 unsigned
-node_exec_nop(struct node *o, struct exec *x, struct data **r) 
+node_exec_nop(struct node *o, struct exec *x, struct data **r)
 {
 	return RESULT_OK;
 }
 
-/* 
+/*
  * built a list from the expression list
  */
 unsigned
-node_exec_list(struct node *o, struct exec *x, struct data **r) 
+node_exec_list(struct node *o, struct exec *x, struct data **r)
 {
 	struct node *arg;
 	struct data *d;
-	
+
 	*r = data_newlist(NULL);
 
 	for (arg = o->list; arg != NULL; arg = arg->next) {
@@ -493,16 +493,16 @@ node_exec_list(struct node *o, struct exec *x, struct data **r)
 	return RESULT_OK;
 }
 
-/* 
+/*
  * built a range from two integers
  */
 unsigned
-node_exec_range(struct node *o, struct exec *x, struct data **r) 
+node_exec_range(struct node *o, struct exec *x, struct data **r)
 {
 	struct data *min, *max;
 
 	if (!node_exec(o->list, x, &min))
-		return RESULT_ERR;	
+		return RESULT_ERR;
 	if (!node_exec(o->list->next, x, &max))
 		return RESULT_ERR;
 	if (min->type != DATA_LONG || max->type != DATA_LONG) {
@@ -518,143 +518,143 @@ node_exec_range(struct node *o, struct exec *x, struct data **r)
 }
 
 unsigned
-node_exec_eq(struct node *o, struct exec *x, struct data **r) 
+node_exec_eq(struct node *o, struct exec *x, struct data **r)
 {
 	return node_exec_binary(o, x, r, data_eq);
 }
 
 unsigned
-node_exec_neq(struct node *o, struct exec *x, struct data **r) 
+node_exec_neq(struct node *o, struct exec *x, struct data **r)
 {
 	return node_exec_binary(o, x, r, data_neq);
 }
 
 unsigned
-node_exec_le(struct node *o, struct exec *x, struct data **r) 
+node_exec_le(struct node *o, struct exec *x, struct data **r)
 {
 	return node_exec_binary(o, x, r, data_le);
 }
 
 unsigned
-node_exec_lt(struct node *o, struct exec *x, struct data **r) 
+node_exec_lt(struct node *o, struct exec *x, struct data **r)
 {
 	return node_exec_binary(o, x, r, data_lt);
 }
 
 
 unsigned
-node_exec_ge(struct node *o, struct exec *x, struct data **r) 
+node_exec_ge(struct node *o, struct exec *x, struct data **r)
 {
 	return node_exec_binary(o, x, r, data_ge);
 }
 
 unsigned
-node_exec_gt(struct node *o, struct exec *x, struct data **r) 
+node_exec_gt(struct node *o, struct exec *x, struct data **r)
 {
 	return node_exec_binary(o, x, r, data_gt);
 }
 
 unsigned
-node_exec_and(struct node *o, struct exec *x, struct data **r) 
+node_exec_and(struct node *o, struct exec *x, struct data **r)
 {
 	return node_exec_binary(o, x, r, data_and);
 }
 
 unsigned
-node_exec_or(struct node *o, struct exec *x, struct data **r) 
+node_exec_or(struct node *o, struct exec *x, struct data **r)
 {
 
 	return node_exec_binary(o, x, r, data_or);
 }
 
 unsigned
-node_exec_not(struct node *o, struct exec *x, struct data **r) 
+node_exec_not(struct node *o, struct exec *x, struct data **r)
 {
 
 	return node_exec_unary(o, x, r, data_not);
 }
 
 unsigned
-node_exec_add(struct node *o, struct exec *x, struct data **r) 
+node_exec_add(struct node *o, struct exec *x, struct data **r)
 {
 
 	return node_exec_binary(o, x, r, data_add);
 }
 
 unsigned
-node_exec_sub(struct node *o, struct exec *x, struct data **r) 
+node_exec_sub(struct node *o, struct exec *x, struct data **r)
 {
 
 	return node_exec_binary(o, x, r, data_sub);
 }
 
 unsigned
-node_exec_mul(struct node *o, struct exec *x, struct data **r) 
+node_exec_mul(struct node *o, struct exec *x, struct data **r)
 {
 
 	return node_exec_binary(o, x, r, data_mul);
 }
 
 unsigned
-node_exec_div(struct node *o, struct exec *x, struct data **r) 
+node_exec_div(struct node *o, struct exec *x, struct data **r)
 {
 	return node_exec_binary(o, x, r, data_div);
 }
 
 unsigned
-node_exec_mod(struct node *o, struct exec *x, struct data **r) 
+node_exec_mod(struct node *o, struct exec *x, struct data **r)
 {
 
 	return node_exec_binary(o, x, r, data_mod);
 }
 
 unsigned
-node_exec_neg(struct node *o, struct exec *x, struct data **r) 
+node_exec_neg(struct node *o, struct exec *x, struct data **r)
 {
 
 	return node_exec_unary(o, x, r, data_neg);
 }
 
 unsigned
-node_exec_lshift(struct node *o, struct exec *x, struct data **r) 
+node_exec_lshift(struct node *o, struct exec *x, struct data **r)
 {
 
 	return node_exec_binary(o, x, r, data_lshift);
 }
 
 unsigned
-node_exec_rshift(struct node *o, struct exec *x, struct data **r) 
+node_exec_rshift(struct node *o, struct exec *x, struct data **r)
 {
 
 	return node_exec_binary(o, x, r, data_rshift);
 }
 
 unsigned
-node_exec_bitand(struct node *o, struct exec *x, struct data **r) 
+node_exec_bitand(struct node *o, struct exec *x, struct data **r)
 {
 
 	return node_exec_binary(o, x, r, data_bitand);
 }
 
 unsigned
-node_exec_bitor(struct node *o, struct exec *x, struct data **r) 
+node_exec_bitor(struct node *o, struct exec *x, struct data **r)
 {
 	return node_exec_binary(o, x, r, data_bitor);
 }
 
 unsigned
-node_exec_bitxor(struct node *o, struct exec *x, struct data **r) 
+node_exec_bitxor(struct node *o, struct exec *x, struct data **r)
 {
 	return node_exec_binary(o, x, r, data_bitxor);
 }
 
 unsigned
-node_exec_bitnot(struct node *o, struct exec *x, struct data **r) 
+node_exec_bitnot(struct node *o, struct exec *x, struct data **r)
 {
 	return node_exec_unary(o, x, r, data_bitnot);
 }
 
-struct node_vmt 
+struct node_vmt
 node_vmt_proc = { "proc", node_exec_proc },
 node_vmt_alist = { "alist", node_exec_alist },
 node_vmt_slist = { "slist", node_exec_slist },

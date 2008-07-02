@@ -2,8 +2,8 @@
  * Copyright (c) 2003-2007 Alexandre Ratchov <alex@caoua.org>
  * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without 
- * modification, are permitted provided that the following conditions 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
  * are met:
  *
  * 	- Redistributions of source code must retain the above
@@ -65,7 +65,7 @@
  * one, then update it.
  */
 void
-conv_setctl(struct statelist *slist, struct ev *ev) 
+conv_setctl(struct statelist *slist, struct ev *ev)
 {
 	struct state *i;
 
@@ -86,7 +86,7 @@ conv_setctl(struct statelist *slist, struct ev *ev)
  * recorded, then return EV_UNDEF
  */
 unsigned
-conv_getctl(struct statelist *slist, struct ev *ev, unsigned num) 
+conv_getctl(struct statelist *slist, struct ev *ev, unsigned num)
 {
 	struct state *i;
 
@@ -103,7 +103,7 @@ conv_getctl(struct statelist *slist, struct ev *ev, unsigned num)
  * same channel/device as the given event.
  */
 void
-conv_rmctl(struct statelist *slist, struct ev *ev, unsigned num) 
+conv_rmctl(struct statelist *slist, struct ev *ev, unsigned num)
 {
 	struct state *i;
 
@@ -123,7 +123,7 @@ conv_rmctl(struct statelist *slist, struct ev *ev, unsigned num)
  * returned.
  */
 unsigned
-conv_getctx(struct statelist *slist, struct ev *ev, unsigned hi, unsigned lo) 
+conv_getctx(struct statelist *slist, struct ev *ev, unsigned hi, unsigned lo)
 {
 	unsigned vhi, vlo;
 
@@ -144,8 +144,8 @@ conv_getctx(struct statelist *slist, struct ev *ev, unsigned hi, unsigned lo)
  * filled and 1 is returned.
  */
 unsigned
-conv_packev(struct statelist *l, unsigned xctlset, 
-	    struct ev *ev, struct ev *rev) 
+conv_packev(struct statelist *l, unsigned xctlset,
+	    struct ev *ev, struct ev *rev)
 {
 	unsigned num, val;
 
@@ -212,7 +212,7 @@ conv_packev(struct statelist *l, unsigned xctlset,
 				if (EVCTL_ISFINE(xctlset, ev->ctl_num)) {
 					conv_setctl(l, ev);
 					break;
-				}				
+				}
 				rev->ctl_num = ev->ctl_num;
 				rev->ctl_val = ev->ctl_val << 7;
 			} else if (ev->ctl_num < 64) {
@@ -273,7 +273,7 @@ conv_unpackev(struct statelist *slist, unsigned xctlset,
 			rev->ch = ev->ch;
 			rev->ctl_num = ev->ctl_num + 32;
 			rev->ctl_val = ev->ctl_val & 0x7f;
-			rev++; 
+			rev++;
 			nev++;
 			return nev;
 		} else {
@@ -293,7 +293,7 @@ conv_unpackev(struct statelist *slist, unsigned xctlset,
 			rev->ctl_num = BANK_HI;
 			rev->ctl_val = ev->pc_bank >> 7;
 			conv_setctl(slist, rev);
-			rev++; 
+			rev++;
 			nev++;
 			rev->cmd = EV_CTL;
 			rev->dev = ev->dev;
@@ -301,7 +301,7 @@ conv_unpackev(struct statelist *slist, unsigned xctlset,
 			rev->ctl_num = BANK_LO;
 			rev->ctl_val = ev->pc_bank & 0x7f;
 			conv_setctl(slist, rev);
-			rev++; 
+			rev++;
 			nev++;
 		}
 		rev->cmd = EV_PC;
@@ -322,7 +322,7 @@ conv_unpackev(struct statelist *slist, unsigned xctlset,
 			rev->ctl_num = NRPN_HI;
 			rev->ctl_val = ev->rpn_num >> 7;
 			conv_setctl(slist, rev);
-			rev++; 
+			rev++;
 			nev++;
 			rev->cmd = EV_CTL;
 			rev->dev = ev->dev;
@@ -330,7 +330,7 @@ conv_unpackev(struct statelist *slist, unsigned xctlset,
 			rev->ctl_num = NRPN_LO;
 			rev->ctl_val = ev->rpn_num & 0x7f;
 			conv_setctl(slist, rev);
-			rev++; 
+			rev++;
 			nev++;
 		}
 	dataentry:
@@ -360,7 +360,7 @@ conv_unpackev(struct statelist *slist, unsigned xctlset,
 			rev->ctl_num = RPN_HI;
 			rev->ctl_val = ev->rpn_num >> 7;
 			conv_setctl(slist, rev);
-			rev++; 
+			rev++;
 			nev++;
 			rev->cmd = EV_CTL;
 			rev->dev = ev->dev;
@@ -368,7 +368,7 @@ conv_unpackev(struct statelist *slist, unsigned xctlset,
 			rev->ctl_num = RPN_LO;
 			rev->ctl_val = ev->rpn_num & 0x7f;
 			conv_setctl(slist, rev);
-			rev++; 
+			rev++;
 			nev++;
 		}
 		goto dataentry;

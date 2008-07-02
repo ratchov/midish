@@ -2,8 +2,8 @@
  * Copyright (c) 2003-2007 Alexandre Ratchov <alex@caoua.org>
  * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without 
- * modification, are permitted provided that the following conditions 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
  * are met:
  *
  * 	- Redistributions of source code must retain the above
@@ -31,7 +31,7 @@
 /*
  * machine and OS dependent code
  */
- 
+
 #include <sys/param.h>
 #include <sys/time.h>
 #include <sys/types.h>
@@ -76,7 +76,7 @@ struct pollfd *cons_pfd;
  * open midi devices
  */
 void
-mux_mdep_open(void) 
+mux_mdep_open(void)
 {
 	if (gettimeofday(&tv_last, NULL) < 0) {
 		perror("mux_mdep_open: initial gettimeofday() failed");
@@ -88,7 +88,7 @@ mux_mdep_open(void)
  * close midi devices
  */
 void
-mux_mdep_close(void) 
+mux_mdep_close(void)
 {
 }
 
@@ -139,13 +139,13 @@ mux_mdep_wait(void)
 			rmidi_inputcb(RMIDI(dev), midibuf, res);
 		}
 	}
-	
+
 	if (mux_isopen) {
 		if (gettimeofday(&tv, NULL) < 0) {
 			perror("mux_run: gettimeofday failed");
 			return;
 		}
-		
+
 		/*
 		 * number of micro-seconds between now and the last
 		 * time we called poll(). Warning: because of system
@@ -156,13 +156,13 @@ mux_mdep_wait(void)
 		if (delta_usec > 0) {
 			tv_last = tv;
 			/*
-			 * update the current position, 
+			 * update the current position,
 			 * (time unit = 24th of microsecond
 			 */
 			mux_timercb(24 * delta_usec);
 		}
 	}
-	
+
 	if ((cons_pfd->revents & POLLIN) && (cons_index == cons_len)) {
 		res = read(STDIN_FILENO, cons_buf, CONS_BUFSIZE);
 		if (res < 0) {
@@ -177,14 +177,14 @@ mux_mdep_wait(void)
 	}
 }
 
-/* 
+/*
  * sleep for 'millisecs' milliseconds useful when sending system
  * exclusive messages
  *
  * IMPORTANT : must never be called from inside mux_run()
  */
-void 
-mux_sleep(unsigned millisecs) 
+void
+mux_sleep(unsigned millisecs)
 {
 	while (poll(NULL, (nfds_t)0, millisecs) < 0) {
 		perror("mux_sleep: poll failed");
@@ -196,7 +196,7 @@ mux_sleep(unsigned millisecs)
  * open an already initialized midi device
  */
 void
-rmidi_open(struct rmidi *o) 
+rmidi_open(struct rmidi *o)
 {
 	int mode;
 
@@ -224,12 +224,12 @@ rmidi_open(struct rmidi *o)
 	o->istatus = o->ostatus = 0;
 	o->isysex = NULL;
 }
- 
+
 /*
  * close the given midi device
  */
 void
-rmidi_close(struct rmidi *o) 
+rmidi_close(struct rmidi *o)
 {
 	if (o->mdep.fd < 0) {
 		return;
@@ -240,8 +240,8 @@ rmidi_close(struct rmidi *o)
 /*
  * create/register the new device
  */
-void 
-rmidi_init(struct rmidi *o, unsigned mode) 
+void
+rmidi_init(struct rmidi *o, unsigned mode)
 {
 	o->mdep.fd = -1;
 	o->mdep.pfd = NULL;
@@ -254,8 +254,8 @@ rmidi_init(struct rmidi *o, unsigned mode)
 /*
  * unregister/destroy the given device
  */
-void 
-rmidi_done(struct rmidi *o) 
+void
+rmidi_done(struct rmidi *o)
 {
 	if (mux_isopen) {
 		rmidi_close(o);
@@ -270,11 +270,11 @@ rmidi_done(struct rmidi *o)
  * flush the given midi device
  */
 void
-rmidi_flush(struct rmidi *o) 
+rmidi_flush(struct rmidi *o)
 {
 	int res;
 	unsigned start, stop;
-	
+
 	if (!RMIDI(o)->mdep.odying) {
 		start = 0;
 		stop = o->oused;
@@ -320,12 +320,12 @@ cons_mdep_getc(void)
  * try /etc/midishrc
  */
 unsigned
-exec_runrcfile(struct exec *o) 
+exec_runrcfile(struct exec *o)
 {
 	char *home;
 	char name[PATH_MAX];
 	struct stat st;
-	
+
 	home = getenv("HOME");
 	if (home != NULL) {
 		snprintf(name, PATH_MAX, "%s" "/" "." RC_NAME, home);
@@ -343,7 +343,7 @@ extern char *optarg;
 extern int optind;
 
 unsigned
-user_getopts(int *pargc, char ***pargv) 
+user_getopts(int *pargc, char ***pargv)
 {
 	int ch;
 

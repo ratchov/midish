@@ -2,8 +2,8 @@
  * Copyright (c) 2003-2007 Alexandre Ratchov <alex@caoua.org>
  * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without 
- * modification, are permitted provided that the following conditions 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
  * are met:
  *
  * 	- Redistributions of source code must retain the above
@@ -28,7 +28,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/* 
+/*
  * mididev is a generic midi device structure it doesn't contain any
  * device-specific fields and shoud be extended by other structures
  *
@@ -52,10 +52,10 @@ struct mididev *mididev_byunit[DEFAULT_MAXNDEVS];
  * initialize the device independent part of the device structure
  */
 void
-mididev_init(struct mididev *o, unsigned mode) 
+mididev_init(struct mididev *o, unsigned mode)
 {
-	/* 
-	 * by default we don't transmit realtime information 
+	/*
+	 * by default we don't transmit realtime information
 	 * (midi_tic, midi_start, midi_stop etc...)
 	 */
 	o->sendrt = 0;
@@ -71,7 +71,7 @@ mididev_init(struct mididev *o, unsigned mode)
  * future use
  */
 void
-mididev_done(struct mididev *o) 
+mididev_done(struct mididev *o)
 {
 }
 
@@ -79,7 +79,7 @@ mididev_done(struct mididev *o)
  * initialize the device table
  */
 void
-mididev_listinit(void) 
+mididev_listinit(void)
 {
 	unsigned i;
 	for (i = 0; i < DEFAULT_MAXNDEVS; i++) {
@@ -93,11 +93,11 @@ mididev_listinit(void)
  * unregister all entries of the device table
  */
 void
-mididev_listdone(void) 
+mididev_listdone(void)
 {
 	unsigned i;
 	struct mididev *dev;
-	
+
 	for (i = 0; i < DEFAULT_MAXNDEVS; i++) {
 		dev = mididev_byunit[i];
 		if (dev != NULL) {
@@ -114,7 +114,7 @@ mididev_listdone(void)
  * register a new device number (ie "unit")
  */
 unsigned
-mididev_attach(unsigned unit, char *path, unsigned mode) 
+mididev_attach(unsigned unit, char *path, unsigned mode)
 {
 	struct mididev *dev;
 
@@ -131,7 +131,7 @@ mididev_attach(unsigned unit, char *path, unsigned mode)
 	dev->next = mididev_list;
 	mididev_list = dev;
 	mididev_byunit[unit] = dev;
-	dev->unit = unit;	
+	dev->unit = unit;
 	return 1;
 }
 
@@ -139,20 +139,20 @@ mididev_attach(unsigned unit, char *path, unsigned mode)
  * unregister the given device number
  */
 unsigned
-mididev_detach(unsigned unit) 
+mididev_detach(unsigned unit)
 {
 	struct mididev **i, *dev;
-	
+
 	if (unit >= DEFAULT_MAXNDEVS || mididev_byunit[unit] == NULL) {
 		cons_err("no such device");
 		return 0;
 	}
-	
+
 	if (mididev_byunit[unit] == mididev_master) {
 		cons_err("cant detach master device");
 		return 0;
 	}
-	
+
 	for (i = &mididev_list; *i != NULL; i = &(*i)->next) {
 		dev = *i;
 		if (dev->unit == unit) {

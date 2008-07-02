@@ -2,8 +2,8 @@
  * Copyright (c) 2003-2007 Alexandre Ratchov <alex@caoua.org>
  * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without 
- * modification, are permitted provided that the following conditions 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
  * are met:
  *
  * 	- Redistributions of source code must retain the above
@@ -116,7 +116,7 @@ unsigned user_func_chanunconfev(struct exec *o, struct data **r);
 unsigned user_func_chaninfo(struct exec *o, struct data **r);
 unsigned user_func_changetcurinput(struct exec *o, struct data **r);
 unsigned user_func_chansetcurinput(struct exec *o, struct data **r);
- 
+
 /* sysex */
 
 unsigned user_func_sysexlist(struct exec *o, struct data **r);
@@ -222,7 +222,7 @@ unsigned user_func_devticrate(struct exec *o, struct data **r);
 unsigned user_func_devinfo(struct exec *o, struct data **r);
 unsigned user_func_devixctl(struct exec *o, struct data **r);
 unsigned user_func_devoxctl(struct exec *o, struct data **r);
- 
+
 /* misc */
 
 unsigned user_func_metroswitch(struct exec *o, struct data **r);

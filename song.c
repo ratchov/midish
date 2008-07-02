@@ -2,8 +2,8 @@
  * Copyright (c) 2003-2007 Alexandre Ratchov <alex@caoua.org>
  * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without 
- * modification, are permitted provided that the following conditions 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
  * are met:
  *
  * 	- Redistributions of source code must retain the above
@@ -46,7 +46,7 @@ unsigned song_debug = 0;
  * allocate and initialize a song structure
  */
 struct song *
-song_new(void) 
+song_new(void)
 {
 	struct song *o;
 	o = (struct song *)mem_alloc(sizeof(struct song));
@@ -58,7 +58,7 @@ song_new(void)
  * free the given song structure
  */
 void
-song_delete(struct song *o) 
+song_delete(struct song *o)
 {
 	song_done(o);
 	mem_free(o);
@@ -68,12 +68,12 @@ song_delete(struct song *o)
  * initialize the given song
  */
 void
-song_init(struct song *o) 
+song_init(struct song *o)
 {
 	struct seqev *se;
 
-	/* 
-	 * song parameters 
+	/*
+	 * song parameters
 	 */
 	o->mode = 0;
 	o->trklist = NULL;
@@ -84,8 +84,8 @@ song_init(struct song *o)
 	track_init(&o->meta);
 	track_init(&o->rec);
 
-	/* 
-	 * runtime play record parameters 
+	/*
+	 * runtime play record parameters
 	 */
 	o->filt = NULL;
 	o->tpb = o->tics_per_unit / DEFAULT_BPM;
@@ -93,14 +93,14 @@ song_init(struct song *o)
 	o->tempo = TEMPO_TO_USEC24(DEFAULT_TEMPO, o->tpb);
 	o->tempo_factor = 0x100;
 
-	/* 
-	 * metronome 
+	/*
+	 * metronome
 	 */
 	metro_init(&o->metro);
 	o->tic = o->beat = o->measure = 0;
-	
-	/* 
-	 * defaults 
+
+	/*
+	 * defaults
 	 */
 	o->curtrk = NULL;
 	o->curfilt = NULL;
@@ -113,8 +113,8 @@ song_init(struct song *o)
 	o->curinput_ch = 0;
 	evspec_reset(&o->curev);
 
-	/* 
-	 * add default timesig/tempo so that setunit() works 
+	/*
+	 * add default timesig/tempo so that setunit() works
 	 */
 	se = seqev_new();
 	se->ev.cmd = EV_TEMPO;
@@ -131,7 +131,7 @@ song_init(struct song *o)
  * delete a song without freeing it
  */
 void
-song_done(struct song *o) 
+song_done(struct song *o)
 {
 	if (mux_isopen) {
 		song_stop(o);
@@ -157,7 +157,7 @@ song_done(struct song *o)
  * create a new track in the song
  */
 struct songtrk *
-song_trknew(struct song *o, char *name) 
+song_trknew(struct song *o, char *name)
 {
 	struct songtrk *t;
 
@@ -177,7 +177,7 @@ song_trknew(struct song *o, char *name)
  * delete the current track from the song
  */
 void
-song_trkdel(struct song *o, struct songtrk *t) 
+song_trkdel(struct song *o, struct songtrk *t)
 {
 	if (o->curtrk == t) {
 		o->curtrk = NULL;
@@ -192,7 +192,7 @@ song_trkdel(struct song *o, struct songtrk *t)
  * return the track with the given name
  */
 struct songtrk *
-song_trklookup(struct song *o, char *name) 
+song_trklookup(struct song *o, char *name)
 {
 	return (struct songtrk *)name_lookup(&o->trklist, name);
 }
@@ -201,7 +201,7 @@ song_trklookup(struct song *o, char *name)
  * add a new chan to the song
  */
 struct songchan *
-song_channew(struct song *o, char *name, unsigned dev, unsigned ch) 
+song_channew(struct song *o, char *name, unsigned dev, unsigned ch)
 {
 	struct songchan *c;
 
@@ -221,7 +221,7 @@ song_channew(struct song *o, char *name, unsigned dev, unsigned ch)
  * delete the given chan from the song
  */
 void
-song_chandel(struct song *o, struct songchan *c) 
+song_chandel(struct song *o, struct songchan *c)
 {
 	struct songfilt *f;
 
@@ -235,7 +235,7 @@ song_chandel(struct song *o, struct songchan *c)
 	}
 	name_remove(&o->chanlist, (struct name *)c);
 	track_done(&c->conf);
-	name_done(&c->name);	
+	name_done(&c->name);
 	mem_free(c);
 }
 
@@ -243,7 +243,7 @@ song_chandel(struct song *o, struct songchan *c)
  * return the chan with the given name
  */
 struct songchan *
-song_chanlookup(struct song *o, char *name) 
+song_chanlookup(struct song *o, char *name)
 {
 	return (struct songchan *)name_lookup(&o->chanlist, name);
 }
@@ -252,7 +252,7 @@ song_chanlookup(struct song *o, char *name)
  * return the chan matching the given (dev, ch) pair
  */
 struct songchan *
-song_chanlookup_bynum(struct song *o, unsigned dev, unsigned ch) 
+song_chanlookup_bynum(struct song *o, unsigned dev, unsigned ch)
 {
 	struct songchan *i;
 
@@ -268,7 +268,7 @@ song_chanlookup_bynum(struct song *o, unsigned dev, unsigned ch)
  * add a new filt to the song
  */
 struct songfilt *
-song_filtnew(struct song *o, char *name) 
+song_filtnew(struct song *o, char *name)
 {
 	struct songfilt *f;
 
@@ -287,7 +287,7 @@ song_filtnew(struct song *o, char *name)
  * delete the given filter from the song
  */
 void
-song_filtdel(struct song *o, struct songfilt *f) 
+song_filtdel(struct song *o, struct songfilt *f)
 {
 	struct songtrk *t;
 
@@ -297,11 +297,11 @@ song_filtdel(struct song *o, struct songfilt *f)
 	SONG_FOREACH_TRK(o, t) {
 		if (t->curfilt == f) {
 			t->curfilt = NULL;
-		}		
-	}	
+		}
+	}
 	name_remove(&o->filtlist, (struct name *)f);
 	filt_done(&f->filt);
-	name_done(&f->name);	
+	name_done(&f->name);
 	mem_free(f);
 }
 
@@ -309,7 +309,7 @@ song_filtdel(struct song *o, struct songfilt *f)
  * return the filt conrresponding to the given name
  */
 struct songfilt *
-song_filtlookup(struct song *o, char *name) 
+song_filtlookup(struct song *o, char *name)
 {
 	return (struct songfilt *)name_lookup(&o->filtlist, name);
 }
@@ -318,7 +318,7 @@ song_filtlookup(struct song *o, char *name)
  * add a new sx to the song
  */
 struct songsx *
-song_sxnew(struct song *o, char *name) 
+song_sxnew(struct song *o, char *name)
 {
 	struct songsx *x;
 
@@ -334,14 +334,14 @@ song_sxnew(struct song *o, char *name)
  * delete the given sysex bank from the song
  */
 void
-song_sxdel(struct song *o, struct songsx *x) 
+song_sxdel(struct song *o, struct songsx *x)
 {
 	if (o->cursx == x) {
 		o->cursx = NULL;
 	}
 	name_remove(&o->sxlist, (struct name *)x);
 	sysexlist_done(&x->sx);
-	name_done(&x->name);	
+	name_done(&x->name);
 	mem_free(x);
 }
 
@@ -349,7 +349,7 @@ song_sxdel(struct song *o, struct songsx *x)
  * return the sx with the given name
  */
 struct songsx *
-song_sxlookup(struct song *o, char *name) 
+song_sxlookup(struct song *o, char *name)
 {
 	return (struct songsx *)name_lookup(&o->sxlist, name);
 }
@@ -360,31 +360,31 @@ song_sxlookup(struct song *o, char *name)
  * values
  */
 void
-song_getcursx(struct song *o, struct songsx **r) 
+song_getcursx(struct song *o, struct songsx **r)
 {
 	*r = o->cursx;
 }
 
 void
-song_setcursx(struct song *o, struct songsx *x) 
+song_setcursx(struct song *o, struct songsx *x)
 {
 	o->cursx = x;
 }
 
 void
-song_getcurtrk(struct song *o, struct songtrk **r) 
+song_getcurtrk(struct song *o, struct songtrk **r)
 {
 	*r = o->curtrk;
 }
 
 void
-song_setcurtrk(struct song *o, struct songtrk *t) 
+song_setcurtrk(struct song *o, struct songtrk *t)
 {
 	o->curtrk = t;
 }
 
 void
-song_getcurfilt(struct song *o, struct songfilt **r) 
+song_getcurfilt(struct song *o, struct songfilt **r)
 {
 	struct songtrk *t;
 	song_getcurtrk(o, &t);
@@ -396,7 +396,7 @@ song_getcurfilt(struct song *o, struct songfilt **r)
 }
 
 void
-song_setcurfilt(struct song *o, struct songfilt *f) 
+song_setcurfilt(struct song *o, struct songfilt *f)
 {
 	struct songtrk *t;
 	o->curfilt = f;
@@ -407,7 +407,7 @@ song_setcurfilt(struct song *o, struct songfilt *f)
 }
 
 void
-song_getcurchan(struct song *o, struct songchan **r) 
+song_getcurchan(struct song *o, struct songchan **r)
 {
 	struct songfilt *f;
 	song_getcurfilt(o, &f);
@@ -419,7 +419,7 @@ song_getcurchan(struct song *o, struct songchan **r)
 }
 
 void
-song_setcurchan(struct song *o, struct songchan *c) 
+song_setcurchan(struct song *o, struct songchan *c)
 {
 	struct songfilt *f;
 	song_getcurfilt(o, &f);
@@ -431,7 +431,7 @@ song_setcurchan(struct song *o, struct songchan *c)
 }
 
 void
-song_getcurinput(struct song *o, unsigned *dev, unsigned *ch) 
+song_getcurinput(struct song *o, unsigned *dev, unsigned *ch)
 {
 	struct songchan *c;
 	song_getcurchan(o, &c);
@@ -445,7 +445,7 @@ song_getcurinput(struct song *o, unsigned *dev, unsigned *ch)
 }
 
 void
-song_setcurinput(struct song *o, unsigned dev, unsigned ch) 
+song_setcurinput(struct song *o, unsigned dev, unsigned ch)
 {
 	struct songchan *c;
 	song_getcurchan(o, &c);
@@ -462,13 +462,13 @@ song_setcurinput(struct song *o, unsigned dev, unsigned ch)
  * send to the output all events from all chans
  */
 void
-song_playconf(struct song *o) 
+song_playconf(struct song *o)
 {
 	struct songchan *i;
 	struct seqptr cp;
 	struct state *st;
 	struct ev ev;
-	
+
 	SONG_FOREACH_CHAN(o, i) {
 		seqptr_init(&cp, &i->conf);
 		for (;;) {
@@ -496,12 +496,12 @@ song_playconf(struct song *o)
  * send all sysex messages
  */
 void
-song_playsysex(struct song *o) 
+song_playsysex(struct song *o)
 {
 	struct songsx *l;
 	struct sysex *s;
 	struct chunk *c;
-	
+
 	SONG_FOREACH_SX(o, l) {
 		for (s = l->sx.first; s != NULL; s = s->next) {
 			for (c = s->first; c != NULL; c = c->next) {
@@ -517,7 +517,7 @@ song_playsysex(struct song *o)
  * play a meta event
  */
 void
-song_metaput(struct song *o, struct ev *ev) 
+song_metaput(struct song *o, struct ev *ev)
 {
 	switch(ev->cmd) {
 	case EV_TIMESIG:
@@ -526,7 +526,7 @@ song_metaput(struct song *o, struct ev *ev)
 		break;
 	case EV_TEMPO:
 		o->tempo = ev->tempo_usec24;
-		mux_chgtempo(o->tempo_factor * o->tempo  / 0x100);	
+		mux_chgtempo(o->tempo_factor * o->tempo  / 0x100);
 		break;
 	default:
 		break;
@@ -542,12 +542,12 @@ song_metaput(struct song *o, struct ev *ev)
  * this routine must be called after song_ticplay()
  */
 void
-song_ticskip(struct song *o) 
+song_ticskip(struct song *o)
 {
 	struct songtrk *i;
 
-	/* 
-	 * tempo_track 
+	/*
+	 * tempo_track
 	 */
 	(void)seqptr_ticskip(&o->metaptr, 1);
 	o->tic++;
@@ -580,13 +580,13 @@ song_ticskip(struct song *o)
  * recordcb.
  */
 void
-song_ticplay(struct song *o) 
+song_ticplay(struct song *o)
 {
 	struct songtrk *i;
 	struct state *st;
 	struct ev ev;
 	unsigned id;
-	
+
 	/*
 	 * provide song-position feedback
 	 */
@@ -634,11 +634,11 @@ song_ticplay(struct song *o)
  * that have context, then the rest.
  */
 void
-song_confrestore(struct statelist *slist) 
+song_confrestore(struct statelist *slist)
 {
 	struct state *s;
 	struct ev re;
-	
+
 	for (s = slist->first; s != NULL; s = s->next) {
 		if (!EV_ISNOTE(&s->ev)) {
 			if (state_restore(s, &re)) {
@@ -667,7 +667,7 @@ song_confrestore(struct statelist *slist)
  * cancel all frames in the given state list
  */
 void
-song_confcancel(struct statelist *slist) 
+song_confcancel(struct statelist *slist)
 {
 	struct state *s;
 	struct ev ca;
@@ -703,7 +703,7 @@ song_confcancel(struct statelist *slist)
  * call-back called when the first midi tick arrives
  */
 void
-song_startcb(struct song *o) 
+song_startcb(struct song *o)
 {
 
 	if (song_debug) {
@@ -719,7 +719,7 @@ song_startcb(struct song *o)
  * call-back called when the midi clock stopped
  */
 void
-song_stopcb(struct song *o) 
+song_stopcb(struct song *o)
 {
 
 	if (song_debug) {
@@ -731,7 +731,7 @@ song_stopcb(struct song *o)
  * call-back, called when the midi clock moved one tick forward
  */
 void
-song_movecb(struct song *o) 
+song_movecb(struct song *o)
 {
 	unsigned delta;
 
@@ -753,7 +753,7 @@ song_movecb(struct song *o)
  * call-back called when a midi event arrives
  */
 void
-song_evcb(struct song *o, struct ev *ev) 
+song_evcb(struct song *o, struct ev *ev)
 {
 	struct ev filtout[FILT_MAXNRULES];
 	unsigned i, nev;
@@ -790,7 +790,7 @@ song_evcb(struct song *o, struct ev *ev)
  * call-back called when a sysex message arrives
  */
 void
-song_sysexcb(struct song *o, struct sysex *sx) 
+song_sysexcb(struct song *o, struct sysex *sx)
 {
 	if (song_debug) {
 		dbg_puts("song_sysexcb:\n");
@@ -813,7 +813,7 @@ song_sysexcb(struct song *o, struct sysex *sx)
  * for each input event.
  */
 void
-song_start(struct song *o, unsigned mode, unsigned countdown) 
+song_start(struct song *o, unsigned mode, unsigned countdown)
 {
 	struct songfilt *f;
 	struct songtrk *t;
@@ -827,7 +827,7 @@ song_start(struct song *o, unsigned mode, unsigned countdown)
 	 */
 	song_getcurfilt(o, &f);
 	if (f) {
-		o->filt = &f->filt;	
+		o->filt = &f->filt;
 	} else {
 		o->filt = NULL;
 	}
@@ -838,7 +838,7 @@ song_start(struct song *o, unsigned mode, unsigned countdown)
 	 */
 	o->measure = o->curpos >= countdown ? o->curpos - countdown : 0;
 	o->beat = 0;
-	o->tic = 0;	
+	o->tic = 0;
 	track_timeinfo(&o->meta, o->measure,
 	    &tic, &o->tempo, &o->bpm, &o->tpb);
 
@@ -848,7 +848,7 @@ song_start(struct song *o, unsigned mode, unsigned countdown)
 	 */
 	tic = track_findmeasure(&o->meta, o->measure);
 	off = o->curquant / 2;
-	if (off > o->tpb) 
+	if (off > o->tpb)
 		off = o->tpb;
 	if (off > tic)
 		off = tic;
@@ -858,7 +858,7 @@ song_start(struct song *o, unsigned mode, unsigned countdown)
 		o->beat = o->bpm - 1;
 		o->measure--;
 	}
-	
+
 	/*
 	 * move all tracks to the current position
 	 */
@@ -868,7 +868,7 @@ song_start(struct song *o, unsigned mode, unsigned countdown)
 	}
 	seqptr_init(&o->metaptr, &o->meta);
 	seqptr_skip(&o->metaptr, tic);
-	
+
 	seqptr_init(&o->recptr, &o->rec);
 	seqptr_seek(&o->recptr, tic);
 
@@ -904,7 +904,7 @@ song_start(struct song *o, unsigned mode, unsigned countdown)
 			s->tag = 0;
 		}
 	}
-	mux_flush();	
+	mux_flush();
 }
 
 /*
@@ -912,13 +912,13 @@ song_start(struct song *o, unsigned mode, unsigned countdown)
  * play/record process. Must be called with the mux initialised
  */
 void
-song_stop(struct song *o) 
+song_stop(struct song *o)
 {
 	struct songtrk *t;
 	struct state *st;
 	struct ev ev;
 
-	metro_shut(&o->metro);	
+	metro_shut(&o->metro);
 
 	/*
 	 * stop sounding notes
@@ -959,10 +959,10 @@ song_stop(struct song *o)
  * play the song initialize the midi/timer and start the event loop
  */
 void
-song_play(struct song *o) 
+song_play(struct song *o)
 {
 	song_start(o, SONG_PLAY, 0);
-	
+
 	if (song_debug) {
 		dbg_puts("song_play: starting loop, waiting for a start event...\n");
 	}
@@ -974,10 +974,10 @@ song_play(struct song *o)
  * event loop
  */
 void
-song_record(struct song *o) 
+song_record(struct song *o)
 {
 	struct songtrk *t;
-	
+
 	song_getcurtrk(o, &t);
 	if (!t || t->mute) {
 		dbg_puts("song_record: no current track or current track is muted\n");
@@ -994,10 +994,10 @@ song_record(struct song *o)
  * move input events directly to the output
  */
 void
-song_idle(struct song *o) 
+song_idle(struct song *o)
 {
 	song_start(o, 0, 0);
-	
+
 	if (song_debug) {
 		dbg_puts("song_idle: started loop...\n");
 	}

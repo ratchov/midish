@@ -2,8 +2,8 @@
  * Copyright (c) 2003-2007 Alexandre Ratchov <alex@caoua.org>
  * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without 
- * modification, are permitted provided that the following conditions 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
  * are met:
  *
  * 	- Redistributions of source code must retain the above
@@ -34,7 +34,7 @@
  *
  * endl:	"\n"
  * 		";"
- * 
+ *
  * cst:		num
  * 		string
  * 		ident
@@ -43,44 +43,44 @@
  * 		"[" call "]"
  * 		"(" expr ")"
  * 		"{" [ expr expr ...  expr ] "}"
- * 
+ *
  * unary:	"-" unary
  * 		"~" unary
  * 		"!" unary
  * 		cst
- * 
+ *
  * muldiv:	unary "*" unary
  * 		unary "/" unary
  * 		unary "%" unary
- * 	
+ *
  * addsub:	muldiv "+" muldiv
  * 		muldiv "-" muldiv
- * 	
+ *
  * shift:	addsub "<<" addsub
  * 		addsub ">>" addsub
- * 	
+ *
  * compare:	shift "<" shift
- * 		shift ">" shift 
+ * 		shift ">" shift
  * 		shift "<=" shift
  * 		shift ">=" shift
- * 	
+ *
  * equal:	compare "==" compare
  * 		compare "!=" compare
- * 	
+ *
  * bitand:	equal "&" equal
- * 	
- * bitxor:	bitand "^" bitand	
- * 	
+ *
+ * bitxor:	bitand "^" bitand
+ *
  * bitor:	bitxor "|" bitxor
- * 	
+ *
  * and:		bitor "&&" bitor
- * 	
+ *
  * or:		and "||" and
- * 
+ *
  * expr:	or
- * 
+ *
  * call:	ident [ expr expr ... expr ]
- * 
+ *
  * stmt:	"let" ident "=" expr endl
  * 		"for" ident "in" expr slist endl
  * 		"if" expr slist [ else slist ] endl
@@ -88,15 +88,15 @@
  * 		"return" expr endl
  * 		call endl
  * 		endl
- * 		
+ *
  * slist:	"{" [ stmt stmt ... stmt ] "}"
- * 
+ *
  * proc:	"proc" ident [ ident ident ... ident ] slist
- * 
+ *
  * line:	proc
  * 		stmt
  *
- * prog:	[ line line ... line ] EOF 		
+ * prog:	[ line line ... line ] EOF
  */
 
 #include "dbg.h"
@@ -111,7 +111,7 @@
 /* ------------------------------------------------------------- */
 
 void
-parse_recover(struct parse *o, char *msg) 
+parse_recover(struct parse *o, char *msg)
 {
 	lex_err(&o->lex, msg);
 	for (;;) {
@@ -129,10 +129,10 @@ parse_recover(struct parse *o, char *msg)
 }
 
 struct parse *
-parse_new(char *filename) 
+parse_new(char *filename)
 {
 	struct parse *o;
-	o = (struct parse *)mem_alloc(sizeof(struct parse));	
+	o = (struct parse *)mem_alloc(sizeof(struct parse));
 	if (!lex_init(&o->lex, filename)) {
 		mem_free(o);
 		return 0;
@@ -142,14 +142,14 @@ parse_new(char *filename)
 }
 
 void
-parse_delete(struct parse *o) 
+parse_delete(struct parse *o)
 {
 	lex_done(&o->lex);
 	mem_free(o);
 }
 
 unsigned
-parse_getsym(struct parse *o) 
+parse_getsym(struct parse *o)
 {
 	if (o->lookavail) {
 		o->lookavail = 0;
@@ -159,17 +159,17 @@ parse_getsym(struct parse *o)
 }
 
 void
-parse_ungetsym(struct parse *o) 
+parse_ungetsym(struct parse *o)
 {
 	if (o->lookavail) {
 		dbg_puts("parse_ungetsym: looksym already set\n");
 		dbg_panic();
 	}
-	o->lookavail = 1; 
+	o->lookavail = 1;
 }
 
 unsigned
-parse_isfirst(struct parse *o, unsigned *first) 
+parse_isfirst(struct parse *o, unsigned *first)
 {
 	while (*first != 0) {
 		if (*first == o->lex.id) {
@@ -182,41 +182,41 @@ parse_isfirst(struct parse *o, unsigned *first)
 
 /* ------------------------------------------------------------- */
 
-unsigned first_endl[] = 
+unsigned first_endl[] =
 {
 	TOK_ENDLINE, TOK_SEMICOLON, 0
 };
 
-unsigned first_proc[] = 
+unsigned first_proc[] =
 {
 	TOK_PROC, 0
 };
 
-unsigned first_assign[] = 
+unsigned first_assign[] =
 {
 	TOK_LET, 0
 };
 
-unsigned first_call[] = 
+unsigned first_call[] =
 {
 	TOK_IDENT, 0
 };
 
-unsigned first_expr[] = 
+unsigned first_expr[] =
 {
 	TOK_MINUS, TOK_EXCLAM, TOK_TILDE,
 	TOK_LPAR, TOK_DOLLAR, TOK_LBRACE, TOK_IDENT, TOK_NIL,
 	TOK_NUM, TOK_STRING, TOK_LBRACKET, 0
 };
 
-unsigned first_stmt[] = 
+unsigned first_stmt[] =
 {
-	TOK_SEMICOLON, TOK_ENDLINE, 
+	TOK_SEMICOLON, TOK_ENDLINE,
 	TOK_IF, TOK_FOR, TOK_IDENT, TOK_LET, TOK_RETURN, TOK_EXIT, 0
 };
-	 
+
 unsigned
-parse_endl(struct parse *o, struct node **n) 
+parse_endl(struct parse *o, struct node **n)
 {
 	if (!parse_getsym(o)) {
 		return 0;
@@ -229,10 +229,10 @@ parse_endl(struct parse *o, struct node **n)
 }
 
 unsigned
-parse_cst(struct parse *o, struct node **n) 
+parse_cst(struct parse *o, struct node **n)
 {
 	struct data *data;
-		
+
 	if (!parse_getsym(o)) {
 		return 0;
 	}
@@ -329,7 +329,7 @@ parse_cst(struct parse *o, struct node **n)
 
 
 unsigned
-parse_unary(struct parse *o, struct node **n) 
+parse_unary(struct parse *o, struct node **n)
 {
 	if (!parse_getsym(o)) {
 		return 0;
@@ -360,11 +360,11 @@ parse_unary(struct parse *o, struct node **n)
 
 
 unsigned
-parse_muldiv(struct parse *o, struct node **n) 
+parse_muldiv(struct parse *o, struct node **n)
 {
 	if (!parse_unary(o, n)) {
 		return 0;
-	}	
+	}
 	for (;;) {
 		if (!parse_getsym(o)) {
 			return 0;
@@ -394,7 +394,7 @@ parse_muldiv(struct parse *o, struct node **n)
 
 
 unsigned
-parse_addsub(struct parse *o, struct node **n) 
+parse_addsub(struct parse *o, struct node **n)
 {
 	if (!parse_muldiv(o, n)) {
 		return 0;
@@ -423,7 +423,7 @@ parse_addsub(struct parse *o, struct node **n)
 
 
 unsigned
-parse_shift(struct parse *o, struct node **n) 
+parse_shift(struct parse *o, struct node **n)
 {
 	if (!parse_addsub(o, n)) {
 		return 0;
@@ -452,7 +452,7 @@ parse_shift(struct parse *o, struct node **n)
 
 
 unsigned
-parse_compare(struct parse *o, struct node **n) 
+parse_compare(struct parse *o, struct node **n)
 {
 	if (!parse_shift(o, n)) {
 		return 0;
@@ -491,7 +491,7 @@ parse_compare(struct parse *o, struct node **n)
 
 
 unsigned
-parse_equal(struct parse *o, struct node **n) 
+parse_equal(struct parse *o, struct node **n)
 {
 	if (!parse_compare(o, n)) {
 		return 0;
@@ -520,7 +520,7 @@ parse_equal(struct parse *o, struct node **n)
 
 
 unsigned
-parse_bitand(struct parse *o, struct node **n) 
+parse_bitand(struct parse *o, struct node **n)
 {
 	if (!parse_equal(o, n)) {
 		return 0;
@@ -544,7 +544,7 @@ parse_bitand(struct parse *o, struct node **n)
 
 
 unsigned
-parse_bitxor(struct parse *o, struct node **n) 
+parse_bitxor(struct parse *o, struct node **n)
 {
 	if (!parse_bitand(o, n)) {
 		return 0;
@@ -568,7 +568,7 @@ parse_bitxor(struct parse *o, struct node **n)
 
 
 unsigned
-parse_bitor(struct parse *o, struct node **n) 
+parse_bitor(struct parse *o, struct node **n)
 {
 	if (!parse_bitxor(o, n)) {
 		return 0;
@@ -592,7 +592,7 @@ parse_bitor(struct parse *o, struct node **n)
 
 
 unsigned
-parse_and(struct parse *o, struct node **n) 
+parse_and(struct parse *o, struct node **n)
 {
 	if (!parse_bitor(o, n)) {
 		return 0;
@@ -615,7 +615,7 @@ parse_and(struct parse *o, struct node **n)
 }
 
 unsigned
-parse_or(struct parse *o, struct node **n) 
+parse_or(struct parse *o, struct node **n)
 {
 	if (!parse_and(o, n)) {
 		return 0;
@@ -638,7 +638,7 @@ parse_or(struct parse *o, struct node **n)
 }
 
 unsigned
-parse_exprange(struct parse *o, struct node **n) 
+parse_exprange(struct parse *o, struct node **n)
 {
 	if (!parse_or(o, n)) {
 		return 0;
@@ -664,17 +664,17 @@ parse_exprange(struct parse *o, struct node **n)
 }
 
 unsigned
-parse_expr(struct parse *o, struct node **n) 
+parse_expr(struct parse *o, struct node **n)
 {
 	return parse_exprange(o, n);
 }
 
 unsigned
-parse_call(struct parse *o, struct node **n) 
+parse_call(struct parse *o, struct node **n)
 {
 	if (!parse_getsym(o)) {
 		return 0;
-	} 
+	}
 	if (o->lex.id != TOK_IDENT) {
 		return 0;
 	}
@@ -698,7 +698,7 @@ parse_call(struct parse *o, struct node **n)
 }
 
 unsigned
-parse_stmt(struct parse *o, struct node **n) 
+parse_stmt(struct parse *o, struct node **n)
 {
 	if (!parse_getsym(o)) {
 		return 0;
@@ -793,7 +793,7 @@ parse_stmt(struct parse *o, struct node **n)
 		if (o->lex.id != TOK_ASSIGN) {
 			parse_recover(o, "'=' expected");
 			return 0;
-		}	
+		}
 		if (!parse_getsym(o)) {
 			return 0;
 		}
@@ -828,7 +828,7 @@ parse_stmt(struct parse *o, struct node **n)
 }
 
 unsigned
-parse_slist(struct parse *o, struct node **n) 
+parse_slist(struct parse *o, struct node **n)
 {
 	if (!parse_getsym(o)) {
 		return 0;
@@ -856,7 +856,7 @@ parse_slist(struct parse *o, struct node **n)
 }
 
 unsigned
-parse_alist(struct parse *o, struct node **n) 
+parse_alist(struct parse *o, struct node **n)
 {
 	*n = node_new(&node_vmt_alist, NULL);
 	n = &(*n)->list;
@@ -870,12 +870,12 @@ parse_alist(struct parse *o, struct node **n)
 		}
 		*n = node_new(&node_vmt_cst, data_newref(o->lex.strval));
 		n = &(*n)->next;
-	}	
+	}
 	return 1;
 }
 
 unsigned
-parse_proc(struct parse *o, struct node **n) 
+parse_proc(struct parse *o, struct node **n)
 {
 
 	struct node **a;
@@ -911,7 +911,7 @@ parse_proc(struct parse *o, struct node **n)
 			parse_recover(o, "argument name or block expected");
 			return 0;
 		}
-	}	
+	}
 	if (!parse_slist(o, &(*n)->list->next)) {
 		return 0;
 	}
@@ -919,10 +919,10 @@ parse_proc(struct parse *o, struct node **n)
 		return 0;
 	}
 	return 1;
-}	
+}
 
 unsigned
-parse_line(struct parse *o, struct node **n) 
+parse_line(struct parse *o, struct node **n)
 {
 	if (!parse_getsym(o)) {
 		return 0;
@@ -943,9 +943,9 @@ parse_line(struct parse *o, struct node **n)
 	}
 	return 1;
 }
-	
+
 unsigned
-parse_prog(struct parse *o, struct node **n) 
+parse_prog(struct parse *o, struct node **n)
 {
 	*n = node_new(&node_vmt_slist, NULL);
 	n = &(*n)->list;

@@ -2,8 +2,8 @@
  * Copyright (c) 2003-2007 Alexandre Ratchov <alex@caoua.org>
  * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without 
- * modification, are permitted provided that the following conditions 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
  * are met:
  *
  * 	- Redistributions of source code must retain the above
@@ -36,67 +36,67 @@
 #include "ev.h"
 #include "str.h"
 
-struct evinfo evinfo[EV_NUMCMD] = 
+struct evinfo evinfo[EV_NUMCMD] =
 {
-	{ "nil", "none",	
+	{ "nil", "none",
 	  0,
 	  0, 0,
 	  0, 0, 0, 0
 	},
-	{ NULL,	"any",	
+	{ NULL,	"any",
 	  EV_HAS_DEV | EV_HAS_CH,
 	  0, 0,
 	  0, 0, 0, 0
 	},
-	{ "tempo", NULL,	
+	{ "tempo", NULL,
 	  0,
 	  1, 0xdeadbeef,
-	  TEMPO_MIN, TEMPO_MAX, 0, 0 
+	  TEMPO_MIN, TEMPO_MAX, 0, 0
 	},
-	{ "timesig", NULL,	
+	{ "timesig", NULL,
 	  0,
 	  2, 0xdeadbeef,
 	  1, 16, 1, 32
 	},
-	{ "nrpn", "nrpn",  
-	  EV_HAS_DEV | EV_HAS_CH, 
-	  2, 2, 
-	  0, EV_MAXFINE, 0, EV_MAXFINE 
-	},
-	{ "rpn", "rpn", 
+	{ "nrpn", "nrpn",
 	  EV_HAS_DEV | EV_HAS_CH,
 	  2, 2,
-	  0, EV_MAXFINE, 0, EV_MAXFINE 
+	  0, EV_MAXFINE, 0, EV_MAXFINE
+	},
+	{ "rpn", "rpn",
+	  EV_HAS_DEV | EV_HAS_CH,
+	  2, 2,
+	  0, EV_MAXFINE, 0, EV_MAXFINE
 	},
 	{ "xctl", "xctl",
 	  EV_HAS_DEV | EV_HAS_CH,
 	  2, 1,
-	  0, EV_MAXCOARSE, 0, EV_MAXFINE 
+	  0, EV_MAXCOARSE, 0, EV_MAXFINE
 	},
 	{ "xpc", "xpc",
 	  EV_HAS_DEV | EV_HAS_CH,
 	  2, 2,
-	  0, EV_MAXCOARSE, 0, EV_MAXFINE 
+	  0, EV_MAXCOARSE, 0, EV_MAXFINE
 	},
 	{ "noff", NULL,
 	  EV_HAS_DEV | EV_HAS_CH,
 	  2, 0xdeadbeef,
-	  0, EV_MAXCOARSE, 0, EV_MAXCOARSE 
+	  0, EV_MAXCOARSE, 0, EV_MAXCOARSE
 	},
 	{ "non", "note",
 	  EV_HAS_DEV | EV_HAS_CH,
 	  2, 1,
-	  0, EV_MAXCOARSE, 0, EV_MAXCOARSE 
+	  0, EV_MAXCOARSE, 0, EV_MAXCOARSE
 	},
 	{ "kat", NULL,
 	  EV_HAS_DEV | EV_HAS_CH,
 	  2, 0xdeadbeef,
-	  0, EV_MAXCOARSE, 0, EV_MAXCOARSE 
+	  0, EV_MAXCOARSE, 0, EV_MAXCOARSE
 	},
 	{ "ctl", "ctl",
 	  EV_HAS_DEV | EV_HAS_CH,
 	  2, 1,
-	  0, EV_MAXCOARSE, 0, EV_MAXCOARSE 
+	  0, EV_MAXCOARSE, 0, EV_MAXCOARSE
 	},
 	{ "pc", "pc",
 	  EV_HAS_DEV | EV_HAS_CH,
@@ -121,7 +121,7 @@ struct evctl evctl_tab[128];
  * return the 'name' of the given event
  */
 char *
-ev_getstr(struct ev *ev) 
+ev_getstr(struct ev *ev)
 {
 	if (ev->cmd >= EV_NUMCMD) {
 		return NULL;
@@ -137,7 +137,7 @@ ev_getstr(struct ev *ev)
  * find the event EV_XXX constant corresponding to the given string
  */
 unsigned
-ev_str2cmd(struct ev *ev, char *str) 
+ev_str2cmd(struct ev *ev, char *str)
 {
 	unsigned i;
 	for (i = 0; i < EV_NUMCMD; i++) {
@@ -163,10 +163,10 @@ ev_str2cmd(struct ev *ev, char *str)
  *	in a frame (example: note-off, any unknown controller)
  */
 unsigned
-ev_phase(struct ev *ev) 
+ev_phase(struct ev *ev)
 {
 	unsigned phase;
-	
+
 	switch(ev->cmd) {
 	case EV_NOFF:
 		phase = EV_PHASE_LAST;
@@ -199,7 +199,7 @@ ev_phase(struct ev *ev)
 		if (ev->bend_val != EV_BEND_DEFAULT) {
 			phase = EV_PHASE_FIRST | EV_PHASE_NEXT;
 		} else {
-			phase = EV_PHASE_LAST;		
+			phase = EV_PHASE_LAST;
 		}
 		break;
 	default:
@@ -213,7 +213,7 @@ ev_phase(struct ev *ev)
  * dump the event structure on stderr, for debug purposes
  */
 void
-ev_dbg(struct ev *ev) 
+ev_dbg(struct ev *ev)
 {
 	char *cmdstr;
 	cmdstr = ev_getstr(ev);
@@ -270,7 +270,7 @@ ev_dbg(struct ev *ev)
  * the given string
  */
 unsigned
-evspec_str2cmd(struct evspec *ev, char *str) 
+evspec_str2cmd(struct evspec *ev, char *str)
 {
 	unsigned i;
 
@@ -287,7 +287,7 @@ evspec_str2cmd(struct evspec *ev, char *str)
  * reset the evspec structure with "select any event"
  */
 void
-evspec_reset(struct evspec *o) 
+evspec_reset(struct evspec *o)
 {
 	o->cmd = EVSPEC_ANY;
 	o->dev_min = 0;
@@ -304,10 +304,10 @@ evspec_reset(struct evspec *o)
  * dump the event structure on stderr (debug purposes)
  */
 void
-evspec_dbg(struct evspec *o) 
+evspec_dbg(struct evspec *o)
 {
 	unsigned i;
-	
+
 	i = 0;
 	for (;;) {
 		if (i == EV_NUMCMD) {
@@ -345,7 +345,7 @@ evspec_dbg(struct evspec *o)
 		dbg_putu(o->v0_min);
 		dbg_puts(":");
 		dbg_putu(o->v0_max);
-	}	
+	}
 	if (evinfo[o->cmd].nranges >= 2) {
 		dbg_puts(" ");
 		dbg_putu(o->v1_min);
@@ -354,11 +354,11 @@ evspec_dbg(struct evspec *o)
 	}
 }
 
-/* 
+/*
  * check if the given state belongs to the event spec
  */
 unsigned
-evspec_matchev(struct evspec *es, struct ev *ev) 
+evspec_matchev(struct evspec *es, struct ev *ev)
 {
 	if (es->cmd == EVSPEC_EMPTY)
 		return 0;
@@ -390,7 +390,7 @@ evspec_matchev(struct evspec *es, struct ev *ev)
 		if (ev->v0 < es->v0_min ||
 		    ev->v0 > es->v0_max)
 			return 0;
-	}	
+	}
 	if (evinfo[es->cmd].nranges > 1 &&
 	    evinfo[ev->cmd].nranges > 1) {
 		if (ev->v1 < es->v1_min ||
@@ -404,7 +404,7 @@ evspec_matchev(struct evspec *es, struct ev *ev)
  * check if both sets are the same
  */
 unsigned
-evspec_eq(struct evspec *es1, struct evspec *es2) 
+evspec_eq(struct evspec *es1, struct evspec *es2)
 {
 	if (es1->cmd != es2->cmd) {
 		return 0;
@@ -440,12 +440,12 @@ evspec_eq(struct evspec *es1, struct evspec *es2)
  * check if there is intersection between two evspecs
  */
 unsigned
-evspec_isec(struct evspec *es1, struct evspec *es2) 
+evspec_isec(struct evspec *es1, struct evspec *es2)
 {
 	if (es1->cmd == EVSPEC_EMPTY || es2->cmd == EVSPEC_EMPTY) {
 		return 0;
 	}
-	if (es1->cmd != EVSPEC_ANY && 
+	if (es1->cmd != EVSPEC_ANY &&
 	    es2->cmd != EVSPEC_ANY &&
 	    es1->cmd != es2->cmd) {
 		return 0;
@@ -486,7 +486,7 @@ evspec_isec(struct evspec *es1, struct evspec *es2)
  * note: any evspec includes itself
  */
 unsigned
-evspec_in(struct evspec *es1, struct evspec *es2) 
+evspec_in(struct evspec *es1, struct evspec *es2)
 {
 	if (es1->cmd == EVSPEC_EMPTY) {
 		return 1;
@@ -535,7 +535,7 @@ evspec_in(struct evspec *es1, struct evspec *es2)
  * configure a controller (set the name and default value)
  */
 void
-evctl_conf(unsigned num, char *name, unsigned defval) 
+evctl_conf(unsigned num, char *name, unsigned defval)
 {
 	struct evctl *ctl = &evctl_tab[num];
 
@@ -550,7 +550,7 @@ evctl_conf(unsigned num, char *name, unsigned defval)
  * value tu "unknown")
  */
 void
-evctl_unconf(unsigned i) 
+evctl_unconf(unsigned i)
 {
 	struct evctl *ctl = &evctl_tab[i];
 
@@ -566,11 +566,11 @@ evctl_unconf(unsigned i)
  * name. Return 1 if found, 0 if not
  */
 unsigned
-evctl_lookup(char *name, unsigned *ret) 
+evctl_lookup(char *name, unsigned *ret)
 {
 	unsigned i;
 	struct evctl *ctl;
-	
+
 	for (i = 0; i < 128; i++) {
 		ctl = &evctl_tab[i];
 		if (ctl->name != NULL && str_eq(ctl->name, name)) {
@@ -585,10 +585,10 @@ evctl_lookup(char *name, unsigned *ret)
  * initialize the controller table
  */
 void
-evctl_init(void) 
+evctl_init(void)
 {
 	unsigned i;
-	
+
 	for (i = 0; i < 128; i++) {
 		evctl_tab[i].name = NULL;
 		evctl_tab[i].defval = EV_UNDEF;
@@ -603,10 +603,10 @@ evctl_init(void)
 }
 
 /*
- * free the controller table 
+ * free the controller table
  */
 void
-evctl_done(void) 
+evctl_done(void)
 {
 	unsigned i;
 
@@ -621,13 +621,13 @@ evctl_done(void)
  * return 1 if the controller is reserved
  */
 unsigned
-evctl_isreserved(unsigned num) 
+evctl_isreserved(unsigned num)
 {
 	if (num == BANK_HI || num == DATAENT_HI || (num >= 32 && num < 64) ||
-	    num == RPN_HI || num == RPN_LO || 
+	    num == RPN_HI || num == RPN_LO ||
 	    num == NRPN_HI || num == NRPN_LO) {
 		return 1;
 	} else {
 		return 0;
-	}	
+	}
 }

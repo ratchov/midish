@@ -2,8 +2,8 @@
  * Copyright (c) 2003-2007 Alexandre Ratchov <alex@caoua.org>
  * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without 
- * modification, are permitted provided that the following conditions 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
  * are met:
  *
  * 	- Redistributions of source code must retain the above
@@ -47,7 +47,7 @@ struct track {
 void	      seqev_pool_init(unsigned size);
 void	      seqev_pool_done(void);
 struct seqev *seqev_new(void);
-void	      seqev_del(struct seqev *p);	
+void	      seqev_del(struct seqev *p);
 void	      seqev_dump(struct seqev *i);
 
 void	      track_init(struct track *o);

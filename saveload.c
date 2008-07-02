@@ -2,8 +2,8 @@
  * Copyright (c) 2003-2007 Alexandre Ratchov <alex@caoua.org>
  * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without 
- * modification, are permitted provided that the following conditions 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
  * are met:
  *
  * 	- Redistributions of source code must retain the above
@@ -41,7 +41,7 @@
 /* ------------------------------------------------------------------- */
 
 void
-chan_output(unsigned dev, unsigned ch, struct textout *f) 
+chan_output(unsigned dev, unsigned ch, struct textout *f)
 {
 	textout_putstr(f, "{");
 	textout_putlong(f, dev);
@@ -52,7 +52,7 @@ chan_output(unsigned dev, unsigned ch, struct textout *f)
 
 
 void
-ev_output(struct ev *e, struct textout *f) 
+ev_output(struct ev *e, struct textout *f)
 {
 
 	/* XXX: use ev_getstr() */
@@ -106,14 +106,14 @@ ev_output(struct ev *e, struct textout *f)
 			textout_putstr(f, "tempo");
 			textout_putstr(f, " ");
 			textout_putlong(f, e->tempo_usec24);
-			break;			
+			break;
 		case EV_TIMESIG:
 			textout_putstr(f, "timesig");
 			textout_putstr(f, " ");
 			textout_putlong(f, e->timesig_beats);
 			textout_putstr(f, " ");
 			textout_putlong(f, e->timesig_tics);
-			break;			
+			break;
 		default:
 			textout_putstr(f, "# ignored event\n");
 			dbg_puts("ignoring event: ");
@@ -121,7 +121,7 @@ ev_output(struct ev *e, struct textout *f)
 			dbg_puts("\n");
 			break;
 		}
-	return;	
+	return;
 two:
 	textout_putstr(f, " ");
 	chan_output(e->dev, e->ch, f);
@@ -134,7 +134,7 @@ two:
 		textout_putstr(f, "nil");
 	}
 	return;
-one:	
+one:
 	textout_putstr(f, " ");
 	chan_output(e->dev, e->ch, f);
 	textout_putstr(f, " ");
@@ -153,10 +153,10 @@ range_output(unsigned min, unsigned max, struct textout *f)
 }
 
 void
-evspec_output(struct evspec *o, struct textout *f) 
+evspec_output(struct evspec *o, struct textout *f)
 {
 	textout_putstr(f, evinfo[o->cmd].spec);
-	if ((evinfo[o->cmd].flags & EV_HAS_DEV) && 
+	if ((evinfo[o->cmd].flags & EV_HAS_DEV) &&
 	    (evinfo[o->cmd].flags & EV_HAS_CH)) {
 		textout_putstr(f, " {");
 		range_output(o->dev_min, o->dev_max, f);
@@ -167,7 +167,7 @@ evspec_output(struct evspec *o, struct textout *f)
 	if (evinfo[o->cmd].nranges >= 1) {
 		textout_putstr(f, " ");
 		range_output(o->v0_min, o->v0_max, f);
-	}	
+	}
 	if (evinfo[o->cmd].nranges >= 2) {
 		textout_putstr(f, " ");
 		range_output(o->v1_min, o->v1_max, f);
@@ -175,40 +175,40 @@ evspec_output(struct evspec *o, struct textout *f)
 }
 
 void
-track_output(struct track *t, struct textout *f) 
+track_output(struct track *t, struct textout *f)
 {
 	struct seqev *i;
-	
+
 	textout_putstr(f, "{\n");
 	textout_shiftright(f);
-	
+
 	for (i = t->first; i != NULL; i = i->next) {
 		if (i->delta != 0) {
 			textout_indent(f);
 			textout_putlong(f, i->delta);
-			textout_putstr(f, "\n");		
+			textout_putstr(f, "\n");
 		}
 		if (i->ev.cmd == EV_NULL) {
 			break;
 		}
 		textout_indent(f);
 		ev_output(&i->ev, f);
-		textout_putstr(f, "\n");		
+		textout_putstr(f, "\n");
 	}
-	
+
 	textout_shiftleft(f);
 	textout_indent(f);
 	textout_putstr(f, "}");
 }
 
 void
-filt_output(struct filt *o, struct textout *f) 
+filt_output(struct filt *o, struct textout *f)
 {
 	struct filtsrc *s, *snext;
 	struct filtdst *d;
 	textout_putstr(f, "{\n");
 	textout_shiftright(f);
-	
+
 	snext = 0;
 	for (;;) {
 		if (snext == o->srclist)
@@ -225,26 +225,26 @@ filt_output(struct filt *o, struct textout *f)
 			textout_putstr(f, "\n");
 		}
 		snext = s;
-	}	
+	}
 	textout_shiftleft(f);
 	textout_indent(f);
 	textout_putstr(f, "}");
 }
 
 void
-sysex_output(struct sysex *o, struct textout *f) 
+sysex_output(struct sysex *o, struct textout *f)
 {
 	struct chunk *c;
 	unsigned i, col;
 	textout_putstr(f, "{\n");
 	textout_shiftright(f);
-	
-	textout_indent(f);	
+
+	textout_indent(f);
 	textout_putstr(f, "unit ");
 	textout_putlong(f, o->unit);
 	textout_putstr(f, "\n");
-	
-	textout_indent(f);	
+
+	textout_indent(f);
 	textout_putstr(f, "data\t");
 	textout_shiftright(f);
 	col = 0;
@@ -256,7 +256,7 @@ sysex_output(struct sysex *o, struct textout *f)
 				if (col >= 8) {
 					col = 0;
 					textout_putstr(f, " \\\n");
-					textout_indent(f);	
+					textout_indent(f);
 				} else {
 					textout_putstr(f, " ");
 				}
@@ -273,19 +273,19 @@ sysex_output(struct sysex *o, struct textout *f)
 }
 
 void
-songsx_output(struct songsx *o, struct textout *f) 
+songsx_output(struct songsx *o, struct textout *f)
 {
 	struct sysex *i;
 	textout_putstr(f, "{\n");
 	textout_shiftright(f);
-	
+
 	for (i = o->sx.first; i != NULL; i = i->next) {
 		textout_indent(f);
 		textout_putstr(f, "sysex ");
 		sysex_output(i, f);
 		textout_putstr(f, "\n");
 	}
-	
+
 	textout_shiftleft(f);
 	textout_indent(f);
 	textout_putstr(f, "}");
@@ -293,7 +293,7 @@ songsx_output(struct songsx *o, struct textout *f)
 
 
 void
-songtrk_output(struct songtrk *o, struct textout *f) 
+songtrk_output(struct songtrk *o, struct textout *f)
 {
 	textout_putstr(f, "{\n");
 	textout_shiftright(f);
@@ -313,18 +313,18 @@ songtrk_output(struct songtrk *o, struct textout *f)
 	textout_putstr(f, "track ");
 	track_output(&o->track, f);
 	textout_putstr(f, "\n");
-	
+
 	textout_shiftleft(f);
 	textout_indent(f);
 	textout_putstr(f, "}");
 }
 
 void
-songchan_output(struct songchan *o, struct textout *f) 
+songchan_output(struct songchan *o, struct textout *f)
 {
 	textout_putstr(f, "{\n");
 	textout_shiftright(f);
-			
+
 	textout_indent(f);
 	textout_putstr(f, "chan ");
 	chan_output(o->dev, o->ch, f);
@@ -334,7 +334,7 @@ songchan_output(struct songchan *o, struct textout *f)
 	textout_putstr(f, "conf ");
 	track_output(&o->conf, f);
 	textout_putstr(f, "\n");
-	
+
 	textout_indent(f);
 	textout_putstr(f, "curinput {");
 	textout_putlong(f, o->curinput_dev);
@@ -348,7 +348,7 @@ songchan_output(struct songchan *o, struct textout *f)
 }
 
 void
-songfilt_output(struct songfilt *o, struct textout *f) 
+songfilt_output(struct songfilt *o, struct textout *f)
 {
 	textout_putstr(f, "{\n");
 	textout_shiftright(f);
@@ -364,23 +364,23 @@ songfilt_output(struct songfilt *o, struct textout *f)
 	textout_putstr(f, "filt ");
 	filt_output(&o->filt, f);
 	textout_putstr(f, "\n");
-	
+
 	textout_shiftleft(f);
 	textout_indent(f);
 	textout_putstr(f, "}");
 }
 
 void
-metro_output(struct metro *o, struct textout *f) 
+metro_output(struct metro *o, struct textout *f)
 {
 	textout_putstr(f, "{\n");
 	textout_shiftright(f);
-	
+
 	textout_indent(f);
 	textout_putstr(f, "enabled ");
 	textout_putlong(f, o->enabled);
 	textout_putstr(f, "\n");
-	
+
 	textout_indent(f);
 	textout_putstr(f, "lo\t");
 	ev_output(&o->lo, f);
@@ -397,11 +397,11 @@ metro_output(struct metro *o, struct textout *f)
 }
 
 void
-evctltab_output(struct evctl *tab, struct textout *f) 
+evctltab_output(struct evctl *tab, struct textout *f)
 {
 	unsigned i;
 	struct evctl *ctl;
-	
+
 	textout_putstr(f, "ctltab {\n");
 	textout_shiftright(f);
 	textout_indent(f);
@@ -432,7 +432,7 @@ evctltab_output(struct evctl *tab, struct textout *f)
 }
 
 void
-song_output(struct song *o, struct textout *f) 
+song_output(struct song *o, struct textout *f)
 {
 	struct songtrk *t;
 	struct songchan *i;
@@ -441,7 +441,7 @@ song_output(struct song *o, struct textout *f)
 
 	textout_putstr(f, "{\n");
 	textout_shiftright(f);
-	
+
 	textout_indent(f);
 	textout_putstr(f, "tics_per_unit ");
 	textout_putlong(f, o->tics_per_unit);
@@ -489,13 +489,13 @@ song_output(struct song *o, struct textout *f)
 		songsx_output(s, f);
 		textout_putstr(f, "\n");
 	}
-	
+
 	if (o->curtrk) {
 		textout_indent(f);
 		textout_putstr(f, "curtrk ");
 		textout_putstr(f, o->curtrk->name.str);
 		textout_putstr(f, "\n");
-	}		
+	}
 	if (o->curfilt) {
 		textout_indent(f);
 		textout_putstr(f, "curfilt ");
@@ -513,22 +513,22 @@ song_output(struct song *o, struct textout *f)
 		textout_putstr(f, "curchan ");
 		textout_putstr(f, o->curchan->name.str);
 		textout_putstr(f, "\n");
-	}		
+	}
 	textout_indent(f);
 	textout_putstr(f, "curpos ");
 	textout_putlong(f, o->curpos);
 	textout_putstr(f, "\n");
-	
+
 	textout_indent(f);
 	textout_putstr(f, "curlen ");
 	textout_putlong(f, o->curlen);
 	textout_putstr(f, "\n");
-	
+
 	textout_indent(f);
 	textout_putstr(f, "curquant ");
 	textout_putlong(f, o->curquant);
 	textout_putstr(f, "\n");
-			
+
 	textout_indent(f);
 	textout_putstr(f, "curev ");
 	evspec_output(&o->curev, f);
@@ -562,12 +562,12 @@ unsigned parse_songtrk(struct parse *o, struct song *s, struct songtrk *t);
 unsigned parse_song(struct parse *o, struct song *s);
 
 unsigned
-parse_ukline(struct parse *o) 
+parse_ukline(struct parse *o)
 {
 	if (!parse_getsym(o)) {
 		return 0;
 	}
-	if (o->lex.id != TOK_IDENT && o->lex.id != TOK_NUM && 
+	if (o->lex.id != TOK_IDENT && o->lex.id != TOK_NUM &&
 	    o->lex.id != TOK_ENDLINE) {
 		lex_err(&o->lex, "ident, number, newline or '}' expected");
 		return 0;
@@ -593,7 +593,7 @@ parse_ukline(struct parse *o)
 }
 
 unsigned
-parse_ukblock(struct parse *o) 
+parse_ukblock(struct parse *o)
 {
 	if (!parse_getsym(o)) {
 		return 0;
@@ -615,11 +615,11 @@ parse_ukblock(struct parse *o)
 			}
 		}
 	}
-	return 1;			
+	return 1;
 }
 
 unsigned
-parse_nl(struct parse *o) 
+parse_nl(struct parse *o)
 {
 	if (!parse_getsym(o)) {
 		return 0;
@@ -634,7 +634,7 @@ parse_nl(struct parse *o)
 }
 
 unsigned
-parse_empty(struct parse *o) 
+parse_empty(struct parse *o)
 {
 	for (;;) {
 		if (!parse_getsym(o)) {
@@ -650,7 +650,7 @@ parse_empty(struct parse *o)
 
 
 unsigned
-parse_long(struct parse *o, unsigned long min, unsigned long max, unsigned long *data) 
+parse_long(struct parse *o, unsigned long min, unsigned long max, unsigned long *data)
 {
 	if (!parse_getsym(o)) {
 		return 0;
@@ -668,7 +668,7 @@ parse_long(struct parse *o, unsigned long min, unsigned long max, unsigned long 
 }
 
 unsigned
-parse_delta(struct parse *o, unsigned *delta) 
+parse_delta(struct parse *o, unsigned *delta)
 {
 	if (!parse_getsym(o)) {
 		return 0;
@@ -685,7 +685,7 @@ parse_delta(struct parse *o, unsigned *delta)
 }
 
 unsigned
-parse_chan(struct parse *o, unsigned long *dev, unsigned long *ch) 
+parse_chan(struct parse *o, unsigned long *dev, unsigned long *ch)
 {
 	if (!parse_getsym(o)) {
 		return 0;
@@ -720,10 +720,10 @@ parse_chan(struct parse *o, unsigned long *dev, unsigned long *ch)
 }
 
 unsigned
-parse_ev(struct parse *o, struct ev *ev) 
+parse_ev(struct parse *o, struct ev *ev)
 {
 	unsigned long val, val2;
-	
+
 	if (!parse_getsym(o)) {
 		return 0;
 	}
@@ -844,7 +844,7 @@ parse_ev(struct parse *o, struct ev *ev)
 			return 0;
 		}
 		ev->v1 = val;
-		break;		
+		break;
 	case EV_PC:
 	case EV_CAT:
 		if (!parse_long(o, 0, EV_MAXCOARSE, &val)) {
@@ -873,13 +873,13 @@ parse_ev(struct parse *o, struct ev *ev)
 
 
 unsigned
-parse_track(struct parse *o, struct track *t) 
+parse_track(struct parse *o, struct track *t)
 {
 	unsigned delta;
 	struct seqev *pos, *se;
 	struct statelist slist;
 	struct ev ev, rev;
-	
+
 	if (!parse_getsym(o)) {
 		return 0;
 	}
@@ -887,7 +887,7 @@ parse_track(struct parse *o, struct track *t)
 		lex_err(&o->lex, "'{' expected while parsing track");
 		return 0;
 	}
-	track_clear(t);	
+	track_clear(t);
 	statelist_init(&slist);
 	pos = t->first;
 	for (;;) {
@@ -922,7 +922,7 @@ parse_track(struct parse *o, struct track *t)
 		}
 	}
 	statelist_done(&slist);
-	return 1;			
+	return 1;
 }
 
 unsigned
@@ -998,7 +998,7 @@ parse_evspec(struct parse *o, struct evspec *es)
 }
 
 unsigned
-parse_rule(struct parse *o, struct filt *f) 
+parse_rule(struct parse *o, struct filt *f)
 {
 	unsigned long idev, ich, odev, och, ictl, octl, keylo, keyhi, ukeyplus;
 	struct evspec from, to;
@@ -1048,7 +1048,7 @@ parse_rule(struct parse *o, struct filt *f)
 		if (o->lex.id != TOK_IDENT) {
 			lex_err(&o->lex, "curve identifier expected");
 			return 0;
-		}	
+		}
 		filt_conf_keymap(f, idev, ich, odev, och, keylo, keyhi, keyplus);
 	} else if (str_eq(o->lex.strval, "ctldrop")) {
 		if (!parse_chan(o, &idev, &ich)) {
@@ -1077,7 +1077,7 @@ parse_rule(struct parse *o, struct filt *f)
 		if (o->lex.id != TOK_IDENT) {
 			lex_err(&o->lex, "curve identifier expected");
 			return 0;
-		}	
+		}
 		filt_conf_ctlmap(f, idev, ich, odev, och, ictl, octl);
 	} else if (str_eq(o->lex.strval, "chandrop")) {
 		if (!parse_chan(o, &idev, &ich)) {
@@ -1135,7 +1135,7 @@ parse_rule(struct parse *o, struct filt *f)
 }
 
 unsigned
-parse_filt(struct parse *o, struct filt *f) 
+parse_filt(struct parse *o, struct filt *f)
 {
 	if (!parse_getsym(o)) {
 		return 0;
@@ -1163,18 +1163,18 @@ parse_filt(struct parse *o, struct filt *f)
 }
 
 unsigned
-parse_sysex(struct parse *o, struct sysex **res) 
+parse_sysex(struct parse *o, struct sysex **res)
 {
 	struct sysex *sx;
 	unsigned long val;
-		
+
 	if (!parse_getsym(o)) {
 		return 0;
 	}
 	if (o->lex.id != TOK_LBRACE) {
 		lex_err(&o->lex, "'{' expected while parsing sysex");
 		return 0;
-	}	
+	}
 	sx = sysex_new(0);
 	for (;;) {
 		if (!parse_getsym(o)) {
@@ -1221,14 +1221,14 @@ parse_sysex(struct parse *o, struct sysex **res)
 	}
 	*res = sx;
 	return 1;
-	
+
 err1:
 	sysex_del(sx);
 	return 0;
 }
 
 unsigned
-parse_songchan(struct parse *o, struct song *s, struct songchan *i) 
+parse_songchan(struct parse *o, struct song *s, struct songchan *i)
 {
 	unsigned long val, val2;
 	if (!parse_getsym(o)) {
@@ -1259,8 +1259,8 @@ parse_songchan(struct parse *o, struct song *s, struct songchan *i)
 				if (!parse_chan(o, &val, &val2)) {
 					return 0;
 				}
-				i->dev = val; 
-				i->ch = val2; 
+				i->dev = val;
+				i->ch = val2;
 				if (!parse_nl(o)) {
 					return 0;
 				}
@@ -1290,11 +1290,11 @@ parse_songchan(struct parse *o, struct song *s, struct songchan *i)
 
 
 unsigned
-parse_songtrk(struct parse *o, struct song *s, struct songtrk *t) 
+parse_songtrk(struct parse *o, struct song *s, struct songtrk *t)
 {
 	struct songfilt *f;
 	unsigned long val;
-	
+
 	if (!parse_getsym(o)) {
 		return 0;
 	}
@@ -1322,8 +1322,8 @@ parse_songtrk(struct parse *o, struct song *s, struct songtrk *t)
 				f = song_filtlookup(s, o->lex.strval);
 				if (!f) {
 					f = song_filtnew(s, o->lex.strval);
-				}				
-				t->curfilt = f; 
+				}
+				t->curfilt = f;
 				if (!parse_nl(o)) {
 					return 0;
 				}
@@ -1354,16 +1354,16 @@ parse_songtrk(struct parse *o, struct song *s, struct songtrk *t)
 			lex_err(&o->lex, "unknown line format in songtrk, ignored");
 		}
 	}
-	
+
 	return 1;
 }
 
 
 unsigned
-parse_songfilt(struct parse *o, struct song *s, struct songfilt *g) 
+parse_songfilt(struct parse *o, struct song *s, struct songfilt *g)
 {
 	struct songchan *c;
-	
+
 	if (!parse_getsym(o)) {
 		return 0;
 	}
@@ -1392,7 +1392,7 @@ parse_songfilt(struct parse *o, struct song *s, struct songfilt *g)
 				if (!c) {
 					c = song_channew(s, o->lex.strval, 0, 0);
 				}
-				g->curchan = c; 
+				g->curchan = c;
 				if (!parse_nl(o)) {
 					return 0;
 				}
@@ -1418,10 +1418,10 @@ parse_songfilt(struct parse *o, struct song *s, struct songfilt *g)
 
 
 unsigned
-parse_songsx(struct parse *o, struct song *s, struct songsx *g) 
+parse_songsx(struct parse *o, struct song *s, struct songsx *g)
 {
 	struct sysex *sx;
-	
+
 	if (!parse_getsym(o)) {
 		return 0;
 	}
@@ -1459,7 +1459,7 @@ parse_songsx(struct parse *o, struct song *s, struct songsx *g)
 }
 
 unsigned
-parse_metro(struct parse *o, struct metro *m) 
+parse_metro(struct parse *o, struct metro *m)
 {
 	unsigned long num;
 	struct ev ev;
@@ -1496,7 +1496,7 @@ parse_metro(struct parse *o, struct metro *m)
 					lex_err(&o->lex, "'lo' must be followed by a 'non' event\n");
 				} else {
 					m->lo = ev;
-				}					
+				}
 			} else if (str_eq(o->lex.strval, "hi")) {
 				if (!parse_ev(o, &ev)) {
 					return 0;
@@ -1505,7 +1505,7 @@ parse_metro(struct parse *o, struct metro *m)
 					lex_err(&o->lex, "'hi' must be followed by a 'non' event\n");
 				} else {
 					m->hi = ev;
-				}					
+				}
 			} else {
 				goto unknown;
 			}
@@ -1522,7 +1522,7 @@ parse_metro(struct parse *o, struct metro *m)
 }
 
 unsigned
-parse_song(struct parse *o, struct song *s) 
+parse_song(struct parse *o, struct song *s)
 {
 	struct songtrk *t;
 	struct songchan *i;
@@ -1789,30 +1789,30 @@ parse_song(struct parse *o, struct song *s)
 }
 
 void
-song_save(struct song *o, char *name) 
+song_save(struct song *o, char *name)
 {
 	struct textout *f;
-	
+
 	f = textout_new(name);
 	if (f == NULL) {
 		return;
 	}
-	textout_putstr(f, 
+	textout_putstr(f,
 	    "#\n"
 	    "# song file of " VERSION "\n"
 	    "#\n"
 	    );
 	song_output(o, f);
 	textout_putstr(f, "\n");
-	textout_delete(f);	
+	textout_delete(f);
 }
 
 unsigned
-song_load(struct song *o, char *filename) 
+song_load(struct song *o, char *filename)
 {
 	struct parse *parse;
 	unsigned res;
-	
+
 	parse = parse_new(filename);
 	if (!parse) {
 		return 0;

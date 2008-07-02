@@ -2,8 +2,8 @@
  * Copyright (c) 2003-2007 Alexandre Ratchov <alex@caoua.org>
  * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without 
- * modification, are permitted provided that the following conditions 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
  * are met:
  *
  * 	- Redistributions of source code must retain the above
@@ -57,7 +57,7 @@ struct songtrk {
 
 struct songchan {
 	struct name name;		/* identifier + list entry */
-	struct track conf;		/* data to send on initialization */	
+	struct track conf;		/* data to send on initialization */
 	unsigned dev, ch;		/* dev/chan of the chan */
 	unsigned curinput_dev;		/* defaults for filter creation */
 	unsigned curinput_ch;
@@ -75,8 +75,8 @@ struct songsx {
 };
 
 struct song {
-	/* 
-	 * music-related fields that should be saved 
+	/*
+	 * music-related fields that should be saved
 	 */
 	struct track meta;		/* tempo track */
 	struct name *trklist;		/* list of tracks */
@@ -97,7 +97,7 @@ struct song {
 	struct evspec curev;		/* evspec for track editing */
 	struct metro metro;		/* metonome conf. */
 
-	/* 
+	/*
 	 * temporary variables used in real-time operations
 	 */
 	struct seqptr metaptr;		/* cur. pos in meta track */
@@ -110,7 +110,7 @@ struct song {
 	unsigned measure, beat, tic;	/* cur position (for metronome) */
 #define SONG_PLAY	1
 #define SONG_REC	2
-	unsigned mode;			/* real-time "mode" */    
+	unsigned mode;			/* real-time "mode" */
 };
 
 #define SONG_FOREACH_TRK(s, i)				\

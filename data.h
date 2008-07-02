@@ -2,8 +2,8 @@
  * Copyright (c) 2003-2007 Alexandre Ratchov <alex@caoua.org>
  * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without 
- * modification, are permitted provided that the following conditions 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
  * are met:
  *
  * 	- Redistributions of source code must retain the above
@@ -47,7 +47,7 @@ struct data {
 #define DATA_REF	3
 #define DATA_LIST	4
 #define DATA_USER	5
-#define DATA_RANGE	6	
+#define DATA_RANGE	6
 	unsigned type;			/* type of the value */
 	union {
 		char *str;		/* if string */

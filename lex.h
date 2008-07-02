@@ -2,8 +2,8 @@
  * Copyright (c) 2003-2007 Alexandre Ratchov <alex@caoua.org>
  * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without 
- * modification, are permitted provided that the following conditions 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
  * are met:
  *
  * 	- Redistributions of source code must retain the above
@@ -36,10 +36,10 @@
 #define TOK_MAXLEN	STRING_MAXLEN
 
 enum SYM_ID {
-	TOK_EOF = 0, TOK_ASSIGN, 
+	TOK_EOF = 0, TOK_ASSIGN,
 	TOK_PLUS, TOK_MINUS, TOK_STAR, TOK_SLASH, TOK_PCT,
 	TOK_LSHIFT, TOK_RSHIFT, TOK_BITAND, TOK_BITOR, TOK_BITXOR, TOK_TILDE,
-	TOK_EQ, TOK_NEQ, TOK_GE, TOK_GT, TOK_LE, TOK_LT, 
+	TOK_EQ, TOK_NEQ, TOK_GE, TOK_GT, TOK_LE, TOK_LT,
 	TOK_EXCLAM, TOK_AND, TOK_OR,
 	TOK_LPAR, TOK_RPAR, TOK_LBRACE, TOK_RBRACE, TOK_LBRACKET, TOK_RBRACKET,
 	TOK_COMMA, TOK_DOT, TOK_SEMICOLON, TOK_COLON, TOK_RANGE,
@@ -59,7 +59,7 @@ struct tokdef {
 struct lex {
 	unsigned id;
 	char strval[TOK_MAXLEN + 1];
-	unsigned long longval;	
+	unsigned long longval;
 	struct textin *in;		/* input file */
 	int lookchar;			/* used by ungetchar */
 	unsigned line, col;		/* for error reporting */

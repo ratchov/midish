@@ -2,8 +2,8 @@
  * Copyright (c) 2003-2007 Alexandre Ratchov <alex@caoua.org>
  * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without 
- * modification, are permitted provided that the following conditions 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
  * are met:
  *
  * 	- Redistributions of source code must retain the above
@@ -51,7 +51,7 @@
 #include "textio.h"
 
 unsigned
-user_func_chanlist(struct exec *o, struct data **r) 
+user_func_chanlist(struct exec *o, struct data **r)
 {
 	struct data *d, *n;
 	struct songchan *i;
@@ -69,12 +69,12 @@ user_func_chanlist(struct exec *o, struct data **r)
 }
 
 unsigned
-user_func_channew(struct exec *o, struct data **r) 
+user_func_channew(struct exec *o, struct data **r)
 {
 	char *name;
 	struct songchan *i;
 	unsigned dev, ch;
-	
+
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -91,7 +91,7 @@ user_func_channew(struct exec *o, struct data **r)
 	if (i != NULL) {
 		cons_errs(i->name.str, "dev/chan number already used");
 		return 0;
-	}	
+	}
 	if (dev > EV_MAXDEV || ch > EV_MAXCH) {
 		cons_err("channew: dev/chan number out of bounds");
 		return 0;
@@ -101,7 +101,7 @@ user_func_channew(struct exec *o, struct data **r)
 }
 
 unsigned
-user_func_chandelete(struct exec *o, struct data **r) 
+user_func_chandelete(struct exec *o, struct data **r)
 {
 	struct songchan *c;
 
@@ -116,11 +116,11 @@ user_func_chandelete(struct exec *o, struct data **r)
 }
 
 unsigned
-user_func_chanrename(struct exec *o, struct data **r) 
+user_func_chanrename(struct exec *o, struct data **r)
 {
 	struct songchan *c;
 	char *name;
-	
+
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -138,11 +138,11 @@ user_func_chanrename(struct exec *o, struct data **r)
 }
 
 unsigned
-user_func_chanexists(struct exec *o, struct data **r) 
+user_func_chanexists(struct exec *o, struct data **r)
 {
 	struct songchan *i;
 	unsigned dev, ch;
-	
+
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -155,11 +155,11 @@ user_func_chanexists(struct exec *o, struct data **r)
 }
 
 unsigned
-user_func_chanset(struct exec *o, struct data **r) 
+user_func_chanset(struct exec *o, struct data **r)
 {
 	struct songchan *c, *i;
 	unsigned dev, ch;
-	
+
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -179,10 +179,10 @@ user_func_chanset(struct exec *o, struct data **r)
 }
 
 unsigned
-user_func_changetch(struct exec *o, struct data **r) 
+user_func_changetch(struct exec *o, struct data **r)
 {
 	struct songchan *i;
-	
+
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -194,10 +194,10 @@ user_func_changetch(struct exec *o, struct data **r)
 }
 
 unsigned
-user_func_changetdev(struct exec *o, struct data **r) 
+user_func_changetdev(struct exec *o, struct data **r)
 {
 	struct songchan *i;
-	
+
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -209,11 +209,11 @@ user_func_changetdev(struct exec *o, struct data **r)
 }
 
 unsigned
-user_func_chanconfev(struct exec *o, struct data **r) 
+user_func_chanconfev(struct exec *o, struct data **r)
 {
 	struct songchan *c;
 	struct ev ev;
-	
+
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -230,11 +230,11 @@ user_func_chanconfev(struct exec *o, struct data **r)
 }
 
 unsigned
-user_func_chanunconfev(struct exec *o, struct data **r) 
+user_func_chanunconfev(struct exec *o, struct data **r)
 {
 	struct songchan *c;
 	struct evspec es;
-	
+
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -247,10 +247,10 @@ user_func_chanunconfev(struct exec *o, struct data **r)
 }
 
 unsigned
-user_func_chaninfo(struct exec *o, struct data **r) 
+user_func_chaninfo(struct exec *o, struct data **r)
 {
 	struct songchan *c;
-	
+
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -263,12 +263,12 @@ user_func_chaninfo(struct exec *o, struct data **r)
 }
 
 unsigned
-user_func_chansetcurinput(struct exec *o, struct data **r) 
+user_func_chansetcurinput(struct exec *o, struct data **r)
 {
 	unsigned dev, ch;
 	struct songchan *c;
 	struct data *l;
-	
+
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -286,10 +286,10 @@ user_func_chansetcurinput(struct exec *o, struct data **r)
 
 
 unsigned
-user_func_changetcurinput(struct exec *o, struct data **r) 
+user_func_changetcurinput(struct exec *o, struct data **r)
 {
 	struct songchan *c;
-	
+
 	if (!song_try(usong)) {
 		return 0;
 	}

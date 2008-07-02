@@ -2,8 +2,8 @@
  * Copyright (c) 2003-2007 Alexandre Ratchov <alex@caoua.org>
  * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without 
- * modification, are permitted provided that the following conditions 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
  * are met:
  *
  * 	- Redistributions of source code must retain the above
@@ -44,20 +44,20 @@ unsigned pool_debug = 0;
  * initialises a pool of "itemnum" elements of size "itemsize"
  */
 void
-pool_init(struct pool *o, char *name, unsigned itemsize, unsigned itemnum) 
+pool_init(struct pool *o, char *name, unsigned itemsize, unsigned itemnum)
 {
 	unsigned i;
 	unsigned char *p;
-	
-	/* 
-	 * round item size to sizeof unsigned 
-	 */	
+
+	/*
+	 * round item size to sizeof unsigned
+	 */
 	if (itemsize < sizeof(struct poolent)) {
 		itemsize = sizeof(struct poolent);
 	}
 	itemsize += sizeof(unsigned) - 1;
 	itemsize &= ~(sizeof(unsigned) - 1);
-		
+
 	o->data = (unsigned char *)mem_alloc(itemsize * itemnum);
 	if (!o->data) {
 		dbg_puts("pool_init(");
@@ -73,7 +73,7 @@ pool_init(struct pool *o, char *name, unsigned itemsize, unsigned itemnum)
 	o->maxused = 0;
 	o->used = 0;
 	o->newcnt = 0;
-#endif	
+#endif
 
 	/*
 	 * create a linked list of all entries
@@ -83,7 +83,7 @@ pool_init(struct pool *o, char *name, unsigned itemsize, unsigned itemnum)
 		((struct poolent *)p)->next = o->first;
 		o->first = (struct poolent *)p;
 		p += itemsize;
-		o->itemnum++;		
+		o->itemnum++;
 	}
 }
 
@@ -92,7 +92,7 @@ pool_init(struct pool *o, char *name, unsigned itemsize, unsigned itemnum)
  * free the given pool
  */
 void
-pool_done(struct pool *o) 
+pool_done(struct pool *o)
 {
 	mem_free(o->data);
 #ifdef POOL_DEBUG
@@ -122,18 +122,18 @@ pool_done(struct pool *o)
  * it from the free list and return the pointer
  */
 void *
-pool_new(struct pool *o) 
+pool_new(struct pool *o)
 {
 
 	struct poolent *e;
-	
+
 	if (!o->first) {
 		dbg_puts("pool_new(");
 		dbg_puts(o->name);
 		dbg_puts("): pool is empty\n");
 		dbg_panic();
 	}
-	
+
 	/*
 	 * unlink from the free list
 	 */
@@ -153,7 +153,7 @@ pool_new(struct pool *o)
  * free an entry: just link it again on the free list
  */
 void
-pool_del(struct pool *o, void *p) 
+pool_del(struct pool *o, void *p)
 {
 	struct poolent *e = (struct poolent *)p;
 #ifdef POOL_DEBUG
@@ -176,7 +176,7 @@ pool_del(struct pool *o, void *p)
 	 * overwrite the entry with garbage so any attempt to use a
 	 * free entry will probably segfault
 	 */
-	buf = (unsigned *)e; 
+	buf = (unsigned *)e;
 	n = o->itemsize / sizeof(unsigned);
 	for (i = 0; i < n; i++)
 		*(buf++) = mem_rnd();

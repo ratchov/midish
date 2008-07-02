@@ -2,8 +2,8 @@
  * Copyright (c) 2003-2007 Alexandre Ratchov <alex@caoua.org>
  * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without 
- * modification, are permitted provided that the following conditions 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
  * are met:
  *
  * 	- Redistributions of source code must retain the above
@@ -132,11 +132,11 @@ struct evspec {
 /*
  * we use a static array (indexed by 'cmd') of the following
  * structures to lookup for events properties
- */ 
+ */
 struct evinfo {
 	char *ev, *spec;
 #define EV_HAS_DEV	0x01	/* if ev->dev is used */
-#define EV_HAS_CH	0x02	/* if ev->ch is used */ 
+#define EV_HAS_CH	0x02	/* if ev->ch is used */
 	unsigned flags;		/* bitmap of above */
 	unsigned nparams;	/* number of params (ie v0, v1) used */
 	unsigned nranges;	/* number of ranges (ie v0, v1) used */
@@ -182,8 +182,8 @@ extern	struct evctl evctl_tab[128];
 
 /*
  * return true if the given controller number is 14bit (fine)
- * and false if it is 7bit (coarse). The 'ctlbits' is 
- * a 32bit bitmap, it is stored in per-device basis in 
+ * and false if it is 7bit (coarse). The 'ctlbits' is
+ * a 32bit bitmap, it is stored in per-device basis in
  * mididev structure
  */
 #define EVCTL_ISFINE(xctlset, num)	((xctlset) & (1 << (num)))

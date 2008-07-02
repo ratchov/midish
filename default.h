@@ -2,8 +2,8 @@
  * Copyright (c) 2003-2007 Alexandre Ratchov <alex@caoua.org>
  * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without 
- * modification, are permitted provided that the following conditions 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
  * are met:
  *
  * 	- Redistributions of source code must retain the above
@@ -62,8 +62,8 @@
 #define TIMESIG_TICS_MAX	240
 #define TIMESIG_BEATS_MAX	16
 
-/* 
- * maximum number of midi devices supported by midish 
+/*
+ * maximum number of midi devices supported by midish
  */
 #define DEFAULT_MAXNDEVS	16
 
@@ -104,7 +104,7 @@
 #define DEFAULT_TPB		24
 
 /*
- * default beats per measure 
+ * default beats per measure
  */
 #define DEFAULT_BPM		4
 
@@ -113,7 +113,7 @@
  */
 #define DEFAULT_TPU		96
 
-/* 
+/*
  * default tempo
  */
 #define DEFAULT_TEMPO		120

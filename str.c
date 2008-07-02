@@ -2,8 +2,8 @@
  * Copyright (c) 2003-2007 Alexandre Ratchov <alex@caoua.org>
  * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without 
- * modification, are permitted provided that the following conditions 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
  * are met:
  *
  * 	- Redistributions of source code must retain the above
@@ -34,7 +34,7 @@
  * str_delete(). Non-sense strings cannot be compared and have no
  * length
  */
- 
+
 #include "dbg.h"
 #include "str.h"
 
@@ -43,7 +43,7 @@
  * into the allocated buffer the argument cannot be NULL.
  */
 char *
-str_new(char *val) 
+str_new(char *val)
 {
 	unsigned cnt;
 	char *s, *buf;
@@ -65,7 +65,7 @@ str_new(char *val)
  * pointer
  */
 void
-str_delete(char *s) 
+str_delete(char *s)
 {
 	if (s == NULL) {
 		dbg_puts("str_delete: NULL pointer argument\n");
@@ -79,7 +79,7 @@ str_delete(char *s)
  * is NULL
  */
 void
-str_dbg(char *s) 
+str_dbg(char *s)
 {
 	if (s == NULL) {
 		dbg_puts("<nullstring>");
@@ -93,7 +93,7 @@ str_dbg(char *s)
  * zero-length strings are considered identical.
  */
 unsigned
-str_eq(char *s1, char *s2) 
+str_eq(char *s1, char *s2)
 {
 
 	if (s1 == NULL || s2 == NULL) {
@@ -102,7 +102,7 @@ str_eq(char *s1, char *s2)
 	}
 	for (;;) {
 		if (*s1 == '\0' && *s2 == '\0') {
-			return 1; 
+			return 1;
 		} else if (*s1 == '\0' || *s2 == '\0' || *s1 != *s2) {
 			return 0;
 		}
@@ -115,7 +115,7 @@ str_eq(char *s1, char *s2)
  * return the length of the given string
  */
 unsigned
-str_len(char *s) 
+str_len(char *s)
 {
 	unsigned n;
 	for (n = 0; *s; s++) {

@@ -2,8 +2,8 @@
  * Copyright (c) 2003-2007 Alexandre Ratchov <alex@caoua.org>
  * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without 
- * modification, are permitted provided that the following conditions 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
  * are met:
  *
  * 	- Redistributions of source code must retain the above
@@ -50,7 +50,7 @@
 
 
 unsigned
-user_func_devlist(struct exec *o, struct data **r) 
+user_func_devlist(struct exec *o, struct data **r)
 {
 	struct data *d, *n;
 	struct mididev *i;
@@ -68,16 +68,16 @@ user_func_devlist(struct exec *o, struct data **r)
 }
 
 unsigned
-user_func_devattach(struct exec *o, struct data **r) 
+user_func_devattach(struct exec *o, struct data **r)
 {
 	long unit;
 	char *path, *modename;
 	unsigned mode;
-	
+
 	if (!song_try(usong)) {
 		return 0;
 	}
-	if (!exec_lookuplong(o, "unit", &unit) || 
+	if (!exec_lookuplong(o, "unit", &unit) ||
 	    !exec_lookupstring(o, "path", &path) ||
 	    !exec_lookupname(o, "mode", &modename)) {
 		return 0;
@@ -96,7 +96,7 @@ user_func_devattach(struct exec *o, struct data **r)
 }
 
 unsigned
-user_func_devdetach(struct exec *o, struct data **r) 
+user_func_devdetach(struct exec *o, struct data **r)
 {
 	long unit;
 
@@ -110,11 +110,11 @@ user_func_devdetach(struct exec *o, struct data **r)
 }
 
 unsigned
-user_func_devsetmaster(struct exec *o, struct data **r) 
+user_func_devsetmaster(struct exec *o, struct data **r)
 {
 	struct var *arg;
 	long unit;
-	
+
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -130,18 +130,18 @@ user_func_devsetmaster(struct exec *o, struct data **r)
 		unit = arg->data->val.num;
 		if (unit < 0 || unit >= DEFAULT_MAXNDEVS || !mididev_byunit[unit]) {
 			cons_err("no such device");
-			return 0;		
+			return 0;
 		}
 		mididev_master = mididev_byunit[unit];
 		return 1;
 	}
-	
+
 	cons_err("bad argument type for 'unit'");
 	return 0;
 }
 
 unsigned
-user_func_devgetmaster(struct exec *o, struct data **r) 
+user_func_devgetmaster(struct exec *o, struct data **r)
 {
 
 	if (!song_try(usong)) {
@@ -156,40 +156,40 @@ user_func_devgetmaster(struct exec *o, struct data **r)
 }
 
 unsigned
-user_func_devsendrt(struct exec *o, struct data **r) 
+user_func_devsendrt(struct exec *o, struct data **r)
 {
 	long unit, sendrt;
 
 	if (!song_try(usong)) {
 		return 0;
 	}
-	if (!exec_lookuplong(o, "unit", &unit) || 
+	if (!exec_lookuplong(o, "unit", &unit) ||
 	    !exec_lookupbool(o, "sendrt", &sendrt)) {
 		return 0;
 	}
 	if (unit < 0 || unit >= DEFAULT_MAXNDEVS || !mididev_byunit[unit]) {
 		cons_err("no such device");
-		return 0;		
+		return 0;
 	}
 	mididev_byunit[unit]->sendrt = sendrt;
 	return 1;
 }
 
 unsigned
-user_func_devticrate(struct exec *o, struct data **r) 
+user_func_devticrate(struct exec *o, struct data **r)
 {
 	long unit, tpu;
-	
+
 	if (!song_try(usong)) {
 		return 0;
 	}
-	if (!exec_lookuplong(o, "unit", &unit) || 
+	if (!exec_lookuplong(o, "unit", &unit) ||
 	    !exec_lookuplong(o, "tics_per_unit", &tpu)) {
 		return 0;
 	}
 	if (unit < 0 || unit >= DEFAULT_MAXNDEVS || !mididev_byunit[unit]) {
 		cons_err("no such device");
-		return 0;		
+		return 0;
 	}
 	if (tpu < DEFAULT_TPU || (tpu % DEFAULT_TPU)) {
 		cons_err("device tpu must be multiple of 96");
@@ -200,10 +200,10 @@ user_func_devticrate(struct exec *o, struct data **r)
 }
 
 unsigned
-user_func_devinfo(struct exec *o, struct data **r) 
+user_func_devinfo(struct exec *o, struct data **r)
 {
 	long unit;
-	
+
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -212,11 +212,11 @@ user_func_devinfo(struct exec *o, struct data **r)
 	}
 	if (unit < 0 || unit >= DEFAULT_MAXNDEVS || !mididev_byunit[unit]) {
 		cons_err("no such device");
-		return 0;		
+		return 0;
 	}
 	textout_putstr(tout, "{\n");
 	textout_shiftright(tout);
-	
+
 	textout_indent(tout);
 	textout_putstr(tout, "unit ");
 	textout_putlong(tout, unit);
@@ -235,14 +235,14 @@ user_func_devinfo(struct exec *o, struct data **r)
 	textout_putstr(tout, "tics_per_unit ");
 	textout_putlong(tout, mididev_byunit[unit]->ticrate);
 	textout_putstr(tout, "\n");
-	
+
 	textout_shiftleft(tout);
 	textout_putstr(tout, "}\n");
 	return 1;
-}	
+}
 
 unsigned
-user_func_devixctl(struct exec *o, struct data **r) 
+user_func_devixctl(struct exec *o, struct data **r)
 {
 	long unit;
 	struct data *list;
@@ -251,13 +251,13 @@ user_func_devixctl(struct exec *o, struct data **r)
 	if (!song_try(usong)) {
 		return 0;
 	}
-	if (!exec_lookuplong(o, "unit", &unit) || 
+	if (!exec_lookuplong(o, "unit", &unit) ||
 	    !exec_lookuplist(o, "ctlset", &list)) {
 		return 0;
 	}
 	if (unit < 0 || unit >= DEFAULT_MAXNDEVS || !mididev_byunit[unit]) {
 		cons_err("no such device");
-		return 0;		
+		return 0;
 	}
 	if (!data_list2ctlset(list, &ctlset)) {
 		return 0;
@@ -267,7 +267,7 @@ user_func_devixctl(struct exec *o, struct data **r)
 }
 
 unsigned
-user_func_devoxctl(struct exec *o, struct data **r) 
+user_func_devoxctl(struct exec *o, struct data **r)
 {
 	long unit;
 	struct data *list;
@@ -276,13 +276,13 @@ user_func_devoxctl(struct exec *o, struct data **r)
 	if (!song_try(usong)) {
 		return 0;
 	}
-	if (!exec_lookuplong(o, "unit", &unit) || 
+	if (!exec_lookuplong(o, "unit", &unit) ||
 	    !exec_lookuplist(o, "ctlset", &list)) {
 		return 0;
 	}
 	if (unit < 0 || unit >= DEFAULT_MAXNDEVS || !mididev_byunit[unit]) {
 		cons_err("no such device");
-		return 0;		
+		return 0;
 	}
 	if (!data_list2ctlset(list, &ctlset)) {
 		return 0;

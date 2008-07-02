@@ -2,8 +2,8 @@
  * Copyright (c) 2003-2007 Alexandre Ratchov <alex@caoua.org>
  * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without 
- * modification, are permitted provided that the following conditions 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
  * are met:
  *
  * 	- Redistributions of source code must retain the above
@@ -36,7 +36,7 @@
 struct seqptr {
 	struct statelist statelist;
 	struct seqev *pos;		/* next event (current position) */
-	unsigned delta;			/* tics until the next event */	 
+	unsigned delta;			/* tics until the next event */
 	unsigned tic;			/* absolute tic of the current pos */
 };
 
@@ -49,7 +49,7 @@ struct state *seqptr_evget(struct seqptr *sp);
 struct state *seqptr_evdel(struct seqptr *sp, struct statelist *slist);
 struct state *seqptr_evput(struct seqptr *sp, struct ev *ev);
 unsigned      seqptr_ticskip(struct seqptr *sp, unsigned max);
-unsigned      seqptr_ticdel(struct seqptr *sp, unsigned max, 
+unsigned      seqptr_ticdel(struct seqptr *sp, unsigned max,
 			    struct statelist *slist);
 void	      seqptr_ticput(struct seqptr *sp, unsigned ntics);
 unsigned      seqptr_skip(struct seqptr *sp, unsigned ntics);
@@ -59,16 +59,16 @@ struct state *seqptr_gettempo(struct seqptr *sp, unsigned long *usec24);
 
 void	 track_merge(struct track *dst, struct track *src);
 unsigned track_findmeasure(struct track *t, unsigned m0);
-void	 track_timeinfo(struct track *t, unsigned meas, unsigned *tic, 
+void	 track_timeinfo(struct track *t, unsigned meas, unsigned *tic,
 			unsigned long *usec24, unsigned *bpm, unsigned *tpb);
 void     track_settempo(struct track *t, unsigned measure, unsigned tempo);
-void     track_move(struct track *src, unsigned start, unsigned len, 
-		    struct evspec *evspec, struct track *dst, 
+void     track_move(struct track *src, unsigned start, unsigned len,
+		    struct evspec *evspec, struct track *dst,
 		    unsigned copy, unsigned blank);
-void     track_quantize(struct track *src, unsigned start, unsigned len, 
+void     track_quantize(struct track *src, unsigned start, unsigned len,
 			unsigned offset, unsigned quantum, unsigned rate);
 void     track_scale(struct track *t, unsigned oldunit, unsigned newunit);
-void     track_transpose(struct track *src, unsigned start, unsigned len, 
+void     track_transpose(struct track *src, unsigned start, unsigned len,
 			 int halftones);
 void	 track_check(struct track *src);
 void     track_confev(struct track *src, struct ev *ev);

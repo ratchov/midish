@@ -2,8 +2,8 @@
  * Copyright (c) 2003-2007 Alexandre Ratchov <alex@caoua.org>
  * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without 
- * modification, are permitted provided that the following conditions 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
  * are met:
  *
  * 	- Redistributions of source code must retain the above
@@ -35,7 +35,7 @@
  * input
  *
  */
- 
+
 #include "dbg.h"
 #include "ev.h"
 #include "norm.h"
@@ -65,7 +65,7 @@ void norm_timocb(void *);
  * given callback
  */
 void
-norm_start(struct norm *o) 
+norm_start(struct norm *o)
 {
 	statelist_init(&o->statelist);
 	timo_set(&o->timo, norm_timocb, o);
@@ -79,7 +79,7 @@ norm_start(struct norm *o)
  * unconfigure the normalizer
  */
 void
-norm_stop(struct norm *o) 
+norm_stop(struct norm *o)
 {
 	if (norm_debug) {
 		dbg_puts("norm_stop()\n");
@@ -94,11 +94,11 @@ norm_stop(struct norm *o)
  * of the modified controllers, the bender etc...
  */
 void
-norm_shut(struct norm *o) 
+norm_shut(struct norm *o)
 {
 	struct state *s, *snext;
 	struct ev ca;
-	
+
 	for (s = o->statelist.first; s != NULL; s = snext) {
 		snext = s->next;
 		if (state_cancel(s, &ca)) {
@@ -120,7 +120,7 @@ norm_shut(struct norm *o)
  * event was received)
  */
 void
-norm_kill(struct norm *o, struct ev *ev) 
+norm_kill(struct norm *o, struct ev *ev)
 {
 	struct state *st, *stnext;
 	struct ev ca;
@@ -152,10 +152,10 @@ norm_kill(struct norm *o, struct ev *ev)
  * give an event to the normalizer for processing
  */
 void
-norm_evcb(struct norm *o, struct ev *ev) 
+norm_evcb(struct norm *o, struct ev *ev)
 {
 	struct state *st;
-	
+
 	if (norm_debug) {
 		dbg_puts("norm_run: ");
 		ev_dbg(ev);
@@ -198,12 +198,12 @@ norm_evcb(struct norm *o, struct ev *ev)
 		return;
 
 	/*
-	 * throttling: if we played more than MAXEV 
+	 * throttling: if we played more than MAXEV
 	 * events skip this event only if it doesnt change the
 	 * phase of the frame
 	 */
 	if (st->nevents > NORM_MAXEV &&
-	    (st->phase == EV_PHASE_NEXT || 
+	    (st->phase == EV_PHASE_NEXT ||
 	     st->phase == (EV_PHASE_FIRST | EV_PHASE_LAST))) {
 		st->tag |= TAG_PENDING;
 		return;
@@ -218,7 +218,7 @@ norm_evcb(struct norm *o, struct ev *ev)
  * output again.
  */
 void
-norm_timocb(void *addr) 
+norm_timocb(void *addr)
 {
 	struct norm *o = (struct norm *)addr;
 	struct state *i;
