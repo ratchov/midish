@@ -53,23 +53,27 @@ struct pool state_pool;
 unsigned state_serial;
 
 void
-state_pool_init(unsigned size) {
+state_pool_init(unsigned size) 
+{
 	state_serial = 0;
 	pool_init(&state_pool, "state", sizeof(struct state), size);
 }
 
 void
-state_pool_done(void) {
+state_pool_done(void) 
+{
 	pool_done(&state_pool);
 }
 
 struct state *
-state_new(void) {
+state_new(void) 
+{
 	return (struct state *)pool_new(&state_pool);
 }
 
 void
-state_del(struct state *s) {
+state_del(struct state *s) 
+{
 	pool_del(&state_pool, s);
 }
 
@@ -77,7 +81,8 @@ state_del(struct state *s) {
  * dump the state to stderr
  */
 void
-state_dbg(struct state *s) {
+state_dbg(struct state *s) 
+{
 	ev_dbg(&s->ev);
 	if (s->flags & STATE_NEW) {
 		dbg_puts(" NEW");
@@ -106,7 +111,8 @@ state_dbg(struct state *s) {
  * copy an event into a state.
  */
 void
-state_copyev(struct state *st, struct ev *ev, unsigned ph) {
+state_copyev(struct state *st, struct ev *ev, unsigned ph) 
+{
 	st->ev = *ev;
 	st->phase = ph;
 	st->flags |= STATE_CHANGED;
@@ -118,7 +124,8 @@ state_copyev(struct state *st, struct ev *ev, unsigned ph) {
  * conflict between the frame and the event)
  */
 unsigned
-state_match(struct state *st, struct ev *ev) {
+state_match(struct state *st, struct ev *ev) 
+{
 	switch (st->ev.cmd) {
 	case EV_NON:
 	case EV_NOFF:
@@ -174,7 +181,8 @@ state_match(struct state *st, struct ev *ev) {
  * check if the given state belongs to the event spec
  */
 unsigned
-state_inspec(struct state *st, struct evspec *spec) {
+state_inspec(struct state *st, struct evspec *spec) 
+{
 	if (spec == NULL) {
 		return 1;
 	}
@@ -249,7 +257,8 @@ ch:	if (st->ev.dev < spec->dev_min ||
  * state_match() returns 1)
  */
 unsigned
-state_eq(struct state *st, struct ev *ev) {
+state_eq(struct state *st, struct ev *ev) 
+{
 	if (EV_ISVOICE(&st->ev)) {
 		switch(st->ev.cmd) {
 		case EV_CAT:
@@ -291,7 +300,8 @@ state_eq(struct state *st, struct ev *ev) {
  * currently this never happens...)
  */
 unsigned
-state_cancel(struct state *st, struct ev *rev) {
+state_cancel(struct state *st, struct ev *rev) 
+{
 	if (st->phase & EV_PHASE_LAST)
 		return 0;
 	switch(st->ev.cmd) {
@@ -342,7 +352,8 @@ state_cancel(struct state *st, struct ev *rev) {
  * currently this never happens...)
  */
 unsigned
-state_restore(struct state *st, struct ev *rev) {
+state_restore(struct state *st, struct ev *rev) 
+{
 	if (st->flags & STATE_BOGUS)
 		return 0;
 
@@ -369,7 +380,8 @@ state_restore(struct state *st, struct ev *rev) {
  * initialize an empty state list
  */
 void
-statelist_init(struct statelist *o) {
+statelist_init(struct statelist *o) 
+{
 	o->first = NULL;
 	o->changed = 0;
 	o->serial = state_serial++;
@@ -386,7 +398,8 @@ statelist_init(struct statelist *o) {
  * issued, since this probably is due to track inconsistencies
  */
 void
-statelist_done(struct statelist *o) {
+statelist_done(struct statelist *o) 
+{
 	struct state *i, *inext;
 #ifdef STATE_PROF
 	unsigned mean;
@@ -432,7 +445,8 @@ statelist_done(struct statelist *o) {
 }
 
 void
-statelist_dump(struct statelist *o) {
+statelist_dump(struct statelist *o) 
+{
 	struct state *i;
 
 	dbg_puts("statelist_dump:\n");
@@ -446,7 +460,8 @@ statelist_dump(struct statelist *o) {
  * create a new statelist by duplicating another one
  */
 void
-statelist_dup(struct statelist *o, struct statelist *src) {
+statelist_dup(struct statelist *o, struct statelist *src) 
+{
 	struct state *i, *n;
 
 	statelist_init(o);
@@ -463,7 +478,8 @@ statelist_dup(struct statelist *o, struct statelist *src) {
  * remove and free all states from the state list
  */
 void
-statelist_empty(struct statelist *o) {
+statelist_empty(struct statelist *o) 
+{
 	struct state *i, *inext;
 
 	for (i = o->first; i != NULL; i = inext) {
@@ -477,7 +493,8 @@ statelist_empty(struct statelist *o) {
  * add a state to the state list
  */ 
 void
-statelist_add(struct statelist *o, struct state *st) {
+statelist_add(struct statelist *o, struct state *st) 
+{
 	st->next = o->first;
 	st->prev = &o->first;
 	if (o->first)
@@ -490,7 +507,8 @@ statelist_add(struct statelist *o, struct state *st) {
  * isn't freed
  */
 void
-statelist_rm(struct statelist *o, struct state *st) {
+statelist_rm(struct statelist *o, struct state *st) 
+{
 	*st->prev = st->next;
 	if (st->next)
 		st->next->prev = st->prev;
@@ -501,7 +519,8 @@ statelist_rm(struct statelist *o, struct state *st) {
  * return NULL if not found
  */
 struct state *
-statelist_lookup(struct statelist *o, struct ev *ev) {
+statelist_lookup(struct statelist *o, struct ev *ev) 
+{
 	struct state *i;
 #ifdef STATE_PROF
 	unsigned time = 0;
@@ -533,7 +552,8 @@ statelist_lookup(struct statelist *o, struct ev *ev) {
  * beginning of the list.
  */
 struct state *
-statelist_update(struct statelist *statelist, struct ev *ev) {
+statelist_update(struct statelist *statelist, struct ev *ev) 
+{
 	struct state *st, *stnext;
 	unsigned phase;
 #ifdef STATE_PROF
@@ -655,7 +675,8 @@ statelist_update(struct statelist *statelist, struct ev *ev) {
  * filter).
  */
 void
-statelist_outdate(struct statelist *o) {
+statelist_outdate(struct statelist *o) 
+{
 	struct state *i, *inext;
 
 	if (!o->changed)

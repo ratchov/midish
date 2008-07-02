@@ -74,7 +74,8 @@
 unsigned rmidi_debug = 0;
 
 struct rmidi *
-rmidi_new(unsigned mode) {
+rmidi_new(unsigned mode) 
+{
 	struct rmidi *o;
 	o = (struct rmidi *)mem_alloc(sizeof(struct rmidi));
 	rmidi_init(o, mode);
@@ -82,7 +83,8 @@ rmidi_new(unsigned mode) {
 }
 
 void
-rmidi_delete(struct rmidi *o) {
+rmidi_delete(struct rmidi *o) 
+{
 	rmidi_done(o);
 	mem_free(o);
 }
@@ -95,7 +97,8 @@ unsigned rmidi_evlen[] = { 2, 2, 2, 2, 1, 1, 2, 0 };
  * it calls mux_evcb
  */
 void
-rmidi_inputcb(struct rmidi *o, unsigned char *buf, unsigned count) {
+rmidi_inputcb(struct rmidi *o, unsigned char *buf, unsigned count) 
+{
 	struct ev ev;
 	unsigned data;
 
@@ -219,7 +222,8 @@ rmidi_inputcb(struct rmidi *o, unsigned char *buf, unsigned count) {
  * it is full, flush it. Shouldn't we inline it?
  */
 void
-rmidi_out(struct rmidi *o, unsigned data) {
+rmidi_out(struct rmidi *o, unsigned data) 
+{
 	if (!(o->mididev.mode & MIDIDEV_MODE_OUT)) {
 		return;
 	}
@@ -237,22 +241,26 @@ rmidi_out(struct rmidi *o, unsigned data) {
 }
 
 void
-rmidi_putstart(struct rmidi *o) {
+rmidi_putstart(struct rmidi *o) 
+{
 	rmidi_out(o, MIDI_START);
 }
 
 void
-rmidi_putstop(struct rmidi *o) {
+rmidi_putstop(struct rmidi *o) 
+{
 	rmidi_out(o, MIDI_STOP);
 }
 
 void
-rmidi_puttic(struct rmidi *o) {
+rmidi_puttic(struct rmidi *o) 
+{
 	rmidi_out(o, MIDI_TIC);
 }
 
 void
-rmidi_putack(struct rmidi *o) {
+rmidi_putack(struct rmidi *o) 
+{
 	rmidi_out(o, MIDI_ACK);
 }
 
@@ -261,7 +269,8 @@ rmidi_putack(struct rmidi *o) {
  * it for sending
  */
 void
-rmidi_putev(struct rmidi *o, struct ev *ev) {
+rmidi_putev(struct rmidi *o, struct ev *ev) 
+{
 	unsigned s;
 	
 	if (!EV_ISVOICE(ev)) {
@@ -300,7 +309,8 @@ rmidi_putev(struct rmidi *o, struct ev *ev) {
  * queue raw data for sending
  */
 void
-rmidi_sendraw(struct rmidi *o, unsigned char *buf, unsigned len) {
+rmidi_sendraw(struct rmidi *o, unsigned char *buf, unsigned len) 
+{
 	if (!(o->mididev.mode & MIDIDEV_MODE_OUT)) {
 		return;
 	}

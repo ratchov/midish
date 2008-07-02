@@ -36,17 +36,20 @@
 #include "name.h"
 
 void
-name_init(struct name *o, char *name) {
+name_init(struct name *o, char *name) 
+{
 	o->str = str_new(name);
 }
 
 void
-name_done(struct name *o) {
+name_done(struct name *o) 
+{
 	str_delete(o->str);
 }
 
 struct name *
-name_new(char *name) {
+name_new(char *name) 
+{
 	struct name *o;
 	o = (struct name *)mem_alloc(sizeof(struct name));
 	name_init(o, name);
@@ -54,7 +57,8 @@ name_new(char *name) {
 }
 
 struct name *
-name_newarg(char *name, struct name *next) {
+name_newarg(char *name, struct name *next) 
+{
 	struct name *o;
 	o = name_new(name);
 	o->next = next;
@@ -62,13 +66,15 @@ name_newarg(char *name, struct name *next) {
 }
 
 void
-name_delete(struct name *o) {
+name_delete(struct name *o) 
+{
 	name_done(o);
 	mem_free(o);
 }
 
 void
-name_dbg(struct name *o) {
+name_dbg(struct name *o) 
+{
 	for (; o != NULL; o = o->next) {
 		str_dbg(o->str);
 		if (o->next) {
@@ -78,13 +84,15 @@ name_dbg(struct name *o) {
 }
 
 void
-name_insert(struct name **first, struct name *i) {
+name_insert(struct name **first, struct name *i) 
+{
 	i->next = *first;
 	*first = i;
 }
 
 void
-name_add(struct name **first, struct name *v) {
+name_add(struct name **first, struct name *v) 
+{
 	struct name **i;
 	i = first;
 	while (*i != NULL) {
@@ -95,7 +103,8 @@ name_add(struct name **first, struct name *v) {
 }
 
 void
-name_remove(struct name **first, struct name *v) {
+name_remove(struct name **first, struct name *v) 
+{
 	struct name **i;
 	i = first;
 	while (*i != NULL) {
@@ -111,7 +120,8 @@ name_remove(struct name **first, struct name *v) {
 }
 
 void
-name_empty(struct name **first) {
+name_empty(struct name **first) 
+{
 	struct name *i, *inext;
 	for (i = *first; i != NULL; i = inext) {
 		inext = i->next;
@@ -121,7 +131,8 @@ name_empty(struct name **first) {
 }
 
 void
-name_cat(struct name **dst, struct name **src) {
+name_cat(struct name **dst, struct name **src) 
+{
 	while (*dst != NULL) {
 		dst = &(*dst)->next;
 	}
@@ -133,7 +144,8 @@ name_cat(struct name **dst, struct name **src) {
 }
 
 unsigned
-name_eq(struct name **first1, struct name **first2) {
+name_eq(struct name **first1, struct name **first2) 
+{
 	struct name *n1 = *first1, *n2 = *first2;
 	
 	for (;;) {
@@ -148,7 +160,8 @@ name_eq(struct name **first1, struct name **first2) {
 }
 
 struct name *
-name_lookup(struct name **first, char *str) {
+name_lookup(struct name **first, char *str) 
+{
 	struct name *i;
 	for (i = *first; i != NULL; i = i->next) {
 		if (i->str == NULL)

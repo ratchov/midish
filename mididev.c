@@ -52,7 +52,8 @@ struct mididev *mididev_byunit[DEFAULT_MAXNDEVS];
  * initialize the device independent part of the device structure
  */
 void
-mididev_init(struct mididev *o, unsigned mode) {
+mididev_init(struct mididev *o, unsigned mode) 
+{
 	/* 
 	 * by default we don't transmit realtime information 
 	 * (midi_tic, midi_start, midi_stop etc...)
@@ -70,14 +71,16 @@ mididev_init(struct mididev *o, unsigned mode) {
  * future use
  */
 void
-mididev_done(struct mididev *o) {
+mididev_done(struct mididev *o) 
+{
 }
 
 /*
  * initialize the device table
  */
 void
-mididev_listinit(void) {
+mididev_listinit(void) 
+{
 	unsigned i;
 	for (i = 0; i < DEFAULT_MAXNDEVS; i++) {
 		mididev_byunit[i] = NULL;
@@ -90,7 +93,8 @@ mididev_listinit(void) {
  * unregister all entries of the device table
  */
 void
-mididev_listdone(void) {
+mididev_listdone(void) 
+{
 	unsigned i;
 	struct mididev *dev;
 	
@@ -110,7 +114,8 @@ mididev_listdone(void) {
  * register a new device number (ie "unit")
  */
 unsigned
-mididev_attach(unsigned unit, char *path, unsigned mode) {
+mididev_attach(unsigned unit, char *path, unsigned mode) 
+{
 	struct mididev *dev;
 
 	if (unit >= DEFAULT_MAXNDEVS) {
@@ -134,7 +139,8 @@ mididev_attach(unsigned unit, char *path, unsigned mode) {
  * unregister the given device number
  */
 unsigned
-mididev_detach(unsigned unit) {
+mididev_detach(unsigned unit) 
+{
 	struct mididev **i, *dev;
 	
 	if (unit >= DEFAULT_MAXNDEVS || mididev_byunit[unit] == NULL) {

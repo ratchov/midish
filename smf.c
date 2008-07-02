@@ -52,7 +52,8 @@ unsigned smf_evlen[] = { 2, 2, 2, 2, 1, 1, 2, 0 };
 
 /* --------------------------------------------- chunk read/write --- */
 
-struct smf {
+struct smf 
+{
 	FILE *file;
 	unsigned length, index;		/* current chunk length/position */
 };
@@ -62,7 +63,8 @@ struct smf {
  * the smf structure
  */
 unsigned
-smf_open(struct smf *o, char *path, char *mode) {
+smf_open(struct smf *o, char *path, char *mode) 
+{
 	o->file = fopen(path, mode);
 	if (!o->file) {
 		cons_errs(path, "failed to open file");
@@ -77,7 +79,8 @@ smf_open(struct smf *o, char *path, char *mode) {
  * close the file
  */
 void
-smf_close(struct smf *o) {
+smf_close(struct smf *o) 
+{
 	fclose(o->file);
 }
 
@@ -85,7 +88,8 @@ smf_close(struct smf *o) {
  * read a 32bit fixed-size number, return 0 on error
  */
 unsigned
-smf_get32(struct smf *o, unsigned *val) {
+smf_get32(struct smf *o, unsigned *val) 
+{
 	unsigned char buf[4];
 	if (o->index + 4 > o->length || fread(buf, 1, 4, o->file) != 4) {
 		cons_err("failed to read 32bit number");
@@ -100,7 +104,8 @@ smf_get32(struct smf *o, unsigned *val) {
  * read a 24bit fixed-size number, return 0 on error
  */
 unsigned
-smf_get24(struct smf *o, unsigned *val) {
+smf_get24(struct smf *o, unsigned *val) 
+{
 	unsigned char buf[4];
 	if (o->index + 3 > o->length || fread(buf, 1, 3, o->file) != 3) {
 		cons_err("failed to read 24bit number");
@@ -115,7 +120,8 @@ smf_get24(struct smf *o, unsigned *val) {
  * read a 16bit fixed-size number, return 0 on error
  */
 unsigned
-smf_get16(struct smf *o, unsigned *val) {
+smf_get16(struct smf *o, unsigned *val) 
+{
 	unsigned char buf[4];
 	if (o->index + 2 > o->length || fread(buf, 1, 2, o->file) != 2) {
 		cons_err("failed to read 16bit number");
@@ -130,7 +136,8 @@ smf_get16(struct smf *o, unsigned *val) {
  * read a 8bit fixed-size number, return 0 on error
  */
 unsigned
-smf_getc(struct smf *o, unsigned *res) {
+smf_getc(struct smf *o, unsigned *res) 
+{
 	int c;
 	if (o->index + 1 > o->length || (c = fgetc(o->file)) < 0) {
 		cons_err("failed to read one byte");
@@ -145,7 +152,8 @@ smf_getc(struct smf *o, unsigned *res) {
  * read a variable length number, return 0 on error
  */
 unsigned
-smf_getvar(struct smf *o, unsigned *val) {
+smf_getvar(struct smf *o, unsigned *val) 
+{
 	int c;
 	unsigned bits;
 	*val = 0;
@@ -180,7 +188,8 @@ smf_getvar(struct smf *o, unsigned *val) {
  * return 0 on error
  */
 unsigned
-smf_getheader(struct smf *o, char *hdr) {
+smf_getheader(struct smf *o, char *hdr) 
+{
 	char buf[4];
 	unsigned len;
 	if (o->index != o->length) {
@@ -217,7 +226,8 @@ smf_getheader(struct smf *o, char *hdr) {
  * put a fixed-size 32-bit number
  */
 void
-smf_put32(struct smf *o, unsigned *used, unsigned val) {
+smf_put32(struct smf *o, unsigned *used, unsigned val) 
+{
 	unsigned char buf[4];
 	if (used) {
 		(*used) += 4;
@@ -239,7 +249,8 @@ smf_put32(struct smf *o, unsigned *used, unsigned val) {
  * put a fixed-size 24-bit number
  */
 void
-smf_put24(struct smf *o, unsigned *used, unsigned val) {
+smf_put24(struct smf *o, unsigned *used, unsigned val) 
+{
 	unsigned char buf[4];
 	if (used) {
 		(*used) += 3;
@@ -260,7 +271,8 @@ smf_put24(struct smf *o, unsigned *used, unsigned val) {
  * put a fixed-size 16-bit number
  */
 void
-smf_put16(struct smf *o, unsigned *used, unsigned val) {
+smf_put16(struct smf *o, unsigned *used, unsigned val) 
+{
 	unsigned char buf[4];
 	if (used) {
 		(*used) += 2;
@@ -281,7 +293,8 @@ smf_put16(struct smf *o, unsigned *used, unsigned val) {
  * put a fixed-size 8-bit number
  */
 void
-smf_putc(struct smf *o, unsigned *used, unsigned val) {
+smf_putc(struct smf *o, unsigned *used, unsigned val) 
+{
 	if (used) {
 		(*used) ++;
 	} else {
@@ -299,7 +312,8 @@ smf_putc(struct smf *o, unsigned *used, unsigned val) {
  * put a variable length number
  */
 void
-smf_putvar(struct smf *o, unsigned *used, unsigned val) {
+smf_putvar(struct smf *o, unsigned *used, unsigned val) 
+{
 #define MAXBYTES 5			/* 32bit / 7bit = 4bytes + 4bit */
 	unsigned char buf[MAXBYTES];
 	unsigned index = 0, bits;
@@ -332,7 +346,8 @@ smf_putvar(struct smf *o, unsigned *used, unsigned val) {
  * put the given chunk header with the given magic and size field
  */
 void
-smf_putheader(struct smf *o, char *hdr, unsigned len) {
+smf_putheader(struct smf *o, char *hdr, unsigned len) 
+{
 	fwrite(hdr, 1, 4, o->file);
 	o->length = 4;
 	o->index = 0;
@@ -345,7 +360,8 @@ smf_putheader(struct smf *o, char *hdr, unsigned len) {
  * store a track in the smf
  */
 void
-smf_puttrack(struct smf *o, unsigned *used, struct song *s, struct track *t) {
+smf_puttrack(struct smf *o, unsigned *used, struct song *s, struct track *t) 
+{
 	struct seqev *pos;
 	unsigned status, newstatus, delta, chan, denom;
 	struct ev rev[CONV_NUMREV];
@@ -436,7 +452,8 @@ smf_puttrack(struct smf *o, unsigned *used, struct song *s, struct track *t) {
  * store a sysex in the smf
  */
 void
-smf_putsysex(struct smf *o, unsigned *used, struct sysex *sx) {
+smf_putsysex(struct smf *o, unsigned *used, struct sysex *sx) 
+{
 	struct chunk *c;
 	unsigned i, first;
 		
@@ -456,7 +473,8 @@ smf_putsysex(struct smf *o, unsigned *used, struct sysex *sx) {
  * store a sysex back in the smf
  */
 void
-smf_putsx(struct smf *o, unsigned *used, struct song *s, struct songsx *songsx) {
+smf_putsx(struct smf *o, unsigned *used, struct song *s, struct songsx *songsx) 
+{
 	unsigned sysexused;
 	struct sysex *sx;
 	
@@ -478,7 +496,8 @@ smf_putsx(struct smf *o, unsigned *used, struct song *s, struct songsx *songsx) 
  * open the smf and store the whole song
  */
 unsigned
-song_exportsmf(struct song *o, char *filename) {
+song_exportsmf(struct song *o, char *filename) 
+{
 	struct smf f;
 	struct songtrk *t;
 	struct songchan *i;
@@ -554,7 +573,8 @@ song_exportsmf(struct song *o, char *filename) {
  * parse '0xF0 varlen data data ... data 0xF7'
  */
 unsigned
-smf_getsysex(struct smf *o, struct sysex *sx) {
+smf_getsysex(struct smf *o, struct sysex *sx) 
+{
 	unsigned i, length, c;
 	
 	if (!smf_getvar(o, &length)) {
@@ -573,7 +593,8 @@ smf_getsysex(struct smf *o, struct sysex *sx) {
  * parse a track 'varlen event varlen event ... varlen event'
  */
 unsigned
-smf_gettrack(struct smf *o, struct song *s, struct songtrk *t) {
+smf_gettrack(struct smf *o, struct song *s, struct songtrk *t) 
+{
 	unsigned delta, i, status, type, length, abspos;
 	unsigned tempo, num, den, dummy;
 	struct statelist slist;
@@ -749,7 +770,8 @@ smf_gettrack(struct smf *o, struct song *s, struct songtrk *t) {
  * fix song imported from format 1 smf 
  */
 void
-song_fix1(struct song *o) {
+song_fix1(struct song *o) 
+{
 	struct track copy;
 	struct seqptr tp, cp;
 	struct state *st;
@@ -806,7 +828,8 @@ song_fix1(struct song *o) {
  * to the meta-track then split it creating one track per channel
  */
 void
-song_fix0(struct song *o) {
+song_fix0(struct song *o) 
+{
 	char trackname[MAXTRACKNAME];	
 	struct seqptr tp, cp;
 	struct state *st;
@@ -859,7 +882,8 @@ song_fix0(struct song *o) {
  * open the smf and load the whole file
  */
 struct song *
-song_importsmf(char *filename) {
+song_importsmf(char *filename) 
+{
 	struct song *o;
 	struct songtrk *t;
 	unsigned format, ntrks, timecode, i;

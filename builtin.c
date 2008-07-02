@@ -44,7 +44,8 @@
 #include "mux.h"
 
 unsigned
-blt_ev(struct exec *o, struct data **r) {
+blt_ev(struct exec *o, struct data **r) 
+{
 	struct evspec es;
 	
 	if (!song_try(usong)) {

@@ -36,7 +36,8 @@
 #include "ev.h"
 #include "str.h"
 
-struct evinfo evinfo[EV_NUMCMD] = {
+struct evinfo evinfo[EV_NUMCMD] = 
+{
 	{ "nil", "none",	
 	  0,
 	  0, 0,
@@ -120,7 +121,8 @@ struct evctl evctl_tab[128];
  * return the 'name' of the given event
  */
 char *
-ev_getstr(struct ev *ev) {
+ev_getstr(struct ev *ev) 
+{
 	if (ev->cmd >= EV_NUMCMD) {
 		return NULL;
 		/*
@@ -135,7 +137,8 @@ ev_getstr(struct ev *ev) {
  * find the event EV_XXX constant corresponding to the given string
  */
 unsigned
-ev_str2cmd(struct ev *ev, char *str) {
+ev_str2cmd(struct ev *ev, char *str) 
+{
 	unsigned i;
 	for (i = 0; i < EV_NUMCMD; i++) {
 		if (evinfo[i].ev && str_eq(evinfo[i].ev, str)) {
@@ -160,7 +163,8 @@ ev_str2cmd(struct ev *ev, char *str) {
  *	in a frame (example: note-off, any unknown controller)
  */
 unsigned
-ev_phase(struct ev *ev) {
+ev_phase(struct ev *ev) 
+{
 	unsigned phase;
 	
 	switch(ev->cmd) {
@@ -209,7 +213,8 @@ ev_phase(struct ev *ev) {
  * dump the event structure on stderr, for debug purposes
  */
 void
-ev_dbg(struct ev *ev) {
+ev_dbg(struct ev *ev) 
+{
 	char *cmdstr;
 	cmdstr = ev_getstr(ev);
 	if (cmdstr == NULL) {
@@ -265,7 +270,8 @@ ev_dbg(struct ev *ev) {
  * the given string
  */
 unsigned
-evspec_str2cmd(struct evspec *ev, char *str) {
+evspec_str2cmd(struct evspec *ev, char *str) 
+{
 	unsigned i;
 
 	for (i = 0; i < EV_NUMCMD; i++) {
@@ -281,7 +287,8 @@ evspec_str2cmd(struct evspec *ev, char *str) {
  * reset the evspec structure with "select any event"
  */
 void
-evspec_reset(struct evspec *o) {
+evspec_reset(struct evspec *o) 
+{
 	o->cmd = EVSPEC_ANY;
 	o->dev_min = 0;
 	o->dev_max = EV_MAXDEV;
@@ -297,7 +304,8 @@ evspec_reset(struct evspec *o) {
  * dump the event structure on stderr (debug purposes)
  */
 void
-evspec_dbg(struct evspec *o) {
+evspec_dbg(struct evspec *o) 
+{
 	unsigned i;
 	
 	i = 0;
@@ -350,7 +358,8 @@ evspec_dbg(struct evspec *o) {
  * check if the given state belongs to the event spec
  */
 unsigned
-evspec_matchev(struct evspec *es, struct ev *ev) {
+evspec_matchev(struct evspec *es, struct ev *ev) 
+{
 	if (es->cmd == EVSPEC_EMPTY)
 		return 0;
 	if (es->cmd == EVSPEC_NOTE && !EV_ISNOTE(ev))
@@ -395,7 +404,8 @@ evspec_matchev(struct evspec *es, struct ev *ev) {
  * check if both sets are the same
  */
 unsigned
-evspec_eq(struct evspec *es1, struct evspec *es2) {
+evspec_eq(struct evspec *es1, struct evspec *es2) 
+{
 	if (es1->cmd != es2->cmd) {
 		return 0;
 	}
@@ -430,7 +440,8 @@ evspec_eq(struct evspec *es1, struct evspec *es2) {
  * check if there is intersection between two evspecs
  */
 unsigned
-evspec_isec(struct evspec *es1, struct evspec *es2) {
+evspec_isec(struct evspec *es1, struct evspec *es2) 
+{
 	if (es1->cmd == EVSPEC_EMPTY || es2->cmd == EVSPEC_EMPTY) {
 		return 0;
 	}
@@ -475,7 +486,8 @@ evspec_isec(struct evspec *es1, struct evspec *es2) {
  * note: any evspec includes itself
  */
 unsigned
-evspec_in(struct evspec *es1, struct evspec *es2) {
+evspec_in(struct evspec *es1, struct evspec *es2) 
+{
 	if (es1->cmd == EVSPEC_EMPTY) {
 		return 1;
 	}
@@ -523,7 +535,8 @@ evspec_in(struct evspec *es1, struct evspec *es2) {
  * configure a controller (set the name and default value)
  */
 void
-evctl_conf(unsigned num, char *name, unsigned defval) {
+evctl_conf(unsigned num, char *name, unsigned defval) 
+{
 	struct evctl *ctl = &evctl_tab[num];
 
 	if (name) {
@@ -537,7 +550,8 @@ evctl_conf(unsigned num, char *name, unsigned defval) {
  * value tu "unknown")
  */
 void
-evctl_unconf(unsigned i) {
+evctl_unconf(unsigned i) 
+{
 	struct evctl *ctl = &evctl_tab[i];
 
 	if (ctl->name != NULL) {
@@ -552,7 +566,8 @@ evctl_unconf(unsigned i) {
  * name. Return 1 if found, 0 if not
  */
 unsigned
-evctl_lookup(char *name, unsigned *ret) {
+evctl_lookup(char *name, unsigned *ret) 
+{
 	unsigned i;
 	struct evctl *ctl;
 	
@@ -570,7 +585,8 @@ evctl_lookup(char *name, unsigned *ret) {
  * initialize the controller table
  */
 void
-evctl_init(void) {
+evctl_init(void) 
+{
 	unsigned i;
 	
 	for (i = 0; i < 128; i++) {
@@ -590,7 +606,8 @@ evctl_init(void) {
  * free the controller table 
  */
 void
-evctl_done(void) {
+evctl_done(void) 
+{
 	unsigned i;
 
 	for (i = 0; i < 128; i++) {
@@ -604,7 +621,8 @@ evctl_done(void) {
  * return 1 if the controller is reserved
  */
 unsigned
-evctl_isreserved(unsigned num) {
+evctl_isreserved(unsigned num) 
+{
 	if (num == BANK_HI || num == DATAENT_HI || (num >= 32 && num < 64) ||
 	    num == RPN_HI || num == RPN_LO || 
 	    num == NRPN_HI || num == NRPN_LO) {

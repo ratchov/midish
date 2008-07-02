@@ -57,7 +57,8 @@
  * and insert it on the given variable list
  */	 
 struct var *
-var_new(struct name **list, char *name, struct data *data) {
+var_new(struct name **list, char *name, struct data *data) 
+{
 	struct var *o;
 	o = (struct var *)mem_alloc(sizeof(struct var));
 	o->data = data;
@@ -70,7 +71,8 @@ var_new(struct name **list, char *name, struct data *data) {
  * delete the given variable from the given list
  */
 void
-var_delete(struct name **list, struct var *o) {
+var_delete(struct name **list, struct var *o) 
+{
 	name_remove(list, (struct name *)o);
 	if (o->data != NULL) {
 		data_delete(o->data);
@@ -83,7 +85,8 @@ var_delete(struct name **list, struct var *o) {
  * print "name = value" on stderr
  */
 void
-var_dbg(struct var *o) {
+var_dbg(struct var *o) 
+{
 	str_dbg(o->name.str);
 	dbg_puts(" = ");
 	if (o->data != NULL)
@@ -96,7 +99,8 @@ var_dbg(struct var *o) {
  * delete all variables and clear the given list
  */
 void
-var_empty(struct name **list) {
+var_empty(struct name **list) 
+{
 	while (*list != NULL) {
 		var_delete(list, (struct var *)*list);
 	}
@@ -106,7 +110,8 @@ var_empty(struct name **list) {
  * allocate a new procedure with the given name
  */
 struct proc *
-proc_new(char *name) {
+proc_new(char *name) 
+{
 	struct proc *o;
 	o = (struct proc *)mem_alloc(sizeof(struct proc));
 	name_init(&o->name, name);
@@ -119,7 +124,8 @@ proc_new(char *name) {
  * delete the given procedure: free name, arguments and code
  */
 void
-proc_delete(struct proc *o) {
+proc_delete(struct proc *o) 
+{
 	node_delete(o->code);
 	name_empty(&o->args);
 	name_done(&o->name);
@@ -130,7 +136,8 @@ proc_delete(struct proc *o) {
  * free all procedures and clear the given list
  */
 void
-proc_empty(struct name **first) {
+proc_empty(struct name **first) 
+{
 	struct name *i;
 	while (*first) {
 		i = *first;
@@ -146,7 +153,8 @@ proc_empty(struct name **first) {
  *	code_tree
  */
 void
-proc_dbg(struct proc *o) {
+proc_dbg(struct proc *o) 
+{
 	struct name *i;
 	str_dbg(o->name.str);
 	dbg_puts("(");
@@ -169,7 +177,8 @@ proc_dbg(struct proc *o) {
  * create a new empty execution environment
  */
 struct exec *
-exec_new(void) {
+exec_new(void) 
+{
 	struct exec *o;
 	o = (struct exec *)mem_alloc(sizeof(struct exec));
 	o->procs = NULL;
@@ -185,7 +194,8 @@ exec_new(void) {
  * called inside a procedure
  */
 void
-exec_delete(struct exec *o) {
+exec_delete(struct exec *o) 
+{
 	if (o->depth != 0) {
 		dbg_puts("exec_done: depth != 0\n");
 		dbg_panic();
@@ -202,7 +212,8 @@ exec_delete(struct exec *o) {
  * global list.
  */
 struct var *
-exec_varlookup(struct exec *o, char *name) {
+exec_varlookup(struct exec *o, char *name) 
+{
 	struct name *var;
 
 	var = name_lookup(o->locals, name);
@@ -222,7 +233,8 @@ exec_varlookup(struct exec *o, char *name) {
  * find the procedure with the given name
  */
 struct proc *
-exec_proclookup(struct exec *o, char *name) {
+exec_proclookup(struct exec *o, char *name) 
+{
 	return (struct proc *)name_lookup(&o->procs, name);
 }
 
@@ -244,7 +256,8 @@ exec_newbuiltin(struct exec *o, char *name,
  * add a new global variable in the exec environment
  */
 void
-exec_newvar(struct exec *o, char *name, struct data *val) {
+exec_newvar(struct exec *o, char *name, struct data *val) 
+{
 	var_new(&o->globals, name, val);
 }
 
@@ -255,7 +268,8 @@ exec_newvar(struct exec *o, char *name, struct data *val) {
  *	...
  */
 void
-exec_dumpprocs(struct exec *o) {
+exec_dumpprocs(struct exec *o) 
+{
 	struct proc *p;
 	struct name *n;
 
@@ -279,7 +293,8 @@ exec_dumpprocs(struct exec *o) {
  *	...
  */
 void
-exec_dumpvars(struct exec *o) {
+exec_dumpvars(struct exec *o) 
+{
 	struct var *v;
 	VAR_FOREACH(v, o->globals) {
 		dbg_puts(v->name.str);
@@ -293,7 +308,8 @@ exec_dumpvars(struct exec *o) {
  * find a variable with the given name with value of type DATA_REF 
  */
 unsigned 
-exec_lookupname(struct exec *o, char *name, char **val) {
+exec_lookupname(struct exec *o, char *name, char **val) 
+{
 	struct var *var;
 	var = exec_varlookup(o, name);
 	if (var == NULL || var->data->type != DATA_REF) {
@@ -308,7 +324,8 @@ exec_lookupname(struct exec *o, char *name, char **val) {
  * find a variable with the given name with value of type DATA_STRING
  */
 unsigned
-exec_lookupstring(struct exec *o, char *name, char **val) {
+exec_lookupstring(struct exec *o, char *name, char **val) 
+{
 	struct var *var;
 	var = exec_varlookup(o, name);
 	if (var == NULL || var->data->type != DATA_STRING) {
@@ -324,7 +341,8 @@ exec_lookupstring(struct exec *o, char *name, char **val) {
  * find a variable with the given name with value of type DATA_LONG
  */
 unsigned
-exec_lookuplong(struct exec *o, char *name, long *val) {
+exec_lookuplong(struct exec *o, char *name, long *val) 
+{
 	struct var *var;
 	var = exec_varlookup(o, name);
 	if (var == NULL || var->data->type != DATA_LONG) {
@@ -339,7 +357,8 @@ exec_lookuplong(struct exec *o, char *name, long *val) {
  * find a variable with the given name with value of type DATA_LIST
  */
 unsigned
-exec_lookuplist(struct exec *o, char *name, struct data **val) {
+exec_lookuplist(struct exec *o, char *name, struct data **val) 
+{
 	struct var *var;
 	var = exec_varlookup(o, name);
 	if (var == NULL || var->data->type != DATA_LIST) {
@@ -355,7 +374,8 @@ exec_lookuplist(struct exec *o, char *name, struct data **val) {
  * a boolean and return it
  */
 unsigned
-exec_lookupbool(struct exec *o, char *name, long *val) {
+exec_lookupbool(struct exec *o, char *name, long *val) 
+{
 	struct var *var;
 	unsigned res;
 	

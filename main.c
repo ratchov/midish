@@ -46,7 +46,8 @@
 
 
 int
-main(int argc, char **argv) {
+main(int argc, char **argv) 
+{
 	unsigned exitcode;
 	
 	if (!user_getopts(&argc, &argv)) {

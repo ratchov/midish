@@ -41,7 +41,8 @@
 /* ------------------------------------------------------------------- */
 
 void
-chan_output(unsigned dev, unsigned ch, struct textout *f) {
+chan_output(unsigned dev, unsigned ch, struct textout *f) 
+{
 	textout_putstr(f, "{");
 	textout_putlong(f, dev);
 	textout_putstr(f, " ");
@@ -51,7 +52,8 @@ chan_output(unsigned dev, unsigned ch, struct textout *f) {
 
 
 void
-ev_output(struct ev *e, struct textout *f) {
+ev_output(struct ev *e, struct textout *f) 
+{
 
 	/* XXX: use ev_getstr() */
 
@@ -151,7 +153,8 @@ range_output(unsigned min, unsigned max, struct textout *f)
 }
 
 void
-evspec_output(struct evspec *o, struct textout *f) {
+evspec_output(struct evspec *o, struct textout *f) 
+{
 	textout_putstr(f, evinfo[o->cmd].spec);
 	if ((evinfo[o->cmd].flags & EV_HAS_DEV) && 
 	    (evinfo[o->cmd].flags & EV_HAS_CH)) {
@@ -172,7 +175,8 @@ evspec_output(struct evspec *o, struct textout *f) {
 }
 
 void
-track_output(struct track *t, struct textout *f) {
+track_output(struct track *t, struct textout *f) 
+{
 	struct seqev *i;
 	
 	textout_putstr(f, "{\n");
@@ -198,7 +202,8 @@ track_output(struct track *t, struct textout *f) {
 }
 
 void
-filt_output(struct filt *o, struct textout *f) {
+filt_output(struct filt *o, struct textout *f) 
+{
 	struct filtsrc *s, *snext;
 	struct filtdst *d;
 	textout_putstr(f, "{\n");
@@ -227,7 +232,8 @@ filt_output(struct filt *o, struct textout *f) {
 }
 
 void
-sysex_output(struct sysex *o, struct textout *f) {
+sysex_output(struct sysex *o, struct textout *f) 
+{
 	struct chunk *c;
 	unsigned i, col;
 	textout_putstr(f, "{\n");
@@ -267,7 +273,8 @@ sysex_output(struct sysex *o, struct textout *f) {
 }
 
 void
-songsx_output(struct songsx *o, struct textout *f) {
+songsx_output(struct songsx *o, struct textout *f) 
+{
 	struct sysex *i;
 	textout_putstr(f, "{\n");
 	textout_shiftright(f);
@@ -286,7 +293,8 @@ songsx_output(struct songsx *o, struct textout *f) {
 
 
 void
-songtrk_output(struct songtrk *o, struct textout *f) {
+songtrk_output(struct songtrk *o, struct textout *f) 
+{
 	textout_putstr(f, "{\n");
 	textout_shiftright(f);
 
@@ -312,7 +320,8 @@ songtrk_output(struct songtrk *o, struct textout *f) {
 }
 
 void
-songchan_output(struct songchan *o, struct textout *f) {
+songchan_output(struct songchan *o, struct textout *f) 
+{
 	textout_putstr(f, "{\n");
 	textout_shiftright(f);
 			
@@ -339,7 +348,8 @@ songchan_output(struct songchan *o, struct textout *f) {
 }
 
 void
-songfilt_output(struct songfilt *o, struct textout *f) {
+songfilt_output(struct songfilt *o, struct textout *f) 
+{
 	textout_putstr(f, "{\n");
 	textout_shiftright(f);
 
@@ -361,7 +371,8 @@ songfilt_output(struct songfilt *o, struct textout *f) {
 }
 
 void
-metro_output(struct metro *o, struct textout *f) {
+metro_output(struct metro *o, struct textout *f) 
+{
 	textout_putstr(f, "{\n");
 	textout_shiftright(f);
 	
@@ -386,7 +397,8 @@ metro_output(struct metro *o, struct textout *f) {
 }
 
 void
-evctltab_output(struct evctl *tab, struct textout *f) {
+evctltab_output(struct evctl *tab, struct textout *f) 
+{
 	unsigned i;
 	struct evctl *ctl;
 	
@@ -420,7 +432,8 @@ evctltab_output(struct evctl *tab, struct textout *f) {
 }
 
 void
-song_output(struct song *o, struct textout *f) {
+song_output(struct song *o, struct textout *f) 
+{
 	struct songtrk *t;
 	struct songchan *i;
 	struct songfilt *g;
@@ -549,7 +562,8 @@ unsigned parse_songtrk(struct parse *o, struct song *s, struct songtrk *t);
 unsigned parse_song(struct parse *o, struct song *s);
 
 unsigned
-parse_ukline(struct parse *o) {
+parse_ukline(struct parse *o) 
+{
 	if (!parse_getsym(o)) {
 		return 0;
 	}
@@ -579,7 +593,8 @@ parse_ukline(struct parse *o) {
 }
 
 unsigned
-parse_ukblock(struct parse *o) {
+parse_ukblock(struct parse *o) 
+{
 	if (!parse_getsym(o)) {
 		return 0;
 	}
@@ -604,7 +619,8 @@ parse_ukblock(struct parse *o) {
 }
 
 unsigned
-parse_nl(struct parse *o) {
+parse_nl(struct parse *o) 
+{
 	if (!parse_getsym(o)) {
 		return 0;
 	}
@@ -618,7 +634,8 @@ parse_nl(struct parse *o) {
 }
 
 unsigned
-parse_empty(struct parse *o) {
+parse_empty(struct parse *o) 
+{
 	for (;;) {
 		if (!parse_getsym(o)) {
 			return 0;
@@ -633,7 +650,8 @@ parse_empty(struct parse *o) {
 
 
 unsigned
-parse_long(struct parse *o, unsigned long min, unsigned long max, unsigned long *data) {
+parse_long(struct parse *o, unsigned long min, unsigned long max, unsigned long *data) 
+{
 	if (!parse_getsym(o)) {
 		return 0;
 	}
@@ -650,7 +668,8 @@ parse_long(struct parse *o, unsigned long min, unsigned long max, unsigned long 
 }
 
 unsigned
-parse_delta(struct parse *o, unsigned *delta) {
+parse_delta(struct parse *o, unsigned *delta) 
+{
 	if (!parse_getsym(o)) {
 		return 0;
 	}
@@ -666,7 +685,8 @@ parse_delta(struct parse *o, unsigned *delta) {
 }
 
 unsigned
-parse_chan(struct parse *o, unsigned long *dev, unsigned long *ch) {
+parse_chan(struct parse *o, unsigned long *dev, unsigned long *ch) 
+{
 	if (!parse_getsym(o)) {
 		return 0;
 	}
@@ -700,7 +720,8 @@ parse_chan(struct parse *o, unsigned long *dev, unsigned long *ch) {
 }
 
 unsigned
-parse_ev(struct parse *o, struct ev *ev) {
+parse_ev(struct parse *o, struct ev *ev) 
+{
 	unsigned long val, val2;
 	
 	if (!parse_getsym(o)) {
@@ -852,7 +873,8 @@ parse_ev(struct parse *o, struct ev *ev) {
 
 
 unsigned
-parse_track(struct parse *o, struct track *t) {
+parse_track(struct parse *o, struct track *t) 
+{
 	unsigned delta;
 	struct seqev *pos, *se;
 	struct statelist slist;
@@ -976,7 +998,8 @@ parse_evspec(struct parse *o, struct evspec *es)
 }
 
 unsigned
-parse_rule(struct parse *o, struct filt *f) {
+parse_rule(struct parse *o, struct filt *f) 
+{
 	unsigned long idev, ich, odev, och, ictl, octl, keylo, keyhi, ukeyplus;
 	struct evspec from, to;
 	int keyplus;
@@ -1112,7 +1135,8 @@ parse_rule(struct parse *o, struct filt *f) {
 }
 
 unsigned
-parse_filt(struct parse *o, struct filt *f) {
+parse_filt(struct parse *o, struct filt *f) 
+{
 	if (!parse_getsym(o)) {
 		return 0;
 	}
@@ -1139,7 +1163,8 @@ parse_filt(struct parse *o, struct filt *f) {
 }
 
 unsigned
-parse_sysex(struct parse *o, struct sysex **res) {
+parse_sysex(struct parse *o, struct sysex **res) 
+{
 	struct sysex *sx;
 	unsigned long val;
 		
@@ -1203,7 +1228,8 @@ err1:
 }
 
 unsigned
-parse_songchan(struct parse *o, struct song *s, struct songchan *i) {
+parse_songchan(struct parse *o, struct song *s, struct songchan *i) 
+{
 	unsigned long val, val2;
 	if (!parse_getsym(o)) {
 		return 0;
@@ -1264,7 +1290,8 @@ parse_songchan(struct parse *o, struct song *s, struct songchan *i) {
 
 
 unsigned
-parse_songtrk(struct parse *o, struct song *s, struct songtrk *t) {
+parse_songtrk(struct parse *o, struct song *s, struct songtrk *t) 
+{
 	struct songfilt *f;
 	unsigned long val;
 	
@@ -1333,7 +1360,8 @@ parse_songtrk(struct parse *o, struct song *s, struct songtrk *t) {
 
 
 unsigned
-parse_songfilt(struct parse *o, struct song *s, struct songfilt *g) {
+parse_songfilt(struct parse *o, struct song *s, struct songfilt *g) 
+{
 	struct songchan *c;
 	
 	if (!parse_getsym(o)) {
@@ -1390,7 +1418,8 @@ parse_songfilt(struct parse *o, struct song *s, struct songfilt *g) {
 
 
 unsigned
-parse_songsx(struct parse *o, struct song *s, struct songsx *g) {
+parse_songsx(struct parse *o, struct song *s, struct songsx *g) 
+{
 	struct sysex *sx;
 	
 	if (!parse_getsym(o)) {
@@ -1430,7 +1459,8 @@ parse_songsx(struct parse *o, struct song *s, struct songsx *g) {
 }
 
 unsigned
-parse_metro(struct parse *o, struct metro *m) {
+parse_metro(struct parse *o, struct metro *m) 
+{
 	unsigned long num;
 	struct ev ev;
 
@@ -1492,7 +1522,8 @@ parse_metro(struct parse *o, struct metro *m) {
 }
 
 unsigned
-parse_song(struct parse *o, struct song *s) {
+parse_song(struct parse *o, struct song *s) 
+{
 	struct songtrk *t;
 	struct songchan *i;
 	struct songfilt *g;
@@ -1758,7 +1789,8 @@ parse_song(struct parse *o, struct song *s) {
 }
 
 void
-song_save(struct song *o, char *name) {
+song_save(struct song *o, char *name) 
+{
 	struct textout *f;
 	
 	f = textout_new(name);
@@ -1776,7 +1808,8 @@ song_save(struct song *o, char *name) {
 }
 
 unsigned
-song_load(struct song *o, char *filename) {
+song_load(struct song *o, char *filename) 
+{
 	struct parse *parse;
 	unsigned res;
 	

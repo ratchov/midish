@@ -38,7 +38,8 @@ void metro_tocb(void *);
  * initialize the metronome with some defaults
  */
 void
-metro_init(struct metro *o) {
+metro_init(struct metro *o) 
+{
 	o->enabled = 1;
 	o->hi.cmd = EV_NON;
 	o->hi.dev = DEFAULT_METRO_DEV;
@@ -58,7 +59,8 @@ metro_init(struct metro *o) {
  * free the metronome
  */
 void
-metro_done(struct metro *o) {
+metro_done(struct metro *o) 
+{
 	/* nothing for now */
 }
 
@@ -66,7 +68,8 @@ metro_done(struct metro *o) {
  * callback that sends the note-off event of the click
  */ 
 void
-metro_tocb(void *addr) {
+metro_tocb(void *addr) 
+{
 	struct metro *o = (struct metro *)addr;
 	struct ev ev;
 
@@ -89,7 +92,8 @@ metro_tocb(void *addr) {
  * note: the output is not flushed
  */
 void
-metro_tic(struct metro *o, unsigned beat, unsigned tic) {
+metro_tic(struct metro *o, unsigned beat, unsigned tic) 
+{
 	if (o->enabled && tic == 0) {
 		/*
 		 * if the last metronome click is sounding
@@ -117,7 +121,8 @@ metro_tic(struct metro *o, unsigned beat, unsigned tic) {
  * send the note off event of the click (if any)
  */
 void
-metro_shut(struct metro *o) {
+metro_shut(struct metro *o) 
+{
 	if (o->ev) {
 		timo_del(&o->to);
 		metro_tocb(o);

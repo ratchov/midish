@@ -126,7 +126,8 @@ void mux_chgphase(unsigned phase);
  * initialize all structures and open all midi devices
  */
 void
-mux_open(void) {
+mux_open(void) 
+{
 	struct mididev *i;
 
 	timo_init();
@@ -167,7 +168,8 @@ mux_open(void) {
  * release all structures and close midi devices
  */
 void
-mux_close(void) {
+mux_close(void) 
+{
 	struct mididev *i;
 
 	if (!mididev_master) {
@@ -197,7 +199,8 @@ mux_close(void) {
 
 #ifdef MUX_DEBUG
 void
-mux_dbgphase(unsigned phase) {
+mux_dbgphase(unsigned phase) 
+{
 	switch(phase) {
 	case MUX_STARTWAIT:
 		dbg_puts("STARTWAIT");
@@ -228,7 +231,8 @@ mux_dbgphase(unsigned phase) {
  * change the current phase
  */
 void
-mux_chgphase(unsigned phase) {
+mux_chgphase(unsigned phase) 
+{
 #ifdef MUX_DEBUG
 	dbg_puts("mux_phase: ");
 	mux_dbgphase(mux_phase);
@@ -244,7 +248,8 @@ mux_chgphase(unsigned phase) {
  * is only sent if the device tic_per_unit permits it.
  */
 void
-mux_sendtic(void) {
+mux_sendtic(void) 
+{
 	struct mididev *i;
 
 	for (i = mididev_list; i != NULL; i = i->next) {
@@ -262,7 +267,8 @@ mux_sendtic(void) {
  * similar to sendtic, but sends a START event
  */
 void
-mux_sendstart(void) {
+mux_sendstart(void) 
+{
 	struct mididev *i;
 
 	for (i = mididev_list; i != NULL; i = i->next) {
@@ -283,7 +289,8 @@ mux_sendstart(void) {
  * similar to sendtic, but send a STOP event
  */
 void
-mux_sendstop(void) {
+mux_sendstop(void) 
+{
 	struct mididev *i;
 
 	for (i = mididev_list; i != NULL; i = i->next) {
@@ -298,7 +305,8 @@ mux_sendstop(void) {
  * other routines should be used to send events
  */
 void
-mux_putev(struct ev *ev) {
+mux_putev(struct ev *ev) 
+{
 	unsigned unit;
 	struct mididev *dev;
 	struct ev rev[CONV_NUMREV];
@@ -335,7 +343,8 @@ mux_putev(struct ev *ev) {
  * sysex messages
  */
 void
-mux_sendraw(unsigned unit, unsigned char *buf, unsigned len) {
+mux_sendraw(unsigned unit, unsigned char *buf, unsigned len) 
+{
 	struct mididev *dev;
 	if (unit >= DEFAULT_MAXNDEVS) {
 		return;
@@ -355,7 +364,8 @@ mux_sendraw(unsigned unit, unsigned char *buf, unsigned len) {
  * contains the number of 24th of seconds elapsed since the last call
  */
 void
-mux_timercb(unsigned long delta) {
+mux_timercb(unsigned long delta) 
+{
 	struct mididev *dev;
 	mux_curpos += delta;
 	
@@ -441,7 +451,8 @@ mux_timercb(unsigned long delta) {
  * called when a MIDI TICK is received from an external device
  */
 void
-mux_ticcb(unsigned unit) {
+mux_ticcb(unsigned unit) 
+{
 	struct mididev *dev = mididev_byunit[unit];
 
 	if (!mididev_master || dev != mididev_master) {	
@@ -469,7 +480,8 @@ mux_ticcb(unsigned unit) {
  * called when a MIDI START event is received from an external device
  */
 void
-mux_startcb(unsigned unit) {
+mux_startcb(unsigned unit) 
+{
 	struct mididev *dev = mididev_byunit[unit];
 
 	if (!mididev_master || dev != mididev_master) {	
@@ -485,7 +497,8 @@ mux_startcb(unsigned unit) {
  * called when a MIDI STOP event is received from an external device
  */
 void
-mux_stopcb(unsigned unit) {
+mux_stopcb(unsigned unit) 
+{
 	struct mididev *dev = mididev_byunit[unit];
 
 	if (!mididev_master || dev != mididev_master) {	
@@ -502,7 +515,8 @@ mux_stopcb(unsigned unit) {
  * called when a MIDI Active-sensing is received from an external device
  */
 void
-mux_ackcb(unsigned unit) {
+mux_ackcb(unsigned unit) 
+{
 	struct mididev *dev = mididev_byunit[unit];
 
 	if (dev->isensto == 0) {
@@ -516,7 +530,8 @@ mux_ackcb(unsigned unit) {
  * called when a MIDI voice event is received from an external device
  */
 void
-mux_evcb(unsigned unit, struct ev *ev) {
+mux_evcb(unsigned unit, struct ev *ev) 
+{
 	struct ev rev;
 	struct mididev *dev = mididev_byunit[ev->dev];
 #ifdef MUX_DEBUG
@@ -538,7 +553,8 @@ mux_evcb(unsigned unit, struct ev *ev) {
  *	rules.
  */
 void
-mux_errorcb(unsigned unit) {
+mux_errorcb(unsigned unit) 
+{
 	unsigned i;
 	struct ev ev;
 	
@@ -566,7 +582,8 @@ mux_errorcb(unsigned unit) {
  * called when an sysex has been received from an external device
  */
 void
-mux_sysexcb(unsigned unit, struct sysex *sysex) {
+mux_sysexcb(unsigned unit, struct sysex *sysex) 
+{
 	song_sysexcb(usong, sysex);
 }
 
@@ -574,7 +591,8 @@ mux_sysexcb(unsigned unit, struct sysex *sysex) {
  * flush all devices
  */
 void
-mux_flush(void) {
+mux_flush(void) 
+{
 	struct mididev *dev;
 	for (dev = mididev_list; dev != NULL; dev = dev->next) {
 		rmidi_flush(RMIDI(dev));
@@ -585,7 +603,8 @@ mux_flush(void) {
  * return the current phase
  */
 unsigned
-mux_getphase(void) {
+mux_getphase(void) 
+{
 	return mux_phase;
 }
 
@@ -594,7 +613,8 @@ mux_getphase(void) {
  * microseconds
  */
 void
-mux_chgtempo(unsigned long ticlength) {
+mux_chgtempo(unsigned long ticlength) 
+{
 	if (mux_phase == MUX_FIRST || mux_phase == MUX_NEXT) {
 		mux_nextpos += ticlength;
 		mux_nextpos -= mux_ticlength;
@@ -607,7 +627,8 @@ mux_chgtempo(unsigned long ticlength) {
  * instance that 1 of "our"ticks equals 2 ticks on that device...
  */
 void
-mux_chgticrate(unsigned tpu) {
+mux_chgticrate(unsigned tpu) 
+{
 	mux_ticrate = tpu;
 }
 
@@ -616,7 +637,8 @@ mux_chgticrate(unsigned tpu) {
  * we're the clock master)
  */
 void
-mux_startwait(void) {
+mux_startwait(void) 
+{
 	mux_chgphase(MUX_STARTWAIT);
 }
 
@@ -625,6 +647,7 @@ mux_startwait(void) {
  * the clock master)
  */
 void
-mux_stopwait(void) {
+mux_stopwait(void) 
+{
 	mux_chgphase(MUX_STOPWAIT);
 }

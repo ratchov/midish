@@ -44,7 +44,8 @@ unsigned pool_debug = 0;
  * initialises a pool of "itemnum" elements of size "itemsize"
  */
 void
-pool_init(struct pool *o, char *name, unsigned itemsize, unsigned itemnum) {
+pool_init(struct pool *o, char *name, unsigned itemsize, unsigned itemnum) 
+{
 	unsigned i;
 	unsigned char *p;
 	
@@ -91,7 +92,8 @@ pool_init(struct pool *o, char *name, unsigned itemsize, unsigned itemnum) {
  * free the given pool
  */
 void
-pool_done(struct pool *o) {
+pool_done(struct pool *o) 
+{
 	mem_free(o->data);
 #ifdef POOL_DEBUG
 	if (o->used != 0) {
@@ -120,7 +122,9 @@ pool_done(struct pool *o) {
  * it from the free list and return the pointer
  */
 void *
-pool_new(struct pool *o) {	
+pool_new(struct pool *o) 
+{
+
 	struct poolent *e;
 	
 	if (!o->first) {
@@ -149,7 +153,8 @@ pool_new(struct pool *o) {
  * free an entry: just link it again on the free list
  */
 void
-pool_del(struct pool *o, void *p) {
+pool_del(struct pool *o, void *p) 
+{
 	struct poolent *e = (struct poolent *)p;
 #ifdef POOL_DEBUG
 	unsigned i, n;

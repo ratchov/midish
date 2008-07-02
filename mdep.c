@@ -76,7 +76,8 @@ struct pollfd *cons_pfd;
  * open midi devices
  */
 void
-mux_mdep_open(void) {
+mux_mdep_open(void) 
+{
 	if (gettimeofday(&tv_last, NULL) < 0) {
 		perror("mux_mdep_open: initial gettimeofday() failed");
 		exit(1);
@@ -87,7 +88,8 @@ mux_mdep_open(void) {
  * close midi devices
  */
 void
-mux_mdep_close(void) {
+mux_mdep_close(void) 
+{
 }
 
 void
@@ -182,7 +184,8 @@ mux_mdep_wait(void)
  * IMPORTANT : must never be called from inside mux_run()
  */
 void 
-mux_sleep(unsigned millisecs) {
+mux_sleep(unsigned millisecs) 
+{
 	while (poll(NULL, (nfds_t)0, millisecs) < 0) {
 		perror("mux_sleep: poll failed");
 		exit(1);
@@ -193,7 +196,8 @@ mux_sleep(unsigned millisecs) {
  * open an already initialized midi device
  */
 void
-rmidi_open(struct rmidi *o) {
+rmidi_open(struct rmidi *o) 
+{
 	int mode;
 
 	if (o->mididev.mode == MIDIDEV_MODE_IN) {
@@ -225,7 +229,8 @@ rmidi_open(struct rmidi *o) {
  * close the given midi device
  */
 void
-rmidi_close(struct rmidi *o) {
+rmidi_close(struct rmidi *o) 
+{
 	if (o->mdep.fd < 0) {
 		return;
 	}
@@ -236,7 +241,8 @@ rmidi_close(struct rmidi *o) {
  * create/register the new device
  */
 void 
-rmidi_init(struct rmidi *o, unsigned mode) {
+rmidi_init(struct rmidi *o, unsigned mode) 
+{
 	o->mdep.fd = -1;
 	o->mdep.pfd = NULL;
 	o->oused = 0;
@@ -249,7 +255,8 @@ rmidi_init(struct rmidi *o, unsigned mode) {
  * unregister/destroy the given device
  */
 void 
-rmidi_done(struct rmidi *o) {
+rmidi_done(struct rmidi *o) 
+{
 	if (mux_isopen) {
 		rmidi_close(o);
 	}
@@ -263,7 +270,8 @@ rmidi_done(struct rmidi *o) {
  * flush the given midi device
  */
 void
-rmidi_flush(struct rmidi *o) {
+rmidi_flush(struct rmidi *o) 
+{
 	int res;
 	unsigned start, stop;
 	
@@ -312,7 +320,8 @@ cons_mdep_getc(void)
  * try /etc/midishrc
  */
 unsigned
-exec_runrcfile(struct exec *o) {
+exec_runrcfile(struct exec *o) 
+{
 	char *home;
 	char name[PATH_MAX];
 	struct stat st;
@@ -334,7 +343,8 @@ extern char *optarg;
 extern int optind;
 
 unsigned
-user_getopts(int *pargc, char ***pargv) {
+user_getopts(int *pargc, char ***pargv) 
+{
 	int ch;
 
 	while ((ch = getopt(*pargc, *pargv, "bhv")) != -1) {

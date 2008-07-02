@@ -65,7 +65,8 @@
  * one, then update it.
  */
 void
-conv_setctl(struct statelist *slist, struct ev *ev) {
+conv_setctl(struct statelist *slist, struct ev *ev) 
+{
 	struct state *i;
 
 	for (i = slist->first; i != NULL; i = i->next) {
@@ -85,7 +86,8 @@ conv_setctl(struct statelist *slist, struct ev *ev) {
  * recorded, then return EV_UNDEF
  */
 unsigned
-conv_getctl(struct statelist *slist, struct ev *ev, unsigned num) {
+conv_getctl(struct statelist *slist, struct ev *ev, unsigned num) 
+{
 	struct state *i;
 
 	for (i = slist->first; i != NULL; i = i->next) {
@@ -101,7 +103,8 @@ conv_getctl(struct statelist *slist, struct ev *ev, unsigned num) {
  * same channel/device as the given event.
  */
 void
-conv_rmctl(struct statelist *slist, struct ev *ev, unsigned num) {
+conv_rmctl(struct statelist *slist, struct ev *ev, unsigned num) 
+{
 	struct state *i;
 
 	for (i = slist->first; i != NULL; i = i->next) {
@@ -120,7 +123,8 @@ conv_rmctl(struct statelist *slist, struct ev *ev, unsigned num) {
  * returned.
  */
 unsigned
-conv_getctx(struct statelist *slist, struct ev *ev, unsigned hi, unsigned lo) {
+conv_getctx(struct statelist *slist, struct ev *ev, unsigned hi, unsigned lo) 
+{
 	unsigned vhi, vlo;
 
 	vlo = conv_getctl(slist, ev, lo);

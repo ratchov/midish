@@ -50,7 +50,8 @@
 
 
 unsigned
-user_func_sysexlist(struct exec *o, struct data **r) {
+user_func_sysexlist(struct exec *o, struct data **r) 
+{
 	struct data *d, *n;
 	struct songsx *i;
 
@@ -67,7 +68,8 @@ user_func_sysexlist(struct exec *o, struct data **r) {
 }
 
 unsigned
-user_func_sysexnew(struct exec *o, struct data **r) {
+user_func_sysexnew(struct exec *o, struct data **r) 
+{
 	char *name;
 	struct songsx *i;
 	
@@ -87,7 +89,8 @@ user_func_sysexnew(struct exec *o, struct data **r) {
 }
 
 unsigned
-user_func_sysexdelete(struct exec *o, struct data **r) {
+user_func_sysexdelete(struct exec *o, struct data **r) 
+{
 	struct songsx *c;
 
 	if (!song_try(usong)) {
@@ -101,7 +104,8 @@ user_func_sysexdelete(struct exec *o, struct data **r) {
 }
 
 unsigned
-user_func_sysexrename(struct exec *o, struct data **r) {
+user_func_sysexrename(struct exec *o, struct data **r) 
+{
 	struct songsx *c;
 	char *name;
 	
@@ -122,7 +126,8 @@ user_func_sysexrename(struct exec *o, struct data **r) {
 }
 
 unsigned
-user_func_sysexexists(struct exec *o, struct data **r) {
+user_func_sysexexists(struct exec *o, struct data **r) 
+{
 	char *name;
 	struct songsx *i;
 
@@ -138,7 +143,8 @@ user_func_sysexexists(struct exec *o, struct data **r) {
 }
 
 unsigned
-user_func_sysexinfo(struct exec *o, struct data **r) {
+user_func_sysexinfo(struct exec *o, struct data **r) 
+{
 	struct songsx *c;
 	struct sysex *e;
 	unsigned i;
@@ -177,7 +183,8 @@ user_func_sysexinfo(struct exec *o, struct data **r) {
 
 
 unsigned
-user_func_sysexclear(struct exec *o, struct data **r) {
+user_func_sysexclear(struct exec *o, struct data **r) 
+{
 	struct songsx *c;
 	struct sysex *x, **px;
 	struct data *d;
@@ -213,7 +220,8 @@ user_func_sysexclear(struct exec *o, struct data **r) {
 }
 
 unsigned
-user_func_sysexsetunit(struct exec *o, struct data **r) {
+user_func_sysexsetunit(struct exec *o, struct data **r) 
+{
 	struct songsx *c;
 	struct sysex *x;
 	struct data *d;
@@ -247,7 +255,8 @@ user_func_sysexsetunit(struct exec *o, struct data **r) {
 }
 
 unsigned
-user_func_sysexadd(struct exec *o, struct data **r) {
+user_func_sysexadd(struct exec *o, struct data **r) 
+{
 	struct songsx *c;
 	struct sysex *x;
 	struct data *byte;

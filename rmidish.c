@@ -52,7 +52,8 @@
 
 #define MIDISH "midish"
 
-struct midish {
+struct midish 
+{
 	int pid;				/* pid of midish */
 	int sin;				/* stdin of midish */
 	int sout;				/* stdout of midish */
@@ -276,7 +277,8 @@ userline(char *rl)
 
 
 int
-main(int argc, char *argv[]) {
+main(int argc, char *argv[]) 
+{
 	char path[PATH_MAX];
 	unsigned dirlen, filelen;
 	struct pollfd pfds[2];

@@ -49,7 +49,8 @@
 
 /* ----------------------------------------------------- tokdefs --- */
 
-struct tokdef lex_op[] = {
+struct tokdef lex_op[] = 
+{
 	{ TOK_EQ, 		"=="		},
 	{ TOK_NEQ, 		"!="		},
 	{ TOK_GE, 		">="		},
@@ -87,7 +88,8 @@ struct tokdef lex_op[] = {
 	{ 0,			NULL		}
 };
 
-struct tokdef lex_kw[] = {
+struct tokdef lex_kw[] = 
+{
 	{ TOK_IF,		"if" 		},
 	{ TOK_ELSE,		"else" 		},
 	{ TOK_PROC,		"proc"		},
@@ -101,7 +103,8 @@ struct tokdef lex_kw[] = {
 };
 
 unsigned
-lex_init(struct lex *o, char *filename) {
+lex_init(struct lex *o, char *filename) 
+{
 	o->lookchar = -1;
 	o->in = textin_new(filename);
 	if (!o->in) {
@@ -111,12 +114,14 @@ lex_init(struct lex *o, char *filename) {
 }
 
 void
-lex_done(struct lex *o) {
+lex_done(struct lex *o) 
+{
 	textin_delete(o->in);
 }
 
 unsigned
-lex_getchar(struct lex *o, int *c) {
+lex_getchar(struct lex *o, int *c) 
+{
 	if (o->lookchar < 0) {
 		textin_getpos(o->in, &o->line, &o->col);
 		if (!textin_getchar(o->in, c)) {
@@ -130,7 +135,8 @@ lex_getchar(struct lex *o, int *c) {
 }
 
 void
-lex_ungetchar(struct lex *o, int c) {
+lex_ungetchar(struct lex *o, int c) 
+{
 	if (o->lookchar >= 0) {
 		dbg_puts("lex_ungetchar: lookchar already set\n");
 		dbg_panic();
@@ -139,12 +145,14 @@ lex_ungetchar(struct lex *o, int c) {
 }
 
 void
-lex_err(struct lex *o, char *msg) {
+lex_err(struct lex *o, char *msg) 
+{
 	cons_erruu(o->line + 1, o->col + 1, msg);
 }
 
 void
-lex_recover(struct lex *o, char *msg) {
+lex_recover(struct lex *o, char *msg) 
+{
 	int c;
 	
 	lex_err(o, msg);
@@ -166,7 +174,8 @@ lex_recover(struct lex *o, char *msg) {
  * convert string to number in any base between 2 and 36
  */
 unsigned
-lex_str2long(struct lex *o, unsigned base) {
+lex_str2long(struct lex *o, unsigned base) 
+{
 	char *p;
 	unsigned digit;
 	unsigned long hi, lo;
@@ -201,7 +210,8 @@ lex_str2long(struct lex *o, unsigned base) {
 }
 
 unsigned
-lex_scan(struct lex *o) {
+lex_scan(struct lex *o) 
+{
 	int c, cn;
 	unsigned i, base;
 	
@@ -381,7 +391,8 @@ lex_scan(struct lex *o) {
 }
 
 void
-lex_dbg(struct lex *o) {
+lex_dbg(struct lex *o) 
+{
 	struct tokdef *t;
 	
 	if (o->id == 0) {

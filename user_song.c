@@ -52,7 +52,8 @@
 
 
 unsigned
-user_func_songsetcurchan(struct exec *o, struct data **r) {
+user_func_songsetcurchan(struct exec *o, struct data **r) 
+{
 	struct songchan *t;
 	struct var *arg;
 	
@@ -76,7 +77,8 @@ user_func_songsetcurchan(struct exec *o, struct data **r) {
 }
 
 unsigned
-user_func_songgetcurchan(struct exec *o, struct data **r) {
+user_func_songgetcurchan(struct exec *o, struct data **r) 
+{
 	struct songchan *cur;
 	
 	if (!song_try(usong)) {
@@ -92,7 +94,8 @@ user_func_songgetcurchan(struct exec *o, struct data **r) {
 }
 
 unsigned
-user_func_songsetcursysex(struct exec *o, struct data **r) {
+user_func_songsetcursysex(struct exec *o, struct data **r) 
+{
 	struct songsx *t;
 	struct var *arg;
 	
@@ -116,7 +119,8 @@ user_func_songsetcursysex(struct exec *o, struct data **r) {
 }
 
 unsigned
-user_func_songgetcursysex(struct exec *o, struct data **r) {
+user_func_songgetcursysex(struct exec *o, struct data **r) 
+{
 	struct songsx *cur;
 	
 	if (!song_try(usong)) {
@@ -132,7 +136,8 @@ user_func_songgetcursysex(struct exec *o, struct data **r) {
 }
 
 unsigned
-user_func_songsetunit(struct exec *o, struct data **r) {
+user_func_songsetunit(struct exec *o, struct data **r) 
+{
 	long tpu;
 	struct songtrk *t;
 
@@ -156,7 +161,8 @@ user_func_songsetunit(struct exec *o, struct data **r) {
 }
 
 unsigned
-user_func_songgetunit(struct exec *o, struct data **r) {
+user_func_songgetunit(struct exec *o, struct data **r) 
+{
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -165,7 +171,8 @@ user_func_songgetunit(struct exec *o, struct data **r) {
 }
 
 unsigned
-user_func_songsetcurpos(struct exec *o, struct data **r) {
+user_func_songsetcurpos(struct exec *o, struct data **r) 
+{
 	long measure;
 	
 	if (!song_try(usong)) {
@@ -184,7 +191,8 @@ user_func_songsetcurpos(struct exec *o, struct data **r) {
 }
 
 unsigned
-user_func_songgetcurpos(struct exec *o, struct data **r) {
+user_func_songgetcurpos(struct exec *o, struct data **r) 
+{
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -193,7 +201,8 @@ user_func_songgetcurpos(struct exec *o, struct data **r) {
 }
 
 unsigned
-user_func_songsetcurlen(struct exec *o, struct data **r) {
+user_func_songsetcurlen(struct exec *o, struct data **r) 
+{
 	long len;
 	
 	if (!song_try(usong)) {
@@ -211,7 +220,8 @@ user_func_songsetcurlen(struct exec *o, struct data **r) {
 }
 
 unsigned
-user_func_songgetcurlen(struct exec *o, struct data **r) {
+user_func_songgetcurlen(struct exec *o, struct data **r) 
+{
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -220,7 +230,8 @@ user_func_songgetcurlen(struct exec *o, struct data **r) {
 }
 
 unsigned
-user_func_songsetcurquant(struct exec *o, struct data **r) {
+user_func_songsetcurquant(struct exec *o, struct data **r) 
+{
 	long quantum;
 	
 	if (!song_try(usong)) {
@@ -238,7 +249,8 @@ user_func_songsetcurquant(struct exec *o, struct data **r) {
 }
 
 unsigned
-user_func_songgetcurquant(struct exec *o, struct data **r) {
+user_func_songgetcurquant(struct exec *o, struct data **r) 
+{
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -247,7 +259,8 @@ user_func_songgetcurquant(struct exec *o, struct data **r) {
 }
 
 unsigned
-user_func_songsetcurtrack(struct exec *o, struct data **r) {
+user_func_songsetcurtrack(struct exec *o, struct data **r) 
+{
 	struct songtrk *t;
 	struct var *arg;
 	
@@ -271,7 +284,8 @@ user_func_songsetcurtrack(struct exec *o, struct data **r) {
 }
 
 unsigned
-user_func_songgetcurtrack(struct exec *o, struct data **r) {
+user_func_songgetcurtrack(struct exec *o, struct data **r) 
+{
 	struct songtrk *cur;
 	
 	if (!song_try(usong)) {
@@ -287,7 +301,8 @@ user_func_songgetcurtrack(struct exec *o, struct data **r) {
 }
 
 unsigned
-user_func_songsetcurfilt(struct exec *o, struct data **r) {
+user_func_songsetcurfilt(struct exec *o, struct data **r) 
+{
 	struct songfilt *f;
 	struct var *arg;
 	
@@ -315,7 +330,8 @@ user_func_songsetcurfilt(struct exec *o, struct data **r) {
 }
 
 unsigned
-user_func_songgetcurfilt(struct exec *o, struct data **r) {
+user_func_songgetcurfilt(struct exec *o, struct data **r) 
+{
 	struct songfilt *cur;
 	
 	if (!song_try(usong)) {
@@ -331,7 +347,8 @@ user_func_songgetcurfilt(struct exec *o, struct data **r) {
 }
 
 unsigned
-user_func_songinfo(struct exec *o, struct data **r) {
+user_func_songinfo(struct exec *o, struct data **r) 
+{
 	char map[DEFAULT_MAXNCHANS];
 	struct songtrk *t;
 	struct songchan *c;
@@ -525,7 +542,8 @@ user_func_songinfo(struct exec *o, struct data **r) {
 }
 
 unsigned
-user_func_songsave(struct exec *o, struct data **r) {
+user_func_songsave(struct exec *o, struct data **r) 
+{
 	char *filename;	
 
 	if (!song_try(usong)) {
@@ -539,7 +557,8 @@ user_func_songsave(struct exec *o, struct data **r) {
 }
 
 unsigned
-user_func_songload(struct exec *o, struct data **r) {
+user_func_songload(struct exec *o, struct data **r) 
+{
 	char *filename;		
 	unsigned res;
 
@@ -557,7 +576,8 @@ user_func_songload(struct exec *o, struct data **r) {
 }
 
 unsigned
-user_func_songreset(struct exec *o, struct data **r) {
+user_func_songreset(struct exec *o, struct data **r) 
+{
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -568,7 +588,8 @@ user_func_songreset(struct exec *o, struct data **r) {
 }
 
 unsigned
-user_func_songexportsmf(struct exec *o, struct data **r) {
+user_func_songexportsmf(struct exec *o, struct data **r) 
+{
 	char *filename;
 
 	if (!song_try(usong)) {
@@ -581,7 +602,8 @@ user_func_songexportsmf(struct exec *o, struct data **r) {
 }
 
 unsigned
-user_func_songimportsmf(struct exec *o, struct data **r) {
+user_func_songimportsmf(struct exec *o, struct data **r) 
+{
 	char *filename;
 	struct song *sng;
 
@@ -602,7 +624,8 @@ user_func_songimportsmf(struct exec *o, struct data **r) {
 }
 
 unsigned
-user_func_songidle(struct exec *o, struct data **r) {
+user_func_songidle(struct exec *o, struct data **r) 
+{
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -611,7 +634,8 @@ user_func_songidle(struct exec *o, struct data **r) {
 }
 		
 unsigned
-user_func_songplay(struct exec *o, struct data **r) {
+user_func_songplay(struct exec *o, struct data **r) 
+{
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -620,7 +644,8 @@ user_func_songplay(struct exec *o, struct data **r) {
 }
 
 unsigned
-user_func_songrecord(struct exec *o, struct data **r) {
+user_func_songrecord(struct exec *o, struct data **r) 
+{
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -629,7 +654,8 @@ user_func_songrecord(struct exec *o, struct data **r) {
 }
 
 unsigned
-user_func_songstop(struct exec *o, struct data **r) {
+user_func_songstop(struct exec *o, struct data **r) 
+{
 	if (!mux_isopen) {
 		cons_err("nothing to stop, ignored");
 		return 1;
@@ -640,7 +666,8 @@ user_func_songstop(struct exec *o, struct data **r) {
 }
 
 unsigned
-user_func_songsettempo(struct exec *o, struct data **r) {
+user_func_songsettempo(struct exec *o, struct data **r) 
+{
 	long tempo, measure;
 	
 	if (!song_try(usong)) {
@@ -659,7 +686,8 @@ user_func_songsettempo(struct exec *o, struct data **r) {
 }
 
 unsigned
-user_func_songtimeins(struct exec *o, struct data **r) {
+user_func_songtimeins(struct exec *o, struct data **r) 
+{
 	long num, den, amount, from;
 	unsigned tic, len, tpm;
 	unsigned long usec24;
@@ -714,7 +742,8 @@ user_func_songtimeins(struct exec *o, struct data **r) {
 }
 
 unsigned
-user_func_songtimerm(struct exec *o, struct data **r) {
+user_func_songtimerm(struct exec *o, struct data **r) 
+{
 	long amount, from;
 	unsigned tic, len;
 	struct track t1, t2;
@@ -745,7 +774,8 @@ user_func_songtimerm(struct exec *o, struct data **r) {
 }
 
 unsigned
-user_func_songtimeinfo(struct exec *o, struct data **r) {
+user_func_songtimeinfo(struct exec *o, struct data **r) 
+{
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -755,7 +785,8 @@ user_func_songtimeinfo(struct exec *o, struct data **r) {
 }
 
 unsigned
-user_func_songsetcurinput(struct exec *o, struct data **r) {
+user_func_songsetcurinput(struct exec *o, struct data **r) 
+{
 	unsigned dev, ch;
 	struct data *l;
 	
@@ -773,7 +804,8 @@ user_func_songsetcurinput(struct exec *o, struct data **r) {
 }
 
 unsigned
-user_func_songgettempo(struct exec *o, struct data **r) {
+user_func_songgettempo(struct exec *o, struct data **r) 
+{
 	long from;
 	unsigned tic, bpm, tpb;
 	unsigned long usec24;
@@ -790,7 +822,8 @@ user_func_songgettempo(struct exec *o, struct data **r) {
 }
 
 unsigned
-user_func_songgetsign(struct exec *o, struct data **r) {
+user_func_songgetsign(struct exec *o, struct data **r) 
+{
 	long from;
 	unsigned tic, bpm, tpb;
 	unsigned long usec24;
@@ -809,7 +842,8 @@ user_func_songgetsign(struct exec *o, struct data **r) {
 }
 
 unsigned
-user_func_songgetcurinput(struct exec *o, struct data **r) {
+user_func_songgetcurinput(struct exec *o, struct data **r) 
+{
 	unsigned dev, ch;
 
 	if (!song_try(usong)) {
@@ -823,7 +857,8 @@ user_func_songgetcurinput(struct exec *o, struct data **r) {
 }
 
 unsigned
-user_func_songsetfactor(struct exec *o, struct data **r) {
+user_func_songsetfactor(struct exec *o, struct data **r) 
+{
 	long tpu;
 	if (!exec_lookuplong(o, "tempo_factor", &tpu)) {
 		return 0;
@@ -837,7 +872,8 @@ user_func_songsetfactor(struct exec *o, struct data **r) {
 }
 
 unsigned
-user_func_songgetfactor(struct exec *o, struct data **r) {
+user_func_songgetfactor(struct exec *o, struct data **r) 
+{
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -846,7 +882,8 @@ user_func_songgetfactor(struct exec *o, struct data **r) {
 }
 
 unsigned
-user_func_ctlconfx(struct exec *o, struct data **r) {
+user_func_ctlconfx(struct exec *o, struct data **r) 
+{
 	char *name;
 	unsigned num, old, val;
 	
@@ -871,7 +908,8 @@ user_func_ctlconfx(struct exec *o, struct data **r) {
 }
 
 unsigned
-user_func_ctlconf(struct exec *o, struct data **r) {
+user_func_ctlconf(struct exec *o, struct data **r) 
+{
 	char *name;
 	unsigned num, old, val;
 	
@@ -892,7 +930,8 @@ user_func_ctlconf(struct exec *o, struct data **r) {
 }
 
 unsigned
-user_func_ctlunconf(struct exec *o, struct data **r) {
+user_func_ctlunconf(struct exec *o, struct data **r) 
+{
 	char *name;
 	unsigned num;
 	
@@ -912,7 +951,8 @@ user_func_ctlunconf(struct exec *o, struct data **r) {
 
 
 unsigned
-user_func_ctlinfo(struct exec *o, struct data **r) {
+user_func_ctlinfo(struct exec *o, struct data **r) 
+{
 	if (!song_try(usong)) {
 		return 0;
 	}

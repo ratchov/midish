@@ -46,7 +46,8 @@ unsigned song_debug = 0;
  * allocate and initialize a song structure
  */
 struct song *
-song_new(void) {
+song_new(void) 
+{
 	struct song *o;
 	o = (struct song *)mem_alloc(sizeof(struct song));
 	song_init(o);
@@ -57,7 +58,8 @@ song_new(void) {
  * free the given song structure
  */
 void
-song_delete(struct song *o) {
+song_delete(struct song *o) 
+{
 	song_done(o);
 	mem_free(o);
 }
@@ -66,7 +68,8 @@ song_delete(struct song *o) {
  * initialize the given song
  */
 void
-song_init(struct song *o) {
+song_init(struct song *o) 
+{
 	struct seqev *se;
 
 	/* 
@@ -128,7 +131,8 @@ song_init(struct song *o) {
  * delete a song without freeing it
  */
 void
-song_done(struct song *o) {
+song_done(struct song *o) 
+{
 	if (mux_isopen) {
 		song_stop(o);
 	}
@@ -153,7 +157,8 @@ song_done(struct song *o) {
  * create a new track in the song
  */
 struct songtrk *
-song_trknew(struct song *o, char *name) {
+song_trknew(struct song *o, char *name) 
+{
 	struct songtrk *t;
 
 	t = (struct songtrk *)mem_alloc(sizeof(struct songtrk));
@@ -172,7 +177,8 @@ song_trknew(struct song *o, char *name) {
  * delete the current track from the song
  */
 void
-song_trkdel(struct song *o, struct songtrk *t) {
+song_trkdel(struct song *o, struct songtrk *t) 
+{
 	if (o->curtrk == t) {
 		o->curtrk = NULL;
 	}
@@ -186,7 +192,8 @@ song_trkdel(struct song *o, struct songtrk *t) {
  * return the track with the given name
  */
 struct songtrk *
-song_trklookup(struct song *o, char *name) {
+song_trklookup(struct song *o, char *name) 
+{
 	return (struct songtrk *)name_lookup(&o->trklist, name);
 }
 
@@ -194,7 +201,8 @@ song_trklookup(struct song *o, char *name) {
  * add a new chan to the song
  */
 struct songchan *
-song_channew(struct song *o, char *name, unsigned dev, unsigned ch) {
+song_channew(struct song *o, char *name, unsigned dev, unsigned ch) 
+{
 	struct songchan *c;
 
 	c = (struct songchan *)mem_alloc(sizeof(struct songchan));
@@ -213,7 +221,8 @@ song_channew(struct song *o, char *name, unsigned dev, unsigned ch) {
  * delete the given chan from the song
  */
 void
-song_chandel(struct song *o, struct songchan *c) {
+song_chandel(struct song *o, struct songchan *c) 
+{
 	struct songfilt *f;
 
 	if (o->curchan == c) {
@@ -234,7 +243,8 @@ song_chandel(struct song *o, struct songchan *c) {
  * return the chan with the given name
  */
 struct songchan *
-song_chanlookup(struct song *o, char *name) {
+song_chanlookup(struct song *o, char *name) 
+{
 	return (struct songchan *)name_lookup(&o->chanlist, name);
 }
 
@@ -242,7 +252,8 @@ song_chanlookup(struct song *o, char *name) {
  * return the chan matching the given (dev, ch) pair
  */
 struct songchan *
-song_chanlookup_bynum(struct song *o, unsigned dev, unsigned ch) {
+song_chanlookup_bynum(struct song *o, unsigned dev, unsigned ch) 
+{
 	struct songchan *i;
 
 	SONG_FOREACH_CHAN(o, i) {
@@ -257,7 +268,8 @@ song_chanlookup_bynum(struct song *o, unsigned dev, unsigned ch) {
  * add a new filt to the song
  */
 struct songfilt *
-song_filtnew(struct song *o, char *name) {
+song_filtnew(struct song *o, char *name) 
+{
 	struct songfilt *f;
 
 	f = (struct songfilt *)mem_alloc(sizeof(struct songfilt));
@@ -275,7 +287,8 @@ song_filtnew(struct song *o, char *name) {
  * delete the given filter from the song
  */
 void
-song_filtdel(struct song *o, struct songfilt *f) {
+song_filtdel(struct song *o, struct songfilt *f) 
+{
 	struct songtrk *t;
 
 	if (o->curfilt == f) {
@@ -296,7 +309,8 @@ song_filtdel(struct song *o, struct songfilt *f) {
  * return the filt conrresponding to the given name
  */
 struct songfilt *
-song_filtlookup(struct song *o, char *name) {
+song_filtlookup(struct song *o, char *name) 
+{
 	return (struct songfilt *)name_lookup(&o->filtlist, name);
 }
 
@@ -304,7 +318,8 @@ song_filtlookup(struct song *o, char *name) {
  * add a new sx to the song
  */
 struct songsx *
-song_sxnew(struct song *o, char *name) {
+song_sxnew(struct song *o, char *name) 
+{
 	struct songsx *x;
 
 	x = (struct songsx *)mem_alloc(sizeof(struct songsx));
@@ -319,7 +334,8 @@ song_sxnew(struct song *o, char *name) {
  * delete the given sysex bank from the song
  */
 void
-song_sxdel(struct song *o, struct songsx *x) {
+song_sxdel(struct song *o, struct songsx *x) 
+{
 	if (o->cursx == x) {
 		o->cursx = NULL;
 	}
@@ -333,7 +349,8 @@ song_sxdel(struct song *o, struct songsx *x) {
  * return the sx with the given name
  */
 struct songsx *
-song_sxlookup(struct song *o, char *name) {
+song_sxlookup(struct song *o, char *name) 
+{
 	return (struct songsx *)name_lookup(&o->sxlist, name);
 }
 
@@ -343,27 +360,32 @@ song_sxlookup(struct song *o, char *name) {
  * values
  */
 void
-song_getcursx(struct song *o, struct songsx **r) {
+song_getcursx(struct song *o, struct songsx **r) 
+{
 	*r = o->cursx;
 }
 
 void
-song_setcursx(struct song *o, struct songsx *x) {
+song_setcursx(struct song *o, struct songsx *x) 
+{
 	o->cursx = x;
 }
 
 void
-song_getcurtrk(struct song *o, struct songtrk **r) {
+song_getcurtrk(struct song *o, struct songtrk **r) 
+{
 	*r = o->curtrk;
 }
 
 void
-song_setcurtrk(struct song *o, struct songtrk *t) {
+song_setcurtrk(struct song *o, struct songtrk *t) 
+{
 	o->curtrk = t;
 }
 
 void
-song_getcurfilt(struct song *o, struct songfilt **r) {
+song_getcurfilt(struct song *o, struct songfilt **r) 
+{
 	struct songtrk *t;
 	song_getcurtrk(o, &t);
 	if (t) {
@@ -374,7 +396,8 @@ song_getcurfilt(struct song *o, struct songfilt **r) {
 }
 
 void
-song_setcurfilt(struct song *o, struct songfilt *f) {
+song_setcurfilt(struct song *o, struct songfilt *f) 
+{
 	struct songtrk *t;
 	o->curfilt = f;
 	song_getcurtrk(o, &t);
@@ -384,7 +407,8 @@ song_setcurfilt(struct song *o, struct songfilt *f) {
 }
 
 void
-song_getcurchan(struct song *o, struct songchan **r) {
+song_getcurchan(struct song *o, struct songchan **r) 
+{
 	struct songfilt *f;
 	song_getcurfilt(o, &f);
 	if (f) {
@@ -395,7 +419,8 @@ song_getcurchan(struct song *o, struct songchan **r) {
 }
 
 void
-song_setcurchan(struct song *o, struct songchan *c) {
+song_setcurchan(struct song *o, struct songchan *c) 
+{
 	struct songfilt *f;
 	song_getcurfilt(o, &f);
 	if (f) {
@@ -406,7 +431,8 @@ song_setcurchan(struct song *o, struct songchan *c) {
 }
 
 void
-song_getcurinput(struct song *o, unsigned *dev, unsigned *ch) {
+song_getcurinput(struct song *o, unsigned *dev, unsigned *ch) 
+{
 	struct songchan *c;
 	song_getcurchan(o, &c);
 	if (c) {
@@ -419,7 +445,8 @@ song_getcurinput(struct song *o, unsigned *dev, unsigned *ch) {
 }
 
 void
-song_setcurinput(struct song *o, unsigned dev, unsigned ch) {
+song_setcurinput(struct song *o, unsigned dev, unsigned ch) 
+{
 	struct songchan *c;
 	song_getcurchan(o, &c);
 	if (c) {
@@ -435,7 +462,8 @@ song_setcurinput(struct song *o, unsigned dev, unsigned ch) {
  * send to the output all events from all chans
  */
 void
-song_playconf(struct song *o) {
+song_playconf(struct song *o) 
+{
 	struct songchan *i;
 	struct seqptr cp;
 	struct state *st;
@@ -468,7 +496,8 @@ song_playconf(struct song *o) {
  * send all sysex messages
  */
 void
-song_playsysex(struct song *o) {
+song_playsysex(struct song *o) 
+{
 	struct songsx *l;
 	struct sysex *s;
 	struct chunk *c;
@@ -488,7 +517,8 @@ song_playsysex(struct song *o) {
  * play a meta event
  */
 void
-song_metaput(struct song *o, struct ev *ev) {
+song_metaput(struct song *o, struct ev *ev) 
+{
 	switch(ev->cmd) {
 	case EV_TIMESIG:
 		o->bpm = ev->timesig_beats;
@@ -512,7 +542,8 @@ song_metaput(struct song *o, struct ev *ev) {
  * this routine must be called after song_ticplay()
  */
 void
-song_ticskip(struct song *o) {
+song_ticskip(struct song *o) 
+{
 	struct songtrk *i;
 
 	/* 
@@ -549,7 +580,8 @@ song_ticskip(struct song *o) {
  * recordcb.
  */
 void
-song_ticplay(struct song *o) {
+song_ticplay(struct song *o) 
+{
 	struct songtrk *i;
 	struct state *st;
 	struct ev ev;
@@ -602,7 +634,8 @@ song_ticplay(struct song *o) {
  * that have context, then the rest.
  */
 void
-song_confrestore(struct statelist *slist) {
+song_confrestore(struct statelist *slist) 
+{
 	struct state *s;
 	struct ev re;
 	
@@ -634,7 +667,8 @@ song_confrestore(struct statelist *slist) {
  * cancel all frames in the given state list
  */
 void
-song_confcancel(struct statelist *slist) {
+song_confcancel(struct statelist *slist) 
+{
 	struct state *s;
 	struct ev ca;
 
@@ -669,7 +703,9 @@ song_confcancel(struct statelist *slist) {
  * call-back called when the first midi tick arrives
  */
 void
-song_startcb(struct song *o) {	
+song_startcb(struct song *o) 
+{
+
 	if (song_debug) {
 		dbg_puts("song_startcb:\n");
 	}
@@ -683,7 +719,9 @@ song_startcb(struct song *o) {
  * call-back called when the midi clock stopped
  */
 void
-song_stopcb(struct song *o) {	
+song_stopcb(struct song *o) 
+{
+
 	if (song_debug) {
 		dbg_puts("song_rec_stop:\n");
 	}
@@ -693,7 +731,8 @@ song_stopcb(struct song *o) {
  * call-back, called when the midi clock moved one tick forward
  */
 void
-song_movecb(struct song *o) {
+song_movecb(struct song *o) 
+{
 	unsigned delta;
 
 	if (o->mode & SONG_REC) {
@@ -714,7 +753,8 @@ song_movecb(struct song *o) {
  * call-back called when a midi event arrives
  */
 void
-song_evcb(struct song *o, struct ev *ev) {
+song_evcb(struct song *o, struct ev *ev) 
+{
 	struct ev filtout[FILT_MAXNRULES];
 	unsigned i, nev;
 
@@ -750,7 +790,8 @@ song_evcb(struct song *o, struct ev *ev) {
  * call-back called when a sysex message arrives
  */
 void
-song_sysexcb(struct song *o, struct sysex *sx) {
+song_sysexcb(struct song *o, struct sysex *sx) 
+{
 	if (song_debug) {
 		dbg_puts("song_sysexcb:\n");
 	}
@@ -772,7 +813,8 @@ song_sysexcb(struct song *o, struct sysex *sx) {
  * for each input event.
  */
 void
-song_start(struct song *o, unsigned mode, unsigned countdown) {
+song_start(struct song *o, unsigned mode, unsigned countdown) 
+{
 	struct songfilt *f;
 	struct songtrk *t;
 	unsigned tic, off;
@@ -870,7 +912,8 @@ song_start(struct song *o, unsigned mode, unsigned countdown) {
  * play/record process. Must be called with the mux initialised
  */
 void
-song_stop(struct song *o) {
+song_stop(struct song *o) 
+{
 	struct songtrk *t;
 	struct state *st;
 	struct ev ev;
@@ -916,7 +959,8 @@ song_stop(struct song *o) {
  * play the song initialize the midi/timer and start the event loop
  */
 void
-song_play(struct song *o) {
+song_play(struct song *o) 
+{
 	song_start(o, SONG_PLAY, 0);
 	
 	if (song_debug) {
@@ -930,7 +974,8 @@ song_play(struct song *o) {
  * event loop
  */
 void
-song_record(struct song *o) {
+song_record(struct song *o) 
+{
 	struct songtrk *t;
 	
 	song_getcurtrk(o, &t);
@@ -949,7 +994,8 @@ song_record(struct song *o) {
  * move input events directly to the output
  */
 void
-song_idle(struct song *o) {
+song_idle(struct song *o) 
+{
 	song_start(o, 0, 0);
 	
 	if (song_debug) {

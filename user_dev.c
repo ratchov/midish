@@ -50,7 +50,8 @@
 
 
 unsigned
-user_func_devlist(struct exec *o, struct data **r) {
+user_func_devlist(struct exec *o, struct data **r) 
+{
 	struct data *d, *n;
 	struct mididev *i;
 
@@ -67,7 +68,8 @@ user_func_devlist(struct exec *o, struct data **r) {
 }
 
 unsigned
-user_func_devattach(struct exec *o, struct data **r) {
+user_func_devattach(struct exec *o, struct data **r) 
+{
 	long unit;
 	char *path, *modename;
 	unsigned mode;
@@ -94,7 +96,8 @@ user_func_devattach(struct exec *o, struct data **r) {
 }
 
 unsigned
-user_func_devdetach(struct exec *o, struct data **r) {
+user_func_devdetach(struct exec *o, struct data **r) 
+{
 	long unit;
 
 	if (!song_try(usong)) {
@@ -107,7 +110,8 @@ user_func_devdetach(struct exec *o, struct data **r) {
 }
 
 unsigned
-user_func_devsetmaster(struct exec *o, struct data **r) {
+user_func_devsetmaster(struct exec *o, struct data **r) 
+{
 	struct var *arg;
 	long unit;
 	
@@ -137,7 +141,8 @@ user_func_devsetmaster(struct exec *o, struct data **r) {
 }
 
 unsigned
-user_func_devgetmaster(struct exec *o, struct data **r) {
+user_func_devgetmaster(struct exec *o, struct data **r) 
+{
 
 	if (!song_try(usong)) {
 		return 0;
@@ -151,7 +156,8 @@ user_func_devgetmaster(struct exec *o, struct data **r) {
 }
 
 unsigned
-user_func_devsendrt(struct exec *o, struct data **r) {
+user_func_devsendrt(struct exec *o, struct data **r) 
+{
 	long unit, sendrt;
 
 	if (!song_try(usong)) {
@@ -170,7 +176,8 @@ user_func_devsendrt(struct exec *o, struct data **r) {
 }
 
 unsigned
-user_func_devticrate(struct exec *o, struct data **r) {
+user_func_devticrate(struct exec *o, struct data **r) 
+{
 	long unit, tpu;
 	
 	if (!song_try(usong)) {
@@ -193,7 +200,8 @@ user_func_devticrate(struct exec *o, struct data **r) {
 }
 
 unsigned
-user_func_devinfo(struct exec *o, struct data **r) {
+user_func_devinfo(struct exec *o, struct data **r) 
+{
 	long unit;
 	
 	if (!song_try(usong)) {
@@ -234,7 +242,8 @@ user_func_devinfo(struct exec *o, struct data **r) {
 }	
 
 unsigned
-user_func_devixctl(struct exec *o, struct data **r) {
+user_func_devixctl(struct exec *o, struct data **r) 
+{
 	long unit;
 	struct data *list;
 	unsigned ctlset;
@@ -258,7 +267,8 @@ user_func_devixctl(struct exec *o, struct data **r) {
 }
 
 unsigned
-user_func_devoxctl(struct exec *o, struct data **r) {
+user_func_devoxctl(struct exec *o, struct data **r) 
+{
 	long unit;
 	struct data *list;
 	unsigned ctlset;

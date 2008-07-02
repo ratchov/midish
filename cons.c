@@ -43,7 +43,8 @@ unsigned cons_breakcnt, cons_ready;
  * the interrupt flag
  */
 unsigned
-cons_break(void) {
+cons_break(void) 
+{
 	if (cons_breakcnt > 0) {
 		cons_breakcnt = 0;
 		cons_err("\n--interrupt--\n");
@@ -54,14 +55,16 @@ cons_break(void) {
 }
 
 void
-cons_init(void) {
+cons_init(void) 
+{
 	cons_ready = 1;
 	cons_breakcnt = 0;
 	cons_mdep_init();
 }
 
 void
-cons_done(void) {
+cons_done(void) 
+{
 	cons_mdep_done();
 }
 
@@ -71,7 +74,8 @@ cons_done(void) {
  * front-ends that open midish in a pair of pipes
  */
 int
-cons_getc(void) {
+cons_getc(void) 
+{
 	int c;
 	if (cons_ready) {
 		if (user_flag_verb) {
@@ -106,31 +110,37 @@ cons_putpos(unsigned measure, unsigned beat, unsigned tic)
  */
 
 void
-cons_err(char *mesg) {
+cons_err(char *mesg) 
+{
 	fprintf(stderr, "%s\n", mesg);
 }
 
 void
-cons_errs(char *s, char *mesg) {
+cons_errs(char *s, char *mesg) 
+{
 	fprintf(stderr, "%s: %s\n", s, mesg);
 }
 
 void
-cons_erru(unsigned long u, char *mesg) {
+cons_erru(unsigned long u, char *mesg) 
+{
 	fprintf(stderr, "%lu: %s\n", u, mesg);
 }
 
 void
-cons_errss(char *s0, char *s1, char *mesg) {
+cons_errss(char *s0, char *s1, char *mesg) 
+{
 	fprintf(stderr, "%s: %s: %s\n", s0, s1, mesg);
 }
 
 void
-cons_errsu(char *s, unsigned long u, char *mesg) {
+cons_errsu(char *s, unsigned long u, char *mesg) 
+{
 	fprintf(stderr, "%s: %lu: %s\n", s, u, mesg);
 }
 
 void
-cons_erruu(unsigned long u0, unsigned long u1, char *mesg) {
+cons_erruu(unsigned long u0, unsigned long u1, char *mesg) 
+{
 	fprintf(stderr, "%lu.%lu: %s\n", u0, u1, mesg);
 }

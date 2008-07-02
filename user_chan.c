@@ -51,7 +51,8 @@
 #include "textio.h"
 
 unsigned
-user_func_chanlist(struct exec *o, struct data **r) {
+user_func_chanlist(struct exec *o, struct data **r) 
+{
 	struct data *d, *n;
 	struct songchan *i;
 
@@ -68,7 +69,8 @@ user_func_chanlist(struct exec *o, struct data **r) {
 }
 
 unsigned
-user_func_channew(struct exec *o, struct data **r) {
+user_func_channew(struct exec *o, struct data **r) 
+{
 	char *name;
 	struct songchan *i;
 	unsigned dev, ch;
@@ -99,7 +101,8 @@ user_func_channew(struct exec *o, struct data **r) {
 }
 
 unsigned
-user_func_chandelete(struct exec *o, struct data **r) {
+user_func_chandelete(struct exec *o, struct data **r) 
+{
 	struct songchan *c;
 
 	if (!song_try(usong)) {
@@ -113,7 +116,8 @@ user_func_chandelete(struct exec *o, struct data **r) {
 }
 
 unsigned
-user_func_chanrename(struct exec *o, struct data **r) {
+user_func_chanrename(struct exec *o, struct data **r) 
+{
 	struct songchan *c;
 	char *name;
 	
@@ -134,7 +138,8 @@ user_func_chanrename(struct exec *o, struct data **r) {
 }
 
 unsigned
-user_func_chanexists(struct exec *o, struct data **r) {
+user_func_chanexists(struct exec *o, struct data **r) 
+{
 	struct songchan *i;
 	unsigned dev, ch;
 	
@@ -150,7 +155,8 @@ user_func_chanexists(struct exec *o, struct data **r) {
 }
 
 unsigned
-user_func_chanset(struct exec *o, struct data **r) {
+user_func_chanset(struct exec *o, struct data **r) 
+{
 	struct songchan *c, *i;
 	unsigned dev, ch;
 	
@@ -173,7 +179,8 @@ user_func_chanset(struct exec *o, struct data **r) {
 }
 
 unsigned
-user_func_changetch(struct exec *o, struct data **r) {
+user_func_changetch(struct exec *o, struct data **r) 
+{
 	struct songchan *i;
 	
 	if (!song_try(usong)) {
@@ -187,7 +194,8 @@ user_func_changetch(struct exec *o, struct data **r) {
 }
 
 unsigned
-user_func_changetdev(struct exec *o, struct data **r) {
+user_func_changetdev(struct exec *o, struct data **r) 
+{
 	struct songchan *i;
 	
 	if (!song_try(usong)) {
@@ -201,7 +209,8 @@ user_func_changetdev(struct exec *o, struct data **r) {
 }
 
 unsigned
-user_func_chanconfev(struct exec *o, struct data **r) {
+user_func_chanconfev(struct exec *o, struct data **r) 
+{
 	struct songchan *c;
 	struct ev ev;
 	
@@ -221,7 +230,8 @@ user_func_chanconfev(struct exec *o, struct data **r) {
 }
 
 unsigned
-user_func_chanunconfev(struct exec *o, struct data **r) {
+user_func_chanunconfev(struct exec *o, struct data **r) 
+{
 	struct songchan *c;
 	struct evspec es;
 	
@@ -237,7 +247,8 @@ user_func_chanunconfev(struct exec *o, struct data **r) {
 }
 
 unsigned
-user_func_chaninfo(struct exec *o, struct data **r) {
+user_func_chaninfo(struct exec *o, struct data **r) 
+{
 	struct songchan *c;
 	
 	if (!song_try(usong)) {
@@ -252,7 +263,8 @@ user_func_chaninfo(struct exec *o, struct data **r) {
 }
 
 unsigned
-user_func_chansetcurinput(struct exec *o, struct data **r) {
+user_func_chansetcurinput(struct exec *o, struct data **r) 
+{
 	unsigned dev, ch;
 	struct songchan *c;
 	struct data *l;
@@ -274,7 +286,8 @@ user_func_chansetcurinput(struct exec *o, struct data **r) {
 
 
 unsigned
-user_func_changetcurinput(struct exec *o, struct data **r) {
+user_func_changetcurinput(struct exec *o, struct data **r) 
+{
 	struct songchan *c;
 	
 	if (!song_try(usong)) {

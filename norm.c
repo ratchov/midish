@@ -65,7 +65,8 @@ void norm_timocb(void *);
  * given callback
  */
 void
-norm_start(struct norm *o) {
+norm_start(struct norm *o) 
+{
 	statelist_init(&o->statelist);
 	timo_set(&o->timo, norm_timocb, o);
 	timo_add(&o->timo, NORM_TIMO);
@@ -78,7 +79,8 @@ norm_start(struct norm *o) {
  * unconfigure the normalizer
  */
 void
-norm_stop(struct norm *o) {
+norm_stop(struct norm *o) 
+{
 	if (norm_debug) {
 		dbg_puts("norm_stop()\n");
 	}
@@ -92,7 +94,8 @@ norm_stop(struct norm *o) {
  * of the modified controllers, the bender etc...
  */
 void
-norm_shut(struct norm *o) {
+norm_shut(struct norm *o) 
+{
 	struct state *s, *snext;
 	struct ev ca;
 	
@@ -117,7 +120,8 @@ norm_shut(struct norm *o) {
  * event was received)
  */
 void
-norm_kill(struct norm *o, struct ev *ev) {
+norm_kill(struct norm *o, struct ev *ev) 
+{
 	struct state *st, *stnext;
 	struct ev ca;
 
@@ -148,7 +152,8 @@ norm_kill(struct norm *o, struct ev *ev) {
  * give an event to the normalizer for processing
  */
 void
-norm_evcb(struct norm *o, struct ev *ev) {
+norm_evcb(struct norm *o, struct ev *ev) 
+{
 	struct state *st;
 	
 	if (norm_debug) {
@@ -213,7 +218,8 @@ norm_evcb(struct norm *o, struct ev *ev) {
  * output again.
  */
 void
-norm_timocb(void *addr) {
+norm_timocb(void *addr) 
+{
 	struct norm *o = (struct norm *)addr;
 	struct state *i;
 

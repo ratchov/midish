@@ -43,7 +43,8 @@
  * into the allocated buffer the argument cannot be NULL.
  */
 char *
-str_new(char *val) {
+str_new(char *val) 
+{
 	unsigned cnt;
 	char *s, *buf;
 
@@ -64,7 +65,8 @@ str_new(char *val) {
  * pointer
  */
 void
-str_delete(char *s) {
+str_delete(char *s) 
+{
 	if (s == NULL) {
 		dbg_puts("str_delete: NULL pointer argument\n");
 		dbg_panic();
@@ -77,7 +79,8 @@ str_delete(char *s) {
  * is NULL
  */
 void
-str_dbg(char *s) {
+str_dbg(char *s) 
+{
 	if (s == NULL) {
 		dbg_puts("<nullstring>");
 	} else {
@@ -90,7 +93,9 @@ str_dbg(char *s) {
  * zero-length strings are considered identical.
  */
 unsigned
-str_eq(char *s1, char *s2) {	
+str_eq(char *s1, char *s2) 
+{
+
 	if (s1 == NULL || s2 == NULL) {
 		dbg_puts("std_id: NULL pointer argument\n");
 		dbg_panic();
@@ -110,7 +115,8 @@ str_eq(char *s1, char *s2) {
  * return the length of the given string
  */
 unsigned
-str_len(char *s) {
+str_len(char *s) 
+{
 	unsigned n;
 	for (n = 0; *s; s++) {
 		n++;

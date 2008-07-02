@@ -70,7 +70,8 @@ unsigned user_flag_verb = 0;
  * procedure
  */
 unsigned
-exec_runfile(struct exec *exec, char *filename) {
+exec_runfile(struct exec *exec, char *filename) 
+{
 	struct parse *parse;
 	struct name **locals;
 	struct node *root;
@@ -100,7 +101,8 @@ exec_runfile(struct exec *exec, char *filename) {
  * reference)
  */
 unsigned
-exec_lookuptrack(struct exec *o, char *var, struct songtrk **res) {
+exec_lookuptrack(struct exec *o, char *var, struct songtrk **res) 
+{
 	char *name;	
 	struct songtrk *t;
 	if (!exec_lookupname(o, var, &name)) {
@@ -142,7 +144,8 @@ exec_lookupchan_getnum(struct exec *o, char *var,
  * 'var'.  ('var' must be a reference)
  */
 unsigned
-exec_lookupchan_getref(struct exec *o, char *var, struct songchan **res) {
+exec_lookupchan_getref(struct exec *o, char *var, struct songchan **res) 
+{
 	struct var *arg;
 	struct songchan *i;
 	
@@ -170,7 +173,8 @@ exec_lookupchan_getref(struct exec *o, char *var, struct songchan **res) {
  * a reference)
  */
 unsigned
-exec_lookupfilt(struct exec *o, char *var, struct songfilt **res) {
+exec_lookupfilt(struct exec *o, char *var, struct songfilt **res) 
+{
 	char *name;	
 	struct songfilt *f;
 	if (!exec_lookupname(o, var, &name)) {
@@ -190,7 +194,8 @@ exec_lookupfilt(struct exec *o, char *var, struct songfilt **res) {
  * reference)
  */
 unsigned
-exec_lookupsx(struct exec *o, char *var, struct songsx **res) {
+exec_lookupsx(struct exec *o, char *var, struct songsx **res) 
+{
 	char *name;	
 	struct songsx *t;
 	if (!exec_lookupname(o, var, &name)) {
@@ -223,7 +228,8 @@ exec_lookupsx(struct exec *o, char *var, struct songsx **res) {
  * and 'xxx' and 'yyy' are integers
  */
 unsigned
-exec_lookupev(struct exec *o, char *name, struct ev *ev) {
+exec_lookupev(struct exec *o, char *name, struct ev *ev) 
+{
 	struct var *arg;
 	struct data *d;
 	unsigned dev, ch, max, num;
@@ -316,7 +322,8 @@ exec_lookupev(struct exec *o, char *name, struct ev *ev) {
  * (brackets mean argument is optionnal)
  */
 unsigned
-exec_lookupevspec(struct exec *o, char *name, struct evspec *e) {
+exec_lookupevspec(struct exec *o, char *name, struct evspec *e) 
+{
 	struct var *arg;
 	struct data *d;
 	struct songchan *i;
@@ -469,7 +476,8 @@ exec_lookupevspec(struct exec *o, char *name, struct evspec *e) {
  *	- a list of two integers (like '{hi lo}')
  */
 unsigned
-exec_lookupctl(struct exec *o, char *var, unsigned *num) {
+exec_lookupctl(struct exec *o, char *var, unsigned *num) 
+{
 	struct var *arg;
 	
 	arg = exec_varlookup(o, var);
@@ -484,7 +492,8 @@ exec_lookupctl(struct exec *o, char *var, unsigned *num) {
  * print a struct data to the console
  */
 void
-data_print(struct data *d) {
+data_print(struct data *d) 
+{
 	struct data *i;
 	
 	switch(d->type) {
@@ -532,7 +541,8 @@ data_print(struct data *d) {
  * convert 2 integer lists to channels
  */
 unsigned
-data_num2chan(struct data *o, unsigned *res_dev, unsigned *res_ch) {
+data_num2chan(struct data *o, unsigned *res_dev, unsigned *res_ch) 
+{
 	long dev, ch;
 
 	if (o == NULL || 
@@ -559,7 +569,8 @@ data_num2chan(struct data *o, unsigned *res_dev, unsigned *res_ch) {
  * lookup the value of the given controller
  */
 unsigned
-exec_lookupval(struct exec *o, char *n, unsigned isfine, unsigned *r) {
+exec_lookupval(struct exec *o, char *n, unsigned isfine, unsigned *r) 
+{
 	struct var *arg;
 	unsigned max;
 
@@ -591,7 +602,8 @@ exec_lookupval(struct exec *o, char *n, unsigned isfine, unsigned *r) {
  *	- a pair of integers '{ dev midichan }'
  */
 unsigned
-data_list2chan(struct data *o, unsigned *res_dev, unsigned *res_ch) {
+data_list2chan(struct data *o, unsigned *res_dev, unsigned *res_ch) 
+{
 	struct songchan *i;
 
 	if (o->type == DATA_LIST) {
@@ -654,7 +666,8 @@ data_list2range(struct data *d, unsigned min, unsigned max,
  * convert a list to bitmap of continuous controllers
  */
 unsigned
-data_list2ctlset(struct data *d, unsigned *res) {
+data_list2ctlset(struct data *d, unsigned *res) 
+{
 	unsigned ctlset;
 	
 	ctlset = 0;
@@ -684,7 +697,8 @@ data_list2ctlset(struct data *d, unsigned *res) {
  * match the beggining of the given sysex
  */
 unsigned
-data_matchsysex(struct data *d, struct sysex *sx, unsigned *res) {
+data_matchsysex(struct data *d, struct sysex *sx, unsigned *res) 
+{
 	unsigned i;
 	struct chunk *ck;
 	
@@ -720,7 +734,8 @@ data_matchsysex(struct data *d, struct sysex *sx, unsigned *res) {
  * convert a 'struct data' to a controller number
  */
 unsigned
-data_getctl(struct data *d, unsigned *num) {
+data_getctl(struct data *d, unsigned *num) 
+{
     	if (d->type == DATA_LONG) {
 		if (d->val.num < 0 || d->val.num > EV_MAXCOARSE) {
 			cons_err("7bit ctl number out of bounds");
@@ -746,14 +761,16 @@ data_getctl(struct data *d, unsigned *num) {
 /* ---------------------------------------- interpreter functions --- */
 
 unsigned
-user_func_panic(struct exec *o, struct data **r) {
+user_func_panic(struct exec *o, struct data **r) 
+{
 	dbg_panic();
 	/* not reached */
 	return 0;
 }
 
 unsigned
-user_func_debug(struct exec *o, struct data **r) {
+user_func_debug(struct exec *o, struct data **r) 
+{
 	char *flag;
 	long value;
 	
@@ -777,7 +794,8 @@ user_func_debug(struct exec *o, struct data **r) {
 }
 
 unsigned
-user_func_exec(struct exec *o, struct data **r) {
+user_func_exec(struct exec *o, struct data **r) 
+{
 	char *filename;		
 	if (!exec_lookupstring(o, "filename", &filename)) {
 		return 0;
@@ -786,7 +804,8 @@ user_func_exec(struct exec *o, struct data **r) {
 }
 
 unsigned
-user_func_print(struct exec *o, struct data **r) {
+user_func_print(struct exec *o, struct data **r) 
+{
 	struct var *arg;
 	arg = exec_varlookup(o, "value");
 	if (!arg) {
@@ -800,14 +819,16 @@ user_func_print(struct exec *o, struct data **r) {
 }
 
 unsigned
-user_func_info(struct exec *o, struct data **r) {
+user_func_info(struct exec *o, struct data **r) 
+{
 	exec_dumpprocs(o);
 	exec_dumpvars(o);
 	return 1;
 }
 
 unsigned
-user_func_metroswitch(struct exec *o, struct data **r) {
+user_func_metroswitch(struct exec *o, struct data **r) 
+{
 	long onoff;
 
 	if (!song_try(usong)) {
@@ -821,7 +842,8 @@ user_func_metroswitch(struct exec *o, struct data **r) {
 }
 
 unsigned
-user_func_metroconf(struct exec *o, struct data **r) {
+user_func_metroconf(struct exec *o, struct data **r) 
+{
 	struct ev evhi, evlo;
 
 	if (!song_try(usong)) {
@@ -841,7 +863,8 @@ user_func_metroconf(struct exec *o, struct data **r) {
 }
 
 unsigned
-user_func_shut(struct exec *o, struct data **r) {
+user_func_shut(struct exec *o, struct data **r) 
+{
 	unsigned i;
 	struct ev ev;
 	struct mididev *dev;
@@ -876,7 +899,8 @@ user_func_shut(struct exec *o, struct data **r) {
 }
 
 unsigned
-user_func_sendraw(struct exec *o, struct data **r) {
+user_func_sendraw(struct exec *o, struct data **r) 
+{
 	struct var *arg;
 	struct data *i;
 	unsigned char byte;
@@ -918,7 +942,8 @@ user_func_sendraw(struct exec *o, struct data **r) {
 }
 
 unsigned
-user_func_proclist(struct exec *o, struct data **r) {
+user_func_proclist(struct exec *o, struct data **r) 
+{
 	struct proc *i;
 	struct data *d, *n;
 
@@ -934,7 +959,8 @@ user_func_proclist(struct exec *o, struct data **r) {
 }
 
 unsigned
-user_func_builtinlist(struct exec *o, struct data **r) {
+user_func_builtinlist(struct exec *o, struct data **r) 
+{
 	struct proc *i;
 	struct data *d, *n;
 
@@ -950,7 +976,8 @@ user_func_builtinlist(struct exec *o, struct data **r) {
 }
 
 unsigned
-user_mainloop(void) {
+user_mainloop(void) 
+{
 	struct parse *parse;
 	struct exec *exec;
 	struct node *root;

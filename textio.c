@@ -44,13 +44,15 @@
 #include "textio.h"
 #include "cons.h"
 
-struct textin {
+struct textin 
+{
 	FILE *file;
 	unsigned isconsole;
 	unsigned line, col;
 };
 
-struct textout {
+struct textout 
+{
 	FILE *file;
 	unsigned indent, isconsole;
 };
@@ -58,7 +60,8 @@ struct textout {
 /* -------------------------------------------------------- input --- */
 
 struct textin *
-textin_new(char *filename) {
+textin_new(char *filename) 
+{
 	struct textin *o;
 
 	o = (struct textin *)mem_alloc(sizeof(struct textin));
@@ -79,7 +82,8 @@ textin_new(char *filename) {
 }
 
 void
-textin_delete(struct textin *o) {
+textin_delete(struct textin *o) 
+{
 	if (!o->isconsole) {
 		fclose(o->file);
 	}
@@ -87,7 +91,8 @@ textin_delete(struct textin *o) {
 }
 
 unsigned
-textin_getchar(struct textin *o, int *c) {
+textin_getchar(struct textin *o, int *c) 
+{
 	if (o->isconsole) {
 		*c = cons_getc();	/* because it handles ^C */
 	} else {
@@ -113,7 +118,8 @@ textin_getchar(struct textin *o, int *c) {
 }
 
 void
-textin_getpos(struct textin *o, unsigned *line, unsigned *col) {
+textin_getpos(struct textin *o, unsigned *line, unsigned *col) 
+{
 	*line = o->line;
 	*col = o->col;
 }
@@ -121,7 +127,8 @@ textin_getpos(struct textin *o, unsigned *line, unsigned *col) {
 /* ------------------------------------------------------- output --- */
 
 struct textout *
-textout_new(char *filename) {
+textout_new(char *filename) 
+{
 	struct textout *o;
 	
 	o = (struct textout *)mem_alloc(sizeof(struct textout));
@@ -142,7 +149,8 @@ textout_new(char *filename) {
 }
 
 void
-textout_delete(struct textout *o) {
+textout_delete(struct textout *o) 
+{
 	if (!o->isconsole) {
 		fclose(o->file);
 	}
@@ -150,7 +158,8 @@ textout_delete(struct textout *o) {
 }
 
 void
-textout_indent(struct textout *o) {
+textout_indent(struct textout *o) 
+{
 	unsigned i;
 	for (i = 0; i < o->indent; i++) {
 		fputc('\t', o->file);
@@ -158,27 +167,32 @@ textout_indent(struct textout *o) {
 }
 
 void
-textout_shiftleft(struct textout *o) {
+textout_shiftleft(struct textout *o) 
+{
 	o->indent--;
 }
 
 void
-textout_shiftright(struct textout *o) {
+textout_shiftright(struct textout *o) 
+{
 	o->indent++;
 }
 
 void
-textout_putstr(struct textout *o, char *str) {
+textout_putstr(struct textout *o, char *str) 
+{
 	fputs(str, o->file);
 }
 
 void
-textout_putlong(struct textout *o, unsigned long val) {
+textout_putlong(struct textout *o, unsigned long val) 
+{
 	fprintf(o->file, "%lu", val);
 }
 
 void
-textout_putbyte(struct textout *o, unsigned val) {
+textout_putbyte(struct textout *o, unsigned val) 
+{
 	fprintf(o->file, "0x%02x", val & 0xff);
 }
 
@@ -189,13 +203,15 @@ struct textout *tout;
 struct textin *tin;
 
 void
-textio_init(void) {
+textio_init(void) 
+{
 	tout = textout_new(NULL);
 	tin = textin_new(NULL);
 }
 
 void
-textio_done(void) {
+textio_done(void) 
+{
 	textout_delete(tout);
 	tout = 0;
 	textin_delete(tin);

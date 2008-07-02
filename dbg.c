@@ -44,17 +44,20 @@ unsigned mem_nalloc = 0, mem_nfree = 0, mem_debug = 0;
  */
 
 void
-dbg_puts(char *msg) {
+dbg_puts(char *msg) 
+{
 	fputs(msg, stderr);
 }
 
 void
-dbg_putx(unsigned long n) {
+dbg_putx(unsigned long n) 
+{
 	fprintf(stderr, "%lx", n);
 }
 
 void
-dbg_putu(unsigned long n) {
+dbg_putu(unsigned long n) 
+{
 	fprintf(stderr, "%lu", n);
 }
 
@@ -63,7 +66,8 @@ dbg_putu(unsigned long n) {
  * put code here to backup user data
  */
 void
-dbg_panic(void) {
+dbg_panic(void) 
+{
 	abort();
 }
 
@@ -71,7 +75,8 @@ dbg_panic(void) {
  * return a random number, will be used to randomize memory bocks
  */
 unsigned
-mem_rnd(void) {
+mem_rnd(void) 
+{
 	static unsigned seed = 1989123;
 	seed = (seed * 1664525) + 1013904223;
 	return seed;
@@ -85,7 +90,8 @@ mem_rnd(void) {
  * trailer to detect writes outside the block boundaries.
  */
 void *
-mem_alloc(unsigned n) {
+mem_alloc(unsigned n) 
+{
 	unsigned i, *buf;
 	
 	if (n == 0) {
@@ -124,7 +130,8 @@ mem_alloc(unsigned n) {
  * usable once freed
  */
 void
-mem_free(void *mem) {
+mem_free(void *mem) 
+{
 	unsigned *buf, n;
 	unsigned i;
 
@@ -156,7 +163,8 @@ mem_free(void *mem) {
 }
 
 void
-mem_stats(void) {
+mem_stats(void) 
+{
 	if (mem_debug) {
 		dbg_puts("mem_stats: used=");
 		dbg_putu(mem_nalloc - mem_nfree);

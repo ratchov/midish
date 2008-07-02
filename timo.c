@@ -60,7 +60,8 @@ unsigned timo_abstime;
  * that will be passed to the callback
  */
 void
-timo_set(struct timo *o, void (*cb)(void *), void *arg) {
+timo_set(struct timo *o, void (*cb)(void *), void *arg) 
+{
 	o->cb = cb;
 	o->arg = arg;
 	o->set = 0;
@@ -71,7 +72,8 @@ timo_set(struct timo *o, void (*cb)(void *), void *arg) {
  * must not be already scheduled
  */
 void
-timo_add(struct timo *o, unsigned delta) {
+timo_add(struct timo *o, unsigned delta) 
+{
 	struct timo **i;
 	unsigned val;
 	int diff;
@@ -103,7 +105,8 @@ timo_add(struct timo *o, unsigned delta) {
  * abort a scheduled timeout
  */
 void
-timo_del(struct timo *o) {
+timo_del(struct timo *o) 
+{
 	struct timo **i;
 	
 	for (i = &timo_queue; *i != NULL; i = &(*i)->next) {
@@ -125,7 +128,8 @@ timo_del(struct timo *o) {
  * calls expired timeouts
  */
 void
-timo_update(unsigned delta) {
+timo_update(unsigned delta) 
+{
 	struct timo *to;
 	int diff;
 	
@@ -157,7 +161,8 @@ timo_update(unsigned delta) {
  * initialize timeout queue
  */
 void
-timo_init(void) {
+timo_init(void) 
+{
 	timo_queue = NULL;
 	timo_abstime = 0;
 }
@@ -166,7 +171,8 @@ timo_init(void) {
  * destroy timeout queue
  */
 void
-timo_done(void) {
+timo_done(void) 
+{
 #ifdef TIMO_DEBUG
 	if (timo_queue != NULL) {
 		dbg_puts("timo_done: timo_queue not empty!\n");
