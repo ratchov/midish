@@ -5,41 +5,13 @@
 #devattach 1 "/dev/rmidi3" rw
 
 #
-# set the current input channel
-#
-proc ci input {
-	songsetcurinput $input
-}
-
-#
-# set the current channel
-#
-proc cc chan {
-	songsetcurchan $chan
-}
-
-#
-# set the current filt
-#
-proc cf filt { 
-	songsetcurfilt $filt
-}
-
-#
-# set the current track
-#
-proc ct track { 
-	songsetcurtrack $track
-}
-
-#
 # create a channel and a filter
 #
 proc ni name chan {
-	songsetcurtrack nil
+	ct nil
 	filtnew $name 
 	channew $name $chan
-	filtchanmap $name [songgetcurinput] $name
+	filtchanmap $name [geti] $name
 }
 
 #
@@ -60,18 +32,18 @@ proc nt name {
 # some filter rules
 #
 proc ctldrop ic {
-	let i = [songgetcurinput]
-	let c = [songgetcurchan]
+	let i = [geti]
+	let c = [getc]
 	filtevmap [songgetcurfilt] {ctl $i $ic} {none}
 }
 proc ctlmap ic oc {
-	let i = [songgetcurinput]
-	let o = [songgetcurchan]
+	let i = [geti]
+	let o = [getc]
 	filtevmap [songgetcurfilt] {ctl $i $ic} {ctl $o $oc}
 }
 proc transpose plus {
-	let i = [songgetcurinput]
-	let o = [songgetcurchan]
+	let i = [geti]
+	let o = [getc]
 	#let lo = 0;
 	#let hi = 127;
 	#filtevunmap [songgetcurfilt] {} {note $i}
@@ -87,77 +59,18 @@ proc transpose plus {
 }
 
 #
-# do nothing, just echo trough the configuration of the current track
-#
-proc i  {
-	songidle
-}
-
-#
-# play the song
-#
-proc p  {
-	metroswitch 0
-	songplay
-}
-
-#
-# record a track while playing the song, start 1 measure before
-# the current position
-#
-proc r  { 
-	metroswitch 1
-	songrecord
-}
-
-#
-# stop idle/play/record
-#
-proc s  {
-	songstop
-}
-
-#
-# print the list of tracks, channels and filters, etc
-#
-proc l  {
-	songinfo
-}
-
-#
-# change current position
-#
-proc g measure {
-	songsetcurpos $measure
-}
-
-#
-# change the current selection's length
-#
-proc sel length {
-	songsetcurlen $length
-}
-
-#
 # set note quantum
 #
 proc n denom {
-	songsetcurquant [songgetunit]/$denom
+	setq [getunit] / $denom
 } 
 
 #
 # quantise
 #
 proc q rate {
-	trackquant [songgetcurtrack] [songgetcurpos] [songgetcurlen] $rate [songgetcurquant]
+	trackquant [gett] [getpos] [getlen] $rate [getq]
 } 
-
-#
-# set the tempo factor
-#
-proc fac percent {
-	songsetfactor $percent
-}
 
 #
 # cut the given number of measures from the current 
@@ -269,34 +182,6 @@ proc save filename {
 }
 
 #
-# load a song
-#
-proc load filename {
-	songload $filename
-}
-
-#
-# export a song in a .mid
-#
-proc export filename {
-	songexportsmf $filename
-}
-
-#
-# import a song from a .mid
-#
-proc import filename {
-	songimportsmf $filename
-}
-
-#
-# change tempo a current position
-#
-proc tempo beat_per_measure {
-	songsettempo [songgetcurpos] $beat_per_measure
-}
-
-#
 # insert measures in the meta-track
 #
 proc timeins amount numerator denominator {
@@ -355,19 +240,19 @@ proc xvparam a0 a1 a2 a3 val {
 #
 # controllers config
 #
-proc mod    v { let c = [songgetcurchan]; chanconfev $c {ctl $c 1  $v}; }
-proc breath v { let c = [songgetcurchan]; chanconfev $c {ctl $c 2  $v}; }
-proc vol    v { let c = [songgetcurchan]; chanconfev $c {ctl $c 7  $v}; }
-proc bal    v { let c = [songgetcurchan]; chanconfev $c {ctl $c 8  $v}; }
-proc pan    v { let c = [songgetcurchan]; chanconfev $c {ctl $c 10 $v}; }
-proc reverb v { let c = [songgetcurchan]; chanconfev $c {ctl $c 91 $v}; }
-proc chorus v { let c = [songgetcurchan]; chanconfev $c {ctl $c 93 $v}; }
+proc mod    v { chanconfev [getc] {ctl [getc] 1  $v}; }
+proc breath v { chanconfev [getc] {ctl [getc] 2  $v}; }
+proc vol    v { chanconfev [getc] {ctl [getc] 7  $v}; }
+proc bal    v { chanconfev [getc] {ctl [getc] 8  $v}; }
+proc pan    v { chanconfev [getc] {ctl [getc] 10 $v}; }
+proc reverb v { chanconfev [getc] {ctl [getc] 91 $v}; }
+proc chorus v { chanconfev [getc] {ctl [getc] 93 $v}; }
 
 #
 # set RPN to the given value for the current chan
 #
 proc rpn addr val { 
-	let c = [songgetcurchan]
+	let c = [getc]
 	chanconfev $c {rpn $c $addr $val}
 }
 
@@ -376,6 +261,6 @@ proc rpn addr val {
 # set NRPN to the given value for the current chan
 #
 proc nrpn addr val { 
-	let c = [songgetcurchan]
+	let c = [getc]
 	chanconfev $c {nrpn $c $addr $val}
 }

@@ -57,7 +57,7 @@ rmidish:	rmidish.c midish
 builtin.o:	builtin.c dbg.h default.h node.h exec.h name.h str.h \
 		data.h cons.h frame.h state.h ev.h song.h track.h filt.h \
 		sysex.h metro.h timo.h user.h smf.h saveload.h textio.h \
-		mux.h
+		mux.h rmidi.h mdep.h mididev.h builtin.h
 cons.o:		cons.c dbg.h textio.h cons.h user.h
 conv.o:		conv.c dbg.h state.h ev.h default.h conv.h
 data.o:		data.c dbg.h str.h cons.h data.h
@@ -106,7 +106,7 @@ track.o:	track.c dbg.h pool.h track.h ev.h default.h
 user.o:		user.c dbg.h default.h node.h exec.h name.h str.h data.h \
 		cons.h textio.h lex.h parse.h mux.h mididev.h track.h \
 		ev.h song.h frame.h state.h filt.h sysex.h metro.h \
-		timo.h user.h smf.h saveload.h rmidi.h mdep.h
+		timo.h user.h builtin.h smf.h saveload.h rmidi.h mdep.h
 user_trk.o:	user_trk.c dbg.h default.h node.h exec.h name.h str.h \
 		data.h cons.h frame.h state.h ev.h track.h song.h filt.h \
 		sysex.h metro.h timo.h user.h saveload.h textio.h

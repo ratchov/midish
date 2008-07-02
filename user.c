@@ -1214,80 +1214,79 @@ user_mainloop(void)
 			name_newarg("unit",
 			name_newarg("data", NULL))));
 
-	exec_newbuiltin(exec, "songgetunit", user_func_songgetunit, NULL);
-	exec_newbuiltin(exec, "songsetunit", user_func_songsetunit,
+	exec_newbuiltin(exec, "getunit", blt_getunit, NULL);
+	exec_newbuiltin(exec, "setunit", blt_setunit,
 			name_newarg("tics_per_unit", NULL));
-	exec_newbuiltin(exec, "songgetfactor", user_func_songgetfactor, NULL);
-	exec_newbuiltin(exec, "songsetfactor", user_func_songsetfactor,
+	exec_newbuiltin(exec, "getfac", blt_getfac, NULL);
+	exec_newbuiltin(exec, "fac", blt_fac,
 			name_newarg("tempo_factor", NULL));
-	exec_newbuiltin(exec, "songgetcurpos", user_func_songgetcurpos, NULL);
-	exec_newbuiltin(exec, "songsetcurpos", user_func_songsetcurpos,
+	exec_newbuiltin(exec, "getpos", blt_getpos, NULL);
+	exec_newbuiltin(exec, "g", blt_goto,
 			name_newarg("measure", NULL));
-	exec_newbuiltin(exec, "songgetcurlen", user_func_songgetcurlen, NULL);
-	exec_newbuiltin(exec, "songsetcurlen", user_func_songsetcurlen,
+	exec_newbuiltin(exec, "getlen", blt_getlen, NULL);
+	exec_newbuiltin(exec, "sel", blt_sel,
 			name_newarg("length", NULL));
-	exec_newbuiltin(exec, "songgetcurquant", user_func_songgetcurquant, NULL);
-	exec_newbuiltin(exec, "songsetcurquant", user_func_songsetcurquant,
+	exec_newbuiltin(exec, "getq", blt_getq, NULL);
+	exec_newbuiltin(exec, "setq", blt_setq,
 			name_newarg("quantum", NULL));
 	exec_newbuiltin(exec, "ev", blt_ev,
 			name_newarg("evspec", NULL));
-	exec_newbuiltin(exec, "songgetcurtrack", user_func_songgetcurtrack, NULL);
-	exec_newbuiltin(exec, "songsetcurtrack", user_func_songsetcurtrack,
-			name_newarg("trackname", NULL));
-	exec_newbuiltin(exec, "songgetcurfilt", user_func_songgetcurfilt, NULL);
-	exec_newbuiltin(exec, "songsetcurfilt", user_func_songsetcurfilt,
-			name_newarg("filtname", NULL));
-	exec_newbuiltin(exec, "songgetcursysex", user_func_songgetcursysex, NULL);
-	exec_newbuiltin(exec, "songsetcursysex", user_func_songsetcursysex,
-			name_newarg("sysexname", NULL));
-	exec_newbuiltin(exec, "songgetcurchan", user_func_songgetcurchan, NULL);
-	exec_newbuiltin(exec, "songsetcurchan", user_func_songsetcurchan,
-			name_newarg("channame", NULL));
-	exec_newbuiltin(exec, "songgetcurinput", user_func_songgetcurinput, NULL);
-	exec_newbuiltin(exec, "songsetcurinput", user_func_songsetcurinput,
+	exec_newbuiltin(exec, "geti", blt_geti, NULL);
+	exec_newbuiltin(exec, "ci", blt_ci,
 			name_newarg("inputchan", NULL));
-	exec_newbuiltin(exec, "songinfo", user_func_songinfo, NULL);
-	exec_newbuiltin(exec, "songsave", user_func_songsave,
+	exec_newbuiltin(exec, "gett", blt_gett, NULL);
+	exec_newbuiltin(exec, "ct", blt_ct,
+			name_newarg("trackname", NULL));
+	exec_newbuiltin(exec, "getf", blt_getf, NULL);
+	exec_newbuiltin(exec, "cf", blt_cf,
+			name_newarg("filtname", NULL));
+	exec_newbuiltin(exec, "getx", blt_getx, NULL);
+	exec_newbuiltin(exec, "cx", blt_cx,
+			name_newarg("sysexname", NULL));
+	exec_newbuiltin(exec, "getc", blt_getc, NULL);
+	exec_newbuiltin(exec, "cc", blt_cc,
+			name_newarg("channame", NULL));
+	exec_newbuiltin(exec, "ls", blt_ls, NULL);
+	exec_newbuiltin(exec, "save", blt_save,
 			name_newarg("filename", NULL));
-	exec_newbuiltin(exec, "songload", user_func_songload,
+	exec_newbuiltin(exec, "load", blt_load,
 			name_newarg("filename", NULL));
-	exec_newbuiltin(exec, "songreset", user_func_songreset, NULL);
-	exec_newbuiltin(exec, "songexportsmf", user_func_songexportsmf,
+	exec_newbuiltin(exec, "reset", blt_reset, NULL);
+	exec_newbuiltin(exec, "export", blt_export,
 			name_newarg("filename", NULL));
-	exec_newbuiltin(exec, "songimportsmf", user_func_songimportsmf,
+	exec_newbuiltin(exec, "import", blt_import,
 			name_newarg("filename", NULL));
-	exec_newbuiltin(exec, "songidle", user_func_songidle, NULL);
-	exec_newbuiltin(exec, "songplay", user_func_songplay, NULL);
-	exec_newbuiltin(exec, "songrecord", user_func_songrecord, NULL);
-	exec_newbuiltin(exec, "songstop", user_func_songstop, NULL);
-	exec_newbuiltin(exec, "songsetunit", user_func_songsetunit, NULL);
-	exec_newbuiltin(exec, "songsettempo", user_func_songsettempo,
+	exec_newbuiltin(exec, "i", blt_idle, NULL);
+	exec_newbuiltin(exec, "p", blt_play, NULL);
+	exec_newbuiltin(exec, "r", blt_rec, NULL);
+	exec_newbuiltin(exec, "s", blt_stop, NULL);
+	exec_newbuiltin(exec, "t", blt_tempo,
 			name_newarg("measure",
 			name_newarg("beats_per_minute", NULL)));
-	exec_newbuiltin(exec, "songtimeins", user_func_songtimeins,
+	exec_newbuiltin(exec, "sins", blt_sins,
 			name_newarg("from",
 			name_newarg("amount",
 			name_newarg("numerator",
 			name_newarg("denominator", NULL)))));
-	exec_newbuiltin(exec, "songtimerm", user_func_songtimerm,
+	exec_newbuiltin(exec, "sdel", blt_sdel,
 			name_newarg("from",
 			name_newarg("amount", NULL)));
-	exec_newbuiltin(exec, "songtimeinfo", user_func_songtimeinfo, NULL);
-	exec_newbuiltin(exec, "songgettempo", user_func_songgettempo,
+	exec_newbuiltin(exec, "minfo", blt_minfo, NULL);
+	exec_newbuiltin(exec, "mtempo", blt_mtempo,
 			name_newarg("from", NULL));
-	exec_newbuiltin(exec, "songgetsign", user_func_songgetsign,
+	exec_newbuiltin(exec, "msig", blt_msig,
 			name_newarg("from", NULL));
-	exec_newbuiltin(exec, "ctlconf", user_func_ctlconf,
+	exec_newbuiltin(exec, "ctlconf", blt_ctlconf,
 			name_newarg("name",
 			name_newarg("ctl",
 			name_newarg("defval", NULL))));
-	exec_newbuiltin(exec, "ctlconfx", user_func_ctlconf,
+	exec_newbuiltin(exec, "ctlconfx", blt_ctlconfx,
 			name_newarg("name",
 			name_newarg("ctl",
 			name_newarg("defval", NULL))));
-	exec_newbuiltin(exec, "ctlunconf", user_func_ctlunconf,
+	exec_newbuiltin(exec, "ctlunconf", blt_ctlunconf,
 			name_newarg("name", NULL));
-	exec_newbuiltin(exec, "ctlinfo", user_func_ctlinfo, NULL);
+	exec_newbuiltin(exec, "ctlinfo", blt_ctlinfo, NULL);
 
 	exec_newbuiltin(exec, "metroswitch", user_func_metroswitch,
 			name_newarg("onoff", NULL));

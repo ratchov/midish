@@ -111,6 +111,7 @@ struct song {
 #define SONG_PLAY	1
 #define SONG_REC	2
 	unsigned mode;			/* real-time "mode" */
+	unsigned metro_mask;		/* if enable = (mask | mode) */
 };
 
 #define SONG_FOREACH_TRK(s, i)				\

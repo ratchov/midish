@@ -128,4 +128,3 @@ metro_shut(struct metro *o)
 		metro_tocb(o);
 	}
 }
-
