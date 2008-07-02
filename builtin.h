@@ -34,6 +34,11 @@
 struct exec;
 struct data;
 
+unsigned blt_panic(struct exec *, struct data **);
+unsigned blt_debug(struct exec *, struct data **);
+unsigned blt_exec(struct exec *, struct data **);
+unsigned blt_print(struct exec *, struct data **);
+unsigned blt_err(struct exec *, struct data **);
 unsigned blt_ev(struct exec *, struct data **);
 
 #endif /* MIDISH_BUILTIN_H */

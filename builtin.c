@@ -34,7 +34,6 @@
 #include "exec.h"
 #include "data.h"
 #include "cons.h"
-
 #include "frame.h"
 #include "song.h"
 #include "user.h"
@@ -42,6 +41,79 @@
 #include "saveload.h"
 #include "textio.h"
 #include "mux.h"
+#include "rmidi.h"
+
+unsigned
+blt_panic(struct exec *o, struct data **r)
+{
+	dbg_panic();
+	/* not reached */
+	return 0;
+}
+
+unsigned
+blt_debug(struct exec *o, struct data **r)
+{
+	char *flag;
+	long value;
+
+	if (!exec_lookupname(o, "flag", &flag) ||
+	    !exec_lookuplong(o, "value", &value)) {
+		return 0;
+	}
+	if (str_eq(flag, "rmidi")) {
+		rmidi_debug = value;
+	} else if (str_eq(flag, "filt")) {
+		filt_debug = value;
+	} else if (str_eq(flag, "song")) {
+		song_debug = value;
+	} else if (str_eq(flag, "mem")) {
+		mem_debug = value;
+	} else {
+		cons_err("debug: unknuwn debug-flag");
+		return 0;
+	}
+	return 1;
+}
+
+unsigned
+blt_exec(struct exec *o, struct data **r)
+{
+	char *filename;
+
+	if (!exec_lookupstring(o, "filename", &filename)) {
+		return 0;
+	}
+	return exec_runfile(o, filename);
+}
+
+unsigned
+blt_print(struct exec *o, struct data **r)
+{
+	struct var *arg;
+
+	arg = exec_varlookup(o, "value");
+	if (!arg) {
+		dbg_puts("blt_print: 'value': no such param\n");
+		dbg_panic();
+	}
+	data_print(arg->data);
+	textout_putstr(tout, "\n");
+	*r = data_newnil();
+	return 1;
+}
+
+unsigned
+blt_err(struct exec *o, struct data **r)
+{
+	char *msg;
+
+	if (!exec_lookupstring(o, "message", &msg)) {
+		return 0;
+	}
+	cons_err(msg);
+	return 0;
+}
 
 unsigned
 blt_ev(struct exec *o, struct data **r)

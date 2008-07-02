@@ -760,63 +760,6 @@ data_getctl(struct data *d, unsigned *num)
 
 /* ---------------------------------------- interpreter functions --- */
 
-unsigned
-user_func_panic(struct exec *o, struct data **r)
-{
-	dbg_panic();
-	/* not reached */
-	return 0;
-}
-
-unsigned
-user_func_debug(struct exec *o, struct data **r)
-{
-	char *flag;
-	long value;
-
-	if (!exec_lookupname(o, "flag", &flag) ||
-	    !exec_lookuplong(o, "value", &value)) {
-		return 0;
-	}
-	if (str_eq(flag, "rmidi")) {
-		rmidi_debug = value;
-	} else if (str_eq(flag, "filt")) {
-		filt_debug = value;
-	} else if (str_eq(flag, "song")) {
-		song_debug = value;
-	} else if (str_eq(flag, "mem")) {
-		mem_debug = value;
-	} else {
-		cons_err("debug: unknuwn debug-flag");
-		return 0;
-	}
-	return 1;
-}
-
-unsigned
-user_func_exec(struct exec *o, struct data **r)
-{
-	char *filename;
-	if (!exec_lookupstring(o, "filename", &filename)) {
-		return 0;
-	}
-	return exec_runfile(o, filename);
-}
-
-unsigned
-user_func_print(struct exec *o, struct data **r)
-{
-	struct var *arg;
-	arg = exec_varlookup(o, "value");
-	if (!arg) {
-		dbg_puts("user_func_print: 'value': no such param\n");
-		return 0;
-	}
-	data_print(arg->data);
-	textout_putstr(tout, "\n");
-	*r = data_newnil();
-	return 1;
-}
 
 unsigned
 user_func_info(struct exec *o, struct data **r)
@@ -994,14 +937,16 @@ user_mainloop(void)
 	/*
 	 * register built-in functions
 	 */
-	exec_newbuiltin(exec, "print", user_func_print,
+	exec_newbuiltin(exec, "print", blt_print,
 			name_newarg("value", NULL));
-	exec_newbuiltin(exec, "exec", user_func_exec,
+	exec_newbuiltin(exec, "err", blt_err,
+			name_newarg("message", NULL));
+	exec_newbuiltin(exec, "exec", blt_exec,
 			name_newarg("filename", NULL));
-	exec_newbuiltin(exec, "debug", user_func_debug,
+	exec_newbuiltin(exec, "debug", blt_debug,
 			name_newarg("flag",
 			name_newarg("value", NULL)));
-	exec_newbuiltin(exec, "panic", user_func_panic, NULL);
+	exec_newbuiltin(exec, "panic", blt_panic, NULL);
 	exec_newbuiltin(exec, "info", user_func_info, NULL);
 
 	exec_newbuiltin(exec, "tracklist", user_func_tracklist, NULL);
