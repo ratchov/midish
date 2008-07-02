@@ -28,38 +28,12 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef MIDISH_SAVELOAD_H
-#define MIDISH_SAVELOAD_H
+#ifndef MIDISH_BUILTIN_H
+#define MIDISH_BUILTIN_H
 
-struct textout;
-struct ev;
-struct evctl;
-struct track;
-struct filt;
-struct rule;
-struct songchan;
-struct songtrk;
-struct songfilt;
-struct songsx;
-struct song;
+struct exec;
+struct data;
 
-void ev_output(struct ev *e, struct textout *f);
-void evspec_output(struct evspec *o, struct textout *f);
-void track_output(struct track *t, struct textout *f);
-void rule_output(struct rule *o, struct textout *f);
-void filt_output(struct filt *o, struct textout *f);
-void songtrk_output(struct songtrk *o, struct textout *f);
-void songchan_output(struct songchan *o, struct textout *f);
-void songfilt_output(struct songfilt *o, struct textout *f);
-void songsx_output(struct songsx *o, struct textout *f);
-void evctltab_output(struct evctl *tab, struct textout *f);
-void song_output(struct song *o, struct textout *f);
+unsigned blt_ev(struct exec *, struct data **);
 
-void track_save(struct track *o, char *name);
-unsigned track_load(struct track *o, char *name);
-
-void song_save(struct song *o, char *name);
-unsigned song_load(struct song *o, char *filename);
-
-
-#endif /* MIDISH_SAVELOAD_H */
+#endif /* MIDISH_BUILTIN_H */

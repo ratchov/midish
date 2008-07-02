@@ -52,6 +52,7 @@
 #include "track.h"
 #include "song.h"
 #include "user.h"
+#include "builtin.h"
 #include "smf.h"
 #include "saveload.h"
 #include "rmidi.h"	/* for rmidi_debug */
@@ -1256,6 +1257,8 @@ user_mainloop(void) {
 	exec_newbuiltin(exec, "songgetcurquant", user_func_songgetcurquant, NULL);
 	exec_newbuiltin(exec, "songsetcurquant", user_func_songsetcurquant, 
 			name_newarg("quantum", NULL));
+	exec_newbuiltin(exec, "ev", blt_ev,
+			name_newarg("evspec", NULL));
 	exec_newbuiltin(exec, "songgetcurtrack", user_func_songgetcurtrack, NULL);
 	exec_newbuiltin(exec, "songsetcurtrack", user_func_songsetcurtrack, 
 			name_newarg("trackname", NULL));

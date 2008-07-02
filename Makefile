@@ -41,7 +41,7 @@ clean:
 # ---------------------------------------------------------- dependencies ---
 
 MIDISH_OBJS = \
-cons.o conv.o data.o dbg.o ev.o exec.o filt.o frame.o lex.o \
+builtin.o cons.o conv.o data.o dbg.o ev.o exec.o filt.o frame.o lex.o \
 main.o mdep.o metro.o mididev.o mixout.o mux.o name.o node.o \
 norm.o parse.o pool.o rmidi.o saveload.o smf.o song.o state.o \
 str.o sysex.o textio.o timo.o track.o user.o user_trk.o \
@@ -54,6 +54,10 @@ rmidish:	rmidish.c midish
 		${CC} ${CFLAGS} ${READLINE_CFLAGS} ${READLINE_INCLUDE} rmidish.c \
 		${LDFLAGS} ${READLINE_LDFLAGS} -o rmidish ${READLINE_LIB}
 
+builtin.o:	builtin.c dbg.h default.h node.h exec.h name.h str.h \
+		data.h cons.h frame.h state.h ev.h song.h track.h filt.h \
+		sysex.h metro.h timo.h user.h smf.h saveload.h textio.h \
+		mux.h
 cons.o:		cons.c dbg.h textio.h cons.h user.h
 conv.o:		conv.c dbg.h state.h ev.h default.h conv.h
 data.o:		data.c dbg.h str.h cons.h data.h

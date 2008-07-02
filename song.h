@@ -94,6 +94,7 @@ struct song {
 	unsigned curlen;		/* selection length */
 	unsigned curinput_dev;		/* default input device */
 	unsigned curinput_ch;		/* default midi channel */
+	struct evspec curev;		/* evspec for track editing */
 	struct metro metro;		/* metonome conf. */
 
 	/* 

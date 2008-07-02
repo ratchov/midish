@@ -108,6 +108,7 @@ song_init(struct song *o) {
 	o->curquant = 0;
 	o->curinput_dev = 0;
 	o->curinput_ch = 0;
+	evspec_reset(&o->curev);
 
 	/* 
 	 * add default timesig/tempo so that setunit() works 

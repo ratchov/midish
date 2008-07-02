@@ -517,6 +517,11 @@ song_output(struct song *o, struct textout *f) {
 	textout_putstr(f, "\n");
 			
 	textout_indent(f);
+	textout_putstr(f, "curev ");
+	evspec_output(&o->curev, f);
+	textout_putstr(f, "\n");
+
+	textout_indent(f);
 	textout_putstr(f, "curinput {");
 	textout_putlong(f, o->curinput_dev);
 	textout_putstr(f, " ");
@@ -1492,6 +1497,7 @@ parse_song(struct parse *o, struct song *s) {
 	struct songchan *i;
 	struct songfilt *g;
 	struct songsx *l;
+	struct evspec es;
 	unsigned long num, num2;
 
 	if (!parse_getsym(o)) {
@@ -1712,6 +1718,14 @@ parse_song(struct parse *o, struct song *s) {
 					return 0;
 				}
 				s->curquant = num;
+			} else if (str_eq(o->lex.strval, "curev")) {
+				if (!parse_evspec(o, &es)) {
+					return 0;
+				}
+				if (!parse_nl(o)) {
+					return 0;
+				}
+				s->curev = es;
 			} else if (str_eq(o->lex.strval, "curinput")) {
 				if (!parse_chan(o, &num, &num2)) {
 					return 0;

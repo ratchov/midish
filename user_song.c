@@ -504,6 +504,9 @@ user_func_songinfo(struct exec *o, struct data **r) {
 	textout_putstr(tout, "curquant ");
 	textout_putlong(tout, user_song->curquant);
 	textout_putstr(tout, "\n");	
+	textout_putstr(tout, "curev ");
+	evspec_output(&user_song->curev, tout);
+	textout_putstr(tout, "\n");
 	textout_putstr(tout, "curpos ");
 	textout_putlong(tout, user_song->curpos);
 	textout_putstr(tout, "\n");	

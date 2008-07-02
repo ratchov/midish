@@ -1688,6 +1688,12 @@ it, use the <TT>songstop</TT> function.
 		however it can be used as default value for
 		the track editing functions
 	<TR>
+	<TD>curev
+	<TD>current event selection
+		This value isn't used in real-time, 
+		however it can be used as default value for
+		the track editing functions
+	<TR>
 	<TD>curinput
 	<TD>default input <tt>{dev&nbsp;chan}</tt> pair. 
 	        This value isn't used in
@@ -2793,6 +2799,14 @@ it, use the <TT>songstop</TT> function.
 
 <A name="func_song"></A>
 <A name="section_17_6"></A><H2>17.6 Song functions</H2>
+
+<A name="func_ev"></A>
+<B><TT>ev evspec</TT></B>
+        <BLOCKQUOTE>
+        set the current event selection. Most track editing
+	functions will act only on events matching "evspec",
+	ignoring all other events.
+        </BLOCKQUOTE>
 
 <A name="func_songsetcurquant"></A>
 <B><TT>songsetcurquant ticks</TT></B>
