@@ -47,13 +47,13 @@ unsigned
 blt_ev(struct exec *o, struct data **r) {
 	struct evspec es;
 	
-	if (!song_try(user_song)) {
+	if (!song_try(usong)) {
 		return 0;
 	}
 	if (!exec_lookupevspec(o, "evspec", &es)) {
 		return 0;
 	}
-	user_song->curev = es;
+	usong->curev = es;
 	return 1;
 }
 

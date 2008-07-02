@@ -54,11 +54,11 @@ user_func_sysexlist(struct exec *o, struct data **r) {
 	struct data *d, *n;
 	struct songsx *i;
 
-	if (!song_try(user_song)) {
+	if (!song_try(usong)) {
 		return 0;
 	}
 	d = data_newlist(NULL);
-	SONG_FOREACH_SX(user_song, i) {
+	SONG_FOREACH_SX(usong, i) {
 		n = data_newref(i->name.str);
 		data_listadd(d, n);
 	}
@@ -71,18 +71,18 @@ user_func_sysexnew(struct exec *o, struct data **r) {
 	char *name;
 	struct songsx *i;
 	
-	if (!song_try(user_song)) {
+	if (!song_try(usong)) {
 		return 0;
 	}
 	if (!exec_lookupname(o, "sysexname", &name)) {
 		return 0;
 	}
-	i = song_sxlookup(user_song, name);
+	i = song_sxlookup(usong, name);
 	if (i != NULL) {
 		cons_err("sysexnew: sysex already exists");
 		return 0;
 	}
-	i = song_sxnew(user_song, name);
+	i = song_sxnew(usong, name);
 	return 1;
 }
 
@@ -90,13 +90,13 @@ unsigned
 user_func_sysexdelete(struct exec *o, struct data **r) {
 	struct songsx *c;
 
-	if (!song_try(user_song)) {
+	if (!song_try(usong)) {
 		return 0;
 	}
 	if (!exec_lookupsx(o, "sysexname", &c)) {
 		return 0;
 	}
-	song_sxdel(user_song, c);
+	song_sxdel(usong, c);
 	return 1;
 }
 
@@ -105,14 +105,14 @@ user_func_sysexrename(struct exec *o, struct data **r) {
 	struct songsx *c;
 	char *name;
 	
-	if (!song_try(user_song)) {
+	if (!song_try(usong)) {
 		return 0;
 	}
 	if (!exec_lookupsx(o, "sysexname", &c) ||
 	    !exec_lookupname(o, "newname", &name)) {
 		return 0;
 	}
-	if (song_sxlookup(user_song, name)) {
+	if (song_sxlookup(usong, name)) {
 		cons_err("name already used by another sysex");
 		return 0;
 	}
@@ -126,13 +126,13 @@ user_func_sysexexists(struct exec *o, struct data **r) {
 	char *name;
 	struct songsx *i;
 
-	if (!song_try(user_song)) {
+	if (!song_try(usong)) {
 		return 0;
 	}
 	if (!exec_lookupname(o, "sysexname", &name)) {
 		return 0;
 	}
-	i = song_sxlookup(user_song, name);
+	i = song_sxlookup(usong, name);
 	*r = data_newlong(i != NULL ? 1 : 0);
 	return 1;
 }
@@ -143,7 +143,7 @@ user_func_sysexinfo(struct exec *o, struct data **r) {
 	struct sysex *e;
 	unsigned i;
 	
-	if (!song_try(user_song)) {
+	if (!song_try(usong)) {
 		return 0;
 	}
 	if (!exec_lookupsx(o, "sysexname", &c)) {
@@ -183,7 +183,7 @@ user_func_sysexclear(struct exec *o, struct data **r) {
 	struct data *d;
 	unsigned match;
 	
-	if (!song_try(user_song)) {
+	if (!song_try(usong)) {
 		return 0;
 	}
 	if (!exec_lookupsx(o, "sysexname", &c) ||
@@ -220,7 +220,7 @@ user_func_sysexsetunit(struct exec *o, struct data **r) {
 	unsigned match;
 	long unit;
 	
-	if (!song_try(user_song)) {
+	if (!song_try(usong)) {
 		return 0;
 	}
 	if (!exec_lookupsx(o, "sysexname", &c) ||
@@ -254,7 +254,7 @@ user_func_sysexadd(struct exec *o, struct data **r) {
 	struct var *arg;
 	long unit;
 	
-	if (!song_try(user_song)) {
+	if (!song_try(usong)) {
 		return 0;
 	}
 	if (!exec_lookupsx(o, "sysexname", &c) || 

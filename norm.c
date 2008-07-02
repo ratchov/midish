@@ -107,7 +107,7 @@ norm_shut(struct norm *o) {
 				dbg_puts("\n");
 			}
 			s = statelist_update(&o->statelist, &ca);
-			song_evcb(user_song, &s->ev);
+			song_evcb(usong, &s->ev);
 		}
 	}
 }
@@ -135,7 +135,7 @@ norm_kill(struct norm *o, struct ev *ev) {
 		 */
 		if (state_cancel(st, &ca)) {
 			st = statelist_update(&o->statelist, &ca);
-			song_evcb(user_song, &st->ev);
+			song_evcb(usong, &st->ev);
 		}
 		st->tag &= ~TAG_PASS;
 		dbg_puts("norm_kill: ");
@@ -204,7 +204,7 @@ norm_evcb(struct norm *o, struct ev *ev) {
 		return;
 	}
 
-	song_evcb(user_song, &st->ev);
+	song_evcb(usong, &st->ev);
 	st->nevents++;
 }
 
@@ -222,7 +222,7 @@ norm_timocb(void *addr) {
 		i->nevents = 0;
 		if (i->tag & TAG_PENDING) {
 			i->tag &= ~TAG_PENDING;
-			song_evcb(user_song, &i->ev);
+			song_evcb(usong, &i->ev);
 			i->nevents++;
 		}
 	}

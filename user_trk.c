@@ -56,11 +56,11 @@ user_func_tracklist(struct exec *o, struct data **r) {
 	struct data *d, *n;
 	struct songtrk *i;
 
-	if (!song_try(user_song)) {
+	if (!song_try(usong)) {
 		return 0;
 	}
 	d = data_newlist(NULL);
-	SONG_FOREACH_TRK(user_song, i) {
+	SONG_FOREACH_TRK(usong, i) {
 		n = data_newref(i->name.str);
 		data_listadd(d, n);
 	}
@@ -73,18 +73,18 @@ user_func_tracknew(struct exec *o, struct data **r) {
 	char *trkname;
 	struct songtrk *t;
 	
-	if (!song_try(user_song)) {
+	if (!song_try(usong)) {
 		return 0;
 	}
 	if (!exec_lookupname(o, "trackname", &trkname)) {
 		return 0;
 	}
-	t = song_trklookup(user_song, trkname);
+	t = song_trklookup(usong, trkname);
 	if (t != NULL) {
 		cons_err("tracknew: track already exists");
 		return 0;
 	}
-	t = song_trknew(user_song, trkname);
+	t = song_trknew(usong, trkname);
 	return 1;
 }
 
@@ -92,13 +92,13 @@ unsigned
 user_func_trackdelete(struct exec *o, struct data **r) {
 	struct songtrk *t;
 
-	if (!song_try(user_song)) {
+	if (!song_try(usong)) {
 		return 0;
 	}
 	if (!exec_lookuptrack(o, "trackname", &t)) {
 		return 0;
 	}
-	song_trkdel(user_song, t);
+	song_trkdel(usong, t);
 	return 1;
 }
 
@@ -107,14 +107,14 @@ user_func_trackrename(struct exec *o, struct data **r) {
 	struct songtrk *t;
 	char *name;
 	
-	if (!song_try(user_song)) {
+	if (!song_try(usong)) {
 		return 0;
 	}
 	if (!exec_lookuptrack(o, "trackname", &t) ||
 	    !exec_lookupname(o, "newname", &name)) {
 		return 0;
 	}
-	if (song_trklookup(user_song, name)) {
+	if (song_trklookup(usong, name)) {
 		cons_err("name already used by another track");
 		return 0;
 	}
@@ -128,13 +128,13 @@ user_func_trackexists(struct exec *o, struct data **r) {
 	char *name;
 	struct songtrk *t;
 	
-	if (!song_try(user_song)) {
+	if (!song_try(usong)) {
 		return 0;
 	}
 	if (!exec_lookupname(o, "trackname", &name)) {
 		return 0;
 	}
-	t = song_trklookup(user_song, name);
+	t = song_trklookup(usong, name);
 	*r = data_newlong(t != NULL ? 1 : 0);
 	return 1;
 }
@@ -147,7 +147,7 @@ user_func_trackaddev(struct exec *o, struct data **r) {
 	struct songtrk *t;
 	unsigned pos, bpm, tpb;
 
-	if (!song_try(user_song)) {
+	if (!song_try(usong)) {
 		return 0;
 	}
 	if (!exec_lookuptrack(o, "trackname", &t) || 
@@ -157,7 +157,7 @@ user_func_trackaddev(struct exec *o, struct data **r) {
 	    !exec_lookupev(o, "event", &ev)) {
 		return 0;
 	}
-	track_timeinfo(&user_song->meta, measure, &pos, NULL, &bpm, &tpb);
+	track_timeinfo(&usong->meta, measure, &pos, NULL, &bpm, &tpb);
 	
 	if (beat < 0 || (unsigned)beat >= bpm || 
 	    tic  < 0 || (unsigned)tic  >= tpb) {
@@ -178,7 +178,7 @@ user_func_tracksetcurfilt(struct exec *o, struct data **r) {
 	struct songfilt *f;
 	struct var *arg;
 	
-	if (!song_try(user_song)) {
+	if (!song_try(usong)) {
 		return 0;
 	}
 	if (!exec_lookuptrack(o, "trackname", &t)) {
@@ -193,7 +193,7 @@ user_func_tracksetcurfilt(struct exec *o, struct data **r) {
 		t->curfilt = NULL;
 		return 1;
 	} else if (arg->data->type == DATA_REF) {
-		f = song_filtlookup(user_song, arg->data->val.ref);
+		f = song_filtlookup(usong, arg->data->val.ref);
 		if (!f) {
 			cons_err("no such filt");
 			return 0;
@@ -208,7 +208,7 @@ unsigned
 user_func_trackgetcurfilt(struct exec *o, struct data **r) {
 	struct songtrk *t;
 	
-	if (!song_try(user_song)) {
+	if (!song_try(usong)) {
 		return 0;
 	}
 	if (!exec_lookuptrack(o, "trackname", &t)) {
@@ -227,13 +227,13 @@ user_func_trackcheck(struct exec *o, struct data **r) {
 	char *trkname;
 	struct songtrk *t;
 	
-	if (!song_try(user_song)) {
+	if (!song_try(usong)) {
 		return 0;
 	}
 	if (!exec_lookupname(o, "trackname", &trkname)) {
 		return 0;
 	}
-	t = song_trklookup(user_song, trkname);
+	t = song_trklookup(usong, trkname);
 	if (t == NULL) {
 		cons_err("trackcheck: no such track");
 		return 0;
@@ -249,7 +249,7 @@ user_func_trackcut(struct exec *o, struct data **r) {
 	unsigned tic, len;
 	struct track t1, t2;
 	
-	if (!song_try(user_song)) {
+	if (!song_try(usong)) {
 		return 0;
 	}
 	if (!exec_lookuptrack(o, "trackname", &t) ||
@@ -258,10 +258,10 @@ user_func_trackcut(struct exec *o, struct data **r) {
 	    !exec_lookuplong(o, "quantum", &quant)) {
 		return 0;
 	}
-	tic = track_findmeasure(&user_song->meta, from);
-	len = track_findmeasure(&user_song->meta, from + amount) - tic;
+	tic = track_findmeasure(&usong->meta, from);
+	len = track_findmeasure(&usong->meta, from + amount) - tic;
 
-	if (quant < 0 || (unsigned)quant > user_song->tics_per_unit) {
+	if (quant < 0 || (unsigned)quant > usong->tics_per_unit) {
 		cons_err("quantum must be between 0 and tics_per_unit");
 		return 0;
 	}
@@ -292,7 +292,7 @@ user_func_trackblank(struct exec *o, struct data **r) {
 	long from, amount, quant;
 	unsigned tic, len;
 	
-	if (!song_try(user_song)) {
+	if (!song_try(usong)) {
 		return 0;
 	}
 	if (!exec_lookuptrack(o, "trackname", &t) ||
@@ -302,10 +302,10 @@ user_func_trackblank(struct exec *o, struct data **r) {
 	    !exec_lookupevspec(o, "evspec", &es)) {
 		return 0;
 	}
-	tic = track_findmeasure(&user_song->meta, from);
-	len = track_findmeasure(&user_song->meta, from + amount) - tic;
+	tic = track_findmeasure(&usong->meta, from);
+	len = track_findmeasure(&usong->meta, from + amount) - tic;
 	
-	if (quant < 0 || (unsigned)quant > user_song->tics_per_unit) {
+	if (quant < 0 || (unsigned)quant > usong->tics_per_unit) {
 		cons_err("quantum must be between 0 and tics_per_unit");
 		return 0;
 	}
@@ -325,7 +325,7 @@ user_func_trackcopy(struct exec *o, struct data **r) {
 	long from, where, amount, quant;
 	unsigned tic, tic2, len;
 	
-	if (!song_try(user_song)) {
+	if (!song_try(usong)) {
 		return 0;
 	}
 	if (!exec_lookuptrack(o, "trackname", &t) ||
@@ -337,11 +337,11 @@ user_func_trackcopy(struct exec *o, struct data **r) {
 	    !exec_lookupevspec(o, "evspec", &es)) {
 		return 0;
 	}
-	tic  = track_findmeasure(&user_song->meta, from);
-	len  = track_findmeasure(&user_song->meta, from + amount) - tic;
-	tic2 = track_findmeasure(&user_song->meta, where);
+	tic  = track_findmeasure(&usong->meta, from);
+	len  = track_findmeasure(&usong->meta, from + amount) - tic;
+	tic2 = track_findmeasure(&usong->meta, where);
 
-	if (quant < 0 || (unsigned)quant > user_song->tics_per_unit) {
+	if (quant < 0 || (unsigned)quant > usong->tics_per_unit) {
 		cons_err("quantum must be between 0 and tics_per_unit");
 		return 0;
 	}
@@ -368,7 +368,7 @@ user_func_trackinsert(struct exec *o, struct data **r) {
 	unsigned tic, len;
 	struct track t1, t2;
 	
-	if (!song_try(user_song)) {
+	if (!song_try(usong)) {
 		return 0;
 	}
 	if (!exec_lookupname(o, "trackname", &trkname) ||
@@ -377,16 +377,16 @@ user_func_trackinsert(struct exec *o, struct data **r) {
 	    !exec_lookuplong(o, "quantum", &quant)) {
 		return 0;
 	}
-	t = song_trklookup(user_song, trkname);
+	t = song_trklookup(usong, trkname);
 	if (t == NULL) {
 		cons_err("trackinsert: no such track");
 		return 0;
 	}
 
-	tic = track_findmeasure(&user_song->meta, from);
-	len = track_findmeasure(&user_song->meta, from + amount) - tic;
+	tic = track_findmeasure(&usong->meta, from);
+	len = track_findmeasure(&usong->meta, from + amount) - tic;
 
-	if (quant < 0 || (unsigned)quant > user_song->tics_per_unit) {
+	if (quant < 0 || (unsigned)quant > usong->tics_per_unit) {
 		cons_err("quantum must be between 0 and tics_per_unit");
 		return 0;
 	}
@@ -413,7 +413,7 @@ unsigned
 user_func_trackmerge(struct exec *o, struct data **r) {
 	struct songtrk *src, *dst;
 
-	if (!song_try(user_song)) {
+	if (!song_try(usong)) {
 		return 0;
 	}
 	if (!exec_lookuptrack(o, "source", &src) ||
@@ -432,7 +432,7 @@ user_func_trackquant(struct exec *o, struct data **r) {
 	unsigned start, len, offset;
 	long quant, rate;
 	
-	if (!song_try(user_song)) {
+	if (!song_try(usong)) {
 		return 0;
 	}
 	if (!exec_lookupname(o, "trackname", &trkname) ||
@@ -442,7 +442,7 @@ user_func_trackquant(struct exec *o, struct data **r) {
 	    !exec_lookuplong(o, "rate", &rate)) {
 		return 0;
 	}	
-	t = song_trklookup(user_song, trkname);
+	t = song_trklookup(usong, trkname);
 	if (t == NULL) {
 		cons_err("trackquant: no such track");
 		return 0;
@@ -452,10 +452,10 @@ user_func_trackquant(struct exec *o, struct data **r) {
 		return 0;
 	}
 
-	start = track_findmeasure(&user_song->meta, from);
-	len = track_findmeasure(&user_song->meta, from + amount) - start;
+	start = track_findmeasure(&usong->meta, from);
+	len = track_findmeasure(&usong->meta, from + amount) - start;
 	
-	if (quant < 0 || (unsigned)quant > user_song->tics_per_unit) {
+	if (quant < 0 || (unsigned)quant > usong->tics_per_unit) {
 		cons_err("quantum must be between 0 and tics_per_unit");
 		return 0;
 	}
@@ -477,7 +477,7 @@ user_func_tracktransp(struct exec *o, struct data **r) {
 	unsigned tic, len;
 	struct evspec es;
 	
-	if (!song_try(user_song)) {
+	if (!song_try(usong)) {
 		return 0;
 	}
 	if (!exec_lookuptrack(o, "trackname", &t) ||
@@ -488,10 +488,10 @@ user_func_tracktransp(struct exec *o, struct data **r) {
 	    !exec_lookupevspec(o, "evspec", &es)) {
 		return 0;
 	}
-	tic = track_findmeasure(&user_song->meta, from);
-	len = track_findmeasure(&user_song->meta, from + amount) - tic;
+	tic = track_findmeasure(&usong->meta, from);
+	len = track_findmeasure(&usong->meta, from + amount) - tic;
 	
-	if (quant < 0 || (unsigned)quant > user_song->tics_per_unit) {
+	if (quant < 0 || (unsigned)quant > usong->tics_per_unit) {
 		cons_err("quantum must be between 0 and tics_per_unit");
 		return 0;
 	}
@@ -510,7 +510,7 @@ user_func_tracksetmute(struct exec *o, struct data **r) {
 	struct songtrk *t;
 	long flag;
 	
-	if (!song_try(user_song)) {
+	if (!song_try(usong)) {
 		return 0;
 	}
 	if (!exec_lookuptrack(o, "trackname", &t) ||
@@ -525,7 +525,7 @@ unsigned
 user_func_trackgetmute(struct exec *o, struct data **r) {
 	struct songtrk *t;
 	
-	if (!song_try(user_song)) {
+	if (!song_try(usong)) {
 		return 0;
 	}
 	if (!exec_lookuptrack(o, "trackname", &t)) {
@@ -543,7 +543,7 @@ user_func_trackchanlist(struct exec *o, struct data **r) {
 	char map[DEFAULT_MAXNCHANS];
 	unsigned i;
 	
-	if (!song_try(user_song)) {
+	if (!song_try(usong)) {
 		return 0;
 	}
 	if (!exec_lookuptrack(o, "trackname", &t)) {
@@ -553,7 +553,7 @@ user_func_trackchanlist(struct exec *o, struct data **r) {
 	track_chanmap(&t->track, map);
 	for (i = 0; i < DEFAULT_MAXNCHANS; i++) {
 		if (map[i]) {
-			c = song_chanlookup_bynum(user_song, i / 16, i % 16);
+			c = song_chanlookup_bynum(usong, i / 16, i % 16);
 			if (c != 0) {
 				data_listadd(*r, data_newref(c->name.str));
 			} else {
@@ -576,7 +576,7 @@ user_func_trackinfo(struct exec *o, struct data **r) {
 	long quant;
 	unsigned len, count, count_next, tpb, bpm;
 
-	if (!song_try(user_song)) {
+	if (!song_try(usong)) {
 		return 0;
 	}
 	if (!exec_lookuptrack(o, "trackname", &t) ||
@@ -585,7 +585,7 @@ user_func_trackinfo(struct exec *o, struct data **r) {
 		return 0;
 	}
 
-	if (quant < 0 || (unsigned)quant > user_song->tics_per_unit) {
+	if (quant < 0 || (unsigned)quant > usong->tics_per_unit) {
 		cons_err("quantum must be between 0 and tics_per_unit");
 		return 0;
 	}
@@ -595,7 +595,7 @@ user_func_trackinfo(struct exec *o, struct data **r) {
 	
 	count_next = 0;
 	seqptr_init(&tp, &t->track);
-	seqptr_init(&mp, &user_song->meta);
+	seqptr_init(&mp, &usong->meta);
 	for (;;) {
 		/*
 		 * scan for a time signature change

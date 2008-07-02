@@ -57,7 +57,7 @@
 #include "saveload.h"
 #include "rmidi.h"	/* for rmidi_debug */
 
-struct song *user_song;
+struct song *usong;
 unsigned user_flag_batch = 0;
 unsigned user_flag_verb = 0;
 
@@ -106,7 +106,7 @@ exec_lookuptrack(struct exec *o, char *var, struct songtrk **res) {
 	if (!exec_lookupname(o, var, &name)) {
 		return 0;
 	}
-	t = song_trklookup(user_song, name);
+	t = song_trklookup(usong, name);
 	if (t == NULL) {
 		cons_errs(name, "no such track");
 		return 0;
@@ -152,7 +152,7 @@ exec_lookupchan_getref(struct exec *o, char *var, struct songchan **res) {
 		dbg_panic();
 	}
 	if (arg->data->type == DATA_REF) {
-		i = song_chanlookup(user_song, arg->data->val.ref);
+		i = song_chanlookup(usong, arg->data->val.ref);
 	} else {
 		cons_err("bad channel name");
 		return 0;
@@ -176,7 +176,7 @@ exec_lookupfilt(struct exec *o, char *var, struct songfilt **res) {
 	if (!exec_lookupname(o, var, &name)) {
 		return 0;
 	}
-	f = song_filtlookup(user_song, name);
+	f = song_filtlookup(usong, name);
 	if (f == NULL) {
 		cons_errs(name, "no such filt");
 		return 0;
@@ -196,7 +196,7 @@ exec_lookupsx(struct exec *o, char *var, struct songsx **res) {
 	if (!exec_lookupname(o, var, &name)) {
 		return 0;
 	}
-	t = song_sxlookup(user_song, name);
+	t = song_sxlookup(usong, name);
 	if (t == NULL) {
 		cons_errs(name, "no such sysex");
 		return 0;
@@ -362,7 +362,7 @@ exec_lookupevspec(struct exec *o, char *name, struct evspec *e) {
 		goto toomany;
 	}
 	if (d->type == DATA_REF) {
-		i = song_chanlookup(user_song, d->val.ref);
+		i = song_chanlookup(usong, d->val.ref);
 		if (i == NULL) {
 			cons_err("no such chan name");
 			return 0;
@@ -597,7 +597,7 @@ data_list2chan(struct data *o, unsigned *res_dev, unsigned *res_ch) {
 	if (o->type == DATA_LIST) {
 		return data_num2chan(o->val.list, res_dev, res_ch);
 	} else if (o->type == DATA_REF) {
-		i = song_chanlookup(user_song, o->val.ref);
+		i = song_chanlookup(usong, o->val.ref);
 		if (i == NULL) {
 			cons_errs(o->val.ref, "no such chan name");
 			return 0;
@@ -810,13 +810,13 @@ unsigned
 user_func_metroswitch(struct exec *o, struct data **r) {
 	long onoff;
 
-	if (!song_try(user_song)) {
+	if (!song_try(usong)) {
 		return 0;
 	}
 	if (!exec_lookuplong(o, "onoff", &onoff)) {
 		return 0;
 	}	
-	user_song->metro.enabled = onoff;
+	usong->metro.enabled = onoff;
 	return 1;
 }
 
@@ -824,7 +824,7 @@ unsigned
 user_func_metroconf(struct exec *o, struct data **r) {
 	struct ev evhi, evlo;
 
-	if (!song_try(user_song)) {
+	if (!song_try(usong)) {
 		return 0;
 	}
 	if (!exec_lookupev(o, "eventhi", &evhi) ||
@@ -835,8 +835,8 @@ user_func_metroconf(struct exec *o, struct data **r) {
 		cons_err("note-on event expected");
 		return 0;
 	}
-	user_song->metro.hi = evhi;
-	user_song->metro.lo = evlo;
+	usong->metro.hi = evhi;
+	usong->metro.lo = evlo;
 	return 1;
 }
 
@@ -846,7 +846,7 @@ user_func_shut(struct exec *o, struct data **r) {
 	struct ev ev;
 	struct mididev *dev;
 
-	if (!song_try(user_song)) {
+	if (!song_try(usong)) {
 		return 0;
 	}
 	mux_open();
@@ -882,7 +882,7 @@ user_func_sendraw(struct exec *o, struct data **r) {
 	unsigned char byte;
 	long device;
 	
-	if (!song_try(user_song)) {
+	if (!song_try(usong)) {
 		return 0;
 	}
 	arg = exec_varlookup(o, "list");
@@ -961,7 +961,7 @@ user_mainloop(void) {
 	 * create the project (ie the song) and
 	 * the execution environment of the interpreter
 	 */
-	user_song = song_new();
+	usong = song_new();
 	exec = exec_new();
 
 	/*
@@ -1369,7 +1369,7 @@ user_mainloop(void) {
 		return 0;
 	}
 
-	cons_putpos(user_song->curpos, 0, 0);
+	cons_putpos(usong->curpos, 0, 0);
 
 	root = NULL;
 	data = NULL;
@@ -1424,8 +1424,8 @@ user_mainloop(void) {
 	
 	parse_delete(parse);
 	exec_delete(exec);
-	song_delete(user_song);
-	user_song = NULL;
+	song_delete(usong);
+	usong = NULL;
 	mididev_listdone();
 	return exitcode;
 }

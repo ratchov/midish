@@ -173,7 +173,7 @@ mux_close(void) {
 	if (!mididev_master) {
 		if (mux_phase > MUX_START && mux_phase < MUX_STOP) {
 			mux_chgphase(MUX_STOP);
-			song_stopcb(user_song);
+			song_stopcb(usong);
 			mux_sendstop();
 			mux_flush();
 		}
@@ -411,7 +411,7 @@ mux_timercb(unsigned long delta) {
 			if (mux_debug) {
 				dbg_puts("mux_timercb: generated stop\n");
 			}
-			song_stopcb(user_song);
+			song_stopcb(usong);
 			mux_sendstop();
 			mux_flush();
 		}
@@ -427,10 +427,10 @@ mux_timercb(unsigned long delta) {
 			mux_sendtic();
 			if (mux_phase == MUX_NEXT) {
 				mux_curtic++;
-				song_movecb(user_song);
+				song_movecb(usong);
 			} else if (mux_phase == MUX_FIRST) {
 				mux_curtic = 0;
-				song_startcb(user_song);
+				song_startcb(usong);
 			}
 			mux_flush();	
 		}
@@ -455,10 +455,10 @@ mux_ticcb(unsigned unit) {
 		}
 		if (mux_phase == MUX_NEXT) {
 			mux_curtic++;
-			song_movecb(user_song);
+			song_movecb(usong);
 		} else if (mux_phase == MUX_FIRST) {
 			mux_curtic = 0;
-			song_startcb(user_song);
+			song_startcb(usong);
 		}
 		mididev_master->ticdelta -= mididev_master->ticrate;
 	}
@@ -495,7 +495,7 @@ mux_stopcb(unsigned unit) {
 	if (mux_debug) {
 		dbg_puts("mux_startcb: got stop\n");
 	}
-	song_stopcb(user_song);
+	song_stopcb(usong);
 }
 
 /*
@@ -567,7 +567,7 @@ mux_errorcb(unsigned unit) {
  */
 void
 mux_sysexcb(unsigned unit, struct sysex *sysex) {
-	song_sysexcb(user_song, sysex);
+	song_sysexcb(usong, sysex);
 }
 
 /*

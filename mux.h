@@ -55,7 +55,7 @@ struct sysex;
  * save 3 layers of indirection
  */
 struct song;
-extern struct song *user_song;
+extern struct song *usong;
 extern unsigned mux_isopen;
 void song_startcb(struct song *);
 void song_stopcb(struct song *);

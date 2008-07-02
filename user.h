@@ -43,7 +43,7 @@ struct ev;
 struct evspec;
 struct sysex;
 
-extern struct song *user_song;
+extern struct song *usong;
 extern struct exec *user_exec;
 extern struct textout *user_stdout;
 extern unsigned user_flag_batch;
