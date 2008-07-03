@@ -1,2 +1,2 @@
-songload "bend1.sng"
+load "bend1.sng"
 trackinsert t 0 1 0

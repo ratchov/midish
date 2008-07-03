@@ -1,2 +1,2 @@
-songload "ctl.sng"
+load "ctl.sng"
 trackinsert t 2 1 0

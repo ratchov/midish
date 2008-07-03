@@ -1,3 +1,3 @@
-songload "bend_e2.sng"
+load "bend_e2.sng"
 trackmerge t t2
 trackdelete t2

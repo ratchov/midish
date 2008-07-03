@@ -1,2 +1,2 @@
-songload "ctl.sng"
+load "ctl.sng"
 trackblank t 1 1 0 {}

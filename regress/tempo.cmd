@@ -1,4 +1,8 @@
-songsettempo 0 240
-songsettempo 1 120
-songsettempo 2 240
-songsettempo 1 240
+g 0 
+t 240
+g 1
+t 120
+g 2
+t 240
+g 1
+t 240
