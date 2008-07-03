@@ -97,5 +97,6 @@ unsigned blt_tcheck(struct exec *, struct data **);
 unsigned blt_tcut(struct exec *, struct data **);
 unsigned blt_tins(struct exec *, struct data **);
 unsigned blt_tclr(struct exec *, struct data **);
+unsigned blt_tcopy(struct exec *, struct data **);
 
 #endif /* MIDISH_BUILTIN_H */

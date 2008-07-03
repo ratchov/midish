@@ -1,5 +1,5 @@
 load "bend2.sng"
 tnew u
-trackcopy t 1 1 u 0 0 {}
+ct t; g 1; sel 1; tcopy u 0; g 0; sel 0
 ct t; tdel
 ct u

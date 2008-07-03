@@ -1284,6 +1284,8 @@ blt_tcut(struct exec *o, struct data **r)
 	qstep = usong->curquant / 2;
 	if (stic > qstep) {
 		stic -= qstep;
+	}	
+	if (etic > qstep) {
 		etic -= qstep;
 	}	
 	track_init(&t1);
@@ -1325,6 +1327,8 @@ blt_tins(struct exec *o, struct data **r)
 	qstep = usong->curquant / 2;
 	if (stic > qstep) {
 		stic -= qstep;
+	}	
+	if (etic > qstep) {
 		etic -= qstep;
 	}	
 	track_init(&t1);
@@ -1361,8 +1365,50 @@ blt_tclr(struct exec *o, struct data **r)
 	qstep = usong->curquant / 2;
 	if (stic > qstep) {
 		stic -= qstep;
+	}	
+	if (etic > qstep) {
 		etic -= qstep;
 	}	
 	track_move(&t->track, stic, etic - stic, &usong->curev, NULL, 0, 1);
+	return 1;
+}
+
+unsigned
+blt_tcopy(struct exec *o, struct data **r)
+{
+	struct songtrk *t, *t2;
+	struct track copy;
+	long where;
+	unsigned stic, etic, stic2, qstep;
+
+	if (!song_try(usong)) {
+		return 0;
+	}
+	if ((t = usong->curtrk) == NULL) {
+		cons_err("tcopy: no current track");
+		return 0;
+	}
+	if (!exec_lookuptrack(o, "trackname2", &t2) ||
+	    !exec_lookuplong(o, "where", &where)) {
+		return 0;
+	}
+	stic = track_findmeasure(&usong->meta, usong->curpos);
+	etic = track_findmeasure(&usong->meta, usong->curpos + usong->curlen);
+	stic2 = track_findmeasure(&usong->meta, where);
+	qstep = usong->curquant / 2;
+	if (stic > qstep && stic2 > qstep) {
+		stic -= qstep;
+		stic2 -= qstep;
+	}
+	if (etic > qstep) {
+		etic -= qstep;
+	}
+	track_init(&copy);
+	track_move(&t->track, stic, etic - stic, &usong->curev, &copy, 1, 0);
+	if (!track_isempty(&copy)) {
+		copy.first->delta += stic2;
+		track_merge(&t2->track, &copy);
+	}
+	track_done(&copy);
 	return 1;
 }
