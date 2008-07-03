@@ -1265,3 +1265,39 @@ blt_tcheck(struct exec *o, struct data **r)
 	return 1;
 }
 
+unsigned
+blt_tcut(struct exec *o, struct data **r)
+{
+	struct songtrk *t;
+	unsigned qstep, stic, etic;
+	struct track t1, t2;
+
+	if (!song_try(usong)) {
+		return 0;
+	}
+	if ((t = usong->curtrk) == NULL) {
+		cons_err("tcut: no current track");
+		return 0;
+	}
+	stic = track_findmeasure(&usong->meta, usong->curpos);
+	etic = track_findmeasure(&usong->meta, usong->curpos + usong->curlen);
+	qstep = usong->curquant / 2;
+	if (stic > qstep) {
+		stic -= qstep;
+		etic -= qstep;
+	}	
+	track_init(&t1);
+	track_init(&t2);
+	track_move(&t->track, 0,   stic, NULL, &t1, 1, 1);
+	track_move(&t->track, etic, ~0U, NULL, &t2, 1, 1);
+	track_shift(&t2, stic);
+	track_clear(&t->track);
+	track_merge(&t->track, &t1);
+	if (!track_isempty(&t2)) {
+		track_merge(&t->track, &t2);
+	}
+	track_done(&t1);
+	track_done(&t2);
+	usong->curlen = 0;
+	return 1;
+}

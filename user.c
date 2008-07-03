@@ -931,11 +931,7 @@ user_mainloop(void)
 			name_newarg("filtname", NULL));
 	exec_newbuiltin(exec, "tgetf", blt_tgetf, NULL);
 	exec_newbuiltin(exec, "tcheck", blt_tcheck, NULL);
-	exec_newbuiltin(exec, "trackcut", user_func_trackcut,
-			name_newarg("trackname",
-			name_newarg("from",
-			name_newarg("amount",
-			name_newarg("quantum", NULL)))));
+	exec_newbuiltin(exec, "tcut", blt_tcut, NULL);
 	exec_newbuiltin(exec, "trackblank", user_func_trackblank,
 			name_newarg("trackname",
 			name_newarg("from",

@@ -94,5 +94,6 @@ unsigned blt_taddev(struct exec *, struct data **);
 unsigned blt_tsetf(struct exec *, struct data **);
 unsigned blt_tgetf(struct exec *, struct data **);
 unsigned blt_tcheck(struct exec *, struct data **);
+unsigned blt_tcut(struct exec *, struct data **);
 
 #endif /* MIDISH_BUILTIN_H */

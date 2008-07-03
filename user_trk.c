@@ -51,49 +51,6 @@
 #include "saveload.h"
 #include "textio.h"
 
-unsigned
-user_func_trackcut(struct exec *o, struct data **r)
-{
-	struct songtrk *t;
-	long from, amount, quant;
-	unsigned tic, len;
-	struct track t1, t2;
-
-	if (!song_try(usong)) {
-		return 0;
-	}
-	if (!exec_lookuptrack(o, "trackname", &t) ||
-	    !exec_lookuplong(o, "from", &from) ||
-	    !exec_lookuplong(o, "amount", &amount) ||
-	    !exec_lookuplong(o, "quantum", &quant)) {
-		return 0;
-	}
-	tic = track_findmeasure(&usong->meta, from);
-	len = track_findmeasure(&usong->meta, from + amount) - tic;
-
-	if (quant < 0 || (unsigned)quant > usong->tics_per_unit) {
-		cons_err("quantum must be between 0 and tics_per_unit");
-		return 0;
-	}
-
-	if (tic > (unsigned)quant/2) {
-		tic -= quant/2;
-	}
-
-	track_init(&t1);
-	track_init(&t2);
-	track_move(&t->track, 0,         tic, NULL, &t1, 1, 1);
-	track_move(&t->track, tic + len, ~0U, NULL, &t2, 1, 1);
-	track_shift(&t2, tic);
-	track_clear(&t->track);
-	track_merge(&t->track, &t1);
-	if (!track_isempty(&t2)) {
-		track_merge(&t->track, &t2);
-	}
-	track_done(&t1);
-	track_done(&t2);
-	return 1;
-}
 
 unsigned
 user_func_trackblank(struct exec *o, struct data **r)

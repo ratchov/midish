@@ -1,2 +1,4 @@
 load "bend2.sng"
-trackcut t 0 1 0
+ct t; g 0; sel 1; tcut
+g 0
+sel 0
