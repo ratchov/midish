@@ -1,2 +1,3 @@
 load "bad1.sng"
-trackcheck t
+ct t
+tcheck

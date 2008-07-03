@@ -914,29 +914,23 @@ user_mainloop(void)
 	exec_newbuiltin(exec, "panic", blt_panic, NULL);
 	exec_newbuiltin(exec, "info", user_func_info, NULL);
 
-	exec_newbuiltin(exec, "tracklist", user_func_tracklist, NULL);
-	exec_newbuiltin(exec, "tracknew", user_func_tracknew,
+	exec_newbuiltin(exec, "tlist", blt_tlist, NULL);
+	exec_newbuiltin(exec, "tnew", blt_tnew,
 			name_newarg("trackname", NULL));
-	exec_newbuiltin(exec, "trackdelete", user_func_trackdelete,
+	exec_newbuiltin(exec, "tdel", blt_tdel, NULL);
+	exec_newbuiltin(exec, "tren", blt_tren,
+			name_newarg("newname", NULL));
+	exec_newbuiltin(exec, "texists", blt_texists,
 			name_newarg("trackname", NULL));
-	exec_newbuiltin(exec, "trackrename", user_func_trackrename,
-			name_newarg("trackname",
-			name_newarg("newname", NULL)));
-	exec_newbuiltin(exec, "trackexists", user_func_trackexists,
-			name_newarg("trackname", NULL));
-	exec_newbuiltin(exec, "trackaddev", user_func_trackaddev,
-			name_newarg("trackname",
+	exec_newbuiltin(exec, "taddev", blt_taddev,
 			name_newarg("measure",
 			name_newarg("beat",
 			name_newarg("tic",
-			name_newarg("event", NULL))))));
-	exec_newbuiltin(exec, "tracksetcurfilt", user_func_tracksetcurfilt,
-			name_newarg("trackname",
-			name_newarg("filtname", NULL)));
-	exec_newbuiltin(exec, "trackgetcurfilt", user_func_trackgetcurfilt,
-			name_newarg("trackname", NULL));
-	exec_newbuiltin(exec, "trackcheck", user_func_trackcheck,
-			name_newarg("trackname", NULL));
+			name_newarg("event", NULL)))));
+	exec_newbuiltin(exec, "tsetf", blt_tsetf,
+			name_newarg("filtname", NULL));
+	exec_newbuiltin(exec, "tgetf", blt_tgetf, NULL);
+	exec_newbuiltin(exec, "tcheck", blt_tcheck, NULL);
 	exec_newbuiltin(exec, "trackcut", user_func_trackcut,
 			name_newarg("trackname",
 			name_newarg("from",
@@ -1227,11 +1221,11 @@ user_mainloop(void)
 	exec_newbuiltin(exec, "s", blt_stop, NULL);
 	exec_newbuiltin(exec, "t", blt_tempo,
 			name_newarg("beats_per_minute", NULL));
-	exec_newbuiltin(exec, "sins", blt_sins,
+	exec_newbuiltin(exec, "mins", blt_mins,
 			name_newarg("amount",
 			name_newarg("numerator",
 			name_newarg("denominator", NULL))));
-	exec_newbuiltin(exec, "sdel", blt_sdel,
+	exec_newbuiltin(exec, "mdel", blt_mdel,
 			name_newarg("amount", NULL));
 	exec_newbuiltin(exec, "minfo", blt_minfo, NULL);
 	exec_newbuiltin(exec, "mtempo", blt_mtempo,

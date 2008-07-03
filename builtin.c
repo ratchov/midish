@@ -825,7 +825,7 @@ blt_tempo(struct exec *o, struct data **r)
 }
 
 unsigned
-blt_sins(struct exec *o, struct data **r)
+blt_mins(struct exec *o, struct data **r)
 {
 	long num, den, amount;
 	unsigned tic, len, tpm;
@@ -880,7 +880,7 @@ blt_sins(struct exec *o, struct data **r)
 }
 
 unsigned
-blt_sdel(struct exec *o, struct data **r)
+blt_mdel(struct exec *o, struct data **r)
 {
 	long amount;
 	unsigned tic, len;
@@ -1063,3 +1063,205 @@ blt_metrocf(struct exec *o, struct data **r)
 	usong->metro.lo = evlo;
 	return 1;
 }
+
+unsigned
+blt_tlist(struct exec *o, struct data **r)
+{
+	struct data *d, *n;
+	struct songtrk *i;
+
+	if (!song_try(usong)) {
+		return 0;
+	}
+	d = data_newlist(NULL);
+	SONG_FOREACH_TRK(usong, i) {
+		n = data_newref(i->name.str);
+		data_listadd(d, n);
+	}
+	*r = d;
+	return 1;
+}
+
+unsigned
+blt_tnew(struct exec *o, struct data **r)
+{
+	char *trkname;
+	struct songtrk *t;
+
+	if (!song_try(usong)) {
+		return 0;
+	}
+	if (!exec_lookupname(o, "trackname", &trkname)) {
+		return 0;
+	}
+	t = song_trklookup(usong, trkname);
+	if (t != NULL) {
+		cons_err("tnew: track already exists");
+		return 0;
+	}
+	t = song_trknew(usong, trkname);
+	return 1;
+}
+
+unsigned
+blt_tdel(struct exec *o, struct data **r)
+{
+	if (!song_try(usong)) {
+		return 0;
+	}
+	if (usong->curtrk == NULL) {
+		cons_err("tdel: no current track");
+		return 0;
+	}
+	song_trkdel(usong, usong->curtrk);
+	return 1;
+}
+
+unsigned
+blt_tren(struct exec *o, struct data **r)
+{
+	char *name;
+
+	if (!song_try(usong)) {
+		return 0;
+	}
+	if (usong->curtrk == NULL) {
+		cons_err("tren: no current track");
+		return 0;
+	}
+	if (!exec_lookupname(o, "newname", &name)) {
+		return 0;
+	}
+	if (song_trklookup(usong, name)) {
+		cons_err("tren: name already used by another track");
+		return 0;
+	}
+	str_delete(usong->curtrk->name.str);
+	usong->curtrk->name.str = str_new(name);
+	return 1;
+}
+
+unsigned
+blt_texists(struct exec *o, struct data **r)
+{
+	char *name;
+	struct songtrk *t;
+
+	if (!song_try(usong)) {
+		return 0;
+	}
+	if (!exec_lookupname(o, "trackname", &name)) {
+		return 0;
+	}
+	t = song_trklookup(usong, name);
+	*r = data_newlong(t != NULL ? 1 : 0);
+	return 1;
+}
+
+unsigned
+blt_taddev(struct exec *o, struct data **r)
+{
+	long measure, beat, tic;
+	struct ev ev;
+	struct seqptr tp;
+	struct songtrk *t;
+	unsigned pos, bpm, tpb;
+
+	if (!song_try(usong)) {
+		return 0;
+	}
+	if (!exec_lookuplong(o, "measure", &measure) ||
+	    !exec_lookuplong(o, "beat", &beat) ||
+	    !exec_lookuplong(o, "tic", &tic) ||
+	    !exec_lookupev(o, "event", &ev)) {
+		return 0;
+	}
+	if ((t = usong->curtrk) == NULL) {
+		cons_err("taddev: no current track");
+		return 0;
+	}
+	track_timeinfo(&usong->meta, measure, &pos, NULL, &bpm, &tpb);
+
+	if (beat < 0 || (unsigned)beat >= bpm ||
+	    tic  < 0 || (unsigned)tic  >= tpb) {
+		cons_err("taddev: beat/tick must fit in the measure");
+		return 0;
+	}
+	pos += beat * tpb + tic;
+	seqptr_init(&tp, &t->track);
+	seqptr_seek(&tp, pos);
+	seqptr_evput(&tp, &ev);
+	seqptr_done(&tp);
+	return 1;
+}
+
+unsigned
+blt_tsetf(struct exec *o, struct data **r)
+{
+	struct songtrk *t;
+	struct songfilt *f;
+	struct var *arg;
+
+	if (!song_try(usong)) {
+		return 0;
+	}
+	if ((t = usong->curtrk) == NULL) {
+		cons_err("tsetf: no current track");
+		return 0;
+	}
+	arg = exec_varlookup(o, "filtname");
+	if (!arg) {
+		dbg_puts("blt_tsetf: filtname: no such param\n");
+		return 0;
+	}
+	if (arg->data->type == DATA_NIL) {
+		t->curfilt = NULL;
+		return 1;
+	} else if (arg->data->type == DATA_REF) {
+		f = song_filtlookup(usong, arg->data->val.ref);
+		if (!f) {
+			cons_err("tsetf: no such filt");
+			return 0;
+		}
+		t->curfilt = f;
+		return 1;
+	}
+	return 0;
+}
+
+unsigned
+blt_tgetf(struct exec *o, struct data **r)
+{
+	struct songtrk *t;
+
+	if (!song_try(usong)) {
+		return 0;
+	}
+	if ((t = usong->curtrk) == NULL) {
+		cons_err("tgetf: no current track");
+		return 0;
+	}
+	if (t->curfilt) {
+		*r = data_newref(t->curfilt->name.str);
+	} else {
+		*r = data_newnil();
+	}
+	return 1;
+}
+
+unsigned
+blt_tcheck(struct exec *o, struct data **r)
+{
+	struct songtrk *t;
+
+	if (!song_try(usong)) {
+		return 0;
+	}
+	if ((t = usong->curtrk) == NULL) {
+		cons_err("tgetf: no current track");
+		return 0;
+	}
+	track_check(&t->track);
+	return 1;
+}
+

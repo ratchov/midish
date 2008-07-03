@@ -1,4 +1,5 @@
 load "bend2.sng"
-tracknew u
+tnew u
 trackcopy t 2 1 u 0 0 {}
-trackdelete t
+ct t; tdel
+ct u

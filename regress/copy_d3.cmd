@@ -1,4 +1,5 @@
 load "ctl.sng"
-tracknew u
+tnew u
 trackcopy t 3 1 u 0 0 {}
-trackdelete t
+ct t; tdel
+ct u

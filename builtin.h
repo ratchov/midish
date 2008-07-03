@@ -73,8 +73,8 @@ unsigned blt_play(struct exec *, struct data **);
 unsigned blt_rec(struct exec *, struct data **);
 unsigned blt_stop(struct exec *, struct data **);
 unsigned blt_tempo(struct exec *, struct data **);
-unsigned blt_sins(struct exec *, struct data **);
-unsigned blt_sdel(struct exec *, struct data **);
+unsigned blt_mins(struct exec *, struct data **);
+unsigned blt_mdel(struct exec *, struct data **);
 unsigned blt_minfo(struct exec *, struct data **);
 unsigned blt_mtempo(struct exec *, struct data **);
 unsigned blt_msig(struct exec *, struct data **);
@@ -84,5 +84,15 @@ unsigned blt_ctlunconf(struct exec *, struct data **);
 unsigned blt_ctlinfo(struct exec *, struct data **);
 unsigned blt_metro(struct exec *, struct data **);
 unsigned blt_metrocf(struct exec *, struct data **);
+
+unsigned blt_tlist(struct exec *, struct data **);
+unsigned blt_tnew(struct exec *, struct data **);
+unsigned blt_tdel(struct exec *, struct data **);
+unsigned blt_tren(struct exec *, struct data **);
+unsigned blt_texists(struct exec *, struct data **);
+unsigned blt_taddev(struct exec *, struct data **);
+unsigned blt_tsetf(struct exec *, struct data **);
+unsigned blt_tgetf(struct exec *, struct data **);
+unsigned blt_tcheck(struct exec *, struct data **);
 
 #endif /* MIDISH_BUILTIN_H */
