@@ -1226,8 +1226,7 @@ user_mainloop(void)
 	exec_newbuiltin(exec, "r", blt_rec, NULL);
 	exec_newbuiltin(exec, "s", blt_stop, NULL);
 	exec_newbuiltin(exec, "t", blt_tempo,
-			name_newarg("measure",
-			name_newarg("beats_per_minute", NULL)));
+			name_newarg("beats_per_minute", NULL));
 	exec_newbuiltin(exec, "sins", blt_sins,
 			name_newarg("from",
 			name_newarg("amount",

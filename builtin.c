@@ -808,20 +808,19 @@ blt_stop(struct exec *o, struct data **r)
 unsigned
 blt_tempo(struct exec *o, struct data **r)
 {
-	long tempo, measure;
+	long tempo;
 
 	if (!song_try(usong)) {
 		return 0;
 	}
-	if (!exec_lookuplong(o, "measure", &measure) ||
-	    !exec_lookuplong(o, "beats_per_minute", &tempo)) {
+	if (!exec_lookuplong(o, "beats_per_minute", &tempo)) {
 		return 0;
 	}
 	if (tempo < 40 || tempo > 240) {
 		cons_err("tempo must be between 40 and 240 beats per measure");
 		return 0;
 	}
-	track_settempo(&usong->meta, measure, tempo);
+	track_settempo(&usong->meta, usong->curpos, tempo);
 	return 1;
 }
 
