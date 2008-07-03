@@ -827,7 +827,7 @@ blt_tempo(struct exec *o, struct data **r)
 unsigned
 blt_sins(struct exec *o, struct data **r)
 {
-	long num, den, amount, from;
+	long num, den, amount;
 	unsigned tic, len, tpm;
 	unsigned long usec24;
 	struct seqptr sp;
@@ -837,8 +837,7 @@ blt_sins(struct exec *o, struct data **r)
 	if (!song_try(usong)) {
 		return 0;
 	}
-	if (!exec_lookuplong(o, "from", &from) ||
-	    !exec_lookuplong(o, "amount", &amount) ||
+	if (!exec_lookuplong(o, "amount", &amount) ||
 	    !exec_lookuplong(o, "numerator", &num) ||
 	    !exec_lookuplong(o, "denominator", &den)) {
 		return 0;
@@ -849,7 +848,7 @@ blt_sins(struct exec *o, struct data **r)
 	}
 
 	tpm = usong->tics_per_unit * num / den;
-	track_timeinfo(&usong->meta, from, &tic, &usec24, NULL, NULL);
+	track_timeinfo(&usong->meta, usong->curpos, &tic, &usec24, NULL, NULL);
 	len = amount * tpm;
 
 	track_init(&tn);
@@ -883,19 +882,18 @@ blt_sins(struct exec *o, struct data **r)
 unsigned
 blt_sdel(struct exec *o, struct data **r)
 {
-	long amount, from;
+	long amount;
 	unsigned tic, len;
 	struct track t1, t2;
 
 	if (!song_try(usong)) {
 		return 0;
 	}
-	if (!exec_lookuplong(o, "from", &from) ||
-	    !exec_lookuplong(o, "amount", &amount)) {
+	if (!exec_lookuplong(o, "amount", &amount)) {
 		return 0;
 	}
-	tic = track_findmeasure(&usong->meta, from);
-	len = track_findmeasure(&usong->meta, from + amount) - tic;
+	tic = track_findmeasure(&usong->meta, usong->curpos);
+	len = track_findmeasure(&usong->meta, usong->curpos + amount) - tic;
 
 	track_init(&t1);
 	track_init(&t2);

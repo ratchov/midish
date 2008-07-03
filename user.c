@@ -1228,13 +1228,11 @@ user_mainloop(void)
 	exec_newbuiltin(exec, "t", blt_tempo,
 			name_newarg("beats_per_minute", NULL));
 	exec_newbuiltin(exec, "sins", blt_sins,
-			name_newarg("from",
 			name_newarg("amount",
 			name_newarg("numerator",
-			name_newarg("denominator", NULL)))));
+			name_newarg("denominator", NULL))));
 	exec_newbuiltin(exec, "sdel", blt_sdel,
-			name_newarg("from",
-			name_newarg("amount", NULL)));
+			name_newarg("amount", NULL));
 	exec_newbuiltin(exec, "minfo", blt_minfo, NULL);
 	exec_newbuiltin(exec, "mtempo", blt_mtempo,
 			name_newarg("from", NULL));

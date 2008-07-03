@@ -1,2 +1,4 @@
 load "time.sng"
-songtimerm 10 10
+g 10
+sdel 10
+g 0
