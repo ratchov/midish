@@ -1314,7 +1314,7 @@ blt_tins(struct exec *o, struct data **r)
 		return 0;
 	}
 	if ((t = usong->curtrk) == NULL) {
-		cons_err("tcut: no current track");
+		cons_err("tins: no current track");
 		return 0;
 	}
 	if (!exec_lookuplong(o, "amount", &amount)) {
@@ -1340,5 +1340,29 @@ blt_tins(struct exec *o, struct data **r)
 	track_done(&t1);
 	track_done(&t2);
 	usong->curlen += amount;
+	return 1;
+}
+
+unsigned
+blt_tclr(struct exec *o, struct data **r)
+{
+	struct songtrk *t;
+	unsigned stic, etic, qstep;
+
+	if (!song_try(usong)) {
+		return 0;
+	}
+	if ((t = usong->curtrk) == NULL) {
+		cons_err("tins: no current track");
+		return 0;
+	}
+	stic = track_findmeasure(&usong->meta, usong->curpos);
+	etic = track_findmeasure(&usong->meta, usong->curpos + usong->curlen);
+	qstep = usong->curquant / 2;
+	if (stic > qstep) {
+		stic -= qstep;
+		etic -= qstep;
+	}	
+	track_move(&t->track, stic, etic - stic, &usong->curev, NULL, 0, 1);
 	return 1;
 }

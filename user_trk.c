@@ -53,39 +53,6 @@
 
 
 unsigned
-user_func_trackblank(struct exec *o, struct data **r)
-{
-	struct songtrk *t;
-	struct evspec es;
-	long from, amount, quant;
-	unsigned tic, len;
-
-	if (!song_try(usong)) {
-		return 0;
-	}
-	if (!exec_lookuptrack(o, "trackname", &t) ||
-	    !exec_lookuplong(o, "from", &from) ||
-	    !exec_lookuplong(o, "amount", &amount) ||
-	    !exec_lookuplong(o, "quantum", &quant) ||
-	    !exec_lookupevspec(o, "evspec", &es)) {
-		return 0;
-	}
-	tic = track_findmeasure(&usong->meta, from);
-	len = track_findmeasure(&usong->meta, from + amount) - tic;
-
-	if (quant < 0 || (unsigned)quant > usong->tics_per_unit) {
-		cons_err("quantum must be between 0 and tics_per_unit");
-		return 0;
-	}
-
-	if (tic > (unsigned)quant/2) {
-		tic -= quant/2;
-	}
-	track_move(&t->track, tic, len, &es, NULL, 0, 1);
-	return 1;
-}
-
-unsigned
 user_func_trackcopy(struct exec *o, struct data **r)
 {
 	struct songtrk *t, *t2;

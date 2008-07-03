@@ -1,2 +1,2 @@
 load "bend1.sng"
-trackblank t 1 1 0 {}
+ct t; g 1; sel 1; tclr; g 0; sel 0
