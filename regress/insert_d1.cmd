@@ -1,2 +1,2 @@
 load "ctl.sng"
-trackinsert t 1 1 0
+ct t; g 1; tins 1; g 0; sel 0

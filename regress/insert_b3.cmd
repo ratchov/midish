@@ -1,2 +1,2 @@
 load "bend2.sng"
-trackinsert t 3 1 0
+ct t; g 3; tins 1; g 0; sel 0

@@ -946,11 +946,8 @@ user_mainloop(void)
 			name_newarg("where",
 			name_newarg("quantum",
 			name_newarg("evspec",  NULL))))))));
-	exec_newbuiltin(exec, "trackinsert", user_func_trackinsert,
-			name_newarg("trackname",
-			name_newarg("from",
-			name_newarg("amount",
-			name_newarg("quantum", NULL)))));
+	exec_newbuiltin(exec, "tins", blt_tins,
+			name_newarg("amount", NULL));
 	exec_newbuiltin(exec, "trackmerge", user_func_trackmerge,
 			name_newarg("source",
 			name_newarg("dest", NULL)));
