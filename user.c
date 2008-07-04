@@ -914,6 +914,88 @@ user_mainloop(void)
 	exec_newbuiltin(exec, "panic", blt_panic, NULL);
 	exec_newbuiltin(exec, "info", user_func_info, NULL);
 
+	exec_newbuiltin(exec, "getunit", blt_getunit, NULL);
+	exec_newbuiltin(exec, "setunit", blt_setunit,
+			name_newarg("tics_per_unit", NULL));
+	exec_newbuiltin(exec, "getfac", blt_getfac, NULL);
+	exec_newbuiltin(exec, "fac", blt_fac,
+			name_newarg("tempo_factor", NULL));
+	exec_newbuiltin(exec, "getpos", blt_getpos, NULL);
+	exec_newbuiltin(exec, "g", blt_goto,
+			name_newarg("measure", NULL));
+	exec_newbuiltin(exec, "getlen", blt_getlen, NULL);
+	exec_newbuiltin(exec, "sel", blt_sel,
+			name_newarg("length", NULL));
+	exec_newbuiltin(exec, "getq", blt_getq, NULL);
+	exec_newbuiltin(exec, "setq", blt_setq,
+			name_newarg("quantum", NULL));
+	exec_newbuiltin(exec, "ev", blt_ev,
+			name_newarg("evspec", NULL));
+	exec_newbuiltin(exec, "geti", blt_geti, NULL);
+	exec_newbuiltin(exec, "ci", blt_ci,
+			name_newarg("inputchan", NULL));
+	exec_newbuiltin(exec, "gett", blt_gett, NULL);
+	exec_newbuiltin(exec, "ct", blt_ct,
+			name_newarg("trackname", NULL));
+	exec_newbuiltin(exec, "getf", blt_getf, NULL);
+	exec_newbuiltin(exec, "cf", blt_cf,
+			name_newarg("filtname", NULL));
+	exec_newbuiltin(exec, "getx", blt_getx, NULL);
+	exec_newbuiltin(exec, "cx", blt_cx,
+			name_newarg("sysexname", NULL));
+	exec_newbuiltin(exec, "getc", blt_getc, NULL);
+	exec_newbuiltin(exec, "cc", blt_cc,
+			name_newarg("channame", NULL));
+	exec_newbuiltin(exec, "mute", blt_mute,
+			name_newarg("trackname", NULL));
+	exec_newbuiltin(exec, "unmute", blt_unmute,
+			name_newarg("trackname", NULL));
+	exec_newbuiltin(exec, "getmute", blt_getmute,
+			name_newarg("trackname", NULL));
+	exec_newbuiltin(exec, "ls", blt_ls, NULL);
+	exec_newbuiltin(exec, "save", blt_save,
+			name_newarg("filename", NULL));
+	exec_newbuiltin(exec, "load", blt_load,
+			name_newarg("filename", NULL));
+	exec_newbuiltin(exec, "reset", blt_reset, NULL);
+	exec_newbuiltin(exec, "export", blt_export,
+			name_newarg("filename", NULL));
+	exec_newbuiltin(exec, "import", blt_import,
+			name_newarg("filename", NULL));
+	exec_newbuiltin(exec, "i", blt_idle, NULL);
+	exec_newbuiltin(exec, "p", blt_play, NULL);
+	exec_newbuiltin(exec, "r", blt_rec, NULL);
+	exec_newbuiltin(exec, "s", blt_stop, NULL);
+	exec_newbuiltin(exec, "t", blt_tempo,
+			name_newarg("beats_per_minute", NULL));
+	exec_newbuiltin(exec, "mins", blt_mins,
+			name_newarg("amount",
+			name_newarg("numerator",
+			name_newarg("denominator", NULL))));
+	exec_newbuiltin(exec, "mdel", blt_mdel,
+			name_newarg("amount", NULL));
+	exec_newbuiltin(exec, "minfo", blt_minfo, NULL);
+	exec_newbuiltin(exec, "mtempo", blt_mtempo,
+			name_newarg("from", NULL));
+	exec_newbuiltin(exec, "msig", blt_msig,
+			name_newarg("from", NULL));
+	exec_newbuiltin(exec, "ctlconf", blt_ctlconf,
+			name_newarg("name",
+			name_newarg("ctl",
+			name_newarg("defval", NULL))));
+	exec_newbuiltin(exec, "ctlconfx", blt_ctlconfx,
+			name_newarg("name",
+			name_newarg("ctl",
+			name_newarg("defval", NULL))));
+	exec_newbuiltin(exec, "ctlunconf", blt_ctlunconf,
+			name_newarg("name", NULL));
+	exec_newbuiltin(exec, "ctlinfo", blt_ctlinfo, NULL);
+	exec_newbuiltin(exec, "m", blt_metro,
+			name_newarg("onoff", NULL));
+	exec_newbuiltin(exec, "metrocf", blt_metrocf,
+			name_newarg("eventhi",
+			name_newarg("eventlo", NULL)));
+
 	exec_newbuiltin(exec, "tlist", blt_tlist, NULL);
 	exec_newbuiltin(exec, "tnew", blt_tnew,
 			name_newarg("trackname", NULL));
@@ -944,12 +1026,8 @@ user_mainloop(void)
 			name_newarg("rate", NULL));
 	exec_newbuiltin(exec, "ttransp", blt_ttransp,
 			name_newarg("halftones", NULL));
-	exec_newbuiltin(exec, "trackchanlist", user_func_trackchanlist,
-			name_newarg("trackname", NULL));
-	exec_newbuiltin(exec, "trackinfo", user_func_trackinfo,
-			name_newarg("trackname",
-			name_newarg("quantum",
-			name_newarg("evspec", NULL))));
+	exec_newbuiltin(exec, "tclist", blt_tclist, NULL);
+	exec_newbuiltin(exec, "tinfo", blt_tinfo, NULL);
 
 	exec_newbuiltin(exec, "chanlist", user_func_chanlist, NULL);
 	exec_newbuiltin(exec, "chanset", user_func_chanset,
@@ -1141,88 +1219,6 @@ user_mainloop(void)
 			name_newarg("unit",
 			name_newarg("data", NULL))));
 
-	exec_newbuiltin(exec, "getunit", blt_getunit, NULL);
-	exec_newbuiltin(exec, "setunit", blt_setunit,
-			name_newarg("tics_per_unit", NULL));
-	exec_newbuiltin(exec, "getfac", blt_getfac, NULL);
-	exec_newbuiltin(exec, "fac", blt_fac,
-			name_newarg("tempo_factor", NULL));
-	exec_newbuiltin(exec, "getpos", blt_getpos, NULL);
-	exec_newbuiltin(exec, "g", blt_goto,
-			name_newarg("measure", NULL));
-	exec_newbuiltin(exec, "getlen", blt_getlen, NULL);
-	exec_newbuiltin(exec, "sel", blt_sel,
-			name_newarg("length", NULL));
-	exec_newbuiltin(exec, "getq", blt_getq, NULL);
-	exec_newbuiltin(exec, "setq", blt_setq,
-			name_newarg("quantum", NULL));
-	exec_newbuiltin(exec, "ev", blt_ev,
-			name_newarg("evspec", NULL));
-	exec_newbuiltin(exec, "geti", blt_geti, NULL);
-	exec_newbuiltin(exec, "ci", blt_ci,
-			name_newarg("inputchan", NULL));
-	exec_newbuiltin(exec, "gett", blt_gett, NULL);
-	exec_newbuiltin(exec, "ct", blt_ct,
-			name_newarg("trackname", NULL));
-	exec_newbuiltin(exec, "getf", blt_getf, NULL);
-	exec_newbuiltin(exec, "cf", blt_cf,
-			name_newarg("filtname", NULL));
-	exec_newbuiltin(exec, "getx", blt_getx, NULL);
-	exec_newbuiltin(exec, "cx", blt_cx,
-			name_newarg("sysexname", NULL));
-	exec_newbuiltin(exec, "getc", blt_getc, NULL);
-	exec_newbuiltin(exec, "cc", blt_cc,
-			name_newarg("channame", NULL));
-	exec_newbuiltin(exec, "mute", blt_mute,
-			name_newarg("trackname", NULL));
-	exec_newbuiltin(exec, "unmute", blt_unmute,
-			name_newarg("trackname", NULL));
-	exec_newbuiltin(exec, "getmute", blt_getmute,
-			name_newarg("trackname", NULL));
-	exec_newbuiltin(exec, "ls", blt_ls, NULL);
-	exec_newbuiltin(exec, "save", blt_save,
-			name_newarg("filename", NULL));
-	exec_newbuiltin(exec, "load", blt_load,
-			name_newarg("filename", NULL));
-	exec_newbuiltin(exec, "reset", blt_reset, NULL);
-	exec_newbuiltin(exec, "export", blt_export,
-			name_newarg("filename", NULL));
-	exec_newbuiltin(exec, "import", blt_import,
-			name_newarg("filename", NULL));
-	exec_newbuiltin(exec, "i", blt_idle, NULL);
-	exec_newbuiltin(exec, "p", blt_play, NULL);
-	exec_newbuiltin(exec, "r", blt_rec, NULL);
-	exec_newbuiltin(exec, "s", blt_stop, NULL);
-	exec_newbuiltin(exec, "t", blt_tempo,
-			name_newarg("beats_per_minute", NULL));
-	exec_newbuiltin(exec, "mins", blt_mins,
-			name_newarg("amount",
-			name_newarg("numerator",
-			name_newarg("denominator", NULL))));
-	exec_newbuiltin(exec, "mdel", blt_mdel,
-			name_newarg("amount", NULL));
-	exec_newbuiltin(exec, "minfo", blt_minfo, NULL);
-	exec_newbuiltin(exec, "mtempo", blt_mtempo,
-			name_newarg("from", NULL));
-	exec_newbuiltin(exec, "msig", blt_msig,
-			name_newarg("from", NULL));
-	exec_newbuiltin(exec, "ctlconf", blt_ctlconf,
-			name_newarg("name",
-			name_newarg("ctl",
-			name_newarg("defval", NULL))));
-	exec_newbuiltin(exec, "ctlconfx", blt_ctlconfx,
-			name_newarg("name",
-			name_newarg("ctl",
-			name_newarg("defval", NULL))));
-	exec_newbuiltin(exec, "ctlunconf", blt_ctlunconf,
-			name_newarg("name", NULL));
-	exec_newbuiltin(exec, "ctlinfo", blt_ctlinfo, NULL);
-
-	exec_newbuiltin(exec, "m", blt_metro,
-			name_newarg("onoff", NULL));
-	exec_newbuiltin(exec, "metrocf", blt_metrocf,
-			name_newarg("eventhi",
-			name_newarg("eventlo", NULL)));
 	exec_newbuiltin(exec, "shut", user_func_shut, NULL);
 	exec_newbuiltin(exec, "sendraw", user_func_sendraw,
 			name_newarg("device",

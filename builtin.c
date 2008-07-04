@@ -1538,3 +1538,111 @@ blt_ttransp(struct exec *o, struct data **r)
 	track_transpose(&t->track, stic, etic - stic, halftones);
 	return 1;
 }
+
+unsigned
+blt_tclist(struct exec *o, struct data **r)
+{
+	struct songtrk *t;
+	struct songchan *c;
+	struct data *num;
+	char map[DEFAULT_MAXNCHANS];
+	unsigned i;
+
+	if (!song_try(usong)) {
+		return 0;
+	}
+	if ((t = usong->curtrk) == NULL) {
+		cons_err("tclist: no current track");
+		return 0;
+	}
+	*r = data_newlist(NULL);
+	track_chanmap(&t->track, map);
+	for (i = 0; i < DEFAULT_MAXNCHANS; i++) {
+		if (map[i]) {
+			c = song_chanlookup_bynum(usong, i / 16, i % 16);
+			if (c != 0) {
+				data_listadd(*r, data_newref(c->name.str));
+			} else {
+				num = data_newlist(NULL);
+				data_listadd(num, data_newlong(i / 16));
+				data_listadd(num, data_newlong(i % 16));
+				data_listadd(*r, num);
+			}
+		}
+	}
+	return 1;
+}
+
+unsigned
+blt_tinfo(struct exec *o, struct data **r)
+{
+	struct songtrk *t;
+	struct seqptr mp, tp;
+	struct state *st;
+	unsigned len, count, count_next, tpb, bpm;
+
+	if (!song_try(usong)) {
+		return 0;
+	}
+	if ((t = usong->curtrk) == NULL) {
+		cons_err("tinfo: no current track");
+		return 0;
+	}
+	textout_putstr(tout, "{\n");
+	textout_shiftright(tout);
+	textout_indent(tout);
+
+	count_next = 0;
+	seqptr_init(&tp, &t->track);
+	seqptr_init(&mp, &usong->meta);
+	for (;;) {
+		/*
+		 * scan for a time signature change
+		 */
+		while (seqptr_evget(&mp)) {
+			/* nothing */
+		}
+		seqptr_getsign(&mp, &bpm, &tpb);
+
+		/*
+		 * count starting events
+		 */
+		len = bpm * tpb;
+		count = count_next;
+		count_next = 0;
+		for (;;) {
+			len -= seqptr_ticskip(&tp, len);
+			if (len == 0)
+				break;
+			st = seqptr_evget(&tp);
+			if (st == NULL)
+				break;
+			if (st->phase & EV_PHASE_FIRST) {
+				if (state_inspec(st, &usong->curev)) {
+					if (len >= usong->curquant / 2)
+						count++;
+					else
+						count_next++;
+				}
+	                }
+		}
+		textout_putlong(tout, count);
+		textout_putstr(tout, " ");
+		if (len > 0) {
+			if (len < usong->curquant / 2) {
+				textout_putlong(tout, count_next);
+				textout_putstr(tout, " ");
+			}
+			break;
+		}
+		(void)seqptr_skip(&mp, bpm * tpb);
+	}
+	seqptr_done(&mp);
+	seqptr_done(&tp);
+
+	textout_putstr(tout, "\n");
+	textout_shiftleft(tout);
+	textout_indent(tout);
+	textout_putstr(tout, "}\n");
+	return 1;
+}
