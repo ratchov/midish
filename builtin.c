@@ -1918,3 +1918,284 @@ blt_cgeti(struct exec *o, struct data **r)
 	data_listadd(*r, data_newlong(c->curinput_ch));
 	return 1;
 }
+
+unsigned
+blt_flist(struct exec *o, struct data **r)
+{
+	struct data *d, *n;
+	struct songfilt *i;
+
+	if (!song_try(usong)) {
+		return 0;
+	}
+	d = data_newlist(NULL);
+	SONG_FOREACH_FILT(usong, i) {
+		n = data_newref(i->name.str);
+		data_listadd(d, n);
+	}
+	*r = d;
+	return 1;
+}
+
+unsigned
+blt_fnew(struct exec *o, struct data **r)
+{
+	char *name;
+	struct songfilt *i;
+
+	if (!song_try(usong)) {
+		return 0;
+	}
+	if (!exec_lookupname(o, "filtname", &name)) {
+		return 0;
+	}
+	i = song_filtlookup(usong, name);
+	if (i != NULL) {
+		cons_err("filtnew: filt already exists");
+		return 0;
+	}
+	i = song_filtnew(usong, name);
+	return 1;
+}
+
+unsigned
+blt_fdel(struct exec *o, struct data **r)
+{
+	struct songfilt *f;
+
+	if (!song_try(usong)) {
+		return 0;
+	}
+	if ((f = usong->curfilt) == NULL) {
+		cons_err("fdel: no current filt");
+		return 0;
+	}
+	song_filtdel(usong, f);
+	return 1;
+}
+
+unsigned
+blt_fren(struct exec *o, struct data **r)
+{
+	struct songfilt *f;
+	char *name;
+
+	if (!song_try(usong)) {
+		return 0;
+	}
+	if ((f = usong->curfilt) == NULL) {
+		cons_err("fdel: no current filt");
+		return 0;
+	}
+	if (!exec_lookupname(o, "newname", &name)) {
+		return 0;
+	}
+	if (song_filtlookup(usong, name)) {
+		cons_err("name already used by another filt");
+		return 0;
+	}
+	str_delete(f->name.str);
+	f->name.str = str_new(name);
+	return 1;
+}
+
+unsigned
+blt_fexists(struct exec *o, struct data **r)
+{
+	char *name;
+	struct songfilt *f;
+
+	if (!song_try(usong)) {
+		return 0;
+	}
+	if ((f = usong->curfilt) == NULL) {
+		cons_err("fdel: no current filt");
+		return 0;
+	}
+	if (!exec_lookupname(o, "filtname", &name)) {
+		return 0;
+	}
+	f = song_filtlookup(usong, name);
+	*r = data_newlong(f != NULL ? 1 : 0);
+	return 1;
+}
+
+unsigned
+blt_finfo(struct exec *o, struct data **r)
+{
+	struct songfilt *f;
+
+	if (!song_try(usong)) {
+		return 0;
+	}
+	if ((f = usong->curfilt) == NULL) {
+		cons_err("fdel: no current filt");
+		return 0;
+	}
+	filt_output(&f->filt, tout);
+	textout_putstr(tout, "\n");
+	return 1;
+}
+
+unsigned
+blt_freset(struct exec *o, struct data **r)
+{
+	struct songfilt *f;
+
+	if (!song_try(usong)) {
+		return 0;
+	}
+	if ((f = usong->curfilt) == NULL) {
+		cons_err("fdel: no current filt");
+		return 0;
+	}
+	filt_reset(&f->filt);
+	return 1;
+}
+
+unsigned
+blt_fmap(struct exec *o, struct data **r)
+{
+	struct songfilt *f;
+	struct evspec from, to;
+
+	if (!song_try(usong)) {
+		return 0;
+	}
+	if ((f = usong->curfilt) == NULL) {
+		cons_err("fdel: no current filt");
+		return 0;
+	}
+	if (!exec_lookupevspec(o, "from", &from) ||
+	    !exec_lookupevspec(o, "to", &to)) {
+		return 0;
+	}
+	filt_mapnew(&f->filt, &from, &to);
+	return 1;
+}
+
+unsigned
+blt_funmap(struct exec *o, struct data **r)
+{
+	struct songfilt *f;
+	struct evspec from, to;
+
+	if (!song_try(usong)) {
+		return 0;
+	}
+	if ((f = usong->curfilt) == NULL) {
+		cons_err("fdel: no current filt");
+		return 0;
+	}
+	if (!exec_lookupevspec(o, "from", &from) ||
+	    !exec_lookupevspec(o, "to", &to)) {
+		return 0;
+	}
+	filt_mapdel(&f->filt, &from, &to);
+	return 1;
+}
+
+unsigned
+blt_fchgxxx(struct exec *o, struct data **r, int input, int swap)
+{
+	struct songfilt *f;
+	struct evspec from, to;
+
+	if (!song_try(usong)) {
+		return 0;
+	}
+	if ((f = usong->curfilt) == NULL) {
+		cons_err("fdel: no current filt");
+		return 0;
+	}
+	if (!exec_lookupevspec(o, "from", &from) ||
+	    !exec_lookupevspec(o, "to", &to)) {
+		return 0;
+	}
+	if (evspec_isec(&from, &to)) {
+		cons_err("\"from\" and \"to\" event ranges must be disjoint");
+	}
+	if (input)
+		filt_chgin(&f->filt, &from, &to, swap);
+	else
+		filt_chgout(&f->filt, &from, &to, swap);
+	return 1;
+}
+
+unsigned
+blt_fchgin(struct exec *o, struct data **r)
+{
+	return blt_fchgxxx(o, r, 1, 0);
+}
+
+unsigned
+blt_fchgout(struct exec *o, struct data **r)
+{
+	return blt_fchgxxx(o, r, 0, 0);
+}
+
+unsigned
+blt_fswapin(struct exec *o, struct data **r)
+{
+	return blt_fchgxxx(o, r, 1, 1);
+}
+
+unsigned
+blt_fswapout(struct exec *o, struct data **r)
+{
+	return blt_fchgxxx(o, r, 0, 1);
+}
+
+unsigned
+blt_fsetc(struct exec *o, struct data **r)
+{
+	struct songfilt *f;
+	struct songchan *c;
+	struct var *arg;
+
+	if (!song_try(usong)) {
+		return 0;
+	}
+	if ((f = usong->curfilt) == NULL) {
+		cons_err("fdel: no current filt");
+		return 0;
+	}
+	arg = exec_varlookup(o, "channame");
+	if (!arg) {
+		dbg_puts("user_func_filtsetcurchan: 'channame': no such param\n");
+		return 0;
+	}
+	if (arg->data->type == DATA_NIL) {
+		f->curchan = NULL;
+		return 1;
+	} else if (arg->data->type == DATA_REF) {
+		c = song_chanlookup(usong, arg->data->val.ref);
+		if (!c) {
+			cons_err("no such chan");
+			return 0;
+		}
+		f->curchan = c;
+		return 1;
+	}
+	return 0;
+}
+
+unsigned
+blt_fgetc(struct exec *o, struct data **r)
+{
+	struct songfilt *f;
+
+	if (!song_try(usong)) {
+		return 0;
+	}
+	if ((f = usong->curfilt) == NULL) {
+		cons_err("fdel: no current filt");
+		return 0;
+	}
+	if (f->curchan) {
+		*r = data_newref(f->curchan->name.str);
+	} else {
+		*r = data_newnil();
+	}
+	return 1;
+}

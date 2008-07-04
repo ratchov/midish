@@ -45,7 +45,7 @@ builtin.o cons.o conv.o data.o dbg.o ev.o exec.o filt.o frame.o lex.o \
 main.o mdep.o metro.o mididev.o mixout.o mux.o name.o node.o \
 norm.o parse.o pool.o rmidi.o saveload.o smf.o song.o state.o \
 str.o sysex.o textio.o timo.o track.o user.o \
-user_filt.o user_sx.o user_dev.o
+user_sx.o user_dev.o
 
 midish:		${MIDISH_OBJS}
 		${CC} ${LDFLAGS} ${MIDISH_OBJS} -o midish

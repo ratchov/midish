@@ -9,32 +9,30 @@
 #
 proc ni name chan {
 	ct nil
-	filtnew $name 
+	fnew $name 
 	cnew $name $chan
-	filtchanmap $name [geti] $name
+	fmap {any [geti]} {any $name}
 }
 
 #
 # create a new filter 
 #
 proc nf filt { 
-	filtnew $filt
+	fnew $filt
 }
 
 #
 # create a new track 
 #
 proc nt name { 
-	tracknew $name 
+	tnew $name 
 }
 
 #
 # some filter rules
 #
-proc ctldrop ic {
-	let i = [geti]
-	let c = [getc]
-	filtevmap [songgetcurfilt] {ctl $i $ic} {none}
+proc ctldrop ctlno {
+	fmap {ctl [geti] $ctlno} {none}
 }
 proc ctlmap ic oc {
 	let i = [geti]

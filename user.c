@@ -1051,139 +1051,37 @@ user_mainloop(void)
 			name_newarg("inputchan", NULL));
 	exec_newbuiltin(exec, "cgeti", blt_cgeti, NULL);
 
-	exec_newbuiltin(exec, "filtlist", user_func_filtlist, NULL);
-	exec_newbuiltin(exec, "filtnew", user_func_filtnew,
+	exec_newbuiltin(exec, "flist", blt_flist, NULL);
+	exec_newbuiltin(exec, "fexists", blt_fexists,
 			name_newarg("filtname", NULL));
-	exec_newbuiltin(exec, "filtdelete", user_func_filtdelete,
+	exec_newbuiltin(exec, "fnew", blt_fnew,
 			name_newarg("filtname", NULL));
-	exec_newbuiltin(exec, "filtrename", user_func_filtrename,
-			name_newarg("filtname",
-			name_newarg("newname", NULL)));
-	exec_newbuiltin(exec, "filtinfo", user_func_filtinfo,
-			name_newarg("filtname", NULL));
-	exec_newbuiltin(exec, "filtexists", user_func_filtexists,
-			name_newarg("filtname", NULL));
-	exec_newbuiltin(exec, "filtreset", user_func_filtreset,
-			name_newarg("filtname", NULL));
-	exec_newbuiltin(exec, "filtdevdrop", user_func_filtdevdrop,
-			name_newarg("filtname",
-			name_newarg("indev", NULL)));
-	exec_newbuiltin(exec, "filtnodevdrop", user_func_filtnodevdrop,
-			name_newarg("filtname",
-			name_newarg("indev", NULL)));
-	exec_newbuiltin(exec, "filtdevmap", user_func_filtdevmap,
-			name_newarg("filtname",
-			name_newarg("indev",
-			name_newarg("outdev", NULL))));
-	exec_newbuiltin(exec, "filtnodevmap", user_func_filtnodevmap,
-			name_newarg("filtname",
-			name_newarg("outdev", NULL)));
-	exec_newbuiltin(exec, "filtchandrop", user_func_filtchandrop,
-			name_newarg("filtname",
-			name_newarg("inchan", NULL)));
-	exec_newbuiltin(exec, "filtnochandrop", user_func_filtnochandrop,
-			name_newarg("filtname",
-			name_newarg("inchan", NULL)));
-	exec_newbuiltin(exec, "filtchanmap", user_func_filtchanmap,
-			name_newarg("filtname",
-			name_newarg("inchan",
-			name_newarg("outchan", NULL))));
-	exec_newbuiltin(exec, "filtnochanmap", user_func_filtnochanmap,
-			name_newarg("filtname",
-			name_newarg("outchan", NULL)));
-	exec_newbuiltin(exec, "filtkeydrop", user_func_filtkeydrop,
-			name_newarg("filtname",
-			name_newarg("inchan",
-			name_newarg("keystart",
-			name_newarg("keyend", NULL)))));
-	exec_newbuiltin(exec, "filtnokeydrop", user_func_filtnokeydrop,
-			name_newarg("filtname",
-			name_newarg("inchan",
-			name_newarg("keystart",
-			name_newarg("keyend", NULL)))));
-	exec_newbuiltin(exec, "filtkeymap", user_func_filtkeymap,
-			name_newarg("filtname",
-			name_newarg("inchan",
-			name_newarg("outchan",
-			name_newarg("keystart",
-			name_newarg("keyend",
-			name_newarg("keyplus", NULL)))))));
-	exec_newbuiltin(exec, "filtnokeymap", user_func_filtnokeymap,
-			name_newarg("filtname",
-			name_newarg("outchan",
-			name_newarg("keystart",
-			name_newarg("keyend", NULL)))));
-	exec_newbuiltin(exec, "filtctldrop", user_func_filtctldrop,
-			name_newarg("filtname",
-			name_newarg("inchan",
-			name_newarg("inctl", NULL))));
-	exec_newbuiltin(exec, "filtnoctldrop", user_func_filtnoctldrop,
-			name_newarg("filtname",
-			name_newarg("inchan",
-			name_newarg("inctl", NULL))));
-	exec_newbuiltin(exec, "filtctlmap", user_func_filtctlmap,
-			name_newarg("filtname",
-			name_newarg("inchan",
-			name_newarg("outchan",
-			name_newarg("inctl",
-			name_newarg("outctl", NULL))))));
-	exec_newbuiltin(exec, "filtnoctlmap", user_func_filtnoctlmap,
-			name_newarg("filtname",
-			name_newarg("outchan",
-			name_newarg("outctl", NULL))));
-	exec_newbuiltin(exec, "filtchgich", user_func_filtchgich,
-			name_newarg("filtname",
-			name_newarg("oldchan",
-			name_newarg("newchan", NULL))));
-	exec_newbuiltin(exec, "filtchgidev", user_func_filtchgidev,
-			name_newarg("filtname",
-			name_newarg("olddev",
-			name_newarg("newdev", NULL))));
-	exec_newbuiltin(exec, "filtswapich", user_func_filtswapich,
-			name_newarg("filtname",
-			name_newarg("oldchan",
-			name_newarg("newchan", NULL))));
-	exec_newbuiltin(exec, "filtswapidev", user_func_filtswapidev,
-			name_newarg("filtname",
-			name_newarg("olddev",
-			name_newarg("newdev", NULL))));
-	exec_newbuiltin(exec, "filtchgoch", user_func_filtchgoch,
-			name_newarg("filtname",
-			name_newarg("oldchan",
-			name_newarg("newchan", NULL))));
-	exec_newbuiltin(exec, "filtchgodev", user_func_filtchgodev,
-			name_newarg("filtname",
-			name_newarg("olddev",
-			name_newarg("newdev", NULL))));
-	exec_newbuiltin(exec, "filtswapoch", user_func_filtswapoch,
-			name_newarg("filtname",
-			name_newarg("oldchan",
-			name_newarg("newchan", NULL))));
-	exec_newbuiltin(exec, "filtswapodev", user_func_filtswapodev,
-			name_newarg("filtname",
-			name_newarg("olddev",
-			name_newarg("newdev", NULL))));
-	exec_newbuiltin(exec, "filtevmap", user_func_filtevmap,
-			name_newarg("filtname",
+	exec_newbuiltin(exec, "fdel", blt_fdel, NULL);
+	exec_newbuiltin(exec, "fren", blt_fren,
+			name_newarg("newname", NULL));
+	exec_newbuiltin(exec, "finfo", blt_finfo, NULL);
+	exec_newbuiltin(exec, "freset", blt_freset, NULL);
+	exec_newbuiltin(exec, "fmap", blt_fmap,
 			name_newarg("from",
-			name_newarg("to", NULL))));
-	exec_newbuiltin(exec, "filtevunmap", user_func_filtevunmap,
-			name_newarg("filtname",
+			name_newarg("to", NULL)));
+	exec_newbuiltin(exec, "funmap", blt_funmap,
 			name_newarg("from",
-			name_newarg("to", NULL))));
-	exec_newbuiltin(exec, "filtchgin", user_func_filtchgin,
-			name_newarg("filtname",
+			name_newarg("to", NULL)));
+	exec_newbuiltin(exec, "fchgin", blt_fchgin,
 			name_newarg("from",
-			name_newarg("to", NULL))));
-	exec_newbuiltin(exec, "filtchgout", user_func_filtchgout,
-			name_newarg("filtname",
+			name_newarg("to", NULL)));
+	exec_newbuiltin(exec, "fchgout", blt_fchgout,
 			name_newarg("from",
-			name_newarg("to", NULL))));
-	exec_newbuiltin(exec, "filtsetcurchan", user_func_filtsetcurchan,
-			name_newarg("filtname",
-			name_newarg("channame", NULL)));
-	exec_newbuiltin(exec, "filtgetcurchan", user_func_filtgetcurchan,
-			name_newarg("filtname", NULL));
+			name_newarg("to", NULL)));
+	exec_newbuiltin(exec, "fswapin", blt_fswapin,
+			name_newarg("from",
+			name_newarg("to", NULL)));
+	exec_newbuiltin(exec, "fswapout", blt_fswapout,
+			name_newarg("from",
+			name_newarg("to", NULL)));
+	exec_newbuiltin(exec, "fsetc", blt_fsetc,
+			name_newarg("channame", NULL));
+	exec_newbuiltin(exec, "fgetc", blt_fgetc, NULL);
 
 	exec_newbuiltin(exec, "sysexlist", user_func_sysexlist, NULL);
 	exec_newbuiltin(exec, "sysexnew", user_func_sysexnew,
