@@ -807,49 +807,6 @@ user_func_shut(struct exec *o, struct data **r)
 }
 
 unsigned
-user_func_sendraw(struct exec *o, struct data **r)
-{
-	struct var *arg;
-	struct data *i;
-	unsigned char byte;
-	long device;
-
-	if (!song_try(usong)) {
-		return 0;
-	}
-	arg = exec_varlookup(o, "list");
-	if (!arg) {
-		dbg_puts("user_func_sendraw: 'list': no such param\n");
-		dbg_panic();
-	}
-	if (arg->data->type != DATA_LIST) {
-		cons_err("argument must be a list");
-		return 0;
-	}
-	if (!exec_lookuplong(o, "device", &device)) {
-		return 0;
-	}
-	if (device < 0 || device >= DEFAULT_MAXNDEVS) {
-		cons_err("sendraw: device out of range");
-		return 0;
-	}
-	for (i = arg->data->val.list; i != NULL; i = i->next) {
-		if (i->type != DATA_LONG || i->val.num < 0 || i->val.num > 255) {
-			cons_err("list elements must be integers in 0..255");
-			return 0;
-		}
-	}
-
-	mux_open();
-	for (i = arg->data->val.list; i != NULL; i = i->next) {
-		byte = i->val.num;
-		mux_sendraw(device, &byte, 1);
-	}
-	mux_close();
-	return 1;
-}
-
-unsigned
 user_func_proclist(struct exec *o, struct data **r)
 {
 	struct proc *i;
@@ -1083,59 +1040,47 @@ user_mainloop(void)
 			name_newarg("channame", NULL));
 	exec_newbuiltin(exec, "fgetc", blt_fgetc, NULL);
 
-	exec_newbuiltin(exec, "sysexlist", user_func_sysexlist, NULL);
-	exec_newbuiltin(exec, "sysexnew", user_func_sysexnew,
+	exec_newbuiltin(exec, "xlist", blt_xlist, NULL);
+	exec_newbuiltin(exec, "xexists", blt_xexists,
 			name_newarg("sysexname", NULL));
-	exec_newbuiltin(exec, "sysexdelete", user_func_sysexdelete,
+	exec_newbuiltin(exec, "xnew", blt_xnew,
 			name_newarg("sysexname", NULL));
-	exec_newbuiltin(exec, "sysexrename", user_func_sysexrename,
-			name_newarg("sysexname",
-			name_newarg("newname", NULL)));
-	exec_newbuiltin(exec, "sysexexists", user_func_sysexexists,
-			name_newarg("sysexname", NULL));
-	exec_newbuiltin(exec, "sysexinfo", user_func_sysexinfo,
-			name_newarg("sysexname", NULL));
-	exec_newbuiltin(exec, "sysexclear", user_func_sysexclear,
-			name_newarg("sysexname",
+	exec_newbuiltin(exec, "xdel", blt_xdel, NULL);
+	exec_newbuiltin(exec, "xren", blt_xren,
+			name_newarg("newname", NULL));
+	exec_newbuiltin(exec, "xinfo", blt_xinfo, NULL);
+	exec_newbuiltin(exec, "xrm", blt_xrm,
+			name_newarg("data", NULL));
+	exec_newbuiltin(exec, "xsetd", blt_xsetd,
+			name_newarg("unit",
 			name_newarg("data", NULL)));
-	exec_newbuiltin(exec, "sysexsetunit", user_func_sysexsetunit,
-			name_newarg("sysexname",
+	exec_newbuiltin(exec, "xadd", blt_xadd,
 			name_newarg("unit",
-			name_newarg("data", NULL))));
-	exec_newbuiltin(exec, "sysexadd", user_func_sysexadd,
-			name_newarg("sysexname",
-			name_newarg("unit",
-			name_newarg("data", NULL))));
+			name_newarg("data", NULL)));
 
 	exec_newbuiltin(exec, "shut", user_func_shut, NULL);
-	exec_newbuiltin(exec, "sendraw", user_func_sendraw,
-			name_newarg("device",
-			name_newarg("list", NULL)));
 	exec_newbuiltin(exec, "proclist", user_func_proclist, NULL);
 	exec_newbuiltin(exec, "builtinlist", user_func_builtinlist, NULL);
 
-	exec_newbuiltin(exec, "devattach", user_func_devattach,
+	exec_newbuiltin(exec, "dnew", blt_dnew,
 			name_newarg("unit",
 			name_newarg("path",
 			name_newarg("mode", NULL))));
-	exec_newbuiltin(exec, "devdetach", user_func_devdetach,
+	exec_newbuiltin(exec, "ddel", blt_ddel,
 			name_newarg("unit", NULL));
-	exec_newbuiltin(exec, "devlist", user_func_devlist, NULL);
-	exec_newbuiltin(exec, "devsetmaster", user_func_devsetmaster,
+	exec_newbuiltin(exec, "dclktx", blt_dclktx,
+			name_newarg("unitlist", NULL));
+	exec_newbuiltin(exec, "dclkrx", blt_dclkrx,
 			name_newarg("unit", NULL));
-	exec_newbuiltin(exec, "devgetmaster", user_func_devgetmaster, NULL);
-	exec_newbuiltin(exec, "devsendrt", user_func_devsendrt,
-			name_newarg("unit",
-			name_newarg("sendrt", NULL)));
-	exec_newbuiltin(exec, "devticrate", user_func_devticrate,
+	exec_newbuiltin(exec, "dclkrate", blt_dclkrate,
 			name_newarg("unit",
 			name_newarg("tics_per_unit", NULL)));
-	exec_newbuiltin(exec, "devinfo", user_func_devinfo,
+	exec_newbuiltin(exec, "dinfo", blt_dinfo,
 			name_newarg("unit", NULL));
-	exec_newbuiltin(exec, "devixctl", user_func_devixctl,
+	exec_newbuiltin(exec, "dixctl", blt_dixctl,
 			name_newarg("unit",
 			name_newarg("ctlset", NULL)));
-	exec_newbuiltin(exec, "devoxctl", user_func_devoxctl,
+	exec_newbuiltin(exec, "doxctl", blt_doxctl,
 			name_newarg("unit",
 			name_newarg("ctlset", NULL)));
 

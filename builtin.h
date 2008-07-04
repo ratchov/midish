@@ -137,4 +137,23 @@ unsigned blt_fswapout(struct exec *, struct data **);
 unsigned blt_fsetc(struct exec *, struct data **);
 unsigned blt_fgetc(struct exec *, struct data **);
 
+unsigned blt_xlist(struct exec *, struct data **);
+unsigned blt_xexists(struct exec *, struct data **);
+unsigned blt_xnew(struct exec *, struct data **);
+unsigned blt_xdel(struct exec *, struct data **);
+unsigned blt_xren(struct exec *, struct data **);
+unsigned blt_xinfo(struct exec *, struct data **);
+unsigned blt_xrm(struct exec *, struct data **);
+unsigned blt_xsetd(struct exec *, struct data **);
+unsigned blt_xadd(struct exec *, struct data **);
+
+unsigned blt_dnew(struct exec *, struct data **);
+unsigned blt_ddel(struct exec *, struct data **);
+unsigned blt_dclkrx(struct exec *, struct data **);
+unsigned blt_dclktx(struct exec *, struct data **);
+unsigned blt_dclkrate(struct exec *, struct data **);
+unsigned blt_dinfo(struct exec *, struct data **);
+unsigned blt_dixctl(struct exec *, struct data **);
+unsigned blt_doxctl(struct exec *, struct data **);
+
 #endif /* MIDISH_BUILTIN_H */

@@ -2199,3 +2199,496 @@ blt_fgetc(struct exec *o, struct data **r)
 	}
 	return 1;
 }
+
+unsigned
+blt_xlist(struct exec *o, struct data **r)
+{
+	struct data *d, *n;
+	struct songsx *i;
+
+	if (!song_try(usong)) {
+		return 0;
+	}
+	d = data_newlist(NULL);
+	SONG_FOREACH_SX(usong, i) {
+		n = data_newref(i->name.str);
+		data_listadd(d, n);
+	}
+	*r = d;
+	return 1;
+}
+
+unsigned
+blt_xexists(struct exec *o, struct data **r)
+{
+	char *name;
+	struct songsx *c;
+
+	if (!song_try(usong)) {
+		return 0;
+	}
+	if (!exec_lookupname(o, "sysexname", &name)) {
+		return 0;
+	}
+	c = song_sxlookup(usong, name);
+	*r = data_newlong(c != NULL ? 1 : 0);
+	return 1;
+}
+
+unsigned
+blt_xnew(struct exec *o, struct data **r)
+{
+	char *name;
+	struct songsx *c;
+
+	if (!song_try(usong)) {
+		return 0;
+	}
+	if (!exec_lookupname(o, "sysexname", &name)) {
+		return 0;
+	}
+	c = song_sxlookup(usong, name);
+	if (c != NULL) {
+		cons_err("xnew: sysex already exists");
+		return 0;
+	}
+	c = song_sxnew(usong, name);
+	return 1;
+}
+
+unsigned
+blt_xdel(struct exec *o, struct data **r)
+{
+	struct songsx *c;
+
+	if (!song_try(usong)) {
+		return 0;
+	}
+	if ((c = usong->cursx) == NULL) {
+		cons_err("xdel: no current sysex");
+		return 0;
+	}
+	song_sxdel(usong, c);
+	return 1;
+}
+
+unsigned
+blt_xren(struct exec *o, struct data **r)
+{
+	struct songsx *c;
+	char *name;
+
+	if (!song_try(usong)) {
+		return 0;
+	}
+	if ((c = usong->cursx) == NULL) {
+		cons_err("xdel: no current sysex");
+		return 0;
+	}
+	if (!exec_lookupname(o, "newname", &name)) {
+		return 0;
+	}
+	if (song_sxlookup(usong, name)) {
+		cons_err("name already used by another sysex");
+		return 0;
+	}
+	str_delete(c->name.str);
+	c->name.str = str_new(name);
+	return 1;
+}
+
+unsigned
+blt_xinfo(struct exec *o, struct data **r)
+{
+	struct songsx *c;
+	struct sysex *e;
+	unsigned i;
+
+	if (!song_try(usong)) {
+		return 0;
+	}
+	if ((c = usong->cursx) == NULL) {
+		cons_err("xdel: no current sysex");
+		return 0;
+	}
+	textout_putstr(tout, "{\n");
+	textout_shiftright(tout);
+
+	for (e = c->sx.first; e != NULL; e = e->next) {
+		textout_indent(tout);
+		textout_putlong(tout, e->unit);
+		textout_putstr(tout, " { ");
+		if (e->first) {
+			for (i = 0; i < e->first->used; i++) {
+				if (i > 10) {
+					textout_putstr(tout, "... ");
+					break;
+				}
+				textout_putbyte(tout, e->first->data[i]);
+				textout_putstr(tout, " ");
+			}
+		}
+		textout_putstr(tout, "}\n");
+	}
+	textout_shiftleft(tout);
+	textout_indent(tout);
+	textout_putstr(tout, "}\n");
+	return 1;
+}
+
+
+unsigned
+blt_xrm(struct exec *o, struct data **r)
+{
+	struct songsx *c;
+	struct sysex *x, **px;
+	struct data *d;
+	unsigned match;
+
+	if (!song_try(usong)) {
+		return 0;
+	}
+	if ((c = usong->cursx) == NULL) {
+		cons_err("xdel: no current sysex");
+		return 0;
+	}
+	if (!exec_lookuplist(o, "data", &d)) {
+		return 0;
+	}
+	px = &c->sx.first;
+	for (;;) {
+		if (!*px) {
+			break;
+		}
+		if (!data_matchsysex(d, *px, &match)) {
+			return 0;
+		}
+		if (match) {
+			x = *px;
+			*px = x->next;
+			if (*px == NULL) {
+				c->sx.lastptr = px;
+			}
+			sysex_del(x);
+		} else {
+			px = &(*px)->next;
+		}
+	}
+	return 1;
+}
+
+unsigned
+blt_xsetd(struct exec *o, struct data **r)
+{
+	struct songsx *c;
+	struct sysex *x;
+	struct data *d;
+	unsigned match;
+	long unit;
+
+	if (!song_try(usong)) {
+		return 0;
+	}
+	if ((c = usong->cursx) == NULL) {
+		cons_err("xdel: no current sysex");
+		return 0;
+	}
+	if (!exec_lookuplong(o, "unit", &unit) ||
+	    !exec_lookuplist(o, "data", &d)) {
+		return 0;
+	}
+	if (unit < 0 || unit >= DEFAULT_MAXNDEVS) {
+		cons_err("sysexsetunit: unit out of range");
+		return 0;
+	}
+	for (x = c->sx.first; x != NULL; x = x->next) {
+		if (!x) {
+			break;
+		}
+		if (!data_matchsysex(d, x, &match)) {
+			return 0;
+		}
+		if (match) {
+			x->unit = unit;
+		}
+	}
+	return 1;
+}
+
+unsigned
+blt_xadd(struct exec *o, struct data **r)
+{
+	struct songsx *c;
+	struct sysex *x;
+	struct data *byte;
+	struct var *arg;
+	long unit;
+
+	if (!song_try(usong)) {
+		return 0;
+	}
+	if ((c = usong->cursx) == NULL) {
+		cons_err("xdel: no current sysex");
+		return 0;
+	}
+	if (!exec_lookuplong(o, "unit", &unit)) {
+		return 0;
+	}
+	if (unit < 0 || unit >= DEFAULT_MAXNDEVS) {
+		cons_err("sysexadd: unit out of range");
+		return 0;
+	}
+	arg = exec_varlookup(o, "data");
+	if (!arg) {
+		dbg_puts("exec_lookupev: no such var\n");
+		dbg_panic();
+	}
+	if (arg->data->type != DATA_LIST) {
+		cons_err("sysexadd: data must be a list of numbers");
+		return 0;
+	}
+	x = sysex_new(unit);
+	for (byte = arg->data->val.list; byte != 0; byte = byte->next) {
+		if (byte->type != DATA_LONG) {
+			cons_err("sysexadd: only bytes allowed as data");
+			sysex_del(x);
+			return 0;
+		}
+		if (byte->val.num < 0 || byte->val.num > 0xff) {
+			cons_err("sysexadd: data out of range");
+			sysex_del(x);
+			return 0;
+		}
+		sysex_add(x, byte->val.num);
+	}
+	if (!sysex_check(x)) {
+		cons_err("sysexadd: bad sysex format");
+		sysex_del(x);
+		return 0;
+	}
+	if (x->first) {
+		sysexlist_put(&c->sx, x);
+	} else {
+		sysex_del(x);
+	}
+	return 1;
+}
+
+unsigned
+blt_dnew(struct exec *o, struct data **r)
+{
+	long unit;
+	char *path, *modename;
+	unsigned mode;
+
+	if (!song_try(usong)) {
+		return 0;
+	}
+	if (!exec_lookuplong(o, "unit", &unit) ||
+	    !exec_lookupstring(o, "path", &path) ||
+	    !exec_lookupname(o, "mode", &modename)) {
+		return 0;
+	}
+	if (str_eq(modename, "ro")) {
+		mode = MIDIDEV_MODE_IN;
+	} else if (str_eq(modename, "wo")) {
+		mode = MIDIDEV_MODE_OUT;
+	} else if (str_eq(modename, "rw")) {
+		mode = MIDIDEV_MODE_IN | MIDIDEV_MODE_OUT;
+	} else {
+		cons_errs("bad mode (allowed: ro, wo, rw)", modename);
+		return 0;
+	}
+	return mididev_attach(unit, path, mode);
+}
+
+unsigned
+blt_ddel(struct exec *o, struct data **r)
+{
+	long unit;
+
+	if (!song_try(usong)) {
+		return 0;
+	}
+	if (!exec_lookuplong(o, "unit", &unit)) {
+		return 0;
+	}
+	return mididev_detach(unit);
+}
+
+unsigned
+blt_dclkrx(struct exec *o, struct data **r)
+{
+	struct var *arg;
+	long unit;
+
+	if (!song_try(usong)) {
+		return 0;
+	}
+	arg = exec_varlookup(o, "unit");
+	if (!arg) {
+		dbg_puts("user_func_devsetmaster: no such var\n");
+		dbg_panic();
+	}
+	if (arg->data->type == DATA_NIL) {
+		mididev_master = NULL;
+		return 0;
+	} else if (arg->data->type == DATA_LONG) {
+		unit = arg->data->val.num;
+		if (unit < 0 || unit >= DEFAULT_MAXNDEVS || 
+		    !mididev_byunit[unit]) {
+			cons_err("no such device");
+			return 0;
+		}
+		mididev_master = mididev_byunit[unit];
+		return 1;
+	}
+	cons_err("bad argument type for 'unit'");
+	return 0;
+}
+
+unsigned
+blt_dclktx(struct exec *o, struct data **r)
+{
+	struct data *units, *n;
+	unsigned i, tx[DEFAULT_MAXNDEVS];
+
+	if (!song_try(usong)) {
+		return 0;
+	}
+	if (!exec_lookuplist(o, "unitlist", &units)) {
+		return 0;
+	}
+	for (i = 0; i < DEFAULT_MAXNDEVS; i++)
+		tx[i] = 0;
+	for (n = units; n != NULL; n = n->next) {
+		if (n->type != DATA_LONG ||
+		    n->val.num < 0 || n->val.num >= DEFAULT_MAXNDEVS ||
+		    !mididev_byunit[n->val.num]) {
+			cons_err("no such device");
+			return 0;
+		}
+		tx[n->val.num] = 1;
+	}
+	for (i = 0; i < DEFAULT_MAXNDEVS; i++) {
+		if (mididev_byunit[i])
+			mididev_byunit[i]->sendrt = tx[i];
+	}
+	return 1;
+}
+
+unsigned
+blt_dclkrate(struct exec *o, struct data **r)
+{
+	long unit, tpu;
+
+	if (!song_try(usong)) {
+		return 0;
+	}
+	if (!exec_lookuplong(o, "unit", &unit) ||
+	    !exec_lookuplong(o, "tics_per_unit", &tpu)) {
+		return 0;
+	}
+	if (unit < 0 || unit >= DEFAULT_MAXNDEVS || !mididev_byunit[unit]) {
+		cons_err("no such device");
+		return 0;
+	}
+	if (tpu < DEFAULT_TPU || (tpu % DEFAULT_TPU)) {
+		cons_err("device tpu must be multiple of 96");
+		return 0;
+	}
+	mididev_byunit[unit]->ticrate = tpu;
+	return 1;
+}
+
+unsigned
+blt_dinfo(struct exec *o, struct data **r)
+{
+	long unit;
+
+	if (!song_try(usong)) {
+		return 0;
+	}
+	if (!exec_lookuplong(o, "unit", &unit)) {
+		return 0;
+	}
+	if (unit < 0 || unit >= DEFAULT_MAXNDEVS || !mididev_byunit[unit]) {
+		cons_err("no such device");
+		return 0;
+	}
+	textout_putstr(tout, "{\n");
+	textout_shiftright(tout);
+
+	textout_indent(tout);
+	textout_putstr(tout, "devnum ");
+	textout_putlong(tout, unit);
+	textout_putstr(tout, "\n");
+
+	if (mididev_master == mididev_byunit[unit]) {
+		textout_indent(tout);
+		textout_putstr(tout, "clkrx\t\t\t# master clock source\n");
+	}
+	if (mididev_byunit[unit]->sendrt) {
+		textout_indent(tout);
+		textout_putstr(tout, "clktx\t\t\t# sends clock ticks\n");
+	}
+
+	textout_indent(tout);
+	textout_putstr(tout, "clkrate ");
+	textout_putlong(tout, mididev_byunit[unit]->ticrate);
+	textout_putstr(tout, "\n");
+
+	textout_shiftleft(tout);
+	textout_putstr(tout, "}\n");
+	return 1;
+}
+
+unsigned
+blt_dixctl(struct exec *o, struct data **r)
+{
+	long unit;
+	struct data *list;
+	unsigned ctlset;
+
+	if (!song_try(usong)) {
+		return 0;
+	}
+	if (!exec_lookuplong(o, "unit", &unit) ||
+	    !exec_lookuplist(o, "ctlset", &list)) {
+		return 0;
+	}
+	if (unit < 0 || unit >= DEFAULT_MAXNDEVS || !mididev_byunit[unit]) {
+		cons_err("no such device");
+		return 0;
+	}
+	if (!data_list2ctlset(list, &ctlset)) {
+		return 0;
+	}
+	mididev_byunit[unit]->ixctlset = ctlset;
+	return 1;
+}
+
+unsigned
+blt_doxctl(struct exec *o, struct data **r)
+{
+	long unit;
+	struct data *list;
+	unsigned ctlset;
+
+	if (!song_try(usong)) {
+		return 0;
+	}
+	if (!exec_lookuplong(o, "unit", &unit) ||
+	    !exec_lookuplist(o, "ctlset", &list)) {
+		return 0;
+	}
+	if (unit < 0 || unit >= DEFAULT_MAXNDEVS || !mididev_byunit[unit]) {
+		cons_err("no such device");
+		return 0;
+	}
+	if (!data_list2ctlset(list, &ctlset)) {
+		return 0;
+	}
+	mididev_byunit[unit]->oxctlset = ctlset;
+	return 1;
+}

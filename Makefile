@@ -44,8 +44,7 @@ MIDISH_OBJS = \
 builtin.o cons.o conv.o data.o dbg.o ev.o exec.o filt.o frame.o lex.o \
 main.o mdep.o metro.o mididev.o mixout.o mux.o name.o node.o \
 norm.o parse.o pool.o rmidi.o saveload.o smf.o song.o state.o \
-str.o sysex.o textio.o timo.o track.o user.o \
-user_sx.o user_dev.o
+str.o sysex.o textio.o timo.o track.o user.o
 
 midish:		${MIDISH_OBJS}
 		${CC} ${LDFLAGS} ${MIDISH_OBJS} -o midish
@@ -107,18 +106,3 @@ user.o:		user.c dbg.h default.h node.h exec.h name.h str.h data.h \
 		cons.h textio.h lex.h parse.h mux.h mididev.h track.h \
 		ev.h song.h frame.h state.h filt.h sysex.h metro.h \
 		timo.h user.h builtin.h smf.h saveload.h rmidi.h mdep.h
-user_trk.o:	user_trk.c dbg.h default.h node.h exec.h name.h str.h \
-		data.h cons.h frame.h state.h ev.h track.h song.h filt.h \
-		sysex.h metro.h timo.h user.h saveload.h textio.h
-user_chan.o:	user_chan.c dbg.h default.h node.h exec.h name.h str.h \
-		data.h cons.h frame.h state.h ev.h track.h song.h filt.h \
-		sysex.h metro.h timo.h user.h saveload.h textio.h
-user_filt.o:	user_filt.c dbg.h default.h node.h exec.h name.h str.h \
-		data.h cons.h song.h track.h ev.h frame.h state.h filt.h \
-		sysex.h metro.h timo.h user.h saveload.h textio.h
-user_sx.o:	user_sx.c dbg.h default.h node.h exec.h name.h str.h \
-		data.h cons.h song.h track.h ev.h frame.h state.h filt.h \
-		sysex.h metro.h timo.h user.h saveload.h textio.h
-user_dev.o:	user_dev.c dbg.h default.h node.h exec.h name.h str.h \
-		data.h cons.h mididev.h song.h track.h ev.h frame.h \
-		state.h filt.h sysex.h metro.h timo.h user.h textio.h
