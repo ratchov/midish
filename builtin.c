@@ -487,6 +487,48 @@ blt_getf(struct exec *o, struct data **r)
 }
 
 unsigned
+blt_mutexxx(struct exec *o, struct data **r, int flag)
+{
+	struct songtrk *t;
+
+	if (!song_try(usong)) {
+		return 0;
+	}
+	if (!exec_lookuptrack(o, "trackname", &t)) {
+		return 0;
+	}
+	t->mute = flag;
+	return 1;
+}
+
+unsigned
+blt_mute(struct exec *o, struct data **r)
+{
+	return blt_mutexxx(o, r, 1);
+}
+
+unsigned
+blt_unmute(struct exec *o, struct data **r)
+{
+	return blt_mutexxx(o, r, 1);
+}
+
+unsigned
+blt_getmute(struct exec *o, struct data **r)
+{
+	struct songtrk *t;
+
+	if (!song_try(usong)) {
+		return 0;
+	}
+	if (!exec_lookuptrack(o, "trackname", &t)) {
+		return 0;
+	}
+	*r = data_newlong(t->mute);
+	return 1;
+}
+
+unsigned
 blt_ls(struct exec *o, struct data **r)
 {
 	char map[DEFAULT_MAXNCHANS];
@@ -1464,5 +1506,35 @@ blt_tquant(struct exec *o, struct data **r)
 	if (etic > qstep)
 		etic -= qstep;
 	track_quantize(&t->track, stic, etic - stic, offset, 2 * qstep, rate);
+	return 1;
+}
+
+unsigned
+blt_ttransp(struct exec *o, struct data **r)
+{
+	struct songtrk *t;
+	long halftones;
+	unsigned stic, etic, qstep;
+
+	if (!song_try(usong)) {
+		return 0;
+	}
+	if ((t = usong->curtrk) == NULL) {
+		cons_err("ttransp: no current track");
+		return 0;
+	}
+	if (!exec_lookuplong(o, "halftones", &halftones)) {
+		return 0;
+	}
+	stic = track_findmeasure(&usong->meta, usong->curpos);
+	etic = track_findmeasure(&usong->meta, usong->curpos + usong->curlen);
+	qstep = usong->curquant / 2;
+	if (stic > qstep) {
+		stic -= qstep;
+	}
+	if (etic > qstep) {
+		etic -= qstep;
+	}
+	track_transpose(&t->track, stic, etic - stic, halftones);
 	return 1;
 }

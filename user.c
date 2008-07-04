@@ -942,18 +942,8 @@ user_mainloop(void)
 			name_newarg("source", NULL));
 	exec_newbuiltin(exec, "tquant", blt_tquant,
 			name_newarg("rate", NULL));
-	exec_newbuiltin(exec, "tracktransp", user_func_tracktransp,
-			name_newarg("trackname",
-			name_newarg("from",
-			name_newarg("amount",
-			name_newarg("halftones",
-			name_newarg("quantum",
-			name_newarg("evspec", NULL)))))));
-	exec_newbuiltin(exec, "tracksetmute", user_func_tracksetmute,
-			name_newarg("trackname",
-			name_newarg("muteflag", NULL)));
-	exec_newbuiltin(exec, "trackgetmute", user_func_trackgetmute,
-			name_newarg("trackname", NULL));
+	exec_newbuiltin(exec, "ttransp", blt_ttransp,
+			name_newarg("halftones", NULL));
 	exec_newbuiltin(exec, "trackchanlist", user_func_trackchanlist,
 			name_newarg("trackname", NULL));
 	exec_newbuiltin(exec, "trackinfo", user_func_trackinfo,
@@ -1183,6 +1173,12 @@ user_mainloop(void)
 	exec_newbuiltin(exec, "getc", blt_getc, NULL);
 	exec_newbuiltin(exec, "cc", blt_cc,
 			name_newarg("channame", NULL));
+	exec_newbuiltin(exec, "mute", blt_mute,
+			name_newarg("trackname", NULL));
+	exec_newbuiltin(exec, "unmute", blt_unmute,
+			name_newarg("trackname", NULL));
+	exec_newbuiltin(exec, "getmute", blt_getmute,
+			name_newarg("trackname", NULL));
 	exec_newbuiltin(exec, "ls", blt_ls, NULL);
 	exec_newbuiltin(exec, "save", blt_save,
 			name_newarg("filename", NULL));

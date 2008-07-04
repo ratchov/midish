@@ -62,6 +62,9 @@ unsigned blt_ct(struct exec *, struct data **);
 unsigned blt_gett(struct exec *, struct data **);
 unsigned blt_cf(struct exec *, struct data **);
 unsigned blt_getf(struct exec *, struct data **);
+unsigned blt_mute(struct exec *, struct data **);
+unsigned blt_unmute(struct exec *, struct data **);
+unsigned blt_getmute(struct exec *, struct data **);
 unsigned blt_ls(struct exec *, struct data **);
 unsigned blt_save(struct exec *, struct data **);
 unsigned blt_load(struct exec *, struct data **);
@@ -100,5 +103,6 @@ unsigned blt_tclr(struct exec *, struct data **);
 unsigned blt_tcopy(struct exec *, struct data **);
 unsigned blt_tmerge(struct exec *, struct data **);
 unsigned blt_tquant(struct exec *, struct data **);
+unsigned blt_ttransp(struct exec *, struct data **);
 
 #endif /* MIDISH_BUILTIN_H */

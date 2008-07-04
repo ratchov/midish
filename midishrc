@@ -142,25 +142,11 @@ proc gcopy where {
 
 
 #
-# mute a track
-#
-proc mute track {
-	tracksetmute $track 1
-}
-
-#
-# unmute a track
-#
-proc unmute track {
-	tracksetmute $track 0
-}
-
-#
 # unmute all tracks
 #
 proc nomute {
 	for i in [tracklist] {
-		tracksetmute $i 0
+		unmute $i
 	}
 }
 
@@ -168,9 +154,11 @@ proc nomute {
 # mute all tracks but current
 #
 proc solo {
-	let curtrack = [songgetcurtrack]
+	unmute [gett]
 	for i in [tracklist] {
-		tracksetmute $i ($i != $curtrack)
+		if ($i != [gett]) {
+			mute $i
+		}
 	}
 }
 
