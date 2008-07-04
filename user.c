@@ -938,15 +938,10 @@ user_mainloop(void)
 			name_newarg("where", NULL)));
 	exec_newbuiltin(exec, "tins", blt_tins,
 			name_newarg("amount", NULL));
-	exec_newbuiltin(exec, "trackmerge", user_func_trackmerge,
-			name_newarg("source",
-			name_newarg("dest", NULL)));
-	exec_newbuiltin(exec, "trackquant", user_func_trackquant,
-			name_newarg("trackname",
-			name_newarg("from",
-			name_newarg("amount",
-			name_newarg("rate",
-			name_newarg("quantum", NULL))))));
+	exec_newbuiltin(exec, "tmerge", blt_tmerge,
+			name_newarg("source", NULL));
+	exec_newbuiltin(exec, "tquant", blt_tquant,
+			name_newarg("rate", NULL));
 	exec_newbuiltin(exec, "tracktransp", user_func_tracktransp,
 			name_newarg("trackname",
 			name_newarg("from",

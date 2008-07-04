@@ -1,2 +1,7 @@
 load "quant.sng"
-trackquant t 0 16 100 (96 / 24)
+g 0
+sel 16
+setq 96 / 24
+tquant 100
+sel 0
+setq 0

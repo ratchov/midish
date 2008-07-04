@@ -1412,3 +1412,57 @@ blt_tcopy(struct exec *o, struct data **r)
 	track_done(&copy);
 	return 1;
 }
+
+unsigned
+blt_tmerge(struct exec *o, struct data **r)
+{
+	struct songtrk *src, *dst;
+
+	if (!song_try(usong)) {
+		return 0;
+	}
+	if (!exec_lookuptrack(o, "source", &src)) {
+		return 0;
+	}
+	if ((dst = usong->curtrk) == NULL) {
+		cons_err("tmerge: no current track");
+		return 0;
+	}
+	track_merge(&src->track, &dst->track);
+	return 1;
+}
+
+unsigned
+blt_tquant(struct exec *o, struct data **r)
+{
+	struct songtrk *t;
+	unsigned stic, etic, offset, qstep;
+	long rate;
+
+	if (!song_try(usong)) {
+		return 0;
+	}
+	if ((t = usong->curtrk) == NULL) {
+		cons_err("tquant: no current track");
+		return 0;
+	}
+	if (!exec_lookuplong(o, "rate", &rate)) {
+		return 0;
+	}
+	if (rate > 100) {
+		cons_err("tquant: rate must be between 0 and 100");
+		return 0;
+	}
+	stic = track_findmeasure(&usong->meta, usong->curpos);
+	etic = track_findmeasure(&usong->meta, usong->curpos + usong->curlen);
+	qstep = usong->curquant / 2;
+	if (stic > qstep) {
+		stic -= qstep;
+		offset = qstep;
+	} else
+		offset = 0;
+	if (etic > qstep)
+		etic -= qstep;
+	track_quantize(&t->track, stic, etic - stic, offset, 2 * qstep, rate);
+	return 1;
+}
