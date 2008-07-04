@@ -10,7 +10,7 @@
 proc ni name chan {
 	ct nil
 	filtnew $name 
-	channew $name $chan
+	cnew $name $chan
 	filtchanmap $name [geti] $name
 }
 
@@ -187,8 +187,7 @@ proc gmon devnum {
 # configure an instrument for a given general midi patch
 #
 proc gmp patch {
-	let chan = [songgetcurchan]
-	chanconfev $chan { pc $chan ($patch - 1) }
+	caddev $chan { pc [getc] ($patch - 1) }
 }
 
 #
@@ -199,12 +198,10 @@ proc gmp patch {
 # patches/rhythmes are counted from 1 to 128
 #
 proc xvp bank patch {
-	let chan = [songgetcurchan]
-	chanconfev $chan { xpc $chan ($patch - 1) (87 * 128 + (64 + $bank - 1)) }
+	caddev { xpc [getc] ($patch - 1) (87 * 128 + (64 + $bank - 1)) }
 }
 proc xvr bank patch { 
-	let chan = [songgetcurchan]
-	chanconfev $chan { xpc $chan ($patch - 1) (86 * 128 + (64 + $bank - 1)) }
+	caddev { xpc [getc] ($patch - 1) (86 * 128 + (64 + $bank - 1)) }
 }
 
 #
@@ -221,27 +218,20 @@ proc xvparam a0 a1 a2 a3 val {
 #
 # controllers config
 #
-proc mod    v { chanconfev [getc] {ctl [getc] 1  $v}; }
-proc breath v { chanconfev [getc] {ctl [getc] 2  $v}; }
-proc vol    v { chanconfev [getc] {ctl [getc] 7  $v}; }
-proc bal    v { chanconfev [getc] {ctl [getc] 8  $v}; }
-proc pan    v { chanconfev [getc] {ctl [getc] 10 $v}; }
-proc reverb v { chanconfev [getc] {ctl [getc] 91 $v}; }
-proc chorus v { chanconfev [getc] {ctl [getc] 93 $v}; }
+proc mod    v { caddev {ctl [getc] 1  $v}; }
+proc breath v { caddev {ctl [getc] 2  $v}; }
+proc vol    v { caddev {ctl [getc] 7  $v}; }
+proc bal    v { caddev {ctl [getc] 8  $v}; }
+proc pan    v { caddev {ctl [getc] 10 $v}; }
+proc reverb v { caddev {ctl [getc] 91 $v}; }
+proc chorus v { caddev {ctl [getc] 93 $v}; }
 
 #
-# set RPN to the given value for the current chan
+# set RPN/NRPN to the given value for the current chan
 #
-proc rpn addr val { 
-	let c = [getc]
-	chanconfev $c {rpn $c $addr $val}
+proc rpn  addr val {
+	caddev {rpn [getc] $addr $val}
 }
-
-
-#
-# set NRPN to the given value for the current chan
-#
 proc nrpn addr val { 
-	let c = [getc]
-	chanconfev $c {nrpn $c $addr $val}
+	caddev {nrpn [getc] $addr $val}
 }

@@ -1029,37 +1029,27 @@ user_mainloop(void)
 	exec_newbuiltin(exec, "tclist", blt_tclist, NULL);
 	exec_newbuiltin(exec, "tinfo", blt_tinfo, NULL);
 
-	exec_newbuiltin(exec, "chanlist", user_func_chanlist, NULL);
-	exec_newbuiltin(exec, "chanset", user_func_chanset,
+	exec_newbuiltin(exec, "clist", blt_clist, NULL);
+	exec_newbuiltin(exec, "cexists", blt_cexists,
+			name_newarg("channame", NULL));
+	exec_newbuiltin(exec, "cset", blt_cset,
+			name_newarg("channum", NULL));
+	exec_newbuiltin(exec, "cnew", blt_cnew,
 			name_newarg("channame",
 			name_newarg("channum", NULL)));
-	exec_newbuiltin(exec, "channew", user_func_channew,
-			name_newarg("channame",
-			name_newarg("channum", NULL)));
-	exec_newbuiltin(exec, "chandelete", user_func_chandelete,
-			name_newarg("channame", NULL));
-	exec_newbuiltin(exec, "chanrename", user_func_chanrename,
-			name_newarg("channame",
-			name_newarg("newname", NULL)));
-	exec_newbuiltin(exec, "chanexists", user_func_chanexists,
-			name_newarg("channame", NULL));
-	exec_newbuiltin(exec, "chaninfo", user_func_chaninfo,
-			name_newarg("channame", NULL));
-	exec_newbuiltin(exec, "changetch", user_func_changetch,
-			name_newarg("channame", NULL));
-	exec_newbuiltin(exec, "changetdev", user_func_changetdev,
-			name_newarg("channame", NULL));
-	exec_newbuiltin(exec, "chanconfev", user_func_chanconfev,
-			name_newarg("channame",
-			name_newarg("event", NULL)));
-	exec_newbuiltin(exec, "chanunconfev", user_func_chanunconfev,
-			name_newarg("channame",
-			name_newarg("evspec", NULL)));
-	exec_newbuiltin(exec, "chansetcurinput", user_func_chansetcurinput,
-			name_newarg("channame",
-			name_newarg("inputchan", NULL)));
-	exec_newbuiltin(exec, "changetcurinput", user_func_changetcurinput,
-			name_newarg("channame", NULL));
+	exec_newbuiltin(exec, "cdel", blt_cdel, NULL);
+	exec_newbuiltin(exec, "cren", blt_cren,
+			name_newarg("newname", NULL));
+	exec_newbuiltin(exec, "cinfo", blt_cinfo, NULL);
+	exec_newbuiltin(exec, "cgetc", blt_cgetc, NULL);
+	exec_newbuiltin(exec, "cgetd", blt_cgetd, NULL);
+	exec_newbuiltin(exec, "caddev", blt_caddev,
+			name_newarg("event", NULL));
+	exec_newbuiltin(exec, "crmev", blt_crmev,
+			name_newarg("evspec", NULL));
+	exec_newbuiltin(exec, "cseti", blt_cseti,
+			name_newarg("inputchan", NULL));
+	exec_newbuiltin(exec, "cgeti", blt_cgeti, NULL);
 
 	exec_newbuiltin(exec, "filtlist", user_func_filtlist, NULL);
 	exec_newbuiltin(exec, "filtnew", user_func_filtnew,

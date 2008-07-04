@@ -107,4 +107,19 @@ unsigned blt_ttransp(struct exec *, struct data **);
 unsigned blt_tclist(struct exec *, struct data **);
 unsigned blt_tinfo(struct exec *, struct data **);
 
+unsigned blt_clist(struct exec *, struct data **);
+unsigned blt_cexists(struct exec *, struct data **);
+unsigned blt_cnew(struct exec *, struct data **);
+unsigned blt_cdel(struct exec *, struct data **);
+unsigned blt_cren(struct exec *, struct data **);
+unsigned blt_cset(struct exec *, struct data **);
+unsigned blt_cgetc(struct exec *, struct data **);
+unsigned blt_cgetd(struct exec *, struct data **);
+unsigned blt_caddev(struct exec *, struct data **);
+unsigned blt_crmev(struct exec *, struct data **);
+unsigned blt_cinfo(struct exec *, struct data **);
+unsigned blt_cseti(struct exec *, struct data **);
+unsigned blt_cgeti(struct exec *, struct data **);
+
 #endif /* MIDISH_BUILTIN_H */
+
