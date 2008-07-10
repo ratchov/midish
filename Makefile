@@ -44,7 +44,8 @@ MIDISH_OBJS = \
 builtin.o cons.o conv.o data.o dbg.o ev.o exec.o filt.o frame.o lex.o \
 main.o mdep.o metro.o mididev.o mixout.o mux.o name.o node.o \
 norm.o parse.o pool.o rmidi.o saveload.o smf.o song.o state.o \
-str.o sysex.o textio.o timo.o track.o user.o
+str.o sysex.o textio.o timo.o track.o user.o \
+user_chan.o user_dev.o user_filt.o user_song.o user_sx.o user_trk.o
 
 midish:		${MIDISH_OBJS}
 		${CC} ${LDFLAGS} ${MIDISH_OBJS} -o midish
@@ -71,7 +72,8 @@ main.o:		main.c dbg.h str.h cons.h ev.h default.h mux.h track.h \
 		timo.h user.h mididev.h textio.h
 mdep.o:		mdep.c default.h mux.h rmidi.h mdep.h mididev.h cons.h \
 		user.h exec.h name.h str.h dbg.h
-metro.o:	metro.c dbg.h mux.h metro.h ev.h default.h timo.h
+metro.o:	metro.c dbg.h mux.h metro.h ev.h default.h timo.h song.h \
+		name.h str.h track.h frame.h state.h filt.h sysex.h
 mididev.o:	mididev.c dbg.h default.h mididev.h rmidi.h mdep.h \
 		pool.h cons.h str.h
 mixout.o:	mixout.c dbg.h ev.h default.h filt.h pool.h mux.h timo.h \
@@ -106,3 +108,22 @@ user.o:		user.c dbg.h default.h node.h exec.h name.h str.h data.h \
 		cons.h textio.h lex.h parse.h mux.h mididev.h track.h \
 		ev.h song.h frame.h state.h filt.h sysex.h metro.h \
 		timo.h user.h builtin.h smf.h saveload.h rmidi.h mdep.h
+user_chan.o:	user_chan.c dbg.h default.h node.h exec.h name.h str.h \
+		data.h cons.h frame.h state.h ev.h track.h song.h filt.h \
+		sysex.h metro.h timo.h user.h saveload.h textio.h
+user_dev.o:	user_dev.c dbg.h default.h node.h exec.h name.h str.h \
+		data.h cons.h mididev.h song.h track.h ev.h frame.h \
+		state.h filt.h sysex.h metro.h timo.h user.h textio.h
+user_filt.o:	user_filt.c dbg.h default.h node.h exec.h name.h str.h \
+		data.h cons.h song.h track.h ev.h frame.h state.h filt.h \
+		sysex.h metro.h timo.h user.h saveload.h textio.h
+user_song.o:	user_song.c dbg.h default.h node.h exec.h name.h str.h \
+		data.h cons.h frame.h state.h ev.h song.h track.h filt.h \
+		sysex.h metro.h timo.h user.h smf.h saveload.h textio.h \
+		mux.h
+user_sx.o:	user_sx.c dbg.h default.h node.h exec.h name.h str.h \
+		data.h cons.h song.h track.h ev.h frame.h state.h filt.h \
+		sysex.h metro.h timo.h user.h saveload.h textio.h
+user_trk.o:	user_trk.c dbg.h default.h node.h exec.h name.h str.h \
+		data.h cons.h frame.h state.h ev.h track.h song.h filt.h \
+		sysex.h metro.h timo.h user.h saveload.h textio.h
