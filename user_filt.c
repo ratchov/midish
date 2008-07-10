@@ -47,7 +47,373 @@
 #include "saveload.h"
 #include "textio.h"
 
+/*
+ * configure the filt to drop events from a particular device
+ */
+void
+filt_conf_devdrop(struct filt *o, unsigned idev)
+{
+	struct evspec from, to;
 
+	evspec_reset(&from);
+	from.dev_min = from.dev_max = idev;
+	to.cmd = EVSPEC_EMPTY;
+	filt_mapnew(o, &from, &to);
+}
+
+/*
+ * configure the filt not to drop events from a particular device
+ */
+void
+filt_conf_nodevdrop(struct filt *o, unsigned idev)
+{
+	struct evspec from, to;
+
+	evspec_reset(&from);
+	from.dev_min = from.dev_max = idev;
+	to.cmd = EVSPEC_EMPTY;
+	filt_mapdel(o, &from, &to);
+}
+
+/*
+ * configure the filter to map one device to another
+ */
+void
+filt_conf_devmap(struct filt *o, unsigned idev, unsigned odev)
+{
+	struct evspec from, to;
+
+	evspec_reset(&from);
+	evspec_reset(&to);
+	from.dev_min = from.dev_max = idev;
+	to.dev_min = to.dev_max = odev;
+	filt_mapnew(o, &from, &to);
+}
+
+/*
+ * configure the filter not to map
+ * any devices to the given one
+ */
+void
+filt_conf_nodevmap(struct filt *o, unsigned odev)
+{
+	struct evspec from, to;
+
+	evspec_reset(&from);
+	evspec_reset(&to);
+	to.dev_min = to.dev_max = odev;
+	filt_mapdel(o, &from, &to);
+}
+
+/*
+ * configure the filter to drop a particular channel
+ */
+void
+filt_conf_chandrop(struct filt *o, unsigned idev, unsigned ich)
+{
+	struct evspec from, to;
+
+	evspec_reset(&from);
+	from.dev_min = from.dev_max = idev;
+	from.ch_min = from.ch_max = ich;
+	to.cmd = EVSPEC_EMPTY;
+	filt_mapnew(o, &from, &to);
+}
+
+/*
+ * configure the filter to drop a particular channel
+ */
+void
+filt_conf_nochandrop(struct filt *o, unsigned idev, unsigned ich)
+{
+	struct evspec from, to;
+
+	evspec_reset(&from);
+	from.dev_min = from.dev_max = idev;
+	from.ch_min = from.ch_max = ich;
+	to.cmd = EVSPEC_EMPTY;
+	filt_mapdel(o, &from, &to);
+}
+
+void
+filt_conf_chanmap(struct filt *o, unsigned idev, unsigned ich,
+    unsigned odev, unsigned och)
+{
+	struct evspec from, to;
+
+	evspec_reset(&from);
+	evspec_reset(&to);
+	from.dev_min = from.dev_max = idev;
+	from.ch_min = from.ch_max = ich;
+	to.dev_min = to.dev_max = odev;
+	to.ch_min = to.ch_max = och;
+	filt_mapnew(o, &from, &to);
+}
+
+void
+filt_conf_nochanmap(struct filt *o, unsigned odev, unsigned och)
+{
+	struct evspec from, to;
+
+	evspec_reset(&from);
+	evspec_reset(&to);
+	to.dev_min = to.dev_max = odev;
+	to.ch_min = to.ch_max = och;
+	filt_mapdel(o, &from, &to);
+}
+
+
+void
+filt_conf_ctldrop(struct filt *o, unsigned idev, unsigned ich, unsigned ictl)
+{
+	struct evspec from, to;
+
+	evspec_reset(&from);
+	from.cmd = EVSPEC_XCTL;
+	from.dev_min = from.dev_max = idev;
+	from.ch_min = from.ch_max = ich;
+	from.v0_min = from.v0_max = ictl;
+	to.cmd = EVSPEC_EMPTY;
+	filt_mapnew(o, &from, &to);
+}
+
+void
+filt_conf_noctldrop(struct filt *o, unsigned idev, unsigned ich, unsigned ictl)
+{
+	struct evspec from, to;
+
+	evspec_reset(&from);
+	from.cmd = EVSPEC_XCTL;
+	from.dev_min = from.dev_max = idev;
+	from.ch_min = from.ch_max = ich;
+	from.v0_min = from.v0_max = ictl;
+	to.cmd = EVSPEC_EMPTY;
+	filt_mapdel(o, &from, &to);
+}
+
+void
+filt_conf_ctlmap(struct filt *o,
+    unsigned idev, unsigned ich, unsigned odev, unsigned och,
+    unsigned ictl, unsigned octl)
+{
+	struct evspec from, to;
+
+	evspec_reset(&from);
+	evspec_reset(&to);
+	from.cmd = EVSPEC_CTL;
+	from.dev_min = from.dev_max = idev;
+	from.ch_min = from.ch_max = ich;
+	from.v0_min = from.v0_max = ictl;
+	to.cmd = EVSPEC_CTL;
+	to.dev_min = to.dev_max = odev;
+	to.ch_min = to.ch_max = och;
+	to.v0_min = to.v0_max = octl;
+	filt_mapnew(o, &from, &to);
+}
+
+void
+filt_conf_noctlmap(struct filt *o,
+    unsigned odev, unsigned och, unsigned octl)
+{
+	struct evspec from, to;
+
+	evspec_reset(&from);
+	evspec_reset(&to);
+	to.cmd = EVSPEC_CTL;
+	to.dev_min = to.dev_max = odev;
+	to.ch_min = to.ch_max = och;
+	to.v0_min = to.v0_max = octl;
+	filt_mapdel(o, &from, &to);
+}
+
+void
+filt_conf_keydrop(struct filt *o, unsigned idev, unsigned ich,
+    unsigned keylo, unsigned keyhi)
+{
+	struct evspec from, to;
+
+	evspec_reset(&from);
+	from.cmd = EVSPEC_NOTE;
+	from.dev_min = from.dev_max = idev;
+	from.ch_min = from.ch_max = ich;
+	from.v0_min = keylo;
+	from.v0_max = keyhi;
+	to.cmd = EVSPEC_EMPTY;
+	filt_mapnew(o, &from, &to);
+}
+
+void
+filt_conf_nokeydrop(struct filt *o, unsigned idev, unsigned ich,
+    unsigned keylo, unsigned keyhi)
+{
+	struct evspec from, to;
+
+	evspec_reset(&from);
+	from.cmd = EVSPEC_NOTE;
+	from.dev_min = from.dev_max = idev;
+	from.ch_min = from.ch_max = ich;
+	from.v0_min = keylo;
+	from.v0_max = keyhi;
+	to.cmd = EVSPEC_EMPTY;
+	filt_mapdel(o, &from, &to);
+}
+
+
+void
+filt_conf_keymap(struct filt *o,
+    unsigned idev, unsigned ich, unsigned odev, unsigned och,
+    unsigned keylo, unsigned keyhi, int keyplus)
+{
+	struct evspec from, to;
+
+	if ((int)keyhi + keyplus > EV_MAXCOARSE)
+		keyhi = EV_MAXCOARSE - keyplus;
+	if ((int)keylo + keyplus < 0)
+		keylo = -keyplus;
+	if (keylo >= keyhi)
+		return;
+
+	evspec_reset(&from);
+	evspec_reset(&to);
+	from.cmd = EVSPEC_NOTE;
+	from.dev_min = from.dev_max = idev;
+	from.ch_min = from.ch_max = ich;
+	from.v0_min = keylo;
+	from.v0_max = keyhi;
+	to.cmd = EVSPEC_NOTE;
+	to.dev_min = to.dev_max = odev;
+	to.ch_min = to.ch_max = och;
+	to.v0_min = keylo + keyplus;
+	to.v0_max = keyhi + keyplus;
+	filt_mapnew(o, &from, &to);
+}
+
+void
+filt_conf_nokeymap(struct filt *o, unsigned odev, unsigned och,
+    unsigned keylo, unsigned keyhi)
+{
+	struct evspec from, to;
+
+	evspec_reset(&from);
+	evspec_reset(&to);
+	to.cmd = EVSPEC_NOTE;
+	to.dev_min = to.dev_max = odev;
+	to.ch_min = to.ch_max = och;
+	to.v0_min = keylo;
+	to.v0_max = keyhi;
+	filt_mapdel(o, &from, &to);
+}
+
+void
+filt_conf_chgich(struct filt *o, unsigned olddev, unsigned oldch,
+    unsigned newdev, unsigned newch)
+{
+	struct evspec from, to;
+
+	evspec_reset(&from);
+	from.dev_min = from.dev_max = olddev;
+	from.ch_min = from.ch_max = oldch;
+	evspec_reset(&to);
+	to.dev_min = to.dev_max = newdev;
+	to.ch_min = to.ch_max = newch;
+	filt_chgin(o, &from, &to, 0);
+}
+
+void
+filt_conf_chgidev(struct filt *o, unsigned olddev, unsigned newdev)
+{
+	struct evspec from, to;
+
+	evspec_reset(&from);
+	from.dev_min = from.dev_max = olddev;
+	evspec_reset(&to);
+	to.dev_min = to.dev_max = newdev;
+	filt_chgin(o, &from, &to, 0);
+}
+
+
+void
+filt_conf_swapich(struct filt *o, unsigned olddev, unsigned oldch,
+    unsigned newdev, unsigned newch)
+{
+	struct evspec from, to;
+
+	evspec_reset(&from);
+	from.dev_min = from.dev_max = olddev;
+	from.ch_min = from.ch_max = oldch;
+	evspec_reset(&to);
+	to.dev_min = to.dev_max = newdev;
+	to.ch_min = to.ch_max = newch;
+	filt_chgin(o, &from, &to, 1);
+}
+
+void
+filt_conf_swapidev(struct filt *o, unsigned olddev, unsigned newdev)
+{
+	struct evspec from, to;
+
+	evspec_reset(&from);
+	from.dev_min = from.dev_max = olddev;
+	evspec_reset(&to);
+	to.dev_min = to.dev_max = newdev;
+	filt_chgin(o, &from, &to, 1);
+}
+
+void
+filt_conf_chgoch(struct filt *o, unsigned olddev, unsigned oldch,
+    unsigned newdev, unsigned newch)
+{
+	struct evspec from, to;
+
+	evspec_reset(&from);
+	from.dev_min = from.dev_max = olddev;
+	from.ch_min = from.ch_max = oldch;
+	evspec_reset(&to);
+	to.dev_min = to.dev_max = newdev;
+	to.ch_min = to.ch_max = newch;
+	filt_chgout(o, &from, &to, 0);
+}
+
+
+void
+filt_conf_chgodev(struct filt *o, unsigned olddev, unsigned newdev)
+{
+	struct evspec from, to;
+
+	evspec_reset(&from);
+	from.dev_min = from.dev_max = olddev;
+	evspec_reset(&to);
+	to.dev_min = to.dev_max = newdev;
+	filt_chgout(o, &from, &to, 0);
+}
+
+
+void
+filt_conf_swapoch(struct filt *o, unsigned olddev, unsigned oldch,
+    unsigned newdev, unsigned newch)
+{
+	struct evspec from, to;
+
+	evspec_reset(&from);
+	from.dev_min = from.dev_max = olddev;
+	from.ch_min = from.ch_max = oldch;
+	evspec_reset(&to);
+	to.dev_min = to.dev_max = newdev;
+	to.ch_min = to.ch_max = newch;
+	filt_chgout(o, &from, &to, 1);
+}
+
+void
+filt_conf_swapodev(struct filt *o, unsigned olddev, unsigned newdev)
+{
+	struct evspec from, to;
+
+	evspec_reset(&from);
+	from.dev_min = from.dev_max = olddev;
+	evspec_reset(&to);
+	to.dev_min = to.dev_max = newdev;
+	filt_chgout(o, &from, &to, 1);
+}
 
 unsigned
 user_func_filtlist(struct exec *o, struct data **r) {
