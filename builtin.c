@@ -312,20 +312,35 @@ blt_getlen(struct exec *o, struct data **r)
 unsigned
 blt_setq(struct exec *o, struct data **r)
 {
-	long quantum;
+	long step;
+	struct var *arg;
 
 	if (!song_try(usong)) {
 		return 0;
 	}
-	if (!exec_lookuplong(o, "quantum", &quantum)) {
+	arg = exec_varlookup(o, "step");
+	if (!arg) {
+		dbg_puts("blt_setq: step: no such param\n");
 		return 0;
 	}
-	if (quantum < 0 || (unsigned)quantum > usong->tics_per_unit) {
-		cons_err("quantum must be between 0 and tics_per_unit");
-		return 0;
+	if (arg->data->type == DATA_NIL) {
+		usong->curquant = 0;
+		return 1;
+	} else if (arg->data->type == DATA_LONG) {
+		step = arg->data->val.num;
+		if (step < 1 || step > 96) {
+			cons_err("the step must be in the 1..96 range");
+			return 0;
+		}
+		if (usong->tics_per_unit % step != 0) {
+			cons_err("the step must divide the unit note");
+			return 0;
+		}
+		usong->curquant = usong->tics_per_unit / step;
+		return 1;
 	}
-	usong->curquant = quantum;
-	return 1;
+	cons_err("the step must nil or integer");
+	return 0;
 }
 
 unsigned
@@ -334,7 +349,10 @@ blt_getq(struct exec *o, struct data **r)
 	if (!song_try(usong)) {
 		return 0;
 	}
-	*r = data_newlong(usong->curquant);
+	if (usong->curquant > 0) 
+		*r = data_newlong(usong->tics_per_unit / usong->curquant);
+	else 
+		*r = data_newnil();
 	return 1;
 }
 
@@ -701,7 +719,11 @@ blt_ls(struct exec *o, struct data **r)
 	textout_putstr(tout, "\n");
 
 	textout_putstr(tout, "curquant ");
-	textout_putlong(tout, usong->curquant);
+	if (usong->curquant > 0) {
+		textout_putlong(tout, usong->tics_per_unit / usong->curquant);
+	} else {
+		textout_putstr(tout, "nil");
+	}
 	textout_putstr(tout, "\n");
 	textout_putstr(tout, "curev ");
 	evspec_output(&usong->curev, tout);

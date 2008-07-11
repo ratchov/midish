@@ -1139,7 +1139,7 @@ start measure
 number of measures
 
 <li>
-precision/quantum (in ticks).
+precision / quantization step
 
 </ul>
 
@@ -1196,18 +1196,18 @@ copied (see section <a href="#ev_evspec">event ranges</a>).
 
 A track can be quantized by rounding note-positions
 to the nearest exact position. The following
-will quantize 4 measures starting at measure number
-3 by rounding notes to the nearest quarter note.
+will quantize the current selection of the current track
+by rounding notes to the nearest quarter note.
 
 <pre>
-trackquant mypiano 3 4 (96 / 4) 75
+setq 4		# quarter note = 1/4-th of unit
+tquant 75
 </pre>
 
 The last arguments gives the percent of quantization.
 100% means full quantization and 0% leans no
 quantization at all. This is useful because full quantization
-often sound to regular especially on acoustic patches.
-
+often sounds to regular especially on acoustic patches.
 
 <h3><a name="section_6_5">6.5 Checking a track</a></h3>
 
@@ -2142,7 +2142,7 @@ editing functions.
 <td>curquant
 
 <td>
-current quantization step in ticks.  This value isn't used in
+current quantization step.  This value isn't used in
 real-time, however it can be used as default value for the track
 editing functions
 
@@ -3119,18 +3119,39 @@ set the current event selection. Most track editing
 functions will act only on events matching "evspec",
 ignoring all other events.
 
-<dt><a name="func_setq">setq ticks</a>
+<dt><a name="func_setq">setq step</a>
 
 <dd>
-set the current quatization step to te given number of ticks.
-This value will be used by <a href="func_tquant">tquant</a>
-function and also by all editing functions to optimize
-event selection.
+set the current quatization step to the given note
+value, as follow:
 
-<dt><a name="func_getq">getq</a>
+<ul>
+
+<li>4 - quarter note
+
+<li>6 - quarter note triplet
+
+<li>8 - eigth note
+
+<li>12 - eight note triplet
+
+<li>16 - sixteenth note
+
+<li>24 - sixteenth note triplet
+
+<li>etc...
+
+</ul>
+
+The quatization step will be used by <a href="func_tquant">tquant</a>
+function and also by all editing functions to optimize event
+selection. If the special ``nil'' value is specified as quatization
+step, then quatization is disabled.
+
+<a name="func_getq">getq</a>
 
 <dd>
-get the current quatization step
+return the current quatization step
 
 <dt><a name="func_g">g measure</a>
 

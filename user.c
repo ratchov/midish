@@ -887,7 +887,7 @@ user_mainloop(void)
 			name_newarg("length", NULL));
 	exec_newbuiltin(exec, "getq", blt_getq, NULL);
 	exec_newbuiltin(exec, "setq", blt_setq,
-			name_newarg("quantum", NULL));
+			name_newarg("step", NULL));
 	exec_newbuiltin(exec, "ev", blt_ev,
 			name_newarg("evspec", NULL));
 	exec_newbuiltin(exec, "geti", blt_geti, NULL);
