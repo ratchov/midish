@@ -312,11 +312,11 @@ typing "<tt>cp midishrc /etc</tt>" in your shell.
 
 <li>
 Read the documentation and modify <tt>/etc/midishrc</tt> in order
-to choose the default MIDI device by using the <tt>devattach</tt>
+to choose the default MIDI device by using the <tt>dnew</tt>
 function, example:
 
 <pre>
-devattach 0 "/dev/rmidi3" rw
+dnew 0 "/dev/rmidi3" rw
 </pre>
 
 see next section for details.
@@ -350,29 +350,31 @@ print "hello world"
 
 <p>
 Once MIDI devices are setup, one of the performance modes
-can be started or stopped with one of the following commands:
+can be started or stopped with one of the following
+single letter commands:
 
 <ul>
 
 <li>
-songidle - open MIDI devices but do nothing, just process
-input and send it to the output.
+``i'' - <b>i</b>dle, open MIDI devices but do nothing,
+just process input and send it to the output.
 
 <li>
-songplay - open MIDI devices and start playback
+``p'' - <b>p</b>lay, open MIDI devices and start playback
 
 <li>
-songrecord - open MIDI devices and start playback and
+``r'' - <b>r</b>ecord, open MIDI devices and start playback and
 recording
 
 <li>
-songstop - stop one of the above and close MIDI devices.
+``s'' - <b>s</b>top one of the above and close MIDI devices.
 </ul>
 
 In performance mode certain features are not available (like
 most editing functions).
 
-Thus performance mode should be disabled; furthermore MIDI
+Thus performance mode should be disabled in order to
+be able to edit the song; furthermore MIDI
 devices are closed and thus are available to other
 applications.
 
@@ -399,8 +401,8 @@ other anomalies.
 <li>
 <b>Channels:</b><br>
 
-a channel is an a output <tt>{device&nbsp;midichannel}</tt> pair that
-represent an instrument. A channel holds some properties like patch
+a channel is an output ``{device&nbsp;midichannel}'' pair that
+represents an instrument. A channel holds some properties like patch
 number, volume, reverb depth or other controllers.
 
 <li>
@@ -426,7 +428,7 @@ only special events like tempo changes and time signature changes.
 <b>Song parameters:</b><br>
 
 these are miscellaneous parameters like the
-metronome configuration, the current selection...
+metronome configuration, the current position, current selection...
 
 </ul>
 
@@ -516,11 +518,11 @@ being passed through the filter.
 
 </ul>
 
-The above performance modes are started respectively with
-<tt>songidle</tt>, <tt>songplay</tt>, <tt>songrecord</tt>.
+The above performance modes are started with
+the single lettre commands ``i'', ``p'', ``r'' respectively.
 
 Certain functions are not available during performance mode; to stop
-it, use the <tt>songstop</tt> function.
+it, use the ``s'' function.
 
 <h3><a name="section_1_5">1.5 An example</a></h3>
 
@@ -536,71 +538,50 @@ Suppose that there are two devices:
 
 </ul>
 
-Thus, the <tt>/etc/midishrc</tt> file contains the
-following lines:
+In this case, the ``/etc/midishrc'' file probably should contain
+the following lines:
 
 <pre>
-devattach 0 "/dev/rmidi4" rw	# attach the module as dev number 0
-devattach 1 "/dev/rmidi3" rw	# attach the keyboard as dev number 1
+dnew 0 "/dev/rmidi4" rw		# attach the module as dev number 0
+dnew 1 "/dev/rmidi3" rw		# attach the keyboard as dev number 1
 </pre>
 
-the <tt>rw</tt> means that the device will be opened in
+the ``rw'' parameter means that the device will be opened in
 read-write mode.
-The following session shows how to  record a simple track.
-First, we define a filter  named <tt>piano</tt> that
-routes events from device 1, channel 0 (input channel of
+The following session shows how to record a simple track.
+First, we define a filter named <tt>piano</tt> that
+routes any event from device 1, channel 0 (input channel of
 the keyboard) to device 0, channel 5  (output channel of
 the sound module). Then we create a new track
 <tt>pi1</tt>, we start recording and we save the song
 into a file.
 
 <pre>
-1&gt; filtnew piano			# create filter "piano"
-2&gt; filtchanmap piano {1 0} {0 5}	# dev=1,ch=0 -&gt; dev=0,ch=5
-3&gt; tracknew pi1				# create track "pi1"
-4&gt; songrecord				# start recording
-5&gt; songstop				# stop recording
-6&gt; songsave "mysong"			# save the song into a file
-7&gt;					# EOF (control-D) to quit
+send EOF character (control-D) to quit
+[0000:00]&gt; fnew piano				# create filter "piano"
+[0000:00]&gt; fmap {any {1 0}} {any {0 5}}		# dev=1,ch=0 -&gt; dev=0,ch=5
+[0000:00]&gt; tnew pi1				# create track "pi1"
+[0000:00]&gt; r					# start recording
+[0006:02]&gt; s					# stop recording
+[0000:00]&gt; save "mysong"			# save the song into a file
+[0000:00]&gt;					# EOF (control-D) to quit
 </pre>
-
-<p>
-The same task can be achieved in a much easier way
-by using the simple procedures (or macros) defined in the
-default <tt>/etc/midishrc</tt>.
-
-<pre>
-1&gt; ci {1 0}			# select default input {dev, chan}
-2&gt; ni piano {0 5}		# create piano on dev=0, chan=5
-3&gt; nt pi1 			# new track named "pi1"
-4&gt; r				# start recording
-5&gt; s				# stop recording
-6&gt; save "mysong"		# save to file "mysong"
-7&gt;				# EOF (control-D) to quit
-</pre>
-
-<p>
-<b>Note:</b>
-
-It is strongly recommended to define simple procedures
-and to use them instead of directly using the built-in functions
-of midish.
 
 <h2><a name="dev">2 Devices setup</a></h2>
 
 In midish, MIDI devices are numbered from 0 to 15.
-Each MIDI device has its "slot number". For instance,
-suppose that there is a MIDI sound module known as
+Each MIDI device has its <i>device number</i>. 
+
+For instance, suppose that there is a MIDI sound module known as
 <tt>/dev/rmidi3</tt> and a MIDI keyboard known as
 <tt>/dev/rmidi4</tt>.
 
-The following commands will configure the module as
-device number 0 and
-the keyboard as device number 1:
+The following commands will configure the module as device number 0
+and the keyboard as device number 1:
 
 <pre>
-devattach 0 "/dev/rmidi4" rw
-devattach 1 "/dev/rmidi3" rw
+dnew 0 "/dev/rmidi4" rw
+dnew 1 "/dev/rmidi3" rw
 </pre>
 
 <p>
@@ -616,12 +597,13 @@ In order to check that the sound module is properly configured
 play the demo song:
 
 <pre>
-songload "sample.sng"
-songplay
-songstop
+send EOF character (control-D) to quit
+[0000:00]&gt; load "sample.sng"		# load the file
+[0000:00]&gt; p				# start playback
+[0004:02]&gt; s				# stop playback
 </pre>
 
-When the configuration is setup, put the "devattach"
+When the configuration is setup, put the dnew
 commands in the user's <tt>$HOME/.midishrc</tt>. It will be
 automatically executed the next time midish is run.
 
@@ -631,7 +613,8 @@ Because midish handles multiple devices, instead of
 using MIDI channels, it uses device / MIDI channel pairs
 to represent instruments.
 
-So <i>channel</i> refers the device / MIDI channel pair.
+So in this document <i>channel</i> refers the 
+``{device&nbsp;MIDI-channel}'' pair.
 
 Channels are handled by two-item lists, like this:
 
@@ -639,37 +622,35 @@ Channels are handled by two-item lists, like this:
 {0 1}                   # device 0, MIDI channel 1
 </pre>
 
-Channels can also be named, as follows:
+Channels can also be named using the ``cnew'' command, as follows:
 
 <pre>
-channew mybass {0 1}
+cnew mybass {0 1}
 </pre>
 
-this defines a named-channel <tt>mybass</tt> that can
-be used instead of the <tt>{0 1}</tt> pair.
+this defines a named channel ``mybass'' that can
+be used instead of the ``{0 1}'' pair.
 
 <h3><a name="section_3_1">3.1 Channel configuration</a></h3>
 
-A channel represents one musical instrument;
-midish allows to attach to the channel definition
-basic "configuration" events like program changes and
-controllers.
+A channel represents one musical instrument; midish allows to attach
+to the channel definition basic channel configuration events like
+program changes and controllers.
 
 Such events are sent to the output when performance mode is entered,
 for instance just before playback is started. This approach avoids
-flooding MIDI devices with "slow" events (like
-program changes).
+flooding MIDI devices with slow events (like program changes).
 
 <p>
 For instance;
-to select patch 34 on channel <tt>mybass</tt>, attach
-a "program change" event:
+to select patch 34 on channel ``mybass'', attach
+a ``program change'' event:
 
 <pre>
-chanconfev mybass {pc mybass 32}
+caddev mybass {pc mybass 32}
 </pre>
 
-the list-argument gives the event to attach to the channel.
+the list argument gives the event to attach to the channel.
 See the <a href="#ev_ev">event</a> section for
 more details about events.
 
@@ -677,7 +658,7 @@ more details about events.
 To set the volume (controller 7) of this channel to 120:
 
 <pre>
-chanconfev mybass {ctl mybass 7 120}
+caddev mybass {ctl mybass 7 120}
 </pre>
 
 If several events of the same type are attached
@@ -685,7 +666,7 @@ then just the last one is kept. So, the following
 will change the volume to 125 by replacing the above event:
 
 <pre>
-chanconfev mybass {ctl mybass 7 125}
+caddev mybass {ctl mybass 7 125}
 </pre>
 
 <h2><a name="filt">4 Filtering/routing</a></h2>
@@ -717,9 +698,6 @@ etc...
 
 </ul>
 
-
-<h3><a name="section_4_1">4.1 About filters</a></h3>
-
 Multiple filters can be defined, however only the
 <i>current filter</i> will run in performance
 mode.
@@ -727,92 +705,170 @@ mode.
 If no filters are defined or if there is no current filter
 then, in performance mode, input is sent to the output as-is.
 
-The current filter processes input MIDI events in the
-following order:
-
-<ol>
-
-<li>
-First, input events are checked for inconsistencies: nested
-note-on, orphaned note-off and duplicate controller, bender
-and aftertouch events are removed.
-Zero-length notes are lengthened to one "tick".
-The rate of controller, bender and aftertouch events is
-normalized in order not to flood output devices.
-
-<li>    
-The input event is checked against all <i>voice rules</i>
-and the resulting events (if any) are sent to the output of
-the filter (if the event matches more than one <i>voice
-rule</i> then it is duplicated if needed).
-
-<li>    
-If the input didn't match any <i>voice rule</i> then it is
-checked against all <i>channel rules</i> and the resulting
-events (if any) are sent to the output of the filter.  (if
-the event matches more than one <i>channel rule</i> then it
-is duplicated if needed).
-
-<li>    
-If the input event didn't match any <i>channel rule</i> then
-it is checked against all <i>device rules</i> and the
-resulting events (if any) are sent to the output of the
-filter (if several <i>device rules</i> match the input event
-then it is duplicated if needed).
-
-<li>    
-Finally, if the input event didn't match any <i>device
-rule</i> then it is passed to the output of the filter
-as-is.
-
-</ol>
-
-<p>
-The following diagram summarizes the event path through the filter:
-
-<pre>
-	+------------+
-	|   voice    | match
-in ----&gt;|            |-----------------------------------------&gt; out
-	|   rules    |
-	+------------+
-      doesn't |         +------------+
-	match |         |  channel   | match
-	      \--------&gt;|            |-------------------------&gt; out
-			|   rules    |
-			+------------+
-		      doesn't |         +------------+
-			match |         |   device   | match
-			      \--------&gt;|            |---------&gt; out
-					|   rules    |
-					+------------+
-				      doesn't |
-					match |
-					      \----------------&gt; out
-
-</pre>
+In any cases input events are checked for inconsistencies: nested
+note-on, orphaned note-off and duplicate controller, bender and
+aftertouch events are removed.  The rate of controller, bender and
+aftertouch events is normalized in order not to flood output devices.
 
 <p>
 Filters are defined as follows:
 
 <pre>
-filtnew myfilt                  # define filter "myfilt"
+fnew myfilt			# create filter "myfilt"
 </pre>
 
 initially the filter is empty and will send input to output
-as-is.
+as-is. 
 
-Once the filter is created, filtering rules can be added,
-modified and removed.
-See
+Once the filter is created, filtering rules can be added, modified and
+removed.
 
-<a href="#func_filt">filtering functions</a> section
-for details.
+The filtering rules can be listes with the
+<a href="#func_finfo">finfo</a> function.
+All rules can be removed with the
+<a href="#func_freset">freset</a> function.
+
+See <a href="#func_filt">filtering functions</a>
+section for details.
+
+
+<h3><a name="section_4_1">4.1 Filter rules</a></h3>
+
+The filter is configured through a list of filtering rules provided
+by the user.
+
+Each rule teaches the filter which incoming events to transform on
+which outgoing events.
+
+A rule is defined as 
+
+<ul>
+
+<li>a source event set
+
+<li>a destination event set
+
+</ul>
+
+When the filter is running if an incoming event is contained in the
+source set, then it is rewritten to match the destination set.
+
+With the following rule:
+
+<pre>
+note {1 3} -&gt; note {2 8}
+</pre>
+
+note events arriving on device 1 midi-channel 3 are sent
+to device 2, midi-channel 8.
 
 <p>
-Rules can be listed with <tt>filtinfo</tt>.
-All filtering rules can be removed with <tt>filtreset</tt>.
+The source and destination event sets must be of the same type
+and must contain ranges of the same size.
 
+If the source and destination event sets contain
+ranges, then the incoming event will be rewritten
+to match the destination by being shifted.
+
+For instance, the following rule:
+
+<pre>
+note {0 0} 40..49 -&gt; note {0 0} 60..69
+</pre>
+
+will map notes on channel ``{0 0}'' by rewriting:
+
+<ul>
+
+<li>note 40 into note 60
+
+<li>note 41 into note 61
+
+<li>note 42 into note 62
+
+<li>...
+
+<li>note 49 into note 69
+
+</ul>
+
+<p>
+In order to discard a set of input events, it's possible to create
+rules with the empty set as destination set. For instance to
+discard the volume controller (number 7) on channel 
+``{0 0}'' the following rule might be used:
+
+<pre>
+ctl {0 0} 7 -&gt; none
+</pre>
+
+<p>
+Rules
+are created and delete with the
+<a href="#func_fmap">fmap</a> and 
+<a href="#func_funmap">funmap</a> functions respectively.
+
+For instance, to create a filter with the
+above rules:
+
+<pre>
+send EOF character (control-D) to quit
+[0000:00]&gt; fnew myfilt
+[0000:00]&gt; fmap {note {1 3}}        {note {2 8}}
+[0000:00]&gt; fmap {note {0 0} 40..49} {note {0 0} 60..69}
+[0000:00]&gt; fmap {ctl {0 0} 7}       {none}
+[0000:00]&gt; finfo
+{
+        evmap xctl {0 0} 7 &gt; none
+        evmap note {0 0} 40..49 &gt; note {0 0} 60..69
+        evmap note {1 3} 0..127 &gt; note {2 8} 0..127
+}
+[0000:00]>
+</pre>
+
+
+<h3>Rules hierarchy</h3>
+
+In real life, the filter will probably have to contain multiple rules.
+
+If the input event matches the source set of two rules, then the most
+specific rule wins, ie the event is run only through the rule with the
+smaller source set.
+
+If both rules have the same source set, then the event is duplicated
+and run through both rules.
+
+<p>
+This mechanism is very useful because it allows to define a default
+rule with a large source set and then to define ``exceptions'' to it.
+For instance consider the following filter:
+
+<pre>
+fnew myfilt
+fmap {any {1 0}} {any piano}
+fmap {ctl {1 0} 1} {ctl piano 11}
+</pre>
+
+the first rule will map all events comming from channel ``{1 0}'' (the
+input) to channel ``piano'' (the output); the second rule maps
+controller 1 (modulation) to controller 11 (expression).
+
+Controller 1 events match source sets of both rules, but they will be
+run through the second rule only, because it has the smaller set.
+
+The order in which rules are created is not important because 
+<a href="#func_fmap">fmap</a> and <a href="#func_funmap">funmap</a>
+functions will always sort them.
+
+<p>
+That last point to retain is that in order to avoid inconsistencies
+there's a constraint on the source sets of rules of the same filter:
+if two source sets overlap, then one of them must contain the other
+one.
+
+The user doesn't need to care about this constraint since
+<a href="#func_fmap">fmap</a> and <a href="#func_funmap">funmap</a>
+functions will to the right thing an all cases.
 
 <h3><a name="section_4_2">4.2 Examples</a></h3>
 
@@ -823,71 +879,51 @@ device number 1 (the MIDI keyboard) to device number 0
 (the sound module).
 
 <pre>
-filtnew mydevmap                # define filter "mydevmap"
-filtdevmap mydevmap 1 0         # make it route device 1 -&gt; device 0
+fnew mydevmap				# define filter "mydevmap"
+fmap {any {1 0..15}} {any {0 0..15}}	# make it route device 1 -&gt; device 0
 </pre>
 
-To test the filter, start performance mode:
-
-<pre>
-songidle
-</pre>
-
-(type "songstop" to stop performance mode).
+To test the filter, start performance mode using the ``i'' command and
+then type ``s'' to stop performance mode
 
 <h4><a name="section_4_2_2">4.2.2 Channel maps</a></h4>
 
-The following example defines a filter
-that routes events from device 1, channel 0
-(first channel of the keyboard) to device 0, channel 9
-(default drum channel of the sound module).
+The following example defines a filter that routes events from device
+1, midi channel 0 (first channel of the keyboard) to device 0, midi
+channel 9 (default drum channel of the sound module).
 
 <pre>
-filtnew mydrums                 # define filter "mydrums"
-filtchanmap mydrums {1 0} {0 9} # route dev/chan {1 0} to {0 9}
+fnew mydrums				# define filter "mydrums"
+fmap {any {1 0}} {any {0 9}}		# route dev/chan {1 0} to {0 9}
 </pre>
 
-The device/channel pair is in braces. The first <tt>{1 0}</tt>
-is the input device/channel and <tt>{0 9}</tt> is the output channel.
-To test the filter, start performance mode:
+To test the filter, start performance mode using the ``i'' command.
 
-<pre>
-songidle
-</pre>
+Playing on channel 0 of the keyboard will make sound channel 9 of the
+sound-module.
 
-(type "songstop" to stop performance mode).
-Playing on channel 0 of the keyboard will make
-sound channel 9 of the sound-module.
+To stop performance mode, use ``s'' command.
 
 <h4><a name="section_4_2_3">4.2.3 Controller maps</a></h4>
 
-The following example add a new rule to the above filter
-that maps the modulation wheel (controller 1) of
-the source channel (ie device 1, channel 0)
-to the expression controller (number 11) of
-the destination channel (device 0, channel 9).
+The following example add a new rule to the above filter that maps the
+modulation wheel (controller 1) of the source channel (ie device 1,
+midi channel 0) to the expression controller (number 11) of the
+destination channel (device 0, midi channel 9).
 
 <pre>
-filtctlmap mydrums {1 0} {0 9} 1 11
+fmap {ctl {1 0} 1} {ctl {0 9} 11}
 </pre>
 
-the first three arguments are the name of the filter,
-the input and the output device/channel pair. The 4-th
-argument is the controller number on the input (1 = modulation)
-and the 5-th argument is the controller number
-on the output (11 = expression).
-Rules of the filter can be listed as follows:
-
-<pre>
-filtinfo mydrums
-</pre>
-
-which will print:
+Rules of the filter can be listed with the 
+<a href="#func_finfo">finfo</a>
+functions, which should display the list
+of rules as follows:
 
 <pre>
 {
-chanmap {1 0} {0 9}
-ctlmap {1 0} {0 9} 1 11 id
+        evmap any {1 0} &gt; any {0 9}
+        evmap xctl {1 0} 1 &gt; xctl {0 9} 11
 }
 </pre>
 
@@ -959,6 +995,7 @@ by the <i>tempo</i>. By default midish uses:
 
 From the musical point of view, a beat often corresponds to
 a quarter note, to an eight note etc...
+
 By default
 an unit note corresponds to 96 ticks, thus by default
 one beat corresponds to one quarter note, i.e.
@@ -966,14 +1003,27 @@ the time signature is 4/4.
 
 <h3><a name="section_5_1">5.1 Metronome</a></h3>
 
-In order to "hear" time, a metronome can be used. It is
-used only in play and record modes. It produces
-a click sound on every beat. To start the metronome:
+In order to "hear" time, a metronome can be used.
+
+It has three modes:
+
+<ul>
+
+<li>off - metronome is disabled
+
+<li>on - metronome is enabled
+
+<li>rec - metronome is enabled only for recording (default)
+
+</ul>
+
+The ``m'' function might be used to 
+change the mode of the metronome:
 
 <pre>
-metroswitch 1           # switch the metronome on
-songplay                # start playback
-songstop		# stop
+m on		# switch the metronome on
+p		# start playback
+s		# stop
 </pre>
 
 The metronome has two kind of click-sound:
@@ -992,7 +1042,7 @@ The click-sound can be configured by giving a couple
 of note-on events, as follows:
 
 <pre>
-metroconf {non {0 9} 48 127} {non {0 9} 64 100}
+metrocf {non {0 9} 48 127} {non {0 9} 64 100}
 </pre>
 
 this configures the high-click with note 48, velocity 127 on
@@ -1002,60 +1052,73 @@ on device 0, channel 9.
 <h3><a name="section_5_2">5.2 Time signature changes</a></h3>
 
 Time signature changes are achieved by inserting or
-deleting measures. The following starts
-a song with time signature of 4/4 (at measure 0) and
-change the time signature to 6/8 at measure 2 during
-5 measures:
+deleting measures. 
+
+The following starts a song with time signature of 6/8 (at measure 0)
+and change the time signature to 4/4 at measure 2 during 3 measures:
 
 <pre>
-songtimeins 0 2 4 4     # 4/4 at measure 0 during 2 measures
-songtimeins 2 5 6 8     # 8/6 at measure 2 during 5 measures
-metroswitch 1           # switch the metronome on
-songplay                # test it
-songstop
+g 0			# go to measure 0
+mins 4 {6 8}		# insert 4 measures at 8/6
+g 2			# move to measure 2
+mins 3 {4 4}		# insert 3 measure at 4/4
+m on			# turn metronome on
+p	                # test it, ie start playback
+s			# stop playback
 </pre>
 
-To suppress measure number 2 (the first 6/8 measure)
+To suppress measure number 2 (the first 4/4 measure)
 
 <pre>
-songtimerm  2 1         # remove 1 measure starting a measure 2
-metroswitch 1           # switch the metronome on
-songplay                # test it
-songstop
+g 2			# go to measure 2
+mcut 1			# remove 1 measure starting a measure 2
+m on			# switch the metronome on
+p			# test it
+s			#
 </pre>
 
 <p>
-To get the time signature at any given measure number,
-the 'songgetsign' function can be used. It returns
-the denominator and the numerator in a two integer list.
-For instance,
-to print the time signature at measure number 17:
+To get the time signature at any given measure number, the 
+<a href="#func_msig">msig</a> function can be used.
+
+It returns the denominator and the numerator in a two integer list.
+
+For instance, to print the time signature at measure number 17:
 
 <pre>
-print [songgetsign 17]
+g 17			# go to measure 17
+print [msig]		# print what msig returned	
 </pre>
 
 <h3><a name="section_5_3">5.3 Tempo changes</a></h3>
 
-Tempo changes are achieved simply by giving the measure
-number and the tempo value in beats per minute. For
-instance, the following changes tempo on measure 0
-to 100 beats per minute and on measure 2 to 180 beats
-per minute.
+Tempo changes are achieved simply by moving within
+the song and using the ``t'' command to change
+the tempo at the current position.
+
+The tempo must be provided in beats per minute. 
+
+For instance, the following changes tempo on measure 0 to 100 beats
+per minute and on measure 2 to 180 beats per minute.
 
 <pre>
-songsettempo 0 100
-songsettempo 2 180
+g 0			# go to measure 0
+t 100			# set tempo to 100 bpm
+g 2			# go to measure 2
+t 180			# set tempo to 180 bpm
 </pre>
 
 <p>
-To get the tempo at any given measure number,
-the 'songgettempo' function can be used. It returns
-the tempo in beats per minute. For instance,
-to print the tempo at measure number 17:
+To get the tempo at any given measure number, the <a
+href="#func_mtempo">mtempo</a> function can be used.
+
+It returns the tempo in beats per minute.
+
+For instance, to print the tempo at measure number 17:
 
 <pre>
-print [songgettempo 17]
+g 17			# go to measure 17
+print [msig]		# print what mtempo returned
 </pre>
 
 
@@ -1065,12 +1128,15 @@ The following selects the current position in the song to
 measure number 3:
 
 <pre>
-songsetcurpos 3
+g 3
 </pre>
 
-This will make <tt>songrecord</tt> and <tt>songplay</tt>
+This will make ``r'' and ``p'' commands
 start at this particular position instead of measure
 number 0.
+
+Furthermore all track editing function will process
+the track starting at this position.
 
 <h2><a name="track">6 Tracks</a></h2>
 
@@ -1081,13 +1147,17 @@ and records the current track.
 
 <p>
 Tracks aren't assigned to any particular device/channel; a track
-can contain MIDI data from any device/channel. A track can have its
+can contain MIDI data from any device/channel.
+
+A track can have its
 <i>current filter</i>; in this case, MIDI events
-are passed through that filter before being recorded. If the
-track has no current filter, then the song current
-filter is used instead. If there is neither track current
-filter nor song current filter, then MIDI events
-from all devices are recorded as-is.
+are passed through that filter before being recorded.
+
+If the track has no current filter, then the song current filter is
+used instead. 
+
+If there is neither track current filter nor song current filter, then
+MIDI events from all devices are recorded as-is.
 
 <h3><a name="section_6_1">6.1 Recording a track without a filter</a></h3>
 
@@ -1095,16 +1165,16 @@ The following defines a track and record events
 as-is from all MIDI devices:
 
 <pre>
-tracknew mytrack
-songrecord
-songstop
+[0000:00]&gt; tnew mytrack		# create a new track
+[0000:00]&gt; r			# start recording
+[0003:02]&gt; s			# stop
 </pre>
 
 tracks are played as follows:
 
 <pre>
-songplay
-songstop
+[0000:00]&gt; p			# start playback
+[0001:01]&gt; s			# stop playback
 </pre>
 
 However, with the above configuration this will not
@@ -1119,46 +1189,50 @@ The following creates a filter and uses it to
 record to the above track:
 
 <pre>
-filtnew mypiano
-filtchanmap mypiano {1 0} {0 0}         # dev1/chan0 -&gt; dev0/chan0
-tracknew mytrack
-songrecord
+[0000:00]&gt; fnew mypiano			# create the filter
+[0000:00]&gt; fmap {any {1 0}} {any {0 0}}	# dev1/chan0 -&gt; dev0/chan0
+[0000:00]&gt; tnew mytrack			# create the track
+[0000:00]&gt; r					# start recording
+[0001:03]&gt; s					# stop
 </pre>
 
 <h3><a name="section_6_3">6.3 Basic editing of a track</a></h3>
 
-Most track editing functions in midish take at least the
-following arguments:
+Most track editing functions in midish use the following 
+default values:
 
 <ul>
 
 <li>
-start measure
+current track - the track that will be processed
 
 <li>
-number of measures
+current position - the measure number processing starts
 
 <li>
-precision / quantization step
+current selection - number of measures to process
+
+<li>
+current event set - events type that will be processed.
+
+This allow to process only a subset of events of the current
+selection (eg. only controllers).
+
+<li>
+current quatization step - note positions are rounded to the
+quatization step before being selected for processing.
+
+This makes possible to edit a track that is not quantized without
+loosing events at the selection boundaries.
 
 </ul>
 
-For instance to blank measure number 3 of
-track <tt>mypiano</tt>:
+For instance to clear the current selection
+of the current track:
 
 <pre>
-trackblank mypiano 3 1 (96 / 16) {}
+tclr
 </pre>
-
-the 3-rd argument set the precision to sixteenth note
-(assuming 96 ticks per unit note). This
-means that notes position is rounded to the nearest 16-th note
-before being removed.
-This is useful, because often recorded notes
-doesn't start exactly on the measure boundary. The precision
-argument makes possible to edit a track that is not quantized.
-The latest argument (empty list) selects the events to be
-deleted (see section <a href="#ev_evspec">event ranges</a>).
 
 <p>
 In a similar way, one can cut a piece of a track,
@@ -1166,7 +1240,8 @@ for instance to cut 2 measures starting
 at measure number 5:
 
 <pre>
-trackcut mypiano 5 2 (96 / 16)
+g 5			# move to measure 5
+tcut 2			# cut 2 measures
 </pre>
 
 <p>
@@ -1174,7 +1249,8 @@ The following inserts 2 blank measures at
 measure number 3:
 
 <pre>
-trackinsert mypiano 3 2 (96 / 16)
+g 3
+tins 2
 </pre>
 
 <p>
@@ -1217,13 +1293,13 @@ and removes bogus notes
 and unused controller events:
 
 <pre>
-trackcheck mytrack
+ct badtrack
+tcheck
 </pre>
 
 This function can be useful to remove
 nested notes when a track is recorded twice (or more)
 without being erased.
-
 
 <h2><a name="frames">7 Frames, more about filtering and editing</a></h2>
 
@@ -1351,49 +1427,51 @@ exclusive (aka "sysex") messages are stored into
 named banks. To create a sysex bank named <tt>mybank</tt>:
 
 <pre>
-sysexnew mybank
+xnew mybank
 </pre>
 
 Then, messages can be added:
 
 <pre>
-sysexadd mybank 0 {0xF0 0x7E 0x7F 0x09 0x01 0xF7}
+xadd 0 {0xF0 0x7E 0x7F 0x09 0x01 0xF7}
 </pre>
 
 This will store the "General-MIDI ON" messages into the
 bank. The second argument (here "0") is the device number
 to which the message will be sent when performance mode
-is entered. To send the latter messages to
-the corresponding device, just enter performance mode,
-for instance:
+is entered.
 
-<pre>
-songidle
-</pre>
+To send the latter messages to
+the corresponding device, just enter performance mode
+using the ``i'' command.
 
+<p>
 Sysex messages can be recorded from
 MIDI devices, this is useful to save "bulk dumps"
-from synthesizers. Sysex messages are automatically
-recorded on the <i>current bank</i>. So, to record
-a sysex:
+from synthesizers.
+
+Sysex messages are automatically recorded on the <i>current
+bank</i>. So, to record a sysex:
 
 <pre>
-songsetcursysex mybank
-songrecord
+cx mybank		# set current sysex bank
+r			# start recording
 </pre>
 
 The next time performance mode is entered, recorded
 sysex messages will be sent back to the device.
+
 Information about the recorded sysex messages
 can be obtained as follows:
 
 <pre>
-sysexinfo mybank
+xinfo
 </pre>
+
 A bank can be cleared by:
 
 <pre>
-sysexclear mybank {}
+xrm {}
 </pre>
 
 the second argument is a (empty) pattern, that matches
@@ -1401,7 +1479,7 @@ any sysex message in the bank. The following will remove
 only sysex messages starting with 0xF0 0x7E 0x7F:
 
 <pre>
-sysexclear mybank {0xF0 0x7E 0x7F}
+xrm {0xF0 0x7E 0x7F}
 </pre>
 
 Sysex messages recorded from any device can be configured
@@ -1409,16 +1487,17 @@ to be sent to other devices. To change the device number
 of all messages to 1:
 
 <pre>
-sysexsetunit mybank 1 {}
+xsetd 1 {}
 </pre>
 
 the second argument is an empty pattern, thus it matches
-any sysex message in the bank. The following will change
-the device number of only sysex messages starting
-with 0xF0 0x7E 0x7F:
+any sysex message in the bank.
+
+The following will change the device number of only sysex messages
+starting with 0xF0 0x7E 0x7F:
 
 <pre>
-sysexsetunit mybank 1 {0xF0 0x7E 0x7F}
+xsetd 1 {0xF0 0x7E 0x7F}
 </pre>
 
 <h2><a name="info">9 Obtaining information</a></h2>
@@ -1427,36 +1506,37 @@ The following functions gives some information
 about midish objects:
 
 <pre>
-songinfo                        # summary
-songtimeinfo                    # tempo changes
-chaninfo mydrums                # list config. events in "mydrums"
-filtinfo myfilt                 # list rules in "myfilt"
-trackinfo mytrack (96 / 16) {}  # list number of events per measure
-devinfo 0                       # device properties
+ls		# summary
+minfo		# list tempo and signature  changes
+cinfo		# list config events of current channel
+finfo		# list rules of current filter
+tinfo		# list events distribution of current track
+dinfo 0		# list device 0 properties
 </pre>
 
 <p>
 Objects can be listed as follows:
 
 <pre>
-print [tracklist]
-print [chanlist]
-print [filtlist]
-print [devlist]
+print [tlist]
+print [clist]
+print [flist]
+print [xlist]
+print [dlist]
 </pre>
 
 <p>
 Current values can be obtained as follows:
 
 <pre>
-print [songgetunit]             # ticks per unit note
-print [songgetcurpos]           # print current position
-print [songgetcurlen]           # print current selection length
-print [songgetcurfilt]          # current filter
-print [songgetcurtrack]         # current track
-print [songgetcursysex]
-print [trackgetcurfilt mypiano] # current filter of track "mypiano"
-print [filtgetcurchan mysplit]  # current channel of filter "mysplit"
+print [getunit]		# ticks per unit note
+print [getpos]		# print current position
+print [getlen]		# print current selection length
+print [getf]		# current filter
+print [gett]		# current track
+print [getx]		# current sysex bank
+print [tgetf]		# default filter of current track
+print [fgetc]		# default channel of current filter
 </pre>
 
 <p>
@@ -1464,23 +1544,22 @@ The device and the MIDI channel of a channel definition
 can be obtained as follows:
 
 <pre>
-print [changetch mydrums]       # print midi chan number
-print [changetdev mydrums]      # print device number
+print [cgetc]		# print midi chan number
+print [cgetd]		# print device number
 </pre>
 
 <p>
 To check if object exists:
 
 <pre>
-print [chanexists]
-print [filtexists]
-print [trackexists]
-print [sysexexists]
+print [cexists]
+print [fexists]
+print [texists]
+print [xexists]
 </pre>
 
 this will print 1 if the corresponding object exists
 and 0 otherwise.
-
 
 <h2><a name="save">10 Saving and loading songs</a></h2>
 
@@ -1490,14 +1569,14 @@ and values of the current track, current
 filter will be saved by:
 
 <pre>
-songsave "myfile"
+save "myfile"
 </pre>
 
 In a similar way, the song can be load from a file
 as follows:
 
 <pre>
-songload "myfile"
+load "myfile"
 </pre>
 
 <p>
@@ -1527,7 +1606,7 @@ are moved into the midish's meta-track. Finally tracks
 are checked for anomalies. Example:
 
 <pre>
-songimportsmf "mysong.mid"
+import "mysong.mid"
 </pre>
 
 <p>
@@ -1542,7 +1621,7 @@ because the file format does not allow this.
 Example:
 
 <pre>
-songexportsmf "mysong.mid"
+export "mysong.mid"
 </pre>
 
 <h2><a name="interpreter">12 The interpreter's language</a></h2>
