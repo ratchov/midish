@@ -36,6 +36,38 @@
 <TITLE>midish 0.4 - User's manual and tutorial</TITLE>
 <META http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
 <META name="language" content="en">
+<style type="text/css">
+	TABLE { 
+		border-style: solid; 
+		border-width: thin; 
+		border-collapse: collapse;
+		align: center
+	}
+	TH {
+		border-style: solid; 
+		border-width: thin; 
+		padding: 0.5em; 
+		background-color: #f0f0f0
+	}
+	TD { 
+		border-style: solid; 
+		border-width: thin; 
+		padding: 0.5em; 
+	}
+	H1 {
+		text-align: center
+	}
+	BODY { 
+		background-color: white;
+		color: black
+	}
+	PRE {
+		padding: 1em;
+		border-width: thin;
+		border-style: dotted;
+		background-color: #f0f0f0
+	}
+</style>
 </HEAD>
 <BODY>
 
@@ -196,9 +228,9 @@
         <LI> Untar and gunzip the tar-ball:
 
         <PRE>
-        gunzip midish-0.4.tar.gz
-        tar -xf midish-0.4.tar
-        cd midish-0.4
+gunzip midish-0.4.tar.gz
+tar -xf midish-0.4.tar
+cd midish-0.4
 	</PRE>
 
         <LI>
@@ -221,7 +253,7 @@
         <TT>Makefile</TT>, for instance:
 
         <PRE>
-        make PREFIX=$HOME install
+make PREFIX=$HOME install
         </PRE>
         </UL>
         <LI>
@@ -233,7 +265,7 @@
         to choose the default MIDI device by using the <TT>devattach</TT>
         function, example:
 	<PRE>
-	devattach 0 "/dev/rmidi3" rw
+devattach 0 "/dev/rmidi3" rw
 	</PRE>
 	see next section for details.
         </OL>
@@ -253,13 +285,13 @@
 
         To start midish, just type:
         <PRE>
-        rmidish
+rmidish
         </PRE>
 
         Then, commands are issued interactively on the midish prompt,
         example:
         <PRE>
-        print "hello world"
+print "hello world"
         </PRE>
 
         <P>
@@ -419,8 +451,8 @@ it, use the <TT>songstop</TT> function.
 	Thus, the <TT>/etc/midishrc</TT> file contains the
 	following lines:
 	<PRE>
-	devattach 0 "/dev/rmidi4" rw	# attach the module as dev number 0
-	devattach 1 "/dev/rmidi3" rw	# attach the keyboard as dev number 1
+devattach 0 "/dev/rmidi4" rw	# attach the module as dev number 0
+devattach 1 "/dev/rmidi3" rw	# attach the keyboard as dev number 1
 	</PRE>
 
 	the <TT>rw</TT> means that the device will be opened in
@@ -432,29 +464,29 @@ it, use the <TT>songstop</TT> function.
 	the sound module). Then we create a new track
 	<TT>pi1</TT>, we start recording and we save the song
 	into a file.
-	<PRE>
-	1&gt; filtnew piano			# create filter "piano"
-	2&gt; filtchanmap piano {1 0} {0 5}	# dev=1,ch=0 -&gt; dev=0,ch=5
-	3&gt; tracknew pi1				# create track "pi1"
-	4&gt; songrecord				# start recording
-	5&gt; songstop				# stop recording
-	6&gt; songsave "mysong"			# save the song into a file
-	7&gt;					# EOF (control-D) to quit
-	</PRE>
+<PRE>
+1&gt; filtnew piano			# create filter "piano"
+2&gt; filtchanmap piano {1 0} {0 5}	# dev=1,ch=0 -&gt; dev=0,ch=5
+3&gt; tracknew pi1				# create track "pi1"
+4&gt; songrecord				# start recording
+5&gt; songstop				# stop recording
+6&gt; songsave "mysong"			# save the song into a file
+7&gt;					# EOF (control-D) to quit
+</PRE>
 
 	<P>
 	The same task can be achieved in a much easier way
 	by using the simple procedures (or macros) defined in the
 	default <TT>/etc/midishrc</TT>.
-	<PRE>
-	1&gt; ci {1 0}			# select default input {dev, chan}
-	2&gt; ni piano {0 5}		# create piano on dev=0, chan=5
-	3&gt; nt pi1 			# new track named "pi1"
-	4&gt; r				# start recording
-	5&gt; s				# stop recording
-	6&gt; save "mysong"		# save to file "mysong"
-	7&gt;				# EOF (control-D) to quit
-	</PRE>
+<PRE>
+1&gt; ci {1 0}			# select default input {dev, chan}
+2&gt; ni piano {0 5}		# create piano on dev=0, chan=5
+3&gt; nt pi1 			# new track named "pi1"
+4&gt; r				# start recording
+5&gt; s				# stop recording
+6&gt; save "mysong"		# save to file "mysong"
+7&gt;				# EOF (control-D) to quit
+</PRE>
 
 	<P>
 	<B>Note:</B>
@@ -473,10 +505,10 @@ it, use the <TT>songstop</TT> function.
         The following commands will configure the module as
         device number 0 and
         the keyboard as device number 1:
-        <PRE>
-        devattach 0 "/dev/rmidi4" rw
-        devattach 1 "/dev/rmidi3" rw
-        </PRE>
+<PRE>
+devattach 0 "/dev/rmidi4" rw
+devattach 1 "/dev/rmidi3" rw
+</PRE>
 
         <P>
         <B>Note:</B>
@@ -488,11 +520,11 @@ it, use the <TT>songstop</TT> function.
         <P>
         In order to check that the sound module is properly configured
         play the demo song:
-        <PRE>
-        songload "sample.sng"
-        songplay
-	songstop
-        </PRE>
+<PRE>
+songload "sample.sng"
+songplay
+songstop
+</PRE>
 
         When the configuration is setup, put the "devattach"
         commands in the user's <TT>$HOME/.midishrc</TT>. It will be
@@ -508,13 +540,13 @@ it, use the <TT>songstop</TT> function.
         So <I>channel</I> refers the device / MIDI channel pair.
 
         Channels are handled by two-item lists, like this:
-        <PRE>
-        {0 1}                   # device 0, MIDI channel 1
-        </PRE>
+<PRE>
+{0 1}                   # device 0, MIDI channel 1
+</PRE>
         Channels can also be named, as follows:
-        <PRE>
-        channew mybass {0 1}
-        </PRE>
+<PRE>
+channew mybass {0 1}
+</PRE>
         this defines a named-channel <TT>mybass</TT> that can
         be used instead of the <TT>{0 1}</TT> pair.
 
@@ -534,24 +566,24 @@ it, use the <TT>songstop</TT> function.
         For instance;
         to select patch 34 on channel <TT>mybass</TT>, attach
         a "program change" event:
-        <PRE>
-        chanconfev mybass {pc mybass 32}
-        </PRE>
+<PRE>
+chanconfev mybass {pc mybass 32}
+</PRE>
         the list-argument gives the event to attach to the channel.
         See the <A href="#ev_ev">event</A> section for
         more details about events.
 
         <P>
         To set the volume (controller 7) of this channel to 120:
-        <PRE>
-        chanconfev mybass {ctl mybass 7 120}
-        </PRE>
+<PRE>
+chanconfev mybass {ctl mybass 7 120}
+</PRE>
         If several events of the same type are attached
         then just the last one is kept. So, the following
         will change the volume to 125 by replacing the above event:
-        <PRE>
-        chanconfev mybass {ctl mybass 7 125}
-        </PRE>
+<PRE>
+chanconfev mybass {ctl mybass 7 125}
+</PRE>
 
 
 
@@ -648,7 +680,7 @@ it, use the <TT>songstop</TT> function.
         <P>
         Filters are defined as follows:
         <PRE>
-        filtnew myfilt                  # define filter "myfilt"
+filtnew myfilt                  # define filter "myfilt"
         </PRE>
         initially the filter is empty and will send input to output
         as-is.
@@ -672,12 +704,12 @@ it, use the <TT>songstop</TT> function.
         device number 1 (the MIDI keyboard) to device number 0
         (the sound module).
         <PRE>
-        filtnew mydevmap                # define filter "mydevmap"
-        filtdevmap mydevmap 1 0         # make it route device 1 -&gt; device 0
+filtnew mydevmap                # define filter "mydevmap"
+filtdevmap mydevmap 1 0         # make it route device 1 -&gt; device 0
         </PRE>
         To test the filter, start performance mode:
         <PRE>
-        songidle
+songidle
         </PRE>
 	(type "songstop" to stop performance mode).
 
@@ -688,14 +720,14 @@ it, use the <TT>songstop</TT> function.
         (first channel of the keyboard) to device 0, channel 9
         (default drum channel of the sound module).
         <PRE>
-        filtnew mydrums                 # define filter "mydrums"
-        filtchanmap mydrums {1 0} {0 9} # route dev/chan {1 0} to {0 9}
+filtnew mydrums                 # define filter "mydrums"
+filtchanmap mydrums {1 0} {0 9} # route dev/chan {1 0} to {0 9}
         </PRE>
         The device/channel pair is in braces. The first <TT>{1 0}</TT>
         is the input device/channel and <TT>{0 9}</TT> is the output channel.
         To test the filter, start performance mode:
         <PRE>
-        songidle
+songidle
         </PRE>
 	(type "songstop" to stop performance mode).
         Playing on channel 0 of the keyboard will make
@@ -709,7 +741,7 @@ it, use the <TT>songstop</TT> function.
         to the expression controller (number 11) of
         the destination channel (device 0, channel 9).
         <PRE>
-        filtctlmap mydrums {1 0} {0 9} 1 11
+filtctlmap mydrums {1 0} {0 9} 1 11
         </PRE>
         the first three arguments are the name of the filter,
         the input and the output device/channel pair. The 4-th
@@ -718,14 +750,14 @@ it, use the <TT>songstop</TT> function.
         on the output (11 = expression).
         Rules of the filter can be listed as follows:
         <PRE>
-        filtinfo mydrums
+filtinfo mydrums
         </PRE>
         which will print:
         <PRE>
-        {
-                chanmap {1 0} {0 9}
-                ctlmap {1 0} {0 9} 1 11 id
-        }
+{
+        chanmap {1 0} {0 9}
+        ctlmap {1 0} {0 9} 1 11 id
+}
         </PRE>
 
 <A name="section_4_2_4"></A><H3>4.2.4 Transpose</H3>
@@ -3280,37 +3312,37 @@ it, use the <TT>songstop</TT> function.
         configure a keyboard split:
 
         <PRE>
-        1&gt; channew bass {0 5}
-        2&gt; chanconfev bass {pc bass 33}
-        3&gt; channew piano {0 6}
-        4&gt; chanconfev piano {pc piano 2}
-        5&gt; filtnew split
-        6&gt; filtchanmap split {1 0} bass
-        7&gt; filtchanmap split {1 0} piano
-        8&gt; filtkeymap  split {1 0} bass   0  63 (-12)
-        9&gt; filtkeymap  split {1 0} piano 64 127 0
-        10&gt; filtinfo split
-        {
-                keymap {1 0} {0 2} 65 127 0 id
-                keymap {1 0} {0 1} 0 64 116 id
-                chanmap {1 0} {0 2}
-                chanmap {1 0} {0 1}
-        }
-        11&gt; songidle
-	12&gt; songstop
-        13&gt; songsave "piano-bass"
-	14&gt;
+	send EOF character (control-D) to quit
+	[0000:00]&gt; ci {1 0}
+	[0000:00]&gt; cnew bass {0 5}
+	[0000:00]&gt; caddev {pc bass 33}
+	[0000:00]&gt; cnew piano {0 6}
+	[0000:00]&gt; caddev {pc piano 2}
+	[0000:00]&gt; fnew split
+	[0000:00]&gt; fmap {any [geti]} {any bass}
+	[0000:00]&gt; fmap {any [geti]} {any piano}
+	[0000:00]&gt; fmap {note [geti] 12..62} {note bass 0..50}
+	[0000:00]&gt; fmap {note [geti] 63..127} {note piano 63..127}
+	[0000:00]&gt; finfo
+	{
+		evmap any {1 0} &gt; any {0 5}
+		evmap any {1 0} &gt; any {0 6}
+		evmap note {1 0} 12..62 &gt; note {0 5} 0..50
+		evmap note {1 0} 63..127 &gt; note {0 6} 63..127
+	}
+	[0000:00]&gt; i
+	[0000:00]&gt; s
+	[0000:00]&gt; save "piano-bass"
         </PRE>
 
-        First we define 2 named-channels
-        <TT>bass</TT> on device 0, channel 5
-        and <TT>piano</TT> on device 0 channel 6.
-        Then we assign patches to the respective
-        channels. After this, we define a new
-        filter <TT>split</TT> and we add
-        rules corresponding to the keyboard-split
-        on note number 64 (note E3), the bass is
-        transposed by -12 half-tones (one octave).
+        First we set the default input to device 1, channel 6, on
+	which the keyboard is available.  Then we define 2
+	named-channels <TT>bass</TT> on device 0, channel 5 and
+	<TT>piano</TT> on device 0 channel 6.  Then we assign patches
+	to the respective channels. After this, we define a new filter
+	<TT>split</TT> and we add rules corresponding to the
+	keyboard-split on note number 62 (note D3), the bass is
+	transposed by -12 half-tones (one octave).
 
 <A name="section_20_2"></A><H2>20.2 Example - recording a track</H2>
 
@@ -3319,7 +3351,7 @@ it, use the <TT>songstop</TT> function.
 	in the default <TT>/etc/midishrc</TT>.
         <PRE>
 	1&gt; ci {1 0}
-	2&gt; ni drums {0 9}
+	2&gt; cnew drums {0 9}
 	3&gt; nt dr1
 	4&gt; tempo 90
 	5&gt; r
