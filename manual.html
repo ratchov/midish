@@ -1634,54 +1634,55 @@ It will be automatically executed the next time you run midish.
 added <tt>device</tt> parameter to <tt>sendraw</tt>
 
 <li>
-removed <tt>filtchangein</tt> and added
-	<tt>filtchgich</tt>, <tt>filtchgidev</tt>,
-	<tt>filtswapich</tt>, <tt>filtswapidev</tt>,
-	<tt>filtchgoch</tt>, <tt>filtchgodev</tt>,
-	<tt>filtswapoch</tt>, <tt>filtswapodev</tt>.
+removed <tt>filtchangein</tt> and added <tt>filtchgich</tt>,
+<tt>filtchgidev</tt>, <tt>filtswapich</tt>,
+<tt>filtswapidev</tt>, <tt>filtchgoch</tt>,
+<tt>filtchgodev</tt>, <tt>filtswapoch</tt>,
+<tt>filtswapodev</tt>.
 
-<li>added new filter rules:
-	<tt>filtdevdrop</tt>,
-	<tt>filtchandrop</tt>,
-	<tt>filtctldrop</tt> and
-	<tt>filtkeydrop</tt>.
+<li>
+added new filter rules:
+<tt>filtdevdrop</tt>,
+<tt>filtchandrop</tt>,
+<tt>filtctldrop</tt> and
+<tt>filtkeydrop</tt>.
 
 <li>
 added functions that remove existing rules:
-	<tt>filtnodevdrop</tt>,
-	<tt>filtnodevmap</tt>,
-	<tt>filtnochandrop</tt>,
-	<tt>filtnochanmap</tt>,
-	<tt>filtnoctldrop</tt>,
-	<tt>filtnoctlmap</tt>,
-	<tt>filtnokeydrop</tt> and
-	<tt>filtnokeymap</tt>.
+<tt>filtnodevdrop</tt>,
+<tt>filtnodevmap</tt>,
+<tt>filtnochandrop</tt>,
+<tt>filtnochanmap</tt>,
+<tt>filtnoctldrop</tt>,
+<tt>filtnoctlmap</tt>,
+<tt>filtnokeydrop</tt> and
+<tt>filtnokeymap</tt>.
 
 <li>
 added support for external MIDI synchronization,
-     added <tt>devsetmaster</tt>, <tt>devgetmaster</tt>
-     and <tt>devsendrt</tt>
+added <tt>devsetmaster</tt>, <tt>devgetmaster</tt>
+and <tt>devsendrt</tt>
 
 <li>
 added
-	<tt>trackdelete</tt>,
-	<tt>chandelete</tt>,
-	<tt>filtdelete</tt>
+<tt>trackdelete</tt>,
+<tt>chandelete</tt>,
+<tt>filtdelete</tt>
 
 <li>
 added
-	<tt>trackrename</tt>,
-	<tt>chanrename</tt>,
-	<tt>filtrename</tt>
+<tt>trackrename</tt>,
+<tt>chanrename</tt>,
+<tt>filtrename</tt>
 
 <li>
 split <tt>changetnum</tt> into <tt>changetdev</tt> and <tt>changetch</tt>,
-     added <tt>chanset</tt>
+added <tt>chanset</tt>
 
 <li>
 added "event ranges", and an event range argument to
-	<tt>trackblank</tt> and
-	<tt>trackcopy</tt>
+<tt>trackblank</tt> and
+<tt>trackcopy</tt>
 
 <li>
 removed support for single number channels.
@@ -1691,47 +1692,47 @@ added <tt>tracksetmute</tt> and <tt>trackgetmute</tt>
 
 <li>
 added support for system exclusive messages; added
-	<tt>sysexlist</tt>,
-	<tt>sysexnew</tt>,
-	<tt>sysexdelete</tt>,
-	<tt>sysexrename</tt>,
-	<tt>sysexexists</tt>,
-	<tt>sysexinfo</tt>,
-	<tt>sysexclear</tt>,
-	<tt>sysexsetunit</tt>,
-	<tt>sysexadd</tt>,
-	<tt>songgetcursysex</tt> and
-	<tt>songsetcursysex</tt>.
+<tt>sysexlist</tt>,
+<tt>sysexnew</tt>,
+<tt>sysexdelete</tt>,
+<tt>sysexrename</tt>,
+<tt>sysexexists</tt>,
+<tt>sysexinfo</tt>,
+<tt>sysexclear</tt>,
+<tt>sysexsetunit</tt>,
+<tt>sysexadd</tt>,
+<tt>songgetcursysex</tt> and
+<tt>songsetcursysex</tt>.
 
 <li>
 removed <tt>tracksave</tt> and <tt>trackload</tt>
 
 <li>
 removed support for gnu readline(3) library from midish,
-	and created the <tt>rmidish</tt> utility, a front-end
-	to midish using the readline(3) library.
+and created the <tt>rmidish</tt> utility, a front-end
+to midish using the readline(3) library.
 
 <li>
 added filters the ability to limit MIDI traffic
-	(one controller, one bender, one aftertouch per tick)
+(one controller, one bender, one aftertouch per tick)
 
 <li>
 make the filter drop duplicate controllers, pitch bends and
-	aftertouches
+aftertouches
 
 <li>
 added global and per filter current channel:
-	<tt>songgetcurchan</tt>,
-	<tt>songsetcurchan</tt>,
-	<tt>filtgetcurchan</tt> and
-	<tt>filtsetcurchan</tt>.
+<tt>songgetcurchan</tt>,
+<tt>songsetcurchan</tt>,
+<tt>filtgetcurchan</tt> and
+<tt>filtsetcurchan</tt>.
 
 <li>
 added global and per channel current input:
-	<tt>songgetcurinput</tt>,
-	<tt>songsetcurinput</tt>,
-	<tt>changetcurinput</tt> and
-	<tt>chansetcurinput</tt>.
+<tt>songgetcurinput</tt>,
+<tt>songsetcurinput</tt>,
+<tt>changetcurinput</tt> and
+<tt>chansetcurinput</tt>.
 
 <li>
 added <tt>trackchanlist</tt> and improved <tt>songinfo</tt>
@@ -1752,13 +1753,13 @@ added <tt>tracktransp</tt> to transpose tracks
 added <tt>trackmerge</tt> to merge two tracks
 
 <li>
-make rmidish run midish from the same directory where
-     rmidish is located.
+make rmidish run midish from the same directory where rmidish is
+located.
 
 <li>
 now multiple bender events are gathered together. So track editing
-     functions (<tt>trackcopy</tt> &amp; friends) always leave the
-     bender in a neutral state.
+functions (<tt>trackcopy</tt> &amp; friends) always leave the bender
+in a neutral state.
 
 <li>
 improved <tt>trackcheck</tt>
@@ -1767,9 +1768,9 @@ improved <tt>trackcheck</tt>
 added <tt>exit</tt> keyword to exit midish
 
 <li>
-Added a <tt>mode</tt> argument to <tt>devattach</tt> function.
-     Now devices can be used in read-only or write-only mode (allowing
-     to use named pipes as MIDI devices).
+Added a <tt>mode</tt> argument to <tt>devattach</tt> function.  Now
+devices can be used in read-only or write-only mode (allowing to use
+named pipes as MIDI devices).
 
 <li>
 added basic support for the MIDI "Active Sensing" feature
@@ -1784,18 +1785,18 @@ save metronome settings
 added tempo factor: <tt>songsetfactor</tt> and <tt>songgetfactor</tt>
 
 <li>
-changed all track functions to gracefully handle nested notes, overlapping
-     controllers/benders.
+changed all track functions to gracefully handle nested notes,
+overlapping controllers/benders.
 
 <li>
 when entering real-time mode, midish restores states of all
      controllers/benders corresponding to the current position
 
 <li>
-when leaving real-time mode midish release only notes that
-     are sounding and reset only controllers that are touched
-     instead of resetting all notes/controllers. This allows
-     midish to better share MIDI devices with other sequencers.
+when leaving real-time mode midish release only notes that are
+sounding and reset only controllers that are touched instead of
+resetting all notes/controllers. This allows midish to better share
+MIDI devices with other sequencers.
 
 <li>
 added support for 14bit controllers
@@ -1808,12 +1809,12 @@ split format 0 MIDI files into 16 tracks (one per MIDI channel)
 
 <li>
 made controller interpretation in editing functions configurable:
-	<tt>ctlconf</tt>, <tt>ctlconfx</tt>,
-	<tt>ctlunconf</tt> and <tt>ctlinfo</tt>.
+<tt>ctlconf</tt>, <tt>ctlconfx</tt>, <tt>ctlunconf</tt> and
+<tt>ctlinfo</tt>.
 
 <li>
 added per-device controller precision selection (7bit or 14bit):
-	<tt>devixctl</tt> and <tt>devoxctl</tt>.
+<tt>devixctl</tt> and <tt>devoxctl</tt>.
 
 <li>
 added <tt>chanunconfev</tt> function to remove an event from a channel
@@ -1826,16 +1827,16 @@ added <tt>chanunconfev</tt> function to remove an event from a channel
 
 <li>
 added <tt>songgetsign</tt> and <tt>songgettempo</tt>
-    functions returning time signature and tempo respectively
-    at any measure number
+functions returning time signature and tempo respectively
+at any measure number
 
 <li>
 added output MIDI merger, to avoid conflicts
-    between tracks and MIDI input
+between tracks and MIDI input
 
 <li>
 continuous controllers are merged more
-    intelligently in performance mode, avoiding clipping
+intelligently in performance mode, avoiding clipping
 
 </ul>
 
@@ -1866,31 +1867,32 @@ The following table summarizes the device attributes:
 <td>tickrate
 
 <td>number of tick per unit note, default is 96, which corresponds
-	to the MIDI standard
+to the MIDI standard
 
 <tr>
 
 <td>sendrt flag
 
-<td>boolean; if sendrt = true, the real-time events
-	(like start, stop, ticks) are transmitted to the MIDI device.
+<td>
+boolean; if sendrt = true, the real-time events
+(like start, stop, ticks) are transmitted to the MIDI device.
 
 <tr>
 
 <td>ixctlset
 
-<td>list of continuous controllers that are expected to be
-	received with 14bit precision.
+<td>
+list of continuous controllers that are expected to be
+received with 14bit precision.
 
 <tr>
 
 <td>oxctlset
 
 <td>list of continuous controllers that will be transmitted
-	with 14bit precision
+with 14bit precision
 
 </table>
-
 
 <h3><a name="section_14_2">14.2 Channel attributes</a></h3>
 
@@ -1928,11 +1930,10 @@ The following table summarizes the channel attributes:
 
 <td>curinput
 
-<td>default input <tt>{dev&nbsp;chan}</tt> pair.
-	This value isn't used in
-	real-time, however it can be used as default
-	value when adding new rules to a filter
-	that uses this channel.
+<td>
+default input <tt>{dev&nbsp;chan}</tt> pair.  This value isn't
+used in real-time, however it can be used as default value when adding
+new rules to a filter that uses this channel.
 
 </table>
 
@@ -1966,9 +1967,10 @@ The following table summarizes the filter attributes:
 
 <td>current channel
 
-<td>default channel. This value isn't used in real-time,
-	however it can be used as default value when
-	adding new rules to the filter.
+<td>
+default channel. This value isn't used in real-time,
+however it can be used as default value when
+adding new rules to the filter.
 
 </table>
 
@@ -2003,12 +2005,11 @@ The following table summarizes the track attributes:
 
 <td>current filter
 
-<td>default filter. The track is recorded
-	with this filter. If there is no current filter,
-	then is is recorded with the song's default filter.
+<td>
+default filter. The track is recorded with this filter. If there is no
+current filter, then is is recorded with the song's default filter.
 
 </table>
-
 
 <h3><a name="section_14_5">14.5 Sysex attributes</a></h3>
 
@@ -2034,9 +2035,9 @@ The following table summarizes the sysex back attributes:
 
 <td>list of messages
 
-<td>each message in the list contains
-	the actual message and the unit number of the device
-	to which the message has to be sent.
+<td>
+each message in the list contains the actual message and the unit
+number of the device to which the message has to be sent.
 
 </table>
 
@@ -2064,15 +2065,15 @@ The following table summarizes the song attributes:
 
 <td>ticks_per_unit
 
-<td>number of MIDI ticks per unit note, the default value is 96
-	 which corresponds to the MIDI standard.
+<td>
+number of MIDI ticks per unit note, the default value is 96 which
+corresponds to the MIDI standard.
 
 <tr>
 
 <td>tempo_factor
 
-<td>number by which the tempo is multiplied
-    on play and record.
+<td>number by which the tempo is multiplied on play and record.
 
 <tr>
 
@@ -2084,14 +2085,18 @@ The following table summarizes the song attributes:
 
 <td>metro_hi
 
-<td>a note-on event that is sent on the beginning of every measure
-	if the metronome is enabled
+<td>
+a note-on event that is sent on the beginning of every measure if the
+metronome is enabled
+
 <tr>
 
 <td>metro_lo
 
-<td>a note-on event that is sent on the beginning of every beat
-	if the metronome is enabled
+<td>
+a note-on event that is sent on the beginning of every beat if the
+metronome is enabled
+
 <tr>
 
 <td>curtrack
@@ -2102,61 +2107,63 @@ The following table summarizes the song attributes:
 
 <td>curfilt
 
-<td>default filter. The filter with which the
-	default track is recorded if it hasn't its
-	default filter.
+<td>
+default filter. The filter with which the default track is recorded if
+it hasn't its default filter.
+
 <tr>
 
 <td>curchan
 
-<td>default channel. This value isn't used in real-time,
-	however it can be used as default value when
-	adding new rules to the filter.
+<td>
+default channel. This value isn't used in real-time, however it can be
+used as default value when adding new rules to the filter.
 
 <tr>
 
 <td>curpos
 
-<td>current position (in measures) within the song. Playback
-	and record start from this positions. It is also
-	user as the beginning of the current selection
+<td>
+current position (in measures) within the song. Playback and record
+start from this positions. It is also user as the beginning of the
+current selection
+
 <tr>
 
 <td>curlen
 
 <td>length (in measures) of the current selection.
-	This value isn't used in real-time,
-	however it can be used as default value in track
-	editing functions.
+This value isn't used in real-time,
+however it can be used as default value in track
+editing functions.
 
 <tr>
 
 <td>curquant
 
-<td>current quantization step in ticks.
-	This value isn't used in real-time,
-	however it can be used as default value for
-	the track editing functions
+<td>
+current quantization step in ticks.  This value isn't used in
+real-time, however it can be used as default value for the track
+editing functions
 
 <tr>
 
 <td>curev
 
 <td>current event selection
-	This value isn't used in real-time,
-	however it can be used as default value for
-	the track editing functions
+This value isn't used in real-time,
+however it can be used as default value for
+the track editing functions
 
 <tr>
 
 
 <td>curinput
 
-<td>default input <tt>{dev&nbsp;chan}</tt> pair.
-	This value isn't used in
-	real-time, however it can be uses as default
-	value when adding new values to a filter
-	that uses this channel.
+<td>
+default input <tt>{dev&nbsp;chan}</tt> pair.  This value isn't used in
+real-time, however it can be uses as default value when adding new
+values to a filter that uses this channel.
 
 </table>
 
@@ -2170,10 +2177,9 @@ is specified as a list containing:
 <ul>
 
 <li>
-a reference from the following list:
-     <tt>noff</tt>, <tt>non</tt>, <tt>kat</tt>,
-     <tt>xctl</tt>, <tt>xpc</tt>, <tt>cat</tt>, <tt>bend</tt>
-     <tt>rpn</tt>, <tt>nrpn</tt>.
+a reference from the following list: <tt>noff</tt>, <tt>non</tt>,
+<tt>kat</tt>, <tt>xctl</tt>, <tt>xpc</tt>, <tt>cat</tt>, <tt>bend</tt>
+<tt>rpn</tt>, <tt>nrpn</tt>.
 
 <li>
 a channel
@@ -2248,25 +2254,27 @@ The event range is specified as a list containing:
 
 <li>
 an optional reference from the following list:
-     <tt>any</tt>, <tt>note</tt>, <tt>ctl</tt>, <tt>pc</tt>,
-     <tt>cat</tt>, <tt>bend</tt>, <tt>rpn</tt>, <tt>nrpn</tt>
-     <tt>xpc</tt>, <tt>xctl</tt>.
+<tt>any</tt>, <tt>note</tt>, <tt>ctl</tt>, <tt>pc</tt>,
+<tt>cat</tt>, <tt>bend</tt>, <tt>rpn</tt>, <tt>nrpn</tt>
+<tt>xpc</tt>, <tt>xctl</tt>.
 
 <li>
-an optional channel range specified as a list containing
-	a device number range and a MIDI channel number
-	range. Number ranges are specified as two-number list
-	like this <tt>{12 34}</tt>. Channel name matches an unique channel.
+an optional channel range specified as a list containing device number
+range and a MIDI channel number range. Number ranges are specified as
+two-number list like this <tt>{12 34}</tt>. Channel name matches an
+unique channel.
 
 <li>
 an optional  number range, specified as a list
-	of two number like this <tt>{12 65}</tt>
+of two number like this <tt>{12 65}</tt>
 
 <li>
 an optional second number range, in the same
-	format as the first one (not permitted for <tt>pc</tt>,
-	<tt>bend</tt> and <tt>cat</tt>)
+format as the first one (not permitted for <tt>pc</tt>,
+<tt>bend</tt> and <tt>cat</tt>)
+
 </ul>
+
 In the above, empty lists can also be used. An empty list
 means "match everything".
 
@@ -2305,6 +2313,7 @@ The input line is split into tokens:
 
 <li>
 Identifiers<br>
+
 an identifier is a sequence of up to 32
 characters, digits and underscores ("<tt>_</tt>").
 However, an identifier cannot start with a
@@ -2339,6 +2348,7 @@ by "0x", as in the C language. Examples:
 
 <li>
 String constants<br>
+
 string constants are sequence of printable
 characters enclosed in pairs of double quotes.
 Thus a string cannot contain double quotes,
@@ -2346,12 +2356,14 @@ tabs, newlines.
 
 <li>
 Keywords<br>
+
 valid keywords are: <tt>nil</tt>, <tt>let</tt>,
 <tt>if</tt>, <tt>else</tt>, <tt>for</tt>, <tt>in</tt>
 <tt>return</tt>, <tt>exit</tt> and <tt>proc</tt>.
 
 <li>
 Operators, separators etc...<br>
+
 sequences of meta-characters like "<tt>(</tt>", "<tt>)</tt>",
 "<tt>+</tt>", "<tt>$</tt>", newline character,
 "<tt>;</tt>",  etc...
@@ -2511,91 +2523,106 @@ The following operators are recognized:
 <p align="center">
 <table border="1">
 
-<tr>    <th>oper.       <th>usage               <th>associativity
+<tr>
 
-<tr>    <td><tt>{}</tt>
-	<td>list definition
-	<td rowspan="3">left to right
+<th>oper.		<th>usage               <th>associativity
+		
+<tr>
 
-<tr>    <td><tt>()</tt>
-	<td>grouping
+<td><tt>{}</tt>		<td>list definition	<td rowspan="3">left to right
 
-<tr>    <td><tt>[]</tt>
-	<td>function call
+<tr>
 
-<tr>    <td><tt>!</tt>
-	<td>logical NOT
-	<td rowspan="3">right to left
+<td><tt>()</tt>		<td>grouping
 
-<tr>    <td><tt>~</tt>
-	<td>bitwise NOT
+<tr>
 
-<tr>    <td><tt>-</tt>
-	<td>unary minus
+<td><tt>[]</tt>		<td>function call	
 
-<tr>    <td><tt>*</tt>
-	<td>multiplication
-	<td rowspan="3">left to right
+<tr>	
 
-<tr>    <td><tt>/</tt>
-	<td>division
+<td><tt>!</tt>		<td>logical NOT		<td rowspan="3">right to left
 
-<tr>    <td><tt>%</tt>
-	<td>reminder
+<tr>
 
-<tr>    <td><tt>+</tt>
-	<td>addition
-	<td rowspan="2">left to right
+<td><tt>~</tt>		<td>bitwise NOT
 
-<tr>    <td><tt>-</tt>
-	<td>subtraction
+<tr>
 
-<tr>    <td><tt>&lt;&lt;</tt>
-	<td>left shift
-	<td rowspan="2">left to right
+<td><tt>-</tt>		<td>unary minus
 
-<tr>    <td><tt>&gt;&gt;</tt>
-	<td>right shift
+<tr>
 
-<tr>    <td><tt>&lt;</tt>
-	<td>less
-	<td rowspan="4">left to right
+<td><tt>*</tt>		<td>multiplication	<td rowspan="3">left to right
 
-<tr>    <td><tt>&lt;=</tt>
-	<td>less or equal
+<tr>
 
-<tr>    <td><tt>&gt;</tt>
-	<td>greater
+<td><tt>/</tt>		<td>division		
 
-<tr>    <td><tt>&gt;=</tt>
-	<td>greater or equal
+<tr>
 
-<tr>    <td><tt>==</tt>
-	<td>equal
-	<td rowspan="2">left to right
+<td><tt>%</tt>		<td>reminder		
 
-<tr>    <td><tt>!=</tt>
-	<td>not equal
+<tr>
 
-<tr>    <td><tt>&amp;</tt>
-	<td>bitwise AND
-	<td>left to right
+<td><tt>+</tt>		<td>addition		<td rowspan="2">left to right
 
-<tr>    <td><tt>^</tt>
-	<td>bitwise XOR
-	<td>left to right
+<tr>
 
-<tr>    <td><tt>|</tt>
-	<td>bitwise OR
-	<td>left to right
+<td><tt>-</tt>		<td>subtraction		
 
-<tr>    <td><tt>&amp;&amp;</tt>
-	<td>logical AND
-	<td>left to right
+<tr>
 
-<tr>    <td><tt>||</tt>
-	<td>logical OR
-	<td>left to right
+<td><tt>&lt;&lt;</tt>	<td>left shift		<td rowspan="2">left to right
+
+<tr>
+
+<td><tt>&gt;&gt;</tt>	<td>right shift
+
+<tr>
+
+<td><tt>&lt;</tt>	<td>less		<td rowspan="4">left to right
+
+<tr>
+
+<td><tt>&lt;=</tt>	<td>less or equal
+
+<tr>
+
+<td><tt>&gt;</tt>	<td>greater
+
+<tr>
+
+<td><tt>&gt;=</tt>	<td>greater or equal
+
+<tr>
+
+<td><tt>==</tt>		<td>equal		<td rowspan="2">left to right
+
+<tr>
+
+<td><tt>!=</tt>		<td>not equal
+
+<tr>
+
+<td><tt>&amp;</tt>	<td>bitwise AND		<td rowspan="3">left to right
+
+<tr>
+
+<td><tt>^</tt>		<td>bitwise XOR
+
+<tr>
+
+<td><tt>|</tt>		<td>bitwise OR
+
+<tr>
+
+<td><tt>&amp;&amp;</tt>	<td>logical AND		<td rowspan="2">left to right
+
+<tr>
+
+<td><tt>||</tt>		<td>logical OR
+
 </table>
 
 <p>
@@ -2820,7 +2847,7 @@ and assigned the given device and MIDI channel.
 <dd>
 set the device/channel pair of the current channel.
 
-<dt><a name="func_cdel"><b>cdel</b></a>
+<dt><a name="func_cdel">cdel</a>
 
 <dd>
 delete current channel.
