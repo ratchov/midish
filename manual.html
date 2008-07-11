@@ -93,14 +93,15 @@
 </ul>
 <li><a href="#filt">4 Filtering/routing</a>
 <ul>
-<li><a href="#section_4_1">4.1 About filters</a>
-<li><a href="#section_4_2">4.2 Examples</a>
+<li><a href="#section_4_1">4.1 Filter rules</a>
+<li><a href="#section_4_2">4.2 Rules hierarchy</a>
+<li><a href="#section_4_3">4.3 Examples</a>
 <ul>
-<li><a href="#section_4_2_1">4.2.1 Device redirections</a>
-<li><a href="#section_4_2_2">4.2.2 Channel maps</a>
-<li><a href="#section_4_2_3">4.2.3 Controller maps</a>
-<li><a href="#section_4_2_4">4.2.4 Transpose</a>
-<li><a href="#section_4_2_5">4.2.5 Keyboard splits</a>
+<li><a href="#section_4_3_1">4.3.1 Device redirections</a>
+<li><a href="#section_4_3_2">4.3.2 Channel maps</a>
+<li><a href="#section_4_3_3">4.3.3 Controller maps</a>
+<li><a href="#section_4_3_4">4.3.4 Transpose</a>
+<li><a href="#section_4_3_5">4.3.5 Keyboard splits</a>
 </ul>
 </ul>
 <li><a href="#time">5 Time structure</a>
@@ -827,7 +828,7 @@ send EOF character (control-D) to quit
 </pre>
 
 
-<h3>Rules hierarchy</h3>
+<h3><a name="section_4_2">4.2 Rules hierarchy</a></h3>
 
 In real life, the filter will probably have to contain multiple rules.
 
@@ -870,9 +871,9 @@ The user doesn't need to care about this constraint since
 <a href="#func_fmap">fmap</a> and <a href="#func_funmap">funmap</a>
 functions will to the right thing an all cases.
 
-<h3><a name="section_4_2">4.2 Examples</a></h3>
+<h3><a name="section_4_3">4.3 Examples</a></h3>
 
-<h4><a name="section_4_2_1">4.2.1 Device redirections</a></h4>
+<h4><a name="section_4_3_1">4.3.1 Device redirections</a></h4>
 
 The following example defines a filter that routes events from
 device number 1 (the MIDI keyboard) to device number 0
@@ -886,7 +887,7 @@ fmap {any {1 0..15}} {any {0 0..15}}	# make it route device 1 -&gt; device 0
 To test the filter, start performance mode using the ``i'' command and
 then type ``s'' to stop performance mode
 
-<h4><a name="section_4_2_2">4.2.2 Channel maps</a></h4>
+<h4><a name="section_4_3_2">4.3.2 Channel maps</a></h4>
 
 The following example defines a filter that routes events from device
 1, midi channel 0 (first channel of the keyboard) to device 0, midi
@@ -904,7 +905,7 @@ sound-module.
 
 To stop performance mode, use ``s'' command.
 
-<h4><a name="section_4_2_3">4.2.3 Controller maps</a></h4>
+<h4><a name="section_4_3_3">4.3.3 Controller maps</a></h4>
 
 The following example add a new rule to the above filter that maps the
 modulation wheel (controller 1) of the source channel (ie device 1,
@@ -927,7 +928,7 @@ of rules as follows:
 }
 </pre>
 
-<h4><a name="section_4_2_4">4.2.4 Transpose</a></h4>
+<h4><a name="section_4_3_4">4.3.4 Transpose</a></h4>
 
 The following example transposes by 12 half-tones
 (one octave) notes on device 1, channel 0 (keyboard) and
@@ -947,7 +948,7 @@ give the note range that will be handled
 and the 6-th argument gives the number of half-tones
 (12, one octave) to transpose.
 
-<h4><a name="section_4_2_5">4.2.5 Keyboard splits</a></h4>
+<h4><a name="section_4_3_5">4.3.5 Keyboard splits</a></h4>
 
 In the same way it is possible to create a keyboard-split with two
 key-rules and two channel-rules.
