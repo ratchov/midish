@@ -869,8 +869,9 @@ blt_tempo(struct exec *o, struct data **r)
 unsigned
 blt_mins(struct exec *o, struct data **r)
 {
-	long num, den, amount;
-	unsigned tic, len, tpm;
+	long amount;
+	struct data *sig;
+	unsigned tic, len, bpm, tpb;
 	unsigned long usec24;
 	struct seqptr sp;
 	struct track t1, t2, tn;
@@ -882,25 +883,34 @@ blt_mins(struct exec *o, struct data **r)
 		return 0;
 	}
 	if (!exec_lookuplong(o, "amount", &amount) ||
-	    !exec_lookuplong(o, "numerator", &num) ||
-	    !exec_lookuplong(o, "denominator", &den)) {
+	    !exec_lookuplist(o, "sig", &sig)) {
 		return 0;
 	}
-	if (den != 1 && den != 2 && den != 4 && den != 8) {
-		cons_err("only 1, 2, 4 and 8 are supported as denominator");
+	track_timeinfo(&usong->meta, usong->curpos, &tic, &usec24, &bpm, &tpb);
+	if (sig == NULL) {
+		/* nothing */
+	} else if (sig->type == DATA_LONG && sig->next != NULL &&
+	    sig->next->type == DATA_LONG && sig->next->next == NULL) {
+		bpm = sig->val.num;
+		sig = sig->next;
+		if (sig->val.num != 1 && sig->val.num != 2 && 
+		    sig->val.num != 4 && sig->val.num != 8) {
+			cons_err("denominator must be 1, 2, 4 or 8");
+			return 0;
+		}
+		tpb = usong->tics_per_unit / sig->val.num;
+	} else {
+		cons_err("signature must be {num denom} or {} list");
 		return 0;
 	}
-
-	tpm = usong->tics_per_unit * num / den;
-	track_timeinfo(&usong->meta, usong->curpos, &tic, &usec24, NULL, NULL);
-	len = amount * tpm;
+	len = amount * bpm * tpb;
 
 	track_init(&tn);
 	seqptr_init(&sp, &tn);
 	seqptr_ticput(&sp, tic);
 	ev.cmd = EV_TIMESIG;
-	ev.timesig_beats = num;
-	ev.timesig_tics = usong->tics_per_unit / den;
+	ev.timesig_beats = bpm;
+	ev.timesig_tics = tpb;
 	seqptr_evput(&sp, &ev);
 	ev.cmd = EV_TEMPO;
 	ev.tempo_usec24 = usec24;

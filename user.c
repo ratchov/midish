@@ -929,8 +929,7 @@ user_mainloop(void)
 			name_newarg("beats_per_minute", NULL));
 	exec_newbuiltin(exec, "mins", blt_mins,
 			name_newarg("amount",
-			name_newarg("numerator",
-			name_newarg("denominator", NULL))));
+			name_newarg("sig", NULL)));
 	exec_newbuiltin(exec, "mdel", blt_mdel,
 			name_newarg("amount", NULL));
 	exec_newbuiltin(exec, "minfo", blt_minfo, NULL);

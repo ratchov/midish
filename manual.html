@@ -3258,13 +3258,15 @@ return the current tempo factor
 <dd>
 set the tempo at the current song position
 
-<dt><a name="func_mins">mins amount numerator denominator</a>
+<dt><a name="func_mins">mins amount {num denom}</a>
 
 <dd>
 insert <tt>amount</tt> blank measures at the
 current song position.
-The time signature used is given
-by numerator/denominator.
+The time signature used is num/denom.
+If the time signature is an empty list (ie ``{}'')
+then the time signature at the current position
+is used.
 This function only affects the time structure
 of the song, it does not affect any track
 
