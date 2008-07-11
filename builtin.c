@@ -934,7 +934,7 @@ blt_mins(struct exec *o, struct data **r)
 }
 
 unsigned
-blt_mdel(struct exec *o, struct data **r)
+blt_mcut(struct exec *o, struct data **r)
 {
 	long amount;
 	unsigned tic, len;

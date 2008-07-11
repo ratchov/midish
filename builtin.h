@@ -77,7 +77,7 @@ unsigned blt_rec(struct exec *, struct data **);
 unsigned blt_stop(struct exec *, struct data **);
 unsigned blt_tempo(struct exec *, struct data **);
 unsigned blt_mins(struct exec *, struct data **);
-unsigned blt_mdel(struct exec *, struct data **);
+unsigned blt_mcut(struct exec *, struct data **);
 unsigned blt_minfo(struct exec *, struct data **);
 unsigned blt_mtempo(struct exec *, struct data **);
 unsigned blt_msig(struct exec *, struct data **);
