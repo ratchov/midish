@@ -969,7 +969,6 @@ blt_minfo(struct exec *o, struct data **r)
 unsigned
 blt_mtempo(struct exec *o, struct data **r)
 {
-	long from;
 	unsigned tic, bpm, tpb;
 	unsigned long usec24;
 
@@ -984,7 +983,6 @@ blt_mtempo(struct exec *o, struct data **r)
 unsigned
 blt_msig(struct exec *o, struct data **r)
 {
-	long from;
 	unsigned tic, bpm, tpb;
 	unsigned long usec24;
 
@@ -1144,14 +1142,17 @@ blt_tnew(struct exec *o, struct data **r)
 unsigned
 blt_tdel(struct exec *o, struct data **r)
 {
+	struct songtrk *t;
+
 	if (!song_try(usong)) {
 		return 0;
 	}
-	if (usong->curtrk == NULL) {
+	song_getcurtrk(usong, &t);
+	if (t == NULL) {
 		cons_err("tdel: no current track");
 		return 0;
 	}
-	song_trkdel(usong, usong->curtrk);
+	song_trkdel(usong, t);
 	return 1;
 }
 
@@ -1159,11 +1160,13 @@ unsigned
 blt_tren(struct exec *o, struct data **r)
 {
 	char *name;
+	struct songtrk *t;
 
 	if (!song_try(usong)) {
 		return 0;
 	}
-	if (usong->curtrk == NULL) {
+	song_getcurtrk(usong, &t);
+	if (t == NULL) {
 		cons_err("tren: no current track");
 		return 0;
 	}
@@ -1174,8 +1177,8 @@ blt_tren(struct exec *o, struct data **r)
 		cons_err("tren: name already used by another track");
 		return 0;
 	}
-	str_delete(usong->curtrk->name.str);
-	usong->curtrk->name.str = str_new(name);
+	str_delete(t->name.str);
+	t->name.str = str_new(name);
 	return 1;
 }
 
@@ -1214,7 +1217,8 @@ blt_taddev(struct exec *o, struct data **r)
 	    !exec_lookupev(o, "event", &ev)) {
 		return 0;
 	}
-	if ((t = usong->curtrk) == NULL) {
+	song_getcurtrk(usong, &t);
+	if (t == NULL) {
 		cons_err("taddev: no current track");
 		return 0;
 	}
@@ -1243,7 +1247,8 @@ blt_tsetf(struct exec *o, struct data **r)
 	if (!song_try(usong)) {
 		return 0;
 	}
-	if ((t = usong->curtrk) == NULL) {
+	song_getcurtrk(usong, &t);
+	if (t == NULL) {
 		cons_err("tsetf: no current track");
 		return 0;
 	}
@@ -1275,7 +1280,8 @@ blt_tgetf(struct exec *o, struct data **r)
 	if (!song_try(usong)) {
 		return 0;
 	}
-	if ((t = usong->curtrk) == NULL) {
+	song_getcurtrk(usong, &t);
+	if (t == NULL) {
 		cons_err("tgetf: no current track");
 		return 0;
 	}
@@ -1295,7 +1301,8 @@ blt_tcheck(struct exec *o, struct data **r)
 	if (!song_try(usong)) {
 		return 0;
 	}
-	if ((t = usong->curtrk) == NULL) {
+	song_getcurtrk(usong, &t);
+	if (t == NULL) {
 		cons_err("tgetf: no current track");
 		return 0;
 	}
@@ -1313,7 +1320,8 @@ blt_tcut(struct exec *o, struct data **r)
 	if (!song_try(usong)) {
 		return 0;
 	}
-	if ((t = usong->curtrk) == NULL) {
+	song_getcurtrk(usong, &t);
+	if (t == NULL) {
 		cons_err("tcut: no current track");
 		return 0;
 	}
@@ -1353,7 +1361,8 @@ blt_tins(struct exec *o, struct data **r)
 	if (!song_try(usong)) {
 		return 0;
 	}
-	if ((t = usong->curtrk) == NULL) {
+	song_getcurtrk(usong, &t);
+	if (t == NULL) {
 		cons_err("tins: no current track");
 		return 0;
 	}
@@ -1394,7 +1403,8 @@ blt_tclr(struct exec *o, struct data **r)
 	if (!song_try(usong)) {
 		return 0;
 	}
-	if ((t = usong->curtrk) == NULL) {
+	song_getcurtrk(usong, &t);
+	if (t == NULL) {
 		cons_err("tins: no current track");
 		return 0;
 	}
@@ -1422,7 +1432,8 @@ blt_tcopy(struct exec *o, struct data **r)
 	if (!song_try(usong)) {
 		return 0;
 	}
-	if ((t = usong->curtrk) == NULL) {
+	song_getcurtrk(usong, &t);
+	if (t == NULL) {
 		cons_err("tcopy: no current track");
 		return 0;
 	}
@@ -1462,7 +1473,8 @@ blt_tmerge(struct exec *o, struct data **r)
 	if (!exec_lookuptrack(o, "source", &src)) {
 		return 0;
 	}
-	if ((dst = usong->curtrk) == NULL) {
+	song_getcurtrk(usong, &dst);
+	if (dst == NULL) {
 		cons_err("tmerge: no current track");
 		return 0;
 	}
@@ -1480,7 +1492,8 @@ blt_tquant(struct exec *o, struct data **r)
 	if (!song_try(usong)) {
 		return 0;
 	}
-	if ((t = usong->curtrk) == NULL) {
+	song_getcurtrk(usong, &t);
+	if (t == NULL) {
 		cons_err("tquant: no current track");
 		return 0;
 	}
@@ -1515,7 +1528,8 @@ blt_ttransp(struct exec *o, struct data **r)
 	if (!song_try(usong)) {
 		return 0;
 	}
-	if ((t = usong->curtrk) == NULL) {
+	song_getcurtrk(usong, &t);
+	if (t == NULL) {
 		cons_err("ttransp: no current track");
 		return 0;
 	}
@@ -1547,7 +1561,8 @@ blt_tclist(struct exec *o, struct data **r)
 	if (!song_try(usong)) {
 		return 0;
 	}
-	if ((t = usong->curtrk) == NULL) {
+	song_getcurtrk(usong, &t);
+	if (t == NULL) {
 		cons_err("tclist: no current track");
 		return 0;
 	}
@@ -1580,7 +1595,8 @@ blt_tinfo(struct exec *o, struct data **r)
 	if (!song_try(usong)) {
 		return 0;
 	}
-	if ((t = usong->curtrk) == NULL) {
+	song_getcurtrk(usong, &t);
+	if (t == NULL) {
 		cons_err("tinfo: no current track");
 		return 0;
 	}
@@ -1718,7 +1734,8 @@ blt_cdel(struct exec *o, struct data **r)
 	if (!song_try(usong)) {
 		return 0;
 	}
-	if ((c = usong->curchan) == NULL) {
+	song_getcurchan(usong, &c);
+	if (c == NULL) {
 		cons_err("cren: no current chan");
 		return 0;
 	}
@@ -1735,7 +1752,8 @@ blt_cren(struct exec *o, struct data **r)
 	if (!song_try(usong)) {
 		return 0;
 	}
-	if ((c = usong->curchan) == NULL) {
+	song_getcurchan(usong, &c);
+	if (c == NULL) {
 		cons_err("cren: no current chan");
 		return 0;
 	}
@@ -1760,7 +1778,8 @@ blt_cset(struct exec *o, struct data **r)
 	if (!song_try(usong)) {
 		return 0;
 	}
-	if ((c = usong->curchan) == NULL) {
+	song_getcurchan(usong, &c);
+	if (c == NULL) {
 		cons_err("cset: no current chan");
 		return 0;
 	}
@@ -1786,7 +1805,8 @@ blt_cgetc(struct exec *o, struct data **r)
 	if (!song_try(usong)) {
 		return 0;
 	}
-	if ((c = usong->curchan) == NULL) {
+	song_getcurchan(usong, &c);
+	if (c == NULL) {
 		cons_err("cgetc: no current chan");
 		return 0;
 	}
@@ -1802,7 +1822,8 @@ blt_cgetd(struct exec *o, struct data **r)
 	if (!song_try(usong)) {
 		return 0;
 	}
-	if ((c = usong->curchan) == NULL) {
+	song_getcurchan(usong, &c);
+	if (c == NULL) {
 		cons_err("cgetd: no current chan");
 		return 0;
 	}
@@ -1819,7 +1840,8 @@ blt_caddev(struct exec *o, struct data **r)
 	if (!song_try(usong)) {
 		return 0;
 	}
-	if ((c = usong->curchan) == NULL) {
+	song_getcurchan(usong, &c);
+	if (c == NULL) {
 		cons_err("caddev: no current chan");
 		return 0;
 	}
@@ -1843,7 +1865,8 @@ blt_crmev(struct exec *o, struct data **r)
 	if (!song_try(usong)) {
 		return 0;
 	}
-	if ((c = usong->curchan) == NULL) {
+	song_getcurchan(usong, &c);
+	if (c == NULL) {
 		cons_err("crmev: no current chan");
 		return 0;
 	}
@@ -1862,7 +1885,8 @@ blt_cinfo(struct exec *o, struct data **r)
 	if (!song_try(usong)) {
 		return 0;
 	}
-	if ((c = usong->curchan) == NULL) {
+	song_getcurchan(usong, &c);
+	if (c == NULL) {
 		cons_err("cinfo: no current chan");
 		return 0;
 	}
@@ -1881,7 +1905,8 @@ blt_cseti(struct exec *o, struct data **r)
 	if (!song_try(usong)) {
 		return 0;
 	}
-	if ((c = usong->curchan) == NULL) {
+	song_getcurchan(usong, &c);
+	if (c == NULL) {
 		cons_err("cseti: no current chan");
 		return 0;
 	}
@@ -1905,7 +1930,8 @@ blt_cgeti(struct exec *o, struct data **r)
 	if (!song_try(usong)) {
 		return 0;
 	}
-	if ((c = usong->curchan) == NULL) {
+	song_getcurchan(usong, &c);
+	if (c == NULL) {
 		cons_err("cgeti: no current chan");
 		return 0;
 	}
@@ -1962,7 +1988,8 @@ blt_fdel(struct exec *o, struct data **r)
 	if (!song_try(usong)) {
 		return 0;
 	}
-	if ((f = usong->curfilt) == NULL) {
+	song_getcurfilt(usong, &f);
+	if (f == NULL) {
 		cons_err("fdel: no current filt");
 		return 0;
 	}
@@ -1979,7 +2006,8 @@ blt_fren(struct exec *o, struct data **r)
 	if (!song_try(usong)) {
 		return 0;
 	}
-	if ((f = usong->curfilt) == NULL) {
+	song_getcurfilt(usong, &f);
+	if (f == NULL) {
 		cons_err("fdel: no current filt");
 		return 0;
 	}
@@ -2004,7 +2032,8 @@ blt_fexists(struct exec *o, struct data **r)
 	if (!song_try(usong)) {
 		return 0;
 	}
-	if ((f = usong->curfilt) == NULL) {
+	song_getcurfilt(usong, &f);
+	if (f == NULL) {
 		cons_err("fdel: no current filt");
 		return 0;
 	}
@@ -2024,7 +2053,8 @@ blt_finfo(struct exec *o, struct data **r)
 	if (!song_try(usong)) {
 		return 0;
 	}
-	if ((f = usong->curfilt) == NULL) {
+	song_getcurfilt(usong, &f);
+	if (f == NULL) {
 		cons_err("fdel: no current filt");
 		return 0;
 	}
@@ -2041,7 +2071,8 @@ blt_freset(struct exec *o, struct data **r)
 	if (!song_try(usong)) {
 		return 0;
 	}
-	if ((f = usong->curfilt) == NULL) {
+	song_getcurfilt(usong, &f);
+	if (f == NULL) {
 		cons_err("fdel: no current filt");
 		return 0;
 	}
@@ -2058,7 +2089,8 @@ blt_fmap(struct exec *o, struct data **r)
 	if (!song_try(usong)) {
 		return 0;
 	}
-	if ((f = usong->curfilt) == NULL) {
+	song_getcurfilt(usong, &f);
+	if (f == NULL) {
 		cons_err("fdel: no current filt");
 		return 0;
 	}
@@ -2079,7 +2111,8 @@ blt_funmap(struct exec *o, struct data **r)
 	if (!song_try(usong)) {
 		return 0;
 	}
-	if ((f = usong->curfilt) == NULL) {
+	song_getcurfilt(usong, &f);
+	if (f == NULL) {
 		cons_err("fdel: no current filt");
 		return 0;
 	}
@@ -2100,7 +2133,8 @@ blt_fchgxxx(struct exec *o, struct data **r, int input, int swap)
 	if (!song_try(usong)) {
 		return 0;
 	}
-	if ((f = usong->curfilt) == NULL) {
+	song_getcurfilt(usong, &f);
+	if (f == NULL) {
 		cons_err("fdel: no current filt");
 		return 0;
 	}
@@ -2152,13 +2186,14 @@ blt_fsetc(struct exec *o, struct data **r)
 	if (!song_try(usong)) {
 		return 0;
 	}
-	if ((f = usong->curfilt) == NULL) {
+	song_getcurfilt(usong, &f);
+	if (f == NULL) {
 		cons_err("fdel: no current filt");
 		return 0;
 	}
 	arg = exec_varlookup(o, "channame");
 	if (!arg) {
-		dbg_puts("user_func_filtsetcurchan: 'channame': no such param\n");
+		dbg_puts("fsetc: 'channame': no such param\n");
 		return 0;
 	}
 	if (arg->data->type == DATA_NIL) {
@@ -2184,7 +2219,8 @@ blt_fgetc(struct exec *o, struct data **r)
 	if (!song_try(usong)) {
 		return 0;
 	}
-	if ((f = usong->curfilt) == NULL) {
+	song_getcurfilt(usong, &f);
+	if (f == NULL) {
 		cons_err("fdel: no current filt");
 		return 0;
 	}
@@ -2260,7 +2296,8 @@ blt_xdel(struct exec *o, struct data **r)
 	if (!song_try(usong)) {
 		return 0;
 	}
-	if ((c = usong->cursx) == NULL) {
+	song_getcursx(usong, &c);
+	if (c == NULL) {
 		cons_err("xdel: no current sysex");
 		return 0;
 	}
@@ -2277,7 +2314,8 @@ blt_xren(struct exec *o, struct data **r)
 	if (!song_try(usong)) {
 		return 0;
 	}
-	if ((c = usong->cursx) == NULL) {
+	song_getcursx(usong, &c);
+	if (c == NULL) {
 		cons_err("xdel: no current sysex");
 		return 0;
 	}
@@ -2303,7 +2341,8 @@ blt_xinfo(struct exec *o, struct data **r)
 	if (!song_try(usong)) {
 		return 0;
 	}
-	if ((c = usong->cursx) == NULL) {
+	song_getcursx(usong, &c);
+	if (c == NULL) {
 		cons_err("xdel: no current sysex");
 		return 0;
 	}
@@ -2344,7 +2383,8 @@ blt_xrm(struct exec *o, struct data **r)
 	if (!song_try(usong)) {
 		return 0;
 	}
-	if ((c = usong->cursx) == NULL) {
+	song_getcursx(usong, &c);
+	if (c == NULL) {
 		cons_err("xdel: no current sysex");
 		return 0;
 	}
@@ -2385,7 +2425,8 @@ blt_xsetd(struct exec *o, struct data **r)
 	if (!song_try(usong)) {
 		return 0;
 	}
-	if ((c = usong->cursx) == NULL) {
+	song_getcursx(usong, &c);
+	if (c == NULL) {
 		cons_err("xdel: no current sysex");
 		return 0;
 	}
@@ -2423,7 +2464,8 @@ blt_xadd(struct exec *o, struct data **r)
 	if (!song_try(usong)) {
 		return 0;
 	}
-	if ((c = usong->cursx) == NULL) {
+	song_getcursx(usong, &c);
+	if (c == NULL) {
 		cons_err("xdel: no current sysex");
 		return 0;
 	}

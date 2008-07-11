@@ -387,6 +387,7 @@ void
 song_getcurfilt(struct song *o, struct songfilt **r)
 {
 	struct songtrk *t;
+
 	song_getcurtrk(o, &t);
 	if (t) {
 		*r = t->curfilt;
@@ -399,6 +400,7 @@ void
 song_setcurfilt(struct song *o, struct songfilt *f)
 {
 	struct songtrk *t;
+
 	o->curfilt = f;
 	song_getcurtrk(o, &t);
 	if (t) {
@@ -410,6 +412,7 @@ void
 song_getcurchan(struct song *o, struct songchan **r)
 {
 	struct songfilt *f;
+
 	song_getcurfilt(o, &f);
 	if (f) {
 		*r = f->curchan;
@@ -422,6 +425,7 @@ void
 song_setcurchan(struct song *o, struct songchan *c)
 {
 	struct songfilt *f;
+
 	song_getcurfilt(o, &f);
 	if (f) {
 		f->curchan = c;
@@ -448,6 +452,7 @@ void
 song_setcurinput(struct song *o, unsigned dev, unsigned ch)
 {
 	struct songchan *c;
+
 	song_getcurchan(o, &c);
 	if (c) {
 		c->curinput_dev = dev;
