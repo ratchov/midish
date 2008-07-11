@@ -876,6 +876,8 @@ blt_mins(struct exec *o, struct data **r)
 	struct track t1, t2, tn;
 	struct ev ev;
 
+	/* XXX: get a {num denom} syntax */
+
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -974,10 +976,7 @@ blt_mtempo(struct exec *o, struct data **r)
 	if (!song_try(usong)) {
 		return 0;
 	}
-	if (!exec_lookuplong(o, "from", &from)) {
-		return 0;
-	}
-	track_timeinfo(&usong->meta, from, &tic, &usec24, &bpm, &tpb);
+	track_timeinfo(&usong->meta, usong->curpos, &tic, &usec24, &bpm, &tpb);
 	*r = data_newlong(60L * 24000000L / (usec24 * tpb));
 	return 1;
 }
@@ -992,10 +991,7 @@ blt_msig(struct exec *o, struct data **r)
 	if (!song_try(usong)) {
 		return 0;
 	}
-	if (!exec_lookuplong(o, "from", &from)) {
-		return 0;
-	}
-	track_timeinfo(&usong->meta, from, &tic, &usec24, &bpm, &tpb);
+	track_timeinfo(&usong->meta, usong->curpos, &tic, &usec24, &bpm, &tpb);
 	*r = data_newlist(NULL);
 	data_listadd(*r, data_newlong(bpm));
 	data_listadd(*r, data_newlong(usong->tics_per_unit / tpb));

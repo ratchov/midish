@@ -459,9 +459,11 @@ exec_lookupevspec(struct exec *o, char *name, struct evspec *e)
 		e->v1_max = ((e->v1_max << 7) & 0x3fff) | 0x7f;
 	}
 
+#if 0
 	dbg_puts("lookupevspec: ");
 	evspec_dbg(e);
 	dbg_puts("\n");
+#endif
 
 	return 1;
  toomany:
@@ -932,10 +934,8 @@ user_mainloop(void)
 	exec_newbuiltin(exec, "mdel", blt_mdel,
 			name_newarg("amount", NULL));
 	exec_newbuiltin(exec, "minfo", blt_minfo, NULL);
-	exec_newbuiltin(exec, "mtempo", blt_mtempo,
-			name_newarg("from", NULL));
-	exec_newbuiltin(exec, "msig", blt_msig,
-			name_newarg("from", NULL));
+	exec_newbuiltin(exec, "mtempo", blt_mtempo, NULL);
+	exec_newbuiltin(exec, "msig", blt_msig, NULL);
 	exec_newbuiltin(exec, "ctlconf", blt_ctlconf,
 			name_newarg("name",
 			name_newarg("ctl",
