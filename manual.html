@@ -2084,17 +2084,66 @@ added <tt>chanunconfev</tt> function to remove an event from a channel
 <ul>
 
 <li>
-added <tt>songgetsign</tt> and <tt>songgettempo</tt>
-functions returning time signature and tempo respectively
-at any measure number
-
-<li>
 added output MIDI merger, to avoid conflicts
 between tracks and MIDI input
 
 <li>
 continuous controllers are merged more
 intelligently in performance mode, avoiding clipping
+
+<li>
+changed <i>all</i> functions to use internal context instead of taking
+dozens of parameters, while we're at it give them shorte names. Old
+functions are kept for compatibility. Below is the list of new
+functions:
+
+<blockquote>
+cc, getc, cx, getx, setunit, getunit, goto, getpos, sel, getlen, setq,
+getq, fac, getfac, ci, geti, ct, gett, cf, getf, mutexxx, mute,
+unmute, getmute, ls, save, load, reset, export, import, idle, play,
+rec, stop, tempo, mins, mcut, minfo, mtempo, msig, ctlconf_any,
+ctlconf, ctlconfx, ctlunconf, ctlinfo, metro, metrocf, tlist, tnew,
+tdel, tren, texists, taddev, tsetf, tgetf, tcheck, tcut, tins, tclr,
+tcopy, tmerge, tquant, ttransp, tclist, tinfo, clist, cexists, cnew,
+cdel, cren, cset, cgetc, cgetd, caddev, crmev, cinfo, cseti, cgeti,
+flist, fnew, fdel, fren, fexists, finfo, freset, fmap, funmap,
+fchgxxx, fchgin, fchgout, fswapin, fswapout, fsetc, fgetc, xlist,
+xexists, xnew, xdel, xren, xinfo, xrm, xsetd, xadd, dnew, ddel,
+dclkrx, dclktx, dclkrate, dinfo, dixctl, doxctl.
+</blockquote>
+
+<li>
+added ``msig'' and ``mtempo'' functions returning time signature and
+tempo respectively at the current position
+
+<li>
+added ``err'' function
+
+<li>
+added ``current event set'' in the context and associated ``ev''
+function. All track editing functions use it.
+
+<li>
+greatly simplified the filter: more features with less code and
+concepts. The filter can map any event set to any other set. So all
+mapping can be created with a single
+<a href="#func_fmap">fmap</a> function.
+
+<li>
+added a new ``integer range'' data type, useful to define event sets.
+
+<li>
+added a new metronome mode ``rec'' to turn on the metronome only in
+record mode.
+
+<li>
+switched to multithreaded performance mode, meaning that the prompt
+is available during performance mode.
+
+<li>
+added new messages for front ends allowing to get asynchronously the
+current position. Updated rmidish to use it to display the current
+position in the prompt.
 
 </ul>
 
