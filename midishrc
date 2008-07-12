@@ -1,31 +1,17 @@
 #
 # midi devices config
 #
-#devattach 0 "/dev/rmidi4" rw
-#devattach 1 "/dev/rmidi3" rw
+#dnew 0 "/dev/rmidi4" rw
+#dnew 1 "/dev/rmidi3" rw
 
 #
 # create a channel and a filter
 #
 proc ni name chan {
 	ct nil
-	fnew $name 
 	cnew $name $chan
+	fnew $name 
 	fmap {any [geti]} {any $name}
-}
-
-#
-# create a new filter 
-#
-proc nf filt { 
-	fnew $filt
-}
-
-#
-# create a new track 
-#
-proc nt name { 
-	tnew $name 
 }
 
 #
@@ -35,107 +21,72 @@ proc ctldrop ctlno {
 	fmap {ctl [geti] $ctlno} {none}
 }
 proc ctlmap ic oc {
+	fmap {ctl [geti] $ic} {ctl [getc] $oc}
+}
+proc transp plus {
 	let i = [geti]
 	let o = [getc]
-	filtevmap [songgetcurfilt] {ctl $i $ic} {ctl $o $oc}
+	let lo = 0;
+	let hi = 127;
+	funmap {} {note $i}
+	if ($hi + $plus > 127) {
+		let hi = $hi - $plus
+	}
+	if ($lo + $plus < 0) {
+		let lo = $lo - $plus
+	}
+	fmap {note $i {$lo $hi}} {note $o {$lo + $plus $hi + $plus}}
 }
-proc transpose plus {
-	let i = [geti]
-	let o = [getc]
-	#let lo = 0;
-	#let hi = 127;
-	#filtevunmap [songgetcurfilt] {} {note $i}
-	#if ($hi + $plus > 127) {
-	#	let hi = $hi - $plus
-	#}
-	#if ($lo + $plus < 0) {
-	#	let lo = $lo - $plus
-	#}
-	#filtevmap [songgetcurfilt] {note $i {$lo $hi}} {note $c {$lo + $plus $hi + $plus}}
-	filtnokeymap [songgetcurfilt] $o 0 127
-	filtkeymap   [songgetcurfilt] $i $o 0 127 $plus
-}
-
-#
-# set note quantum
-#
-proc n denom {
-	setq [getunit] / $denom
-} 
 
 #
 # quantise
 #
 proc q rate {
-	trackquant [gett] [getpos] [getlen] $rate [getq]
+	tquant $rate
 } 
 
 #
-# cut the given number of measures from the current 
-# position on the current track
+# copy current selection 'offset' measures forward
 #
-proc cut amount {	 
-	trackcut [songgetcurtrack] [songgetcurpos] $amount [songgetcurquant]
-}
-
-#
-# insert measures in a track, and select them
-#
-proc ins amount {
-	trackinsert [songgetcurtrack] [songgetcurpos] $amount [songgetcurquant]
-	songsetcurlen $amount
-}
-
-#
-# clear a piece of a track
-#
-proc clr {
-	trackblank [songgetcurtrack] [songgetcurpos] [songgetcurlen] [songgetcurquant] {}
-}
-
-#
-# copy current selection 'where' measures forward
-#
-proc copy where {
-	let track = [songgetcurtrack]
-	let from = [songgetcurpos]
-	let len = [songgetcurlen]
-	trackcopy $track $from $len $track ($where + $from) [songgetcurquant] {}
+proc copy offset {
+	tcopy [gett] ([getpos] + $offset)
 }
 
 #
 # cut a piece of the song
 #
 proc gcut amount {
-	let pos = [songgetcurpos] 
-	let quant = [songgetcurquant]
-	for i in [tracklist] {
-		trackcut $i $pos $amount $quant
+	let track = [gett];
+	for i in [tlist] {
+		ct $i 
+		tcut $amount
 	}
+	ct $track
 }
 
 #
 # insert measures in the song
 #
 proc gins amount {
-	let pos = [songgetcurpos] 
-	let quant = [songgetcurquant]
-	for i in [tracklist] {
-		trackinsert $i $pos $amount $quant
+	let track = [gett];
+	for i in [tlist] {
+		ct $i
+		tins $amount
 	}
-	songsetcurlen $amount
+	ct $track
+	sel $amount
 }
 
 #
 # copy a piece of the song 'where' measures forward
 #
 proc gcopy where {
-	let from = [songgetcurpos]
-	let amount = [songgetcurlen] 
-	let quant = [songgetcurquant]
-	for track in [tracklist] {
-		trackcopy $track $from $amount $track ($where + $from) $quant {}
+	let track = [gett];
+	for i in [tlist] {
+		ct $i
+		tcopy $i ([getpos] + $offset)
 	}
+	ct $track
 }
 
 
@@ -143,7 +94,7 @@ proc gcopy where {
 # unmute all tracks
 #
 proc nomute {
-	for i in [tracklist] {
+	for i in [tlist] {
 		unmute $i
 	}
 }
@@ -152,32 +103,17 @@ proc nomute {
 # mute all tracks but current
 #
 proc solo {
-	unmute [gett]
-	for i in [tracklist] {
-		if ($i != [gett]) {
-			mute $i
-		}
+	for i in [tlist] {
+		mute $i
 	}
-}
-
-#
-# insert measures in the meta-track
-#
-proc timeins amount numerator denominator {
-	songtimeins [songgetcurpos] $amount $numerator $denominator
-}
-
-#
-# remove measures from the meta-track
-#
-proc timerm amount {
-	songtimerm [songgetcurpos] $amount
+	unmute [gett]
 }
 
 #
 # turn on general midi (send sysex)
 #
 proc gmon devnum {
+	xnew gmon
 	xadd $devnum { 0xF0 0x7E 0x7F 0x09 0x01 0xF7 }
 }
 
@@ -216,13 +152,11 @@ proc xvparam a0 a1 a2 a3 val {
 #
 # controllers config
 #
-proc mod    v { caddev {ctl [getc] 1  $v}; }
-proc breath v { caddev {ctl [getc] 2  $v}; }
-proc vol    v { caddev {ctl [getc] 7  $v}; }
-proc bal    v { caddev {ctl [getc] 8  $v}; }
-proc pan    v { caddev {ctl [getc] 10 $v}; }
-proc reverb v { caddev {ctl [getc] 91 $v}; }
-proc chorus v { caddev {ctl [getc] 93 $v}; }
+proc vol    val { caddev {ctl [getc] 7  $val}; }
+proc bal    val { caddev {ctl [getc] 8  $val}; }
+proc pan    val { caddev {ctl [getc] 10 $val}; }
+proc reverb val { caddev {ctl [getc] 91 $val}; }
+proc chorus val { caddev {ctl [getc] 93 $val}; }
 
 #
 # set RPN/NRPN to the given value for the current chan

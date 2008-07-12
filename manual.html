@@ -111,18 +111,19 @@
 </ul>
 <li><a href="#time">6 Time structure</a>
 <ul>
-<li><a href="#section_6_1">6.1 Metronome</a>
-<li><a href="#section_6_2">6.2 Time signature changes</a>
-<li><a href="#section_6_3">6.3 Tempo changes</a>
-<li><a href="#section_6_4">6.4 Moving within the song</a>
+<li><a href="#section_6_1">6.1 Moving within the song</a>
+<li><a href="#section_6_2">6.2 Metronome</a>
+<li><a href="#section_6_3">6.3 Time signature changes</a>
+<li><a href="#section_6_4">6.4 Tempo changes</a>
 </ul>
 <li><a href="#track">7 Tracks</a>
 <ul>
 <li><a href="#section_7_1">7.1 Recording a track without a filter</a>
 <li><a href="#section_7_2">7.2 Recording a track with a filter</a>
-<li><a href="#section_7_3">7.3 Basic editing of a track</a>
-<li><a href="#section_7_4">7.4 Track quantization</a>
-<li><a href="#section_7_5">7.5 Checking a track</a>
+<li><a href="#section_7_3">7.3 Basics about editing tracks</a>
+<li><a href="#section_7_4">7.4 Copy, cut, insert</a>
+<li><a href="#section_7_5">7.5 Track quantization</a>
+<li><a href="#section_7_6">7.6 Checking a track</a>
 </ul>
 <li><a href="#frames">8 Frames, more about filtering and editing</a>
 <ul>
@@ -1077,23 +1078,29 @@ of rules as follows:
 
 <h4><a name="section_5_3_4">5.3.4 Transpose</a></h4>
 
-The following example transposes by 12 half-tones
-(one octave) notes on device 1, channel 0 (keyboard) and
-sends them on device 0 channel 2 (sound-module).
+By mapping a note range to another -- shifted -- note range, the input
+appear transposed.
+
+For instance, mapping notes in the 0..115 range to notes in the
+12..127 will transpose the output by 12 half-tones (1 octave).
+
+The folling filter will do this:
 
 <pre>
-filtnew mypiano                 # define filter "mypiano"
-filtchanmap mypiano {1 0} {0 2} # route dev/chan {1 0} to {0 9}
-filtkeymap  mypiano {1 0} {0 2} 0 127 12
+fnew mypiano					# define filter ``mypiano''
+fmap {any {1 0}} {any  {0 2}}			# route {1 0} -&gt; {0 9}
+fmap {note {1 0} 0..115} {note {0 2} 12..127}	# shifted mapping
 </pre>
 
-both rules are necessary. Note events are handled by
-the key-rule and other events (controllers) fall trough
-the channel-rule. Arguments 4 and 5 to <tt>filtkeymap</tt>
-give the note range that will be handled
-(from 0 to 127, i.e. the whole keyboard)
-and the 6-th argument gives the number of half-tones
-(12, one octave) to transpose.
+First we create the filter, and we add a ``default'' rule to map
+anything coming from ``{1 0}'' (ie the MIDI keyboard) to ``{0 2}''
+(the second channel of the synth).
+
+The second rule does the above note range mapping.
+
+Note events will be handled by the second rule because it has as
+smaller source set while all other events will fall through the first
+rule.
 
 <h4><a name="section_5_3_5">5.3.5 Keyboard splits</a></h4>
 
@@ -1107,11 +1114,11 @@ channel 3 of the sound module and notes on the right
 part will be routed to channel 2 of the sound module.
 
 <pre>
-filtnew mysplit
-filtchanmap mysplit {1 0} {0 2}
-filtkeymap mysplit  {1 0} {0 2} 0  63  0
-filtchanmap mysplit {1 0} {0 3}
-filtkeymap mysplit  {1 0} {0 3} 64 127 0
+fnew mysplit
+fmap {any {1 0}} {any {0 2}}
+fmap {any {1 0}} {any {0 3}}
+fmap {note {1 0} 0..63}   {note {0 2} 0..63}
+fmap {note {1 0} 64..127} {note {0 3} 64..127}
 </pre>
 
 <p>
@@ -1149,7 +1156,23 @@ an unit note corresponds to 96 ticks, thus by default
 one beat corresponds to one quarter note, i.e.
 the time signature is 4/4.
 
-<h3><a name="section_6_1">6.1 Metronome</a></h3>
+<h3><a name="section_6_1">6.1 Moving within the song</a></h3>
+
+The following selects the current position in the song to
+measure number 3:
+
+<pre>
+g 3
+</pre>
+
+This will make ``r'' and ``p'' commands
+start at this particular position instead of measure
+number 0.
+
+Furthermore all track editing function will process
+the track starting at this position.
+
+<h3><a name="section_6_2">6.2 Metronome</a></h3>
 
 In order to "hear" time, a metronome can be used.
 
@@ -1197,7 +1220,7 @@ this configures the high-click with note 48, velocity 127 on
 device 0, channel 9 and the low-click with note 64, velocity 100
 on device 0, channel 9.
 
-<h3><a name="section_6_2">6.2 Time signature changes</a></h3>
+<h3><a name="section_6_3">6.3 Time signature changes</a></h3>
 
 Time signature changes are achieved by inserting or
 deleting measures. 
@@ -1238,7 +1261,7 @@ g 17			# go to measure 17
 print [msig]		# print what msig returned	
 </pre>
 
-<h3><a name="section_6_3">6.3 Tempo changes</a></h3>
+<h3><a name="section_6_4">6.4 Tempo changes</a></h3>
 
 Tempo changes are achieved simply by moving within
 the song and using the ``t'' command to change
@@ -1269,22 +1292,6 @@ g 17			# go to measure 17
 print [msig]		# print what mtempo returned
 </pre>
 
-
-<h3><a name="section_6_4">6.4 Moving within the song</a></h3>
-
-The following selects the current position in the song to
-measure number 3:
-
-<pre>
-g 3
-</pre>
-
-This will make ``r'' and ``p'' commands
-start at this particular position instead of measure
-number 0.
-
-Furthermore all track editing function will process
-the track starting at this position.
 
 <h2><a name="track">7 Tracks</a></h2>
 
@@ -1344,53 +1351,92 @@ record to the above track:
 [0001:03]&gt; s					# stop
 </pre>
 
-<h3><a name="section_7_3">7.3 Basic editing of a track</a></h3>
+This setup, is more suitable for multitracking. 
 
-Most track editing functions in midish use the following 
-default values:
+The correct approach for multitracking is to create a filter for each
+musical instrument, and then to use this filter to record one or more
+tracks per instrument.
+
+<h3><a name="section_7_3">7.3 Basics about editing tracks</a></h3>
+
+Most track editing functions use the project context, ie
+a set of ``current values'':
 
 <ul>
 
 <li>
-current track - the track that will be processed
+current track - the track that will be processed, it's selected
+with the ``<a href="func_ct">ct</a>'' command.
 
 <li>
-current position - the measure number processing starts
+current position - the measure number where processing will start.
+
+It's set using the ``<a href="func_ct">g</a>'' command
 
 <li>
-current selection - number of measures to process
+current selection - number of measures to process.
+It's set using the ``<a href="func_ct">sel</a>'' command
 
 <li>
 current event set - events type that will be processed.
 
-This allow to process only a subset of events of the current
-selection (eg. only controllers).
+It's set using the ``<a href="func_ct">ev</a>'' command.
+
+Most of the time all events types need to be processed, but sometimes
+one might want to process only a subset (eg. only controller number
+7), leaving the rest as-is.
 
 <li>
-current quatization step - note positions are rounded to the
-quatization step before being selected for processing.
+current quatization step - this defines how notes at the selection
+boundaries are handled.
 
-This makes possible to edit a track that is not quantized without
-loosing events at the selection boundaries.
+It's set using the ``<a href="func_setq">setq</a>'' command.
+
+Using a quatization step allows to properly process events at the
+selection boundaries, by sligtly enlarging the selection in order to
+select for processing events that would be outside the selection.
 
 </ul>
 
-For instance to clear the current selection
-of the current track:
+So editing tracks consists in modifying above parameters and issuing
+commands to process the current selection.
+
+<h3><a name="section_7_4">7.4 Copy, cut, insert</a></h3>
+
+To clear the current selection of the current track:
 
 <pre>
 tclr
 </pre>
 
+above command will clear only events matching the current 
+event type, which by defaults is set to ``any event''.
+
+To clear only controller number 7 of the current selection:
+
+<pre>
+ev {ctl {} 7}
+tclr
+</pre>
+
+see the <a href="#ev_evspec">event set</a> section for more details.
+
+If you don't plan to continue working only on controller number 7
+events, then dont forget to revert the current event selection to the
+default value (which is ``{}'', all events).
+
 <p>
-In a similar way, one can cut a piece of a track,
-for instance to cut 2 measures starting
-at measure number 5:
+To cut a piece of a track, for instance to cut 2 measures starting at
+measure number 5:
 
 <pre>
 g 5			# move to measure 5
 tcut 2			# cut 2 measures
 </pre>
+
+this command removes 2 measures of ``time'' from the current track;
+thus this will shift all measures following the current position by 2
+measures.
 
 <p>
 The following inserts 2 blank measures at
@@ -1401,22 +1447,23 @@ g 3
 tins 2
 </pre>
 
+similarly, since this commands ``inserts time'', this will shift all
+measures following the current position by 2 measures.
+
 <p>
-A track portion can be copied into
-another track as follows:
+The current selection of a track could be copied
+into another track.
+
+For instance the following will copy the current selection
+at measure 5 of track ``mypiano2''.
 
 <pre>
-trackcopy mypiano 3 2 mypiano2 5 (96 / 16) {}
+tcopy mypiano2 5
 </pre>
 
-this will copy 2 measures starting from measure
-number 3 into (the already existing) track <tt>mypiano2</tt>
-at measure 5.
-The latest argument (empty list) selects the events to be
-copied (see section <a href="#ev_evspec">event ranges</a>).
+as for ``tclr''
 
-
-<h3><a name="section_7_4">7.4 Track quantization</a></h3>
+<h3><a name="section_7_5">7.5 Track quantization</a></h3>
 
 A track can be quantized by rounding note-positions
 to the nearest exact position. The following
@@ -1433,7 +1480,7 @@ The last arguments gives the percent of quantization.
 quantization at all. This is useful because full quantization
 often sounds to regular especially on acoustic patches.
 
-<h3><a name="section_7_5">7.5 Checking a track</a></h3>
+<h3><a name="section_7_6">7.6 Checking a track</a></h3>
 
 It is possible that a MIDI device transmits
 bogus MIDI data. The following scans the track
@@ -1467,7 +1514,7 @@ Note frames are made of a starting "non" event any optional
 note frames are copied/moved/deleted as a whole; they are never
 truncated. The starting event (note on) determines whether
 the frame is selected. For instance, in
-<a href="#func_trackblank">trackblank</a> function, only
+<a href="#func_tclr">tclr</a> function, only
 note frames whose "non" events are in the selected region
 are erased.
 
@@ -1485,8 +1532,8 @@ a "bend" event whose value is different from the default value
 the default value of 0x3FFF. In editing functions a "bend"
 frame may be truncated or split into multiple frames, however
 resulting frames always terminate with the default value. For
-instance, <a href="#func_trackblank">trackblank</a> may erase
-the middle of "bend" frame resulting in two new "bend" frame
+instance, <a href="#func_tclr">tclr</a> may erase
+the middle of "bend" frame resulting in two new "bend" frames
 (the beginning and the ending of the old one).
 
 <p>
@@ -1666,18 +1713,17 @@ dinfo 0		# list device 0 properties
 Objects can be listed as follows:
 
 <pre>
-print [tlist]
-print [clist]
-print [flist]
-print [xlist]
-print [dlist]
+print [tlist]	# print track list
+print [clist]	# print named channel list
+print [flist]	# print filter list
+print [xlist]	# print sysex back list
 </pre>
 
 <p>
 Current values can be obtained as follows:
 
 <pre>
-print [getunit]		# ticks per unit note
+print [getunit]		# ticks per whole note
 print [getpos]		# print current position
 print [getlen]		# print current selection length
 print [getf]		# current filter
@@ -1700,10 +1746,10 @@ print [cgetd]		# print device number
 To check if object exists:
 
 <pre>
-print [cexists]
-print [fexists]
-print [texists]
-print [xexists]
+print [cexists mychan]
+print [fexists myfilt]
+print [texists mytrack]
+print [xexists mysx]
 </pre>
 
 this will print 1 if the corresponding object exists
@@ -1711,10 +1757,7 @@ and 0 otherwise.
 
 <h2><a name="save">11 Saving and loading songs</a></h2>
 
-A song can be saved into a file. All channel definitions,
-filters, tracks, their properties,
-and values of the current track, current
-filter will be saved by:
+A song can be saved into a file as follows:
 
 <pre>
 save "myfile"
@@ -1728,8 +1771,10 @@ load "myfile"
 </pre>
 
 <p>
-Note that the "local settings" (like device configuration,
-metronome settings) are not saved.
+All channel definitions, filters, tracks, their properties, and values
+of the current track, current filter are saved and restored.  However,
+note that the ``local settings'' (like device configuration, metronome
+settings) are not saved.
 
 <h2><a name="export">12 Import/export standard MIDI files</a></h2>
 
@@ -1796,59 +1841,45 @@ to obtain variable values.
 <h3><a name="section_13_2">13.2 Defining simple procedures</a></h3>
 
 For instance, let
-us create a procedure named "<tt>i</tt>" that just replaces
-<tt>songidle</tt> in order to avoid typing its name.
+us create a procedure named ``gmon'' that creates
+a sysex bank and stores a the standard sysex message
+to turn on General MIDI mode on device number 0:
 
 <pre>
-proc i {songidle;}
-</pre>
-
-The <tt>proc</tt> keyword is followed by the procedure
-name and then follows a list of statements between
-braces. In a similar way can define the following
-procedures:
-
-<pre>
-proc p {
-	metroswitch 0           # turn off metronome
-	songplay                # start playback
-}
-
-proc r {
-	metroswitch 1           # turn on metronome
-	songrecord              # start recording
+proc gmon {
+	xnew gm
+	xadd 0 { 0xF0 0x7E 0x7F 0x09 0x01 0xF7 }
 }
 </pre>
+
+The ``proc'' keyword is followed by the procedure
+name ``gmon'' and then follows a list of statements between
+braces. 
 
 <p>
-Procedures can take arguments.
-For instance, to define a procedure named <tt>nt</tt>
-that creates a new track:
+Procedures can take arguments.  For instance, to improve
+above procedure to take the device number as argument:
 
 <pre>
-proc nt name {
-	tracknew $name
+proc gmon devnum {
+	xnew gmon
+	xadd $devnum { 0xF0 0x7E 0x7F 0x09 0x01 0xF7 }
 }
 </pre>
 
 After the name of the procedure follows the argument names list
 that can be arbitrary identifiers. The value of an argument
 is obtained by preceding the variable name by the dollar
-sign ("$"). We can use the above procedure to create a track:
+sign ("$"). 
 
-<pre>
-nt myfilt
-</pre>
-
+<p>
 A lot of similar procedures are defined in the
-sample <tt>midishrc</tt> file, shipped in the source
-tar-ball. To make midish easy to use, most of
-the usual tasks can be performed with only 2 or
-three character statements.
+sample ``midishrc'' file, shipped in the source
+tar-ball.
 
 <p>
 Procedure and variables definitions can be
-stored in the <tt>~/.midishrc</tt> file (or <tt>/etc/midishrc</tt>).
+stored in the ``~/.midishrc'' file (or ``/etc/midishrc'').
 It will be automatically executed the next time you run midish.
 
 
@@ -2085,23 +2116,23 @@ The following table summarizes the device attributes:
 
 <tr>
 
-<td>unit number
+<td>device number
 
 <td>integer that is used to reference the device
 
 <tr>
 
-<td>tickrate
+<td>clkrate
 
-<td>number of tick per unit note, default is 96, which corresponds
+<td>number of tick per while note, default is 96, which corresponds
 to the MIDI standard
 
 <tr>
 
-<td>sendrt flag
+<td>clock ``tx'' flag
 
 <td>
-boolean; if sendrt = true, the real-time events
+boolean; if it is set, the real-time MIDI clock events
 (like start, stop, ticks) are transmitted to the MIDI device.
 
 <tr>
@@ -2293,7 +2324,7 @@ The following table summarizes the song attributes:
 <td>ticks_per_unit
 
 <td>
-number of MIDI ticks per unit note, the default value is 96 which
+number of MIDI ticks per while note, the default value is 96 which
 corresponds to the MIDI standard.
 
 <tr>
@@ -2304,9 +2335,11 @@ corresponds to the MIDI standard.
 
 <tr>
 
-<td>metronome flag
+<td>metronome mode
 
-<td>if the metronome = true, then the metronome is audible
+<td>
+can be ``on'', ``off'' or ``rec'', 
+see ``<a href="func_m">m</a>'' command.
 
 <tr>
 
@@ -2326,13 +2359,13 @@ metronome is enabled
 
 <tr>
 
-<td>curtrack
+<td>current track
 
 <td>default track: the track that will be recorded in record mode
 
 <tr>
 
-<td>curfilt
+<td>current filter
 
 <td>
 default filter. The filter with which the default track is recorded if
@@ -2340,7 +2373,7 @@ it hasn't its default filter.
 
 <tr>
 
-<td>curchan
+<td>current chan
 
 <td>
 default channel. This value isn't used in real-time, however it can be
@@ -2348,7 +2381,7 @@ used as default value when adding new rules to the filter.
 
 <tr>
 
-<td>curpos
+<td>current position
 
 <td>
 current position (in measures) within the song. Playback and record
@@ -2357,35 +2390,35 @@ current selection
 
 <tr>
 
-<td>curlen
+<td>current selection
 
 <td>length (in measures) of the current selection.
 This value isn't used in real-time,
-however it can be used as default value in track
+however it is used as default value in track
 editing functions.
 
 <tr>
 
-<td>curquant
+<td>current quant step
 
 <td>
 current quantization step.  This value isn't used in
-real-time, however it can be used as default value for the track
+real-time, however it's used as default value for the track
 editing functions
 
 <tr>
 
-<td>curev
+<td>current event set
 
 <td>current event selection
 This value isn't used in real-time,
-however it can be used as default value for
+however it is used as default value for
 the track editing functions
 
 <tr>
 
 
-<td>curinput
+<td>current input
 
 <td>
 default input <tt>{dev&nbsp;chan}</tt> pair.  This value isn't used in
@@ -2714,6 +2747,10 @@ The following operators are recognized:
 
 <td><tt>||</tt>		<td>logical OR
 
+<tr>
+
+<td><tt>..</tt>		<td>range definition	<td>left to right
+
 </table>
 
 <p>
@@ -2726,11 +2763,16 @@ Examples:
 is an usual integer arithmetic expression.
 
 <pre>
-[tracklen mytrack]
+[tlist]
 </pre>
 
-is the returned value of the procedure <tt>tracklen</tt>
-called with a single argument <tt>mytrack</tt>.
+is the returned value of the procedure <tt>tlen</tt>.
+
+<pre>
+12..56
+</pre>
+
+is the range of integer between 12 and 65 (included).
 
 <pre>
 {"bla" 3 zer}
@@ -2744,7 +2786,6 @@ braces, a more complicated example is:
 <pre>
 {"hello" 1+2*3 mytrack $i [myproc] {a b c}}
 </pre>
-
 
 <h3><a name="section_16_4">16.4 Procedure definition</a></h3>
 
@@ -3721,145 +3762,123 @@ contains a lot of examples of procedure definitions.
 <dl>
 
 <dt>ni instrname {device channel}
-	<dd>
-	create a new channel and a new filter
-	with the same name in such
-	a way that the current input is routed
-	to this channel.
+
+<dd>
+create a new channel and a new filter
+with the same name in such
+a way that the current input is routed
+to this channel.
 	
 
 <dt>ctldrop ictl
-	<dd>
-	make the current filter drop controller number <tt>ictl</tt>
-	on the current input
+
+<dd>
+make the current filter drop controller number ``ictl''
+on the current input
 	
 
 <dt>ctlmap ictl octl
-	<dd>
-	make the current filter route controller number
-	<tt>ictl</tt> on the current input
-	to controller <tt>octl</tt> on the current channel
+
+<dd>
+make the current filter route controller number
+<tt>ictl</tt> on the current input
+to controller <tt>octl</tt> on the current channel
 	
 
-<dt>transpose halftones
-	<dd>
-	make the current filter to transpose
-	all notes from the current input and
-	to route them to the current channel.
-	
+<dt>transp halftones
 
-<dt>n denominator
-	<dd>
-	set the current note length for quantization
-	to <tt>denominator</tt>, 4 means quarter-note,
-	8 means eighth-note, 16 means sixteenth-note etc...
-	This value will be used by track editing functions.
-	
-
-<dt>q rate
-	<dd>
-	quantize the current selection of
-	the current track (rate=100 means full quantization
-	and rate=0 means no quantization).
-	
-
-<dt>cut amount
-	<dd>
-	cut the given number of measures
-	from the current position on the current track.
-	
-
-<dt>clr
-	<dd>
-	clear (removes events but not blank space)
-	the current selection on the current track.
-	
-
-<dt>ins num
-	<dd>
-	insert <tt>num</tt> empty measures into the
-	current track at the current position
-	
-
-<dt>copy pos
-	<dd>
-	copy the current selection <tt>pos</tt> measures
-	forward from the current position.
+<dd>
+make the current filter to transpose
+all notes from the current input and
+to route them to the current channel.
 	
 
 <dt>gcut
-	<dd>
-	same as <tt>cut</tt> but acts on all tracks
-	simultaneously ("g" like global).
+
+<dd>
+same as <tt>cut</tt> but acts on all tracks
+simultaneously ("g" like global).
 	
 
 <dt>gins num
-	<dd>
-	same as <tt>ins</tt> but acts on all tracks
-	simultaneously ("g" like global).
+
+<dd>
+same as <tt>ins</tt> but acts on all tracks
+simultaneously ("g" like global).
 	
 
 <dt>gcopy num
-	<dd>
-	same as <tt>copy</tt> but acts on all tracks
-	simultaneously ("g" like global).
+
+<dd>
+same as <tt>copy</tt> but acts on all tracks
+simultaneously ("g" like global).
 	
 
 <dt>solo
-	<dd>
-	mute all tracks but current
+
+<dd>
+mute all tracks but current
 	
 
 <dt>nomute
-	<dd>
-	unmute all tracks.
+
+<dd>
+unmute all tracks.
 	
 
 <dt>gmon devnum
-	<dd>
-	generate a ``general midi on'' system exclusive message
-	for device number <tt>devnum</tt> and store it
-	to the current sysex bank.
+
+<dd>
+create a new gmon sysex back and 
+generate a ``general midi on'' system exclusive message
+for device number ``devnum'' and store it
+to the current sysex bank.
 	
 
 <dt>gmp patch
-	<dd>
-	configures the current channel
-	to use general MIDI patch number <tt>patch</tt>.
-	(this will send program change event when
-	performance mode is entered).
+
+<dd>
+configures the current channel
+to use general MIDI patch number <tt>patch</tt>.
+(this will send program change event when
+performance mode is entered).
 	
 
 <dt>vol value
-	<dd>
-	set volume (controller number 7) of
-	the current channel
+
+<dd>
+set volume (controller number 7) of
+the current channel
 	
 
 <dt>reverb value
-	<dd>
-	set reverb (controller number 91) of
-	the current channel
+
+<dd>
+set reverb (controller number 91) of
+the current channel
 	
 
 <dt>chorus value
-	<dd>
-	set chorus (controller number 93) of
-	the current channel
+
+<dd>
+set chorus (controller number 93) of
+the current channel
 	
 
 <dt>rpn addr val
-	<dd>
-	set registered parameter number (RPN) <tt>addr</tt>
-	for the current channel to <tt>val</tt>. Both <tt>addr</tt>
-	and <tt>val</tt> are integers in the range 0..16383.
+
+<dd>
+set registered parameter number (RPN) <tt>addr</tt>
+for the current channel to <tt>val</tt>. Both <tt>addr</tt>
+and <tt>val</tt> are integers in the range 0..16383.
 	
 
 <dt>nrpn addr val
-	<dd>
-	set not registered parameter number (NRPN) <tt>addr</tt>
-	for the current channel to <tt>val</tt>. Both <tt>addr</tt>
-	and <tt>val</tt> are integers in the range 0..16383.
+
+<dd>
+set not registered parameter number (NRPN) <tt>addr</tt>
+for the current channel to <tt>val</tt>. Both <tt>addr</tt>
+and <tt>val</tt> are integers in the range 0..16383.
 	
 </dl>
 
@@ -3906,35 +3925,35 @@ transposed by -12 half-tones (one octave).
 <h3><a name="section_20_2">20.2 Example - recording a track</a></h3>
 
 The following session show how to
-record a track. It uses the procedures defined
-in the default <tt>/etc/midishrc</tt>.
+record a track.
 
 <pre>
-1&gt; ci {1 0}
-2&gt; cnew drums {0 9}
-3&gt; nt dr1
-4&gt; tempo 90
-5&gt; r
-6&gt; s
-7&gt; n 16
-8&gt; sel 32
-9&gt; q 75
-10&gt; p
-11&gt; s
-12&gt; save "myrhythm"
-13&gt;
+send EOF character (control-D) to quit
+[0000:00]&gt; ci {1 0}				# select default input channel
+[0000:00]&gt; cnew drums {0 9}			# create drum channel
+[0000:00]&gt; fnew drums			# create filter for it
+[0000:00]&gt; fmap {any [geti]} {any drums}	# map input -> drums
+[0000:00]&gt; tnew dr1				# create track ``dr1''
+[0000:00]&gt; t 90				# tempo to 90 bpm
+[0000:00]&gt; r					# start recording
+[0003:03]&gt; s					# stop
+[0000:00]&gt; setq 16				# set quantization step
+[0000:00]&gt; sel 32				# select 32 measures
+[0000:00]&gt; tquant 75				# quatize to 75%
+[0000:00]&gt; p					# play
+[0001:02]&gt; s					# stop playing
+[0000:00]&gt; save "myrythm"			# save to a file
+[0000:00]&gt;					# hit ^D to quit
 </pre>
-first, we set the default input channel to {1 0}
-(default channel of the keyboard). Then, we
-define the <tt>drum</tt> channel
-on device 0, channel 9 and the corresponding
-filter that will route events from the
-keyboard to the drum channel.  Then we define
-a new track named <tt>dr1</tt> an we start recording.
-Then, we set the quantization step to 16
-(sixteenth note), we select the first 32 measures of
-the track and we quantize them. Finally,
-we start playback and we save the song into a file.
+
+first, we set the default input channel to ``{1 0}'' (default channel
+of the keyboard). Then, we define the ``drum'' channel on device 0,
+channel 9 and the corresponding filter that will route events from the
+keyboard to the drum channel.  Then we define a new track named
+``dr1'' an we start recording.  Then, we set the quantization step to
+16 (sixteenth note), we select the first 32 measures of the track and
+we quantize them. Finally, we start playback and we save the song into
+a file.
 
 <h2><a name="section_21">21 Thanks</a></h2>
 
