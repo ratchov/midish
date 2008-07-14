@@ -271,6 +271,8 @@ struct songfilt *
 song_filtnew(struct song *o, char *name)
 {
 	struct songfilt *f;
+	struct evspec src, dst;
+	unsigned idev, ich;
 
 	f = (struct songfilt *)mem_alloc(sizeof(struct songfilt));
 	f->curchan = NULL;
@@ -279,6 +281,16 @@ song_filtnew(struct song *o, char *name)
 
 	name_add(&o->filtlist, (struct name *)f);
 	song_getcurchan(o, &f->curchan);
+	if (f->curchan) {
+		song_getcurinput(o, &idev, &ich);
+		evspec_reset(&src);
+		src.dev_min = src.dev_max = idev;
+		src.ch_min = src.ch_max = ich;
+		evspec_reset(&dst);
+		dst.dev_min = dst.dev_max = f->curchan->dev;
+		dst.ch_min = dst.ch_max = f->curchan->ch;
+		filt_mapnew(&f->filt, &src, &dst);
+	}
 	song_setcurfilt(o, f);
 	return f;
 }
