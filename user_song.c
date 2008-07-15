@@ -410,13 +410,7 @@ user_func_songinfo(struct exec *o, struct data **r) {
 	SONG_FOREACH_FILT(usong, f) {
 		textout_indent(tout);
 		textout_putstr(tout, f->name.str);
-		textout_putstr(tout, "\t");
-		if (f->curchan != NULL) {
-			textout_putstr(tout, f->curchan->name.str);
-		} else {
-			textout_putstr(tout, "nil");
-		}
-		textout_putstr(tout, "\n");
+		textout_putstr(tout, "\tnil\n");
 		
 	}
 	textout_shiftleft(tout);

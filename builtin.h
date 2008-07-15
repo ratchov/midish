@@ -144,8 +144,6 @@ unsigned blt_fchgin(struct exec *, struct data **);
 unsigned blt_fchgout(struct exec *, struct data **);
 unsigned blt_fswapin(struct exec *, struct data **);
 unsigned blt_fswapout(struct exec *, struct data **);
-unsigned blt_fsetc(struct exec *, struct data **);
-unsigned blt_fgetc(struct exec *, struct data **);
 
 unsigned blt_xlist(struct exec *, struct data **);
 unsigned blt_xexists(struct exec *, struct data **);

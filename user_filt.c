@@ -1053,7 +1053,7 @@ user_func_filtsetcurchan(struct exec *o, struct data **r) {
 		return 0;
 	}
 	if (arg->data->type == DATA_NIL) {
-		f->curchan = NULL;
+		/* ignore value, no more current channel */
 		return 1;
 	} else if (arg->data->type == DATA_REF) {
 		c = song_chanlookup(usong, arg->data->val.ref, 0);
@@ -1061,7 +1061,7 @@ user_func_filtsetcurchan(struct exec *o, struct data **r) {
 			cons_err("no such chan");
 			return 0;
 		}
-		f->curchan = c;
+		/* ignore value, no more current channel */
 		return 1;
 	}
 	return 0;
@@ -1077,10 +1077,6 @@ user_func_filtgetcurchan(struct exec *o, struct data **r) {
 	if (!exec_lookupfilt(o, "filtname", &f)) {
 		return 0;
 	}
-	if (f->curchan) {
-		*r = data_newref(f->curchan->name.str);
-	} else {
-		*r = data_newnil();
-	}		
+	*r = data_newnil();
 	return 1;
 }

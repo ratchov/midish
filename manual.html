@@ -1773,7 +1773,6 @@ print [getf]		# current filter
 print [gett]		# current track
 print [getx]		# current sysex bank
 print [tgetf]		# default filter of current track
-print [fgetc]		# default channel of current filter
 </pre>
 
 <p>
@@ -2134,6 +2133,10 @@ added output MIDI merger, to avoid conflicts
 between tracks and MIDI input
 
 <li>
+simplifications: removed current input and filter's current channel
+attributes.
+
+<li>
 continuous controllers are merged more
 intelligently in performance mode, avoiding clipping
 
@@ -2154,7 +2157,7 @@ ttransp, tclist, tinfo, ilist, olist, iexists, oexists, inew, onew,
 idel, odel, iren, oren, iset, oset, igetc, ogetc, igetd, ogetd,
 iaddev, oaddev, irmev, ormev, iinfo, oinfo, flist, fnew, fdel, fren,
 fexists, finfo, freset, fmap, funmap, fchgin, fchgout, fswapin,
-fswapout, fsetc, fgetc, xlist, xexists, xnew, xdel, xren, xinfo, xrm,
+fswapout, xlist, xexists, xnew, xdel, xren, xinfo, xrm,
 xsetd, xadd, dnew, ddel, dclkrx, dclktx, dclkrate, dinfo, dixctl,
 doxctl
 </blockquote>
@@ -2312,15 +2315,6 @@ The following table summarizes the filter attributes:
 <td>rules set
 
 <td>set of rules that handle MIDI events
-
-<tr>
-
-<td>current channel
-
-<td>
-default channel. This value isn't used in real-time,
-however it can be used as default value when
-adding new rules to the filter.
 
 </table>
 
@@ -3211,18 +3205,6 @@ remove all rules from the current filter.
 
 <dd>
 list all fitering rules of the current filter
-
-<dt><a name="func_fsetc">fsetc</a>
-
-<dd>
-set the default channel of the current filter
-to <tt>channame</tt>.
-
-<dt><a name="func_fgetc">fgetc</a>
-
-<dd>
-return the default channel
-of current filter, returns <tt>nil</tt> if none
 
 <dt><a name="func_fchgin">fchgin old_evspec new_evspec</a>
 

@@ -346,13 +346,6 @@ songfilt_output(struct songfilt *o, struct textout *f)
 	textout_putstr(f, "{\n");
 	textout_shiftright(f);
 
-	if (o->curchan) {
-		textout_indent(f);
-		textout_putstr(f, "curchan ");
-		textout_putstr(f, o->curchan->name.str);
-		textout_putstr(f, "\n");
-	}
-
 	textout_indent(f);
 	textout_putstr(f, "filt ");
 	filt_output(&o->filt, f);
@@ -1278,11 +1271,11 @@ parse_songchan(struct parse *o, struct song *s, struct songchan *i)
 				if (!parse_chan(o, &val, &val2)) {
 					return 0;
 				}
-				lex_err(&o->lex, 
-				    "ignored obsolete 'curinput' line");
 				if (!parse_nl(o)) {
 					return 0;
 				}
+				lex_err(&o->lex, 
+				    "ignored obsolete 'curinput' line");
 			} else {
 				goto unknown;
 			}
@@ -1372,8 +1365,6 @@ parse_songtrk(struct parse *o, struct song *s, struct songtrk *t)
 unsigned
 parse_songfilt(struct parse *o, struct song *s, struct songfilt *g)
 {
-	struct songchan *c;
-
 	if (!parse_getsym(o)) {
 		return 0;
 	}
@@ -1400,15 +1391,11 @@ parse_songfilt(struct parse *o, struct song *s, struct songfilt *g)
 					    "after 'curchan' in songfilt");
 					return 0;
 				}
-				c = song_chanlookup(s, o->lex.strval, 0);
-				if (!c) {
-					c = song_channew(s, o->lex.strval, 
-					    0, 0, 0);
-				}
-				g->curchan = c;
 				if (!parse_nl(o)) {
 					return 0;
 				}
+				lex_err(&o->lex, 
+				    "ignored obsolete 'curchan' line");
 			} else if (str_eq(o->lex.strval, "filt")) {
 				if (!parse_filt(o, &g->filt)) {
 					return 0;

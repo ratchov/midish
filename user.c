@@ -1052,9 +1052,6 @@ user_mainloop(void)
 	exec_newbuiltin(exec, "fswapout", blt_fswapout,
 			name_newarg("from",
 			name_newarg("to", NULL)));
-	exec_newbuiltin(exec, "fsetc", blt_fsetc,
-			name_newarg("channame", NULL));
-	exec_newbuiltin(exec, "fgetc", blt_fgetc, NULL);
 
 	exec_newbuiltin(exec, "xlist", blt_xlist, NULL);
 	exec_newbuiltin(exec, "xexists", blt_xexists,

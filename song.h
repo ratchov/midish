@@ -64,7 +64,6 @@ struct songchan {
 struct songfilt {
 	struct name name;		/* identifier + list entry */
 	struct filt filt;		/* filter rules */
-	struct songchan *curchan;	/* defaults for new rules */
 };
 
 struct songsx {

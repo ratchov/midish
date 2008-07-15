@@ -552,10 +552,30 @@ blt_ls(struct exec *o, struct data **r)
 	if (!song_try(usong)) {
 		return 0;
 	}
+
 	/*
 	 * print info about channels
 	 */
 	textout_putstr(tout, "outlist {\n");
+	textout_shiftright(tout);
+	textout_indent(tout);
+	textout_putstr(tout, "# chan_name,  {devicenum, midichan}\n");
+	SONG_FOREACH_OUT(usong, c) {
+		textout_indent(tout);
+		textout_putstr(tout, c->name.str);
+		textout_putstr(tout, "\t");
+		textout_putstr(tout, "{");
+		textout_putlong(tout, c->dev);
+		textout_putstr(tout, " ");
+		textout_putlong(tout, c->ch);
+		textout_putstr(tout, "}");
+		textout_putstr(tout, "\n");
+
+	}
+	textout_shiftleft(tout);
+	textout_putstr(tout, "}\n");
+
+	textout_putstr(tout, "inlist {\n");
 	textout_shiftright(tout);
 	textout_indent(tout);
 	textout_putstr(tout, "# chan_name,  {devicenum, midichan}\n");
@@ -580,18 +600,14 @@ blt_ls(struct exec *o, struct data **r)
 	textout_putstr(tout, "filtlist {\n");
 	textout_shiftright(tout);
 	textout_indent(tout);
-	textout_putstr(tout, "# filter_name,  default_channel\n");
+	textout_putstr(tout, "# filter_name\n");
 	SONG_FOREACH_FILT(usong, f) {
 		textout_indent(tout);
 		textout_putstr(tout, f->name.str);
-		textout_putstr(tout, "\t");
-		if (f->curchan != NULL) {
-			textout_putstr(tout, f->curchan->name.str);
-		} else {
-			textout_putstr(tout, "nil");
-		}
 		textout_putstr(tout, "\n");
-
+		/*
+		 * XXX: add info about input and output sets
+		 */
 	}
 	textout_shiftleft(tout);
 	textout_putstr(tout, "}\n");
@@ -2280,62 +2296,6 @@ unsigned
 blt_fswapout(struct exec *o, struct data **r)
 {
 	return blt_fchgxxx(o, r, 0, 1);
-}
-
-unsigned
-blt_fsetc(struct exec *o, struct data **r)
-{
-	struct songfilt *f;
-	struct songchan *c;
-	struct var *arg;
-
-	if (!song_try(usong)) {
-		return 0;
-	}
-	song_getcurfilt(usong, &f);
-	if (f == NULL) {
-		cons_err("fdel: no current filt");
-		return 0;
-	}
-	arg = exec_varlookup(o, "channame");
-	if (!arg) {
-		dbg_puts("fsetc: 'channame': no such param\n");
-		return 0;
-	}
-	if (arg->data->type == DATA_NIL) {
-		f->curchan = NULL;
-		return 1;
-	} else if (arg->data->type == DATA_REF) {
-		c = song_chanlookup(usong, arg->data->val.ref, 0);
-		if (!c) {
-			cons_err("no such chan");
-			return 0;
-		}
-		f->curchan = c;
-		return 1;
-	}
-	return 0;
-}
-
-unsigned
-blt_fgetc(struct exec *o, struct data **r)
-{
-	struct songfilt *f;
-
-	if (!song_try(usong)) {
-		return 0;
-	}
-	song_getcurfilt(usong, &f);
-	if (f == NULL) {
-		cons_err("fdel: no current filt");
-		return 0;
-	}
-	if (f->curchan) {
-		*r = data_newref(f->curchan->name.str);
-	} else {
-		*r = data_newnil();
-	}
-	return 1;
 }
 
 unsigned

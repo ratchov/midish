@@ -226,7 +226,6 @@ song_channew(struct song *o, char *name, unsigned dev, unsigned ch, int input)
 void
 song_chandel(struct song *o, struct songchan *c, int input)
 {
-	struct songfilt *f;
 	struct name **list = input ? &o->inlist : &o->outlist;
 	
 	if (input) {
@@ -235,11 +234,6 @@ song_chandel(struct song *o, struct songchan *c, int input)
 	} else {
 		if (o->curout == c)
 			o->curout = NULL;
-		SONG_FOREACH_FILT(o, f) {
-			if (f->curchan == c) {
-				f->curchan = NULL;
-			}
-		}
 	}
 	name_remove(list, (struct name *)c);
 	track_done(&c->conf);
@@ -283,20 +277,19 @@ song_filtnew(struct song *o, char *name)
 {
 	struct songfilt *f;
 	struct evspec src, dst;
-	struct songchan *i;
+	struct songchan *i, *c;
 
 	f = (struct songfilt *)mem_alloc(sizeof(struct songfilt));
-	f->curchan = NULL;
 	name_init(&f->name, name);
 	filt_init(&f->filt);
 
 	name_add(&o->filtlist, (struct name *)f);
-	song_getcurchan(o, &f->curchan, 0);
-	if (f->curchan) {
+	song_getcurchan(o, &c, 0);
+	if (c != NULL) {
 		evspec_reset(&src);
 		evspec_reset(&dst);
-		dst.dev_min = dst.dev_max = f->curchan->dev;
-		dst.ch_min = dst.ch_max = f->curchan->ch;
+		dst.dev_min = dst.dev_max = c->dev;
+		dst.ch_min = dst.ch_max = c->ch;
 		SONG_FOREACH_IN(o, i) {
 			src.dev_min = src.dev_max = i->dev;
 			src.ch_min = src.ch_max = i->ch;
@@ -435,35 +428,16 @@ song_setcurfilt(struct song *o, struct songfilt *f)
 void
 song_getcurchan(struct song *o, struct songchan **r, int input)
 {
-	struct songfilt *f;
-
-	if (input)
-		*r = o->curin;
-	else {
-		song_getcurfilt(o, &f);
-		if (f) {
-			*r = f->curchan;
-		} else {
-			*r = o->curout;
-		}
-	}
+	*r = (input) ? o->curin : o->curout;
 }
 
 void
 song_setcurchan(struct song *o, struct songchan *c, int input)
 {
-	struct songfilt *f;
-
 	if (input)
 		o->curin = c;
-	else {
-		song_getcurfilt(o, &f);
-		if (f) {
-			f->curchan = c;
-		} else {
-			o->curout = c;
-		}
-	}
+	else
+		o->curout = c;
 }
 
 /*
