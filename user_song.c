@@ -72,8 +72,8 @@ user_func_metroconf(struct exec *o, struct data **r) {
 	if (!song_try(usong)) {
 		return 0;
 	}
-	if (!exec_lookupev(o, "eventhi", &evhi) ||
-	    !exec_lookupev(o, "eventlo", &evlo)) {
+	if (!exec_lookupev(o, "eventhi", &evhi, 0) ||
+	    !exec_lookupev(o, "eventlo", &evlo, 0)) {
 		return 0;
 	}
 	if (evhi.cmd != EV_NON && evlo.cmd != EV_NON) {
@@ -99,13 +99,13 @@ user_func_songsetcurchan(struct exec *o, struct data **r) {
 		return 0;
 	}
 	if (arg->data->type == DATA_NIL) {
-		song_setcurchan(usong, NULL);
+		song_setcurchan(usong, NULL, 0);
 		return 1;
 	} 
-	if (!exec_lookupchan_getref(o, "channame", &t)) {
+	if (!exec_lookupchan_getref(o, "channame", &t, 0)) {
 		return 0;
 	}
-	song_setcurchan(usong, t);
+	song_setcurchan(usong, t, 0);
 	return 1;
 }
 
@@ -116,7 +116,7 @@ user_func_songgetcurchan(struct exec *o, struct data **r) {
 	if (!song_try(usong)) {
 		return 0;
 	}
-	song_getcurchan(usong, &cur);
+	song_getcurchan(usong, &cur, 0);
 	if (cur) {
 		*r = data_newref(cur->name.str);
 	} else {
@@ -385,7 +385,7 @@ user_func_songinfo(struct exec *o, struct data **r) {
 	textout_shiftright(tout);
 	textout_indent(tout);
 	textout_putstr(tout, "# chan_name,  {devicenum, midichan}, default_input\n");
-	SONG_FOREACH_CHAN(usong, c) {
+	SONG_FOREACH_OUT(usong, c) {
 		textout_indent(tout);
 		textout_putstr(tout, c->name.str);
 		textout_putstr(tout, "\t");
@@ -393,12 +393,6 @@ user_func_songinfo(struct exec *o, struct data **r) {
 		textout_putlong(tout, c->dev);
 		textout_putstr(tout, " ");
 		textout_putlong(tout, c->ch);
-		textout_putstr(tout, "}");
-		textout_putstr(tout, "\t");
-		textout_putstr(tout, "{");
-		textout_putlong(tout, c->curinput_dev);
-		textout_putstr(tout, " ");
-		textout_putlong(tout, c->curinput_ch);
 		textout_putstr(tout, "}");
 		textout_putstr(tout, "\n");
 		
@@ -451,7 +445,8 @@ user_func_songinfo(struct exec *o, struct data **r) {
 				if (count) {
 					textout_putstr(tout, " ");
 				}
-				c = song_chanlookup_bynum(usong, i / 16, i % 16);
+				c = song_chanlookup_bynum(usong, 
+				    i / 16, i % 16, 0);
 				if (c) {
 					textout_putstr(tout, c->name.str);
 				} else {
@@ -500,7 +495,7 @@ user_func_songinfo(struct exec *o, struct data **r) {
 	 * print current values
 	 */
 	textout_putstr(tout, "curchan ");
-	song_getcurchan(usong, &c);
+	song_getcurchan(usong, &c, 0);
 	if (c) {
 		textout_putstr(tout, c->name.str);
 	} else {
@@ -547,7 +542,12 @@ user_func_songinfo(struct exec *o, struct data **r) {
 
 	textout_indent(tout);
 	textout_putstr(tout, "curinput {");
-	song_getcurinput(usong, &dev, &ch);
+	if ((c = song_chanlookup(usong, "old_style_input", 1))) {
+		dev = c->dev;
+		ch = c->ch;
+	} else {
+		dev = ch = 0;
+	}
 	textout_putlong(tout, dev);
 	textout_putstr(tout, " ");
 	textout_putlong(tout, ch);
@@ -789,6 +789,7 @@ unsigned
 user_func_songsetcurinput(struct exec *o, struct data **r) {
 	unsigned dev, ch;
 	struct data *l;
+	struct songchan *c;
 	
 	if (!song_try(usong)) {
 		return 0;
@@ -799,7 +800,11 @@ user_func_songsetcurinput(struct exec *o, struct data **r) {
 	if (!data_num2chan(l, &dev, &ch)) {
 		return 0;
 	}
-	song_setcurinput(usong, dev, ch);
+	c = song_chanlookup(usong, "old_style_input", 1);
+	if (c == NULL) {
+		c = song_channew(usong, "old_style_input", dev, ch, 1);
+	}
+	song_setcurchan(usong, c, 1);
 	return 1;
 }
 
@@ -840,13 +845,21 @@ user_func_songgetsign(struct exec *o, struct data **r) {
 }
 
 unsigned
-user_func_songgetcurinput(struct exec *o, struct data **r) {
+user_func_songgetcurinput(struct exec *o, struct data **r)
+{
 	unsigned dev, ch;
+	struct songchan *c;
 
 	if (!song_try(usong)) {
 		return 0;
 	}
-	song_getcurinput(usong, &dev, &ch);  
+	c = song_chanlookup(usong, "old_style_input", 1);
+	if (c != NULL) {
+		dev = c->dev;
+		ch = c->ch;
+	} else {
+		dev = ch = 0;
+	}
 	*r = data_newlist(NULL);
 	data_listadd(*r, data_newlong(dev));
 	data_listadd(*r, data_newlong(ch));

@@ -51,6 +51,7 @@ unsigned user_mainloop(void);
 void user_printstr(char *);
 void user_printlong(long);
 void user_error(char *);
+
 unsigned user_getopts(int *pargc, char ***pargv);
 
 /* useful conversion functions */
@@ -59,19 +60,21 @@ unsigned exec_runfile(struct exec *exec, char *filename);
 unsigned exec_runrcfile(struct exec *exec);
 
 unsigned exec_lookuptrack(struct exec *o, char *var, struct songtrk **res);
-unsigned exec_lookupchan_getnum(struct exec *o, char *var, unsigned *dev, unsigned *ch);
-unsigned exec_lookupchan_getref(struct exec *o, char *var, struct songchan **res);
+unsigned exec_lookupchan_getnum(struct exec *, char *,
+    unsigned *, unsigned *, int);
+unsigned exec_lookupchan_getref(struct exec *, char *,
+    struct songchan **, int);
 unsigned exec_lookupfilt(struct exec *o, char *var, struct songfilt **res);
 unsigned exec_lookupsx(struct exec *o, char *var, struct songsx **res);
-unsigned exec_lookupev(struct exec *o, char *name, struct ev *ev);
-unsigned exec_lookupevspec(struct exec *o, char *name, struct evspec *e);
+unsigned exec_lookupev(struct exec *o, char *name, struct ev *ev, int);
+unsigned exec_lookupevspec(struct exec *o, char *name, struct evspec *e, int);
 unsigned exec_lookupctl(struct exec *o, char *var, unsigned *num);
 unsigned exec_lookupval(struct exec *o, char *n, unsigned isfine, unsigned *r);
 
 
 void data_print(struct data *d);
 unsigned data_num2chan(struct data *o, unsigned *dev, unsigned *ch);
-unsigned data_list2chan(struct data *o, unsigned *dev, unsigned *ch);
+unsigned data_list2chan(struct data *o, unsigned *dev, unsigned *ch, int);
 unsigned data_list2range(struct data *d, unsigned min, unsigned max, unsigned *lo, unsigned *hi);
 unsigned data_matchsysex(struct data *d, struct sysex *sx, unsigned *res);
 unsigned data_list2ctl(struct data *d, unsigned *num);

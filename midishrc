@@ -8,21 +8,25 @@
 # create a channel and a filter
 #
 proc ni name chan {
-	ct nil
-	cnew $name $chan
+	onew $name $chan
 	fnew $name 
-	fmap {any [geti]} {any $name}
 }
 
 #
 # some filter rules
 #
 proc ctldrop ctlno {
-	fmap {ctl [geti] $ctlno} {none}
+	for i in [ilist] {
+		fmap {ctl $i $ctlno} {none}
+	}
 }
+
 proc ctlmap ic oc {
-	fmap {ctl [geti] $ic} {ctl [getc] $oc}
+	for i in [ilist] {
+		fmap {ctl $i $ic} {ctl [getc] $oc}
+	}
 }
+
 proc transp plus {
 	let i = [geti]
 	let o = [getc]
@@ -121,7 +125,7 @@ proc gmon devnum {
 # configure an instrument for a given general midi patch
 #
 proc gmp patch {
-	caddev $chan { pc [getc] ($patch - 1) }
+	oaddev { pc [geto] ($patch - 1) }
 }
 
 #
@@ -132,10 +136,10 @@ proc gmp patch {
 # patches/rhythmes are counted from 1 to 128
 #
 proc xvp bank patch {
-	caddev { xpc [getc] ($patch - 1) (87 * 128 + (64 + $bank - 1)) }
+	oaddev { xpc [geto] ($patch - 1) (87 * 128 + (64 + $bank - 1)) }
 }
 proc xvr bank patch { 
-	caddev { xpc [getc] ($patch - 1) (86 * 128 + (64 + $bank - 1)) }
+	oaddev { xpc [geto] ($patch - 1) (86 * 128 + (64 + $bank - 1)) }
 }
 
 #
@@ -152,18 +156,18 @@ proc xvparam a0 a1 a2 a3 val {
 #
 # controllers config
 #
-proc vol    val { caddev {ctl [getc] 7  $val}; }
-proc bal    val { caddev {ctl [getc] 8  $val}; }
-proc pan    val { caddev {ctl [getc] 10 $val}; }
-proc reverb val { caddev {ctl [getc] 91 $val}; }
-proc chorus val { caddev {ctl [getc] 93 $val}; }
+proc vol    val { oaddev {ctl [geto] 7  $val}; }
+proc bal    val { oaddev {ctl [geto] 8  $val}; }
+proc pan    val { oaddev {ctl [geto] 10 $val}; }
+proc reverb val { oaddev {ctl [geto] 91 $val}; }
+proc chorus val { oaddev {ctl [geto] 93 $val}; }
 
 #
 # set RPN/NRPN to the given value for the current chan
 #
 proc rpn  addr val {
-	caddev {rpn [getc] $addr $val}
+	oaddev {rpn [geto] $addr $val}
 }
 proc nrpn addr val { 
-	caddev {nrpn [getc] $addr $val}
+	oaddev {nrpn [geto] $addr $val}
 }

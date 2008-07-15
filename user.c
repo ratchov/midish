@@ -125,7 +125,7 @@ exec_lookuptrack(struct exec *o, char *var, struct songtrk **res)
  */
 unsigned
 exec_lookupchan_getnum(struct exec *o, char *var,
-    unsigned *dev, unsigned *ch) {
+    unsigned *dev, unsigned *ch, int input) {
 	struct var *arg;
 
 	arg = exec_varlookup(o, var);
@@ -133,7 +133,7 @@ exec_lookupchan_getnum(struct exec *o, char *var,
 		dbg_puts("exec_lookupchan_getnum: no such var\n");
 		dbg_panic();
 	}
-	if (!data_list2chan(arg->data, dev, ch)) {
+	if (!data_list2chan(arg->data, dev, ch, input)) {
 		return 0;
 	}
 	return 1;
@@ -144,7 +144,8 @@ exec_lookupchan_getnum(struct exec *o, char *var,
  * 'var'.  ('var' must be a reference)
  */
 unsigned
-exec_lookupchan_getref(struct exec *o, char *var, struct songchan **res)
+exec_lookupchan_getref(struct exec *o, char *var, 
+    struct songchan **res, int input)
 {
 	struct var *arg;
 	struct songchan *i;
@@ -155,7 +156,7 @@ exec_lookupchan_getref(struct exec *o, char *var, struct songchan **res)
 		dbg_panic();
 	}
 	if (arg->data->type == DATA_REF) {
-		i = song_chanlookup(usong, arg->data->val.ref);
+		i = song_chanlookup(usong, arg->data->val.ref, input);
 	} else {
 		cons_err("bad channel name");
 		return 0;
@@ -228,7 +229,7 @@ exec_lookupsx(struct exec *o, char *var, struct songsx **res)
  * and 'xxx' and 'yyy' are integers
  */
 unsigned
-exec_lookupev(struct exec *o, char *name, struct ev *ev)
+exec_lookupev(struct exec *o, char *name, struct ev *ev, int input)
 {
 	struct var *arg;
 	struct data *d;
@@ -257,7 +258,7 @@ exec_lookupev(struct exec *o, char *name, struct ev *ev)
 		cons_err("no channel in event spec");
 		return 0;
 	}
-	if (!data_list2chan(d, &dev, &ch)) {
+	if (!data_list2chan(d, &dev, &ch, input)) {
 		return 0;
 	}
 	ev->dev = dev;
@@ -322,7 +323,7 @@ exec_lookupev(struct exec *o, char *name, struct ev *ev)
  * (brackets mean argument is optionnal)
  */
 unsigned
-exec_lookupevspec(struct exec *o, char *name, struct evspec *e)
+exec_lookupevspec(struct exec *o, char *name, struct evspec *e, int input)
 {
 	struct var *arg;
 	struct data *d;
@@ -369,7 +370,7 @@ exec_lookupevspec(struct exec *o, char *name, struct evspec *e)
 		goto toomany;
 	}
 	if (d->type == DATA_REF) {
-		i = song_chanlookup(usong, d->val.ref);
+		i = song_chanlookup(usong, d->val.ref, input);
 		if (i == NULL) {
 			cons_err("no such chan name");
 			return 0;
@@ -604,14 +605,14 @@ exec_lookupval(struct exec *o, char *n, unsigned isfine, unsigned *r)
  *	- a pair of integers '{ dev midichan }'
  */
 unsigned
-data_list2chan(struct data *o, unsigned *res_dev, unsigned *res_ch)
+data_list2chan(struct data *o, unsigned *res_dev, unsigned *res_ch, int input)
 {
 	struct songchan *i;
 
 	if (o->type == DATA_LIST) {
 		return data_num2chan(o->val.list, res_dev, res_ch);
 	} else if (o->type == DATA_REF) {
-		i = song_chanlookup(usong, o->val.ref);
+		i = song_chanlookup(usong, o->val.ref, input);
 		if (i == NULL) {
 			cons_errs(o->val.ref, "no such chan name");
 			return 0;
@@ -890,9 +891,6 @@ user_mainloop(void)
 			name_newarg("step", NULL));
 	exec_newbuiltin(exec, "ev", blt_ev,
 			name_newarg("evspec", NULL));
-	exec_newbuiltin(exec, "geti", blt_geti, NULL);
-	exec_newbuiltin(exec, "ci", blt_ci,
-			name_newarg("inputchan", NULL));
 	exec_newbuiltin(exec, "gett", blt_gett, NULL);
 	exec_newbuiltin(exec, "ct", blt_ct,
 			name_newarg("trackname", NULL));
@@ -902,8 +900,11 @@ user_mainloop(void)
 	exec_newbuiltin(exec, "getx", blt_getx, NULL);
 	exec_newbuiltin(exec, "cx", blt_cx,
 			name_newarg("sysexname", NULL));
-	exec_newbuiltin(exec, "getc", blt_getc, NULL);
-	exec_newbuiltin(exec, "cc", blt_cc,
+	exec_newbuiltin(exec, "geti", blt_geti, NULL);
+	exec_newbuiltin(exec, "ci", blt_ci,
+			name_newarg("channame", NULL));
+	exec_newbuiltin(exec, "geto", blt_geto, NULL);
+	exec_newbuiltin(exec, "co", blt_co,
 			name_newarg("channame", NULL));
 	exec_newbuiltin(exec, "mute", blt_mute,
 			name_newarg("trackname", NULL));
@@ -985,27 +986,43 @@ user_mainloop(void)
 	exec_newbuiltin(exec, "tclist", blt_tclist, NULL);
 	exec_newbuiltin(exec, "tinfo", blt_tinfo, NULL);
 
-	exec_newbuiltin(exec, "clist", blt_clist, NULL);
-	exec_newbuiltin(exec, "cexists", blt_cexists,
+	exec_newbuiltin(exec, "ilist", blt_ilist, NULL);
+	exec_newbuiltin(exec, "iexists", blt_iexists,
 			name_newarg("channame", NULL));
-	exec_newbuiltin(exec, "cset", blt_cset,
+	exec_newbuiltin(exec, "iset", blt_iset,
 			name_newarg("channum", NULL));
-	exec_newbuiltin(exec, "cnew", blt_cnew,
+	exec_newbuiltin(exec, "inew", blt_inew,
 			name_newarg("channame",
 			name_newarg("channum", NULL)));
-	exec_newbuiltin(exec, "cdel", blt_cdel, NULL);
-	exec_newbuiltin(exec, "cren", blt_cren,
+	exec_newbuiltin(exec, "idel", blt_idel, NULL);
+	exec_newbuiltin(exec, "iren", blt_iren,
 			name_newarg("newname", NULL));
-	exec_newbuiltin(exec, "cinfo", blt_cinfo, NULL);
-	exec_newbuiltin(exec, "cgetc", blt_cgetc, NULL);
-	exec_newbuiltin(exec, "cgetd", blt_cgetd, NULL);
-	exec_newbuiltin(exec, "caddev", blt_caddev,
+	exec_newbuiltin(exec, "iinfo", blt_iinfo, NULL);
+	exec_newbuiltin(exec, "igetc", blt_igetc, NULL);
+	exec_newbuiltin(exec, "igetd", blt_igetd, NULL);
+	exec_newbuiltin(exec, "iaddev", blt_iaddev,
 			name_newarg("event", NULL));
-	exec_newbuiltin(exec, "crmev", blt_crmev,
+	exec_newbuiltin(exec, "irmev", blt_irmev,
 			name_newarg("evspec", NULL));
-	exec_newbuiltin(exec, "cseti", blt_cseti,
-			name_newarg("inputchan", NULL));
-	exec_newbuiltin(exec, "cgeti", blt_cgeti, NULL);
+
+	exec_newbuiltin(exec, "olist", blt_olist, NULL);
+	exec_newbuiltin(exec, "oexists", blt_oexists,
+			name_newarg("channame", NULL));
+	exec_newbuiltin(exec, "oset", blt_oset,
+			name_newarg("channum", NULL));
+	exec_newbuiltin(exec, "onew", blt_onew,
+			name_newarg("channame",
+			name_newarg("channum", NULL)));
+	exec_newbuiltin(exec, "odel", blt_odel, NULL);
+	exec_newbuiltin(exec, "cren", blt_oren,
+			name_newarg("newname", NULL));
+	exec_newbuiltin(exec, "oinfo", blt_oinfo, NULL);
+	exec_newbuiltin(exec, "ogetc", blt_ogetc, NULL);
+	exec_newbuiltin(exec, "ogetd", blt_ogetd, NULL);
+	exec_newbuiltin(exec, "oaddev", blt_oaddev,
+			name_newarg("event", NULL));
+	exec_newbuiltin(exec, "ormev", blt_ormev,
+			name_newarg("evspec", NULL));
 
 	exec_newbuiltin(exec, "flist", blt_flist, NULL);
 	exec_newbuiltin(exec, "fexists", blt_fexists,

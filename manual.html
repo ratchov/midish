@@ -393,19 +393,26 @@ external sequencers...) from which events are received and/or to which
 they are sent.
 
 <li>
+<b>Input channels:</b><br>
+
+they represent ``{device&nbsp;midichannel}'' pair on which MIDI events
+arrive, like a MIDI keyboard, a MIDI control surface etc...
+
+<li>
+<b>Output channels:</b><br>
+
+they represent ``{device&nbsp;midichannel}'' pair on which MIDI events
+can be sent, like synths. ``Output channel'' objects hold some
+properties like patch number, volume, reverb depth or other
+controllers.
+
+<li>
 <b>Filters:</b><br>
 
 a filter is a set of rules that says which MIDI event to discard
 and how to transform incoming events. The filter also "sanitizes" the
 input MIDI stream by removing nested notes, duplicate controllers and
 other anomalies.
-
-<li>
-<b>Channels:</b><br>
-
-a channel is an output ``{device&nbsp;midichannel}'' pair that
-represents an instrument. A channel holds some properties like patch
-number, volume, reverb depth or other controllers.
 
 <li>
 <b>Tracks:</b><br>
@@ -544,19 +551,19 @@ In this case, the ``/etc/midishrc'' file probably should contain
 the following lines:
 
 <pre>
-dnew 0 "/dev/rmidi4" rw		# attach the module as dev number 0
-dnew 1 "/dev/rmidi3" rw		# attach the keyboard as dev number 1
+dnew 0 "/dev/rmidi4" wo		# attach the module as dev number 0
+dnew 1 "/dev/rmidi3" ro		# attach the keyboard as dev number 1
 </pre>
 
-the ``rw'' parameter means that the device will be opened in
-read-write mode.
-The following session shows how to record a simple track.
-First, we define a filter named <tt>piano</tt> that
-routes any event from device 1, channel 0 (input channel of
-the keyboard) to device 0, channel 5  (output channel of
-the sound module). Then we create a new track
-<tt>pi1</tt>, we start recording and we save the song
-into a file.
+the ``wo'' parameter means that the device will be opened in
+write-only mode.  
+
+The following session shows how to record a simple
+track.  First, we define a filter named <tt>piano</tt> that routes any
+event from device 1, channel 0 (input channel of the keyboard) to
+device 0, channel 5 (output channel of the sound module). Then we
+create a new track <tt>pi1</tt>, we start recording and we save the
+song into a file.
 
 <pre>
 send EOF character (control-D) to quit
@@ -609,14 +616,15 @@ When the configuration is setup, put the dnew
 commands in the user's <tt>$HOME/.midishrc</tt>. It will be
 automatically executed the next time midish is run.
 
-<h2><a name="chan">3 Channels</a></h2>
+<h2><a name="inputs">Input channels</a></h2>
 
-Because midish handles multiple devices, instead of
+Because midish handles multiple input sources, instead of
 using MIDI channels, it uses device / MIDI channel pairs
-to represent instruments.
+to represent inputs.
 
-So in this document <i>channel</i> refers the 
-``{device&nbsp;MIDI-channel}'' pair.
+So in this document <i>input channel</i> refers the 
+``{device&nbsp;MIDI-channel}'' pair on which MIDI events
+are incoming.
 
 Channels are handled by two-item lists, like this:
 
@@ -624,20 +632,53 @@ Channels are handled by two-item lists, like this:
 {0 1}                   # device 0, MIDI channel 1
 </pre>
 
-Channels can also be named using the ``cnew'' command, as follows:
+Channels can also be named using the ``inew'' command,
+as follows:
 
 <pre>
-cnew mybass {0 1}
+inew keyboard {1 0}
+</pre>
+
+this defines a named input channel ``keyboard'' that can
+be used instead of the ``{0 1}'' pair.
+
+<p>
+<b>Note:</b>
+input channels are used as default values by certain functions,
+so it's better to register inputs using the ``inew'' command.
+
+The easier is to add a ``inew'' statement in you ``$HOME/.midishrc''
+file, to avoit typing it every time midish is started.
+
+<h2><a name="chan">3 Output channels</a></h2>
+
+As for input channels, midish uses device / MIDI channel pairs
+to represent ouputs too.
+
+So in this document <i>output channel</i> refers the
+``{device&nbsp;MIDI-channel}'' pair to which MIDI events will
+be sent.
+
+Output channels are handled by two-item lists, like this:
+
+<pre>
+{0 1}                   # device 0, MIDI channel 1
+</pre>
+
+they can also be named using the ``onew'' command, as follows:
+
+<pre>
+onew mybass {0 4}
 </pre>
 
 this defines a named channel ``mybass'' that can
-be used instead of the ``{0 1}'' pair.
+be used instead of the ``{0 4}'' pair.
 
 <h3><a name="section_3_1">3.1 Channel configuration</a></h3>
 
-A channel represents one musical instrument; midish allows to attach
-to the channel definition basic channel configuration events like
-program changes and controllers.
+A output channel represents one musical instrument; midish allows to
+attach to the channel definition basic channel configuration events
+like program changes and controllers.
 
 Such events are sent to the output when performance mode is entered,
 for instance just before playback is started. This approach avoids
@@ -649,7 +690,7 @@ to select patch 34 on channel ``mybass'', attach
 a ``program change'' event:
 
 <pre>
-caddev mybass {pc mybass 32}
+oaddev mybass {pc mybass 32}
 </pre>
 
 the list argument gives the event to attach to the channel.
@@ -660,7 +701,7 @@ more details about events.
 To set the volume (controller 7) of this channel to 120:
 
 <pre>
-caddev mybass {ctl mybass 7 120}
+oaddev mybass {ctl mybass 7 120}
 </pre>
 
 If several events of the same type are attached
@@ -668,7 +709,7 @@ then just the last one is kept. So, the following
 will change the volume to 125 by replacing the above event:
 
 <pre>
-caddev mybass {ctl mybass 7 125}
+oaddev mybass {ctl mybass 7 125}
 </pre>
 
 <h2><a name="ev">4 Events and event sets specification</a></h2>
@@ -994,11 +1035,11 @@ For instance consider the following filter:
 
 <pre>
 fnew myfilt
-fmap {any {1 0}} {any piano}
-fmap {ctl {1 0} 1} {ctl piano 11}
+fmap {any kbd} {any piano}
+fmap {ctl kbd 1} {ctl piano 11}
 </pre>
 
-the first rule will map all events comming from channel ``{1 0}'' (the
+the first rule will map all events comming from channel ``kbd'' (the
 input) to channel ``piano'' (the output); the second rule maps
 controller 1 (modulation) to controller 11 (expression).
 
@@ -1371,16 +1412,16 @@ with the ``<a href="func_ct">ct</a>'' command.
 <li>
 current position - the measure number where processing will start.
 
-It's set using the ``<a href="func_ct">g</a>'' command
+It's set using the ``<a href="func_g">g</a>'' command
 
 <li>
 current selection - number of measures to process.
-It's set using the ``<a href="func_ct">sel</a>'' command
+It's set using the ``<a href="func_g">sel</a>'' command
 
 <li>
 current event set - events type that will be processed.
 
-It's set using the ``<a href="func_ct">ev</a>'' command.
+It's set using the ``<a href="func_ev">ev</a>'' command.
 
 Most of the time all events types need to be processed, but sometimes
 one might want to process only a subset (eg. only controller number
@@ -1703,7 +1744,8 @@ about midish objects:
 <pre>
 ls		# summary
 minfo		# list tempo and signature  changes
-cinfo		# list config events of current channel
+iinfo		# list config events of current input channel
+oinfo		# list config events of current output channel
 finfo		# list rules of current filter
 tinfo		# list events distribution of current track
 dinfo 0		# list device 0 properties
@@ -1714,7 +1756,8 @@ Objects can be listed as follows:
 
 <pre>
 print [tlist]	# print track list
-print [clist]	# print named channel list
+print [ilist]	# print named input channel list
+print [olist]	# print named output channel list
 print [flist]	# print filter list
 print [xlist]	# print sysex back list
 </pre>
@@ -1738,15 +1781,18 @@ The device and the MIDI channel of a channel definition
 can be obtained as follows:
 
 <pre>
-print [cgetc]		# print midi chan number
-print [cgetd]		# print device number
+print [igetc]		# print midi chan number of current input
+print [igetd]		# print device number of current input
+print [ogetc]		# print midi chan number of current output
+print [ogetd]		# print device number of current output
 </pre>
 
 <p>
 To check if object exists:
 
 <pre>
-print [cexists mychan]
+print [iexists myinput]
+print [oexists myouput]
 print [fexists myfilt]
 print [texists mytrack]
 print [xexists mysx]
@@ -2098,19 +2144,24 @@ functions are kept for compatibility. Below is the list of new
 functions:
 
 <blockquote>
-cc, getc, cx, getx, setunit, getunit, goto, getpos, sel, getlen, setq,
-getq, fac, getfac, ci, geti, ct, gett, cf, getf, mutexxx, mute,
-unmute, getmute, ls, save, load, reset, export, import, idle, play,
-rec, stop, tempo, mins, mcut, minfo, mtempo, msig, ctlconf_any,
-ctlconf, ctlconfx, ctlunconf, ctlinfo, metro, metrocf, tlist, tnew,
-tdel, tren, texists, taddev, tsetf, tgetf, tcheck, tcut, tins, tclr,
-tcopy, tmerge, tquant, ttransp, tclist, tinfo, clist, cexists, cnew,
-cdel, cren, cset, cgetc, cgetd, caddev, crmev, cinfo, cseti, cgeti,
-flist, fnew, fdel, fren, fexists, finfo, freset, fmap, funmap,
-fchgxxx, fchgin, fchgout, fswapin, fswapout, fsetc, fgetc, xlist,
-xexists, xnew, xdel, xren, xinfo, xrm, xsetd, xadd, dnew, ddel,
-dclkrx, dclktx, dclkrate, dinfo, dixctl, doxctl.
+ci, co, geti, geto, cx, getx, setunit, getunit, goto, getpos, sel,
+getlen, setq, getq, fac, getfac, ct, gett, cf, getf, mute, unmute,
+getmute, ls, save, load, reset, export, import, idle, play, rec, stop,
+tempo, mins, mcut, minfo, mtempo, msig, ctlconf, ctlconfx, ctlunconf,
+ctlinfo, metro, metrocf, tlist, tnew, tdel, tren, texists, taddev,
+tsetf, tgetf, tcheck, tcut, tins, tclr, tcopy, tmerge, tquant,
+ttransp, tclist, tinfo, ilist, olist, iexists, oexists, inew, onew,
+idel, odel, iren, oren, iset, oset, igetc, ogetc, igetd, ogetd,
+iaddev, oaddev, irmev, ormev, iinfo, oinfo, flist, fnew, fdel, fren,
+fexists, finfo, freset, fmap, funmap, fchgin, fchgout, fswapin,
+fswapout, fsetc, fgetc, xlist, xexists, xnew, xdel, xren, xinfo, xrm,
+xsetd, xadd, dnew, ddel, dclkrx, dclktx, dclkrate, dinfo, dixctl,
+doxctl
 </blockquote>
+
+<li>
+output channels are no more the only to be named and/or confugured. Now
+input channels can be named too.
 
 <li>
 added ``msig'' and ``mtempo'' functions returning time signature and
@@ -2225,22 +2276,14 @@ The following table summarizes the channel attributes:
 
 <td>{dev&nbsp;chan}
 
-<td>device and MIDI channel to which MIDI events are sent
+<td>device and MIDI channel where events are sent to or
+reveived to
 
 <tr>
 
 <td>conf
 
 <td>events that are sent when performance mode is entered
-
-<tr>
-
-<td>curinput
-
-<td>
-default input <tt>{dev&nbsp;chan}</tt> pair.  This value isn't
-used in real-time, however it can be used as default value when adding
-new rules to a filter that uses this channel.
 
 </table>
 
@@ -2422,10 +2465,18 @@ it hasn't its default filter.
 
 <tr>
 
-<td>current chan
+<td>current input
 
 <td>
-default channel. This value isn't used in real-time, however it can be
+default input channel. This value isn't used in real-time, however it can be
+used as default value when adding new rules to the filter.
+
+<tr>
+
+<td>current output
+
+<td>
+default output channel. This value isn't used in real-time, however it can be
 used as default value when adding new rules to the filter.
 
 <tr>
@@ -2463,16 +2514,6 @@ editing functions
 This value isn't used in real-time,
 however it is used as default value for
 the track editing functions
-
-<tr>
-
-
-<td>current input
-
-<td>
-default input <tt>{dev&nbsp;chan}</tt> pair.  This value isn't used in
-real-time, however it can be uses as default value when adding new
-values to a filter that uses this channel.
 
 </table>
 
@@ -2815,7 +2856,7 @@ is an usual integer arithmetic expression.
 [tlist]
 </pre>
 
-is the returned value of the procedure <tt>tlen</tt>.
+is the returned value of the procedure <tt>tlist</tt>.
 
 <pre>
 12..56
@@ -3014,79 +3055,124 @@ event selection
 
 </dl>
 
-<h3><a name="func_chan">17.2 Channel functions</a></h3>
+<h3><a name="func_input">17.2 Input functions</a></h3>
 
 <dl>
 
-<dt><a name="func_cnew">cnew channelname {dev midichan}</a>
+<dt><a name="func_inew">inew channelname {dev midichan}</a>
 
 <dd>create an new channel named <tt>channelname</tt>
 and assigned the given device and MIDI channel.
 
-<dt><a name="func_cset">cset {dev midichan}</a>
+<dt><a name="func_iset">iset {dev midichan}</a>
 
 <dd>
 set the device/channel pair of the current channel.
 
-<dt><a name="func_cdel">cdel</a>
+<dt><a name="func_idel">idel</a>
 
 <dd>
 delete current channel.
 
-<dt><a name="func_cren">cren newname</a>
+<dt><a name="func_iren">iren newname</a>
 
 <dd>
 rename the current channel to <tt>newname</tt>
 
-<dt><a name="func_chanexists">cexists channelname</a>
+<dt><a name="func_iexists">iexists channelname</a>
 
 <dd>
 return 1 if <tt>channelname</tt> is a channel, 0 otherwise
 
-<dt><a name="func_changetch">cgetc</a>
+<dt><a name="func_igetc">igetc</a>
 
 <dd>
 return the MIDI channel number of the current channel
 
 
-<dt><a name="func_changetdev">cgetd channelname</a>
+<dt><a name="func_igetd">igetd channelname</a>
 
 <dd>
 return the device number of the current channel
 
-<dt><a name="func_caddev">caddev event</a>
+<dt><a name="func_iaddev">iaddev event</a>
 
 <dd>
 add the event to the configuration of the current
-channel, typically used set
-the program, volume, depth etc... The channel
-of the event must match the current one.
+channel, it's not used yet.
 
-<dt><a name="func_crmev">crmev evspec</a>
+<dt><a name="func_irmev">irmev evspec</a>
 
 <dd>
 remove all events matching <tt>evspec</tt>
 (see event <a href="#ev_evspec">ranges</a>)
 from the configuration of the current channel
 
-<dt><a name="func_cinfo">cinfo</a>
+<dt><a name="func_iinfo">iinfo</a>
 
 <dd>
 print all events on the config
 of the current channel.
 
-<dt><a name="func_cseti">cseti {dev chan}</a>
+</dl>
+
+<h3><a name="func_output">17.2 Output functions</a></h3>
+
+<dl>
+
+<dt><a name="func_onew">onew channelname {dev midichan}</a>
+
+<dd>create an new channel named <tt>channelname</tt>
+and assigned the given device and MIDI channel.
+
+<dt><a name="func_oset">oset {dev midichan}</a>
 
 <dd>
-set the default input <tt>{dev chan}</tt> pair
-of the current channel. These values are currently not
-used in realtime, but are are used as default values
-for various filter operations.
+set the device/channel pair of the current channel.
 
-<dt><a name="func_cgeti">cgeti</a>
+<dt><a name="func_odel">odel</a>
 
 <dd>
-return the default input <tt>{dev chan}</tt> pair
+delete current channel.
+
+<dt><a name="func_oren">oren newname</a>
+
+<dd>
+rename the current channel to <tt>newname</tt>
+
+<dt><a name="func_oexists">iexists channelname</a>
+
+<dd>
+return 1 if <tt>channelname</tt> is a channel, 0 otherwise
+
+<dt><a name="func_ogetc">ogetc</a>
+
+<dd>
+return the MIDI channel number of the current channel
+
+
+<dt><a name="func_ogetd">ogetd channelname</a>
+
+<dd>
+return the device number of the current channel
+
+<dt><a name="func_oaddev">oaddev event</a>
+
+<dd>
+add the event to the configuration of the current
+channel, it's not used yet.
+
+<dt><a name="func_ormev">ormev evspec</a>
+
+<dd>
+remove all events matching <tt>evspec</tt>
+(see event <a href="#ev_evspec">ranges</a>)
+from the configuration of the current channel
+
+<dt><a name="func_oinfo">oinfo</a>
+
+<dd>
+print all events on the config
 of the current channel.
 
 </dl>
@@ -3266,7 +3352,7 @@ play the song from the current position.
 Input passes through the current filter (if any)
 or through the current track's filter (if any).
 
-<dt><a name="func_r">songrecord</a>
+<dt><a name="func_r">r</a>
 
 <dd>
 play the song and record the input.
@@ -3404,30 +3490,29 @@ editing functions.
 return the current sysex bank
 or <tt>nil</tt> if none
 
-<dt><a name="func_cc">cc channame</a>
+<dt><a name="func_ci">ci channame</a>
 
 <dd>
-set the current (named) channel. All channel
-editing functions will act on it. It will also
-be used as default value when creating filters.
-
-<dt><a name="func_getc">getc</a>
-
-<dd>
-return the name of the current channel
-or <tt>nil</tt> if none
-
-<dt><a name="func_ci">ci {dev chan}</a>
-
-<dd>
-set the (global) default input <tt>{dev chan}</tt> pair.
-These values will be used ass default values when creating
-channels.
+set the current (named) input channel. All input channel
+editing functions will act on it. 
 
 <dt><a name="func_geti">geti</a>
 
 <dd>
-return the (global) default input <tt>{dev chan}</tt> pair.
+return the name of the current input channel
+or <tt>nil</tt> if none
+
+<dt><a name="func_co">co channame</a>
+
+<dd>
+set the current (named) output channel. All output channel
+editing functions will act on it. 
+
+<dt><a name="func_geto">geto</a>
+
+<dd>
+return the name of the current output channel
+or <tt>nil</tt> if none
 
 <dt><a name="func_setunit">setunit ticks_per_unit</a>
 
@@ -3940,16 +4025,16 @@ configure a keyboard split:
 
 <pre>
 send EOF character (control-D) to quit
-[0000:00]&gt; ci {1 0}
-[0000:00]&gt; cnew bass {0 5}
-[0000:00]&gt; caddev {pc bass 33}
-[0000:00]&gt; cnew piano {0 6}
-[0000:00]&gt; caddev {pc piano 2}
+[0000:00]&gt; inew kbd {1 0}
+[0000:00]&gt; onew bass {0 5}
+[0000:00]&gt; oaddev {pc bass 33}
+[0000:00]&gt; onew piano {0 6}
+[0000:00]&gt; oaddev {pc piano 2}
 [0000:00]&gt; fnew split
-[0000:00]&gt; fmap {any [geti]} {any bass}
-[0000:00]&gt; fmap {any [geti]} {any piano}
-[0000:00]&gt; fmap {note [geti] 12..62} {note bass 0..50}
-[0000:00]&gt; fmap {note [geti] 63..127} {note piano 63..127}
+[0000:00]&gt; fmap {any kbd} {any bass}
+[0000:00]&gt; fmap {any kbd} {any piano}
+[0000:00]&gt; fmap {note kbd 12..62} {note bass 0..50}
+[0000:00]&gt; fmap {note kbd 63..127} {note piano 63..127}
 [0000:00]&gt; finfo
 {
 	evmap any {1 0} &gt; any {0 5}
@@ -3978,10 +4063,10 @@ record a track.
 
 <pre>
 send EOF character (control-D) to quit
-[0000:00]&gt; ci {1 0}				# select default input channel
-[0000:00]&gt; cnew drums {0 9}			# create drum channel
+[0000:00]&gt; inew kbd {1 0}			# select default input channel
+[0000:00]&gt; onew drums {0 9}			# create drum channel
 [0000:00]&gt; fnew drums			# create filter for it
-[0000:00]&gt; fmap {any [geti]} {any drums}	# map input -> drums
+[0000:00]&gt; fmap {any kbd} {any drums}	# map input -> drums
 [0000:00]&gt; tnew dr1				# create track ``dr1''
 [0000:00]&gt; t 90				# tempo to 90 bpm
 [0000:00]&gt; r					# start recording
@@ -4021,7 +4106,7 @@ Will Woodruff.
 <hr>
 <small><i>
 Copyright (c) 2003-2008 Alexandre Ratchov<br>
-Last updated jul 11, 2008
+Last updated jul 15, 2008
 </i></small>
 
 </body>

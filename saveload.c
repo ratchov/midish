@@ -335,13 +335,6 @@ songchan_output(struct songchan *o, struct textout *f)
 	track_output(&o->conf, f);
 	textout_putstr(f, "\n");
 
-	textout_indent(f);
-	textout_putstr(f, "curinput {");
-	textout_putlong(f, o->curinput_dev);
-	textout_putstr(f, " ");
-	textout_putlong(f, o->curinput_ch);
-	textout_putstr(f, "}\n");
-
 	textout_shiftleft(f);
 	textout_indent(f);
 	textout_putstr(f, "}");
@@ -467,9 +460,17 @@ song_output(struct song *o, struct textout *f)
 	track_output(&o->meta, f);
 	textout_putstr(f, "\n");
 
-	SONG_FOREACH_CHAN(o, i) {
+	SONG_FOREACH_IN(o, i) {
 		textout_indent(f);
-		textout_putstr(f, "songchan ");
+		textout_putstr(f, "songin ");
+		textout_putstr(f, i->name.str);
+		textout_putstr(f, " ");
+		songchan_output(i, f);
+		textout_putstr(f, "\n");
+	}
+	SONG_FOREACH_OUT(o, i) {
+		textout_indent(f);
+		textout_putstr(f, "songout ");
 		textout_putstr(f, i->name.str);
 		textout_putstr(f, " ");
 		songchan_output(i, f);
@@ -518,10 +519,16 @@ song_output(struct song *o, struct textout *f)
 		textout_putstr(f, o->cursx->name.str);
 		textout_putstr(f, "\n");
 	}
-	if (o->curchan) {
+	if (o->curin) {
 		textout_indent(f);
-		textout_putstr(f, "curchan ");
-		textout_putstr(f, o->curchan->name.str);
+		textout_putstr(f, "curin ");
+		textout_putstr(f, o->curin->name.str);
+		textout_putstr(f, "\n");
+	}
+	if (o->curout) {
+		textout_indent(f);
+		textout_putstr(f, "curout ");
+		textout_putstr(f, o->curout->name.str);
 		textout_putstr(f, "\n");
 	}
 	textout_indent(f);
@@ -543,13 +550,6 @@ song_output(struct song *o, struct textout *f)
 	textout_putstr(f, "curev ");
 	evspec_output(&o->curev, f);
 	textout_putstr(f, "\n");
-
-	textout_indent(f);
-	textout_putstr(f, "curinput {");
-	textout_putlong(f, o->curinput_dev);
-	textout_putstr(f, " ");
-	textout_putlong(f, o->curinput_ch);
-	textout_putstr(f, "}\n");
 
 	textout_indent(f);
 	textout_putstr(f, "metro ");
@@ -1278,8 +1278,8 @@ parse_songchan(struct parse *o, struct song *s, struct songchan *i)
 				if (!parse_chan(o, &val, &val2)) {
 					return 0;
 				}
-				i->curinput_dev = val;
-				i->curinput_ch = val2;
+				lex_err(&o->lex, 
+				    "ignored obsolete 'curinput' line");
 				if (!parse_nl(o)) {
 					return 0;
 				}
@@ -1395,12 +1395,15 @@ parse_songfilt(struct parse *o, struct song *s, struct songfilt *g)
 					return 0;
 				}
 				if (o->lex.id != TOK_IDENT) {
-					lex_err(&o->lex, "identifier expected after 'curchan' in songfilt");
+					lex_err(&o->lex, 
+					    "identifier expected "
+					    "after 'curchan' in songfilt");
 					return 0;
 				}
-				c = song_chanlookup(s, o->lex.strval);
+				c = song_chanlookup(s, o->lex.strval, 0);
 				if (!c) {
-					c = song_channew(s, o->lex.strval, 0, 0);
+					c = song_channew(s, o->lex.strval, 
+					    0, 0, 0);
 				}
 				g->curchan = c;
 				if (!parse_nl(o)) {
@@ -1550,6 +1553,7 @@ parse_song(struct parse *o, struct song *s)
 	struct songsx *l;
 	struct evspec es;
 	unsigned long num, num2;
+	int input;
 
 	if (!parse_getsym(o)) {
 		return 0;
@@ -1585,7 +1589,13 @@ parse_song(struct parse *o, struct song *s)
 				if (!parse_nl(o)) {
 					return 0;
 				}
-			} else if (str_eq(o->lex.strval, "songchan")) {
+			} else if (str_eq(o->lex.strval, "songin")) {
+				input = 1;
+				goto chan_do;
+			} else if (str_eq(o->lex.strval, "songout") ||
+				str_eq(o->lex.strval, "songchan")) {
+				input = 0;
+			chan_do:
 				if (!parse_getsym(o)) {
 					return 0;
 				}
@@ -1593,9 +1603,10 @@ parse_song(struct parse *o, struct song *s)
 					lex_err(&o->lex, "identifier expected after 'songchan' in song");
 					return 0;
 				}
-				i = song_chanlookup(s, o->lex.strval);
+				i = song_chanlookup(s, o->lex.strval, input);
 				if (i == NULL) {
-					i = song_channew(s, o->lex.strval, 0, 0);
+					i = song_channew(s, o->lex.strval,
+					    0, 0, input);
 				}
 				if (!parse_songchan(o, s, i)) {
 					return 0;
@@ -1724,7 +1735,13 @@ parse_song(struct parse *o, struct song *s)
 				if (!parse_nl(o)) {
 					return 0;
 				}
-			} else if (str_eq(o->lex.strval, "curchan")) {
+			} else if (str_eq(o->lex.strval, "curin")) {
+				input = 1;
+				goto curchan_do;
+			} else if (str_eq(o->lex.strval, "curout") ||
+			    str_eq(o->lex.strval, "curchan")) {
+				input = 0;
+			curchan_do:
 				if (!parse_getsym(o)) {
 					return 0;
 				}
@@ -1732,9 +1749,9 @@ parse_song(struct parse *o, struct song *s)
 					lex_err(&o->lex, "identifier expected afer 'curchan' in song");
 					return 0;
 				}
-				i = song_chanlookup(s, o->lex.strval);
+				i = song_chanlookup(s, o->lex.strval, input);
 				if (i) {
-					s->curchan = i;
+					song_setcurchan(s, i, input);
 				} else {
 					lex_err(&o->lex, "warning, cant set current chan, not such chan");
 				}
@@ -1781,8 +1798,14 @@ parse_song(struct parse *o, struct song *s)
 				if (!parse_chan(o, &num, &num2)) {
 					return 0;
 				}
-				s->curinput_dev = num;
-				s->curinput_ch = num2;
+				i = song_chanlookup_bynum(s, num, num2, 1);
+				if (i == NULL) {
+					i = song_channew(s, "old_style_curin",
+					    num, num2, input);
+				} else {
+					i->dev = num;
+					i->ch = num2;
+				}
 				if (!parse_nl(o)) {
 					return 0;
 				}

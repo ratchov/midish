@@ -609,7 +609,7 @@ user_func_filtchandrop(struct exec *o, struct data **r) {
 		return 0;
 	}
 	if (!exec_lookupfilt(o, "filtname", &f) ||
-	    !exec_lookupchan_getnum(o, "inchan", &idev, &ich)) {
+	    !exec_lookupchan_getnum(o, "inchan", &idev, &ich, 1)) {
 		return 0;
 	}
 	filt_conf_chandrop(&f->filt, idev, ich);
@@ -625,7 +625,7 @@ user_func_filtnochandrop(struct exec *o, struct data **r) {
 		return 0;
 	}
 	if (!exec_lookupfilt(o, "filtname", &f) ||
-	    !exec_lookupchan_getnum(o, "inchan", &idev, &ich)) {
+	    !exec_lookupchan_getnum(o, "inchan", &idev, &ich, 1)) {
 		return 0;
 	}
 	filt_conf_nochandrop(&f->filt, idev, ich);
@@ -641,8 +641,8 @@ user_func_filtchanmap(struct exec *o, struct data **r) {
 		return 0;
 	}
 	if (!exec_lookupfilt(o, "filtname", &f) ||
-	    !exec_lookupchan_getnum(o, "inchan", &idev, &ich) ||
-	    !exec_lookupchan_getnum(o, "outchan", &odev, &och)) {
+	    !exec_lookupchan_getnum(o, "inchan", &idev, &ich, 1) ||
+	    !exec_lookupchan_getnum(o, "outchan", &odev, &och, 0)) {
 		return 0;
 	}
 	filt_conf_chanmap(&f->filt, idev, ich, odev, och);
@@ -658,7 +658,7 @@ user_func_filtnochanmap(struct exec *o, struct data **r) {
 		return 0;
 	}
 	if (!exec_lookupfilt(o, "filtname", &f) ||
-	    !exec_lookupchan_getnum(o, "outchan", &odev, &och)) {
+	    !exec_lookupchan_getnum(o, "outchan", &odev, &och, 0)) {
 		return 0;
 	}
 	filt_conf_nochanmap(&f->filt, odev, och);
@@ -674,7 +674,7 @@ user_func_filtctldrop(struct exec *o, struct data **r) {
 		return 0;
 	}
 	if (!exec_lookupfilt(o, "filtname", &f) ||
-	    !exec_lookupchan_getnum(o, "inchan", &idev, &ich) ||
+	    !exec_lookupchan_getnum(o, "inchan", &idev, &ich, 1) ||
 	    !exec_lookupctl(o, "inctl", &ictl)) {
 		return 0;
 	}
@@ -691,7 +691,7 @@ user_func_filtnoctldrop(struct exec *o, struct data **r) {
 		return 0;
 	}
 	if (!exec_lookupfilt(o, "filtname", &f) ||
-	    !exec_lookupchan_getnum(o, "inchan", &idev, &ich) ||
+	    !exec_lookupchan_getnum(o, "inchan", &idev, &ich, 1) ||
 	    !exec_lookupctl(o, "inctl", &ictl)) {
 		return 0;
 	}
@@ -708,8 +708,8 @@ user_func_filtctlmap(struct exec *o, struct data **r) {
 		return 0;
 	}
 	if (!exec_lookupfilt(o, "filtname", &f) ||
-	    !exec_lookupchan_getnum(o, "inchan", &idev, &ich) ||
-	    !exec_lookupchan_getnum(o, "outchan", &odev, &och) ||
+	    !exec_lookupchan_getnum(o, "inchan", &idev, &ich, 1) ||
+	    !exec_lookupchan_getnum(o, "outchan", &odev, &och, 0) ||
 	    !exec_lookupctl(o, "inctl", &ictl) || 
 	    !exec_lookupctl(o, "outctl", &octl)) {
 		return 0;
@@ -727,7 +727,7 @@ user_func_filtnoctlmap(struct exec *o, struct data **r) {
 		return 0;
 	}
 	if (!exec_lookupfilt(o, "filtname", &f) ||
-	    !exec_lookupchan_getnum(o, "outchan", &odev, &och) || 
+	    !exec_lookupchan_getnum(o, "outchan", &odev, &och, 0) || 
 	    !exec_lookupctl(o, "outctl", &octl)) {
 		return 0;
 	}
@@ -745,7 +745,7 @@ user_func_filtkeydrop(struct exec *o, struct data **r) {
 		return 0;
 	}
 	if (!exec_lookupfilt(o, "filtname", &f) ||
-	    !exec_lookupchan_getnum(o, "inchan", &idev, &ich) ||
+	    !exec_lookupchan_getnum(o, "inchan", &idev, &ich, 1) ||
 	    !exec_lookuplong(o, "keystart", &kstart) || 
 	    !exec_lookuplong(o, "keyend", &kend)) {
 		return 0;
@@ -769,7 +769,7 @@ user_func_filtnokeydrop(struct exec *o, struct data **r) {
 		return 0;
 	}
 	if (!exec_lookupfilt(o, "filtname", &f) ||
-	    !exec_lookupchan_getnum(o, "inchan", &idev, &ich) ||
+	    !exec_lookupchan_getnum(o, "inchan", &idev, &ich, 1) ||
 	    !exec_lookuplong(o, "keystart", &kstart) || 
 	    !exec_lookuplong(o, "keyend", &kend)) {
 		return 0;
@@ -793,8 +793,8 @@ user_func_filtkeymap(struct exec *o, struct data **r) {
 		return 0;
 	}
 	if (!exec_lookupfilt(o, "filtname", &f) ||
-	    !exec_lookupchan_getnum(o, "inchan", &idev, &ich) ||
-	    !exec_lookupchan_getnum(o, "outchan", &odev, &och) ||
+	    !exec_lookupchan_getnum(o, "inchan", &idev, &ich, 1) ||
+	    !exec_lookupchan_getnum(o, "outchan", &odev, &och, 0) ||
 	    !exec_lookuplong(o, "keystart", &kstart) || 
 	    !exec_lookuplong(o, "keyend", &kend) ||
 	    !exec_lookuplong(o, "keyplus", &kplus)) {
@@ -823,7 +823,7 @@ user_func_filtnokeymap(struct exec *o, struct data **r) {
 		return 0;
 	}
 	if (!exec_lookupfilt(o, "filtname", &f) ||
-	    !exec_lookupchan_getnum(o, "outchan", &odev, &och) ||
+	    !exec_lookupchan_getnum(o, "outchan", &odev, &och, 0) ||
 	    !exec_lookuplong(o, "keystart", &kstart) || 
 	    !exec_lookuplong(o, "keyend", &kend)) {
 		return 0;
@@ -860,8 +860,8 @@ user_func_filtchgich(struct exec *o, struct data **r) {
 		return 0;
 	}
 	if (!exec_lookupfilt(o, "filtname", &f) ||
-	    !exec_lookupchan_getnum(o, "oldchan", &olddev, &oldch) ||
-	    !exec_lookupchan_getnum(o, "newchan", &newdev, &newch)) {
+	    !exec_lookupchan_getnum(o, "oldchan", &olddev, &oldch, 1) ||
+	    !exec_lookupchan_getnum(o, "newchan", &newdev, &newch, 1)) {
 		return 0;
 	}
 	filt_conf_chgich(&f->filt, olddev, oldch, newdev, newch);
@@ -899,8 +899,8 @@ user_func_filtswapich(struct exec *o, struct data **r) {
 		return 0;
 	}
 	if (!exec_lookupfilt(o, "filtname", &f) ||
-	    !exec_lookupchan_getnum(o, "oldchan", &olddev, &oldch) ||
-	    !exec_lookupchan_getnum(o, "newchan", &newdev, &newch)) {
+	    !exec_lookupchan_getnum(o, "oldchan", &olddev, &oldch, 1) ||
+	    !exec_lookupchan_getnum(o, "newchan", &newdev, &newch, 1)) {
 		return 0;
 	}
 	filt_conf_swapich(&f->filt, olddev, oldch, newdev, newch);
@@ -938,8 +938,8 @@ user_func_filtchgoch(struct exec *o, struct data **r) {
 		return 0;
 	}
 	if (!exec_lookupfilt(o, "filtname", &f) ||
-	    !exec_lookupchan_getnum(o, "oldchan", &olddev, &oldch) ||
-	    !exec_lookupchan_getnum(o, "newchan", &newdev, &newch)) {
+	    !exec_lookupchan_getnum(o, "oldchan", &olddev, &oldch, 0) ||
+	    !exec_lookupchan_getnum(o, "newchan", &newdev, &newch, 0)) {
 		return 0;
 	}
 	filt_conf_chgoch(&f->filt, olddev, oldch, newdev, newch);
@@ -977,8 +977,8 @@ user_func_filtswapoch(struct exec *o, struct data **r) {
 		return 0;
 	}
 	if (!exec_lookupfilt(o, "filtname", &f) ||
-	    !exec_lookupchan_getnum(o, "oldchan", &olddev, &oldch) ||
-	    !exec_lookupchan_getnum(o, "newchan", &newdev, &newch)) {
+	    !exec_lookupchan_getnum(o, "oldchan", &olddev, &oldch, 0) ||
+	    !exec_lookupchan_getnum(o, "newchan", &newdev, &newch, 0)) {
 		return 0;
 	}
 	filt_conf_swapoch(&f->filt, olddev, oldch, newdev, newch);
@@ -1013,8 +1013,8 @@ user_func_filtevmap(struct exec *o, struct data **r) {
 	struct evspec from, to;
 	
 	if (!exec_lookupfilt(o, "filtname", &f) ||
-	    !exec_lookupevspec(o, "from", &from) ||
-	    !exec_lookupevspec(o, "to", &to)) {
+	    !exec_lookupevspec(o, "from", &from, 1) ||
+	    !exec_lookupevspec(o, "to", &to, 0)) {
 		return 0;
 	}
 	filt_mapnew(&f->filt, &from, &to);
@@ -1027,8 +1027,8 @@ user_func_filtevunmap(struct exec *o, struct data **r) {
 	struct evspec from, to;
 	
 	if (!exec_lookupfilt(o, "filtname", &f) ||
-	    !exec_lookupevspec(o, "from", &from) ||
-	    !exec_lookupevspec(o, "to", &to)) {
+	    !exec_lookupevspec(o, "from", &from, 1) ||
+	    !exec_lookupevspec(o, "to", &to, 0)) {
 		return 0;
 	}
 	filt_mapdel(&f->filt, &from, &to);
@@ -1056,7 +1056,7 @@ user_func_filtsetcurchan(struct exec *o, struct data **r) {
 		f->curchan = NULL;
 		return 1;
 	} else if (arg->data->type == DATA_REF) {
-		c = song_chanlookup(usong, arg->data->val.ref);
+		c = song_chanlookup(usong, arg->data->val.ref, 0);
 		if (!c) {
 			cons_err("no such chan");
 			return 0;

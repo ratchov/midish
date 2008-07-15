@@ -59,8 +59,6 @@ struct songchan {
 	struct name name;		/* identifier + list entry */
 	struct track conf;		/* data to send on initialization */
 	unsigned dev, ch;		/* dev/chan of the chan */
-	unsigned curinput_dev;		/* defaults for filter creation */
-	unsigned curinput_ch;
 };
 
 struct songfilt {
@@ -80,20 +78,20 @@ struct song {
 	 */
 	struct track meta;		/* tempo track */
 	struct name *trklist;		/* list of tracks */
-	struct name *chanlist;		/* list of channels */
+	struct name *outlist;		/* list of output channels */
+	struct name *inlist;		/* list of input channels */
 	struct name *filtlist;		/* list of fiters */
 	struct name *sxlist;		/* list of system exclive banks */
 	unsigned tics_per_unit;		/* number of tics in an unit note */
 	unsigned tempo_factor;		/* tempo := tempo * factor / 256 */
 	struct songtrk *curtrk;		/* default track */
 	struct songfilt *curfilt;	/* default filter */
-	struct songchan *curchan;	/* default channel */
+	struct songchan *curout;	/* default output channel */
+	struct songchan *curin;		/* default input channel */
 	struct songsx *cursx;		/* default sysex bank */
 	unsigned curpos;		/* default position (in measures) */
 	unsigned curquant;		/* default quantization step */
 	unsigned curlen;		/* selection length */
-	unsigned curinput_dev;		/* default input device */
-	unsigned curinput_ch;		/* default midi channel */
 	struct evspec curev;		/* evspec for track editing */
 	struct metro metro;		/* metonome conf. */
 
@@ -119,8 +117,18 @@ struct song {
 	     i != NULL;					\
 	     i = (struct songtrk *)i->name.next)
 
-#define SONG_FOREACH_CHAN(s, i)				\
-	for (i = (struct songchan *)(s)->chanlist;	\
+#define SONG_FOREACH_OUT(s, i)				\
+	for (i = (struct songchan *)(s)->outlist;	\
+	     i != NULL;					\
+	     i = (struct songchan *)i->name.next)
+
+#define SONG_FOREACH_IN(s, i)				\
+	for (i = (struct songchan *)(s)->inlist;	\
+	     i != NULL;					\
+	     i = (struct songchan *)i->name.next)
+
+#define SONG_FOREACH_CHAN(s, i, list)			\
+	for (i = (struct songchan *)(list);		\
 	     i != NULL;					\
 	     i = (struct songchan *)i->name.next)
 
@@ -143,10 +151,10 @@ struct songtrk *song_trknew(struct song *o, char *name);
 struct songtrk *song_trklookup(struct song *o, char *name);
 void song_trkdel(struct song *o, struct songtrk *t);
 
-struct songchan *song_channew(struct song *o, char *name, unsigned dev, unsigned ch);
-struct songchan *song_chanlookup(struct song *o, char *name);
-struct songchan *song_chanlookup_bynum(struct song *o, unsigned dev, unsigned ch);
-void song_chandel(struct song *o, struct songchan *c);
+struct songchan *song_channew(struct song *, char *, unsigned, unsigned, int);
+struct songchan *song_chanlookup(struct song *, char *, int);
+struct songchan *song_chanlookup_bynum(struct song *, unsigned, unsigned, int);
+void song_chandel(struct song *, struct songchan *, int);
 
 struct songfilt *song_filtnew(struct song *o, char *name);
 struct songfilt *song_filtlookup(struct song *o, char *name);
@@ -162,10 +170,8 @@ void song_getcurtrk(struct song *o, struct songtrk **r);
 void song_setcurtrk(struct song *o, struct songtrk *t);
 void song_getcurfilt(struct song *o, struct songfilt **r);
 void song_setcurfilt(struct song *o, struct songfilt *f);
-void song_getcurchan(struct song *o, struct songchan **r);
-void song_setcurchan(struct song *o, struct songchan *c);
-void song_getcurinput(struct song *o, unsigned *dev, unsigned *ch);
-void song_setcurinput(struct song *o, unsigned dev, unsigned ch);
+void song_getcurchan(struct song *, struct songchan **, int);
+void song_setcurchan(struct song *, struct songchan *, int);
 
 void song_playconf(struct song *o);
 void song_record(struct song *o);

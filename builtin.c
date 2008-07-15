@@ -124,7 +124,7 @@ blt_ev(struct exec *o, struct data **r)
 	if (!song_try(usong)) {
 		return 0;
 	}
-	if (!exec_lookupevspec(o, "evspec", &es)) {
+	if (!exec_lookupevspec(o, "evspec", &es, 0)) {
 		return 0;
 	}
 	usong->curev = es;
@@ -132,7 +132,7 @@ blt_ev(struct exec *o, struct data **r)
 }
 
 unsigned
-blt_cc(struct exec *o, struct data **r)
+blt_cc(struct exec *o, struct data **r, int input)
 {
 	struct songchan *t;
 	struct var *arg;
@@ -142,35 +142,59 @@ blt_cc(struct exec *o, struct data **r)
 	}
 	arg = exec_varlookup(o, "channame");
 	if (!arg) {
-		dbg_puts("blt_setc: channame: no such param\n");
+		dbg_puts("blt_cc: channame: no such param\n");
 		return 0;
 	}
 	if (arg->data->type == DATA_NIL) {
-		song_setcurchan(usong, NULL);
+		song_setcurchan(usong, NULL, input);
 		return 1;
 	}
-	if (!exec_lookupchan_getref(o, "channame", &t)) {
+	if (!exec_lookupchan_getref(o, "channame", &t, input)) {
 		return 0;
 	}
-	song_setcurchan(usong, t);
+	song_setcurchan(usong, t, input);
 	return 1;
 }
 
 unsigned
-blt_getc(struct exec *o, struct data **r)
+blt_ci(struct exec *o, struct data **r)
+{
+	return blt_cc(o, r, 1);
+}
+
+unsigned
+blt_co(struct exec *o, struct data **r)
+{
+	return blt_cc(o, r, 0);
+}
+
+unsigned
+blt_getc(struct exec *o, struct data **r, int input)
 {
 	struct songchan *cur;
 
 	if (!song_try(usong)) {
 		return 0;
 	}
-	song_getcurchan(usong, &cur);
+	song_getcurchan(usong, &cur, input);
 	if (cur) {
 		*r = data_newref(cur->name.str);
 	} else {
 		*r = data_newnil();
 	}
 	return 1;
+}
+
+unsigned
+blt_geti(struct exec *o, struct data **r)
+{
+	return blt_getc(o, r, 1);
+}
+
+unsigned
+blt_geto(struct exec *o, struct data **r)
+{
+	return blt_getc(o, r, 0);
 }
 
 unsigned
@@ -382,39 +406,6 @@ blt_getfac(struct exec *o, struct data **r)
 	return 1;
 }
 
-unsigned
-blt_ci(struct exec *o, struct data **r)
-{
-	unsigned dev, ch;
-	struct data *l;
-
-	if (!song_try(usong)) {
-		return 0;
-	}
-	if (!exec_lookuplist(o, "inputchan", &l)) {
-		return 0;
-	}
-	if (!data_num2chan(l, &dev, &ch)) {
-		return 0;
-	}
-	song_setcurinput(usong, dev, ch);
-	return 1;
-}
-
-unsigned
-blt_geti(struct exec *o, struct data **r)
-{
-	unsigned dev, ch;
-
-	if (!song_try(usong)) {
-		return 0;
-	}
-	song_getcurinput(usong, &dev, &ch);
-	*r = data_newlist(NULL);
-	data_listadd(*r, data_newlong(dev));
-	data_listadd(*r, data_newlong(ch));
-	return 1;
-}
 
 unsigned
 blt_ct(struct exec *o, struct data **r)
@@ -564,11 +555,11 @@ blt_ls(struct exec *o, struct data **r)
 	/*
 	 * print info about channels
 	 */
-	textout_putstr(tout, "chanlist {\n");
+	textout_putstr(tout, "outlist {\n");
 	textout_shiftright(tout);
 	textout_indent(tout);
-	textout_putstr(tout, "# chan_name,  {devicenum, midichan}, default_input\n");
-	SONG_FOREACH_CHAN(usong, c) {
+	textout_putstr(tout, "# chan_name,  {devicenum, midichan}\n");
+	SONG_FOREACH_OUT(usong, c) {
 		textout_indent(tout);
 		textout_putstr(tout, c->name.str);
 		textout_putstr(tout, "\t");
@@ -576,12 +567,6 @@ blt_ls(struct exec *o, struct data **r)
 		textout_putlong(tout, c->dev);
 		textout_putstr(tout, " ");
 		textout_putlong(tout, c->ch);
-		textout_putstr(tout, "}");
-		textout_putstr(tout, "\t");
-		textout_putstr(tout, "{");
-		textout_putlong(tout, c->curinput_dev);
-		textout_putstr(tout, " ");
-		textout_putlong(tout, c->curinput_ch);
 		textout_putstr(tout, "}");
 		textout_putstr(tout, "\n");
 
@@ -634,14 +619,16 @@ blt_ls(struct exec *o, struct data **r)
 				if (count) {
 					textout_putstr(tout, " ");
 				}
-				c = song_chanlookup_bynum(usong, i / 16, i % 16);
+				dev = i / 16;
+				ch = i % 16;
+				c = song_chanlookup_bynum(usong, dev, ch, 0);
 				if (c) {
 					textout_putstr(tout, c->name.str);
 				} else {
 					textout_putstr(tout, "{");
-					textout_putlong(tout, i / 16);
+					textout_putlong(tout, dev);
 					textout_putstr(tout, " ");
-					textout_putlong(tout, i % 16);
+					textout_putlong(tout, ch);
 					textout_putstr(tout, "}");
 				}
 				count++;
@@ -682,8 +669,17 @@ blt_ls(struct exec *o, struct data **r)
 	/*
 	 * print current values
 	 */
-	textout_putstr(tout, "curchan ");
-	song_getcurchan(usong, &c);
+	textout_putstr(tout, "curout ");
+	song_getcurchan(usong, &c, 0);
+	if (c) {
+		textout_putstr(tout, c->name.str);
+	} else {
+		textout_putstr(tout, "nil");
+	}
+	textout_putstr(tout, "\n");
+
+	textout_putstr(tout, "curin ");
+	song_getcurchan(usong, &c, 1);
 	if (c) {
 		textout_putstr(tout, c->name.str);
 	} else {
@@ -734,14 +730,6 @@ blt_ls(struct exec *o, struct data **r)
 	textout_putstr(tout, "curlen ");
 	textout_putlong(tout, usong->curlen);
 	textout_putstr(tout, "\n");
-
-	textout_indent(tout);
-	textout_putstr(tout, "curinput {");
-	song_getcurinput(usong, &dev, &ch);
-	textout_putlong(tout, dev);
-	textout_putstr(tout, " ");
-	textout_putlong(tout, ch);
-	textout_putstr(tout, "}\n");
 	return 1;
 }
 
@@ -1118,8 +1106,8 @@ blt_metrocf(struct exec *o, struct data **r)
 {
 	struct ev evhi, evlo;
 
-	if (!exec_lookupev(o, "eventhi", &evhi) ||
-	    !exec_lookupev(o, "eventlo", &evlo)) {
+	if (!exec_lookupev(o, "eventhi", &evhi, 0) ||
+	    !exec_lookupev(o, "eventlo", &evlo, 0)) {
 		return 0;
 	}
 	if (evhi.cmd != EV_NON && evlo.cmd != EV_NON) {
@@ -1246,7 +1234,7 @@ blt_taddev(struct exec *o, struct data **r)
 	if (!exec_lookuplong(o, "measure", &measure) ||
 	    !exec_lookuplong(o, "beat", &beat) ||
 	    !exec_lookuplong(o, "tic", &tic) ||
-	    !exec_lookupev(o, "event", &ev)) {
+	    !exec_lookupev(o, "event", &ev, 0)) {
 		return 0;
 	}
 	song_getcurtrk(usong, &t);
@@ -1602,7 +1590,7 @@ blt_tclist(struct exec *o, struct data **r)
 	track_chanmap(&t->track, map);
 	for (i = 0; i < DEFAULT_MAXNCHANS; i++) {
 		if (map[i]) {
-			c = song_chanlookup_bynum(usong, i / 16, i % 16);
+			c = song_chanlookup_bynum(usong, i / 16, i % 16, 0);
 			if (c != 0) {
 				data_listadd(*r, data_newref(c->name.str));
 			} else {
@@ -1692,7 +1680,7 @@ blt_tinfo(struct exec *o, struct data **r)
 }
 
 unsigned
-blt_clist(struct exec *o, struct data **r)
+blt_clist(struct exec *o, struct data **r, int input)
 {
 	struct data *d, *n;
 	struct songchan *i;
@@ -1701,7 +1689,7 @@ blt_clist(struct exec *o, struct data **r)
 		return 0;
 	}
 	d = data_newlist(NULL);
-	SONG_FOREACH_CHAN(usong, i) {
+	SONG_FOREACH_CHAN(usong, i, input ? usong->inlist : usong->outlist) {
 		n = data_newref(i->name.str);
 		data_listadd(d, n);
 	}
@@ -1710,7 +1698,19 @@ blt_clist(struct exec *o, struct data **r)
 }
 
 unsigned
-blt_cexists(struct exec *o, struct data **r)
+blt_ilist(struct exec *o, struct data **r)
+{
+	return blt_clist(o, r, 1);
+}
+
+unsigned
+blt_olist(struct exec *o, struct data **r)
+{
+	return blt_clist(o, r, 0);
+}
+
+unsigned
+blt_cexists(struct exec *o, struct data **r, int input)
 {
 	struct songchan *i;
 	unsigned dev, ch;
@@ -1718,16 +1718,28 @@ blt_cexists(struct exec *o, struct data **r)
 	if (!song_try(usong)) {
 		return 0;
 	}
-	if (!exec_lookupchan_getnum(o, "channame", &dev, &ch)) {
+	if (!exec_lookupchan_getnum(o, "channame", &dev, &ch, input)) {
 		return 0;
 	}
-	i = song_chanlookup_bynum(usong, dev, ch);
+	i = song_chanlookup_bynum(usong, dev, ch, input);
 	*r = data_newlong(i != NULL ? 1 : 0);
 	return 1;
 }
 
 unsigned
-blt_cnew(struct exec *o, struct data **r)
+blt_iexists(struct exec *o, struct data **r)
+{
+	return blt_cexists(o, r, 1);
+}
+
+unsigned
+blt_oexists(struct exec *o, struct data **r)
+{
+	return blt_cexists(o, r, 0);
+}
+
+unsigned
+blt_cnew(struct exec *o, struct data **r, int input)
 {
 	char *name;
 	struct songchan *i;
@@ -1737,15 +1749,15 @@ blt_cnew(struct exec *o, struct data **r)
 		return 0;
 	}
 	if (!exec_lookupname(o, "channame", &name) ||
-	    !exec_lookupchan_getnum(o, "channum", &dev, &ch)) {
+	    !exec_lookupchan_getnum(o, "channum", &dev, &ch, input)) {
 		return 0;
 	}
-	i = song_chanlookup(usong, name);
+	i = song_chanlookup(usong, name, input);
 	if (i != NULL) {
 		cons_err("channew: chan already exists");
 		return 0;
 	}
-	i = song_chanlookup_bynum(usong, dev, ch);
+	i = song_chanlookup_bynum(usong, dev, ch, input);
 	if (i != NULL) {
 		cons_errs(i->name.str, "dev/chan number already used");
 		return 0;
@@ -1754,29 +1766,53 @@ blt_cnew(struct exec *o, struct data **r)
 		cons_err("channew: dev/chan number out of bounds");
 		return 0;
 	}
-	i = song_channew(usong, name, dev, ch);
+	i = song_channew(usong, name, dev, ch, input);
 	return 1;
 }
 
 unsigned
-blt_cdel(struct exec *o, struct data **r)
+blt_inew(struct exec *o, struct data **r)
+{
+	return blt_cnew(o, r, 1);
+}
+
+unsigned
+blt_onew(struct exec *o, struct data **r)
+{
+	return blt_cnew(o, r, 0);
+}
+
+unsigned
+blt_cdel(struct exec *o, struct data **r, int input)
 {
 	struct songchan *c;
 
 	if (!song_try(usong)) {
 		return 0;
 	}
-	song_getcurchan(usong, &c);
+	song_getcurchan(usong, &c, input);
 	if (c == NULL) {
 		cons_err("cren: no current chan");
 		return 0;
 	}
-	song_chandel(usong, c);
+	song_chandel(usong, c, input);
 	return 1;
 }
 
 unsigned
-blt_cren(struct exec *o, struct data **r)
+blt_idel(struct exec *o, struct data **r)
+{
+	return blt_cdel(o, r, 1);
+}
+
+unsigned
+blt_odel(struct exec *o, struct data **r)
+{
+	return blt_cdel(o, r, 0);
+}
+
+unsigned
+blt_cren(struct exec *o, struct data **r, int input)
 {
 	struct songchan *c;
 	char *name;
@@ -1784,7 +1820,7 @@ blt_cren(struct exec *o, struct data **r)
 	if (!song_try(usong)) {
 		return 0;
 	}
-	song_getcurchan(usong, &c);
+	song_getcurchan(usong, &c, input);
 	if (c == NULL) {
 		cons_err("cren: no current chan");
 		return 0;
@@ -1792,7 +1828,7 @@ blt_cren(struct exec *o, struct data **r)
 	if (!exec_lookupname(o, "newname", &name)) {
 		return 0;
 	}
-	if (song_chanlookup(usong, name)) {
+	if (song_chanlookup(usong, name, input)) {
 		cons_err("name already used by another chan");
 		return 0;
 	}
@@ -1802,7 +1838,19 @@ blt_cren(struct exec *o, struct data **r)
 }
 
 unsigned
-blt_cset(struct exec *o, struct data **r)
+blt_iren(struct exec *o, struct data **r)
+{
+	return blt_cren(o, r, 1);
+}
+
+unsigned
+blt_oren(struct exec *o, struct data **r)
+{
+	return blt_cren(o, r, 0);
+}
+
+unsigned
+blt_cset(struct exec *o, struct data **r, int input)
 {
 	struct songchan *c, *i;
 	unsigned dev, ch;
@@ -1810,15 +1858,15 @@ blt_cset(struct exec *o, struct data **r)
 	if (!song_try(usong)) {
 		return 0;
 	}
-	song_getcurchan(usong, &c);
+	song_getcurchan(usong, &c, input);
 	if (c == NULL) {
 		cons_err("cset: no current chan");
 		return 0;
 	}
-	if (!exec_lookupchan_getnum(o, "channum", &dev, &ch)) {
+	if (!exec_lookupchan_getnum(o, "channum", &dev, &ch, input)) {
 		return 0;
 	}
-	i = song_chanlookup_bynum(usong, dev, ch);
+	i = song_chanlookup_bynum(usong, dev, ch, input);
 	if (i != NULL) {
 		cons_errs(i->name.str, "dev/chan number already used");
 		return 0;
@@ -1830,14 +1878,26 @@ blt_cset(struct exec *o, struct data **r)
 }
 
 unsigned
-blt_cgetc(struct exec *o, struct data **r)
+blt_iset(struct exec *o, struct data **r)
+{
+	return blt_cset(o, r, 1);
+}
+
+unsigned
+blt_oset(struct exec *o, struct data **r)
+{
+	return blt_cset(o, r, 0);
+}
+
+unsigned
+blt_cgetc(struct exec *o, struct data **r, int input)
 {
 	struct songchan *c;
 
 	if (!song_try(usong)) {
 		return 0;
 	}
-	song_getcurchan(usong, &c);
+	song_getcurchan(usong, &c, input);
 	if (c == NULL) {
 		cons_err("cgetc: no current chan");
 		return 0;
@@ -1847,14 +1907,26 @@ blt_cgetc(struct exec *o, struct data **r)
 }
 
 unsigned
-blt_cgetd(struct exec *o, struct data **r)
+blt_igetc(struct exec *o, struct data **r)
+{
+	return blt_cgetc(o, r, 1);
+}
+
+unsigned
+blt_ogetc(struct exec *o, struct data **r)
+{
+	return blt_cgetc(o, r, 0);
+}
+
+unsigned
+blt_cgetd(struct exec *o, struct data **r, int input)
 {
 	struct songchan *c;
 
 	if (!song_try(usong)) {
 		return 0;
 	}
-	song_getcurchan(usong, &c);
+	song_getcurchan(usong, &c, input);
 	if (c == NULL) {
 		cons_err("cgetd: no current chan");
 		return 0;
@@ -1864,7 +1936,19 @@ blt_cgetd(struct exec *o, struct data **r)
 }
 
 unsigned
-blt_caddev(struct exec *o, struct data **r)
+blt_igetd(struct exec *o, struct data **r)
+{
+	return blt_cgetd(o, r, 1);
+}
+
+unsigned
+blt_ogetd(struct exec *o, struct data **r)
+{
+	return blt_cgetd(o, r, 0);
+}
+
+unsigned
+blt_caddev(struct exec *o, struct data **r, int input)
 {
 	struct songchan *c;
 	struct ev ev;
@@ -1872,12 +1956,12 @@ blt_caddev(struct exec *o, struct data **r)
 	if (!song_try(usong)) {
 		return 0;
 	}
-	song_getcurchan(usong, &c);
+	song_getcurchan(usong, &c, input);
 	if (c == NULL) {
 		cons_err("caddev: no current chan");
 		return 0;
 	}
-	if (!exec_lookupev(o, "event", &ev)) {
+	if (!exec_lookupev(o, "event", &ev, input)) {
 		return 0;
 	}
 	if (ev.ch != c->ch || ev.dev != c->dev) {
@@ -1889,7 +1973,19 @@ blt_caddev(struct exec *o, struct data **r)
 }
 
 unsigned
-blt_crmev(struct exec *o, struct data **r)
+blt_iaddev(struct exec *o, struct data **r)
+{
+	return blt_caddev(o, r, 1);
+}
+
+unsigned
+blt_oaddev(struct exec *o, struct data **r)
+{
+	return blt_caddev(o, r, 0);
+}
+
+unsigned
+blt_crmev(struct exec *o, struct data **r, int input)
 {
 	struct songchan *c;
 	struct evspec es;
@@ -1897,12 +1993,12 @@ blt_crmev(struct exec *o, struct data **r)
 	if (!song_try(usong)) {
 		return 0;
 	}
-	song_getcurchan(usong, &c);
+	song_getcurchan(usong, &c, input);
 	if (c == NULL) {
 		cons_err("crmev: no current chan");
 		return 0;
 	}
-	if (!exec_lookupevspec(o, "evspec", &es)) {
+	if (!exec_lookupevspec(o, "evspec", &es, input)) {
 		return 0;
 	}
 	track_unconfev(&c->conf, &es);
@@ -1910,14 +2006,26 @@ blt_crmev(struct exec *o, struct data **r)
 }
 
 unsigned
-blt_cinfo(struct exec *o, struct data **r)
+blt_irmev(struct exec *o, struct data **r)
+{
+	return blt_crmev(o, r, 1);
+}
+
+unsigned
+blt_ormev(struct exec *o, struct data **r)
+{
+	return blt_crmev(o, r, 0);
+}
+
+unsigned
+blt_cinfo(struct exec *o, struct data **r, int input)
 {
 	struct songchan *c;
 
 	if (!song_try(usong)) {
 		return 0;
 	}
-	song_getcurchan(usong, &c);
+	song_getcurchan(usong, &c, input);
 	if (c == NULL) {
 		cons_err("cinfo: no current chan");
 		return 0;
@@ -1928,49 +2036,15 @@ blt_cinfo(struct exec *o, struct data **r)
 }
 
 unsigned
-blt_cseti(struct exec *o, struct data **r)
+blt_iinfo(struct exec *o, struct data **r)
 {
-	unsigned dev, ch;
-	struct songchan *c;
-	struct data *l;
-
-	if (!song_try(usong)) {
-		return 0;
-	}
-	song_getcurchan(usong, &c);
-	if (c == NULL) {
-		cons_err("cseti: no current chan");
-		return 0;
-	}
-	if (!exec_lookuplist(o, "inputchan", &l)) {
-		return 0;
-	}
-	if (!data_num2chan(l, &dev, &ch)) {
-		return 0;
-	}
-	c->curinput_dev = dev;
-	c->curinput_ch = ch;
-	return 1;
+	return blt_cinfo(o, r, 1);
 }
 
-
 unsigned
-blt_cgeti(struct exec *o, struct data **r)
+blt_oinfo(struct exec *o, struct data **r)
 {
-	struct songchan *c;
-
-	if (!song_try(usong)) {
-		return 0;
-	}
-	song_getcurchan(usong, &c);
-	if (c == NULL) {
-		cons_err("cgeti: no current chan");
-		return 0;
-	}
-	*r = data_newlist(NULL);
-	data_listadd(*r, data_newlong(c->curinput_dev));
-	data_listadd(*r, data_newlong(c->curinput_ch));
-	return 1;
+	return blt_cinfo(o, r, 0);
 }
 
 unsigned
@@ -2126,8 +2200,8 @@ blt_fmap(struct exec *o, struct data **r)
 		cons_err("fdel: no current filt");
 		return 0;
 	}
-	if (!exec_lookupevspec(o, "from", &from) ||
-	    !exec_lookupevspec(o, "to", &to)) {
+	if (!exec_lookupevspec(o, "from", &from, 1) ||
+	    !exec_lookupevspec(o, "to", &to, 0)) {
 		return 0;
 	}
 	filt_mapnew(&f->filt, &from, &to);
@@ -2148,8 +2222,8 @@ blt_funmap(struct exec *o, struct data **r)
 		cons_err("fdel: no current filt");
 		return 0;
 	}
-	if (!exec_lookupevspec(o, "from", &from) ||
-	    !exec_lookupevspec(o, "to", &to)) {
+	if (!exec_lookupevspec(o, "from", &from, 1) ||
+	    !exec_lookupevspec(o, "to", &to, 0)) {
 		return 0;
 	}
 	filt_mapdel(&f->filt, &from, &to);
@@ -2170,8 +2244,8 @@ blt_fchgxxx(struct exec *o, struct data **r, int input, int swap)
 		cons_err("fdel: no current filt");
 		return 0;
 	}
-	if (!exec_lookupevspec(o, "from", &from) ||
-	    !exec_lookupevspec(o, "to", &to)) {
+	if (!exec_lookupevspec(o, "from", &from, 1) ||
+	    !exec_lookupevspec(o, "to", &to, 0)) {
 		return 0;
 	}
 	if (evspec_isec(&from, &to)) {
@@ -2232,7 +2306,7 @@ blt_fsetc(struct exec *o, struct data **r)
 		f->curchan = NULL;
 		return 1;
 	} else if (arg->data->type == DATA_REF) {
-		c = song_chanlookup(usong, arg->data->val.ref);
+		c = song_chanlookup(usong, arg->data->val.ref, 0);
 		if (!c) {
 			cons_err("no such chan");
 			return 0;

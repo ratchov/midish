@@ -154,7 +154,7 @@ user_func_trackaddev(struct exec *o, struct data **r) {
 	    !exec_lookuplong(o, "measure", &measure) || 
 	    !exec_lookuplong(o, "beat", &beat) || 
 	    !exec_lookuplong(o, "tic", &tic) || 
-	    !exec_lookupev(o, "event", &ev)) {
+	    !exec_lookupev(o, "event", &ev, 0)) {
 		return 0;
 	}
 	track_timeinfo(&usong->meta, measure, &pos, NULL, &bpm, &tpb);
@@ -299,7 +299,7 @@ user_func_trackblank(struct exec *o, struct data **r) {
 	    !exec_lookuplong(o, "from", &from) ||
 	    !exec_lookuplong(o, "amount", &amount) ||
 	    !exec_lookuplong(o, "quantum", &quant) ||
-	    !exec_lookupevspec(o, "evspec", &es)) {
+	    !exec_lookupevspec(o, "evspec", &es, 0)) {
 		return 0;
 	}
 	tic = track_findmeasure(&usong->meta, from);
@@ -334,7 +334,7 @@ user_func_trackcopy(struct exec *o, struct data **r) {
 	    !exec_lookuptrack(o, "trackname2", &t2) ||
 	    !exec_lookuplong(o, "where", &where) ||
 	    !exec_lookuplong(o, "quantum", &quant) ||
-	    !exec_lookupevspec(o, "evspec", &es)) {
+	    !exec_lookupevspec(o, "evspec", &es, 0)) {
 		return 0;
 	}
 	tic  = track_findmeasure(&usong->meta, from);
@@ -485,7 +485,7 @@ user_func_tracktransp(struct exec *o, struct data **r) {
 	    !exec_lookuplong(o, "amount", &amount) ||
 	    !exec_lookuplong(o, "halftones", &halftones) ||
 	    !exec_lookuplong(o, "quantum", &quant) ||
-	    !exec_lookupevspec(o, "evspec", &es)) {
+	    !exec_lookupevspec(o, "evspec", &es, 0)) {
 		return 0;
 	}
 	tic = track_findmeasure(&usong->meta, from);
@@ -553,7 +553,7 @@ user_func_trackchanlist(struct exec *o, struct data **r) {
 	track_chanmap(&t->track, map);
 	for (i = 0; i < DEFAULT_MAXNCHANS; i++) {
 		if (map[i]) {
-			c = song_chanlookup_bynum(usong, i / 16, i % 16);
+			c = song_chanlookup_bynum(usong, i / 16, i % 16, 0);
 			if (c != 0) {
 				data_listadd(*r, data_newref(c->name.str));
 			} else {
@@ -581,7 +581,7 @@ user_func_trackinfo(struct exec *o, struct data **r) {
 	}
 	if (!exec_lookuptrack(o, "trackname", &t) ||
 	    !exec_lookuplong(o, "quantum", &quant) ||
-	    !exec_lookupevspec(o, "evspec", &es)) {
+	    !exec_lookupevspec(o, "evspec", &es, 0)) {
 		return 0;
 	}
 

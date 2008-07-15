@@ -59,7 +59,7 @@ user_func_chanlist(struct exec *o, struct data **r) {
 		return 0;
 	}
 	d = data_newlist(NULL);
-	SONG_FOREACH_CHAN(usong, i) {
+	SONG_FOREACH_OUT(usong, i) {
 		n = data_newref(i->name.str);
 		data_listadd(d, n);
 	}
@@ -77,15 +77,15 @@ user_func_channew(struct exec *o, struct data **r) {
 		return 0;
 	}
 	if (!exec_lookupname(o, "channame", &name) ||
-	    !exec_lookupchan_getnum(o, "channum", &dev, &ch)) {
+	    !exec_lookupchan_getnum(o, "channum", &dev, &ch, 0)) {
 		return 0;
 	}
-	i = song_chanlookup(usong, name);
+	i = song_chanlookup(usong, name, 0);
 	if (i != NULL) {
 		cons_err("channew: chan already exists");
 		return 0;
 	}
-	i = song_chanlookup_bynum(usong, dev, ch);
+	i = song_chanlookup_bynum(usong, dev, ch, 0);
 	if (i != NULL) {
 		cons_errs(i->name.str, "dev/chan number already used");
 		return 0;
@@ -94,7 +94,7 @@ user_func_channew(struct exec *o, struct data **r) {
 		cons_err("channew: dev/chan number out of bounds");
 		return 0;
 	}
-	i = song_channew(usong, name, dev, ch);
+	i = song_channew(usong, name, dev, ch, 0);
 	return 1;
 }
 
@@ -105,10 +105,10 @@ user_func_chandelete(struct exec *o, struct data **r) {
 	if (!song_try(usong)) {
 		return 0;
 	}
-	if (!exec_lookupchan_getref(o, "channame", &c)) {
+	if (!exec_lookupchan_getref(o, "channame", &c, 0)) {
 		return 0;
 	}
-	song_chandel(usong, c);
+	song_chandel(usong, c, 0);
 	return 1;
 }
 
@@ -120,11 +120,11 @@ user_func_chanrename(struct exec *o, struct data **r) {
 	if (!song_try(usong)) {
 		return 0;
 	}
-	if (!exec_lookupchan_getref(o, "channame", &c) ||
+	if (!exec_lookupchan_getref(o, "channame", &c, 0) ||
 	    !exec_lookupname(o, "newname", &name)) {
 		return 0;
 	}
-	if (song_chanlookup(usong, name)) {
+	if (song_chanlookup(usong, name, 0)) {
 		cons_err("name already used by another chan");
 		return 0;
 	}
@@ -141,10 +141,10 @@ user_func_chanexists(struct exec *o, struct data **r) {
 	if (!song_try(usong)) {
 		return 0;
 	}
-	if (!exec_lookupchan_getnum(o, "channame", &dev, &ch)) {
+	if (!exec_lookupchan_getnum(o, "channame", &dev, &ch, 0)) {
 		return 0;
 	}
-	i = song_chanlookup_bynum(usong, dev, ch);
+	i = song_chanlookup_bynum(usong, dev, ch, 0);
 	*r = data_newlong(i != NULL ? 1 : 0);
 	return 1;
 }
@@ -157,11 +157,11 @@ user_func_chanset(struct exec *o, struct data **r) {
 	if (!song_try(usong)) {
 		return 0;
 	}
-	if (!exec_lookupchan_getref(o, "channame", &c) ||
-	    !exec_lookupchan_getnum(o, "channum", &dev, &ch)) {
+	if (!exec_lookupchan_getref(o, "channame", &c, 0) ||
+	    !exec_lookupchan_getnum(o, "channum", &dev, &ch, 0)) {
 		return 0;
 	}
-	i = song_chanlookup_bynum(usong, dev, ch);
+	i = song_chanlookup_bynum(usong, dev, ch, 0);
 	if (i != NULL) {
 		cons_errs(i->name.str, "dev/chan number already used");
 		return 0;
@@ -179,7 +179,7 @@ user_func_changetch(struct exec *o, struct data **r) {
 	if (!song_try(usong)) {
 		return 0;
 	}
-	if (!exec_lookupchan_getref(o, "channame", &i)) {
+	if (!exec_lookupchan_getref(o, "channame", &i, 0)) {
 		return 0;
 	}
 	*r = data_newlong(i->ch);
@@ -193,7 +193,7 @@ user_func_changetdev(struct exec *o, struct data **r) {
 	if (!song_try(usong)) {
 		return 0;
 	}
-	if (!exec_lookupchan_getref(o, "channame", &i)) {
+	if (!exec_lookupchan_getref(o, "channame", &i, 0)) {
 		return 0;
 	}
 	*r = data_newlong(i->dev);
@@ -208,8 +208,8 @@ user_func_chanconfev(struct exec *o, struct data **r) {
 	if (!song_try(usong)) {
 		return 0;
 	}
-	if (!exec_lookupchan_getref(o, "channame", &c) ||
-	    !exec_lookupev(o, "event", &ev)) {
+	if (!exec_lookupchan_getref(o, "channame", &c, 0) ||
+	    !exec_lookupev(o, "event", &ev, 0)) {
 		return 0;
 	}
 	if (ev.ch != c->ch || ev.dev != c->dev) {
@@ -228,8 +228,8 @@ user_func_chanunconfev(struct exec *o, struct data **r) {
 	if (!song_try(usong)) {
 		return 0;
 	}
-	if (!exec_lookupchan_getref(o, "channame", &c) ||
-	    !exec_lookupevspec(o, "evspec", &es)) {
+	if (!exec_lookupchan_getref(o, "channame", &c, 0) ||
+	    !exec_lookupevspec(o, "evspec", &es, 0)) {
 		return 0;
 	}
 	track_unconfev(&c->conf, &es);
@@ -243,7 +243,7 @@ user_func_chaninfo(struct exec *o, struct data **r) {
 	if (!song_try(usong)) {
 		return 0;
 	}
-	if (!exec_lookupchan_getref(o, "channame", &c)) {
+	if (!exec_lookupchan_getref(o, "channame", &c, 0)) {
 		return 0;
 	}
 	track_output(&c->conf, tout);
@@ -260,15 +260,14 @@ user_func_chansetcurinput(struct exec *o, struct data **r) {
 	if (!song_try(usong)) {
 		return 0;
 	}
-	if (!exec_lookupchan_getref(o, "channame", &c) ||
+	if (!exec_lookupchan_getref(o, "channame", &c, 0) ||
 	    !exec_lookuplist(o, "inputchan", &l)) {
 		return 0;
 	}
 	if (!data_num2chan(l, &dev, &ch)) {
 		return 0;
 	}
-	c->curinput_dev = dev;
-	c->curinput_ch = ch;
+	cons_err("warning: there's no more per-channel input");
 	return 1;
 }
 
@@ -280,11 +279,12 @@ user_func_changetcurinput(struct exec *o, struct data **r) {
 	if (!song_try(usong)) {
 		return 0;
 	}
-	if (!exec_lookupchan_getref(o, "channame", &c)) {
+	if (!exec_lookupchan_getref(o, "channame", &c, 0)) {
 		return 0;
 	}
 	*r = data_newlist(NULL);
-	data_listadd(*r, data_newlong(c->curinput_dev));
-	data_listadd(*r, data_newlong(c->curinput_ch));
+	data_listadd(*r, data_newlong(c->dev));
+	data_listadd(*r, data_newlong(c->ch));
+	cons_err("warning: there's no more per-channel input");
 	return 1;
 }
