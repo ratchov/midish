@@ -1014,7 +1014,7 @@ user_mainloop(void)
 			name_newarg("channame",
 			name_newarg("channum", NULL)));
 	exec_newbuiltin(exec, "odel", blt_odel, NULL);
-	exec_newbuiltin(exec, "cren", blt_oren,
+	exec_newbuiltin(exec, "oren", blt_oren,
 			name_newarg("newname", NULL));
 	exec_newbuiltin(exec, "oinfo", blt_oinfo, NULL);
 	exec_newbuiltin(exec, "ogetc", blt_ogetc, NULL);
