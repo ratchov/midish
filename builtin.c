@@ -1728,17 +1728,17 @@ blt_olist(struct exec *o, struct data **r)
 unsigned
 blt_cexists(struct exec *o, struct data **r, int input)
 {
-	struct songchan *i;
-	unsigned dev, ch;
+	struct songchan *c;
+	char *name;
 
 	if (!song_try(usong)) {
 		return 0;
 	}
-	if (!exec_lookupchan_getnum(o, "channame", &dev, &ch, input)) {
+	if (!exec_lookupname(o, "channame", &name)) {
 		return 0;
 	}
-	i = song_chanlookup_bynum(usong, dev, ch, input);
-	*r = data_newlong(i != NULL ? 1 : 0);
+	c = song_chanlookup(usong, name, input);
+	*r = data_newlong(c != NULL ? 1 : 0);
 	return 1;
 }
 
