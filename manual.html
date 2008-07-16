@@ -1501,10 +1501,11 @@ For instance the following will copy the current selection
 at measure 5 of track ``mypiano2''.
 
 <pre>
-tcopy mypiano2 5
+tcopy		# copy current selection
+ct mypiano2	# change current track to ``mypiano2''
+g 5		# go to measure 5
+tpaste		# paste the copy
 </pre>
-
-as for ``tclr''
 
 <h3><a name="section_8_5">8.5 Track quantization</a></h3>
 
@@ -2154,7 +2155,7 @@ getlen, setq, getq, fac, getfac, ct, gett, cf, getf, mute, unmute,
 getmute, ls, save, load, reset, export, import, idle, play, rec, stop,
 tempo, mins, mcut, minfo, mtempo, msig, ctlconf, ctlconfx, ctlunconf,
 ctlinfo, metro, metrocf, tlist, tnew, tdel, tren, texists, taddev,
-tsetf, tgetf, tcheck, tcut, tins, tclr, tcopy, tmerge, tquant,
+tsetf, tgetf, tcheck, tcut, tins, tclr, tpaste, tcopy, tmerge, tquant,
 ttransp, tclist, tinfo, ilist, olist, iexists, oexists, inew, onew,
 idel, odel, iren, oren, iset, oset, igetc, ogetc, igetd, ogetd,
 iaddev, oaddev, irmev, ormev, iinfo, oinfo, flist, fnew, fdel, fren,
@@ -2200,6 +2201,12 @@ is available during performance mode.
 added new messages for front ends allowing to get asynchronously the
 current position. Updated rmidish to use it to display the current
 position in the prompt.
+
+<li>
+make <a href="func_tcopy">tcopy</a> copy selection into a
+hidden temporary track and add
+<a href="func_tcopy">tpaste</a>
+to paste it at the current position.
 
 </ul>
 
@@ -2982,16 +2989,26 @@ removed.
 insert <tt>amount</tt> empty measures in the
 current track, at the current position.
 
-<dt><a name="func_tcopy">tcopy trackname2 where</a>
+<dt><a name="func_tpaste">tpaste</a>
+
+<dd>
+copy the hidden temporary track (filled by
+<a href="func_tcopy">tcopy</a>)
+on the current position of the current track.
+the current event selection
+(see <a href="#func_ev">ev</a> function)
+are copied
+
+<dt><a name="func_tcopy">tcopy</a>
 
 <dd>
 copy the current selection of the current track
-into track <tt>trackname2</tt>
-at position <tt>where</tt>.
+into a hidden temporary track.
 Only events matching
 the current event selection
 (see <a href="#func_ev">ev</a> function)
 are copied
+
 
 <dt><a name="func_tquant">tquant rate</a>
 

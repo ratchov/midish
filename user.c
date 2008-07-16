@@ -972,9 +972,8 @@ user_mainloop(void)
 	exec_newbuiltin(exec, "tcheck", blt_tcheck, NULL);
 	exec_newbuiltin(exec, "tcut", blt_tcut, NULL);
 	exec_newbuiltin(exec, "tclr", blt_tclr, NULL);
-	exec_newbuiltin(exec, "tcopy", blt_tcopy,
-			name_newarg("trackname2",
-			name_newarg("where", NULL)));
+	exec_newbuiltin(exec, "tpaste", blt_tpaste, NULL);
+	exec_newbuiltin(exec, "tcopy", blt_tcopy, NULL);
 	exec_newbuiltin(exec, "tins", blt_tins,
 			name_newarg("amount", NULL));
 	exec_newbuiltin(exec, "tmerge", blt_tmerge,

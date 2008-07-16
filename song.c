@@ -83,6 +83,7 @@ song_init(struct song *o)
 	o->sxlist = NULL;
 	o->tics_per_unit = DEFAULT_TPU;
 	track_init(&o->meta);
+	track_init(&o->clip);
 	track_init(&o->rec);
 
 	/*

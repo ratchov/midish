@@ -95,6 +95,12 @@ struct song {
 	struct metro metro;		/* metonome conf. */
 
 	/*
+	 * clipboard
+	 */
+#define CLIP_OFFS	(256*96)
+	struct track clip;		/* tmp track for copy & paste */
+
+	/*
 	 * temporary variables used in real-time operations
 	 */
 	struct seqptr metaptr;		/* cur. pos in meta track */
