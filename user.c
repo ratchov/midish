@@ -1065,10 +1065,10 @@ user_mainloop(void)
 	exec_newbuiltin(exec, "xrm", blt_xrm,
 			name_newarg("data", NULL));
 	exec_newbuiltin(exec, "xsetd", blt_xsetd,
-			name_newarg("unit",
+			name_newarg("devnum",
 			name_newarg("data", NULL)));
 	exec_newbuiltin(exec, "xadd", blt_xadd,
-			name_newarg("unit",
+			name_newarg("devnum",
 			name_newarg("data", NULL)));
 
 	exec_newbuiltin(exec, "shut", user_func_shut, NULL);
@@ -1076,25 +1076,25 @@ user_mainloop(void)
 	exec_newbuiltin(exec, "builtinlist", user_func_builtinlist, NULL);
 
 	exec_newbuiltin(exec, "dnew", blt_dnew,
-			name_newarg("unit",
+			name_newarg("devnum",
 			name_newarg("path",
 			name_newarg("mode", NULL))));
 	exec_newbuiltin(exec, "ddel", blt_ddel,
-			name_newarg("unit", NULL));
+			name_newarg("devnum", NULL));
 	exec_newbuiltin(exec, "dclktx", blt_dclktx,
-			name_newarg("unitlist", NULL));
+			name_newarg("devlist", NULL));
 	exec_newbuiltin(exec, "dclkrx", blt_dclkrx,
-			name_newarg("unit", NULL));
+			name_newarg("devnum", NULL));
 	exec_newbuiltin(exec, "dclkrate", blt_dclkrate,
-			name_newarg("unit",
+			name_newarg("devnum",
 			name_newarg("tics_per_unit", NULL)));
 	exec_newbuiltin(exec, "dinfo", blt_dinfo,
-			name_newarg("unit", NULL));
+			name_newarg("devnum", NULL));
 	exec_newbuiltin(exec, "dixctl", blt_dixctl,
-			name_newarg("unit",
+			name_newarg("devnum",
 			name_newarg("ctlset", NULL)));
 	exec_newbuiltin(exec, "doxctl", blt_doxctl,
-			name_newarg("unit",
+			name_newarg("devnum",
 			name_newarg("ctlset", NULL)));
 
 	/*

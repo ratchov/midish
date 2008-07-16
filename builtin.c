@@ -252,7 +252,7 @@ blt_setunit(struct exec *o, struct data **r)
 		return 0;
 	}
 	if ((tpu % DEFAULT_TPU) != 0 || tpu < DEFAULT_TPU) {
-		cons_errs(o->procname, "unit must be multiple of 96 tics");
+		cons_errs(o->procname, "tpu must be multiple of 96 tics");
 		return 0;
 	}
 	SONG_FOREACH_TRK(usong, t) {
@@ -2505,12 +2505,12 @@ blt_xsetd(struct exec *o, struct data **r)
 		cons_errs(o->procname, "no current sysex");
 		return 0;
 	}
-	if (!exec_lookuplong(o, "unit", &unit) ||
+	if (!exec_lookuplong(o, "devnum", &unit) ||
 	    !exec_lookuplist(o, "data", &d)) {
 		return 0;
 	}
 	if (unit < 0 || unit >= DEFAULT_MAXNDEVS) {
-		cons_errs(o->procname, "unit out of range");
+		cons_errs(o->procname, "devnum out of range");
 		return 0;
 	}
 	for (x = c->sx.first; x != NULL; x = x->next) {
@@ -2544,11 +2544,11 @@ blt_xadd(struct exec *o, struct data **r)
 		cons_errs(o->procname, "no current sysex");
 		return 0;
 	}
-	if (!exec_lookuplong(o, "unit", &unit)) {
+	if (!exec_lookuplong(o, "devnum", &unit)) {
 		return 0;
 	}
 	if (unit < 0 || unit >= DEFAULT_MAXNDEVS) {
-		cons_errs(o->procname, "unit out of range");
+		cons_errs(o->procname, "devnum out of range");
 		return 0;
 	}
 	arg = exec_varlookup(o, "data");
@@ -2597,7 +2597,7 @@ blt_dnew(struct exec *o, struct data **r)
 	if (!song_try(usong)) {
 		return 0;
 	}
-	if (!exec_lookuplong(o, "unit", &unit) ||
+	if (!exec_lookuplong(o, "devnum", &unit) ||
 	    !exec_lookupstring(o, "path", &path) ||
 	    !exec_lookupname(o, "mode", &modename)) {
 		return 0;
@@ -2624,7 +2624,7 @@ blt_ddel(struct exec *o, struct data **r)
 	if (!song_try(usong)) {
 		return 0;
 	}
-	if (!exec_lookuplong(o, "unit", &unit)) {
+	if (!exec_lookuplong(o, "devnum", &unit)) {
 		return 0;
 	}
 	return mididev_detach(unit);
@@ -2639,7 +2639,7 @@ blt_dclkrx(struct exec *o, struct data **r)
 	if (!song_try(usong)) {
 		return 0;
 	}
-	arg = exec_varlookup(o, "unit");
+	arg = exec_varlookup(o, "devnum");
 	if (!arg) {
 		dbg_puts("blt_dclkrx: no such var\n");
 		dbg_panic();
@@ -2670,7 +2670,7 @@ blt_dclktx(struct exec *o, struct data **r)
 	if (!song_try(usong)) {
 		return 0;
 	}
-	if (!exec_lookuplist(o, "unitlist", &units)) {
+	if (!exec_lookuplist(o, "devlist", &units)) {
 		return 0;
 	}
 	for (i = 0; i < DEFAULT_MAXNDEVS; i++)
@@ -2699,7 +2699,7 @@ blt_dclkrate(struct exec *o, struct data **r)
 	if (!song_try(usong)) {
 		return 0;
 	}
-	if (!exec_lookuplong(o, "unit", &unit) ||
+	if (!exec_lookuplong(o, "devnum", &unit) ||
 	    !exec_lookuplong(o, "tics_per_unit", &tpu)) {
 		return 0;
 	}
@@ -2723,7 +2723,7 @@ blt_dinfo(struct exec *o, struct data **r)
 	if (!song_try(usong)) {
 		return 0;
 	}
-	if (!exec_lookuplong(o, "unit", &unit)) {
+	if (!exec_lookuplong(o, "devnum", &unit)) {
 		return 0;
 	}
 	if (unit < 0 || unit >= DEFAULT_MAXNDEVS || !mididev_byunit[unit]) {
@@ -2767,7 +2767,7 @@ blt_dixctl(struct exec *o, struct data **r)
 	if (!song_try(usong)) {
 		return 0;
 	}
-	if (!exec_lookuplong(o, "unit", &unit) ||
+	if (!exec_lookuplong(o, "devnum", &unit) ||
 	    !exec_lookuplist(o, "ctlset", &list)) {
 		return 0;
 	}
@@ -2792,7 +2792,7 @@ blt_doxctl(struct exec *o, struct data **r)
 	if (!song_try(usong)) {
 		return 0;
 	}
-	if (!exec_lookuplong(o, "unit", &unit) ||
+	if (!exec_lookuplong(o, "devnum", &unit) ||
 	    !exec_lookuplist(o, "ctlset", &list)) {
 		return 0;
 	}
