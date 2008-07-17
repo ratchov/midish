@@ -275,6 +275,55 @@ userline(char *rl)
 
 }
 
+char *builtins[] = {
+        "print", "err", "exec", "debug", "panic", "info", "getunit",
+        "setunit", "getfac", "fac", "getpos", "g", "getlen", "sel",
+        "getq", "setq", "ev", "gett", "ct", "getf", "cf", "getx",
+        "cx", "geti", "ci", "geto", "co", "mute", "unmute", "getmute",
+        "ls", "save", "load", "reset", "export", "import", "i",
+        "p", "r", "s", "t", "mins", "mcut", "minfo", "mtempo",
+        "msig", "ctlconf", "ctlconfx", "ctlunconf", "ctlinfo", "m",
+        "metrocf", "tlist", "tnew", "tdel", "tren", "texists",
+        "taddev", "tsetf", "tgetf", "tcheck", "tcut", "tclr",
+        "tpaste", "tcopy", "tins", "tmerge", "tquant", "ttransp",
+        "tclist", "tinfo", "ilist", "iexists", "iset", "inew",
+        "idel", "iren", "iinfo", "igetc", "igetd", "iaddev", "irmev",
+        "olist", "oexists", "oset", "onew", "odel", "oren", "oinfo",
+        "ogetc", "ogetd", "oaddev", "ormev", "flist", "fexists",
+        "fnew", "fdel", "fren", "finfo", "freset", "fmap", "funmap",
+        "fchgin", "fchgout", "fswapin", "fswapout", "xlist",
+        "xexists", "xnew", "xdel", "xren", "xinfo", "xrm", "xsetd",
+        "xadd", "shut", "proclist", "builtinlist", "dnew", "ddel",
+        "dclktx", "dclkrx", "dclkrate", "dinfo", "dixctl", "doxctl",
+	NULL
+};
+
+
+char *
+genbuiltin(const char *text, int state)
+{
+	static char **pname;
+	size_t len;
+
+	if (state == 0)
+		pname = &builtins[0];
+
+	len = strlen(text);
+	while (*pname != NULL) {
+		if (strncmp(*pname, text, len) == 0)
+			return strdup(*pname++);
+		pname++;
+	}
+	return NULL;
+}
+
+char **
+complete(const char *text, int start, int end)
+{
+	if (start != 0)
+		return NULL;
+	return rl_completion_matches(text, genbuiltin);
+}
 
 int
 main(int argc, char *argv[])
@@ -323,6 +372,7 @@ main(int argc, char *argv[])
 	pfds[1].fd = midish.sout;
 	pfds[1].events = POLLIN;
 
+	rl_attempted_completion_function = complete;
 	rl_callback_handler_install("[----:--]> ", userline);
 	waitready();
 	while (!quit) {
