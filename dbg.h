@@ -54,9 +54,9 @@ struct prof {
 	unsigned panic;
 };
 
-void prof_reset(struct prof *p, char *name);
-void prof_val(struct prof *p, unsigned val);
-void prof_dbg(struct prof *p);
+void prof_reset(struct prof *, char *);
+void prof_val(struct prof *, unsigned);
+void prof_dbg(struct prof *);
 
 extern unsigned mem_debug;
 

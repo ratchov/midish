@@ -148,15 +148,15 @@ struct evinfo {
 
 extern struct evinfo evinfo[EV_NUMCMD];
 
-void	 ev_dbg(struct ev *ev);
-unsigned ev_prio(struct ev *ev);
-unsigned ev_str2cmd(struct ev *ev, char *str);
-unsigned ev_phase(struct ev *ev);
+void	 ev_dbg(struct ev *);
+unsigned ev_prio(struct ev *);
+unsigned ev_str2cmd(struct ev *, char *);
+unsigned ev_phase(struct ev *);
 
-unsigned evspec_str2cmd(struct evspec *ev, char *str);
-void	 evspec_dbg(struct evspec *o);
-void	 evspec_reset(struct evspec *o);
-unsigned evspec_matchev(struct evspec *o, struct ev *e);
+unsigned evspec_str2cmd(struct evspec *, char *);
+void	 evspec_dbg(struct evspec *);
+void	 evspec_reset(struct evspec *);
+unsigned evspec_matchev(struct evspec *, struct ev *);
 unsigned evspec_eq(struct evspec *, struct evspec *);
 unsigned evspec_isec(struct evspec *, struct evspec *);
 unsigned evspec_in(struct evspec *, struct evspec *);
@@ -188,11 +188,11 @@ extern	struct evctl evctl_tab[128];
  */
 #define EVCTL_ISFINE(xctlset, num)	((xctlset) & (1 << (num)))
 
-void     evctl_conf(unsigned num, char *name, unsigned defval);
-void	 evctl_unconf(unsigned i);
-unsigned evctl_lookup(char *name, unsigned *ret);
+void     evctl_conf(unsigned, char *, unsigned);
+void	 evctl_unconf(unsigned);
+unsigned evctl_lookup(char *, unsigned *);
 void	 evctl_init(void);
 void	 evctl_done(void);
-unsigned evctl_isreserved(unsigned num);
+unsigned evctl_isreserved(unsigned);
 
 #endif /* MIDISH_EV_H */

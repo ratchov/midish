@@ -39,7 +39,7 @@ struct mixout {
 
 void mixout_start(void);
 void mixout_stop(void);
-void mixout_putev(struct ev *ev, unsigned id);
+void mixout_putev(struct ev *, unsigned);
 
 extern unsigned mixout_debug;
 

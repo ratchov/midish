@@ -44,27 +44,27 @@ struct track {
 	struct seqev *first;		/* head of the event list */
 };
 
-void	      seqev_pool_init(unsigned size);
+void	      seqev_pool_init(unsigned);
 void	      seqev_pool_done(void);
 struct seqev *seqev_new(void);
-void	      seqev_del(struct seqev *p);
-void	      seqev_dump(struct seqev *i);
+void	      seqev_del(struct seqev *);
+void	      seqev_dump(struct seqev *);
 
-void	      track_init(struct track *o);
-void	      track_done(struct track *o);
-void	      track_dump(struct track *o);
-unsigned      track_numev(struct track *o);
-unsigned      track_numtic(struct track *o);
-void	      track_clear(struct track *o);
-unsigned      track_isempty(struct track *o);
-void	      track_chomp(struct track *o);
-void	      track_shift(struct track *o, unsigned ntics);
+void	      track_init(struct track *);
+void	      track_done(struct track *);
+void	      track_dump(struct track *);
+unsigned      track_numev(struct track *);
+unsigned      track_numtic(struct track *);
+void	      track_clear(struct track *);
+unsigned      track_isempty(struct track *);
+void	      track_chomp(struct track *);
+void	      track_shift(struct track *, unsigned);
 
-unsigned      seqev_avail(struct seqev *pos);
-void	      seqev_ins(struct seqev *pos, struct seqev *se);
-void	      seqev_rm(struct seqev *pos);
+unsigned      seqev_avail(struct seqev *);
+void	      seqev_ins(struct seqev *, struct seqev *);
+void	      seqev_rm(struct seqev *);
 
-void	      track_setchan(struct track *src, unsigned dev, unsigned ch);
-void	      track_chanmap(struct track *o, char *map);
+void	      track_setchan(struct track *, unsigned, unsigned);
+void	      track_chanmap(struct track *, char *);
 
 #endif /* MIDISH_TRACK_H */

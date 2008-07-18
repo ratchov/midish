@@ -33,7 +33,7 @@
 
 struct song;
 
-unsigned song_exportsmf(struct song *o, char *filename);
-struct song *song_importsmf(char *filename);
+unsigned song_exportsmf(struct song *o, char *);
+struct song *song_importsmf(char *);
 
 #endif /* MIDISH_SMF_H */

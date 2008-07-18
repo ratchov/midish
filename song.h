@@ -148,42 +148,42 @@ struct song {
 	     i = (struct songsx *)i->name.next)
 
 struct song *song_new(void);
-void song_delete(struct song *o);
-void song_init(struct song *o);
-void song_done(struct song *o);
+void song_delete(struct song *);
+void song_init(struct song *);
+void song_done(struct song *);
 
-struct songtrk *song_trknew(struct song *o, char *name);
-struct songtrk *song_trklookup(struct song *o, char *name);
-void song_trkdel(struct song *o, struct songtrk *t);
+struct songtrk *song_trknew(struct song *, char *);
+struct songtrk *song_trklookup(struct song *, char *);
+void song_trkdel(struct song *, struct songtrk *);
 
 struct songchan *song_channew(struct song *, char *, unsigned, unsigned, int);
 struct songchan *song_chanlookup(struct song *, char *, int);
 struct songchan *song_chanlookup_bynum(struct song *, unsigned, unsigned, int);
 void song_chandel(struct song *, struct songchan *, int);
 
-struct songfilt *song_filtnew(struct song *o, char *name);
-struct songfilt *song_filtlookup(struct song *o, char *name);
-void song_filtdel(struct song *o, struct songfilt *f);
+struct songfilt *song_filtnew(struct song *, char *);
+struct songfilt *song_filtlookup(struct song *, char *);
+void song_filtdel(struct song *, struct songfilt *);
 
-struct songsx *song_sxnew(struct song *o, char *name);
-struct songsx *song_sxlookup(struct song *o, char *name);
-void song_sxdel(struct song *o, struct songsx *t);
+struct songsx *song_sxnew(struct song *, char *);
+struct songsx *song_sxlookup(struct song *, char *);
+void song_sxdel(struct song *, struct songsx *);
 
-void song_getcursx(struct song *o, struct songsx **r);
-void song_setcursx(struct song *o, struct songsx *x);
-void song_getcurtrk(struct song *o, struct songtrk **r);
-void song_setcurtrk(struct song *o, struct songtrk *t);
-void song_getcurfilt(struct song *o, struct songfilt **r);
-void song_setcurfilt(struct song *o, struct songfilt *f);
+void song_getcursx(struct song *, struct songsx **);
+void song_setcursx(struct song *, struct songsx *);
+void song_getcurtrk(struct song *, struct songtrk **);
+void song_setcurtrk(struct song *, struct songtrk *);
+void song_getcurfilt(struct song *, struct songfilt **);
+void song_setcurfilt(struct song *, struct songfilt *);
 void song_getcurchan(struct song *, struct songchan **, int);
 void song_setcurchan(struct song *, struct songchan *, int);
 
-void song_playconf(struct song *o);
-void song_record(struct song *o);
-void song_play(struct song *o);
-void song_idle(struct song *o);
-void song_stop(struct song *o);
-unsigned song_try(struct song *o);
+void song_playconf(struct song *);
+void song_record(struct song *);
+void song_play(struct song *);
+void song_idle(struct song *);
+void song_stop(struct song *);
+unsigned song_try(struct song *);
 
 extern unsigned song_debug;
 

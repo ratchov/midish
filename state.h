@@ -81,27 +81,27 @@ struct statelist {
 #endif
 };
 
-void	      state_pool_init(unsigned size);
+void	      state_pool_init(unsigned);
 void	      state_pool_done(void);
 struct state *state_new(void);
-void	      state_del(struct state *s);
-void	      state_dbg(struct state *s);
-void	      state_copyev(struct state *s, struct ev *ev, unsigned phase);
-unsigned      state_match(struct state *s, struct ev *ev);
-unsigned      state_inspec(struct state *st, struct evspec *spec);
-unsigned      state_eq(struct state *s, struct ev *ev);
-unsigned      state_cancel(struct state *st, struct ev *rev);
-unsigned      state_restore(struct state *st, struct ev *rev);
+void	      state_del(struct state *);
+void	      state_dbg(struct state *);
+void	      state_copyev(struct state *, struct ev *, unsigned);
+unsigned      state_match(struct state *, struct ev *);
+unsigned      state_inspec(struct state *, struct evspec *);
+unsigned      state_eq(struct state *, struct ev *);
+unsigned      state_cancel(struct state *, struct ev *);
+unsigned      state_restore(struct state *, struct ev *);
 
-void	      statelist_init(struct statelist *o);
-void	      statelist_done(struct statelist *o);
-void	      statelist_dump(struct statelist *o);
-void	      statelist_dup(struct statelist *o, struct statelist *src);
-void	      statelist_empty(struct statelist *o);
-void	      statelist_add(struct statelist *o, struct state *st);
-void	      statelist_rm(struct statelist *o, struct state *st);
-struct state *statelist_lookup(struct statelist *o, struct ev *ev);
-struct state *statelist_update(struct statelist *statelist, struct ev *ev);
-void	      statelist_outdate(struct statelist *o);
+void	      statelist_init(struct statelist *);
+void	      statelist_done(struct statelist *);
+void	      statelist_dump(struct statelist *);
+void	      statelist_dup(struct statelist *, struct statelist *);
+void	      statelist_empty(struct statelist *);
+void	      statelist_add(struct statelist *, struct state *);
+void	      statelist_rm(struct statelist *, struct state *);
+struct state *statelist_lookup(struct statelist *, struct ev *);
+struct state *statelist_update(struct statelist *, struct ev *);
+void	      statelist_outdate(struct statelist *);
 
 #endif /* MIDISH_STATE_H */

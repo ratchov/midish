@@ -38,14 +38,14 @@ void cons_mdep_done(void);
 int  cons_mdep_getc(void);
 int  cons_getc(void);
 unsigned cons_break(void);
-void cons_putpos(unsigned measure, unsigned beat, unsigned tic);
+void cons_putpos(unsigned, unsigned, unsigned);
 
-void cons_err(char *mesg);
-void cons_errs(char *s, char *mesg);
-void cons_erru(unsigned long u, char *mesg);
-void cons_errss(char *s0, char *s1, char *mesg);
-void cons_errsu(char *s, unsigned long u, char *mesg);
-void cons_erruu(unsigned long u0, unsigned long u1, char *mesg);
+void cons_err(char *);
+void cons_errs(char *, char *);
+void cons_erru(unsigned long, char *);
+void cons_errss(char *, char *, char *);
+void cons_errsu(char *, unsigned long, char *);
+void cons_erruu(unsigned long, unsigned long, char *);
 
 extern unsigned cons_breakcnt;
 

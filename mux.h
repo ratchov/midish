@@ -57,6 +57,7 @@ struct sysex;
 struct song;
 extern struct song *usong;
 extern unsigned mux_isopen;
+
 void song_startcb(struct song *);
 void song_stopcb(struct song *);
 void song_movecb(struct song *);
@@ -76,27 +77,27 @@ void filt_evcb(struct filt *, struct ev *);
 void mux_open(void);
 void mux_close(void);
 void mux_run(void);
-void mux_sleep(unsigned millisecs);
+void mux_sleep(unsigned);
 void mux_flush(void);
 void mux_putev(struct ev *);
-void mux_sendraw(unsigned unit, unsigned char *buf, unsigned len);
+void mux_sendraw(unsigned, unsigned char *, unsigned);
 unsigned mux_getphase(void);
 struct sysex *mux_getsysex(void);
-void mux_chgtempo(unsigned long tmr_ticlength);
-void mux_chgticrate(unsigned tpu);
+void mux_chgtempo(unsigned long);
+void mux_chgticrate(unsigned);
 void mux_startwait(void);
 void mux_stopwait(void);
 
 /*
  * call-backs called by midi device drivers
  */
-void mux_timercb(unsigned long delta);
-void mux_startcb(unsigned unit);
-void mux_stopcb(unsigned unit);
-void mux_ticcb(unsigned unit);
-void mux_ackcb(unsigned unit);
-void mux_evcb(unsigned, struct ev *ev);
-void mux_sysexcb(unsigned unit, struct sysex *);
-void mux_errorcb(unsigned unit);
+void mux_timercb(unsigned long);
+void mux_startcb(unsigned);
+void mux_stopcb(unsigned);
+void mux_ticcb(unsigned);
+void mux_ackcb(unsigned);
+void mux_evcb(unsigned, struct ev *);
+void mux_sysexcb(unsigned, struct sysex *);
+void mux_errorcb(unsigned);
 
 #endif /* MIDISH_MUX_H */

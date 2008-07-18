@@ -59,7 +59,7 @@ unsigned      parse_assign(struct parse *, struct node **);
 unsigned      parse_stmt(struct parse *, struct node **);
 unsigned      parse_slist(struct parse *, struct node **);
 unsigned      parse_proc(struct parse *, struct node **);
-unsigned      parse_line(struct parse *o, struct node **n);
-unsigned      parse_prog(struct parse *o, struct node **n);
+unsigned      parse_line(struct parse *, struct node **);
+unsigned      parse_prog(struct parse *, struct node **);
 
 #endif /* MIDISH_PARSE_H */

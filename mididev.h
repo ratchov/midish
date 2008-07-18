@@ -54,8 +54,8 @@ struct mididev {
 	unsigned ixctlset, oxctlset;	/* bitmap of 14bit controllers */
 };
 
-void mididev_init(struct mididev *o, unsigned mode);
-void mididev_done(struct mididev *o);
+void mididev_init(struct mididev *, unsigned);
+void mididev_done(struct mididev *);
 
 extern struct mididev *mididev_list;
 extern struct mididev *mididev_master;
@@ -63,7 +63,7 @@ extern struct mididev *mididev_byunit[];
 
 void mididev_listinit(void);
 void mididev_listdone(void);
-unsigned mididev_attach(unsigned unit, char *path, unsigned mode);
-unsigned mididev_detach(unsigned unit);
+unsigned mididev_attach(unsigned, char *, unsigned);
+unsigned mididev_detach(unsigned);
 
 #endif /* MIDISH_MIDIDEV_H */

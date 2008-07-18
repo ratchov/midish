@@ -87,29 +87,29 @@ struct exec {
 	unsigned depth;		/* max depth of nested proc calls */
 };
 
-struct var *var_new(struct name **list, char *name, struct data *data);
-void        var_delete(struct name **list, struct var *i);
-void	    var_dbg(struct var *i);
-void	    var_empty(struct name **first);
+struct var *var_new(struct name **, char *, struct data *);
+void        var_delete(struct name **, struct var *);
+void	    var_dbg(struct var *);
+void	    var_empty(struct name **);
 
 struct exec *exec_new(void);
-void	     exec_delete(struct exec *o);
-struct proc *exec_proclookup(struct exec *o, char *name);
-struct var  *exec_varlookup(struct exec *o, char *name);
+void	     exec_delete(struct exec *);
+struct proc *exec_proclookup(struct exec *, char *);
+struct var  *exec_varlookup(struct exec *, char *);
 
-void exec_newbuiltin(struct exec *o, char *name, unsigned func(struct exec *, struct data **), struct name *args);
-void exec_newvar(struct exec *o, char *name, struct data *val);
-void exec_dumpprocs(struct exec *o);
-void exec_dumpvars(struct exec *o);
-unsigned exec_lookupname(struct exec *exec, char *name, char **val);
-unsigned exec_lookupstring(struct exec *exec, char *name, char **val);
-unsigned exec_lookuplong(struct exec *exec, char *name, long *val);
-unsigned exec_lookuplist(struct exec *exec, char *name, struct data **val);
-unsigned exec_lookupbool(struct exec *exec, char *name, long *val);
+void exec_newbuiltin(struct exec *, char *, unsigned (*)(struct exec *, struct data **), struct name *);
+void exec_newvar(struct exec *, char *, struct data *);
+void exec_dumpprocs(struct exec *);
+void exec_dumpvars(struct exec *);
+unsigned exec_lookupname(struct exec *, char *, char **);
+unsigned exec_lookupstring(struct exec *, char *, char **);
+unsigned exec_lookuplong(struct exec *, char *, long *);
+unsigned exec_lookuplist(struct exec *, char *, struct data **);
+unsigned exec_lookupbool(struct exec *, char *, long *);
 
-struct proc *proc_new(char *name);
-void 	     proc_delete(struct proc *o);
-void	     proc_empty(struct name **first);
-void 	     proc_dbg(struct proc *o);
+struct proc *proc_new(char *);
+void 	     proc_delete(struct proc *);
+void	     proc_empty(struct name **);
+void 	     proc_dbg(struct proc *);
 
 #endif /* MIDISH_EXEC_H */

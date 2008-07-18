@@ -56,9 +56,9 @@ struct rmidi {
 
 #define RMIDI(o) ((struct rmidi *)(o))
 
-struct rmidi *rmidi_new(unsigned mode);
-void rmidi_delete(struct rmidi *o);
-void rmidi_init(struct rmidi *, unsigned mode);
+struct rmidi *rmidi_new(unsigned);
+void rmidi_delete(struct rmidi *);
+void rmidi_init(struct rmidi *, unsigned);
 void rmidi_done(struct rmidi *);
 void rmidi_out(struct rmidi *, unsigned);
 void rmidi_flush(struct rmidi *);

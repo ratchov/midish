@@ -70,10 +70,10 @@ void     lex_done(struct lex *);
 unsigned lex_scan(struct lex *);
 void	 lex_dbg(struct lex *);
 
-unsigned lex_getchar(struct lex *o, int *c);
-void	 lex_ungetchar(struct lex *o, int c);
-void	 lex_err(struct lex *o, char *msg);
-void	 lex_recover(struct lex *o, char *msg);
-unsigned lex_str2long(struct lex *o, unsigned base);
+unsigned lex_getchar(struct lex *, int *);
+void	 lex_ungetchar(struct lex *, int);
+void	 lex_err(struct lex *, char *);
+void	 lex_recover(struct lex *, char *);
+unsigned lex_str2long(struct lex *, unsigned);
 
 #endif /* MIDISH_LEX_H */

@@ -43,18 +43,18 @@ struct name {
 	struct name *next;
 };
 
-void	     name_init(struct name *o, char *name);
-void	     name_done(struct name *o);
-struct name *name_new(char *name);
-struct name *name_newarg(char *name, struct name *next);
+void	     name_init(struct name *, char *);
+void	     name_done(struct name *);
+struct name *name_new(char *);
+struct name *name_newarg(char *, struct name *);
 void	     name_dbg(struct name *);
-void	     name_delete(struct name *o);
-void	     name_insert(struct name **first, struct name *i);
-void	     name_add(struct name **first, struct name *v);
-void	     name_remove(struct name **first, struct name *v);
-void	     name_empty(struct name **first);
-void         name_cat(struct name **dst, struct name **src);
-unsigned     name_eq(struct name **first1, struct name **first2);
-struct name *name_lookup(struct name **first, char *str);
+void	     name_delete(struct name *);
+void	     name_insert(struct name **, struct name *);
+void	     name_add(struct name **, struct name *);
+void	     name_remove(struct name **, struct name *);
+void	     name_empty(struct name **);
+void         name_cat(struct name **, struct name **);
+unsigned     name_eq(struct name **, struct name **);
+struct name *name_lookup(struct name **, char *);
 
 #endif /* MIDISH_NAME_H */

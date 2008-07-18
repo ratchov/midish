@@ -47,8 +47,8 @@ struct norm {
 void norm_start(struct norm *);
 void norm_shut(struct norm *);
 void norm_stop(struct norm *);
-void norm_evcb(struct norm *o, struct ev *ev);
-void norm_timercb(struct norm *o);
+void norm_evcb(struct norm *, struct ev *);
+void norm_timercb(struct norm *);
 
 extern unsigned norm_debug;
 

@@ -39,10 +39,10 @@ struct timo {
 	void *arg;			/* argument to give to 'cb' */
 };
 
-void timo_set(struct timo *o, void (*cb)(void *), void *arg);
-void timo_add(struct timo *o, unsigned delta);
-void timo_del(struct timo *o);
-void timo_update(unsigned delta);
+void timo_set(struct timo *, void (*)(void *), void *);
+void timo_add(struct timo *, unsigned);
+void timo_del(struct timo *);
+void timo_update(unsigned);
 void timo_init(void);
 void timo_done(void);
 
