@@ -173,3 +173,80 @@ mem_stats(void)
 		dbg_puts("\n");
 	}
 }
+
+unsigned
+prof_sqrt(unsigned op)
+{
+	unsigned res = 0;
+	unsigned one = 1 << (8 * sizeof(unsigned) / 2);
+ 
+	while (one > op)
+		one >>= 2;
+
+	while (one != 0) {
+		if (op >= res + one) {
+			op -= res + one;
+ 			res += 2 * one;
+		}
+		res >>= 1;
+		one >>= 2;
+	}
+        return res;
+}
+
+void
+prof_reset(struct prof *p, char *name)
+{
+	p->n = 0;
+	p->min = ~0U;
+	p->max = 0;
+	p->sum = 0;
+	p->sumsqr = 0;
+	p->name = name;
+}
+
+void
+prof_val(struct prof *p, unsigned val)
+{
+	if (p->max < val)
+		p->max = val;
+	if (p->min > val)
+		p->min = val;
+	p->sum += val;
+	p->sumsqr += (val * val);
+	p->n++;
+}
+
+void
+prof_dbg(struct prof *p)
+{
+	unsigned mean, delta;
+
+	dbg_puts(p->name);
+	dbg_puts(": n=");
+	dbg_putu(p->n);
+	if (p->n != 0) {
+		dbg_puts(", min=");
+		dbg_putu(p->min / 100);
+		dbg_puts(".");
+		dbg_putu(p->min % 100);
+		
+		dbg_puts(", max=");
+		dbg_putu(p->max / 100);
+		dbg_puts(".");
+		dbg_putu(p->max % 100);
+		
+		mean = p->sum / p->n;
+		dbg_puts(", mean=");
+		dbg_putu(mean / 100);
+		dbg_puts(".");
+		dbg_putu(mean % 100);
+
+		delta = prof_sqrt((p->sumsqr - p->sum * p->sum / p->n) / p->n);
+		dbg_puts(", delta=");
+		dbg_putu(delta / 100);
+		dbg_puts(".");
+		dbg_putu(delta % 100);
+	}
+	dbg_puts("\n");
+}

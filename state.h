@@ -32,6 +32,7 @@
 #define MIDISH_STATE_H
 
 #include "ev.h"
+#include "dbg.h"
 
 struct seqev;
 struct statelist;
@@ -76,9 +77,7 @@ struct statelist {
 	unsigned changed;	/* if changed within this tick */
 	unsigned serial;	/* unique ID */
 #ifdef STATE_PROF
-	unsigned lookup_n;	/* number of lookups */
-	unsigned lookup_max;	/* max lookup time */
-	unsigned lookup_time;	/* total lookup time */
+	struct prof prof;
 #endif
 };
 

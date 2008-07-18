@@ -190,6 +190,10 @@ mux_sleep(unsigned millisecs)
 		perror("mux_sleep: poll failed");
 		exit(1);
 	}
+	if (gettimeofday(&tv_last, NULL) < 0) {
+		perror("mux_sleep: gettimeofday");
+		exit(1);
+	}
 }
 
 /*

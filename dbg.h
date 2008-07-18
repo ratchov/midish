@@ -44,6 +44,20 @@ void	 mem_free(void *);
 void	 mem_stats(void);
 unsigned mem_rnd(void);
 
+struct prof {
+	char *name;
+	unsigned n;
+	unsigned min;
+	unsigned max;
+	unsigned sum;
+	unsigned sumsqr;
+	unsigned panic;
+};
+
+void prof_reset(struct prof *p, char *name);
+void prof_val(struct prof *p, unsigned val);
+void prof_dbg(struct prof *p);
+
 extern unsigned mem_debug;
 
 #endif /* MIDISH_DBG_H */

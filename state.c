@@ -386,9 +386,7 @@ statelist_init(struct statelist *o)
 	o->changed = 0;
 	o->serial = state_serial++;
 #ifdef STATE_PROF
-	o->lookup_n = 0;
-	o->lookup_time = 0;
-	o->lookup_max = 0;
+	prof_reset(&o->prof, "statlist/iter");
 #endif
 }
 
@@ -401,9 +399,6 @@ void
 statelist_done(struct statelist *o)
 {
 	struct state *i, *inext;
-#ifdef STATE_PROF
-	unsigned mean;
-#endif
 
 	/*
 	 * free all states
@@ -424,23 +419,7 @@ statelist_done(struct statelist *o)
 	}
 
 #ifdef STATE_PROF
-	/*
-	 * display profiling statistics
-	 */
-	dbg_puts("statelist_done: serial=");
-	dbg_putu(o->serial);
-	dbg_puts(" lookup: num=");
-	dbg_putu(o->lookup_n);
-	if (o->lookup_n != 0) {
-		mean = 100 * o->lookup_time / o->lookup_n;
-		dbg_puts(", max=");
-		dbg_putu(o->lookup_max);
-		dbg_puts(", mean=");
-		dbg_putu(mean / 100);
-		dbg_puts(".");
-		dbg_putu(mean % 100);
-	}
-	dbg_puts("\n");
+	prof_dbg(&o->prof);
 #endif
 }
 
@@ -534,11 +513,7 @@ statelist_lookup(struct statelist *o, struct ev *ev)
 		}
 	}
 #ifdef STATE_PROF
-	o->lookup_n++;
-	if (o->lookup_max < time) {
-		o->lookup_max = time;
-	}
-	o->lookup_time += time;
+	prof_val(&o->prof, time * 100);
 #endif
 	return i;
 }
@@ -605,11 +580,7 @@ statelist_update(struct statelist *statelist, struct ev *ev)
 		st = stnext;
 	}
 #ifdef STATE_PROF
-	statelist->lookup_n++;
-	if (statelist->lookup_max < time) {
-		statelist->lookup_max = time;
-	}
-	statelist->lookup_time += time;
+	prof_val(&statelist->prof, time * 100);
 #endif
 
 	/*

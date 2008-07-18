@@ -109,6 +109,11 @@ unsigned mux_curtic;
 unsigned mux_phase;
 void *mux_addr;
 
+#ifdef MUX_PROF
+struct prof mux_prof;
+#endif
+
+
 struct statelist mux_istate, mux_ostate;
 struct norm mux_norm;
 
@@ -151,17 +156,20 @@ mux_open(void)
 	 * reset tic counters of devices
 	 */
 	mux_isopen = 1;
-	mux_mdep_open();
 	for (i = mididev_list; i != NULL; i = i->next) {
 		i->ticdelta = i->ticrate;
 		i->isensto = 0;
 		i->osensto = MIDIDEV_OSENSTO;
 		rmidi_open(RMIDI(i));
 	}
+	mux_mdep_open();
 
 	mux_curpos = 0;
 	mux_nextpos = 0;
 	mux_phase = MUX_STOP;
+#ifdef MUX_PROF
+	prof_reset(&mux_prof, "mux/ms");
+#endif
 }
 
 /*
@@ -171,6 +179,10 @@ void
 mux_close(void)
 {
 	struct mididev *i;
+
+#ifdef MUX_PROF
+	prof_dbg(&mux_prof);
+#endif
 
 	if (!mididev_master) {
 		if (mux_phase > MUX_START && mux_phase < MUX_STOP) {
@@ -367,6 +379,10 @@ void
 mux_timercb(unsigned long delta)
 {
 	struct mididev *dev;
+
+#ifdef MUX_PROF
+	prof_val(&mux_prof, delta / (24 * 10));
+#endif
 	mux_curpos += delta;
 
 	/*
