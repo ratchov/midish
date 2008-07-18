@@ -107,7 +107,7 @@ mux_mdep_wait(void)
 	cons_pfd->fd = STDIN_FILENO;
 	cons_pfd->events = POLLIN;
 	for (dev = mididev_list; dev != NULL; dev = dev->next) {
-		if (!(dev->mode & MIDIDEV_MODE_IN)) {
+		if (!(dev->mode & MIDIDEV_MODE_IN) || RMIDI(dev)->mdep.fd < 0) {
 			RMIDI(dev)->mdep.pfd = NULL;
 			continue;
 		}
@@ -239,6 +239,7 @@ rmidi_close(struct rmidi *o)
 		return;
 	}
 	close(o->mdep.fd);
+	o->mdep.fd = -1;
 }
 
 /*
