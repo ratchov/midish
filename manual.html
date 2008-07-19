@@ -1409,21 +1409,21 @@ a set of ``current values'':
 
 <li>
 current track - the track that will be processed, it's selected
-with the ``<a href="func_ct">ct</a>'' command.
+with the ``<a href="#func_ct">ct</a>'' command.
 
 <li>
 current position - the measure number where processing will start.
 
-It's set using the ``<a href="func_g">g</a>'' command
+It's set using the ``<a href="#func_g">g</a>'' command
 
 <li>
 current selection - number of measures to process.
-It's set using the ``<a href="func_g">sel</a>'' command
+It's set using the ``<a href="#func_g">sel</a>'' command
 
 <li>
 current event set - events type that will be processed.
 
-It's set using the ``<a href="func_ev">ev</a>'' command.
+It's set using the ``<a href="#func_ev">ev</a>'' command.
 
 Most of the time all events types need to be processed, but sometimes
 one might want to process only a subset (eg. only controller number
@@ -1433,7 +1433,7 @@ one might want to process only a subset (eg. only controller number
 current quatization step - this defines how notes at the selection
 boundaries are handled.
 
-It's set using the ``<a href="func_setq">setq</a>'' command.
+It's set using the ``<a href="#func_setq">setq</a>'' command.
 
 Using a quatization step allows to properly process events at the
 selection boundaries, by sligtly enlarging the selection in order to
@@ -2203,9 +2203,9 @@ current position. Updated rmidish to use it to display the current
 position in the prompt.
 
 <li>
-make <a href="func_tcopy">tcopy</a> copy selection into a
+make <a href="#func_tcopy">tcopy</a> copy selection into a
 hidden temporary track and add
-<a href="func_tcopy">tpaste</a>
+<a href="#func_tcopy">tpaste</a>
 to paste it at the current position.
 
 <li>
@@ -2437,7 +2437,7 @@ corresponds to the MIDI standard.
 
 <td>
 can be ``on'', ``off'' or ``rec'', 
-see ``<a href="func_m">m</a>'' command.
+see ``<a href="#func_m">m</a>'' command.
 
 <tr>
 
@@ -2996,7 +2996,7 @@ current track, at the current position.
 
 <dd>
 copy the hidden temporary track (filled by
-<a href="func_tcopy">tcopy</a>)
+<a href="#func_tcopy">tcopy</a>)
 on the current position of the current track.
 the current event selection
 (see <a href="#func_ev">ev</a> function)
@@ -3414,7 +3414,7 @@ value, as follow:
 
 </ul>
 
-The quatization step will be used by <a href="func_tquant">tquant</a>
+The quatization step will be used by <a href="#func_tquant">tquant</a>
 function and also by all editing functions to optimize event
 selection. If the special ``nil'' value is specified as quatization
 step, then quatization is disabled.
@@ -3685,7 +3685,7 @@ will act as master device.
 
 <dd>
 set the number of ticks in a whole note that are transmitted
-to the MIDI device (if <a href="func_dclktx">dclktx</a> was called
+to the MIDI device (if <a href="#func_dclktx">dclktx</a> was called
 for it). Default value is 96 ticks. This is the standard MIDI value and
 its not recommended to change it.
 
@@ -3723,12 +3723,12 @@ Configure controller number <tt>ctlnumber</tt> with name
 If defval is <tt>nil</tt>
 then there is no default value and corresponding
 controller events are not grouped into frames.
-See sec. <a href="ctl_frames">Controller frames</a>.
+See sec. <a href="#ctl_frames">Controller frames</a>.
 
 <dt><a name="func_ctlconfx">ctlconfx ctlname ctlnumber defval</a>
 
 <dd>
-Same as <a href="func_ctlconfx">ctlconf</a> function,
+Same as <a href="#func_ctlconfx">ctlconf</a> function,
 but for 14bit controllers. Thus defval is in the
 range 0..16383.
 
