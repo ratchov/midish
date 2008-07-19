@@ -1788,7 +1788,7 @@ parse_song(struct parse *o, struct song *s)
 				i = song_chanlookup_bynum(s, num, num2, 1);
 				if (i == NULL) {
 					i = song_channew(s, "old_style_curin",
-					    num, num2, input);
+					    num, num2, 1);
 				} else {
 					i->dev = num;
 					i->ch = num2;

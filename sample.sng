@@ -8,70 +8,65 @@
 		timesig 4 24
 		tempo 400000
 	}
-	songchan piano {
+	songin kbd {
 		chan {0 0}
 		conf {
-			pc {0 0} 0
 		}
-		curinput {1 0}
 	}
-	songchan drums {
+	songout piano {
+		chan {0 0}
+		conf {
+			xpc {0 0} 0 nil
+		}
+	}
+	songout drums {
 		chan {0 9}
 		conf {
 		}
-		curinput {0 0}
 	}
-	songchan bass {
+	songout bass {
 		chan {0 1}
 		conf {
-			pc {0 1} 33
+			xpc {0 1} 33 nil
 		}
-		curinput {0 0}
 	}
-	songchan organ {
+	songout organ {
 		chan {0 2}
 		conf {
-			pc {0 2} 17
-			ctl {0 2} 7 60
+			xpc {0 2} 17 nil
+			xctl {0 2} 7 7680
 		}
-		curinput {0 0}
 	}
-	songchan strings {
+	songout strings {
 		chan {0 4}
 		conf {
-			pc {0 4} 51
-			ctl {0 4} 7 50
+			xpc {0 4} 51 nil
+			xctl {0 4} 7 6400
 		}
-		curinput {0 0}
 	}
 	songfilt piano {
-		curchan piano
 		filt {
-			chanmap {1 0} {0 0}
+			evmap any {1 0} > any {0 0}
 		}
 	}
 	songfilt drums {
-		curchan drums
 		filt {
-			chanmap {1 0} {0 9}
+			evmap any {1 0} > any {0 9}
 		}
 	}
 	songfilt bass {
-		curchan bass
 		filt {
-			chanmap {1 0} {0 1}
+			evmap any {1 0} > any {0 1}
 		}
 	}
 	songfilt organ {
-		curchan organ
 		filt {
-			chanmap {1 0} {0 2}
+			evmap any {1 0} > any {0 2}
 		}
 	}
 	songfilt strings {
-		curchan strings
 		filt {
-			chanmap {1 0} {0 4}
+			evmap any {1 0} > any {0 4}
 		}
 	}
 	songtrk pi1 {
@@ -4103,13 +4098,14 @@
 	curtrk pi1
 	curfilt piano
 	cursx gm_on
-	curchan piano
+	curin kbd
+	curout piano
 	curpos 0
 	curlen 0
 	curquant 0
-	curinput {0 0}
+	curev any {0..15 0..15}
 	metro {
-		enabled 1
+		mask	rec
 		lo	non {0 9} 68 90
 		hi	non {0 9} 67 127
 	}
