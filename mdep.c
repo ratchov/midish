@@ -317,7 +317,7 @@ cons_mdep_getc(void)
 {
 	while (cons_index == cons_len && !cons_eof)
 		mux_mdep_wait();
-	return cons_eof ? EOF : cons_buf[cons_index++];
+	return cons_eof ? EOF : (cons_buf[cons_index++] & 0xff);
 }
 
 /*
