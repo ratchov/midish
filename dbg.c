@@ -177,16 +177,17 @@ mem_stats(void)
 unsigned
 prof_sqrt(unsigned op)
 {
-	unsigned res = 0;
+	unsigned t, res = 0;
 	unsigned one = 1 << (8 * sizeof(unsigned) / 2);
  
 	while (one > op)
 		one >>= 2;
 
 	while (one != 0) {
-		if (op >= res + one) {
-			op -= res + one;
- 			res += 2 * one;
+		t = res + one;
+		if (op >= t) {
+			op -= t;
+ 			res += one << 1;
 		}
 		res >>= 1;
 		one >>= 2;
