@@ -27,21 +27,6 @@ proc ctlmap ic oc {
 	}
 }
 
-proc transp plus {
-	let i = [geti]
-	let o = [getc]
-	let lo = 0;
-	let hi = 127;
-	funmap {} {note $i}
-	if ($hi + $plus > 127) {
-		let hi = $hi - $plus
-	}
-	if ($lo + $plus < 0) {
-		let lo = $lo - $plus
-	}
-	fmap {note $i {$lo $hi}} {note $o {$lo + $plus $hi + $plus}}
-}
-
 #
 # quantise
 #

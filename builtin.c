@@ -2278,6 +2278,39 @@ blt_funmap(struct exec *o, struct data **r)
 }
 
 unsigned
+blt_ftransp(struct exec *o, struct data **r)
+{
+	struct songfilt *f;
+	struct evspec es;
+	long plus;
+
+	if (!song_try(usong)) {
+		return 0;
+	}
+	song_getcurfilt(usong, &f);
+	if (f == NULL) {
+		cons_errs(o->procname, "no current filt");
+		return 0;
+	}
+	if (!exec_lookupevspec(o, "evspec", &es, 0) ||
+	    !exec_lookuplong(o, "plus", &plus)) {
+		return 0;
+	}
+	if (plus < -64 || plus > 63) {
+		cons_errs(o->procname, "plus must be in the -64..63 range");
+		return 0;
+	}
+	if ((es.cmd != EVSPEC_ANY && es.cmd != EVSPEC_NOTE) ||
+	    (es.cmd == EVSPEC_NOTE &&
+		(es.v0_min != 0 || es.v0_max != EV_MAXCOARSE))) {
+		cons_errs(o->procname, "set must contain full range notes");
+		return 0;
+	}
+	filt_transp(&f->filt, &es, plus);
+	return 1;
+}
+
+unsigned
 blt_fchgxxx(struct exec *o, struct data **r, int input, int swap)
 {
 	struct songfilt *f;

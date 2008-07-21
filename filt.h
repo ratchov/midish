@@ -39,6 +39,14 @@
 struct filtdst {
 	struct evspec es;
 	struct filtdst *next;
+	union {
+		struct {
+			int in, out;
+		} vel;
+		struct {
+			int plus;
+		} transp;
+	} u;
 };
 
 /*
@@ -54,6 +62,7 @@ struct filtsrc {
 
 struct filt {
 	struct filtsrc *srclist;
+	struct filtdst *vcurve, *transp;
 };
 
 void filt_init(struct filt *);
@@ -64,6 +73,7 @@ void filt_mapnew(struct filt *, struct evspec *, struct  evspec *);
 void filt_mapdel(struct filt *, struct evspec *, struct  evspec *);
 void filt_chgin(struct filt *, struct evspec *, struct evspec *, int);
 void filt_chgout(struct filt *, struct evspec *, struct evspec *, int);
+void filt_transp(struct filt *, struct evspec *, int);
 
 extern unsigned filt_debug;
 

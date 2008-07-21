@@ -226,6 +226,14 @@ filt_output(struct filt *o, struct textout *f)
 		}
 		snext = s;
 	}
+	for (d = o->transp; d != NULL; d = d->next) {
+		textout_indent(f);
+		textout_putstr(f, "transp ");
+		evspec_output(&d->es, f);
+		textout_putstr(f, " ");
+		textout_putlong(f, d->u.transp.plus & 0x7f);
+		textout_putstr(f, "\n");
+	}
 	textout_shiftleft(f);
 	textout_indent(f);
 	textout_putstr(f, "}");
@@ -1123,6 +1131,14 @@ parse_rule(struct parse *o, struct filt *f)
 			return 0;
 		}
 		filt_mapnew(f, &from, &to);
+	} else if (str_eq(o->lex.strval, "transp")) {
+		if (!parse_evspec(o, &to)) {
+			return 0;
+		}
+		if (!parse_long(o, 0, EV_MAXCOARSE, &ukeyplus)) {
+			return 0;
+		}
+		filt_transp(f, &to, ukeyplus);
 	} else {
 		parse_ungetsym(o);
 		if (!parse_ukline(o)) {

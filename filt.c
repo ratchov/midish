@@ -144,6 +144,8 @@ void
 filt_init(struct filt *o)
 {
 	o->srclist = NULL;
+	o->vcurve = NULL;
+	o->transp = NULL;
 }
 
 /*
@@ -184,21 +186,31 @@ filt_done(struct filt *o)
 unsigned
 filt_do(struct filt *o, struct ev *in, struct ev *out)
 {
+	struct ev *ev;
 	struct filtsrc *s;
 	struct filtdst *d;
-	unsigned nev;
+	unsigned nev, i;
 
+	nev = 0;
 	for (s = o->srclist;; s = s->next) {
 		if (s == NULL)
-			return 0;
-		if (evspec_matchev(&s->es, in))
 			break;
+		if (evspec_matchev(&s->es, in)) {
+			for (d = s->dstlist; d != NULL; d = d->next) {
+				filt_mapev(&s->es, &d->es, in, &out[nev]);
+				nev++;
+			}
+			break;
+		}
 	}
-	nev = 0;
-	for (d = s->dstlist; d != NULL; d = d->next) {
-		filt_mapev(&s->es, &d->es, in, out);
-		nev++;
-		out++;
+	for (d = o->transp; d != NULL; d = d->next) {
+		for (i = 0; i < nev; i++) {
+			ev = &out[i];
+			if (EV_ISNOTE(ev) && evspec_matchev(&d->es, ev)) {
+				ev->note_num += d->u.transp.plus;
+				ev->note_num &= 0x7f;
+			}
+		}
 	}
 	return nev;
 }
@@ -459,3 +471,54 @@ filt_chgout(struct filt *o, struct evspec *from, struct evspec *to, int swap)
 	}
 }
 
+void
+filt_transp(struct filt *f, struct evspec *to, int plus)
+{
+	struct filtdst *d, **pd;
+
+	if (filt_debug) {
+		dbg_puts("filt_transp:  ");
+		evspec_dbg(to);
+		dbg_puts(" ");
+		dbg_putu(plus & 0x7f);
+		dbg_puts("\n");		
+	}
+	if (to->cmd != EVSPEC_ANY && to->cmd != EVSPEC_NOTE) {
+		dbg_puts("filt_transp: set must contain notes\n");
+		return;
+	}
+	if (to->cmd == EVSPEC_NOTE && 
+	    (to->v0_min != 0 || to->v0_max != EV_MAXCOARSE)) {
+		dbg_puts("filt_transp: note range must be full\n");
+		return;
+	}
+	for (pd = &f->transp; (d = *pd) != NULL;) {
+		if (evspec_isec(&d->es, to)) {
+			if (filt_debug) {
+				dbg_puts("filt_transp: ");
+				evspec_dbg(&d->es);
+				dbg_puts(": dst intersect\n");
+			}
+			*pd = d->next;
+			mem_free(d);
+			continue;
+		}
+		pd = &d->next;
+	}
+	if (plus == 0)
+		return;
+
+	/*
+	 * add the new destination to the end of the list,
+	 * in order to obtain the same order as the order in
+	 * which rules are added
+	 */
+	d = (struct filtdst *)mem_alloc(sizeof(struct filtdst));
+	d->es = *to;
+	d->u.transp.plus = plus & 0x7f;
+	for (pd = &f->transp; *pd != NULL; pd = &(*pd)->next) {
+		/* nothing */
+	}
+	d->next = NULL;
+	*pd = d;
+}
