@@ -2337,7 +2337,7 @@ blt_fvcurve(struct exec *o, struct data **r)
 		cons_errs(o->procname, "set must contain notes");
 		return 0;
 	}
-	filt_vcurve(&f->filt, &es, weight + 64);
+	filt_vcurve(&f->filt, &es, weight);
 	return 1;
 }
 

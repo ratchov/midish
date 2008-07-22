@@ -239,7 +239,7 @@ filt_output(struct filt *o, struct textout *f)
 		textout_putstr(f, "vcurve ");
 		evspec_output(&d->es, f);
 		textout_putstr(f, " ");
-		textout_putlong(f, d->u.vel.weight);
+		textout_putlong(f, (64 - d->u.vel.nweight) & 0x7f);
 		textout_putstr(f, "\n");
 	}
 	textout_shiftleft(f);

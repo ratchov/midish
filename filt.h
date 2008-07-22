@@ -41,7 +41,7 @@ struct filtdst {
 	struct filtdst *next;
 	union {
 		struct {
-			int weight;
+			unsigned nweight;
 		} vel;
 		struct {
 			int plus;

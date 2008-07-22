@@ -184,21 +184,21 @@ filt_done(struct filt *o)
  * the weight must be in the 1..127 range, 64 means neutral
  */
 unsigned
-vcurve(unsigned weight, unsigned x)
+vcurve(unsigned nweight, unsigned x)
 {
 	if (x == 0)
 		return 0;
-	weight--;
-	if (x <= weight) {
-		if (weight == 0)
+	nweight--;
+	if (x <= nweight) {
+		if (nweight == 0)
 			return 127;
 		else
-			return 1 + (126 - weight) * (x - 1) / weight;
+			return 1 + (126 - nweight) * (x - 1) / nweight;
 	} else {
-		if (weight == 127)
+		if (nweight == 127)
 			return 1;
 		else
-			return 127 - weight * (127 - x) / (126 - weight);
+			return 127 - nweight * (127 - x) / (126 - nweight);
 	}
 }
 
@@ -238,7 +238,7 @@ filt_do(struct filt *o, struct ev *in, struct ev *out)
 		for (i = 0, ev = out; i < nev; i++, ev++) {
 			if (!EV_ISNOTE(ev) || !evspec_matchev(&d->es, ev))
 				continue;
-			ev->note_vel = vcurve(d->u.vel.weight, ev->note_vel);
+			ev->note_vel = vcurve(d->u.vel.nweight, ev->note_vel);
 		}
 	}
 	return nev;
@@ -567,7 +567,7 @@ filt_vcurve(struct filt *f, struct evspec *to, int weight)
 		}
 		pd = &d->next;
 	}
-	if (weight == 64)
+	if (weight == 0)
 		return;
 
 	/*
@@ -577,7 +577,7 @@ filt_vcurve(struct filt *f, struct evspec *to, int weight)
 	 */
 	d = (struct filtdst *)mem_alloc(sizeof(struct filtdst));
 	d->es = *to;
-	d->u.vel.weight = weight;
+	d->u.vel.nweight = (64 - weight) & 0x7f;
 	for (pd = &f->vcurve; *pd != NULL; pd = &(*pd)->next) {
 		/* nothing */
 	}

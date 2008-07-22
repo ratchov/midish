@@ -3288,16 +3288,15 @@ by the give number of halftones
 <dt><a name="func_fvcurve">fvcurve evspec weight</a>
 
 <dd>
-adjusts velocity of note events produced by the filter.  If ``weight''
+adjusts velocity of note events produced by the filter, using
+the given ``weight'' in the -63..63 range.  If ``weight''
 is:
 
 <ul>
 
-<li> negative - sensitivity is increased around small velocity and
-	decreased around large velocity.
+<li> negative - sensitivity is decreased
 
-<li> positive - sensitivity is increased around large velocity and
-	decreased around small velosity.
+<li> positive - sensitivity is increased
 
 <li> zero - the velocity is unchanged
 
