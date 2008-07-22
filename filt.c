@@ -226,22 +226,19 @@ filt_do(struct filt *o, struct ev *in, struct ev *out)
 			break;
 		}
 	}
-	if (EV_ISNOTE(ev)) {
-		for (d = o->transp; d != NULL; d = d->next) {
-			for (i = 0, ev = out; i < nev; i++, ev++) {
-				if (!evspec_matchev(&d->es, ev))
-					continue;
-				ev->note_num += d->u.transp.plus;
-				ev->note_num &= 0x7f;
-			}
+	for (d = o->transp; d != NULL; d = d->next) {
+		for (i = 0, ev = out; i < nev; i++, ev++) {
+			if (!EV_ISNOTE(ev) || !evspec_matchev(&d->es, ev))
+				continue;
+			ev->note_num += d->u.transp.plus;
+			ev->note_num &= 0x7f;
 		}
-		for (d = o->vcurve; d != NULL; d = d->next) {
-			for (i = 0, ev = out; i < nev; i++, ev++) {
-				if (!evspec_matchev(&d->es, ev))
-					continue;
-				ev->note_vel = 
-				    vcurve(d->u.vel.weight, ev->note_vel);
-			}
+	}
+	for (d = o->vcurve; d != NULL; d = d->next) {
+		for (i = 0, ev = out; i < nev; i++, ev++) {
+			if (!EV_ISNOTE(ev) || !evspec_matchev(&d->es, ev))
+				continue;
+			ev->note_vel = vcurve(d->u.vel.weight, ev->note_vel);
 		}
 	}
 	return nev;
