@@ -325,9 +325,11 @@ mux_putev(struct ev *ev)
 	unsigned i, nev;
 
 #ifdef MUX_DEBUG
-	dbg_puts("mux_putev: ");
-	ev_dbg(ev);
-	dbg_puts("\n");
+	if (mux_debug) {
+		dbg_puts("mux_putev: ");
+		ev_dbg(ev);
+		dbg_puts("\n");
+	}
 #endif
 
 	if (!EV_ISVOICE(ev)) {
@@ -551,9 +553,11 @@ mux_evcb(unsigned unit, struct ev *ev)
 	struct ev rev;
 	struct mididev *dev = mididev_byunit[ev->dev];
 #ifdef MUX_DEBUG
-	dbg_puts("mux_evcb: ");
-	ev_dbg(ev);
-	dbg_puts("\n");
+	if (mux_debug) {
+		dbg_puts("mux_evcb: ");
+		ev_dbg(ev);
+		dbg_puts("\n");
+	}
 #endif
 	if (conv_packev(&mux_istate, dev->ixctlset, ev, &rev)) {
 		norm_evcb(&mux_norm, &rev);
