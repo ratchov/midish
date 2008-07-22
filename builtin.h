@@ -142,6 +142,7 @@ unsigned blt_freset(struct exec *, struct data **);
 unsigned blt_fmap(struct exec *, struct data **);
 unsigned blt_funmap(struct exec *, struct data **);
 unsigned blt_ftransp(struct exec *, struct data **);
+unsigned blt_fvcurve(struct exec *, struct data **);
 unsigned blt_fchgin(struct exec *, struct data **);
 unsigned blt_fchgout(struct exec *, struct data **);
 unsigned blt_fswapin(struct exec *, struct data **);

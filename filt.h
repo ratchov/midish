@@ -41,7 +41,7 @@ struct filtdst {
 	struct filtdst *next;
 	union {
 		struct {
-			int in, out;
+			int weight;
 		} vel;
 		struct {
 			int plus;
@@ -74,6 +74,7 @@ void filt_mapdel(struct filt *, struct evspec *, struct  evspec *);
 void filt_chgin(struct filt *, struct evspec *, struct evspec *, int);
 void filt_chgout(struct filt *, struct evspec *, struct evspec *, int);
 void filt_transp(struct filt *, struct evspec *, int);
+void filt_vcurve(struct filt *, struct evspec *, int);
 
 extern unsigned filt_debug;
 

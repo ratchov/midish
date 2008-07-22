@@ -234,6 +234,14 @@ filt_output(struct filt *o, struct textout *f)
 		textout_putlong(f, d->u.transp.plus & 0x7f);
 		textout_putstr(f, "\n");
 	}
+	for (d = o->vcurve; d != NULL; d = d->next) {
+		textout_indent(f);
+		textout_putstr(f, "vcurve ");
+		evspec_output(&d->es, f);
+		textout_putstr(f, " ");
+		textout_putlong(f, d->u.vel.weight);
+		textout_putstr(f, "\n");
+	}
 	textout_shiftleft(f);
 	textout_indent(f);
 	textout_putstr(f, "}");
@@ -1139,6 +1147,14 @@ parse_rule(struct parse *o, struct filt *f)
 			return 0;
 		}
 		filt_transp(f, &to, ukeyplus);
+	} else if (str_eq(o->lex.strval, "vcurve")) {
+		if (!parse_evspec(o, &to)) {
+			return 0;
+		}
+		if (!parse_long(o, 1, EV_MAXCOARSE, &ukeyplus)) {
+			return 0;
+		}
+		filt_vcurve(f, &to, ukeyplus);
 	} else {
 		parse_ungetsym(o);
 		if (!parse_ukline(o)) {

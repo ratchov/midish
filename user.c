@@ -1042,6 +1042,9 @@ user_mainloop(void)
 	exec_newbuiltin(exec, "ftransp", blt_ftransp,
 			name_newarg("evspec",
 			name_newarg("plus", NULL)));
+	exec_newbuiltin(exec, "fvcurve", blt_fvcurve,
+			name_newarg("evspec",
+			name_newarg("weight", NULL)));
 	exec_newbuiltin(exec, "fchgin", blt_fchgin,
 			name_newarg("from",
 			name_newarg("to", NULL)));

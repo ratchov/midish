@@ -50,7 +50,7 @@ user_chan.o user_dev.o user_filt.o user_song.o user_sx.o user_trk.o
 midish:		${MIDISH_OBJS}
 		${CC} ${LDFLAGS} ${MIDISH_OBJS} -o midish
 
-rmidish:	rmidish.c midish
+rmidish:	rmidish.c
 		${CC} ${CFLAGS} ${READLINE_CFLAGS} ${READLINE_INCLUDE} rmidish.c \
 		${LDFLAGS} ${READLINE_LDFLAGS} -o rmidish ${READLINE_LIB}
 

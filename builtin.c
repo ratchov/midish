@@ -2311,6 +2311,37 @@ blt_ftransp(struct exec *o, struct data **r)
 }
 
 unsigned
+blt_fvcurve(struct exec *o, struct data **r)
+{
+	struct songfilt *f;
+	struct evspec es;
+	long weight;
+
+	if (!song_try(usong)) {
+		return 0;
+	}
+	song_getcurfilt(usong, &f);
+	if (f == NULL) {
+		cons_errs(o->procname, "no current filt");
+		return 0;
+	}
+	if (!exec_lookupevspec(o, "evspec", &es, 0) ||
+	    !exec_lookuplong(o, "weight", &weight)) {
+		return 0;
+	}
+	if (weight < -63 || weight > 63) {
+		cons_errs(o->procname, "plus must be in the -63..63 range");
+		return 0;
+	}
+	if (es.cmd != EVSPEC_ANY && es.cmd != EVSPEC_NOTE) {
+		cons_errs(o->procname, "set must contain notes");
+		return 0;
+	}
+	filt_vcurve(&f->filt, &es, weight + 64);
+	return 1;
+}
+
+unsigned
 blt_fchgxxx(struct exec *o, struct data **r, int input, int swap)
 {
 	struct songfilt *f;

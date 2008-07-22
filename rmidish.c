@@ -272,7 +272,6 @@ userline(char *rl)
 	midish_puts(&midish, "\n");
 	waitready();
 	free(rl);
-
 }
 
 char *builtins[] = {
@@ -291,6 +290,7 @@ char *builtins[] = {
         "olist", "oexists", "oset", "onew", "odel", "oren", "oinfo",
         "ogetc", "ogetd", "oaddev", "ormev", "flist", "fexists",
         "fnew", "fdel", "fren", "finfo", "freset", "fmap", "funmap",
+	"ftransp", "fvcurve",
         "fchgin", "fchgout", "fswapin", "fswapout", "xlist",
         "xexists", "xnew", "xdel", "xren", "xinfo", "xrm", "xsetd",
         "xadd", "shut", "proclist", "builtinlist", "dnew", "ddel",

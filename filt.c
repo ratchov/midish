@@ -180,6 +180,29 @@ filt_done(struct filt *o)
 }
 
 /*
+ * return velocity adjusted by curve with the given weight.
+ * the weight must be in the 1..127 range, 64 means neutral
+ */
+unsigned
+vcurve(unsigned weight, unsigned x)
+{
+	if (x == 0)
+		return 0;
+	weight--;
+	if (x <= weight) {
+		if (weight == 0)
+			return 127;
+		else
+			return 1 + (126 - weight) * (x - 1) / weight;
+	} else {
+		if (weight == 127)
+			return 1;
+		else
+			return 127 - weight * (127 - x) / (126 - weight);
+	}
+}
+
+/*
  * match event against all sources and for each source
  * generate output events
  */
@@ -203,12 +226,21 @@ filt_do(struct filt *o, struct ev *in, struct ev *out)
 			break;
 		}
 	}
-	for (d = o->transp; d != NULL; d = d->next) {
-		for (i = 0; i < nev; i++) {
-			ev = &out[i];
-			if (EV_ISNOTE(ev) && evspec_matchev(&d->es, ev)) {
+	if (EV_ISNOTE(ev)) {
+		for (d = o->transp; d != NULL; d = d->next) {
+			for (i = 0, ev = out; i < nev; i++, ev++) {
+				if (!evspec_matchev(&d->es, ev))
+					continue;
 				ev->note_num += d->u.transp.plus;
 				ev->note_num &= 0x7f;
+			}
+		}
+		for (d = o->vcurve; d != NULL; d = d->next) {
+			for (i = 0, ev = out; i < nev; i++, ev++) {
+				if (!evspec_matchev(&d->es, ev))
+					continue;
+				ev->note_vel = 
+				    vcurve(d->u.vel.weight, ev->note_vel);
 			}
 		}
 	}
@@ -476,13 +508,6 @@ filt_transp(struct filt *f, struct evspec *to, int plus)
 {
 	struct filtdst *d, **pd;
 
-	if (filt_debug) {
-		dbg_puts("filt_transp:  ");
-		evspec_dbg(to);
-		dbg_puts(" ");
-		dbg_putu(plus & 0x7f);
-		dbg_puts("\n");		
-	}
 	if (to->cmd != EVSPEC_ANY && to->cmd != EVSPEC_NOTE) {
 		dbg_puts("filt_transp: set must contain notes\n");
 		return;
@@ -517,6 +542,46 @@ filt_transp(struct filt *f, struct evspec *to, int plus)
 	d->es = *to;
 	d->u.transp.plus = plus & 0x7f;
 	for (pd = &f->transp; *pd != NULL; pd = &(*pd)->next) {
+		/* nothing */
+	}
+	d->next = NULL;
+	*pd = d;
+}
+
+void
+filt_vcurve(struct filt *f, struct evspec *to, int weight)
+{
+	struct filtdst *d, **pd;
+
+	if (to->cmd != EVSPEC_ANY && to->cmd != EVSPEC_NOTE) {
+		dbg_puts("filt_vcurve: set must contain notes\n");
+		return;
+	}
+	for (pd = &f->vcurve; (d = *pd) != NULL;) {
+		if (evspec_isec(&d->es, to)) {
+			if (filt_debug) {
+				dbg_puts("filt_vcurve: ");
+				evspec_dbg(&d->es);
+				dbg_puts(": dst intersect\n");
+			}
+			*pd = d->next;
+			mem_free(d);
+			continue;
+		}
+		pd = &d->next;
+	}
+	if (weight == 64)
+		return;
+
+	/*
+	 * add the new destination to the end of the list,
+	 * in order to obtain the same order as the order in
+	 * which rules are added
+	 */
+	d = (struct filtdst *)mem_alloc(sizeof(struct filtdst));
+	d->es = *to;
+	d->u.vel.weight = weight;
+	for (pd = &f->vcurve; *pd != NULL; pd = &(*pd)->next) {
 		/* nothing */
 	}
 	d->next = NULL;
