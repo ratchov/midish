@@ -9,7 +9,7 @@
 		tempo 400000
 	}
 	songin kbd {
-		chan {0 0}
+		chan {1 0}
 		conf {
 		}
 	}
