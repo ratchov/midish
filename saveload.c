@@ -1357,6 +1357,7 @@ parse_songtrk(struct parse *o, struct song *s, struct songtrk *t)
 				f = song_filtlookup(s, o->lex.strval);
 				if (!f) {
 					f = song_filtnew(s, o->lex.strval);
+					song_setcurfilt(s, NULL);
 				}
 				t->curfilt = f;
 				if (!parse_nl(o)) {
@@ -1601,6 +1602,7 @@ parse_song(struct parse *o, struct song *s)
 				t = song_trklookup(s, o->lex.strval);
 				if (t == NULL) {
 					t = song_trknew(s, o->lex.strval);
+					song_setcurtrk(s, NULL);
 				}
 				if (!parse_songtrk(o, s, t)) {
 					return 0;
@@ -1626,6 +1628,7 @@ parse_song(struct parse *o, struct song *s)
 				if (i == NULL) {
 					i = song_channew(s, o->lex.strval,
 					    0, 0, input);
+					song_setcurchan(s, NULL, input);
 				}
 				if (!parse_songchan(o, s, i)) {
 					return 0;
@@ -1644,6 +1647,7 @@ parse_song(struct parse *o, struct song *s)
 				g = song_filtlookup(s, o->lex.strval);
 				if (!g) {
 					g = song_filtnew(s, o->lex.strval);
+					song_setcurfilt(s, NULL);
 				}
 				if (!parse_songfilt(o, s, g)) {
 					return 0;
@@ -1662,6 +1666,7 @@ parse_song(struct parse *o, struct song *s)
 				l = song_sxlookup(s, o->lex.strval);
 				if (!l) {
 					l = song_sxnew(s, o->lex.strval);
+					song_setcursx(s, NULL);
 				}
 				if (!parse_songsx(o, s, l)) {
 					return 0;
@@ -1821,6 +1826,7 @@ parse_song(struct parse *o, struct song *s)
 				if (i == NULL) {
 					i = song_channew(s, "old_style_curin",
 					    num, num2, 1);
+					song_setcurchan(s, NULL, 1);
 				} else {
 					i->dev = num;
 					i->ch = num2;
