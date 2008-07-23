@@ -333,7 +333,6 @@ filt_mapnew(struct filt *f, struct evspec *from, struct evspec *to)
 	 */
 	for (ps = &f->srclist; (s = *ps) != NULL;) {
 		if (evspec_isec(&s->es, from) &&
-		    !evspec_in(&s->es, from) &&
 		    !evspec_in(from, &s->es)) {
 			for (pd = &s->dstlist; (d = *pd) != NULL;) {
 				if (filt_debug) {
@@ -373,20 +372,6 @@ filt_mapnew(struct filt *f, struct evspec *from, struct evspec *to)
 				dbg_puts("\n");
 			}
 			break;
-		} else if (evspec_isec(from, &s->es)) {
-			if (filt_debug) {
-				dbg_puts("filt_mapnew: ");
-				evspec_dbg(&s->es);
-				dbg_puts(": intersection\n");
-			}
-			while (s->dstlist) {
-				d = s->dstlist;
-				s->dstlist = d->next;
-				mem_free(d);
-			}
-			*ps = s->next;
-			mem_free(s);
-			continue;
 		} else {
 			if (filt_debug) {
 				dbg_puts("filt_mapnew: ");
