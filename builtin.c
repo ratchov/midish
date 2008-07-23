@@ -117,6 +117,30 @@ blt_err(struct exec *o, struct data **r)
 }
 
 unsigned
+blt_h(struct exec *o, struct data **r)
+{
+	char *name;
+	struct proc *proc;
+	struct name *arg;
+
+	if (!exec_lookupname(o, "function", &name)) {
+		return 0;
+	}
+	proc = exec_proclookup(o, name);
+	if (proc == NULL) {
+		cons_errss(o->procname, name, "no such proc");
+		return 0;
+	}
+	textout_putstr(tout, name);
+	for (arg = proc->args; arg != NULL; arg = arg->next) {
+		textout_putstr(tout, " ");
+		textout_putstr(tout, arg->str);
+	}      
+	textout_putstr(tout, "\n");
+	return 1;
+}
+
+unsigned
 blt_ev(struct exec *o, struct data **r)
 {
 	struct evspec es;
@@ -2355,8 +2379,8 @@ blt_fchgxxx(struct exec *o, struct data **r, int input, int swap)
 		cons_errs(o->procname, "no current filt");
 		return 0;
 	}
-	if (!exec_lookupevspec(o, "from", &from, 1) ||
-	    !exec_lookupevspec(o, "to", &to, 0)) {
+	if (!exec_lookupevspec(o, "from", &from, input) ||
+	    !exec_lookupevspec(o, "to", &to, input)) {
 		return 0;
 	}
 	if (evspec_isec(&from, &to)) {
