@@ -582,7 +582,7 @@ blt_ls(struct exec *o, struct data **r)
 	textout_shiftright(tout);
 	textout_indent(tout);
 	textout_putstr(tout, "# chan_name,  {devicenum, midichan}\n");
-	SONG_FOREACH_OUT(usong, c) {
+	SONG_FOREACH_IN(usong, c) {
 		textout_indent(tout);
 		textout_putstr(tout, c->name.str);
 		textout_putstr(tout, "\t");
