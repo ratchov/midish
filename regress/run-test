@@ -31,11 +31,10 @@ for i in $list; do
 	i=${i%.cmd}
 	(echo	load \"$i.res\"\;				\
 		save \"$i.tmp1\"\;				\
-			| ../midish -b >$i.log 2>&1 )		\
-	&&							\
-	(echo	exec \"$i.cmd\"\;				\
+		reset \;					\
+		exec \"$i.cmd\"\;				\
 		save \"$i.tmp2\"\;				\
-			| ../midish -b >>$i.log 2>&1 )		\
+			| ../midish -b >$i.log 2>&1 )		\
 	&&							\
 	diff -u $i.tmp1 $i.tmp2 >$i.diff 2>>$i.log
 	if [ "$?" -eq 0 ]; then
