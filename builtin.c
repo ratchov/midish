@@ -1021,11 +1021,54 @@ blt_mcut(struct exec *o, struct data **r)
 unsigned
 blt_minfo(struct exec *o, struct data **r)
 {
-	if (!song_try(usong)) {
-		return 0;
+	struct seqptr mp;
+	unsigned meas, tpb, otpb, bpm, obpm;
+	unsigned long tempo, otempo;
+
+	textout_putstr(tout, "{\n");
+	textout_shiftright(tout);
+	textout_indent(tout);
+	textout_putstr(tout, "# meas\tsig\ttempo\n");
+
+	otpb = 0;
+	obpm = 0;
+	otempo = 0;
+	meas = 0;
+	seqptr_init(&mp, &usong->meta);
+	for (;;) {
+		/*
+		 * scan for a time signature change
+		 */
+		while (seqptr_evget(&mp)) {
+			/* nothing */
+		}
+		seqptr_getsign(&mp, &bpm, &tpb);
+		seqptr_gettempo(&mp, &tempo);
+
+		if (tpb != otpb || bpm != obpm || tempo != otempo) {
+			otpb = tpb;
+			obpm = bpm;
+			otempo = tempo;
+
+			textout_indent(tout);
+			textout_putlong(tout, meas);
+			textout_putstr(tout, "\t{");
+			textout_putlong(tout, bpm);
+			textout_putstr(tout, " ");
+			textout_putlong(tout, usong->tics_per_unit / tpb);
+			textout_putstr(tout, "}\t");
+			textout_putlong(tout, tempo);
+			textout_putstr(tout, "\n");
+		}
+		if (seqptr_skip(&mp, tpb * bpm) > 0)
+			break;
+		meas++;
 	}
-	track_output(&usong->meta, tout);
-	textout_putstr(tout, "\n");
+	seqptr_done(&mp);
+
+	textout_shiftleft(tout);
+	textout_indent(tout);
+	textout_putstr(tout, "}\n");
 	return 1;
 }
 
