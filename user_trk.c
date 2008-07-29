@@ -501,7 +501,7 @@ user_func_tracktransp(struct exec *o, struct data **r) {
 	} else {
 		len -= quant / 2;
 	}
-	track_transpose(&t->track, tic, len, halftones);
+	track_transpose(&t->track, tic, len, NULL, halftones);
 	return 1;
 }
 

@@ -1677,7 +1677,7 @@ blt_ttransp(struct exec *o, struct data **r)
 	if (etic > qstep) {
 		etic -= qstep;
 	}
-	track_transpose(&t->track, stic, etic - stic, halftones);
+	track_transpose(&t->track, stic, etic - stic, &usong->curev, halftones);
 	return 1;
 }
 

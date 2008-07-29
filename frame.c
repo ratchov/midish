@@ -1034,7 +1034,8 @@ track_scale(struct track *t, unsigned oldunit, unsigned newunit)
  * transpose the given track
  */
 void
-track_transpose(struct track *src, unsigned start, unsigned len, int halftones)
+track_transpose(struct track *src, unsigned start, unsigned len, 
+    struct evspec *es, int halftones)
 {
 	unsigned delta, tic;
 	struct track qt;
@@ -1073,7 +1074,10 @@ track_transpose(struct track *src, unsigned start, unsigned len, int halftones)
 		if (st == NULL)
 			break;
 		if (st->phase & EV_PHASE_FIRST) {
-			st->tag = EV_ISNOTE(&st->ev) ? 1 : 0;
+			if (EV_ISNOTE(&st->ev) && state_inspec(st, es))
+				st->tag = 1;
+			else
+				st->tag = 0;
 		}
 		if (st->tag) {
 			ev = st->ev;
