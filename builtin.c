@@ -278,6 +278,10 @@ blt_setunit(struct exec *o, struct data **r)
 		cons_errs(o->procname, "tpu must be multiple of 96 tics");
 		return 0;
 	}
+	if (tpu > TPU_MAX) {
+		cons_errs(o->procname, "tpu too large");
+		return 0;
+	}
 	song_setunit(usong, tpu);
 	return 1;
 }

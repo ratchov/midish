@@ -59,8 +59,9 @@
  */
 #define TEMPO_MIN		TEMPO_TO_USEC24(240, TIMESIG_TICS_MAX)
 #define TEMPO_MAX		TEMPO_TO_USEC24(20,  24)
-#define TIMESIG_TICS_MAX	240
+#define TIMESIG_TICS_MAX	(TPU_MAX / 4)
 #define TIMESIG_BEATS_MAX	16
+#define TPU_MAX			(96 * 40)
 
 /*
  * maximum number of midi devices supported by midish
