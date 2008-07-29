@@ -441,6 +441,23 @@ song_setcurchan(struct song *o, struct songchan *c, int input)
 		o->curout = c;
 }
 
+void
+song_setunit(struct song *o, unsigned tpu)
+{
+	struct songtrk *t;
+	unsigned mult;
+
+	mult = (tpu + DEFAULT_TPU - 1) / DEFAULT_TPU;
+	if (mult == 0)
+		mult = 1;
+	tpu = mult * DEFAULT_TPU;
+	SONG_FOREACH_TRK(o, t) {
+		track_scale(&t->track, o->tics_per_unit, tpu);
+	}
+	track_scale(&o->meta, o->tics_per_unit, tpu);
+	o->curquant = o->curquant * tpu / o->tics_per_unit;
+	o->tics_per_unit = tpu;
+}
 /*
  * send to the output all events from all chans
  */
