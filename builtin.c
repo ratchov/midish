@@ -267,7 +267,6 @@ unsigned
 blt_setunit(struct exec *o, struct data **r)
 {
 	long tpu;
-	struct songtrk *t;
 
 	if (!song_try(usong)) {
 		return 0;
@@ -279,12 +278,7 @@ blt_setunit(struct exec *o, struct data **r)
 		cons_errs(o->procname, "tpu must be multiple of 96 tics");
 		return 0;
 	}
-	SONG_FOREACH_TRK(usong, t) {
-		track_scale(&t->track, usong->tics_per_unit, tpu);
-	}
-	track_scale(&usong->meta, usong->tics_per_unit, tpu);
-	usong->curquant = usong->curquant * tpu / usong->tics_per_unit;
-	usong->tics_per_unit = tpu;
+	song_setunit(usong, tpu);
 	return 1;
 }
 
