@@ -458,6 +458,41 @@ song_setunit(struct song *o, unsigned tpu)
 	o->curquant = o->curquant * tpu / o->tics_per_unit;
 	o->tics_per_unit = tpu;
 }
+
+unsigned
+song_endpos(struct song *o)
+{
+	struct seqptr mp;
+	struct songtrk *t;
+	unsigned m, tpm, tpb, bpm, len, maxlen, delta;
+
+	maxlen = 0;
+	SONG_FOREACH_TRK(o, t) {
+		len = track_numtic(&t->track);
+		if (maxlen < len)
+			maxlen = len;
+	}
+	m = 0;
+	len = 0;
+	seqptr_init(&mp, &o->meta);
+	while (len < maxlen) {
+		while (seqptr_evget(&mp)) {
+			/* nothing */
+		}
+		seqptr_getsign(&mp, &bpm, &tpb);
+		tpm = bpm * tpb;
+		delta = seqptr_skip(&mp, tpm);
+		if (delta > 0) {
+			m += (maxlen - len + tpm - 1) / tpm;
+			break;
+		}
+		len += tpm;
+		m++;
+	}
+	seqptr_done(&mp);
+	return m;
+}
+
 /*
  * send to the output all events from all chans
  */

@@ -56,6 +56,7 @@ unsigned      seqptr_skip(struct seqptr *, unsigned);
 void	      seqptr_seek(struct seqptr *, unsigned);
 struct state *seqptr_getsign(struct seqptr *, unsigned *, unsigned *);
 struct state *seqptr_gettempo(struct seqptr *, unsigned long *);
+unsigned      seqptr_skipmeasure(struct seqptr *, unsigned);
 
 void	 track_merge(struct track *, struct track *);
 unsigned track_findmeasure(struct track *, unsigned);

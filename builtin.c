@@ -1103,6 +1103,15 @@ blt_msig(struct exec *o, struct data **r)
 	return 1;
 }
 
+unsigned
+blt_mend(struct exec *o, struct data **r)
+{
+	if (!song_try(usong)) {
+		return 0;
+	}
+	*r = data_newlong(song_endpos(usong));
+	return 1;
+}
 
 unsigned
 blt_ctlconf_any(struct exec *o, struct data **r, int isfine)

@@ -81,6 +81,7 @@ unsigned blt_mcut(struct exec *, struct data **);
 unsigned blt_minfo(struct exec *, struct data **);
 unsigned blt_mtempo(struct exec *, struct data **);
 unsigned blt_msig(struct exec *, struct data **);
+unsigned blt_mend(struct exec *, struct data **);
 unsigned blt_ctlconf(struct exec *, struct data **);
 unsigned blt_ctlconfx(struct exec *, struct data **);
 unsigned blt_ctlunconf(struct exec *, struct data **);

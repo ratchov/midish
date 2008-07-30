@@ -938,6 +938,7 @@ user_mainloop(void)
 	exec_newbuiltin(exec, "minfo", blt_minfo, NULL);
 	exec_newbuiltin(exec, "mtempo", blt_mtempo, NULL);
 	exec_newbuiltin(exec, "msig", blt_msig, NULL);
+	exec_newbuiltin(exec, "mend", blt_mend, NULL);
 	exec_newbuiltin(exec, "ctlconf", blt_ctlconf,
 			name_newarg("name",
 			name_newarg("ctl",
