@@ -1057,7 +1057,7 @@ blt_minfo(struct exec *o, struct data **r)
 			textout_putstr(tout, " ");
 			textout_putlong(tout, usong->tics_per_unit / tpb);
 			textout_putstr(tout, "}\t");
-			textout_putlong(tout, tempo);
+			textout_putlong(tout, 60L * 24000000L / (tempo * tpb));
 			textout_putstr(tout, "\n");
 		}
 		if (seqptr_skip(&mp, tpb * bpm) > 0)
