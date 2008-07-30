@@ -1067,7 +1067,7 @@ blt_minfo(struct exec *o, struct data **r)
 			textout_putlong(tout, 
 			    60L * 24000000L / (tempo1 * tpb));
 			if (tempo2 != tempo1) {
-				textout_putstr(tout, "# - ");
+				textout_putstr(tout, "\t# - ");
 				textout_putlong(tout, 
 				    60L * 24000000L / (tempo2 * tpb));
 			}
