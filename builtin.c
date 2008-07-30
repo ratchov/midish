@@ -1023,7 +1023,8 @@ blt_minfo(struct exec *o, struct data **r)
 {
 	struct seqptr mp;
 	unsigned meas, tpb, otpb, bpm, obpm;
-	unsigned long tempo, otempo;
+	unsigned long tempo1, otempo1, tempo2, otempo2;
+	int stop = 0;
 
 	textout_putstr(tout, "{\n");
 	textout_shiftright(tout);
@@ -1032,10 +1033,10 @@ blt_minfo(struct exec *o, struct data **r)
 
 	otpb = 0;
 	obpm = 0;
-	otempo = 0;
+	otempo1 = otempo2 = 0;
 	meas = 0;
 	seqptr_init(&mp, &usong->meta);
-	for (;;) {
+	while (!stop) {
 		/*
 		 * scan for a time signature change
 		 */
@@ -1043,12 +1044,18 @@ blt_minfo(struct exec *o, struct data **r)
 			/* nothing */
 		}
 		seqptr_getsign(&mp, &bpm, &tpb);
-		seqptr_gettempo(&mp, &tempo);
+		seqptr_gettempo(&mp, &tempo1);
 
-		if (tpb != otpb || bpm != obpm || tempo != otempo) {
+		if (seqptr_skip(&mp, tpb * bpm) > 0)
+			stop = 1;
+		seqptr_gettempo(&mp, &tempo2);
+		
+		if (tpb != otpb || bpm != obpm || 
+		    tempo1 != otempo1 || tempo2 != otempo2) {
 			otpb = tpb;
 			obpm = bpm;
-			otempo = tempo;
+			otempo1 = tempo1;
+			otempo2 = tempo2;
 
 			textout_indent(tout);
 			textout_putlong(tout, meas);
@@ -1057,11 +1064,15 @@ blt_minfo(struct exec *o, struct data **r)
 			textout_putstr(tout, " ");
 			textout_putlong(tout, usong->tics_per_unit / tpb);
 			textout_putstr(tout, "}\t");
-			textout_putlong(tout, 60L * 24000000L / (tempo * tpb));
+			textout_putlong(tout, 
+			    60L * 24000000L / (tempo1 * tpb));
+			if (tempo2 != tempo1) {
+				textout_putstr(tout, "# - ");
+				textout_putlong(tout, 
+				    60L * 24000000L / (tempo2 * tpb));
+			}
 			textout_putstr(tout, "\n");
 		}
-		if (seqptr_skip(&mp, tpb * bpm) > 0)
-			break;
 		meas++;
 	}
 	seqptr_done(&mp);
