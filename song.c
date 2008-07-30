@@ -556,6 +556,15 @@ song_metaput(struct song *o, struct ev *ev)
 {
 	switch(ev->cmd) {
 	case EV_TIMESIG:
+		if (o->beat != 0 || o->tic != 0) {
+			/*
+			 * found an incomplete measure, 
+			 * skip to the beggining of the next one
+			 */
+			o->beat = 0;
+			o->tic = 0;
+			o->measure++;
+		}
 		o->bpm = ev->timesig_beats;
 		o->tpb = ev->timesig_tics;
 		break;
