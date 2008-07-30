@@ -2147,7 +2147,7 @@ functions:
 ci, co, geti, geto, cx, getx, setunit, getunit, goto, getpos, sel,
 getlen, setq, getq, fac, getfac, ct, gett, cf, getf, mute, unmute,
 getmute, ls, save, load, reset, export, import, idle, play, rec, stop,
-tempo, mins, mcut, minfo, mtempo, msig, ctlconf, ctlconfx, ctlunconf,
+tempo, mins, mcut, minfo, mtempo, msig, mend, ctlconf, ctlconfx, ctlunconf,
 ctlinfo, metro, metrocf, tlist, tnew, tdel, tren, texists, taddev,
 tsetf, tgetf, tcheck, tcut, tins, tclr, tpaste, tcopy, tmerge, tquant,
 ttransp, tclist, tinfo, ilist, olist, iexists, oexists, inew, onew,
@@ -2213,6 +2213,10 @@ transpose output easily.
 <li>
 add <a href="#func_fvcurve">fvcurve</a> command to
 adjust note velocity.
+
+<li>
+add <a href="#func_mend">mend</a> function to return the end of the
+song (ie the first unused measure).
 
 </ul>
 
@@ -3612,6 +3616,11 @@ is beats per minute.
 <dd>
 Return the time signature at the current song position. The result
 is a two number list: numerator and denominator.
+
+<dt><a name="func_mend">mend</a>
+
+<dd>
+Return the ending measure of the song (ie its size in measures).
 
 <dt><a name="func_ls">ls</a>
 
