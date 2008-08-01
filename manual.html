@@ -867,13 +867,11 @@ Examples:
 { none }		# match nothing
 { any bass }            # match anything on channel "bass"
 { any {1 4} }           # match anything on device 1, channel 4
-{ any {1 {}} }          # match anything on device 1, any channel
-{ any {{} 9} }          # match anything on any device and channel 9
+{ any {1 0..15} }       # match anything on device 1, any channel
 { note }                # match note events
 { note {1 9} }          # match notes on dev 1, channel 9
-{ note {0 {}} }         # match notes on device 0
-{ note {0 {3 5}} }      # match notes on device 0, channel 3, 4, 5
-{ note {} {0 64} }      # match notes between 0 an 64
+{ note {0 3..5} }       # match notes on device 0, channel 3, 4, 5
+{ note {} 0..64 }       # match notes between 0 an 64
 { ctl bass }            # match controllers on channel "bass"
 { ctl bass 7 }          # match controller 7 on channel "bass"
 { bend {} }             # match bender
@@ -887,7 +885,7 @@ Examples:
 A <i>filter</i> transforms incoming MIDI events and send them to the
 output. 
 
-The filter also "sanitizes" the input MIDI stream by removing nested
+The filter also sanitizes the input MIDI stream by removing nested
 notes, duplicate controllers and other anomalies.
 
 Filters are in general used to:
