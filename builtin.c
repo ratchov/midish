@@ -145,10 +145,10 @@ blt_ev(struct exec *o, struct data **r)
 {
 	struct evspec es;
 
-	if (!song_try(usong)) {
+	if (!exec_lookupevspec(o, "evspec", &es, 0)) {
 		return 0;
 	}
-	if (!exec_lookupevspec(o, "evspec", &es, 0)) {
+	if (!song_try_curev(usong)) {
 		return 0;
 	}
 	usong->curev = es;
@@ -161,9 +161,6 @@ blt_cc(struct exec *o, struct data **r, int input)
 	struct songchan *t;
 	struct var *arg;
 
-	if (!song_try(usong)) {
-		return 0;
-	}
 	arg = exec_varlookup(o, "channame");
 	if (!arg) {
 		dbg_puts("blt_cc: channame: no such param\n");
@@ -174,6 +171,9 @@ blt_cc(struct exec *o, struct data **r, int input)
 		return 1;
 	}
 	if (!exec_lookupchan_getref(o, "channame", &t, input)) {
+		return 0;
+	}
+	if (!song_try_curchan(usong, input)) {
 		return 0;
 	}
 	song_setcurchan(usong, t, input);
@@ -197,9 +197,6 @@ blt_getc(struct exec *o, struct data **r, int input)
 {
 	struct songchan *cur;
 
-	if (!song_try(usong)) {
-		return 0;
-	}
 	song_getcurchan(usong, &cur, input);
 	if (cur) {
 		*r = data_newref(cur->name.str);
@@ -227,9 +224,6 @@ blt_cx(struct exec *o, struct data **r)
 	struct songsx *t;
 	struct var *arg;
 
-	if (!song_try(usong)) {
-		return 0;
-	}
 	arg = exec_varlookup(o, "sysexname");
 	if (!arg) {
 		dbg_puts("blt_setx: 'sysexname': no such param\n");
@@ -242,6 +236,9 @@ blt_cx(struct exec *o, struct data **r)
 	if (!exec_lookupsx(o, "sysexname", &t)) {
 		return 0;
 	}
+	if (!song_try_cursx(usong)) {
+		return 0;
+	}
 	song_setcursx(usong, t);
 	return 1;
 }
@@ -251,9 +248,6 @@ blt_getx(struct exec *o, struct data **r)
 {
 	struct songsx *cur;
 
-	if (!song_try(usong)) {
-		return 0;
-	}
 	song_getcursx(usong, &cur);
 	if (cur) {
 		*r = data_newref(cur->name.str);
@@ -268,9 +262,6 @@ blt_setunit(struct exec *o, struct data **r)
 {
 	long tpu;
 
-	if (!song_try(usong)) {
-		return 0;
-	}
 	if (!exec_lookuplong(o, "tics_per_unit", &tpu)) {
 		return 0;
 	}
@@ -282,6 +273,9 @@ blt_setunit(struct exec *o, struct data **r)
 		cons_errs(o->procname, "tpu too large");
 		return 0;
 	}
+	if (!song_try(usong)) {
+		return 0;
+	}
 	song_setunit(usong, tpu);
 	return 1;
 }
@@ -289,9 +283,6 @@ blt_setunit(struct exec *o, struct data **r)
 unsigned
 blt_getunit(struct exec *o, struct data **r)
 {
-	if (!song_try(usong)) {
-		return 0;
-	}
 	*r = data_newlong(usong->tics_per_unit);
 	return 1;
 }
@@ -301,14 +292,14 @@ blt_goto(struct exec *o, struct data **r)
 {
 	long measure;
 
-	if (!song_try(usong)) {
-		return 0;
-	}
 	if (!exec_lookuplong(o, "measure", &measure)) {
 		return 0;
 	}
 	if (measure < 0) {
 		cons_errs(o->procname, "measure cant be negative");
+		return 0;
+	}
+	if (!song_try_curpos(usong)) {
 		return 0;
 	}
 	usong->curpos = measure;
@@ -319,9 +310,6 @@ blt_goto(struct exec *o, struct data **r)
 unsigned
 blt_getpos(struct exec *o, struct data **r)
 {
-	if (!song_try(usong)) {
-		return 0;
-	}
 	*r = data_newlong(usong->curpos);
 	return 1;
 }
@@ -331,14 +319,14 @@ blt_sel(struct exec *o, struct data **r)
 {
 	long len;
 
-	if (!song_try(usong)) {
-		return 0;
-	}
 	if (!exec_lookuplong(o, "length", &len)) {
 		return 0;
 	}
 	if (len < 0) {
 		cons_errs(o->procname, "'measures' parameter cant be negative");
+		return 0;
+	}
+	if (!song_try_curlen(usong)) {
 		return 0;
 	}
 	usong->curlen = len;
@@ -348,9 +336,6 @@ blt_sel(struct exec *o, struct data **r)
 unsigned
 blt_getlen(struct exec *o, struct data **r)
 {
-	if (!song_try(usong)) {
-		return 0;
-	}
 	*r = data_newlong(usong->curlen);
 	return 1;
 }
@@ -361,12 +346,12 @@ blt_setq(struct exec *o, struct data **r)
 	long step;
 	struct var *arg;
 
-	if (!song_try(usong)) {
-		return 0;
-	}
 	arg = exec_varlookup(o, "step");
 	if (!arg) {
 		dbg_puts("blt_setq: step: no such param\n");
+		return 0;
+	}
+	if (!song_try_curquant(usong)) {
 		return 0;
 	}
 	if (arg->data->type == DATA_NIL) {
@@ -394,9 +379,6 @@ blt_setq(struct exec *o, struct data **r)
 unsigned
 blt_getq(struct exec *o, struct data **r)
 {
-	if (!song_try(usong)) {
-		return 0;
-	}
 	if (usong->curquant > 0) 
 		*r = data_newlong(usong->tics_per_unit / usong->curquant);
 	else 
@@ -423,9 +405,6 @@ blt_fac(struct exec *o, struct data **r)
 unsigned
 blt_getfac(struct exec *o, struct data **r)
 {
-	if (!song_try(usong)) {
-		return 0;
-	}
 	*r = data_newlong(usong->tempo_factor);
 	return 1;
 }
@@ -437,12 +416,12 @@ blt_ct(struct exec *o, struct data **r)
 	struct songtrk *t;
 	struct var *arg;
 
-	if (!song_try(usong)) {
-		return 0;
-	}
 	arg = exec_varlookup(o, "trackname");
 	if (!arg) {
 		dbg_puts("blt_sett: 'trackname': no such param\n");
+		return 0;
+	}
+	if (!song_try_curtrk(usong)) {
 		return 0;
 	}
 	if (arg->data->type == DATA_NIL) {
@@ -461,9 +440,6 @@ blt_gett(struct exec *o, struct data **r)
 {
 	struct songtrk *cur;
 
-	if (!song_try(usong)) {
-		return 0;
-	}
 	song_getcurtrk(usong, &cur);
 	if (cur) {
 		*r = data_newref(cur->name.str);
@@ -479,12 +455,12 @@ blt_cf(struct exec *o, struct data **r)
 	struct songfilt *f;
 	struct var *arg;
 
-	if (!song_try(usong)) {
-		return 0;
-	}
 	arg = exec_varlookup(o, "filtname");
 	if (!arg) {
 		dbg_puts("blt_setf: filtname: no such param\n");
+		return 0;
+	}
+	if (!song_try_curfilt(usong)) {
 		return 0;
 	}
 	if (arg->data->type == DATA_NIL) {
@@ -508,9 +484,6 @@ blt_getf(struct exec *o, struct data **r)
 {
 	struct songfilt *cur;
 
-	if (!song_try(usong)) {
-		return 0;
-	}
 	song_getcurfilt(usong, &cur);
 	if (cur) {
 		*r = data_newref(cur->name.str);
@@ -525,10 +498,10 @@ blt_mutexxx(struct exec *o, struct data **r, int flag)
 {
 	struct songtrk *t;
 
-	if (!song_try(usong)) {
+	if (!exec_lookuptrack(o, "trackname", &t)) {
 		return 0;
 	}
-	if (!exec_lookuptrack(o, "trackname", &t)) {
+	if (!song_try_trk(usong, t)) {
 		return 0;
 	}
 	t->mute = flag;
@@ -552,9 +525,6 @@ blt_getmute(struct exec *o, struct data **r)
 {
 	struct songtrk *t;
 
-	if (!song_try(usong)) {
-		return 0;
-	}
 	if (!exec_lookuptrack(o, "trackname", &t)) {
 		return 0;
 	}
@@ -573,10 +543,6 @@ blt_ls(struct exec *o, struct data **r)
 	struct sysex *x;
 	unsigned i, count;
 	unsigned dev, ch;
-
-	if (!song_try(usong)) {
-		return 0;
-	}
 
 	/*
 	 * print info about channels
@@ -903,15 +869,15 @@ blt_tempo(struct exec *o, struct data **r)
 {
 	long tempo;
 
-	if (!song_try(usong)) {
-		return 0;
-	}
 	if (!exec_lookuplong(o, "beats_per_minute", &tempo)) {
 		return 0;
 	}
 	if (tempo < 40 || tempo > 240) {
 		cons_errs(o->procname, 
 		    "tempo must be between 40 and 240 beats per measure");
+		return 0;
+	}
+	if (!song_try_meta(usong)) {
 		return 0;
 	}
 	track_settempo(&usong->meta, usong->curpos, tempo);
@@ -931,9 +897,6 @@ blt_mins(struct exec *o, struct data **r)
 
 	/* XXX: get a {num denom} syntax */
 
-	if (!song_try(usong)) {
-		return 0;
-	}
 	if (!exec_lookuplong(o, "amount", &amount) ||
 	    !exec_lookuplist(o, "sig", &sig)) {
 		return 0;
@@ -955,6 +918,9 @@ blt_mins(struct exec *o, struct data **r)
 	} else {
 		cons_errs(o->procname, 
 		    "signature must be {num denom} or {} list");
+		return 0;
+	}
+	if (!song_try_meta(usong)) {
 		return 0;
 	}
 	len = amount * bpm * tpb;
@@ -994,10 +960,10 @@ blt_mcut(struct exec *o, struct data **r)
 	unsigned tic, len;
 	struct track t1, t2;
 
-	if (!song_try(usong)) {
+	if (!exec_lookuplong(o, "amount", &amount)) {
 		return 0;
 	}
-	if (!exec_lookuplong(o, "amount", &amount)) {
+	if (!song_try(usong)) {
 		return 0;
 	}
 	tic = track_findmeasure(&usong->meta, usong->curpos);
@@ -1090,9 +1056,6 @@ blt_mtempo(struct exec *o, struct data **r)
 	unsigned tic, bpm, tpb;
 	unsigned long usec24;
 
-	if (!song_try(usong)) {
-		return 0;
-	}
 	track_timeinfo(&usong->meta, usong->curpos, &tic, &usec24, &bpm, &tpb);
 	*r = data_newlong(60L * 24000000L / (usec24 * tpb));
 	return 1;
@@ -1104,9 +1067,6 @@ blt_msig(struct exec *o, struct data **r)
 	unsigned tic, bpm, tpb;
 	unsigned long usec24;
 
-	if (!song_try(usong)) {
-		return 0;
-	}
 	track_timeinfo(&usong->meta, usong->curpos, &tic, &usec24, &bpm, &tpb);
 	*r = data_newlist(NULL);
 	data_listadd(*r, data_newlong(bpm));
@@ -1117,9 +1077,6 @@ blt_msig(struct exec *o, struct data **r)
 unsigned
 blt_mend(struct exec *o, struct data **r)
 {
-	if (!song_try(usong)) {
-		return 0;
-	}
 	*r = data_newlong(song_endpos(usong));
 	return 1;
 }
@@ -1184,9 +1141,6 @@ blt_ctlunconf(struct exec *o, struct data **r)
 unsigned
 blt_ctlinfo(struct exec *o, struct data **r)
 {
-	if (!song_try(usong)) {
-		return 0;
-	}
 	evctltab_output(evctl_tab, tout);
 	return 1;
 }
@@ -1234,9 +1188,6 @@ blt_tlist(struct exec *o, struct data **r)
 	struct data *d, *n;
 	struct songtrk *i;
 
-	if (!song_try(usong)) {
-		return 0;
-	}
 	d = data_newlist(NULL);
 	SONG_FOREACH_TRK(usong, i) {
 		n = data_newref(i->name.str);
@@ -1252,7 +1203,7 @@ blt_tnew(struct exec *o, struct data **r)
 	char *trkname;
 	struct songtrk *t;
 
-	if (!song_try(usong)) {
+	if (!song_try_curtrk(usong)) {
 		return 0;
 	}
 	if (!exec_lookupname(o, "trackname", &trkname)) {
@@ -1272,12 +1223,12 @@ blt_tdel(struct exec *o, struct data **r)
 {
 	struct songtrk *t;
 
-	if (!song_try(usong)) {
-		return 0;
-	}
 	song_getcurtrk(usong, &t);
 	if (t == NULL) {
 		cons_errs(o->procname, "no current track");
+		return 0;
+	}
+	if (!song_try_trk(usong, t)) {
 		return 0;
 	}
 	song_trkdel(usong, t);
@@ -1290,9 +1241,6 @@ blt_tren(struct exec *o, struct data **r)
 	char *name;
 	struct songtrk *t;
 
-	if (!song_try(usong)) {
-		return 0;
-	}
 	song_getcurtrk(usong, &t);
 	if (t == NULL) {
 		cons_errs(o->procname, "no current track");
@@ -1317,9 +1265,6 @@ blt_texists(struct exec *o, struct data **r)
 	char *name;
 	struct songtrk *t;
 
-	if (!song_try(usong)) {
-		return 0;
-	}
 	if (!exec_lookupname(o, "trackname", &name)) {
 		return 0;
 	}
@@ -1337,9 +1282,6 @@ blt_taddev(struct exec *o, struct data **r)
 	struct songtrk *t;
 	unsigned pos, bpm, tpb;
 
-	if (!song_try(usong)) {
-		return 0;
-	}
 	if (!exec_lookuplong(o, "measure", &measure) ||
 	    !exec_lookuplong(o, "beat", &beat) ||
 	    !exec_lookuplong(o, "tic", &tic) ||
@@ -1349,6 +1291,9 @@ blt_taddev(struct exec *o, struct data **r)
 	song_getcurtrk(usong, &t);
 	if (t == NULL) {
 		cons_errs(o->procname, "no current track");
+		return 0;
+	}
+	if (!song_try_trk(usong, t)) {
 		return 0;
 	}
 	track_timeinfo(&usong->meta, measure, &pos, NULL, &bpm, &tpb);
@@ -1373,9 +1318,6 @@ blt_tsetf(struct exec *o, struct data **r)
 	struct songfilt *f;
 	struct var *arg;
 
-	if (!song_try(usong)) {
-		return 0;
-	}
 	song_getcurtrk(usong, &t);
 	if (t == NULL) {
 		cons_errs(o->procname, "no current track");
@@ -1406,9 +1348,6 @@ blt_tgetf(struct exec *o, struct data **r)
 {
 	struct songtrk *t;
 
-	if (!song_try(usong)) {
-		return 0;
-	}
 	song_getcurtrk(usong, &t);
 	if (t == NULL) {
 		cons_errs(o->procname, "no current track");
@@ -1427,12 +1366,12 @@ blt_tcheck(struct exec *o, struct data **r)
 {
 	struct songtrk *t;
 
-	if (!song_try(usong)) {
-		return 0;
-	}
 	song_getcurtrk(usong, &t);
 	if (t == NULL) {
 		cons_errs(o->procname, "no current track");
+		return 0;
+	}
+	if (!song_try_trk(usong, t)) {
 		return 0;
 	}
 	track_check(&t->track);
@@ -1446,12 +1385,12 @@ blt_tcut(struct exec *o, struct data **r)
 	unsigned qstep, stic, etic;
 	struct track t1, t2;
 
-	if (!song_try(usong)) {
-		return 0;
-	}
 	song_getcurtrk(usong, &t);
 	if (t == NULL) {
 		cons_errs(o->procname, "no current track");
+		return 0;
+	}
+	if (!song_try_trk(usong, t)) {
 		return 0;
 	}
 	stic = track_findmeasure(&usong->meta, usong->curpos);
@@ -1487,15 +1426,15 @@ blt_tins(struct exec *o, struct data **r)
 	unsigned stic, etic, qstep;
 	struct track t1, t2;
 
-	if (!song_try(usong)) {
-		return 0;
-	}
 	song_getcurtrk(usong, &t);
 	if (t == NULL) {
 		cons_errs(o->procname, "no current track");
 		return 0;
 	}
 	if (!exec_lookuplong(o, "amount", &amount)) {
+		return 0;
+	}
+	if (!song_try_trk(usong, t)) {
 		return 0;
 	}
 	stic = track_findmeasure(&usong->meta, usong->curpos);
@@ -1529,12 +1468,12 @@ blt_tclr(struct exec *o, struct data **r)
 	struct songtrk *t;
 	unsigned stic, etic, qstep;
 
-	if (!song_try(usong)) {
-		return 0;
-	}
 	song_getcurtrk(usong, &t);
 	if (t == NULL) {
 		cons_errs(o->procname, "no current track");
+		return 0;
+	}
+	if (!song_try_trk(usong, t)) {
 		return 0;
 	}
 	stic = track_findmeasure(&usong->meta, usong->curpos);
@@ -1557,12 +1496,12 @@ blt_tpaste(struct exec *o, struct data **r)
 	struct track copy;
 	unsigned stic, stic2, qstep;
 
-	if (!song_try(usong)) {
-		return 0;
-	}
 	song_getcurtrk(usong, &t);
 	if (t == NULL) {
 		cons_errs(o->procname, "no current track");
+		return 0;
+	}
+	if (!song_try_trk(usong, t)) {
 		return 0;
 	}
 	stic = CLIP_OFFS;
@@ -1588,12 +1527,12 @@ blt_tcopy(struct exec *o, struct data **r)
 	struct songtrk *t;
 	unsigned stic, etic, stic2, qstep;
 
-	if (!song_try(usong)) {
-		return 0;
-	}
 	song_getcurtrk(usong, &t);
 	if (t == NULL) {
 		cons_errs(o->procname, "no current track");
+		return 0;
+	}
+	if (!song_try_trk(usong, t)) {
 		return 0;
 	}
 	stic = track_findmeasure(&usong->meta, usong->curpos);
@@ -1619,15 +1558,15 @@ blt_tmerge(struct exec *o, struct data **r)
 {
 	struct songtrk *src, *dst;
 
-	if (!song_try(usong)) {
-		return 0;
-	}
 	if (!exec_lookuptrack(o, "source", &src)) {
 		return 0;
 	}
 	song_getcurtrk(usong, &dst);
 	if (dst == NULL) {
 		cons_errs(o->procname, "no current track");
+		return 0;
+	}
+	if (!song_try_trk(usong, dst)) {
 		return 0;
 	}
 	track_merge(&src->track, &dst->track);
@@ -1641,9 +1580,6 @@ blt_tquant(struct exec *o, struct data **r)
 	unsigned stic, etic, offset, qstep;
 	long rate;
 
-	if (!song_try(usong)) {
-		return 0;
-	}
 	song_getcurtrk(usong, &t);
 	if (t == NULL) {
 		cons_errs(o->procname, "no current track");
@@ -1654,6 +1590,9 @@ blt_tquant(struct exec *o, struct data **r)
 	}
 	if (rate > 100) {
 		cons_errs(o->procname, "rate must be between 0 and 100");
+		return 0;
+	}
+	if (!song_try_trk(usong, t)) {
 		return 0;
 	}
 	stic = track_findmeasure(&usong->meta, usong->curpos);
@@ -1677,15 +1616,15 @@ blt_ttransp(struct exec *o, struct data **r)
 	long halftones;
 	unsigned stic, etic, qstep;
 
-	if (!song_try(usong)) {
-		return 0;
-	}
 	song_getcurtrk(usong, &t);
 	if (t == NULL) {
 		cons_errs(o->procname, "no current track");
 		return 0;
 	}
 	if (!exec_lookuplong(o, "halftones", &halftones)) {
+		return 0;
+	}
+	if (!song_try_trk(usong, t)) {
 		return 0;
 	}
 	stic = track_findmeasure(&usong->meta, usong->curpos);
@@ -1710,9 +1649,6 @@ blt_tclist(struct exec *o, struct data **r)
 	char map[DEFAULT_MAXNCHANS];
 	unsigned i;
 
-	if (!song_try(usong)) {
-		return 0;
-	}
 	song_getcurtrk(usong, &t);
 	if (t == NULL) {
 		cons_errs(o->procname, "no current track");
@@ -1744,9 +1680,6 @@ blt_tinfo(struct exec *o, struct data **r)
 	struct state *st;
 	unsigned len, count, count_next, tpb, bpm;
 
-	if (!song_try(usong)) {
-		return 0;
-	}
 	song_getcurtrk(usong, &t);
 	if (t == NULL) {
 		cons_errs(o->procname, "no current track");
@@ -1817,9 +1750,6 @@ blt_clist(struct exec *o, struct data **r, int input)
 	struct data *d, *n;
 	struct songchan *i;
 
-	if (!song_try(usong)) {
-		return 0;
-	}
 	d = data_newlist(NULL);
 	SONG_FOREACH_CHAN(usong, i, input ? usong->inlist : usong->outlist) {
 		n = data_newref(i->name.str);
@@ -1847,9 +1777,6 @@ blt_cexists(struct exec *o, struct data **r, int input)
 	struct songchan *c;
 	char *name;
 
-	if (!song_try(usong)) {
-		return 0;
-	}
 	if (!exec_lookupname(o, "channame", &name)) {
 		return 0;
 	}
@@ -1877,9 +1804,6 @@ blt_cnew(struct exec *o, struct data **r, int input)
 	struct songchan *i;
 	unsigned dev, ch;
 
-	if (!song_try(usong)) {
-		return 0;
-	}
 	if (!exec_lookupname(o, "channame", &name) ||
 	    !exec_lookupchan_getnum(o, "channum", &dev, &ch, input)) {
 		return 0;
@@ -1896,6 +1820,9 @@ blt_cnew(struct exec *o, struct data **r, int input)
 	}
 	if (dev > EV_MAXDEV || ch > EV_MAXCH) {
 		cons_errs(o->procname, "dev/chan number out of bounds");
+		return 0;
+	}
+	if (!song_try_curchan(usong, input)) {
 		return 0;
 	}
 	i = song_channew(usong, name, dev, ch, input);
@@ -1919,12 +1846,12 @@ blt_cdel(struct exec *o, struct data **r, int input)
 {
 	struct songchan *c;
 
-	if (!song_try(usong)) {
-		return 0;
-	}
 	song_getcurchan(usong, &c, input);
 	if (c == NULL) {
 		cons_errs(o->procname, "no current chan");
+		return 0;
+	}
+	if (!song_try_chan(usong, c, input)) {
 		return 0;
 	}
 	song_chandel(usong, c, input);
@@ -1949,9 +1876,6 @@ blt_cren(struct exec *o, struct data **r, int input)
 	struct songchan *c;
 	char *name;
 
-	if (!song_try(usong)) {
-		return 0;
-	}
 	song_getcurchan(usong, &c, input);
 	if (c == NULL) {
 		cons_errs(o->procname, "no current chan");
@@ -1987,9 +1911,6 @@ blt_cset(struct exec *o, struct data **r, int input)
 	struct songchan *c, *i;
 	unsigned dev, ch;
 
-	if (!song_try(usong)) {
-		return 0;
-	}
 	song_getcurchan(usong, &c, input);
 	if (c == NULL) {
 		cons_errs(o->procname, "no current chan");
@@ -2001,6 +1922,9 @@ blt_cset(struct exec *o, struct data **r, int input)
 	i = song_chanlookup_bynum(usong, dev, ch, input);
 	if (i != NULL) {
 		cons_errs(o->procname, "dev/chan number already used");
+		return 0;
+	}
+	if (!song_try_chan(usong, c, input)) {
 		return 0;
 	}
 	c->dev = dev;
@@ -2026,9 +1950,6 @@ blt_cgetc(struct exec *o, struct data **r, int input)
 {
 	struct songchan *c;
 
-	if (!song_try(usong)) {
-		return 0;
-	}
 	song_getcurchan(usong, &c, input);
 	if (c == NULL) {
 		cons_errs(o->procname, "no current chan");
@@ -2055,9 +1976,6 @@ blt_cgetd(struct exec *o, struct data **r, int input)
 {
 	struct songchan *c;
 
-	if (!song_try(usong)) {
-		return 0;
-	}
 	song_getcurchan(usong, &c, input);
 	if (c == NULL) {
 		cons_errs(o->procname, "no current chan");
@@ -2085,9 +2003,6 @@ blt_caddev(struct exec *o, struct data **r, int input)
 	struct songchan *c;
 	struct ev ev;
 
-	if (!song_try(usong)) {
-		return 0;
-	}
 	song_getcurchan(usong, &c, input);
 	if (c == NULL) {
 		cons_errs(o->procname, "no current chan");
@@ -2098,6 +2013,9 @@ blt_caddev(struct exec *o, struct data **r, int input)
 	}
 	if (ev.ch != c->ch || ev.dev != c->dev) {
 		cons_errs(o->procname, "dev/chan mismatch in event spec");
+		return 0;
+	}
+	if (!song_try_chan(usong, c, input)) {
 		return 0;
 	}
 	track_confev(&c->conf, &ev);
@@ -2133,6 +2051,9 @@ blt_crmev(struct exec *o, struct data **r, int input)
 	if (!exec_lookupevspec(o, "evspec", &es, input)) {
 		return 0;
 	}
+	if (!song_try_chan(usong, c, input)) {
+		return 0;
+	}
 	track_unconfev(&c->conf, &es);
 	return 1;
 }
@@ -2154,9 +2075,6 @@ blt_cinfo(struct exec *o, struct data **r, int input)
 {
 	struct songchan *c;
 
-	if (!song_try(usong)) {
-		return 0;
-	}
 	song_getcurchan(usong, &c, input);
 	if (c == NULL) {
 		cons_errs(o->procname, "no current chan");
@@ -2185,9 +2103,6 @@ blt_flist(struct exec *o, struct data **r)
 	struct data *d, *n;
 	struct songfilt *i;
 
-	if (!song_try(usong)) {
-		return 0;
-	}
 	d = data_newlist(NULL);
 	SONG_FOREACH_FILT(usong, i) {
 		n = data_newref(i->name.str);
@@ -2203,7 +2118,7 @@ blt_fnew(struct exec *o, struct data **r)
 	char *name;
 	struct songfilt *i;
 
-	if (!song_try(usong)) {
+	if (!song_try_curfilt(usong)) {
 		return 0;
 	}
 	if (!exec_lookupname(o, "filtname", &name)) {
@@ -2223,12 +2138,12 @@ blt_fdel(struct exec *o, struct data **r)
 {
 	struct songfilt *f;
 
-	if (!song_try(usong)) {
-		return 0;
-	}
 	song_getcurfilt(usong, &f);
 	if (f == NULL) {
 		cons_errs(o->procname, "no current filt");
+		return 0;
+	}
+	if (!song_try_filt(usong, f)) {
 		return 0;
 	}
 	song_filtdel(usong, f);
@@ -2241,9 +2156,6 @@ blt_fren(struct exec *o, struct data **r)
 	struct songfilt *f;
 	char *name;
 
-	if (!song_try(usong)) {
-		return 0;
-	}
 	song_getcurfilt(usong, &f);
 	if (f == NULL) {
 		cons_errs(o->procname, "no current filt");
@@ -2267,9 +2179,6 @@ blt_fexists(struct exec *o, struct data **r)
 	char *name;
 	struct songfilt *f;
 
-	if (!song_try(usong)) {
-		return 0;
-	}
 	song_getcurfilt(usong, &f);
 	if (f == NULL) {
 		cons_errs(o->procname, "no current filt");
@@ -2288,9 +2197,6 @@ blt_finfo(struct exec *o, struct data **r)
 {
 	struct songfilt *f;
 
-	if (!song_try(usong)) {
-		return 0;
-	}
 	song_getcurfilt(usong, &f);
 	if (f == NULL) {
 		cons_errs(o->procname, "no current filt");
@@ -2306,12 +2212,12 @@ blt_freset(struct exec *o, struct data **r)
 {
 	struct songfilt *f;
 
-	if (!song_try(usong)) {
-		return 0;
-	}
 	song_getcurfilt(usong, &f);
 	if (f == NULL) {
 		cons_errs(o->procname, "no current filt");
+		return 0;
+	}
+	if (!song_try_filt(usong, f)) {
 		return 0;
 	}
 	filt_reset(&f->filt);
@@ -2324,9 +2230,6 @@ blt_fmap(struct exec *o, struct data **r)
 	struct songfilt *f;
 	struct evspec from, to;
 
-	if (!song_try(usong)) {
-		return 0;
-	}
 	song_getcurfilt(usong, &f);
 	if (f == NULL) {
 		cons_errs(o->procname, "no current filt");
@@ -2334,6 +2237,9 @@ blt_fmap(struct exec *o, struct data **r)
 	}
 	if (!exec_lookupevspec(o, "from", &from, 1) ||
 	    !exec_lookupevspec(o, "to", &to, 0)) {
+		return 0;
+	}
+	if (!song_try_filt(usong, f)) {
 		return 0;
 	}
 	filt_mapnew(&f->filt, &from, &to);
@@ -2346,9 +2252,6 @@ blt_funmap(struct exec *o, struct data **r)
 	struct songfilt *f;
 	struct evspec from, to;
 
-	if (!song_try(usong)) {
-		return 0;
-	}
 	song_getcurfilt(usong, &f);
 	if (f == NULL) {
 		cons_errs(o->procname, "no current filt");
@@ -2356,6 +2259,9 @@ blt_funmap(struct exec *o, struct data **r)
 	}
 	if (!exec_lookupevspec(o, "from", &from, 1) ||
 	    !exec_lookupevspec(o, "to", &to, 0)) {
+		return 0;
+	}
+	if (!song_try_filt(usong, f)) {
 		return 0;
 	}
 	filt_mapdel(&f->filt, &from, &to);
@@ -2369,9 +2275,6 @@ blt_ftransp(struct exec *o, struct data **r)
 	struct evspec es;
 	long plus;
 
-	if (!song_try(usong)) {
-		return 0;
-	}
 	song_getcurfilt(usong, &f);
 	if (f == NULL) {
 		cons_errs(o->procname, "no current filt");
@@ -2391,6 +2294,9 @@ blt_ftransp(struct exec *o, struct data **r)
 		cons_errs(o->procname, "set must contain full range notes");
 		return 0;
 	}
+	if (!song_try_filt(usong, f)) {
+		return 0;
+	}
 	filt_transp(&f->filt, &es, plus);
 	return 1;
 }
@@ -2402,9 +2308,6 @@ blt_fvcurve(struct exec *o, struct data **r)
 	struct evspec es;
 	long weight;
 
-	if (!song_try(usong)) {
-		return 0;
-	}
 	song_getcurfilt(usong, &f);
 	if (f == NULL) {
 		cons_errs(o->procname, "no current filt");
@@ -2422,6 +2325,9 @@ blt_fvcurve(struct exec *o, struct data **r)
 		cons_errs(o->procname, "set must contain notes");
 		return 0;
 	}
+	if (!song_try_filt(usong, f)) {
+		return 0;
+	}
 	filt_vcurve(&f->filt, &es, weight);
 	return 1;
 }
@@ -2432,9 +2338,6 @@ blt_fchgxxx(struct exec *o, struct data **r, int input, int swap)
 	struct songfilt *f;
 	struct evspec from, to;
 
-	if (!song_try(usong)) {
-		return 0;
-	}
 	song_getcurfilt(usong, &f);
 	if (f == NULL) {
 		cons_errs(o->procname, "no current filt");
@@ -2447,6 +2350,9 @@ blt_fchgxxx(struct exec *o, struct data **r, int input, int swap)
 	if (evspec_isec(&from, &to)) {
 		cons_errs(o->procname, 
 		    "\"from\" and \"to\" event ranges must be disjoint");
+	}
+	if (!song_try_filt(usong, f)) {
+		return 0;
 	}
 	if (input)
 		filt_chgin(&f->filt, &from, &to, swap);
@@ -2485,9 +2391,6 @@ blt_xlist(struct exec *o, struct data **r)
 	struct data *d, *n;
 	struct songsx *i;
 
-	if (!song_try(usong)) {
-		return 0;
-	}
 	d = data_newlist(NULL);
 	SONG_FOREACH_SX(usong, i) {
 		n = data_newref(i->name.str);
@@ -2503,9 +2406,6 @@ blt_xexists(struct exec *o, struct data **r)
 	char *name;
 	struct songsx *c;
 
-	if (!song_try(usong)) {
-		return 0;
-	}
 	if (!exec_lookupname(o, "sysexname", &name)) {
 		return 0;
 	}
@@ -2520,15 +2420,15 @@ blt_xnew(struct exec *o, struct data **r)
 	char *name;
 	struct songsx *c;
 
-	if (!song_try(usong)) {
-		return 0;
-	}
 	if (!exec_lookupname(o, "sysexname", &name)) {
 		return 0;
 	}
 	c = song_sxlookup(usong, name);
 	if (c != NULL) {
 		cons_errs(o->procname, "sysex already exists");
+		return 0;
+	}
+	if (!song_try_cursx(usong)) {
 		return 0;
 	}
 	c = song_sxnew(usong, name);
@@ -2540,12 +2440,12 @@ blt_xdel(struct exec *o, struct data **r)
 {
 	struct songsx *c;
 
-	if (!song_try(usong)) {
-		return 0;
-	}
 	song_getcursx(usong, &c);
 	if (c == NULL) {
 		cons_errs(o->procname, "no current sysex");
+		return 0;
+	}
+	if (!song_try_sx(usong, c)) {
 		return 0;
 	}
 	song_sxdel(usong, c);
@@ -2558,9 +2458,6 @@ blt_xren(struct exec *o, struct data **r)
 	struct songsx *c;
 	char *name;
 
-	if (!song_try(usong)) {
-		return 0;
-	}
 	song_getcursx(usong, &c);
 	if (c == NULL) {
 		cons_errs(o->procname, "no current sysex");
@@ -2571,6 +2468,9 @@ blt_xren(struct exec *o, struct data **r)
 	}
 	if (song_sxlookup(usong, name)) {
 		cons_errss(o->procname, name, "already in use");
+		return 0;
+	}
+	if (!song_try_sx(usong, c)) {
 		return 0;
 	}
 	str_delete(c->name.str);
@@ -2585,9 +2485,6 @@ blt_xinfo(struct exec *o, struct data **r)
 	struct sysex *e;
 	unsigned i;
 
-	if (!song_try(usong)) {
-		return 0;
-	}
 	song_getcursx(usong, &c);
 	if (c == NULL) {
 		cons_errs(o->procname, "no current sysex");
@@ -2627,15 +2524,15 @@ blt_xrm(struct exec *o, struct data **r)
 	struct data *d;
 	unsigned match;
 
-	if (!song_try(usong)) {
-		return 0;
-	}
 	song_getcursx(usong, &c);
 	if (c == NULL) {
 		cons_errs(o->procname, "no current sysex");
 		return 0;
 	}
 	if (!exec_lookuplist(o, "data", &d)) {
+		return 0;
+	}
+	if (!song_try_sx(usong, c)) {
 		return 0;
 	}
 	px = &c->sx.first;
@@ -2669,9 +2566,6 @@ blt_xsetd(struct exec *o, struct data **r)
 	unsigned match;
 	long unit;
 
-	if (!song_try(usong)) {
-		return 0;
-	}
 	song_getcursx(usong, &c);
 	if (c == NULL) {
 		cons_errs(o->procname, "no current sysex");
@@ -2683,6 +2577,9 @@ blt_xsetd(struct exec *o, struct data **r)
 	}
 	if (unit < 0 || unit >= DEFAULT_MAXNDEVS) {
 		cons_errs(o->procname, "devnum out of range");
+		return 0;
+	}
+	if (!song_try_sx(usong, c)) {
 		return 0;
 	}
 	for (x = c->sx.first; x != NULL; x = x->next) {
@@ -2708,9 +2605,6 @@ blt_xadd(struct exec *o, struct data **r)
 	struct var *arg;
 	long unit;
 
-	if (!song_try(usong)) {
-		return 0;
-	}
 	song_getcursx(usong, &c);
 	if (c == NULL) {
 		cons_errs(o->procname, "no current sysex");
@@ -2730,6 +2624,9 @@ blt_xadd(struct exec *o, struct data **r)
 	}
 	if (arg->data->type != DATA_LIST) {
 		cons_errs(o->procname, "data must be a list of numbers");
+		return 0;
+	}
+	if (!song_try_sx(usong, c)) {
 		return 0;
 	}
 	x = sysex_new(unit);
@@ -2892,9 +2789,6 @@ blt_dinfo(struct exec *o, struct data **r)
 {
 	long unit;
 
-	if (!song_try(usong)) {
-		return 0;
-	}
 	if (!exec_lookuplong(o, "devnum", &unit)) {
 		return 0;
 	}

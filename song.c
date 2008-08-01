@@ -1048,11 +1048,114 @@ song_idle(struct song *o)
 	}
 }
 
+
+/*
+ * the song_try_xxx() routines return 1 if we can have exclusive write
+ * access to the corresponding object, 0 otherwise.
+ *
+ * builting functions that cannot handle properly concurent access to
+ * the object, must call the corresponding song_try_xxx(), and fail if
+ * they cannot get exclusive access to it.
+ */
+
+/*
+ * get the whole song
+ */
 unsigned
 song_try(struct song *o)
 {
 	if (mux_isopen) {
-		cons_err("song in use, use songstop to release it");
+		cons_err("song in use, use ``s'' command to release it");
+		return 0;
+	}
+	return 1;
+}
+
+unsigned
+song_try_curev(struct song *o)
+{
+	return 1;
+}
+
+unsigned
+song_try_curpos(struct song *o)
+{
+	return 1;
+}
+
+unsigned
+song_try_curlen(struct song *o)
+{
+	return 1;
+}
+
+unsigned
+song_try_curquant(struct song *o)
+{
+	return 1;
+}
+
+unsigned
+song_try_curtrk(struct song *o)
+{
+	return song_try(o);
+}
+
+unsigned
+song_try_curchan(struct song *o, int input)
+{
+	return 1;
+}
+
+unsigned
+song_try_curfilt(struct song *o)
+{
+	return song_try(o);
+}
+
+unsigned
+song_try_cursx(struct song *o)
+{
+	return song_try(o);
+}
+
+unsigned
+song_try_trk(struct song *o, struct songtrk *f)
+{
+	if (mux_isopen && (o->mode & (SONG_PLAY | SONG_REC))) {
+		cons_err("track in use, use ``s'' command to release it");
+		return 0;
+	}
+	return 1;
+}
+
+unsigned
+song_try_chan(struct song *o, struct songchan *f, int input)
+{
+	return song_try(o);
+}
+
+unsigned
+song_try_filt(struct song *o, struct songfilt *f)
+{
+	return song_try(o);
+}
+
+unsigned
+song_try_sx(struct song *o, struct songsx *x)
+{
+	if (mux_isopen && (o->mode & SONG_REC) && (o->cursx == x)) {
+		cons_err("sysex in use, stop recording to release it");
+		return 0;
+	}
+	return 1;
+}
+
+unsigned
+song_try_meta(struct song *o)
+{
+	if (mux_isopen && (o->mode & (SONG_PLAY | SONG_REC))) {
+		cons_err("meta track in use, use ``s'' command to release it");
 		return 0;
 	}
 	return 1;

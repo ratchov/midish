@@ -89,8 +89,8 @@ struct song {
 	struct songchan *curin;		/* default input channel */
 	struct songsx *cursx;		/* default sysex bank */
 	unsigned curpos;		/* default position (in measures) */
-	unsigned curquant;		/* default quantization step */
 	unsigned curlen;		/* selection length */
+	unsigned curquant;		/* default quantization step */
 	struct evspec curev;		/* evspec for track editing */
 	struct metro metro;		/* metonome conf. */
 
@@ -184,7 +184,21 @@ void song_record(struct song *);
 void song_play(struct song *);
 void song_idle(struct song *);
 void song_stop(struct song *);
+
 unsigned song_try(struct song *);
+unsigned song_try_curev(struct song *);
+unsigned song_try_curpos(struct song *);
+unsigned song_try_curlen(struct song *);
+unsigned song_try_curquant(struct song *);
+unsigned song_try_curtrk(struct song *);
+unsigned song_try_curchan(struct song *, int);
+unsigned song_try_curfilt(struct song *);
+unsigned song_try_cursx(struct song *);
+unsigned song_try_trk(struct song *, struct songtrk *);
+unsigned song_try_chan(struct song *, struct songchan *, int);
+unsigned song_try_filt(struct song *, struct songfilt *);
+unsigned song_try_sx(struct song *, struct songsx *);
+unsigned song_try_meta(struct song *);
 
 extern unsigned song_debug;
 
