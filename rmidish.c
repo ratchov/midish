@@ -281,7 +281,7 @@ char *builtins[] = {
         "cx", "geti", "ci", "geto", "co", "mute", "unmute", "getmute",
         "ls", "save", "load", "reset", "export", "import", "i",
         "p", "r", "s", "t", "mins", "mcut", "minfo", "mtempo",
-        "msig", "ctlconf", "ctlconfx", "ctlunconf", "ctlinfo", "m",
+        "msig", "mend", "ctlconf", "ctlconfx", "ctlunconf", "ctlinfo", "m",
         "metrocf", "tlist", "tnew", "tdel", "tren", "texists",
         "taddev", "tsetf", "tgetf", "tcheck", "tcut", "tclr",
         "tpaste", "tcopy", "tins", "tmerge", "tquant", "ttransp",
