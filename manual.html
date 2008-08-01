@@ -3879,6 +3879,50 @@ Return a list of all builtin commands.
 
 <h2><a name="section_19">19 Using midish in other programs</a></h2>
 
+<h3>Creating scripts: batch mode</h3>
+
+<p>
+Midish could be used from general purpose scripting languages to do
+MIDI-related tasks.
+
+This is accomplished by starting the ``midish'' binary and writing
+commands to it's standard input.
+
+To ease this process, midish should be started in
+<i>batch mode</i>, with the <b>-b</b> flag.
+
+In batch mode the ``~/.midishrc'' and ``/etc/midishrc''
+files are not parsed, errors cause midish to exit, and 
+``<a href="#func_p">p</a>'', 
+``<a href="#func_r">r</a>'' and 
+``<a href="#func_i">i</a>'' commands are blocking.
+
+<p>
+For instance the following simple shell script will play, on the
+``/dev/rmidi1'' device, standard midi files enumerated on the command
+line:
+
+
+<pre>
+#!/bin/sh
+
+trap : 2
+
+for arg; do
+midish -b &lt;&lt;END
+dnew 0 "/dev/rmidi1" wo
+import "$arg"
+p
+END
+done
+</pre>
+
+<p>
+The ``smfplay'' and ``smfrec'' files shipped in the source tar-balls
+are examples of such scripts.
+
+<h3>Creating front-ends: verbose mode</h3>
+
 <p>
 A program that wants to use a midish feature, may start midish
 and issue commands on its standard input. Then, the standard
@@ -3930,6 +3974,10 @@ while (!eof) {
 	do_something(result);
 }
 </pre>
+
+<p>
+The ``rmidish'' program shipped in the source tar-ball is
+and example of such front-end.
 
 <h2><a name="midishrc">20 Sample midishrc-file</a></h2>
 
