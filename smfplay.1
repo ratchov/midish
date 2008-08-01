@@ -36,6 +36,7 @@
 .Sh SYNOPSIS
 .Nm smfplay
 .Op -mxy
+.Op -g Ar measure
 .Op -d Ar devname
 .Op -i Ar devname
 midifile
@@ -62,6 +63,8 @@ else it will be synchronised to the default device.
 .It Fl y
 Send midi timing information to the default device. Useful if the
 output device is a slave MIDI sequencer.
+.It Fl g Ar measure
+Start playback at the given measure number.
 .It Fl d Ar filename
 Default
 .Xr midi 4

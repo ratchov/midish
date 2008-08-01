@@ -87,7 +87,7 @@ void mux_chgtempo(unsigned long);
 void mux_chgticrate(unsigned);
 void mux_startwait(void);
 void mux_stopwait(void);
-
+int mux_mdep_wait(void);
 /*
  * call-backs called by midi device drivers
  */

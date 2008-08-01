@@ -36,29 +36,12 @@
 #include "cons.h"
 #include "user.h"
 
-unsigned cons_breakcnt, cons_ready;
-
-/*
- * if there is a keyboard interrupt (control-C), return 1 and clear
- * the interrupt flag
- */
-unsigned
-cons_break(void)
-{
-	if (cons_breakcnt > 0) {
-		cons_breakcnt = 0;
-		cons_err("\n--interrupt--\n");
-		return 1;
-	} else {
-		return 0;
-	}
-}
+unsigned cons_ready;
 
 void
 cons_init(void)
 {
 	cons_ready = 1;
-	cons_breakcnt = 0;
 	cons_mdep_init();
 }
 
@@ -88,7 +71,6 @@ cons_getc(void)
 	if (c == '\n') {
 		cons_ready = 1;
 	}
-	cons_breakcnt = 0;
 	return c;
 }
 

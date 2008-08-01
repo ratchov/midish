@@ -9,13 +9,14 @@ extclock=0
 sendrt=0
 input=""
 device=$MIDIDEV
-metronome=0
+metronome="off"
 tempo=0
+pos=0
 
-while getopts mxyd:i: optname; do
+while getopts mxyd:i:g: optname; do
 	case "$optname" in
 	m)
-		metronome=1;;
+		metronome="on";;
 	x)
 		extclock=1;;
 	y)
@@ -24,6 +25,8 @@ while getopts mxyd:i: optname; do
 		device=$OPTARG;;
 	i)
 		input=$OPTARG;;
+	g)
+		pos=$OPTARG;;
 	esac
 done
 shift $(($OPTIND - 1))
@@ -32,26 +35,26 @@ if [ "$#" != "1" -o -z "$1" ]; then
 fi
 
 exec midish -b <<EOF
-songimportsmf "$1"
+import "$1"
+g $pos
 if "$device" {
 	if "$input" {
-		devattach 0 "$device" wo
+		dnew 0 "$device" wo
 	} else {
-		devattach 0 "$device" rw
+		dnew 0 "$device" rw
 	}
 	if $extclock == 1 {
-		devsetmaster 0
+		dclkrx 0
 	}
 	if $sendrt {
-		devsendrt 0 1
+		dclktx {0}
 	}
 }
 if "$input" {
-	devattach 1 "$input" ro
-	filtnew myfilt
-	filtdevmap myfilt 1 0
-	songsetcurfilt myfilt
+	dnew 1 "$input" ro
+	fnew myfilt
+	fmap {any {1 0..15}} {any {0 0..15}}
 }
-metroswitch $metronome
-songplay
+m $metronome
+p
 EOF

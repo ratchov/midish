@@ -36,6 +36,7 @@
 .Sh SYNOPSIS
 .Nm smfrec
 .Op -amxy
+.Op -g Ar measure
 .Op -d Ar devname
 .Op -i Ar devname
 midifile
@@ -60,6 +61,8 @@ device instead of using an internal clock source.
 .It Fl y
 Send midi timing information to the default device.
 Useful if it is a slave MIDI sequencer.
+.It Fl g Ar measure
+Start playback and recording at the given measure number.
 .It Fl d Ar filename
 Default
 .Xr midi 4

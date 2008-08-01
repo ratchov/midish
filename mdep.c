@@ -69,7 +69,7 @@
 struct timeval tv, tv_last;
 
 char cons_buf[CONS_BUFSIZE];
-unsigned cons_index, cons_len, cons_eof;
+unsigned cons_index, cons_len, cons_eof, cons_quit;
 struct pollfd *cons_pfd;
 
 /*
@@ -92,7 +92,7 @@ mux_mdep_close(void)
 {
 }
 
-void
+int
 mux_mdep_wait(void)
 {
 	int res;
@@ -116,9 +116,18 @@ mux_mdep_wait(void)
 		pfd->events = POLLIN;
 		RMIDI(dev)->mdep.pfd = pfd;
 	}
-	res = poll(pfds, nfds, mux_isopen ? 1 : -1);
-	if (res < 0) {
-		perror("mux_run: poll failed");
+	for (;;) {
+		if (cons_quit) {
+			fprintf(stderr, "\n--interrupt--\n");
+			cons_quit = 0;
+			return 0;
+		}
+		res = poll(pfds, nfds, mux_isopen ? 1 : -1);
+		if (res >= 0)
+			break;
+		if (errno == EINTR)
+			continue;
+		perror("mux_mdep_wait: poll failed");
 		exit(1);
 	}
 	for (dev = mididev_list; dev != NULL; dev = dev->next) {
@@ -142,8 +151,8 @@ mux_mdep_wait(void)
 
 	if (mux_isopen) {
 		if (gettimeofday(&tv, NULL) < 0) {
-			perror("mux_run: gettimeofday failed");
-			return;
+			perror("mux_mdep_wait: gettimeofday failed");
+			return 1;
 		}
 
 		/*
@@ -175,6 +184,7 @@ mux_mdep_wait(void)
 		cons_len = res;
 		cons_index = 0;
 	}
+	return 1;
 }
 
 /*
@@ -186,7 +196,14 @@ mux_mdep_wait(void)
 void
 mux_sleep(unsigned millisecs)
 {
-	while (poll(NULL, (nfds_t)0, millisecs) < 0) {
+	int res;
+
+	for (;;) {
+		res = poll(NULL, (nfds_t)0, millisecs);
+		if (res >= 0)
+			break;
+		if (errno == EINTR)
+			continue;	
 		perror("mux_sleep: poll failed");
 		exit(1);
 	}
@@ -300,24 +317,58 @@ rmidi_flush(struct rmidi *o)
 }
 
 void
+cons_mdep_sigint(int s)
+{
+	if (cons_quit)
+		_exit(1);
+	cons_quit = 1;
+}
+
+void
 cons_mdep_init(void)
 {
+	struct sigaction sa;
+
 	cons_index = 0;
 	cons_len = 0;
 	cons_eof = 0;
+	cons_quit = 0;
+
+	sigfillset(&sa.sa_mask);
+	sa.sa_flags = SA_RESTART;
+	sa.sa_handler = cons_mdep_sigint;
+	if (sigaction(SIGINT, &sa, NULL) < 0) {
+		perror("sigaction");
+		exit(1);
+	}
 }
 
 void
 cons_mdep_done(void)
 {
+	struct sigaction sa;
+
+	sigfillset(&sa.sa_mask);
+	sa.sa_flags = SA_RESTART;
+	sa.sa_handler = SIG_DFL;
+	if (sigaction(SIGINT, &sa, NULL) < 0) {
+		perror("sigaction");
+		exit(1);
+	}
 }
 
 int
 cons_mdep_getc(void)
 {
-	while (cons_index == cons_len && !cons_eof)
-		mux_mdep_wait();
-	return cons_eof ? EOF : (cons_buf[cons_index++] & 0xff);
+	int quit = 0;
+
+	while (cons_index == cons_len && !cons_eof) {
+		if (!mux_mdep_wait()) {
+			quit = 1;
+			break;
+		}
+	}
+	return (cons_eof || quit) ? EOF : (cons_buf[cons_index++] & 0xff);
 }
 
 /*

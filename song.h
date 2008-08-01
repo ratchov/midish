@@ -114,6 +114,7 @@ struct song {
 #define SONG_PLAY	1
 #define SONG_REC	2
 	unsigned mode;			/* real-time "mode" */
+	unsigned complete;		/* playback completed */
 	unsigned metro_mask;		/* if enable = (mask | mode) */
 };
 

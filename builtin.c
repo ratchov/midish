@@ -829,6 +829,13 @@ blt_idle(struct exec *o, struct data **r)
 		return 0;
 	}
 	song_idle(usong);
+	if (user_flag_batch) {
+		cons_err("press ^C to stop idling");
+		while (mux_mdep_wait())
+			; /* nothing */
+		cons_err("idling stopped");
+		song_stop(usong);
+	}
 	return 1;
 }
 
@@ -839,6 +846,14 @@ blt_play(struct exec *o, struct data **r)
 		return 0;
 	}
 	song_play(usong);
+	if (user_flag_batch) {
+		cons_err("press ^C to stop playback");
+		while (mux_mdep_wait() && !usong->complete)
+			; /* nothing */
+		cons_err("playback stopped");
+		song_stop(usong);
+		cons_putpos(usong->curpos, 0, 0);
+	}
 	return 1;
 }
 
@@ -849,6 +864,14 @@ blt_rec(struct exec *o, struct data **r)
 		return 0;
 	}
 	song_record(usong);
+	if (user_flag_batch) {
+		cons_err("press ^C to stop recording");
+		while (mux_mdep_wait())
+			; /* nothing */
+		cons_err("recording stopped");
+		song_stop(usong);
+		cons_putpos(usong->curpos, 0, 0);
+	}
 	return 1;
 }
 

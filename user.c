@@ -1534,4 +1534,3 @@ user_mainloop(void)
 	mididev_listdone();
 	return exitcode;
 }
-

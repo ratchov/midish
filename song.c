@@ -589,11 +589,12 @@ void
 song_ticskip(struct song *o)
 {
 	struct songtrk *i;
+	unsigned neot;
 
 	/*
 	 * tempo_track
 	 */
-	(void)seqptr_ticskip(&o->metaptr, 1);
+	neot = seqptr_ticskip(&o->metaptr, 1);
 	o->tic++;
 	if (o->tic >= o->tpb) {
 		o->tic = 0;
@@ -615,8 +616,10 @@ song_ticskip(struct song *o)
 	}
 #endif
 	SONG_FOREACH_TRK(o, i) {
-		(void)seqptr_ticskip(&i->trackptr, 1);
+		neot |= seqptr_ticskip(&i->trackptr, 1);
 	}
+	if (neot == 0)
+		o->complete = 1;
 }
 
 /*
@@ -865,6 +868,7 @@ song_start(struct song *o, unsigned mode, unsigned countdown)
 	struct state *s;
 
 	o->mode = mode;
+	o->complete = (mode & SONG_PLAY) ? 0 : 1;
 
 	/*
 	 * check for the current filter
