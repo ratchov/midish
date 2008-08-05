@@ -2038,10 +2038,11 @@ blt_caddev(struct exec *o, struct data **r, int input)
 		cons_errs(o->procname, "dev/chan mismatch in event spec");
 		return 0;
 	}
-	if (!song_try_chan(usong, c, input)) {
+	if (ev_phase(&ev) != (EV_PHASE_FIRST | EV_PHASE_LAST)) {
+		cons_errs(o->procname, "event must be stateless");
 		return 0;
 	}
-	track_confev(&c->conf, &ev);
+	song_confev(usong, c, input, &ev);
 	return 1;
 }
 
@@ -2074,10 +2075,7 @@ blt_crmev(struct exec *o, struct data **r, int input)
 	if (!exec_lookupevspec(o, "evspec", &es, input)) {
 		return 0;
 	}
-	if (!song_try_chan(usong, c, input)) {
-		return 0;
-	}
-	track_unconfev(&c->conf, &es);
+	song_unconfev(usong, c, input, &es);
 	return 1;
 }
 

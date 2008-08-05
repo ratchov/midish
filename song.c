@@ -493,6 +493,33 @@ song_endpos(struct song *o)
 	return m;
 }
 
+void
+song_playconfev(struct song *o, struct songchan *c, int input, struct ev *in)
+{
+	struct ev ev = *in;
+	struct ev filtout[FILT_MAXNRULES];
+	unsigned i, nev;
+
+	if (!EV_ISVOICE(&ev)) {
+		dbg_puts("song_playconfev: ");
+		dbg_puts(c->name.str);
+		dbg_puts(": ");
+		ev_dbg(&ev);
+		dbg_puts(": not a voice event");
+		dbg_puts("\n");
+		return;
+	}
+	ev.dev = c->dev;
+	ev.ch = c->ch;
+	if (!input || o->filt == NULL) {
+		mixout_putev(&ev, 0);
+	} else {
+		nev = filt_do(o->filt, &ev, filtout);
+		for (i = 0; i < nev; i++)
+			mixout_putev(&filtout[i], 0);
+	}
+}
+
 /*
  * send to the output all events from all chans
  */
@@ -502,24 +529,24 @@ song_playconf(struct song *o)
 	struct songchan *i;
 	struct seqptr cp;
 	struct state *st;
-	struct ev ev;
 
+	SONG_FOREACH_IN(o, i) {
+		seqptr_init(&cp, &i->conf);
+		for (;;) {
+			st = seqptr_evget(&cp);
+			if (st == NULL)
+				break;
+			song_playconfev(o, i, 1, &st->ev);
+		}
+		seqptr_done(&cp);
+	}
 	SONG_FOREACH_OUT(o, i) {
 		seqptr_init(&cp, &i->conf);
 		for (;;) {
 			st = seqptr_evget(&cp);
 			if (st == NULL)
 				break;
-			ev = st->ev;
-			if (EV_ISVOICE(&ev)) {
-				ev.dev = i->dev;
-				ev.ch = i->ch;
-				mixout_putev(&ev, cp.statelist.serial);
-			} else {
-				dbg_puts("song_playconf: event not implemented : ");
-				dbg_putx(ev.cmd);
-				dbg_puts("\n");
-			}
+			song_playconfev(o, i, 0, &st->ev);
 		}
 		seqptr_done(&cp);
 	}
@@ -1164,3 +1191,20 @@ song_try_meta(struct song *o)
 	}
 	return 1;
 }
+
+void
+song_confev(struct song *o, struct songchan *c, int input, struct ev *ev)
+{
+	track_confev(&c->conf, ev);
+	if (mux_isopen) {
+		song_playconfev(o, c, input, ev);
+		mux_flush();
+	}
+}
+
+void
+song_unconfev(struct song *o, struct songchan *c, int input, struct evspec *es)
+{
+	track_unconfev(&c->conf, es);
+}
+
