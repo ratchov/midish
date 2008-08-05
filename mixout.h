@@ -34,9 +34,6 @@
 #include "state.h"
 #include "timo.h"
 
-struct mixout {
-};
-
 void mixout_start(void);
 void mixout_stop(void);
 void mixout_putev(struct ev *, unsigned);

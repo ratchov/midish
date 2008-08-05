@@ -109,7 +109,6 @@ struct song {
 	struct track rec;		/* track being recorded */
 	struct seqptr recptr;		/* cur position in 'rec' track */
 	struct filt *filt;		/* cur filter */
-	struct muxops *ops;		/* cur real-time operation */
 	unsigned measure, beat, tic;	/* cur position (for metronome) */
 #define SONG_PLAY	1
 #define SONG_REC	2

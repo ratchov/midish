@@ -34,21 +34,13 @@
 #include "state.h"
 #include "timo.h"
 
-struct norm {
-	/*
-	 * used in real-time only
-	 */
-	struct statelist statelist;		/* state of the normilizer */
-	struct timo timo;			/* for throtteling */
-};
-
 #define NORM_MAXEV	1			/* max events per time slice */
 
-void norm_start(struct norm *);
-void norm_shut(struct norm *);
-void norm_stop(struct norm *);
-void norm_evcb(struct norm *, struct ev *);
-void norm_timercb(struct norm *);
+void norm_start(void);
+void norm_shut(void);
+void norm_stop(void);
+void norm_evcb(struct ev *);
+void norm_timercb(void);
 
 extern unsigned norm_debug;
 

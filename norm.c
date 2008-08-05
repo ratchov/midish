@@ -54,6 +54,8 @@ extern struct song *user_song;
 #define NORM_TIMO TEMPO_TO_USEC24(120,24)
 
 unsigned norm_debug = 0;
+struct statelist norm_slist;		/* state of the normilizer */
+struct timo norm_timo;			/* for throtteling */
 
 /* --------------------------------------------------------------------- */
 
@@ -65,11 +67,11 @@ void norm_timocb(void *);
  * given callback
  */
 void
-norm_start(struct norm *o)
+norm_start(void)
 {
-	statelist_init(&o->statelist);
-	timo_set(&o->timo, norm_timocb, o);
-	timo_add(&o->timo, NORM_TIMO);
+	statelist_init(&norm_slist);
+	timo_set(&norm_timo, norm_timocb, NULL);
+	timo_add(&norm_timo, NORM_TIMO);
 	if (norm_debug) {
 		dbg_puts("norm_start()\n");
 	}
@@ -79,7 +81,7 @@ norm_start(struct norm *o)
  * unconfigure the normalizer
  */
 void
-norm_stop(struct norm *o)
+norm_stop(void)
 {
 	struct state *s, *snext;
 	struct ev ca;
@@ -87,7 +89,7 @@ norm_stop(struct norm *o)
 	if (norm_debug) {
 		dbg_puts("norm_stop()\n");
 	}
-	for (s = o->statelist.first; s != NULL; s = snext) {
+	for (s = norm_slist.first; s != NULL; s = snext) {
 		snext = s->next;
 		if (state_cancel(s, &ca)) {
 			if (norm_debug) {
@@ -97,12 +99,12 @@ norm_stop(struct norm *o)
 				ev_dbg(&ca);
 				dbg_puts("\n");
 			}
-			s = statelist_update(&o->statelist, &ca);
+			s = statelist_update(&norm_slist, &ca);
 			song_evcb(usong, &s->ev);
 		}
 	}
-	timo_del(&o->timo);
-	statelist_done(&o->statelist);
+	timo_del(&norm_timo);
+	statelist_done(&norm_slist);
 }
 
 /*
@@ -110,12 +112,12 @@ norm_stop(struct norm *o)
  * of the modified controllers, the bender etc...
  */
 void
-norm_shut(struct norm *o)
+norm_shut(void)
 {
 	struct state *s;
 	struct ev ca;
 
-	for (s = o->statelist.first; s != NULL; s = s->next) {
+	for (s = norm_slist.first; s != NULL; s = s->next) {
 		if (!(s->tag & TAG_PASS))
 			continue;
 		if (state_cancel(s, &ca)) {
@@ -137,12 +139,12 @@ norm_shut(struct norm *o)
  * event was received)
  */
 void
-norm_kill(struct norm *o, struct ev *ev)
+norm_kill(struct ev *ev)
 {
 	struct state *st, *stnext;
 	struct ev ca;
 
-	for (st = o->statelist.first; st != NULL; st = stnext) {
+	for (st = norm_slist.first; st != NULL; st = stnext) {
 		stnext = st->next;
 		if (!state_match(st, ev) ||
 		    !(st->tag & TAG_PASS) ||
@@ -155,7 +157,7 @@ norm_kill(struct norm *o, struct ev *ev)
 		 * necessary
 		 */
 		if (state_cancel(st, &ca)) {
-			st = statelist_update(&o->statelist, &ca);
+			st = statelist_update(&norm_slist, &ca);
 			song_evcb(usong, &st->ev);
 		}
 		st->tag &= ~TAG_PASS;
@@ -169,7 +171,7 @@ norm_kill(struct norm *o, struct ev *ev)
  * give an event to the normalizer for processing
  */
 void
-norm_evcb(struct norm *o, struct ev *ev)
+norm_evcb(struct ev *ev)
 {
 	struct state *st;
 
@@ -192,7 +194,7 @@ norm_evcb(struct norm *o, struct ev *ev)
 	/*
 	 * create/update state for this event
 	 */
-	st = statelist_update(&o->statelist, ev);
+	st = statelist_update(&norm_slist, ev);
 	if (st->phase & EV_PHASE_FIRST) {
 		if (st->flags & STATE_NEW)
 			st->nevents = 0;
@@ -204,7 +206,7 @@ norm_evcb(struct norm *o, struct ev *ev)
 				ev_dbg(ev);
 				dbg_puts(": bogus/nested frame\n");
 			}
-			norm_kill(o, ev);
+			norm_kill(ev);
 		}
 	}
 
@@ -237,11 +239,10 @@ norm_evcb(struct norm *o, struct ev *ev)
 void
 norm_timocb(void *addr)
 {
-	struct norm *o = (struct norm *)addr;
 	struct state *i;
 
-	statelist_outdate(&o->statelist);
-	for (i = o->statelist.first; i != NULL; i = i->next) {
+	statelist_outdate(&norm_slist);
+	for (i = norm_slist.first; i != NULL; i = i->next) {
 		i->nevents = 0;
 		if (i->tag & TAG_PENDING) {
 			i->tag &= ~TAG_PENDING;
@@ -249,5 +250,5 @@ norm_timocb(void *addr)
 			i->nevents++;
 		}
 	}
-	timo_add(&o->timo, NORM_TIMO);
+	timo_add(&norm_timo, NORM_TIMO);
 }

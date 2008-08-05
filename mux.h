@@ -65,7 +65,7 @@ void song_evcb(struct song *, struct ev *);
 void song_sysexcb(struct song *, struct sysex *);
 
 struct norm;
-void norm_evcb(struct norm *, struct ev *);
+void norm_evcb(struct ev *);
 
 struct filt;
 void filt_evcb(struct filt *, struct ev *);
@@ -88,7 +88,8 @@ void mux_chgtempo(unsigned long);
 void mux_chgticrate(unsigned);
 void mux_startwait(void);
 void mux_stopwait(void);
-int mux_mdep_wait(void);
+int mux_mdep_wait(void); /* XXX: hide this prototype */
+
 /*
  * call-backs called by midi device drivers
  */

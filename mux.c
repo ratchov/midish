@@ -113,9 +113,7 @@ void *mux_addr;
 struct prof mux_prof;
 #endif
 
-
 struct statelist mux_istate, mux_ostate;
-struct norm mux_norm;
 
 void mux_sendstop(void);
 /*
@@ -139,7 +137,7 @@ mux_open(void)
 	statelist_init(&mux_istate);
 	statelist_init(&mux_ostate);
 	mixout_start();
-	norm_start(&mux_norm);
+	norm_start();
 
 	/*
 	 * default tempo is 120 beats per minutes with 24 tics per
@@ -192,7 +190,7 @@ mux_close(void)
 			mux_flush();
 		}
 	}
-	norm_stop(&mux_norm);
+	norm_stop();
 	mixout_stop();
 	mux_flush();
 	for (i = mididev_list; i != NULL; i = i->next) {
@@ -560,7 +558,7 @@ mux_evcb(unsigned unit, struct ev *ev)
 	}
 #endif
 	if (conv_packev(&mux_istate, dev->ixctlset, ev, &rev)) {
-		norm_evcb(&mux_norm, &rev);
+		norm_evcb(&rev);
 	}
 }
 
@@ -570,7 +568,7 @@ mux_evcb(unsigned unit, struct ev *ev)
 void
 mux_shut(void)
 {
-	norm_shut(&mux_norm);
+	norm_shut();
 	mux_flush();
 }
 
