@@ -404,25 +404,16 @@ song_setcurtrk(struct song *o, struct songtrk *t)
 void
 song_getcurfilt(struct song *o, struct songfilt **r)
 {
-	struct songtrk *t;
-
-	song_getcurtrk(o, &t);
-	if (t) {
-		*r = t->curfilt;
-	} else {
-		*r = o->curfilt;
-	}
+	*r = o->curfilt;
 }
 
 void
 song_setcurfilt(struct song *o, struct songfilt *f)
 {
-	struct songtrk *t;
-
 	o->curfilt = f;
-	song_getcurtrk(o, &t);
-	if (t) {
-		t->curfilt = f;
+	if (mux_isopen) {
+		mux_shut();
+		o->filt = f ? &f->filt : NULL;
 	}
 }
 
@@ -1129,7 +1120,7 @@ song_try_curquant(struct song *o)
 unsigned
 song_try_curtrk(struct song *o)
 {
-	return song_try(o);
+	return 1;
 }
 
 unsigned

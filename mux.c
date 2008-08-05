@@ -565,37 +565,26 @@ mux_evcb(unsigned unit, struct ev *ev)
 }
 
 /*
+ * silent all input states
+ */
+void
+mux_shut(void)
+{
+	norm_shut(&mux_norm);
+	mux_flush();
+}
+
+/*
  * called if an error is detected. currently we send an all note off
  * and all ctls reset
- *
- * XXX: these controllers should be handled by the filter
- *	they should shutdown recorded states following filtering
- *	rules.
  */
 void
 mux_errorcb(unsigned unit)
 {
-	unsigned i;
-	struct ev ev;
-
 	/*
-	 * send all sound off and ctls reset
+	 * XXX: should stop only failed unit, not all devices
 	 */
-	ev.cmd = EV_XCTL;
-	ev.dev = unit;
-	ev.ctl_num = 120;		/* all sound off */
-	ev.ctl_val = 0;
-	for (i = 0; i <= EV_MAXCH; i++) {
-		ev.ch = i;
-		norm_evcb(&mux_norm, &ev);
-	}
-	ev.ctl_num = 121;		/* all ctl reset */
-	ev.ctl_val = 0;
-	for (i = 0; i <= EV_MAXCH; i++) {
-		ev.ch = i;
-		norm_evcb(&mux_norm, &ev);
-	}
-	mux_flush();
+	mux_shut();
 }
 
 /*

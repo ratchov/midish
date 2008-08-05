@@ -421,9 +421,6 @@ blt_ct(struct exec *o, struct data **r)
 		dbg_puts("blt_sett: 'trackname': no such param\n");
 		return 0;
 	}
-	if (!song_try_curtrk(usong)) {
-		return 0;
-	}
 	if (arg->data->type == DATA_NIL) {
 		song_setcurtrk(usong, NULL);
 		return 1;
@@ -432,6 +429,7 @@ blt_ct(struct exec *o, struct data **r)
 		return 0;
 	}
 	song_setcurtrk(usong, t);
+	song_setcurfilt(usong, t->curfilt);
 	return 1;
 }
 
@@ -460,12 +458,8 @@ blt_cf(struct exec *o, struct data **r)
 		dbg_puts("blt_setf: filtname: no such param\n");
 		return 0;
 	}
-	if (!song_try_curfilt(usong)) {
-		return 0;
-	}
 	if (arg->data->type == DATA_NIL) {
-		song_setcurfilt(usong, NULL);
-		return 1;
+		f = NULL;
 	} else if (arg->data->type == DATA_REF) {
 		f = song_filtlookup(usong, arg->data->val.ref);
 		if (!f) {
@@ -473,10 +467,13 @@ blt_cf(struct exec *o, struct data **r)
 			    "no such filt");
 			return 0;
 		}
-		song_setcurfilt(usong, f);
-		return 1;
+	} else {
+		cons_errs(o->procname, "bad filter name");
+		return 0;
 	}
-	return 0;
+	song_setcurtrk(usong, NULL);
+	song_setcurfilt(usong, f);
+	return 1;
 }
 
 unsigned
@@ -1226,7 +1223,7 @@ blt_tnew(struct exec *o, struct data **r)
 	char *trkname;
 	struct songtrk *t;
 
-	if (!song_try_curtrk(usong)) {
+	if (!song_try(usong)) {
 		return 0;
 	}
 	if (!exec_lookupname(o, "trackname", &trkname)) {
@@ -1352,17 +1349,19 @@ blt_tsetf(struct exec *o, struct data **r)
 		return 0;
 	}
 	if (arg->data->type == DATA_NIL) {
-		t->curfilt = NULL;
-		return 1;
+		f = NULL;
 	} else if (arg->data->type == DATA_REF) {
 		f = song_filtlookup(usong, arg->data->val.ref);
 		if (!f) {
 			cons_errs(o->procname, "no such filt");
 			return 0;
 		}
-		t->curfilt = f;
-		return 1;
+	} else {
+		cons_errs(o->procname, "bad filt name");
+		return 0;
 	}
+	t->curfilt = f;
+	song_setcurfilt(usong, f);
 	return 0;
 }
 
@@ -2139,9 +2138,6 @@ blt_fnew(struct exec *o, struct data **r)
 	char *name;
 	struct songfilt *i;
 
-	if (!song_try_curfilt(usong)) {
-		return 0;
-	}
 	if (!exec_lookupname(o, "filtname", &name)) {
 		return 0;
 	}

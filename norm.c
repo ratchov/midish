@@ -81,10 +81,26 @@ norm_start(struct norm *o)
 void
 norm_stop(struct norm *o)
 {
+	struct state *s, *snext;
+	struct ev ca;
+
 	if (norm_debug) {
 		dbg_puts("norm_stop()\n");
 	}
-	norm_shut(o);
+	for (s = o->statelist.first; s != NULL; s = snext) {
+		snext = s->next;
+		if (state_cancel(s, &ca)) {
+			if (norm_debug) {
+				dbg_puts("norm_stop: ");
+				ev_dbg(&s->ev);
+				dbg_puts(": cancelled by: ");
+				ev_dbg(&ca);
+				dbg_puts("\n");
+			}
+			s = statelist_update(&o->statelist, &ca);
+			song_evcb(usong, &s->ev);
+		}
+	}
 	timo_del(&o->timo);
 	statelist_done(&o->statelist);
 }
@@ -96,11 +112,12 @@ norm_stop(struct norm *o)
 void
 norm_shut(struct norm *o)
 {
-	struct state *s, *snext;
+	struct state *s;
 	struct ev ca;
 
-	for (s = o->statelist.first; s != NULL; s = snext) {
-		snext = s->next;
+	for (s = o->statelist.first; s != NULL; s = s->next) {
+		if (!(s->tag & TAG_PASS))
+			continue;
 		if (state_cancel(s, &ca)) {
 			if (norm_debug) {
 				dbg_puts("norm_shut: ");
@@ -109,9 +126,9 @@ norm_shut(struct norm *o)
 				ev_dbg(&ca);
 				dbg_puts("\n");
 			}
-			s = statelist_update(&o->statelist, &ca);
-			song_evcb(usong, &s->ev);
+			song_evcb(usong, &ca);
 		}
+		s->tag &= ~TAG_PASS;
 	}
 }
 

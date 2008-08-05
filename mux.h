@@ -79,6 +79,7 @@ void mux_close(void);
 void mux_run(void);
 void mux_sleep(unsigned);
 void mux_flush(void);
+void mux_shut(void);
 void mux_putev(struct ev *);
 void mux_sendraw(unsigned, unsigned char *, unsigned);
 unsigned mux_getphase(void);
