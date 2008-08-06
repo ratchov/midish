@@ -52,11 +52,13 @@
 	songfilt drums {
 		filt {
 			evmap any {1 0} > any {0 9}
+			transp any {0..15 0..15} 104
 		}
 	}
 	songfilt bass {
 		filt {
 			evmap any {1 0} > any {0 1}
+			transp any {0..15 0..15} 104
 		}
 	}
 	songfilt organ {

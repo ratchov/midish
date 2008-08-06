@@ -31,14 +31,17 @@
 #ifndef MIDISH_NORM_H
 #define MIDISH_NORM_H
 
-#include "state.h"
-#include "timo.h"
-
 #define NORM_MAXEV	1			/* max events per time slice */
+
+struct filt;
+struct ev;
 
 void norm_start(void);
 void norm_shut(void);
 void norm_stop(void);
+void norm_setfilt(struct filt *);
+void norm_putev(struct ev *);
+
 void norm_evcb(struct ev *);
 void norm_timercb(void);
 

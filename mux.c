@@ -563,16 +563,6 @@ mux_evcb(unsigned unit, struct ev *ev)
 }
 
 /*
- * silent all input states
- */
-void
-mux_shut(void)
-{
-	norm_shut();
-	mux_flush();
-}
-
-/*
  * called if an error is detected. currently we send an all note off
  * and all ctls reset
  */
@@ -582,7 +572,8 @@ mux_errorcb(unsigned unit)
 	/*
 	 * XXX: should stop only failed unit, not all devices
 	 */
-	mux_shut();
+	norm_shut();
+	mux_flush();
 }
 
 /*

@@ -108,7 +108,6 @@ struct song {
 	unsigned bpm, tpb;		/* cur time signature */
 	struct track rec;		/* track being recorded */
 	struct seqptr recptr;		/* cur position in 'rec' track */
-	struct filt *filt;		/* cur filter */
 	unsigned measure, beat, tic;	/* cur position (for metronome) */
 #define SONG_PLAY	1
 #define SONG_REC	2

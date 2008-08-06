@@ -41,9 +41,10 @@
 #include "norm.h"
 #include "pool.h"
 #include "mux.h"
+#include "filt.h"
+#include "mixout.h"
 
 struct song;
-extern struct song *user_song;
 
 #define TAG_PASS 1
 #define TAG_PENDING 2
@@ -56,11 +57,47 @@ extern struct song *user_song;
 unsigned norm_debug = 0;
 struct statelist norm_slist;		/* state of the normilizer */
 struct timo norm_timo;			/* for throtteling */
+struct filt *norm_filt = NULL;
 
 /* --------------------------------------------------------------------- */
 
 void norm_timocb(void *);
 
+/*
+ * set the filter to send events to
+ */
+void
+norm_setfilt(struct filt *f)
+{
+	norm_shut();
+	mux_flush();
+	norm_filt = f;
+}
+
+/*
+ * inject an event
+ */
+void
+norm_putev(struct ev *ev)
+{
+	struct ev filtout[FILT_MAXNRULES];
+	unsigned i, nev;
+
+	if (!EV_ISVOICE(ev)) {
+		return;
+	}
+	if (norm_filt) {
+		nev = filt_do(norm_filt, ev, filtout);
+	} else {
+		filtout[0] = *ev;
+		nev = 1;
+	}
+	for (i = 0; i < nev; i++)
+		mixout_putev(&filtout[i], 0);
+	for (i = 0; i < nev; i++)
+		song_evcb(usong, &filtout[i]);
+	mux_flush();
+}
 
 /*
  * configure the normalizer so that output events are passed to the
@@ -100,7 +137,7 @@ norm_stop(void)
 				dbg_puts("\n");
 			}
 			s = statelist_update(&norm_slist, &ca);
-			song_evcb(usong, &s->ev);
+			norm_putev(&s->ev);
 		}
 	}
 	timo_del(&norm_timo);
@@ -128,7 +165,7 @@ norm_shut(void)
 				ev_dbg(&ca);
 				dbg_puts("\n");
 			}
-			song_evcb(usong, &ca);
+			norm_putev(&ca);
 		}
 		s->tag &= ~TAG_PASS;
 	}
@@ -158,7 +195,7 @@ norm_kill(struct ev *ev)
 		 */
 		if (state_cancel(st, &ca)) {
 			st = statelist_update(&norm_slist, &ca);
-			song_evcb(usong, &st->ev);
+			norm_putev(&st->ev);
 		}
 		st->tag &= ~TAG_PASS;
 		dbg_puts("norm_kill: ");
@@ -228,7 +265,7 @@ norm_evcb(struct ev *ev)
 		return;
 	}
 
-	song_evcb(usong, &st->ev);
+	norm_putev(&st->ev);
 	st->nevents++;
 }
 
@@ -246,7 +283,7 @@ norm_timocb(void *addr)
 		i->nevents = 0;
 		if (i->tag & TAG_PENDING) {
 			i->tag &= ~TAG_PENDING;
-			song_evcb(usong, &i->ev);
+			norm_putev(&i->ev);
 			i->nevents++;
 		}
 	}

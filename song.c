@@ -39,6 +39,7 @@
 #include "metro.h"
 #include "default.h"
 #include "mixout.h"
+#include "norm.h"
 
 unsigned song_debug = 0;
 
@@ -89,7 +90,6 @@ song_init(struct song *o)
 	/*
 	 * runtime play record parameters
 	 */
-	o->filt = NULL;
 	o->tpb = o->tics_per_unit / DEFAULT_BPM;
 	o->bpm = DEFAULT_BPM;
 	o->tempo = TEMPO_TO_USEC24(DEFAULT_TEMPO, o->tpb);
@@ -412,8 +412,7 @@ song_setcurfilt(struct song *o, struct songfilt *f)
 {
 	o->curfilt = f;
 	if (mux_isopen) {
-		mux_shut();
-		o->filt = f ? &f->filt : NULL;
+		norm_setfilt(f != NULL ? &f->filt : NULL);
 	}
 }
 
@@ -488,8 +487,6 @@ void
 song_playconfev(struct song *o, struct songchan *c, int input, struct ev *in)
 {
 	struct ev ev = *in;
-	struct ev filtout[FILT_MAXNRULES];
-	unsigned i, nev;
 
 	if (!EV_ISVOICE(&ev)) {
 		dbg_puts("song_playconfev: ");
@@ -502,12 +499,10 @@ song_playconfev(struct song *o, struct songchan *c, int input, struct ev *in)
 	}
 	ev.dev = c->dev;
 	ev.ch = c->ch;
-	if (!input || o->filt == NULL) {
+	if (!input) {
 		mixout_putev(&ev, 0);
 	} else {
-		nev = filt_do(o->filt, &ev, filtout);
-		for (i = 0; i < nev; i++)
-			mixout_putev(&filtout[i], 0);
+		norm_putev(&ev);
 	}
 }
 
@@ -820,35 +815,10 @@ song_movecb(struct song *o)
 void
 song_evcb(struct song *o, struct ev *ev)
 {
-	struct ev filtout[FILT_MAXNRULES];
-	unsigned i, nev;
-
-	if (!EV_ISVOICE(ev)) {
-		return;
-	}
-	if (o->filt) {
-		nev = filt_do(o->filt, ev, filtout);
-	} else {
-		filtout[0] = *ev;
-		nev = 1;
-	}
 	if (o->mode & SONG_REC) {
-		if (mux_getphase() >= MUX_START) {
-			for (i = 0; i < nev; i++) {
-				if (filtout[i].cmd == EV_NULL) {
-					continue;
-				}
-				(void)seqptr_evput(&o->recptr, &filtout[i]);
-			}
-		}
+		if (mux_getphase() >= MUX_START)
+			(void)seqptr_evput(&o->recptr, ev);
 	}
-	for (i = 0; i < nev; i++) {
-		if (filtout[i].cmd == EV_NULL) {
-			continue;
-		}
-		mixout_putev(&filtout[i], 0);
-	}
-	mux_flush();
 }
 
 /*
@@ -887,16 +857,6 @@ song_start(struct song *o, unsigned mode, unsigned countdown)
 
 	o->mode = mode;
 	o->complete = (mode & SONG_PLAY) ? 0 : 1;
-
-	/*
-	 * check for the current filter
-	 */
-	song_getcurfilt(o, &f);
-	if (f) {
-		o->filt = &f->filt;
-	} else {
-		o->filt = NULL;
-	}
 
 	/*
 	 * set the current position and the current
@@ -939,6 +899,12 @@ song_start(struct song *o, unsigned mode, unsigned countdown)
 	seqptr_seek(&o->recptr, tic);
 
 	mux_open();
+
+	/*
+	 * check for the current filter
+	 */
+	song_getcurfilt(o, &f);
+	norm_setfilt(f != NULL ? &f->filt : NULL);
 
 	/*
 	 * send sysex messages and channel config messages
