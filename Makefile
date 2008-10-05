@@ -2,19 +2,18 @@
 # parameters for the GNU readline(3) library, used to
 # build rmidish (front-end to midish)
 #
-READLINE_CFLAGS =			# additionnal compiler flags
 READLINE_LDFLAGS = -L/usr/local/lib	# path to libraries
 READLINE_INCLUDE = -I/usr/local/include # path to header files
-READLINE_LIB = -lreadline -ltermcap	# list of readline libraries
 
 #
 # binaries, documentation, man pages and examples will be installed in 
 # ${BIN_DIR}, ${MAN1_DIR}, ${DOC_DIR} and ${EXAMPLES_DIR}
 #
-BIN_DIR = /home/alex/bin
-MAN1_DIR = /home/alex/man/man1
-DOC_DIR = /home/alex/share/doc/midish
-EXAMPLES_DIR = /home/alex/share/examples/midish
+PREFIX = /usr/local
+BIN_DIR = ${PREFIX}/bin
+MAN1_DIR = ${PREFIX}/man/man1
+DOC_DIR = ${PREFIX}/doc/midish
+EXAMPLES_DIR = ${PREFIX}/examples/midish
 
 #
 # programs to build and install
@@ -53,8 +52,9 @@ midish:		${MIDISH_OBJS}
 		${CC} ${LDFLAGS} ${MIDISH_OBJS} -o midish
 
 rmidish:	rmidish.c
-		${CC} ${CFLAGS} ${READLINE_CFLAGS} ${READLINE_INCLUDE} rmidish.c \
-		${LDFLAGS} ${READLINE_LDFLAGS} -o rmidish ${READLINE_LIB}
+		${CC} ${CFLAGS} ${READLINE_INCLUDE} rmidish.c \
+		${LDFLAGS} ${READLINE_LDFLAGS} -o rmidish -lreadline -ltermcap
+
 builtin.o:	builtin.c dbg.h default.h node.h exec.h name.h str.h \
 		data.h cons.h frame.h state.h ev.h song.h track.h filt.h \
 		sysex.h metro.h timo.h user.h smf.h saveload.h textio.h \
