@@ -107,7 +107,9 @@ mux_mdep_wait(void)
 	cons_pfd->fd = STDIN_FILENO;
 	cons_pfd->events = POLLIN;
 	for (dev = mididev_list; dev != NULL; dev = dev->next) {
-		if (!(dev->mode & MIDIDEV_MODE_IN) || RMIDI(dev)->mdep.fd < 0) {
+		if (!(dev->mode & MIDIDEV_MODE_IN) ||
+		    RMIDI(dev)->mdep.fd < 0 ||
+		    RMIDI(dev)->mdep.dying) {
 			RMIDI(dev)->mdep.pfd = NULL;
 			continue;
 		}
@@ -138,7 +140,7 @@ mux_mdep_wait(void)
 			res = read(pfd->fd, midibuf, MIDI_BUFSIZE);
 			if (res < 0) {
 				perror(RMIDI(dev)->mdep.path);
-				RMIDI(dev)->mdep.idying = 1;
+				RMIDI(dev)->mdep.dying = 1;
 				mux_errorcb(dev->unit);
 				continue;
 			}
@@ -235,12 +237,10 @@ rmidi_open(struct rmidi *o)
 	o->mdep.fd = open(o->mdep.path, mode, 0666);
 	if (o->mdep.fd < 0) {
 		perror(o->mdep.path);
-		o->mdep.idying = 1;
-		o->mdep.odying = 1;
+		o->mdep.dying = 1;
 		return;
 	}
-	o->mdep.idying = 0;
-	o->mdep.odying = 0;
+	o->mdep.dying = 0;
 	o->oused = 0;
 	o->istatus = o->ostatus = 0;
 	o->isysex = NULL;
@@ -297,14 +297,14 @@ rmidi_flush(struct rmidi *o)
 	int res;
 	unsigned start, stop;
 
-	if (!RMIDI(o)->mdep.odying) {
+	if (!RMIDI(o)->mdep.dying) {
 		start = 0;
 		stop = o->oused;
 		while (start < stop) {
 			res = write(o->mdep.fd, o->obuf, o->oused);
 			if (res < 0) {
 				perror(RMIDI(o)->mdep.path);
-				RMIDI(o)->mdep.odying = 1;
+				RMIDI(o)->mdep.dying = 1;
 				break;
 			}
 			start += res;

@@ -40,8 +40,7 @@ struct rmidi_mdep {
 	char *path;		/* path to device node (eg "/dev/rmidi4") */
 	int fd;			/* file descriptor when opened */
 	struct pollfd *pfd;	/* used by poll(2) */
-	unsigned idying;	/* input is no more working */
-	unsigned odying;	/* output is no more working */
+	unsigned dying;		/* descriptor no more works */
 };
 
 #endif /* MIDISH_MDEP_H */
