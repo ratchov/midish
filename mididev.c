@@ -35,15 +35,49 @@
  * this module also, manages a global table of generic midi
  * devices. The table is indexed by the device "unit" number, the
  * same that is stored in the event structure
+ *
+ * this modules converts midi bytes (ie 'unsigned char') to midi events
+ * (struct ev) and calls mux_xxx callbacks to handle midi
+ * input. Similatly, it converts midi events to bytes and sends them on
+ * the wire
+ *
+ * the module provides the following methods:
+ *
+ * - mididev_open() to open the device and setup the parser
+ *
+ * - mididev_close() to release the device and the parser
+ *
+ * - mididev_inputcb() routine called by the lower layer when
+ *   midi input has been read(), basically it decodes the midi byte
+ *   stream and calls mux_xxx() routines
+ *
+ * - mididev_put{ev,start,stop,tic,ack}() routines send respectively
+ *   a voice event, clock start, clock stop, clock tick and midi
+ *   active sens.
+ *
  */
 
 #include "dbg.h"
 #include "default.h"
 #include "mididev.h"
-#include "rmidi.h"
 #include "pool.h"
 #include "cons.h"
 #include "str.h"
+#include "ev.h"
+#include "sysex.h"
+#include "mux.h"
+
+#define MIDI_SYSEXSTART	0xf0
+#define MIDI_SYSEXSTOP	0xf7
+#define MIDI_TIC	0xf8
+#define MIDI_START	0xfa
+#define MIDI_STOP	0xfc
+#define MIDI_ACK	0xfe
+
+unsigned mididev_debug = 0;
+
+unsigned mididev_evlen[] = { 2, 2, 2, 2, 1, 1, 2, 0 };
+#define MIDIDEV_EVLEN(status) (mididev_evlen[((status) >> 4) & 7])
 
 struct mididev *mididev_list, *mididev_master;
 struct mididev *mididev_byunit[DEFAULT_MAXNDEVS];
@@ -52,18 +86,26 @@ struct mididev *mididev_byunit[DEFAULT_MAXNDEVS];
  * initialize the device independent part of the device structure
  */
 void
-mididev_init(struct mididev *o, unsigned mode)
+mididev_init(struct mididev *o, struct devops *ops, unsigned mode)
 {
 	/*
 	 * by default we don't transmit realtime information
 	 * (midi_tic, midi_start, midi_stop etc...)
 	 */
+	o->ops = ops;
 	o->sendrt = 0;
 	o->ticrate = DEFAULT_TPU;
 	o->ticdelta = 0xdeadbeef;
 	o->mode = mode;
 	o->ixctlset = 0;	/* all input controllers are 7bit */
 	o->oxctlset = 0;
+
+	/*
+	 * reset parser
+	 */
+	o->oused = 0;
+	o->istatus = o->ostatus = 0;
+	o->isysex = NULL;
 }
 
 /*
@@ -73,6 +115,297 @@ mididev_init(struct mididev *o, unsigned mode)
 void
 mididev_done(struct mididev *o)
 {
+	if (mux_isopen)
+		mididev_close(o);
+}
+
+/*
+ * open the device and initialize the parser
+ */
+void
+mididev_open(struct mididev *o)
+{
+	o->eof = 0;
+	o->oused = 0;
+	o->istatus = o->ostatus = 0;
+	o->isysex = NULL;
+	o->ops->open(o);
+}
+
+/*
+ * close the device
+ */
+void
+mididev_close(struct mididev *o)
+{
+	o->ops->close(o);
+	if (o->oused) {
+		/*
+		 * XXX: should we flush instead of printing error ?
+		 */
+		dbg_puts("mididev_close: device not flushed\n");
+	}
+}
+
+/*
+ * flush the given midi device
+ */
+void
+mididev_flush(struct mididev *o)
+{
+	unsigned res;
+	unsigned start, stop;
+
+	if (!o->eof) {
+		start = 0;
+		stop = o->oused;
+		while (start < stop) {
+			res = o->ops->write(o, o->obuf, o->oused);
+			if (o->eof)
+				break;
+			start += res;
+		}
+		if (o->oused)
+			o->osensto = MIDIDEV_OSENSTO;
+	}
+	o->oused = 0;
+}
+
+/*
+ * mididev_inputcb is called when midi data becomes available
+ * it calls mux_evcb
+ */
+void
+mididev_inputcb(struct mididev *o, unsigned char *buf, unsigned count)
+{
+	struct ev ev;
+	unsigned data;
+
+	if (!(o->mode & MIDIDEV_MODE_IN)) {
+		dbg_puts("received data from output only device\n");
+		return;
+	}
+	while (count != 0) {
+		data = *buf;
+		count--;
+		buf++;
+
+		if (mididev_debug) {
+			dbg_putu(o->unit);
+			dbg_puts(" <- ");
+			dbg_putx(data);
+			dbg_puts("\n");
+		}
+
+		if (data >= 0xf8) {
+			switch(data) {
+			case MIDI_TIC:
+				mux_ticcb(o->unit);
+				break;
+			case MIDI_START:
+				mux_startcb(o->unit);
+				break;
+			case MIDI_STOP:
+				mux_stopcb(o->unit);
+				break;
+			case MIDI_ACK:
+				mux_ackcb(o->unit);
+				break;
+			default:
+				if (mididev_debug) {
+					dbg_puts("mididev_inputcb: ");
+					dbg_putx(data);
+					dbg_puts(" : skipped unimplemented message\n");
+				}
+				break;
+			}
+		} else if (data >= 0x80) {
+			if (mididev_debug &&
+			    o->istatus >= 0x80 &&  o->icount > 0 &&
+			    o->icount < MIDIDEV_EVLEN(o->istatus)) {
+				/*
+				 * midi spec says messages can be aborted
+				 * by status byte, so don't trigger an error
+				 */
+				dbg_puts("mididev_inputcb: ");
+				dbg_putx(o->istatus);
+				dbg_puts(": skipped aborted message\n");
+			}
+			o->istatus = data;
+			o->icount = 0;
+			switch(data) {
+			case MIDI_SYSEXSTART:
+				if (o->isysex) {
+					if (mididev_debug)
+						dbg_puts("mididev_inputcb: previous sysex aborted\n");
+					sysex_del(o->isysex);
+				}
+				o->isysex = sysex_new(o->unit);
+				sysex_add(o->isysex, data);
+				break;
+			case MIDI_SYSEXSTOP:
+				if (o->isysex) {
+					sysex_add(o->isysex, data);
+					mux_sysexcb(o->unit, o->isysex);
+					o->isysex = NULL;
+				}
+				o->istatus = 0;
+				break;
+			default:
+				/*
+				 * sysex message without the stop byte
+				 * is considered as aborted.
+				 */
+				if (o->isysex) {
+					if (mididev_debug)
+						dbg_puts("mididev_inputcb: current sysex aborted\n");
+					sysex_del(o->isysex);
+					o->isysex = NULL;
+				}
+				break;
+			}
+		} else if (o->istatus >= 0x80 && o->istatus < 0xf0) {
+			o->idata[o->icount] = (unsigned char)data;
+			o->icount++;
+
+			if (o->icount == MIDIDEV_EVLEN(o->istatus)) {
+				o->icount = 0;
+				ev.cmd = o->istatus >> 4;
+				ev.dev = o->unit;
+				ev.ch = o->istatus & 0x0f;
+				if (ev.cmd == EV_NON && o->idata[1] == 0) {
+					ev.cmd = EV_NOFF;
+					ev.note_num = o->idata[0];
+					ev.note_vel = EV_NOFF_DEFAULTVEL;
+				} else if (ev.cmd == EV_BEND) {
+					ev.bend_val = ((unsigned)o->idata[1] << 7) + o->idata[0];
+				} else {
+					ev.v0 = o->idata[0];
+					ev.v1 = o->idata[1];
+				}
+				mux_evcb(o->unit, &ev);
+			}
+		} else if (o->istatus == MIDI_SYSEXSTART) {
+			/*
+			 * NOTE: MIDI uses running status only for voice events
+			 *	 so, if you add new system common messages
+			 *       here don't forget to reset the running status
+			 */
+			sysex_add(o->isysex, data);
+		}
+	}
+}
+
+/*
+ * write a single midi byte to the output buffer, if
+ * it is full, flush it. Shouldn't we inline it?
+ */
+void
+mididev_out(struct mididev *o, unsigned data)
+{
+	if (!(o->mode & MIDIDEV_MODE_OUT)) {
+		return;
+	}
+	if (mididev_debug) {
+		dbg_putu(o->unit);
+		dbg_puts(" -> ");
+		dbg_putx(data);
+		dbg_puts("\n");
+	}
+	if (o->oused == MIDIDEV_BUFLEN) {
+		mididev_flush(o);
+	}
+	o->obuf[o->oused] = (unsigned char)data;
+	o->oused++;
+}
+
+void
+mididev_putstart(struct mididev *o)
+{
+	mididev_out(o, MIDI_START);
+}
+
+void
+mididev_putstop(struct mididev *o)
+{
+	mididev_out(o, MIDI_STOP);
+}
+
+void
+mididev_puttic(struct mididev *o)
+{
+	mididev_out(o, MIDI_TIC);
+}
+
+void
+mididev_putack(struct mididev *o)
+{
+	mididev_out(o, MIDI_ACK);
+}
+
+/*
+ * convert a voice event to byte stream and queue
+ * it for sending
+ */
+void
+mididev_putev(struct mididev *o, struct ev *ev)
+{
+	unsigned s;
+
+	if (!EV_ISVOICE(ev)) {
+		return;
+	}
+	if (ev->cmd == EV_NOFF) {
+		s = ev->ch + (EV_NON << 4);
+		if (s != o->ostatus) {
+			o->ostatus = s;
+			mididev_out(o, s);
+		}
+		mididev_out(o, ev->note_num);
+		mididev_out(o, 0);
+	} else if (ev->cmd == EV_BEND) {
+		s = ev->ch + (EV_BEND << 4);
+		if (s != o->ostatus) {
+			o->ostatus = s;
+			mididev_out(o, s);
+		}
+		mididev_out(o, ev->bend_val & 0x7f);
+		mididev_out(o, ev->bend_val >> 7);
+	} else {
+		s = ev->ch + (ev->cmd << 4);
+		if (s != o->ostatus) {
+			o->ostatus = s;
+			mididev_out(o, s);
+		}
+		mididev_out(o, ev->v0);
+		if (MIDIDEV_EVLEN(s) == 2) {
+			mididev_out(o, ev->v1);
+		}
+	}
+}
+
+/*
+ * queue raw data for sending
+ */
+void
+mididev_sendraw(struct mididev *o, unsigned char *buf, unsigned len)
+{
+	if (!(o->mode & MIDIDEV_MODE_OUT)) {
+		return;
+	}
+	while (len > 0) {
+		if (o->oused == MIDIDEV_BUFLEN) {
+			mididev_flush(o);
+		}
+		o->obuf[o->oused] = *buf;
+		o->oused++;
+		len--;
+		buf++;
+	}
+	/*
+	 * since we don't parse the buffer, reset running status
+	 */
+	o->ostatus = 0;
 }
 
 /*
@@ -101,8 +434,7 @@ mididev_listdone(void)
 	for (i = 0; i < DEFAULT_MAXNDEVS; i++) {
 		dev = mididev_byunit[i];
 		if (dev != NULL) {
-			str_delete(RMIDI(dev)->mdep.path);
-			rmidi_delete(RMIDI(dev));
+			dev->ops->del(dev);
 			mididev_byunit[i] = NULL;
 		}
 	}
@@ -126,8 +458,7 @@ mididev_attach(unsigned unit, char *path, unsigned mode)
 		cons_err("device already exists");
 		return 0;
 	}
-	dev = (struct mididev *)rmidi_new(mode);
-	RMIDI(dev)->mdep.path = str_new(path);
+	dev = raw_new(path, mode);
 	dev->next = mididev_list;
 	mididev_list = dev;
 	mididev_byunit[unit] = dev;
@@ -157,8 +488,7 @@ mididev_detach(unsigned unit)
 		dev = *i;
 		if (dev->unit == unit) {
 			*i = dev->next;
-			str_delete(RMIDI(dev)->mdep.path);
-			rmidi_delete(RMIDI(dev));
+			dev->ops->del(dev);
 			mididev_byunit[unit] = NULL;
 			return 1;
 		}

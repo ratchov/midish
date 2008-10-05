@@ -41,7 +41,7 @@
 #include "saveload.h"
 #include "textio.h"
 #include "mux.h"
-#include "rmidi.h"
+#include "mididev.h"
 #include "builtin.h"
 
 unsigned
@@ -62,8 +62,8 @@ blt_debug(struct exec *o, struct data **r)
 	    !exec_lookuplong(o, "value", &value)) {
 		return 0;
 	}
-	if (str_eq(flag, "rmidi")) {
-		rmidi_debug = value;
+	if (str_eq(flag, "mididev")) {
+		mididev_debug = value;
 	} else if (str_eq(flag, "filt")) {
 		filt_debug = value;
 	} else if (str_eq(flag, "song")) {

@@ -47,7 +47,7 @@
 
 #include "default.h"
 #include "mux.h"
-#include "rmidi.h"
+#include "mididev.h"
 #include "cons.h"
 #include "mdep.h"
 #include "user.h"
@@ -95,7 +95,7 @@ mux_mdep_close(void)
 int
 mux_mdep_wait(void)
 {
-	int res;
+	int res, revents;
 	nfds_t nfds;
 	struct pollfd *pfd, pfds[MAXFDS];
 	struct mididev *dev;
@@ -107,16 +107,13 @@ mux_mdep_wait(void)
 	cons_pfd->fd = STDIN_FILENO;
 	cons_pfd->events = POLLIN;
 	for (dev = mididev_list; dev != NULL; dev = dev->next) {
-		if (!(dev->mode & MIDIDEV_MODE_IN) ||
-		    RMIDI(dev)->mdep.fd < 0 ||
-		    RMIDI(dev)->mdep.dying) {
-			RMIDI(dev)->mdep.pfd = NULL;
+		if (!(dev->mode & MIDIDEV_MODE_IN) || dev->eof) {
+			dev->pfd = NULL;
 			continue;
 		}
-		pfd = &pfds[nfds++];
-		pfd->fd = RMIDI(dev)->mdep.fd;
-		pfd->events = POLLIN;
-		RMIDI(dev)->mdep.pfd = pfd;
+		pfd = &pfds[nfds];
+		nfds += dev->ops->pollfd(dev, pfd, POLLIN);
+		dev->pfd = pfd;
 	}
 	for (;;) {
 		if (cons_quit) {
@@ -133,21 +130,20 @@ mux_mdep_wait(void)
 		exit(1);
 	}
 	for (dev = mididev_list; dev != NULL; dev = dev->next) {
-		pfd = RMIDI(dev)->mdep.pfd;
+		pfd = dev->pfd;
 		if (pfd == NULL)
 			continue;
-		if (pfd->revents & POLLIN) {
-			res = read(pfd->fd, midibuf, MIDI_BUFSIZE);
-			if (res < 0) {
-				perror(RMIDI(dev)->mdep.path);
-				RMIDI(dev)->mdep.dying = 1;
+		revents = dev->ops->revents(dev, pfd);
+		if (revents & POLLIN) {
+			res = dev->ops->read(dev, midibuf, MIDI_BUFSIZE);
+			if (dev->eof) {
 				mux_errorcb(dev->unit);
 				continue;
 			}
 			if (dev->isensto > 0) {
 				dev->isensto = MIDIDEV_ISENSTO;
 			}
-			rmidi_inputcb(RMIDI(dev), midibuf, res);
+			mididev_inputcb(dev, midibuf, res);
 		}
 	}
 
@@ -213,107 +209,6 @@ mux_sleep(unsigned millisecs)
 		perror("mux_sleep: gettimeofday");
 		exit(1);
 	}
-}
-
-/*
- * open an already initialized midi device
- */
-void
-rmidi_open(struct rmidi *o)
-{
-	int mode;
-
-	if (o->mididev.mode == MIDIDEV_MODE_IN) {
-		mode = O_RDONLY;
-	} else if (o->mididev.mode == MIDIDEV_MODE_OUT) {
-		mode = O_WRONLY;
-	} else if (o->mididev.mode == (MIDIDEV_MODE_IN | MIDIDEV_MODE_OUT)) {
-		mode = O_RDWR;
-	} else {
-		dbg_puts("rmidi_open: not allowed mode\n");
-		dbg_panic();
-		mode = 0;
-	}
-	o->mdep.fd = open(o->mdep.path, mode, 0666);
-	if (o->mdep.fd < 0) {
-		perror(o->mdep.path);
-		o->mdep.dying = 1;
-		return;
-	}
-	o->mdep.dying = 0;
-	o->oused = 0;
-	o->istatus = o->ostatus = 0;
-	o->isysex = NULL;
-}
-
-/*
- * close the given midi device
- */
-void
-rmidi_close(struct rmidi *o)
-{
-	if (o->mdep.fd < 0) {
-		return;
-	}
-	close(o->mdep.fd);
-	o->mdep.fd = -1;
-}
-
-/*
- * create/register the new device
- */
-void
-rmidi_init(struct rmidi *o, unsigned mode)
-{
-	o->mdep.fd = -1;
-	o->mdep.pfd = NULL;
-	o->oused = 0;
-	o->istatus = o->ostatus = 0;
-	o->isysex = NULL;
-	mididev_init(&o->mididev, mode);
-}
-
-/*
- * unregister/destroy the given device
- */
-void
-rmidi_done(struct rmidi *o)
-{
-	if (mux_isopen) {
-		rmidi_close(o);
-	}
-	if (o->oused != 0) {
-		dbg_puts("rmidi_done: output buffer is not empty, continuing...\n");
-	}
-	mididev_done(&o->mididev);
-}
-
-/*
- * flush the given midi device
- */
-void
-rmidi_flush(struct rmidi *o)
-{
-	int res;
-	unsigned start, stop;
-
-	if (!RMIDI(o)->mdep.dying) {
-		start = 0;
-		stop = o->oused;
-		while (start < stop) {
-			res = write(o->mdep.fd, o->obuf, o->oused);
-			if (res < 0) {
-				perror(RMIDI(o)->mdep.path);
-				RMIDI(o)->mdep.dying = 1;
-				break;
-			}
-			start += res;
-		}
-		if (o->oused) {
-			o->mididev.osensto = MIDIDEV_OSENSTO;
-		}
-	}
-	o->oused = 0;
 }
 
 void

@@ -55,7 +55,6 @@
 #include "builtin.h"
 #include "smf.h"
 #include "saveload.h"
-#include "rmidi.h"	/* for rmidi_debug */
 
 struct song *usong;
 unsigned user_flag_batch = 0;

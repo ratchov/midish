@@ -84,7 +84,7 @@
 #include "default.h"
 #include "mdep.h"
 #include "mux.h"
-#include "rmidi.h"
+#include "mididev.h"
 #include "sysex.h"
 #include "timo.h"
 #include "state.h"
@@ -158,7 +158,7 @@ mux_open(void)
 		i->ticdelta = i->ticrate;
 		i->isensto = 0;
 		i->osensto = MIDIDEV_OSENSTO;
-		rmidi_open(RMIDI(i));
+		mididev_open(i);
 	}
 	mux_mdep_open();
 
@@ -194,11 +194,11 @@ mux_close(void)
 	mixout_stop();
 	mux_flush();
 	for (i = mididev_list; i != NULL; i = i->next) {
-		if (RMIDI(i)->isysex) {
+		if (i->isysex) {
 			dbg_puts("lost incomplete sysex\n");
-			sysex_del(RMIDI(i)->isysex);
+			sysex_del(i->isysex);
 		}
-		rmidi_close(RMIDI(i));
+		mididev_close(i);
 	}
 	mux_mdep_close();
 	mux_isopen = 0;
@@ -265,7 +265,7 @@ mux_sendtic(void)
 	for (i = mididev_list; i != NULL; i = i->next) {
 		if (i->sendrt && i != mididev_master) {
 			while (i->ticdelta >= mux_ticrate) {
-				rmidi_puttic(RMIDI(i));
+				mididev_puttic(i);
 				i->ticdelta -= mux_ticrate;
 			}
 			i->ticdelta += i->ticrate;
@@ -289,8 +289,8 @@ mux_sendstart(void)
 			 * event in order to notify that we are the
 			 * master
 			 */
-			rmidi_puttic(RMIDI(i));
-			rmidi_putstart(RMIDI(i));
+			mididev_puttic(i);
+			mididev_putstart(i);
 		}
 	}
 }
@@ -305,7 +305,7 @@ mux_sendstop(void)
 
 	for (i = mididev_list; i != NULL; i = i->next) {
 		if (i->sendrt && i != mididev_master) {
-			rmidi_putstop(RMIDI(i));
+			mididev_putstop(i);
 		}
 	}
 }
@@ -345,7 +345,7 @@ mux_putev(struct ev *ev)
 	if (dev != NULL) {
 		nev = conv_unpackev(&mux_ostate, dev->oxctlset, ev, rev);
 		for (i = 0; i < nev; i++) {
-			rmidi_putev(RMIDI(dev), &rev[i]);
+			mididev_putev(dev, &rev[i]);
 		}
 	}
 }
@@ -368,7 +368,7 @@ mux_sendraw(unsigned unit, unsigned char *buf, unsigned len)
 	if (dev == NULL) {
 		return;
 	}
-	rmidi_sendraw(RMIDI(dev), buf, len);
+	mididev_sendraw(dev, buf, len);
 }
 
 /*
@@ -405,8 +405,8 @@ mux_timercb(unsigned long delta)
 		}
 		if (dev->osensto) {
 			if (dev->osensto <= delta) {
-				rmidi_putack(RMIDI(dev));
-				rmidi_flush(RMIDI(dev));
+				mididev_putack(dev);
+				mididev_flush(dev);
 				dev->osensto = MIDIDEV_OSENSTO;
 			} else {
 				dev->osensto -= delta;
@@ -592,8 +592,9 @@ void
 mux_flush(void)
 {
 	struct mididev *dev;
+
 	for (dev = mididev_list; dev != NULL; dev = dev->next) {
-		rmidi_flush(RMIDI(dev));
+		mididev_flush(dev);
 	}
 }
 
