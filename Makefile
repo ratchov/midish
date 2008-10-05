@@ -2,20 +2,19 @@
 # parameters for the GNU readline(3) library, used to
 # build rmidish (front-end to midish)
 #
-READLINE_CFLAGS = 			# additionnal compiler flags
+READLINE_CFLAGS =			# additionnal compiler flags
 READLINE_LDFLAGS = -L/usr/local/lib	# path to libraries
 READLINE_INCLUDE = -I/usr/local/include # path to header files
 READLINE_LIB = -lreadline -ltermcap	# list of readline libraries
 
 #
-# binaries, documentation, man pages and examples will be installed in
+# binaries, documentation, man pages and examples will be installed in 
 # ${BIN_DIR}, ${MAN1_DIR}, ${DOC_DIR} and ${EXAMPLES_DIR}
 #
-PREFIX = /usr/local
-BIN_DIR = ${PREFIX}/bin
-MAN1_DIR = ${PREFIX}/man/man1
-DOC_DIR = ${PREFIX}/share/doc/midish
-EXAMPLES_DIR = ${PREFIX}/share/examples/midish
+BIN_DIR = /home/alex/bin
+MAN1_DIR = /home/alex/man/man1
+DOC_DIR = /home/alex/share/doc/midish
+EXAMPLES_DIR = /home/alex/share/examples/midish
 
 #
 # programs to build and install
@@ -37,6 +36,9 @@ check:		midish
 clean:
 		rm -f -- ${PROGS} *.o *~ *.bak *.tmp *.ln *.s *.out *.core core
 		cd regress && rm -f -- *~ *.tmp? *.core *.log *.diff *.orig *.rej
+
+distclean:	clean
+		rm -f -- Makefile
 
 # ---------------------------------------------------------- dependencies ---
 

@@ -514,7 +514,7 @@ blt_mute(struct exec *o, struct data **r)
 unsigned
 blt_unmute(struct exec *o, struct data **r)
 {
-	return blt_mutexxx(o, r, 1);
+	return blt_mutexxx(o, r, 0);
 }
 
 unsigned
