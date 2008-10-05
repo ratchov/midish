@@ -34,7 +34,7 @@
  *	- internal external/timer
  *
  * the time unit is the 24th of microsecond (thus the tempo is stored
- * with the same accurancy as in standard midi files).
+ * with the same accuracy as in standard midi files).
  *
  * the timer has the following states:
  * STOP -> STARTWAIT -> START -> FIRST_TIC -> NEXT_TIC -> STOPWAIT -> STOP
@@ -51,7 +51,7 @@
  *	we just received the "start" MIDI event, so we wait for the
  *	first "tick" MIDI event; once it's received we switch to the
  *	next state (FIRST_TIC). If the internal clock source is used
- *	we wait MUX_START_DELAT (0.1 second) and we switch to the next
+ *	we wait MUX_START_DELAY (0.1 second) and we switch to the next
  *	state.
  *
  * FIRST_TIC:
@@ -82,7 +82,6 @@
 #include "ev.h"
 
 #include "default.h"
-#include "mdep.h"
 #include "mux.h"
 #include "mididev.h"
 #include "sysex.h"

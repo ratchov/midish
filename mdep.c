@@ -49,7 +49,6 @@
 #include "mux.h"
 #include "mididev.h"
 #include "cons.h"
-#include "mdep.h"
 #include "user.h"
 #include "exec.h"
 #include "dbg.h"
@@ -73,7 +72,7 @@ unsigned cons_index, cons_len, cons_eof, cons_quit;
 struct pollfd *cons_pfd;
 
 /*
- * open midi devices
+ * start the mux, must be called just after devices are opened
  */
 void
 mux_mdep_open(void)
@@ -85,13 +84,18 @@ mux_mdep_open(void)
 }
 
 /*
- * close midi devices
+ * stop the mux, must be called just before devices are closed
  */
 void
 mux_mdep_close(void)
 {
 }
 
+/*
+ * wait until an input device becomes readable or
+ * until the next clock tick. Then process all events.
+ * Return 0 if interrupted by a signal
+ */
 int
 mux_mdep_wait(void)
 {

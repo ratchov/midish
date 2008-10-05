@@ -54,13 +54,41 @@ struct mididev;
 struct ev;
 
 struct devops {
+	/*
+	 * open the device so that read() and write() work
+	 * must set ``eof'' flag on error
+	 */
 	void (*open)(struct mididev *);
+	/*
+	 * try to read the given number of bytes, and retrun the number
+	 * of bytes actually read. Must set the ``eof'' flag on error
+	 */
 	unsigned (*read)(struct mididev *, unsigned char *, unsigned);
+	/*
+	 * try to write the given number of bytes, and retrun the number
+	 * of bytes actually read. Must set the ``eof'' flag on error
+	 */
 	unsigned (*write)(struct mididev *, unsigned char *, unsigned);
+	/*
+	 * return the number of pollfd structures the device requires
+	 */
 	unsigned (*nfds)(struct mididev *);
+	/*
+	 * fill the given array of pollfd structures with the given
+	 * events and return the number of elemets filled
+	 */
 	unsigned (*pollfd)(struct mididev *, struct pollfd *, int);
+	/*
+	 * return the events set in the array of pollfd structures
+	 */
 	int (*revents)(struct mididev *, struct pollfd *);
+	/*
+	 * close the device
+	 */
 	void (*close)(struct mididev *);
+	/*
+	 * free the mididev structure
+	 */
 	void (*del)(struct mididev *);
 };
 
@@ -85,7 +113,7 @@ struct mididev {
 	unsigned eof;			/* i/o error pending */
 
 	/*
-	 * byte parser state
+	 * midi events parser state
 	 */
 	unsigned	  istatus;		/* input running status */
 	unsigned 	  icount;		/* bytes in idata[] */

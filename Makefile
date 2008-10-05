@@ -53,7 +53,6 @@ midish:		${MIDISH_OBJS}
 rmidish:	rmidish.c
 		${CC} ${CFLAGS} ${READLINE_CFLAGS} ${READLINE_INCLUDE} rmidish.c \
 		${LDFLAGS} ${READLINE_LDFLAGS} -o rmidish ${READLINE_LIB}
-### cdeps begin
 builtin.o:	builtin.c dbg.h default.h node.h exec.h name.h str.h \
 		data.h cons.h frame.h state.h ev.h song.h track.h filt.h \
 		sysex.h metro.h timo.h user.h smf.h saveload.h textio.h \
@@ -70,8 +69,8 @@ lex.o:		lex.c dbg.h lex.h str.h textio.h cons.h
 main.o:		main.c dbg.h str.h cons.h ev.h default.h mux.h track.h \
 		song.h name.h frame.h state.h filt.h sysex.h metro.h \
 		timo.h user.h mididev.h textio.h
-mdep.o:		mdep.c default.h mux.h mididev.h cons.h mdep.h user.h \
-		exec.h name.h str.h dbg.h
+mdep.o:		mdep.c default.h mux.h mididev.h cons.h user.h exec.h \
+		name.h str.h dbg.h
 mdep_raw.o:	mdep_raw.c dbg.h mididev.h str.h
 metro.o:	metro.c dbg.h mux.h metro.h ev.h default.h timo.h song.h \
 		name.h str.h track.h frame.h state.h filt.h sysex.h
@@ -79,8 +78,8 @@ mididev.o:	mididev.c dbg.h default.h mididev.h pool.h cons.h str.h \
 		ev.h sysex.h mux.h
 mixout.o:	mixout.c dbg.h ev.h default.h filt.h pool.h mux.h timo.h \
 		state.h
-mux.o:		mux.c dbg.h ev.h default.h mdep.h mux.h mididev.h \
-		sysex.h timo.h state.h conv.h norm.h mixout.h
+mux.o:		mux.c dbg.h ev.h default.h mux.h mididev.h sysex.h \
+		timo.h state.h conv.h norm.h mixout.h
 name.o:		name.c dbg.h name.h str.h
 node.o:		node.c dbg.h str.h data.h node.h exec.h name.h cons.h
 norm.o:		norm.c dbg.h ev.h default.h norm.h pool.h mux.h filt.h \
@@ -126,4 +125,3 @@ user_sx.o:	user_sx.c dbg.h default.h node.h exec.h name.h str.h \
 user_trk.o:	user_trk.c dbg.h default.h node.h exec.h name.h str.h \
 		data.h cons.h frame.h state.h ev.h track.h song.h filt.h \
 		sysex.h metro.h timo.h user.h saveload.h textio.h
-### cdeps end
