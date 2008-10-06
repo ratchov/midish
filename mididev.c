@@ -153,17 +153,18 @@ mididev_close(struct mididev *o)
 void
 mididev_flush(struct mididev *o)
 {
-	unsigned res;
-	unsigned start, stop;
+	unsigned count, todo;
+	unsigned char *buf;
 
 	if (!o->eof) {
-		start = 0;
-		stop = o->oused;
-		while (start < stop) {
-			res = o->ops->write(o, o->obuf, o->oused);
+		todo = o->oused;
+		buf = o->obuf;
+		while (todo > 0) {
+			count = o->ops->write(o, buf, todo);
 			if (o->eof)
 				break;
-			start += res;
+			todo -= count;
+			buf += count;
 		}
 		if (o->oused)
 			o->osensto = MIDIDEV_OSENSTO;

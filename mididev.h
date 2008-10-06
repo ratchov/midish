@@ -55,18 +55,17 @@ struct ev;
 
 struct devops {
 	/*
-	 * open the device so that read() and write() work
-	 * must set ``eof'' flag on error
+	 * open the device or set the ``eof'' flag on error
 	 */
 	void (*open)(struct mididev *);
 	/*
 	 * try to read the given number of bytes, and retrun the number
-	 * of bytes actually read. Must set the ``eof'' flag on error
+	 * of bytes actually read, set the ``eof'' flag on error
 	 */
 	unsigned (*read)(struct mididev *, unsigned char *, unsigned);
 	/*
 	 * try to write the given number of bytes, and retrun the number
-	 * of bytes actually read. Must set the ``eof'' flag on error
+	 * of bytes actually written, set the ``eof'' flag on error
 	 */
 	unsigned (*write)(struct mididev *, unsigned char *, unsigned);
 	/*
@@ -75,11 +74,13 @@ struct devops {
 	unsigned (*nfds)(struct mididev *);
 	/*
 	 * fill the given array of pollfd structures with the given
-	 * events and return the number of elemets filled
+	 * events so that poll(2) can be called, return the number of
+	 * elemets filled
 	 */
 	unsigned (*pollfd)(struct mididev *, struct pollfd *, int);
 	/*
-	 * return the events set in the array of pollfd structures
+	 * return the events set in the array of pollfd structures set
+	 * by the poll(2) syscall
 	 */
 	int (*revents)(struct mididev *, struct pollfd *);
 	/*
@@ -87,7 +88,7 @@ struct devops {
 	 */
 	void (*close)(struct mididev *);
 	/*
-	 * free the mididev structure
+	 * free the mididev structure and associated resources
 	 */
 	void (*del)(struct mididev *);
 };
@@ -96,7 +97,7 @@ struct mididev {
 	struct devops *ops;
 
 	/*
-	 * device list iteration stuff
+	 * device list and iteration stuff
 	 */
 	struct pollfd *pfd;
 	struct mididev *next;
