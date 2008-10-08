@@ -99,6 +99,7 @@ mididev_init(struct mididev *o, struct devops *ops, unsigned mode)
 	o->mode = mode;
 	o->ixctlset = 0;	/* all input controllers are 7bit */
 	o->oxctlset = 0;
+	o->eof = 1;
 
 	/*
 	 * reset parser
@@ -145,6 +146,7 @@ mididev_close(struct mididev *o)
 		 */
 		dbg_puts("mididev_close: device not flushed\n");
 	}
+	o->eof = 1;
 }
 
 /*
