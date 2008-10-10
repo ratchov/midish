@@ -6,6 +6,13 @@ READLINE_LDFLAGS = -L/usr/local/lib	# path to libraries
 READLINE_INCLUDE = -I/usr/local/include # path to header files
 
 #
+# extra parameters
+#
+INCLUDE = 				# extra includes
+LIB = #-lasound				# extra libs
+DEFS = #-DUSE_ALSA			# extra defines
+
+#
 # binaries, documentation, man pages and examples will be installed in 
 # ${BIN_DIR}, ${MAN1_DIR}, ${DOC_DIR} and ${EXAMPLES_DIR}
 #
@@ -43,17 +50,20 @@ distclean:	clean
 
 MIDISH_OBJS = \
 builtin.o cons.o conv.o data.o dbg.o ev.o exec.o filt.o frame.o lex.o \
-main.o mdep.o mdep_raw.o metro.o mididev.o mixout.o mux.o name.o node.o \
-norm.o parse.o pool.o saveload.o smf.o song.o state.o \
-str.o sysex.o textio.o timo.o track.o user.o \
+main.o mdep.o mdep_raw.o mdep_alsa.o metro.o mididev.o \
+mixout.o mux.o name.o node.o norm.o parse.o pool.o saveload.o smf.o song.o \
+state.o str.o sysex.o textio.o timo.o track.o user.o \
 user_chan.o user_dev.o user_filt.o user_song.o user_sx.o user_trk.o
 
 midish:		${MIDISH_OBJS}
-		${CC} ${LDFLAGS} ${MIDISH_OBJS} -o midish
+		${CC} ${LDFLAGS} ${MIDISH_OBJS} -o midish ${LIB}
 
 rmidish:	rmidish.c
 		${CC} ${CFLAGS} ${READLINE_INCLUDE} rmidish.c \
 		${LDFLAGS} ${READLINE_LDFLAGS} -o rmidish -lreadline -ltermcap
+
+.c.o:
+		${CC} ${CFLAGS} ${INCLUDE} ${DEFS} -c $<
 
 builtin.o:	builtin.c dbg.h default.h node.h exec.h name.h str.h \
 		data.h cons.h frame.h state.h ev.h song.h track.h filt.h \
@@ -74,6 +84,7 @@ main.o:		main.c dbg.h str.h cons.h ev.h default.h mux.h track.h \
 mdep.o:		mdep.c default.h mux.h mididev.h cons.h user.h exec.h \
 		name.h str.h dbg.h
 mdep_raw.o:	mdep_raw.c dbg.h mididev.h str.h
+mdep_alsa.o:	mdep_alsa.c dbg.h mididev.h str.h
 metro.o:	metro.c dbg.h mux.h metro.h ev.h default.h timo.h song.h \
 		name.h str.h track.h frame.h state.h filt.h sysex.h
 mididev.o:	mididev.c dbg.h default.h mididev.h pool.h cons.h str.h \

@@ -145,6 +145,7 @@ extern struct mididev *mididev_master;
 extern struct mididev *mididev_byunit[];
 
 struct mididev *raw_new(char *, unsigned);
+struct mididev *alsa_new(char *, unsigned);
 
 void mididev_listinit(void);
 void mididev_listdone(void);
