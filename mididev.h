@@ -112,6 +112,8 @@ struct mididev {
 	unsigned mode;			/* read, write */
 	unsigned ixctlset, oxctlset;	/* bitmap of 14bit controllers */
 	unsigned eof;			/* i/o error pending */
+	unsigned runst;			/* use running status for output */
+	unsigned sync;			/* flush buffer after each message */
 
 	/*
 	 * midi events parser state

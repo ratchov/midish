@@ -107,6 +107,8 @@ mididev_init(struct mididev *o, struct devops *ops, unsigned mode)
 	o->oused = 0;
 	o->istatus = o->ostatus = 0;
 	o->isysex = NULL;
+	o->runst = 1;
+	o->sync = 0;
 }
 
 /*
@@ -157,8 +159,19 @@ mididev_flush(struct mididev *o)
 {
 	unsigned count, todo;
 	unsigned char *buf;
+	unsigned i;
 
 	if (!o->eof) {
+		if (mididev_debug && o->oused > 0) {
+			dbg_puts("mididev_flush: dev ");
+			dbg_putu(o->unit);
+			dbg_puts(":");
+			for (i = 0; i < o->oused; i++) {
+				dbg_puts(" ");
+				dbg_putx(o->obuf[i]);
+			}
+			dbg_puts("\n");
+		}
 		todo = o->oused;
 		buf = o->obuf;
 		while (todo > 0) {
@@ -182,24 +195,26 @@ void
 mididev_inputcb(struct mididev *o, unsigned char *buf, unsigned count)
 {
 	struct ev ev;
-	unsigned data;
+	unsigned i, data;
 
 	if (!(o->mode & MIDIDEV_MODE_IN)) {
 		dbg_puts("received data from output only device\n");
 		return;
 	}
+	if (mididev_debug) {
+		dbg_puts("mididev_inputcb: dev ");
+		dbg_putu(o->unit);
+		dbg_puts(":");
+		for (i = 0; i < count; i++) {
+			dbg_puts(" ");
+			dbg_putx(buf[i]);
+		}
+		dbg_puts("\n");
+	}
 	while (count != 0) {
 		data = *buf;
 		count--;
 		buf++;
-
-		if (mididev_debug) {
-			dbg_putu(o->unit);
-			dbg_puts(" <- ");
-			dbg_putx(data);
-			dbg_puts("\n");
-		}
-
 		if (data >= 0xf8) {
 			switch(data) {
 			case MIDI_TIC:
@@ -309,12 +324,6 @@ mididev_out(struct mididev *o, unsigned data)
 	if (!(o->mode & MIDIDEV_MODE_OUT)) {
 		return;
 	}
-	if (mididev_debug) {
-		dbg_putu(o->unit);
-		dbg_puts(" -> ");
-		dbg_putx(data);
-		dbg_puts("\n");
-	}
 	if (o->oused == MIDIDEV_BUFLEN) {
 		mididev_flush(o);
 	}
@@ -326,24 +335,32 @@ void
 mididev_putstart(struct mididev *o)
 {
 	mididev_out(o, MIDI_START);
+	if (o->sync)
+		mididev_flush(o);
 }
 
 void
 mididev_putstop(struct mididev *o)
 {
 	mididev_out(o, MIDI_STOP);
+	if (o->sync)
+		mididev_flush(o);
 }
 
 void
 mididev_puttic(struct mididev *o)
 {
 	mididev_out(o, MIDI_TIC);
+	if (o->sync)
+		mididev_flush(o);
 }
 
 void
 mididev_putack(struct mididev *o)
 {
 	mididev_out(o, MIDI_ACK);
+	if (o->sync)
+		mididev_flush(o);
 }
 
 /*
@@ -360,7 +377,7 @@ mididev_putev(struct mididev *o, struct ev *ev)
 	}
 	if (ev->cmd == EV_NOFF) {
 		s = ev->ch + (EV_NON << 4);
-		if (s != o->ostatus) {
+		if (!o->runst || s != o->ostatus) {
 			o->ostatus = s;
 			mididev_out(o, s);
 		}
@@ -368,7 +385,7 @@ mididev_putev(struct mididev *o, struct ev *ev)
 		mididev_out(o, 0);
 	} else if (ev->cmd == EV_BEND) {
 		s = ev->ch + (EV_BEND << 4);
-		if (s != o->ostatus) {
+		if (!o->runst || s != o->ostatus) {
 			o->ostatus = s;
 			mididev_out(o, s);
 		}
@@ -376,7 +393,7 @@ mididev_putev(struct mididev *o, struct ev *ev)
 		mididev_out(o, ev->bend_val >> 7);
 	} else {
 		s = ev->ch + (ev->cmd << 4);
-		if (s != o->ostatus) {
+		if (!o->runst || s != o->ostatus) {
 			o->ostatus = s;
 			mididev_out(o, s);
 		}
@@ -385,6 +402,8 @@ mididev_putev(struct mididev *o, struct ev *ev)
 			mididev_out(o, ev->v1);
 		}
 	}
+	if (o->sync)
+		mididev_flush(o);	
 }
 
 /*
@@ -409,6 +428,8 @@ mididev_sendraw(struct mididev *o, unsigned char *buf, unsigned len)
 	 * since we don't parse the buffer, reset running status
 	 */
 	o->ostatus = 0;
+	if (o->sync)
+		mididev_flush(o);
 }
 
 /*
