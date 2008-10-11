@@ -399,6 +399,8 @@ blt_fac(struct exec *o, struct data **r)
 		return 0;
 	}
 	usong->tempo_factor = 0x100 * 100 / tpu;
+	if (mux_isopen)
+		mux_chgtempo(usong->tempo_factor * usong->tempo  / 0x100);
 	return 1;
 }
 
