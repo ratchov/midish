@@ -107,9 +107,13 @@ mux_mdep_wait(void)
 	long delta_usec;
 
 	nfds = 0;
-	cons_pfd = &pfds[nfds++];
-	cons_pfd->fd = STDIN_FILENO;
-	cons_pfd->events = POLLIN;
+	if (cons_index == cons_len) {
+		cons_pfd = &pfds[nfds];
+		cons_pfd->fd = STDIN_FILENO;
+		cons_pfd->events = POLLIN | POLLHUP;
+		nfds++;
+	} else
+		cons_pfd = NULL;
 	for (dev = mididev_list; dev != NULL; dev = dev->next) {
 		if (!(dev->mode & MIDIDEV_MODE_IN) || dev->eof) {
 			dev->pfd = NULL;
@@ -174,7 +178,7 @@ mux_mdep_wait(void)
 		}
 	}
 
-	if ((cons_pfd->revents & POLLIN) && (cons_index == cons_len)) {
+	if (cons_pfd && (cons_pfd->revents & (POLLIN | POLLHUP))) {
 		res = read(STDIN_FILENO, cons_buf, CONS_BUFSIZE);
 		if (res < 0) {
 			perror("stdin");
