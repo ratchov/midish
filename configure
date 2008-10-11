@@ -1,0 +1,146 @@
+#!/bin/sh
+
+#
+# defaults
+#
+prefix=/usr/local		# where to install midish
+readline=no			# do we have readline
+alsa=no				# do we want alsa support ?
+rmidish=yes			# de we want to build rmidish ?
+progs=midish			# programs to build
+unset bindir			# path where to install binaries
+unset datadir			# path where to install doc and examples
+unset mandir			# path where to install man pages
+unset defs			# no extra #defines
+unset lib			# no extra lib paths
+unset include			# no extra header files paths
+unset readline_lib		# path to readline library
+unset readline_include		# path to readline header files
+
+#
+# guess if we want alsa devices support
+#
+if [ `uname` = Linux ]; then
+	alsa=yes
+fi
+
+#
+# guess readline(3) parameters
+#
+if [ -e /usr/include/readline/readline.h ]; then
+	readline=yes
+elif [ -e /usr/local/include/readline/readline.h ]; then
+	readline=yes
+	readline_include=/usr/local/include
+	readline_lib=/usr/local/lib
+fi
+
+#
+# display help screeen
+#
+help() {
+cat << END
+Usage: configure [options]
+--prefix=DIR			set install prefix to DIR [$prefix]
+--bindir=DIR			install executables in DIR [\$prefix/bin]
+--datadir=DIR			install read-only data in DIR [\$prefix/share]
+--mandir=DIR			install man pages in DIR [\$prefix/man]
+--readline-lib=DIR		path to readline library
+--readline-include=DIR		path to readline header files
+--enable-alsa			enable alsa sequencer backend [$alsa]
+--disable-alsa			disable alsa sequencer backend
+--enable-rmidish		build rmidish binary [$rmidish]
+--disable-rmidish		don't build rmidish
+END
+}
+
+IFS=''
+
+for i; do
+	case "$i" in
+	--prefix=*)
+		prefix=${i#--prefix=}
+		shift;;
+	--bindir=*)
+		bindir=${i#--bindir=}
+		shift;;
+	--datadir=*)
+		datadir=${i#--datadir=}
+		shift;;
+	--mandir=*)
+		mandir=${i#--mandir=}
+		shift;;
+	--readline-lib=*)
+		readline=yes
+		readline_lib=${i#--readline-lib=}
+		shift;;
+	--readline-include=*)
+		readline=yes
+		readline_include=${i#--readline-include=}
+		shift;;
+	--enable-alsa)
+		alsa=yes
+		shift;;
+	--disable-alsa)
+		alsa=no
+		shift;;
+	--enable-rmidish)
+		rmidish=yes
+		shift;;
+	--disable-rmidish)
+		rmidish=no
+		shift;;
+	*)
+		help
+		exit 1
+		;;
+	esac
+done
+
+bindir=${bindir:-$prefix/bin}
+datadir=${datadir:-$prefix/share}
+mandir=${mandir:-$prefix/man}
+
+#
+# add parameters for ALSA support
+#
+if [ $alsa = yes ]; then
+	defs="$defs -DUSE_ALSA"
+	lib="$lib -lasound"
+fi
+
+#
+# add rmidish front-end if readline is present
+#
+if [ $rmidish = yes ]; then
+	if [ $readline != yes ]; then
+		echo "Can't build rmidish without readline library"
+		exit 1
+	fi
+	progs="$progs rmidish"
+fi
+
+echo "configure: creating Makefile"
+sed \
+-e "s:@bindir@:$bindir:" \
+-e "s:@datadir@:$datadir:" \
+-e "s:@mandir@:$mandir:" \
+-e "s:@readline_lib@:$readline_lib:" \
+-e "s:@readline_include@:$readline_include:" \
+-e "s:@defs@:$defs:" \
+-e "s:@include@:$include:" \
+-e "s:@lib@:$lib:" \
+-e "s:@progs@:$progs:" \
+< Makefile.in >Makefile
+
+echo
+echo "bindir................... $bindir"
+echo "datadir.................. $datadir"
+echo "mandir................... $mandir"
+echo "alsa..................... $alsa"
+echo "rmidish.................. $rmidish"
+echo "readline-lib............. ${readline_lib-default}"
+echo "readline-include......... ${readline_include-default}"
+echo
+echo "Do \"make && make install\" to compile and install midish"
+echo

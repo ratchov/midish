@@ -279,39 +279,30 @@ cd midish-0.4
 </pre>
 
 <li>
-Edit Makefile and change the readline(3) options in Makefile
+Configure midish, type ``./configure'', it will select reasonable
+defaults.
+
+<p>
+On linux systems it will use the ALSA-style devices, on other systems
+it will use raw MIDI devices.
+
+Binaries, scripts, examples and documentation will be installed
+in the /usr/local directory subtree; this can be overridden 
+with the ``--prefix'' option.
+
+Example:
+
+<pre>
+./configure --prefix=$HOME
+</pre>
 
 <li>
-Compile midish, just type ``make all'', this will build
+Compile midish, just type ``make'', this will build
 midish and rmidish, the readline(3) front-end to midish.
 
 <li>
 Install binaries, documentation and examples by
-typing ``make install''. They are copied as follows:
-
-<ul>
-
-<li>
-binaries in ``PREFIX/bin''
-
-<li>
-manual pages in ``PREFIX/man/man1''
-
-<li>
-html documentation in ``PREFIX/share/doc/midish''
-
-<li>
-example files in ``PREFIX/share/examples/midish''
-
-where PREFIX is by default ``/usr/local''.
-To change this, set the PREFIX variable in
-Makefile, or for instance:
-
-<pre>
-make PREFIX=$HOME install
-</pre>
-
-</ul>
+typing ``make install''.
 
 <li>
 If there isn't a ``/etc/midishrc'' file,
@@ -326,10 +317,14 @@ cp midishrc /etc
 Read the documentation and modify ``/etc/midishrc'' in order
 to choose the default MIDI device by using the 
 ``<a href="#func_dnew">dnew</a>''
-function, example:
-
+function, example (if you're using raw devices):
 <pre>
 dnew 0 "/dev/rmidi3" rw
+</pre>
+
+or if you're using ALSA (default on Linux):
+<pre>
+dnew 0 "28:0" rw
 </pre>
 
 see next section for details.
@@ -577,6 +572,17 @@ dnew 1 "/dev/rmidi3" ro		# attach the keyboard as dev number 1
 the ``wo'' parameter means that the device will be opened in
 write-only mode.  
 
+<p>
+If you're using ALSA, instead of /dev/rmidi3 and /dev/rmidi4,
+use the ALSA sequencer ports, as listed by
+``aseqdump -l'', example:
+
+<pre>
+dnew 0 "28:0" wo		# attach the module as dev number 0
+dnew 1 "32:0" ro		# attach the keyboard as dev number 1
+</pre>
+
+
 The following session shows how to record a simple
 track.  First, we define a filter named ``piano'' that routes any
 event from device 1, channel 0 (input channel of the keyboard) to
@@ -611,6 +617,9 @@ and the keyboard as device number 1:
 dnew 0 "/dev/rmidi4" rw
 dnew 1 "/dev/rmidi3" rw
 </pre>
+
+If you're using ALSA, then use the ALSA port names (as listed by
+``aseqdump -l'' command) instead of the device node paths.
 
 <p>
 <b>Note:</b>
@@ -3736,6 +3745,11 @@ is the name of the mode, it can be on if the following:
 ``rw'' - read and write.
 
 </ul>
+
+<p>
+If midish is configured to use ALSA (default on linux systems) then
+``filename'' should contain the ALSA sequencer port, as listed by
+``aseqdump -l'', (eg. ``28:0'').
 
 <dt><a name="func_ddel">ddel devnum</a>
 

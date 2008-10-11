@@ -2,30 +2,29 @@
 # parameters for the GNU readline(3) library, used to
 # build rmidish (front-end to midish)
 #
-READLINE_LDFLAGS = -L/usr/local/lib	# path to libraries
-READLINE_INCLUDE = -I/usr/local/include # path to header files
+READLINE_INCLUDE = @readline_include@	# extra headers path
+READLINE_LIB = @readline_lib@		# extra libraries path
 
 #
 # extra parameters
 #
-INCLUDE = 				# extra includes
-LIB = #-lasound				# extra libs
-DEFS = #-DUSE_ALSA			# extra defines
+INCLUDE = @include@	# extra includes
+LIB = @lib@		# extra libs
+DEFS = @defs@ 		# extra defines
 
 #
 # binaries, documentation, man pages and examples will be installed in 
 # ${BIN_DIR}, ${MAN1_DIR}, ${DOC_DIR} and ${EXAMPLES_DIR}
 #
-PREFIX = /usr/local
-BIN_DIR = ${PREFIX}/bin
-MAN1_DIR = ${PREFIX}/man/man1
-DOC_DIR = ${PREFIX}/doc/midish
-EXAMPLES_DIR = ${PREFIX}/examples/midish
+BIN_DIR = @bindir@
+MAN1_DIR = @mandir@/man1
+DOC_DIR = @datadir@/doc/midish
+EXAMPLES_DIR = @datadir@/examples/midish
 
 #
 # programs to build and install
 #
-PROGS = midish rmidish
+PROGS = @progs@
 
 all:		${PROGS}
 
@@ -60,7 +59,7 @@ midish:		${MIDISH_OBJS}
 
 rmidish:	rmidish.c
 		${CC} ${CFLAGS} ${READLINE_INCLUDE} rmidish.c \
-		${LDFLAGS} ${READLINE_LDFLAGS} -o rmidish -lreadline -ltermcap
+		${LDFLAGS} -o rmidish ${READLINE_LIB} -lreadline -ltermcap
 
 .c.o:
 		${CC} ${CFLAGS} ${INCLUDE} ${DEFS} -c $<
