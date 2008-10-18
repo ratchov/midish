@@ -487,6 +487,8 @@ mididev_attach(unsigned unit, char *path, unsigned mode)
 #else
 	dev = raw_new(path, mode);
 #endif
+	if (dev == NULL)
+		return 0;
 	dev->next = mididev_list;
 	mididev_list = dev;
 	mididev_byunit[unit] = dev;

@@ -621,6 +621,11 @@ dnew 1 "/dev/rmidi3" rw
 If you're using ALSA, then use the ALSA port names (as listed by
 ``aseqdump -l'' command) instead of the device node paths.
 
+If ``nil'' is given instead of the path, then the port is not
+connected to any existing port; this allows other ALSA sequencer
+clients to subscribe to it and to provide events to midish or to
+consume events midish sends to it.
+
 <p>
 <b>Note:</b>
 
@@ -3750,6 +3755,11 @@ is the name of the mode, it can be on if the following:
 If midish is configured to use ALSA (default on linux systems) then
 ``filename'' should contain the ALSA sequencer port, as listed by
 ``aseqdump -l'', (eg. ``28:0'').
+
+If ``nil'' is given instead of the path, then the port is not
+connected to any existing port; this allows other ALSA sequencer
+clients to subscribe to it and to provide events to midish or to
+consume events midish sends to it.
 
 <dt><a name="func_ddel">ddel devnum</a>
 

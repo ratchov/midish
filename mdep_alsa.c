@@ -51,7 +51,6 @@ struct alsa {
 	char *path;			/* eg. "128:0", translates in dst */
 	snd_midi_event_t *iparser;	/* midi input event parser */
 	snd_midi_event_t *oparser;	/* midi output event parser */
-	struct snd_seq_addr dst;	/* destination client/port */
 	int nfds;
 };
 
@@ -82,7 +81,7 @@ alsa_new(char *path, unsigned mode)
 
 	dev = (struct alsa *)mem_alloc(sizeof(struct alsa));
 	mididev_init(&dev->mididev, &alsa_ops, mode);
-	dev->path = str_new(path);
+	dev->path = (path != NULL) ? str_new(path) : NULL;
 	dev->seq_handle = NULL;
 	dev->my_port = -1;
 	dev->iparser = NULL;
@@ -96,7 +95,8 @@ alsa_del(struct mididev *addr)
 	struct alsa *dev = (struct alsa *)addr;
 
 	mididev_done(&dev->mididev);
-	str_delete(dev->path);
+	if (dev->path)
+		str_delete(dev->path);
 	mem_free(dev);
 }
 
@@ -104,6 +104,7 @@ void
 alsa_open(struct mididev *addr)
 {
 	struct alsa *dev = (struct alsa *)addr;
+	struct snd_seq_addr dst;
 	unsigned int mode;
 	char name[32];
 	
@@ -113,22 +114,23 @@ alsa_open(struct mididev *addr)
 		dev->mididev.eof = 1;
 		return;	
 	}
-	if (snd_seq_parse_address(dev->seq_handle, &dev->dst, dev->path) < 0) {
-		dbg_puts("alsa_open: could not parse alsa port identifier.\n");
-		dev->mididev.eof = 1;
-		return;
-	}
-	snprintf(name, sizeof(name), "midish device %u", dev->mididev.unit);
+	snprintf(name, sizeof(name), "midish/%u", dev->mididev.unit);
 	if (snd_seq_set_client_name(dev->seq_handle, "midish") < 0) {
 		dbg_puts("alsa_open: could set client name\n");
 		dev->mididev.eof = 1;
 		return;
 	}
 	mode = 0;
-	if (dev->mididev.mode & MIDIDEV_MODE_IN)
+	if (dev->mididev.mode & MIDIDEV_MODE_IN) {
 		mode |= SND_SEQ_PORT_CAP_WRITE;
-	if (dev->mididev.mode & MIDIDEV_MODE_OUT)
+		if (dev->path == NULL)
+			mode |= SND_SEQ_PORT_CAP_SUBS_WRITE;
+	}
+	if (dev->mididev.mode & MIDIDEV_MODE_OUT) {
 		mode |= SND_SEQ_PORT_CAP_READ;
+		if (dev->path == NULL)
+			mode |= SND_SEQ_PORT_CAP_SUBS_READ;
+	}
 	if (dev->mididev.mode == (MIDIDEV_MODE_IN | MIDIDEV_MODE_OUT))
 		mode |= SND_SEQ_PORT_CAP_DUPLEX;
 	dev->my_port = snd_seq_create_simple_port(dev->seq_handle, name, mode,
@@ -140,7 +142,7 @@ alsa_open(struct mididev *addr)
 	}
 	
 	/*
-	 * now we have the port, connect to the specified port & create parsers
+	 * now we have the port, create parsers
 	 */
 	if (dev->mididev.mode & MIDIDEV_MODE_IN) {
 		if (snd_midi_event_new(MIDIDEV_BUFLEN, &dev->iparser) < 0) {
@@ -148,24 +150,38 @@ alsa_open(struct mididev *addr)
 			dbg_puts("alsa_open: could not create in parser\n");
 			dev->mididev.eof = 1;		
 			return;
-		}  
-		if (snd_seq_connect_from(dev->seq_handle, 
-			dev->my_port, dev->dst.client, dev->dst.port) < 0) {
-			dbg_puts("alsa_open: could not connect to in port\n");
-			dev->mididev.eof = 1;
-			return;
 		}
 	}
 	if (dev->mididev.mode & MIDIDEV_MODE_OUT) {
 		if (snd_midi_event_new(MIDIDEV_BUFLEN, &dev->oparser) < 0) {
 			dev->oparser = NULL;
-			dbg_puts("alsa_open: could not create midi output parser\n");
+			dbg_puts("alsa_open: couldn't create out parser\n");
 			dev->mididev.eof = 1;
 			return;
 		}  
-		if (snd_seq_connect_to(dev->seq_handle, dev->my_port, 
-			dev->dst.client, dev->dst.port)) {
-			dbg_puts("alsa_open: could not connect to out port\n");
+	}
+
+	/*
+	 * if destination is specified, connect the port
+	 */
+	if (dev->path != NULL) {
+		if (snd_seq_parse_address(dev->seq_handle, &dst,
+			dev->path) < 0) {
+			dbg_puts("alsa_open: couldn't parse alsa port\n");
+			dev->mididev.eof = 1;
+			return;
+		}
+		if ((dev->mididev.mode & MIDIDEV_MODE_IN) &&
+		    snd_seq_connect_from(dev->seq_handle, 
+			dev->my_port, dst.client, dst.port) < 0) {
+			dbg_puts("alsa_open: couldn't connect to input\n");
+			dev->mididev.eof = 1;
+			return;
+		}
+		if ((dev->mididev.mode & MIDIDEV_MODE_OUT) &&
+		    snd_seq_connect_to(dev->seq_handle, 
+			dev->my_port, dst.client, dst.port) < 0) {
+			dbg_puts("alsa_open: couldn't connect to output\n");
 			dev->mididev.eof = 1;
 			return;
 		}
@@ -253,7 +269,7 @@ alsa_write(struct mididev *addr, unsigned char *buf, unsigned count)
 		if (ev.type == SND_SEQ_EVENT_NONE)
 			continue;
 		snd_seq_ev_set_direct(&ev);
-		snd_seq_ev_set_dest(&ev, dev->dst.client, dev->dst.port);
+		snd_seq_ev_set_dest(&ev, SND_SEQ_ADDRESS_SUBSCRIBERS, 255);
 		snd_seq_ev_set_source(&ev, dev->my_port);
 		if (snd_seq_event_output_direct(dev->seq_handle, &ev) < 0) {
 			dev->mididev.eof = 1;

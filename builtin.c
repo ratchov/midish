@@ -2680,14 +2680,27 @@ blt_dnew(struct exec *o, struct data **r)
 {
 	long unit;
 	char *path, *modename;
+	struct var *arg;
 	unsigned mode;
 
 	if (!song_try(usong)) {
 		return 0;
 	}
 	if (!exec_lookuplong(o, "devnum", &unit) ||
-	    !exec_lookupstring(o, "path", &path) ||
 	    !exec_lookupname(o, "mode", &modename)) {
+		return 0;
+	}
+	arg = exec_varlookup(o, "path");
+	if (!arg) {
+		dbg_puts("blt_dnew: path: no such param\n");
+		return 0;
+	}
+	if (arg->data->type == DATA_NIL) {
+		path = NULL;
+	} else if (arg->data->type == DATA_STRING) {
+		path = arg->data->val.str;
+	} else {
+		cons_errs(o->procname, "path must be string or nil");
 		return 0;
 	}
 	if (str_eq(modename, "ro")) {

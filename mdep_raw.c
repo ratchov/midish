@@ -68,6 +68,10 @@ raw_new(char *path, unsigned mode)
 {
 	struct raw *dev;
 
+	if (path == NULL) {
+		dbg_puts("path must be set for raw devices\n");
+		return NULL;
+	}
 	dev = (struct raw *)mem_alloc(sizeof(struct raw));
 	mididev_init(&dev->mididev, &raw_ops, mode);
 	dev->path = str_new(path);
