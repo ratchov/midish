@@ -233,10 +233,9 @@ alsa_read(struct mididev *addr, unsigned char *buf, unsigned count)
 		}
 		len = snd_midi_event_decode(dev->iparser, buf, todo, ev);
 		if (len < 0) {
-			dbg_puts("alsa_write: failed to encode buf\n");
-			dev->mididev.eof = 1;
-			return 0;
-		}
+			/* can fail for ALSA specific stuff we dont care */
+			continue;
+		} 
 		todo -= len;			
 		buf += len;
 	}
