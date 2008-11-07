@@ -78,9 +78,9 @@ proc gcopy where {
 	for i in [tlist] {
 		ct $i
 		tcopy
-		g [getpos] + where
+		g [getpos] + $where
 		tpaste
-		g [getpos] - where
+		g [getpos] - $where
 	}
 	ct $track
 }
