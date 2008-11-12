@@ -50,7 +50,7 @@ struct songsx;
 struct songtrk {
 	struct name name;		/* identifier + list entry */
 	struct track track;		/* actual data */
-	struct seqptr trackptr;		/* track pointer for RT */
+	struct seqptr *trackptr;	/* track pointer for RT */
 	struct songfilt *curfilt;	/* source and dest. channel */
 	unsigned mute;
 };
@@ -103,11 +103,11 @@ struct song {
 	/*
 	 * temporary variables used in real-time operations
 	 */
-	struct seqptr metaptr;		/* cur. pos in meta track */
+	struct seqptr *metaptr;		/* cur. pos in meta track */
 	unsigned long tempo;		/* cur tempo in 24th of usec per tic */
 	unsigned bpm, tpb;		/* cur time signature */
 	struct track rec;		/* track being recorded */
-	struct seqptr recptr;		/* cur position in 'rec' track */
+	struct seqptr *recptr;		/* cur position in 'rec' track */
 	unsigned measure, beat, tic;	/* cur position (for metronome) */
 #define SONG_PLAY	1
 #define SONG_REC	2

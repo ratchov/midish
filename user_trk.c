@@ -143,7 +143,7 @@ unsigned
 user_func_trackaddev(struct exec *o, struct data **r) {
 	long measure, beat, tic;
 	struct ev ev;
-	struct seqptr tp;
+	struct seqptr *tp;
 	struct songtrk *t;
 	unsigned pos, bpm, tpb;
 
@@ -165,10 +165,10 @@ user_func_trackaddev(struct exec *o, struct data **r) {
 		return 0;
 	}
 	pos += beat * tpb + tic;
-	seqptr_init(&tp, &t->track);
-	seqptr_seek(&tp, pos);
-	seqptr_evput(&tp, &ev);
-	seqptr_done(&tp);
+	tp = seqptr_new(&t->track);
+	seqptr_seek(tp, pos);
+	seqptr_evput(tp, &ev);
+	seqptr_del(tp);
 	return 1;
 }
 
@@ -570,7 +570,7 @@ user_func_trackchanlist(struct exec *o, struct data **r) {
 unsigned
 user_func_trackinfo(struct exec *o, struct data **r) {
 	struct songtrk *t;
-	struct seqptr mp, tp;
+	struct seqptr *mp, *tp;
 	struct evspec es;
 	struct state *st;
 	long quant;
@@ -594,16 +594,16 @@ user_func_trackinfo(struct exec *o, struct data **r) {
 	textout_indent(tout);
 	
 	count_next = 0;
-	seqptr_init(&tp, &t->track);
-	seqptr_init(&mp, &usong->meta);
+	tp = seqptr_new(&t->track);
+	mp = seqptr_new(&usong->meta);
 	for (;;) {
 		/*
 		 * scan for a time signature change
 		 */
-		while (seqptr_evget(&mp)) {
+		while (seqptr_evget(mp)) {
 			/* nothing */
 		}
-		seqptr_getsign(&mp, &bpm, &tpb);
+		seqptr_getsign(mp, &bpm, &tpb);
 		
 		/*
 		 * count starting events
@@ -612,10 +612,10 @@ user_func_trackinfo(struct exec *o, struct data **r) {
 		count = count_next;
 		count_next = 0;
 		for (;;) {
-			len -= seqptr_ticskip(&tp, len);
+			len -= seqptr_ticskip(tp, len);
 			if (len == 0)
 				break;
-			st = seqptr_evget(&tp);
+			st = seqptr_evget(tp);
 			if (st == NULL)
 				break;			
 			if (st->phase & EV_PHASE_FIRST) {
@@ -636,10 +636,10 @@ user_func_trackinfo(struct exec *o, struct data **r) {
 			}
 			break;
 		}
-		(void)seqptr_skip(&mp, bpm * tpb);
+		(void)seqptr_skip(mp, bpm * tpb);
 	}
-	seqptr_done(&mp);
-	seqptr_done(&tp);
+	seqptr_del(mp);
+	seqptr_del(tp);
 	
 	textout_putstr(tout, "\n");
 	textout_shiftleft(tout);

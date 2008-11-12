@@ -773,7 +773,7 @@ void
 song_fix1(struct song *o)
 {
 	struct track copy;
-	struct seqptr tp, cp;
+	struct seqptr *tp, *cp;
 	struct state *st;
 	struct statelist slist;
 	struct songtrk *t, *tnext;
@@ -785,14 +785,14 @@ song_fix1(struct song *o)
 		 */
 		delta = 0;
 		track_init(&copy);
-		seqptr_init(&cp, &copy);
-		seqptr_init(&tp, &t->track);
+		cp = seqptr_new(&copy);
+		tp = seqptr_new(&t->track);
 		statelist_init(&slist);
 		for (;;) {
-			delta = seqptr_ticdel(&tp, ~0U, &slist);
-			seqptr_ticput(&tp, delta);
-			seqptr_ticput(&cp, delta);
-			st = seqptr_evdel(&tp, &slist);
+			delta = seqptr_ticdel(tp, ~0U, &slist);
+			seqptr_ticput(tp, delta);
+			seqptr_ticput(cp, delta);
+			st = seqptr_evdel(tp, &slist);
 			if (st == NULL) {
 				break;
 			}
@@ -800,14 +800,14 @@ song_fix1(struct song *o)
 				st->tag = EV_ISMETA(&st->ev) ? 1 : 0;
 			}
 			if (st->tag) {
-				seqptr_evput(&cp, &st->ev);
+				seqptr_evput(cp, &st->ev);
 			} else {
-				seqptr_evput(&tp, &st->ev);
+				seqptr_evput(tp, &st->ev);
 			}
 		}
 		statelist_done(&slist);
-		seqptr_done(&tp);
-		seqptr_done(&cp);
+		seqptr_del(tp);
+		seqptr_del(cp);
 		track_merge(&o->meta, &copy);
 		track_done(&copy);
 	}
@@ -831,7 +831,7 @@ void
 song_fix0(struct song *o)
 {
 	char trackname[MAXTRACKNAME];
-	struct seqptr tp, cp;
+	struct seqptr *tp, *cp;
 	struct state *st;
 	struct statelist slist;
 	struct songtrk *t, *smf;
@@ -847,14 +847,14 @@ song_fix0(struct song *o)
 		snprintf(trackname, MAXTRACKNAME, "trk%02u", i);
 		t = song_trknew(o, trackname);
 		delta = 0;
-		seqptr_init(&cp, &t->track);
-		seqptr_init(&tp, &smf->track);
+		cp = seqptr_new(&t->track);
+		tp = seqptr_new(&smf->track);
 		statelist_init(&slist);
 		for (;;) {
-			delta = seqptr_ticdel(&tp, ~0U, &slist);
-			seqptr_ticput(&tp, delta);
-			seqptr_ticput(&cp, delta);
-			st = seqptr_evdel(&tp, &slist);
+			delta = seqptr_ticdel(tp, ~0U, &slist);
+			seqptr_ticput(tp, delta);
+			seqptr_ticput(cp, delta);
+			st = seqptr_evdel(tp, &slist);
 			if (st == NULL) {
 				break;
 			}
@@ -867,14 +867,14 @@ song_fix0(struct song *o)
 				}
 			}
 			if (st->tag) {
-				seqptr_evput(&cp, &st->ev);
+				seqptr_evput(cp, &st->ev);
 			} else {
-				seqptr_evput(&tp, &st->ev);
+				seqptr_evput(tp, &st->ev);
 			}
 		}
 		statelist_done(&slist);
-		seqptr_done(&tp);
-		seqptr_done(&cp);
+		seqptr_del(tp);
+		seqptr_del(cp);
 	}
 }
 

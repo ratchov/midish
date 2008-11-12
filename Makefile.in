@@ -75,10 +75,11 @@ dbg.o:		dbg.c dbg.h
 ev.o:		ev.c dbg.h ev.h default.h str.h
 exec.o:		exec.c dbg.h exec.h name.h str.h data.h node.h cons.h
 filt.o:		filt.c dbg.h ev.h default.h filt.h pool.h mux.h cons.h
-frame.o:	frame.c dbg.h track.h ev.h default.h frame.h state.h
+frame.o:	frame.c dbg.h track.h ev.h default.h frame.h state.h \
+		pool.h
 lex.o:		lex.c dbg.h lex.h str.h textio.h cons.h
 main.o:		main.c dbg.h str.h cons.h ev.h default.h mux.h track.h \
-		song.h name.h frame.h state.h filt.h sysex.h metro.h \
+		frame.h state.h song.h name.h filt.h sysex.h metro.h \
 		timo.h user.h mididev.h textio.h
 mdep.o:		mdep.c default.h mux.h mididev.h cons.h user.h exec.h \
 		name.h str.h dbg.h

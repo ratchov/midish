@@ -452,7 +452,7 @@ song_setunit(struct song *o, unsigned tpu)
 unsigned
 song_endpos(struct song *o)
 {
-	struct seqptr mp;
+	struct seqptr *mp;
 	struct songtrk *t;
 	unsigned m, tpm, tpb, bpm, len, maxlen, delta;
 
@@ -464,14 +464,14 @@ song_endpos(struct song *o)
 	}
 	m = 0;
 	len = 0;
-	seqptr_init(&mp, &o->meta);
+	mp = seqptr_new(&o->meta);
 	while (len < maxlen) {
-		while (seqptr_evget(&mp)) {
+		while (seqptr_evget(mp)) {
 			/* nothing */
 		}
-		seqptr_getsign(&mp, &bpm, &tpb);
+		seqptr_getsign(mp, &bpm, &tpb);
 		tpm = bpm * tpb;
-		delta = seqptr_skip(&mp, tpm);
+		delta = seqptr_skip(mp, tpm);
 		if (delta > 0) {
 			m += (maxlen - len + tpm - 1) / tpm;
 			break;
@@ -479,7 +479,7 @@ song_endpos(struct song *o)
 		len += tpm;
 		m++;
 	}
-	seqptr_done(&mp);
+	seqptr_del(mp);
 	return m;
 }
 
@@ -513,28 +513,28 @@ void
 song_playconf(struct song *o)
 {
 	struct songchan *i;
-	struct seqptr cp;
+	struct seqptr *cp;
 	struct state *st;
 
 	SONG_FOREACH_IN(o, i) {
-		seqptr_init(&cp, &i->conf);
+		cp = seqptr_new(&i->conf);
 		for (;;) {
-			st = seqptr_evget(&cp);
+			st = seqptr_evget(cp);
 			if (st == NULL)
 				break;
 			song_playconfev(o, i, 1, &st->ev);
 		}
-		seqptr_done(&cp);
+		seqptr_del(cp);
 	}
 	SONG_FOREACH_OUT(o, i) {
-		seqptr_init(&cp, &i->conf);
+		cp = seqptr_new(&i->conf);
 		for (;;) {
-			st = seqptr_evget(&cp);
+			st = seqptr_evget(cp);
 			if (st == NULL)
 				break;
 			song_playconfev(o, i, 0, &st->ev);
 		}
-		seqptr_done(&cp);
+		seqptr_del(cp);
 	}
 	mux_flush();
 	mux_sleep(DEFAULT_CHANWAIT);
@@ -607,7 +607,7 @@ song_ticskip(struct song *o)
 	/*
 	 * tempo_track
 	 */
-	neot = seqptr_ticskip(&o->metaptr, 1);
+	neot = seqptr_ticskip(o->metaptr, 1);
 	o->tic++;
 	if (o->tic >= o->tpb) {
 		o->tic = 0;
@@ -629,7 +629,7 @@ song_ticskip(struct song *o)
 	}
 #endif
 	SONG_FOREACH_TRK(o, i) {
-		neot |= seqptr_ticskip(&i->trackptr, 1);
+		neot |= seqptr_ticskip(i->trackptr, 1);
 	}
 	if (neot == 0)
 		o->complete = 1;
@@ -660,13 +660,13 @@ song_ticplay(struct song *o)
 
 	cons_putpos(o->measure, o->beat, o->tic);
 
-	while ((st = seqptr_evget(&o->metaptr))) {
+	while ((st = seqptr_evget(o->metaptr))) {
 		song_metaput(o, &st->ev);
 	}
 	metro_tic(&o->metro, o->beat, o->tic);
 	SONG_FOREACH_TRK(o, i) {
-		id = i->trackptr.statelist.serial;
-		while ((st = seqptr_evget(&i->trackptr))) {
+		id = i->trackptr->statelist.serial;
+		while ((st = seqptr_evget(i->trackptr))) {
 			ev = st->ev;
 			if (EV_ISVOICE(&ev)) {
 				if (st->phase & EV_PHASE_FIRST)
@@ -796,11 +796,11 @@ song_movecb(struct song *o)
 	unsigned delta;
 
 	if (o->mode & SONG_REC) {
-		while (seqptr_evget(&o->recptr))
+		while (seqptr_evget(o->recptr))
 			; /* nothing */
-		delta = seqptr_ticskip(&o->recptr, 1);
+		delta = seqptr_ticskip(o->recptr, 1);
 		if (delta == 0)
-			seqptr_ticput(&o->recptr, 1);
+			seqptr_ticput(o->recptr, 1);
 	}
 	if (o->mode & SONG_PLAY) {
 		(void)song_ticskip(o);
@@ -817,7 +817,7 @@ song_evcb(struct song *o, struct ev *ev)
 {
 	if (o->mode & SONG_REC) {
 		if (mux_getphase() >= MUX_START)
-			(void)seqptr_evput(&o->recptr, ev);
+			(void)seqptr_evput(o->recptr, ev);
 	}
 }
 
@@ -889,14 +889,14 @@ song_start(struct song *o, unsigned mode, unsigned countdown)
 	 * move all tracks to the current position
 	 */
 	SONG_FOREACH_TRK(o, t) {
-		seqptr_init(&t->trackptr, &t->track);
-		seqptr_skip(&t->trackptr, tic);
+		t->trackptr = seqptr_new(&t->track);
+		seqptr_skip(t->trackptr, tic);
 	}
-	seqptr_init(&o->metaptr, &o->meta);
-	seqptr_skip(&o->metaptr, tic);
+	o->metaptr = seqptr_new(&o->meta);
+	seqptr_skip(o->metaptr, tic);
 
-	seqptr_init(&o->recptr, &o->rec);
-	seqptr_seek(&o->recptr, tic);
+	o->recptr = seqptr_new(&o->rec);
+	seqptr_seek(o->recptr, tic);
 
 	mux_open();
 
@@ -916,9 +916,9 @@ song_start(struct song *o, unsigned mode, unsigned countdown)
 	 * restore track states
 	 */
 	SONG_FOREACH_TRK(o, t) {
-		song_confrestore(&t->trackptr.statelist);
+		song_confrestore(&t->trackptr->statelist);
 	}
-	for (s = o->metaptr.statelist.first; s != NULL; s = s->next) {
+	for (s = o->metaptr->statelist.first; s != NULL; s = s->next) {
 		if (EV_ISMETA(&s->ev)) {
 			if (song_debug) {
 				dbg_puts("song_start: ");
@@ -957,26 +957,26 @@ song_stop(struct song *o)
 	 * stop sounding notes
 	 */
 	SONG_FOREACH_TRK(o, t) {
-		song_confcancel(&t->trackptr.statelist);
+		song_confcancel(&t->trackptr->statelist);
 	}
 	mux_close();
 
 	SONG_FOREACH_TRK(o, t) {
-		statelist_empty(&t->trackptr.statelist);
-		seqptr_done(&t->trackptr);
+		statelist_empty(&t->trackptr->statelist);
+		seqptr_del(t->trackptr);
 	}
 
 	/*
 	 * if there is no filter for recording there may be
 	 * unterminated frames, so finalize them.
 	 */
-	for (st = o->recptr.statelist.first; st != NULL; st = st->next) {
+	for (st = o->recptr->statelist.first; st != NULL; st = st->next) {
 		if (!(st->phase & EV_PHASE_LAST) && state_cancel(st, &ev)) {
-			seqptr_evput(&o->recptr, &ev);
+			seqptr_evput(o->recptr, &ev);
 		}
 	}
-	seqptr_done(&o->recptr);
-	seqptr_done(&o->metaptr);
+	seqptr_del(o->recptr);
+	seqptr_del(o->metaptr);
 
 	if (o->mode & SONG_REC) {
 		song_getcurtrk(o, &t);

@@ -36,6 +36,7 @@
 #include "ev.h"
 #include "mux.h"
 #include "track.h"
+#include "frame.h"
 #include "song.h"
 #include "user.h"
 #include "filt.h"
@@ -43,7 +44,6 @@
 #include "default.h"
 #include "sysex.h"
 #include "textio.h"
-
 
 int
 main(int argc, char **argv)
@@ -61,11 +61,13 @@ main(int argc, char **argv)
 	state_pool_init(DEFAULT_MAXNSTATES);
 	chunk_pool_init(DEFAULT_MAXNCHUNKS);
 	sysex_pool_init(DEFAULT_MAXNSYSEXS);
+	seqptr_pool_init(DEFAULT_MAXNSEQPTRS);
 	mididev_listinit();
 
 	exitcode = user_mainloop();
 
 	mididev_listdone();
+	seqptr_pool_done();
 	sysex_pool_done();
 	chunk_pool_done();
 	state_pool_done();

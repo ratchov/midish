@@ -43,8 +43,10 @@ struct seqptr {
 struct track;
 struct evspec;
 
-void	      seqptr_init(struct seqptr *, struct track *);
-void	      seqptr_done(struct seqptr *);
+void	      seqptr_pool_init(unsigned);
+void	      seqptr_pool_done(void);
+struct seqptr *seqptr_new(struct track *);
+void	      seqptr_del(struct seqptr *);
 struct state *seqptr_evget(struct seqptr *);
 struct state *seqptr_evdel(struct seqptr *, struct statelist *);
 struct state *seqptr_evput(struct seqptr *, struct ev *);

@@ -81,7 +81,7 @@
 /*
  * maximum number of tracks
  */
-#define DEFAULT_MAXNTRACKPTRS	100
+#define DEFAULT_MAXNSEQPTRS	200
 
 /*
  * maximum number of filter states (roughly maximum number of

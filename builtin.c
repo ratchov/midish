@@ -913,7 +913,7 @@ blt_mins(struct exec *o, struct data **r)
 	struct data *sig;
 	unsigned tic, len, bpm, tpb;
 	unsigned long usec24;
-	struct seqptr sp;
+	struct seqptr *sp;
 	struct track t1, t2, tn;
 	struct ev ev;
 
@@ -948,17 +948,17 @@ blt_mins(struct exec *o, struct data **r)
 	len = amount * bpm * tpb;
 
 	track_init(&tn);
-	seqptr_init(&sp, &tn);
-	seqptr_ticput(&sp, tic);
+	sp = seqptr_new(&tn);
+	seqptr_ticput(sp, tic);
 	ev.cmd = EV_TIMESIG;
 	ev.timesig_beats = bpm;
 	ev.timesig_tics = tpb;
-	seqptr_evput(&sp, &ev);
+	seqptr_evput(sp, &ev);
 	ev.cmd = EV_TEMPO;
 	ev.tempo_usec24 = usec24;
-	seqptr_evput(&sp, &ev);
-	seqptr_ticput(&sp, len);
-	seqptr_done(&sp);
+	seqptr_evput(sp, &ev);
+	seqptr_ticput(sp, len);
+	seqptr_del(sp);
 
 	track_init(&t1);
 	track_init(&t2);
@@ -1009,7 +1009,7 @@ blt_mcut(struct exec *o, struct data **r)
 unsigned
 blt_minfo(struct exec *o, struct data **r)
 {
-	struct seqptr mp;
+	struct seqptr *mp;
 	unsigned meas, tpb, otpb, bpm, obpm;
 	unsigned long tempo1, otempo1, tempo2, otempo2;
 	int stop = 0;
@@ -1023,20 +1023,20 @@ blt_minfo(struct exec *o, struct data **r)
 	obpm = 0;
 	otempo1 = otempo2 = 0;
 	meas = 0;
-	seqptr_init(&mp, &usong->meta);
+	mp = seqptr_new(&usong->meta);
 	while (!stop) {
 		/*
 		 * scan for a time signature change
 		 */
-		while (seqptr_evget(&mp)) {
+		while (seqptr_evget(mp)) {
 			/* nothing */
 		}
-		seqptr_getsign(&mp, &bpm, &tpb);
-		seqptr_gettempo(&mp, &tempo1);
+		seqptr_getsign(mp, &bpm, &tpb);
+		seqptr_gettempo(mp, &tempo1);
 
-		if (seqptr_skip(&mp, tpb * bpm) > 0)
+		if (seqptr_skip(mp, tpb * bpm) > 0)
 			stop = 1;
-		seqptr_gettempo(&mp, &tempo2);
+		seqptr_gettempo(mp, &tempo2);
 		
 		if (tpb != otpb || bpm != obpm || 
 		    tempo1 != otempo1 || tempo2 != otempo2) {
@@ -1063,7 +1063,7 @@ blt_minfo(struct exec *o, struct data **r)
 		}
 		meas++;
 	}
-	seqptr_done(&mp);
+	seqptr_del(mp);
 
 	textout_shiftleft(tout);
 	textout_indent(tout);
@@ -1300,7 +1300,7 @@ blt_taddev(struct exec *o, struct data **r)
 {
 	long measure, beat, tic;
 	struct ev ev;
-	struct seqptr tp;
+	struct seqptr *tp;
 	struct songtrk *t;
 	unsigned pos, bpm, tpb;
 
@@ -1326,10 +1326,10 @@ blt_taddev(struct exec *o, struct data **r)
 		return 0;
 	}
 	pos += beat * tpb + tic;
-	seqptr_init(&tp, &t->track);
-	seqptr_seek(&tp, pos);
-	seqptr_evput(&tp, &ev);
-	seqptr_done(&tp);
+	tp = seqptr_new(&t->track);
+	seqptr_seek(tp, pos);
+	seqptr_evput(tp, &ev);
+	seqptr_del(tp);
 	return 1;
 }
 
@@ -1700,7 +1700,7 @@ unsigned
 blt_tinfo(struct exec *o, struct data **r)
 {
 	struct songtrk *t;
-	struct seqptr mp, tp;
+	struct seqptr *mp, *tp;
 	struct state *st;
 	unsigned len, count, count_next, tpb, bpm;
 
@@ -1714,16 +1714,16 @@ blt_tinfo(struct exec *o, struct data **r)
 	textout_indent(tout);
 
 	count_next = 0;
-	seqptr_init(&tp, &t->track);
-	seqptr_init(&mp, &usong->meta);
+	tp = seqptr_new(&t->track);
+	mp = seqptr_new(&usong->meta);
 	for (;;) {
 		/*
 		 * scan for a time signature change
 		 */
-		while (seqptr_evget(&mp)) {
+		while (seqptr_evget(mp)) {
 			/* nothing */
 		}
-		seqptr_getsign(&mp, &bpm, &tpb);
+		seqptr_getsign(mp, &bpm, &tpb);
 
 		/*
 		 * count starting events
@@ -1732,10 +1732,10 @@ blt_tinfo(struct exec *o, struct data **r)
 		count = count_next;
 		count_next = 0;
 		for (;;) {
-			len -= seqptr_ticskip(&tp, len);
+			len -= seqptr_ticskip(tp, len);
 			if (len == 0)
 				break;
-			st = seqptr_evget(&tp);
+			st = seqptr_evget(tp);
 			if (st == NULL)
 				break;
 			if (st->phase & EV_PHASE_FIRST) {
@@ -1756,10 +1756,10 @@ blt_tinfo(struct exec *o, struct data **r)
 			}
 			break;
 		}
-		(void)seqptr_skip(&mp, bpm * tpb);
+		(void)seqptr_skip(mp, bpm * tpb);
 	}
-	seqptr_done(&mp);
-	seqptr_done(&tp);
+	seqptr_del(mp);
+	seqptr_del(tp);
 
 	textout_putstr(tout, "\n");
 	textout_shiftleft(tout);
