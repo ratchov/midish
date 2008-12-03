@@ -6,7 +6,7 @@
 prefix=/usr/local		# where to install midish
 readline=no			# do we have readline
 alsa=no				# do we want alsa support ?
-rmidish=yes			# de we want to build rmidish ?
+rmidish=yes			# do we want to build rmidish ?
 progs=midish			# programs to build
 unset bindir			# path where to install binaries
 unset datadir			# path where to install doc and examples
