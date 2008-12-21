@@ -894,14 +894,14 @@ track_move(struct track *src, unsigned start, unsigned len,
 void
 track_quantize(struct track *src, unsigned start, unsigned len,
     unsigned offset, unsigned quant, unsigned rate) {
-	unsigned delta, tic;
+	unsigned tic, qtic;
 	struct track qt;
 	struct seqptr *sp, *qp;
 	struct state *st;
 	struct statelist slist;
 	unsigned remaind;
 	unsigned fluct, notes;
-	int ofs;
+	int ofs, delta;
 
 	track_init(&qt);
 	sp = seqptr_new(src);
@@ -917,7 +917,7 @@ track_quantize(struct track *src, unsigned start, unsigned len,
 		st->tag = 0;
 	}
 	seqptr_seek(qp, start);
-	tic = start;
+	tic = qtic = start;
 	ofs = 0;
 
 	/*
@@ -936,21 +936,22 @@ track_quantize(struct track *src, unsigned start, unsigned len,
 		if (st == NULL)
 			break;
 
-		delta -= ofs;
 		remaind = quant != 0 ? (tic - start + offset) % quant : 0;
 		if (remaind < quant / 2) {
 			ofs = - ((remaind * rate + 99) / 100);
 		} else {
 			ofs = ((quant - remaind) * rate + 99) / 100;
 		}
+
+		delta = tic + ofs - qtic;
 #ifdef FRAME_DEBUG
-		if (ofs < 0 && delta < (unsigned)-ofs) {
-			dbg_puts("track_quantize: delta < -ofs\n");
+		if (delta < 0) {
+			dbg_puts("track_quantize: delta < 0\n");
 			dbg_panic();
 		}
 #endif
-		delta += ofs;
 		seqptr_ticput(qp, delta);
+		qtic += delta;
 
 		if (st->phase & EV_PHASE_FIRST) {
 			if (EV_ISNOTE(&st->ev)) {
