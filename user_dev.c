@@ -54,6 +54,8 @@ user_func_devlist(struct exec *o, struct data **r) {
 	struct data *d, *n;
 	struct mididev *i;
 
+	EXEC_OBSOLETE(o);
+
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -72,6 +74,8 @@ user_func_devattach(struct exec *o, struct data **r) {
 	char *path, *modename;
 	unsigned mode;
 	
+	EXEC_OBSOLETE(o);
+
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -97,6 +101,8 @@ unsigned
 user_func_devdetach(struct exec *o, struct data **r) {
 	long unit;
 
+	EXEC_OBSOLETE(o);
+
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -111,6 +117,8 @@ user_func_devsetmaster(struct exec *o, struct data **r) {
 	struct var *arg;
 	long unit;
 	
+	EXEC_OBSOLETE(o);
+
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -139,6 +147,8 @@ user_func_devsetmaster(struct exec *o, struct data **r) {
 unsigned
 user_func_devgetmaster(struct exec *o, struct data **r) {
 
+	EXEC_OBSOLETE(o);
+
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -153,6 +163,8 @@ user_func_devgetmaster(struct exec *o, struct data **r) {
 unsigned
 user_func_devsendrt(struct exec *o, struct data **r) {
 	long unit, sendrt;
+
+	EXEC_OBSOLETE(o);
 
 	if (!song_try(usong)) {
 		return 0;
@@ -173,6 +185,8 @@ unsigned
 user_func_devticrate(struct exec *o, struct data **r) {
 	long unit, tpu;
 	
+	EXEC_OBSOLETE(o);
+
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -196,6 +210,8 @@ unsigned
 user_func_devinfo(struct exec *o, struct data **r) {
 	long unit;
 	
+	EXEC_OBSOLETE(o);
+
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -239,6 +255,8 @@ user_func_devixctl(struct exec *o, struct data **r) {
 	struct data *list;
 	unsigned ctlset;
 
+	EXEC_OBSOLETE(o);
+
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -262,6 +280,8 @@ user_func_devoxctl(struct exec *o, struct data **r) {
 	long unit;
 	struct data *list;
 	unsigned ctlset;
+
+	EXEC_OBSOLETE(o);
 
 	if (!song_try(usong)) {
 		return 0;

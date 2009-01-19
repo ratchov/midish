@@ -55,6 +55,8 @@ unsigned
 user_func_metroswitch(struct exec *o, struct data **r) {
 	long onoff;
 
+	EXEC_OBSOLETE(o);
+
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -68,6 +70,8 @@ user_func_metroswitch(struct exec *o, struct data **r) {
 unsigned
 user_func_metroconf(struct exec *o, struct data **r) {
 	struct ev evhi, evlo;
+
+	EXEC_OBSOLETE(o);
 
 	if (!song_try(usong)) {
 		return 0;
@@ -90,6 +94,8 @@ user_func_songsetcurchan(struct exec *o, struct data **r) {
 	struct songchan *t;
 	struct var *arg;
 	
+	EXEC_OBSOLETE(o);
+
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -113,6 +119,8 @@ unsigned
 user_func_songgetcurchan(struct exec *o, struct data **r) {
 	struct songchan *cur;
 	
+	EXEC_OBSOLETE(o);
+
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -130,6 +138,8 @@ user_func_songsetcursysex(struct exec *o, struct data **r) {
 	struct songsx *t;
 	struct var *arg;
 	
+	EXEC_OBSOLETE(o);
+
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -153,6 +163,8 @@ unsigned
 user_func_songgetcursysex(struct exec *o, struct data **r) {
 	struct songsx *cur;
 	
+	EXEC_OBSOLETE(o);
+
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -169,6 +181,8 @@ unsigned
 user_func_songsetunit(struct exec *o, struct data **r) {
 	long tpu;
 	struct songtrk *t;
+
+	EXEC_OBSOLETE(o);
 
 	if (!song_try(usong)) {
 		return 0;
@@ -191,6 +205,7 @@ user_func_songsetunit(struct exec *o, struct data **r) {
 
 unsigned
 user_func_songgetunit(struct exec *o, struct data **r) {
+	EXEC_OBSOLETE(o);
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -202,6 +217,8 @@ unsigned
 user_func_songsetcurpos(struct exec *o, struct data **r) {
 	long measure;
 	
+	EXEC_OBSOLETE(o);
+
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -219,6 +236,8 @@ user_func_songsetcurpos(struct exec *o, struct data **r) {
 
 unsigned
 user_func_songgetcurpos(struct exec *o, struct data **r) {
+	EXEC_OBSOLETE(o);
+
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -230,6 +249,8 @@ unsigned
 user_func_songsetcurlen(struct exec *o, struct data **r) {
 	long len;
 	
+	EXEC_OBSOLETE(o);
+
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -246,6 +267,8 @@ user_func_songsetcurlen(struct exec *o, struct data **r) {
 
 unsigned
 user_func_songgetcurlen(struct exec *o, struct data **r) {
+	EXEC_OBSOLETE(o);
+
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -257,6 +280,8 @@ unsigned
 user_func_songsetcurquant(struct exec *o, struct data **r) {
 	long quantum;
 	
+	EXEC_OBSOLETE(o);
+
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -273,6 +298,8 @@ user_func_songsetcurquant(struct exec *o, struct data **r) {
 
 unsigned
 user_func_songgetcurquant(struct exec *o, struct data **r) {
+	EXEC_OBSOLETE(o);
+
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -285,6 +312,8 @@ user_func_songsetcurtrack(struct exec *o, struct data **r) {
 	struct songtrk *t;
 	struct var *arg;
 	
+	EXEC_OBSOLETE(o);
+
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -308,6 +337,8 @@ unsigned
 user_func_songgetcurtrack(struct exec *o, struct data **r) {
 	struct songtrk *cur;
 	
+	EXEC_OBSOLETE(o);
+
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -325,6 +356,8 @@ user_func_songsetcurfilt(struct exec *o, struct data **r) {
 	struct songfilt *f;
 	struct var *arg;
 	
+	EXEC_OBSOLETE(o);
+
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -352,6 +385,8 @@ unsigned
 user_func_songgetcurfilt(struct exec *o, struct data **r) {
 	struct songfilt *cur;
 	
+	EXEC_OBSOLETE(o);
+
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -375,6 +410,8 @@ user_func_songinfo(struct exec *o, struct data **r) {
 	unsigned i, count;
 	unsigned dev, ch;
 	
+	EXEC_OBSOLETE(o);
+
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -553,6 +590,8 @@ unsigned
 user_func_songsave(struct exec *o, struct data **r) {
 	char *filename;	
 
+	EXEC_OBSOLETE(o);
+
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -567,6 +606,8 @@ unsigned
 user_func_songload(struct exec *o, struct data **r) {
 	char *filename;		
 	unsigned res;
+
+	EXEC_OBSOLETE(o);
 
 	if (!song_try(usong)) {
 		return 0;
@@ -583,6 +624,8 @@ user_func_songload(struct exec *o, struct data **r) {
 
 unsigned
 user_func_songreset(struct exec *o, struct data **r) {
+	EXEC_OBSOLETE(o);
+
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -595,6 +638,8 @@ user_func_songreset(struct exec *o, struct data **r) {
 unsigned
 user_func_songexportsmf(struct exec *o, struct data **r) {
 	char *filename;
+
+	EXEC_OBSOLETE(o);
 
 	if (!song_try(usong)) {
 		return 0;
@@ -609,6 +654,8 @@ unsigned
 user_func_songimportsmf(struct exec *o, struct data **r) {
 	char *filename;
 	struct song *sng;
+
+	EXEC_OBSOLETE(o);
 
 	if (!song_try(usong)) {
 		return 0;
@@ -628,6 +675,8 @@ user_func_songimportsmf(struct exec *o, struct data **r) {
 
 unsigned
 user_func_songidle(struct exec *o, struct data **r) {
+	EXEC_OBSOLETE(o);
+
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -637,6 +686,8 @@ user_func_songidle(struct exec *o, struct data **r) {
 		
 unsigned
 user_func_songplay(struct exec *o, struct data **r) {
+	EXEC_OBSOLETE(o);
+
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -646,6 +697,8 @@ user_func_songplay(struct exec *o, struct data **r) {
 
 unsigned
 user_func_songrecord(struct exec *o, struct data **r) {
+	EXEC_OBSOLETE(o);
+
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -655,6 +708,8 @@ user_func_songrecord(struct exec *o, struct data **r) {
 
 unsigned
 user_func_songstop(struct exec *o, struct data **r) {
+	EXEC_OBSOLETE(o);
+
 	if (!mux_isopen) {
 		cons_err("nothing to stop, ignored");
 		return 1;
@@ -668,6 +723,8 @@ unsigned
 user_func_songsettempo(struct exec *o, struct data **r) {
 	long tempo, measure;
 	
+	EXEC_OBSOLETE(o);
+
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -692,6 +749,8 @@ user_func_songtimeins(struct exec *o, struct data **r) {
 	struct track t1, t2, tn;
 	struct ev ev;
 	
+	EXEC_OBSOLETE(o);
+
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -744,6 +803,8 @@ user_func_songtimerm(struct exec *o, struct data **r) {
 	unsigned tic, len;
 	struct track t1, t2;
 
+	EXEC_OBSOLETE(o);
+
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -771,6 +832,8 @@ user_func_songtimerm(struct exec *o, struct data **r) {
 
 unsigned
 user_func_songtimeinfo(struct exec *o, struct data **r) {
+	EXEC_OBSOLETE(o);
+
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -785,6 +848,8 @@ user_func_songsetcurinput(struct exec *o, struct data **r) {
 	struct data *l;
 	struct songchan *c;
 	
+	EXEC_OBSOLETE(o);
+
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -808,6 +873,8 @@ user_func_songgettempo(struct exec *o, struct data **r) {
 	unsigned tic, bpm, tpb;
 	unsigned long usec24;
 	
+	EXEC_OBSOLETE(o);
+
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -825,6 +892,8 @@ user_func_songgetsign(struct exec *o, struct data **r) {
 	unsigned tic, bpm, tpb;
 	unsigned long usec24;
 	
+	EXEC_OBSOLETE(o);
+
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -843,6 +912,8 @@ user_func_songgetcurinput(struct exec *o, struct data **r)
 {
 	unsigned dev, ch;
 	struct songchan *c;
+
+	EXEC_OBSOLETE(o);
 
 	if (!song_try(usong)) {
 		return 0;
@@ -863,6 +934,9 @@ user_func_songgetcurinput(struct exec *o, struct data **r)
 unsigned
 user_func_songsetfactor(struct exec *o, struct data **r) {
 	long tpu;
+
+	EXEC_OBSOLETE(o);
+
 	if (!exec_lookuplong(o, "tempo_factor", &tpu)) {
 		return 0;
 	}
@@ -876,6 +950,8 @@ user_func_songsetfactor(struct exec *o, struct data **r) {
 
 unsigned
 user_func_songgetfactor(struct exec *o, struct data **r) {
+	EXEC_OBSOLETE(o);
+
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -888,6 +964,8 @@ user_func_ctlconfx(struct exec *o, struct data **r) {
 	char *name;
 	unsigned num, old, val;
 	
+	EXEC_OBSOLETE(o);
+
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -913,6 +991,8 @@ user_func_ctlconf(struct exec *o, struct data **r) {
 	char *name;
 	unsigned num, old, val;
 	
+	EXEC_OBSOLETE(o);
+
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -934,6 +1014,8 @@ user_func_ctlunconf(struct exec *o, struct data **r) {
 	char *name;
 	unsigned num;
 	
+	EXEC_OBSOLETE(o);
+
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -951,6 +1033,8 @@ user_func_ctlunconf(struct exec *o, struct data **r) {
 
 unsigned
 user_func_ctlinfo(struct exec *o, struct data **r) {
+	EXEC_OBSOLETE(o);
+
 	if (!song_try(usong)) {
 		return 0;
 	}

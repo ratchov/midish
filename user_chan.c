@@ -55,6 +55,8 @@ user_func_chanlist(struct exec *o, struct data **r) {
 	struct data *d, *n;
 	struct songchan *i;
 
+	EXEC_OBSOLETE(o);
+
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -73,6 +75,8 @@ user_func_channew(struct exec *o, struct data **r) {
 	struct songchan *i;
 	unsigned dev, ch;
 	
+	EXEC_OBSOLETE(o);
+
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -102,6 +106,8 @@ unsigned
 user_func_chandelete(struct exec *o, struct data **r) {
 	struct songchan *c;
 
+	EXEC_OBSOLETE(o);
+
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -117,6 +123,8 @@ user_func_chanrename(struct exec *o, struct data **r) {
 	struct songchan *c;
 	char *name;
 	
+	EXEC_OBSOLETE(o);
+
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -138,6 +146,8 @@ user_func_chanexists(struct exec *o, struct data **r) {
 	struct songchan *i;
 	unsigned dev, ch;
 	
+	EXEC_OBSOLETE(o);
+
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -154,6 +164,8 @@ user_func_chanset(struct exec *o, struct data **r) {
 	struct songchan *c, *i;
 	unsigned dev, ch;
 	
+	EXEC_OBSOLETE(o);
+
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -176,6 +188,8 @@ unsigned
 user_func_changetch(struct exec *o, struct data **r) {
 	struct songchan *i;
 	
+	EXEC_OBSOLETE(o);
+
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -190,6 +204,8 @@ unsigned
 user_func_changetdev(struct exec *o, struct data **r) {
 	struct songchan *i;
 	
+	EXEC_OBSOLETE(o);
+
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -205,6 +221,8 @@ user_func_chanconfev(struct exec *o, struct data **r) {
 	struct songchan *c;
 	struct ev ev;
 	
+	EXEC_OBSOLETE(o);
+
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -225,6 +243,8 @@ user_func_chanunconfev(struct exec *o, struct data **r) {
 	struct songchan *c;
 	struct evspec es;
 	
+	EXEC_OBSOLETE(o);
+
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -240,6 +260,8 @@ unsigned
 user_func_chaninfo(struct exec *o, struct data **r) {
 	struct songchan *c;
 	
+	EXEC_OBSOLETE(o);
+
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -257,6 +279,8 @@ user_func_chansetcurinput(struct exec *o, struct data **r) {
 	struct songchan *c;
 	struct data *l;
 	
+	EXEC_OBSOLETE(o);
+
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -276,6 +300,8 @@ unsigned
 user_func_changetcurinput(struct exec *o, struct data **r) {
 	struct songchan *c;
 	
+	EXEC_OBSOLETE(o);
+
 	if (!song_try(usong)) {
 		return 0;
 	}

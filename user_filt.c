@@ -420,6 +420,8 @@ user_func_filtlist(struct exec *o, struct data **r) {
 	struct data *d, *n;
 	struct songfilt *i;
 
+	EXEC_OBSOLETE(o);
+
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -437,6 +439,8 @@ user_func_filtnew(struct exec *o, struct data **r) {
 	char *name;
 	struct songfilt *i;
 	
+	EXEC_OBSOLETE(o);
+
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -456,6 +460,8 @@ unsigned
 user_func_filtdelete(struct exec *o, struct data **r) {
 	struct songfilt *f;
 
+	EXEC_OBSOLETE(o);
+
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -471,6 +477,8 @@ user_func_filtrename(struct exec *o, struct data **r) {
 	struct songfilt *f;
 	char *name;
 	
+	EXEC_OBSOLETE(o);
+
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -492,6 +500,8 @@ user_func_filtexists(struct exec *o, struct data **r) {
 	char *name;
 	struct songfilt *i;
 
+	EXEC_OBSOLETE(o);
+
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -507,6 +517,8 @@ unsigned
 user_func_filtinfo(struct exec *o, struct data **r) {
 	struct songfilt *f;
 	
+	EXEC_OBSOLETE(o);
+
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -523,6 +535,8 @@ user_func_filtdevdrop(struct exec *o, struct data **r) {
 	struct songfilt *f;
 	long idev;
 	
+	EXEC_OBSOLETE(o);
+
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -543,6 +557,8 @@ user_func_filtnodevdrop(struct exec *o, struct data **r) {
 	struct songfilt *f;
 	long idev;
 	
+	EXEC_OBSOLETE(o);
+
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -563,6 +579,8 @@ user_func_filtdevmap(struct exec *o, struct data **r) {
 	struct songfilt *f;
 	long idev, odev;
 	
+	EXEC_OBSOLETE(o);
+
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -585,6 +603,8 @@ user_func_filtnodevmap(struct exec *o, struct data **r) {
 	struct songfilt *f;
 	long odev;
 	
+	EXEC_OBSOLETE(o);
+
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -605,6 +625,8 @@ user_func_filtchandrop(struct exec *o, struct data **r) {
 	struct songfilt *f;
 	unsigned idev, ich;
 	
+	EXEC_OBSOLETE(o);
+
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -621,6 +643,8 @@ user_func_filtnochandrop(struct exec *o, struct data **r) {
 	struct songfilt *f;
 	unsigned idev, ich;
 	
+	EXEC_OBSOLETE(o);
+
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -637,6 +661,8 @@ user_func_filtchanmap(struct exec *o, struct data **r) {
 	struct songfilt *f;
 	unsigned idev, ich, odev, och;
 	
+	EXEC_OBSOLETE(o);
+
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -654,6 +680,8 @@ user_func_filtnochanmap(struct exec *o, struct data **r) {
 	struct songfilt *f;
 	unsigned odev, och;
 	
+	EXEC_OBSOLETE(o);
+
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -670,6 +698,8 @@ user_func_filtctldrop(struct exec *o, struct data **r) {
 	struct songfilt *f;
 	unsigned idev, ich, ictl;
 	
+	EXEC_OBSOLETE(o);
+
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -687,6 +717,8 @@ user_func_filtnoctldrop(struct exec *o, struct data **r) {
 	struct songfilt *f;
 	unsigned idev, ich, ictl;
 	
+	EXEC_OBSOLETE(o);
+
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -704,6 +736,8 @@ user_func_filtctlmap(struct exec *o, struct data **r) {
 	struct songfilt *f;
 	unsigned idev, ich, odev, och, ictl, octl;
 	
+	EXEC_OBSOLETE(o);
+
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -723,6 +757,8 @@ user_func_filtnoctlmap(struct exec *o, struct data **r) {
 	struct songfilt *f;
 	unsigned odev, och, octl;
 	
+	EXEC_OBSOLETE(o);
+
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -741,6 +777,8 @@ user_func_filtkeydrop(struct exec *o, struct data **r) {
 	unsigned idev, ich;
 	long kstart, kend;
 	
+	EXEC_OBSOLETE(o);
+
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -765,6 +803,8 @@ user_func_filtnokeydrop(struct exec *o, struct data **r) {
 	unsigned idev, ich;
 	long kstart, kend;
 	
+	EXEC_OBSOLETE(o);
+
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -789,6 +829,8 @@ user_func_filtkeymap(struct exec *o, struct data **r) {
 	unsigned idev, ich, odev, och;
 	long kstart, kend, kplus;
 	
+	EXEC_OBSOLETE(o);
+
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -819,6 +861,8 @@ user_func_filtnokeymap(struct exec *o, struct data **r) {
 	unsigned odev, och;
 	long kstart, kend;
 	
+	EXEC_OBSOLETE(o);
+
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -841,6 +885,8 @@ unsigned
 user_func_filtreset(struct exec *o, struct data **r) {
 	struct songfilt *f;
 	
+	EXEC_OBSOLETE(o);
+
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -856,6 +902,8 @@ user_func_filtchgich(struct exec *o, struct data **r) {
 	struct songfilt *f;
 	unsigned olddev, oldch, newdev, newch;
 	
+	EXEC_OBSOLETE(o);
+
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -873,6 +921,8 @@ user_func_filtchgidev(struct exec *o, struct data **r) {
 	struct songfilt *f;
 	long olddev, newdev;
 	
+	EXEC_OBSOLETE(o);
+
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -895,6 +945,8 @@ user_func_filtswapich(struct exec *o, struct data **r) {
 	struct songfilt *f;
 	unsigned olddev, oldch, newdev, newch;
 	
+	EXEC_OBSOLETE(o);
+
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -912,6 +964,8 @@ user_func_filtswapidev(struct exec *o, struct data **r) {
 	struct songfilt *f;
 	long olddev, newdev;
 	
+	EXEC_OBSOLETE(o);
+
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -934,6 +988,8 @@ user_func_filtchgoch(struct exec *o, struct data **r) {
 	struct songfilt *f;
 	unsigned olddev, oldch, newdev, newch;
 	
+	EXEC_OBSOLETE(o);
+
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -951,6 +1007,8 @@ user_func_filtchgodev(struct exec *o, struct data **r) {
 	struct songfilt *f;
 	long olddev, newdev;
 	
+	EXEC_OBSOLETE(o);
+
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -973,6 +1031,8 @@ user_func_filtswapoch(struct exec *o, struct data **r) {
 	struct songfilt *f;
 	unsigned olddev, oldch, newdev, newch;
 	
+	EXEC_OBSOLETE(o);
+
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -990,6 +1050,8 @@ user_func_filtswapodev(struct exec *o, struct data **r) {
 	struct songfilt *f;
 	long olddev, newdev;
 	
+	EXEC_OBSOLETE(o);
+
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -1012,6 +1074,11 @@ user_func_filtevmap(struct exec *o, struct data **r) {
 	struct songfilt *f;
 	struct evspec from, to;
 	
+	EXEC_OBSOLETE(o);
+
+	if (!song_try(usong)) {
+		return 0;
+	}
 	if (!exec_lookupfilt(o, "filtname", &f) ||
 	    !exec_lookupevspec(o, "from", &from, 1) ||
 	    !exec_lookupevspec(o, "to", &to, 0)) {
@@ -1026,6 +1093,11 @@ user_func_filtevunmap(struct exec *o, struct data **r) {
 	struct songfilt *f;
 	struct evspec from, to;
 	
+	EXEC_OBSOLETE(o);
+
+	if (!song_try(usong)) {
+		return 0;
+	}
 	if (!exec_lookupfilt(o, "filtname", &f) ||
 	    !exec_lookupevspec(o, "from", &from, 1) ||
 	    !exec_lookupevspec(o, "to", &to, 0)) {
@@ -1041,6 +1113,8 @@ user_func_filtsetcurchan(struct exec *o, struct data **r) {
 	struct songchan *c;
 	struct var *arg;
 	
+	EXEC_OBSOLETE(o);
+
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -1071,6 +1145,8 @@ unsigned
 user_func_filtgetcurchan(struct exec *o, struct data **r) {
 	struct songfilt *f;
 	
+	EXEC_OBSOLETE(o);
+
 	if (!song_try(usong)) {
 		return 0;
 	}

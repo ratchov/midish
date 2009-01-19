@@ -56,6 +56,8 @@ user_func_tracklist(struct exec *o, struct data **r) {
 	struct data *d, *n;
 	struct songtrk *i;
 
+	EXEC_OBSOLETE(o);
+
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -73,6 +75,8 @@ user_func_tracknew(struct exec *o, struct data **r) {
 	char *trkname;
 	struct songtrk *t;
 	
+	EXEC_OBSOLETE(o);
+
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -92,6 +96,8 @@ unsigned
 user_func_trackdelete(struct exec *o, struct data **r) {
 	struct songtrk *t;
 
+	EXEC_OBSOLETE(o);
+
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -107,6 +113,8 @@ user_func_trackrename(struct exec *o, struct data **r) {
 	struct songtrk *t;
 	char *name;
 	
+	EXEC_OBSOLETE(o);
+
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -128,6 +136,8 @@ user_func_trackexists(struct exec *o, struct data **r) {
 	char *name;
 	struct songtrk *t;
 	
+	EXEC_OBSOLETE(o);
+
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -146,6 +156,8 @@ user_func_trackaddev(struct exec *o, struct data **r) {
 	struct seqptr *tp;
 	struct songtrk *t;
 	unsigned pos, bpm, tpb;
+
+	EXEC_OBSOLETE(o);
 
 	if (!song_try(usong)) {
 		return 0;
@@ -178,6 +190,8 @@ user_func_tracksetcurfilt(struct exec *o, struct data **r) {
 	struct songfilt *f;
 	struct var *arg;
 	
+	EXEC_OBSOLETE(o);
+
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -208,6 +222,8 @@ unsigned
 user_func_trackgetcurfilt(struct exec *o, struct data **r) {
 	struct songtrk *t;
 	
+	EXEC_OBSOLETE(o);
+
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -227,6 +243,8 @@ user_func_trackcheck(struct exec *o, struct data **r) {
 	char *trkname;
 	struct songtrk *t;
 	
+	EXEC_OBSOLETE(o);
+
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -249,6 +267,8 @@ user_func_trackcut(struct exec *o, struct data **r) {
 	unsigned tic, len;
 	struct track t1, t2;
 	
+	EXEC_OBSOLETE(o);
+
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -292,6 +312,8 @@ user_func_trackblank(struct exec *o, struct data **r) {
 	long from, amount, quant;
 	unsigned tic, len;
 	
+	EXEC_OBSOLETE(o);
+
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -325,6 +347,8 @@ user_func_trackcopy(struct exec *o, struct data **r) {
 	long from, where, amount, quant;
 	unsigned tic, tic2, len;
 	
+	EXEC_OBSOLETE(o);
+
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -368,6 +392,8 @@ user_func_trackinsert(struct exec *o, struct data **r) {
 	unsigned tic, len;
 	struct track t1, t2;
 	
+	EXEC_OBSOLETE(o);
+
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -413,6 +439,8 @@ unsigned
 user_func_trackmerge(struct exec *o, struct data **r) {
 	struct songtrk *src, *dst;
 
+	EXEC_OBSOLETE(o);
+
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -432,6 +460,8 @@ user_func_trackquant(struct exec *o, struct data **r) {
 	unsigned start, len, offset;
 	long quant, rate;
 	
+	EXEC_OBSOLETE(o);
+
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -477,6 +507,8 @@ user_func_tracktransp(struct exec *o, struct data **r) {
 	unsigned tic, len;
 	struct evspec es;
 	
+	EXEC_OBSOLETE(o);
+
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -510,6 +542,8 @@ user_func_tracksetmute(struct exec *o, struct data **r) {
 	struct songtrk *t;
 	long flag;
 	
+	EXEC_OBSOLETE(o);
+
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -525,6 +559,8 @@ unsigned
 user_func_trackgetmute(struct exec *o, struct data **r) {
 	struct songtrk *t;
 	
+	EXEC_OBSOLETE(o);
+
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -543,6 +579,8 @@ user_func_trackchanlist(struct exec *o, struct data **r) {
 	char map[DEFAULT_MAXNCHANS];
 	unsigned i;
 	
+	EXEC_OBSOLETE(o);
+
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -575,6 +613,8 @@ user_func_trackinfo(struct exec *o, struct data **r) {
 	struct state *st;
 	long quant;
 	unsigned len, count, count_next, tpb, bpm;
+
+	EXEC_OBSOLETE(o);
 
 	if (!song_try(usong)) {
 		return 0;

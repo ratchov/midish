@@ -54,6 +54,8 @@ user_func_sysexlist(struct exec *o, struct data **r) {
 	struct data *d, *n;
 	struct songsx *i;
 
+	EXEC_OBSOLETE(o);
+
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -71,6 +73,8 @@ user_func_sysexnew(struct exec *o, struct data **r) {
 	char *name;
 	struct songsx *i;
 	
+	EXEC_OBSOLETE(o);
+
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -90,6 +94,8 @@ unsigned
 user_func_sysexdelete(struct exec *o, struct data **r) {
 	struct songsx *c;
 
+	EXEC_OBSOLETE(o);
+
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -105,6 +111,8 @@ user_func_sysexrename(struct exec *o, struct data **r) {
 	struct songsx *c;
 	char *name;
 	
+	EXEC_OBSOLETE(o);
+
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -126,6 +134,8 @@ user_func_sysexexists(struct exec *o, struct data **r) {
 	char *name;
 	struct songsx *i;
 
+	EXEC_OBSOLETE(o);
+
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -143,6 +153,8 @@ user_func_sysexinfo(struct exec *o, struct data **r) {
 	struct sysex *e;
 	unsigned i;
 	
+	EXEC_OBSOLETE(o);
+
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -183,6 +195,8 @@ user_func_sysexclear(struct exec *o, struct data **r) {
 	struct data *d;
 	unsigned match;
 	
+	EXEC_OBSOLETE(o);
+
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -220,6 +234,8 @@ user_func_sysexsetunit(struct exec *o, struct data **r) {
 	unsigned match;
 	long unit;
 	
+	EXEC_OBSOLETE(o);
+
 	if (!song_try(usong)) {
 		return 0;
 	}
@@ -254,6 +270,8 @@ user_func_sysexadd(struct exec *o, struct data **r) {
 	struct var *arg;
 	long unit;
 	
+	EXEC_OBSOLETE(o);
+
 	if (!song_try(usong)) {
 		return 0;
 	}
