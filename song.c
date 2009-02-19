@@ -310,7 +310,7 @@ song_filtdel(struct song *o, struct songfilt *f)
 	struct songtrk *t;
 
 	if (o->curfilt == f) {
-		o->curfilt = NULL;
+		song_setcurfilt(o, NULL);
 	}
 	SONG_FOREACH_TRK(o, t) {
 		if (t->curfilt == f) {

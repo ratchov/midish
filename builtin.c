@@ -2162,9 +2162,6 @@ blt_fdel(struct exec *o, struct data **r)
 		cons_errs(o->procname, "no current filt");
 		return 0;
 	}
-	if (!song_try_filt(usong, f)) {
-		return 0;
-	}
 	song_filtdel(usong, f);
 	return 1;
 }
@@ -2236,9 +2233,8 @@ blt_freset(struct exec *o, struct data **r)
 		cons_errs(o->procname, "no current filt");
 		return 0;
 	}
-	if (!song_try_filt(usong, f)) {
-		return 0;
-	}
+	if (mux_isopen)
+		norm_shut();
 	filt_reset(&f->filt);
 	return 1;
 }
@@ -2258,9 +2254,8 @@ blt_fmap(struct exec *o, struct data **r)
 	    !exec_lookupevspec(o, "to", &to, 0)) {
 		return 0;
 	}
-	if (!song_try_filt(usong, f)) {
-		return 0;
-	}
+	if (mux_isopen)
+		norm_shut();
 	filt_mapnew(&f->filt, &from, &to);
 	return 1;
 }
@@ -2280,9 +2275,8 @@ blt_funmap(struct exec *o, struct data **r)
 	    !exec_lookupevspec(o, "to", &to, 0)) {
 		return 0;
 	}
-	if (!song_try_filt(usong, f)) {
-		return 0;
-	}
+	if (mux_isopen)
+		norm_shut();
 	filt_mapdel(&f->filt, &from, &to);
 	return 1;
 }
@@ -2313,9 +2307,8 @@ blt_ftransp(struct exec *o, struct data **r)
 		cons_errs(o->procname, "set must contain full range notes");
 		return 0;
 	}
-	if (!song_try_filt(usong, f)) {
-		return 0;
-	}
+	if (mux_isopen)
+		norm_shut();
 	filt_transp(&f->filt, &es, plus);
 	return 1;
 }
@@ -2344,9 +2337,8 @@ blt_fvcurve(struct exec *o, struct data **r)
 		cons_errs(o->procname, "set must contain notes");
 		return 0;
 	}
-	if (!song_try_filt(usong, f)) {
-		return 0;
-	}
+	if (mux_isopen)
+		norm_shut();
 	filt_vcurve(&f->filt, &es, weight);
 	return 1;
 }
@@ -2370,9 +2362,8 @@ blt_fchgxxx(struct exec *o, struct data **r, int input, int swap)
 		cons_errs(o->procname, 
 		    "\"from\" and \"to\" event ranges must be disjoint");
 	}
-	if (!song_try_filt(usong, f)) {
-		return 0;
-	}
+	if (mux_isopen)
+		norm_shut();
 	if (input)
 		filt_chgin(&f->filt, &from, &to, swap);
 	else
