@@ -153,6 +153,10 @@ mux_mdep_wait(void)
 			}
 			mididev_inputcb(dev, midibuf, res);
 		}
+		if (revents & POLLHUP) {
+			dev->eof = 1;
+			mux_errorcb(dev->unit);
+		}
 	}
 
 	if (mux_isopen) {
