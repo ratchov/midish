@@ -207,16 +207,24 @@ song_trklookup(struct song *o, char *name)
 struct songchan *
 song_channew(struct song *o, char *name, unsigned dev, unsigned ch, int input)
 {
+	struct songfilt *f;
 	struct songchan *c;
 	struct name **list = input ? &o->inlist : &o->outlist;
 
 	c = (struct songchan *)mem_alloc(sizeof(struct songchan));
 	name_init(&c->name, name);
 	track_init(&c->conf);
+	c->link = NULL;
 	c->dev = dev;
 	c->ch = ch;
-
 	name_add(list, (struct name *)c);
+	if (!input) {
+		f = song_filtlookup(o, name);
+		if (f == NULL)
+			f = song_filtnew(o, name);
+		f->link = c;
+		c->link = f;
+	}
 	song_setcurchan(o, c, input);
 	return c;
 }
@@ -227,6 +235,7 @@ song_channew(struct song *o, char *name, unsigned dev, unsigned ch, int input)
 void
 song_chandel(struct song *o, struct songchan *c, int input)
 {
+	struct songfilt *f;
 	struct name **list = input ? &o->inlist : &o->outlist;
 	
 	if (input) {
@@ -239,6 +248,12 @@ song_chandel(struct song *o, struct songchan *c, int input)
 	name_remove(list, (struct name *)c);
 	track_done(&c->conf);
 	name_done(&c->name);
+	f = c->link;
+	if (f != NULL) {
+		f->link = NULL;
+		c->link = NULL;
+		song_filtdel(o, f);
+	}
 	mem_free(c);
 }
 
@@ -277,26 +292,12 @@ struct songfilt *
 song_filtnew(struct song *o, char *name)
 {
 	struct songfilt *f;
-	struct evspec src, dst;
-	struct songchan *i, *c;
 
 	f = (struct songfilt *)mem_alloc(sizeof(struct songfilt));
 	name_init(&f->name, name);
 	filt_init(&f->filt);
-
+	f->link = NULL;
 	name_add(&o->filtlist, (struct name *)f);
-	song_getcurchan(o, &c, 0);
-	if (c != NULL) {
-		evspec_reset(&src);
-		evspec_reset(&dst);
-		dst.dev_min = dst.dev_max = c->dev;
-		dst.ch_min = dst.ch_max = c->ch;
-		SONG_FOREACH_IN(o, i) {
-			src.dev_min = src.dev_max = i->dev;
-			src.ch_min = src.ch_max = i->ch;
-			filt_mapnew(&f->filt, &src, &dst);
-		}
-	}
 	song_setcurfilt(o, f);
 	return f;
 }
@@ -307,6 +308,7 @@ song_filtnew(struct song *o, char *name)
 void
 song_filtdel(struct song *o, struct songfilt *f)
 {
+	struct songchan *c;
 	struct songtrk *t;
 
 	if (o->curfilt == f) {
@@ -320,6 +322,12 @@ song_filtdel(struct song *o, struct songfilt *f)
 	name_remove(&o->filtlist, (struct name *)f);
 	filt_done(&f->filt);
 	name_done(&f->name);
+	c = f->link;
+	if (c != NULL) {
+		c->link = NULL;
+		f->link = NULL;
+		song_chandel(o, c, 0);
+	}
 	mem_free(f);
 }
 
@@ -410,7 +418,12 @@ song_getcurfilt(struct song *o, struct songfilt **r)
 void
 song_setcurfilt(struct song *o, struct songfilt *f)
 {
+	if (o->curfilt == f)
+		return;
+
 	o->curfilt = f;
+	if (f != NULL)
+		song_setcurchan(o, f->link, 0);
 	if (mux_isopen) {
 		norm_setfilt(f != NULL ? &f->filt : NULL);
 	}
@@ -425,10 +438,13 @@ song_getcurchan(struct song *o, struct songchan **r, int input)
 void
 song_setcurchan(struct song *o, struct songchan *c, int input)
 {
-	if (input)
-		o->curin = c;
-	else
-		o->curout = c;
+	struct songchan **pc = input ? &o->curin : &o->curout;
+
+	if (*pc == c)
+		return;
+	*pc = c;
+	if (c != NULL && !input)
+		song_setcurfilt(o, c->link);
 }
 
 void

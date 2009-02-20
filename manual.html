@@ -710,6 +710,15 @@ onew mybass {0 4}
 this defines a named channel ``mybass'' that can
 be used instead of the ``{0 4}'' pair.
 
+<p>
+Output channels expose a built-in filter with the same name that
+defines how input events are routed to the output channel.
+
+The filter comes with a default rule that routes all input channels to
+the given output channel.
+
+See filter section forfurther detaits.
+
 <h3><a name="section_4_1">4.1 Channel configuration</a></h3>
 
 A output channel represents one musical instrument; midish allows to
@@ -2272,6 +2281,10 @@ adjust note velocity.
 add <a href="#func_mend">mend</a> function to return the end of the
 song (ie the first unused measure).
 
+<li>
+added built-in filter to output channels, so there's no more need
+to create filter for every channel.
+
 </ul>
 
 <h2><a name="attributes">16 Project attributes</a></h2>
@@ -3201,6 +3214,9 @@ of the current channel.
 
 <dd>create an new channel named ``channelname''
 and assigned the given device and MIDI channel.
+
+Output channels contain a built-in filter having the same name; by
+defaut it maps all inputs to the newly created output channel.
 
 <dt><a name="func_oset">oset {dev midichan}</a>
 
@@ -4216,8 +4232,6 @@ record a track.
 send EOF character (control-D) to quit
 [0000:00]&gt; inew kbd {1 0}			# select default input channel
 [0000:00]&gt; onew drums {0 9}			# create drum channel
-[0000:00]&gt; fnew drums			# create filter for it
-[0000:00]&gt; fmap {any kbd} {any drums}	# map input -&gt; drums
 [0000:00]&gt; tnew dr1				# create track ``dr1''
 [0000:00]&gt; t 90				# tempo to 90 bpm
 [0000:00]&gt; r					# start recording
@@ -4232,13 +4246,16 @@ send EOF character (control-D) to quit
 </pre>
 
 first, we set the default input channel to ``{1 0}'' (default channel
-of the keyboard). Then, we define the ``drum'' channel on device 0,
-channel 9 and the corresponding filter that will route events from the
-keyboard to the drum channel.  Then we define a new track named
-``dr1'' an we start recording.  Then, we set the quantization step to
-16 (sixteenth note), we select the first 32 measures of the track and
-we quantize them. Finally, we start playback and we save the song into
-a file.
+of the keyboard).
+
+Then, we define the ``drum'' channel on device 0, channel 9, this
+creates a default filter that maps ``kbd'' to ``drums''.
+
+Then we define a new track named ``dr1'' an we start recording.
+
+Then, we set the quantization step to 16 (sixteenth note), we select
+the first 32 measures of the track and we quantize them. Finally, we
+start playback and we save the song into a file.
 
 <h2><a name="section_22">22 Thanks</a></h2>
 
@@ -4256,8 +4273,8 @@ Will Woodruff.
 <p>
 <hr>
 <small><i>
-Copyright (c) 2003-2008 Alexandre Ratchov<br>
-Last updated jul 17, 2008
+Copyright (c) 2003-2009 Alexandre Ratchov<br>
+Last updated feb 20, 2009
 </i></small>
 
 </body>

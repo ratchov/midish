@@ -1825,20 +1825,21 @@ unsigned
 blt_cnew(struct exec *o, struct data **r, int input)
 {
 	char *name;
-	struct songchan *i;
+	struct songchan *i, *c;
+	struct evspec src, dst;
 	unsigned dev, ch;
 
 	if (!exec_lookupname(o, "channame", &name) ||
 	    !exec_lookupchan_getnum(o, "channum", &dev, &ch, input)) {
 		return 0;
 	}
-	i = song_chanlookup(usong, name, input);
-	if (i != NULL) {
+	c = song_chanlookup(usong, name, input);
+	if (c != NULL) {
 		cons_errss(o->procname, name, "already exists");
 		return 0;
 	}
-	i = song_chanlookup_bynum(usong, dev, ch, input);
-	if (i != NULL) {
+	c = song_chanlookup_bynum(usong, dev, ch, input);
+	if (c != NULL) {
 		cons_errs(o->procname, "dev/chan number already in use");
 		return 0;
 	}
@@ -1849,7 +1850,18 @@ blt_cnew(struct exec *o, struct data **r, int input)
 	if (!song_try_curchan(usong, input)) {
 		return 0;
 	}
-	i = song_channew(usong, name, dev, ch, input);
+	c = song_channew(usong, name, dev, ch, input);
+	if (c->link) {
+		evspec_reset(&src);
+		evspec_reset(&dst);
+		dst.dev_min = dst.dev_max = c->dev;
+		dst.ch_min = dst.ch_max = c->ch;
+		SONG_FOREACH_IN(usong, i) {
+			src.dev_min = src.dev_max = i->dev;
+			src.ch_min = src.ch_max = i->ch;
+			filt_mapnew(&c->link->filt, &src, &dst);
+		}
+	}
 	return 1;
 }
 
