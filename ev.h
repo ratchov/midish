@@ -171,7 +171,7 @@ struct evctl {
 	unsigned defval;	/* default value if type == EVCTL_FRAME */
 };
 
-extern	struct evctl evctl_tab[128];
+extern	struct evctl evctl_tab[EV_MAXCOARSE + 1];
 
 #define EV_CTL_ISPARAM(ev) \
 	(evctl_tab[(ev)->ctl_num].defval == EV_UNDEF)

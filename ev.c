@@ -115,7 +115,7 @@ struct evinfo evinfo[EV_NUMCMD] =
 	}
 };
 
-struct evctl evctl_tab[128];
+struct evctl evctl_tab[EV_MAXCOARSE + 1];
 
 /*
  * return the 'name' of the given event
@@ -571,7 +571,7 @@ evctl_lookup(char *name, unsigned *ret)
 	unsigned i;
 	struct evctl *ctl;
 
-	for (i = 0; i < 128; i++) {
+	for (i = 0; i < EV_MAXCOARSE + 1; i++) {
 		ctl = &evctl_tab[i];
 		if (ctl->name != NULL && str_eq(ctl->name, name)) {
 			*ret = i;
@@ -589,7 +589,7 @@ evctl_init(void)
 {
 	unsigned i;
 
-	for (i = 0; i < 128; i++) {
+	for (i = 0; i < EV_MAXCOARSE + 1; i++) {
 		evctl_tab[i].name = NULL;
 		evctl_tab[i].defval = EV_UNDEF;
 	}
@@ -610,7 +610,7 @@ evctl_done(void)
 {
 	unsigned i;
 
-	for (i = 0; i < 128; i++) {
+	for (i = 0; i < EV_MAXCOARSE + 1; i++) {
 		if (evctl_tab[i].name != NULL) {
 			str_delete(evctl_tab[i].name);
 		}

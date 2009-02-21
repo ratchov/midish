@@ -29,9 +29,10 @@
  */
 
 #include <stdio.h>
+#include <unistd.h>
+
 #include "dbg.h"
 #include "str.h"
-
 #include "cons.h"
 #include "ev.h"
 #include "mux.h"
@@ -48,10 +49,27 @@
 int
 main(int argc, char **argv)
 {
+	int ch;
 	unsigned exitcode;
 
-	if (!user_getopts(&argc, &argv)) {
-		return 1;
+	while ((ch = getopt(argc, argv, "bv")) != -1) {
+		switch (ch) {
+		case 'b':
+			user_flag_batch = 1;
+			break;
+		case 'v':
+			user_flag_verb = 1;
+			break;
+		default:
+			goto err;
+		}
+	}
+	argc -= optind;
+	argv += optind;
+	if (argc >= 1) {
+	err:
+		fputs("usage: midish [-bv]\n", stderr);
+		return 0;
 	}
 
 	cons_init();

@@ -135,7 +135,7 @@ textout_new(char *filename)
 	if (filename != NULL) {
 		o->file = fopen(filename, "w");
 		if (o->file == NULL) {
-			cons_errs(filename, "filed to open output file");
+			cons_errs(filename, "failed to open output file");
 			mem_free(o);
 			return 0;
 		}

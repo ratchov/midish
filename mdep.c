@@ -301,33 +301,3 @@ exec_runrcfile(struct exec *o)
 	}
 	return 1;
 }
-
-extern char *optarg;
-extern int optind;
-
-unsigned
-user_getopts(int *pargc, char ***pargv)
-{
-	int ch;
-
-	while ((ch = getopt(*pargc, *pargv, "bhv")) != -1) {
-		switch (ch) {
-		case 'b':
-			user_flag_batch = 1;
-			break;
-		case 'v':
-			user_flag_verb = 1;
-			break;
-		default:
-			goto err;
-		}
-	}
-	*pargc -= optind;
-	*pargv += optind;
-	if (*pargc >= 1) {
-	err:
-		fputs("usage: midish [-bhv]\n", stderr);
-		return 0;
-	}
-	return 1;
-}

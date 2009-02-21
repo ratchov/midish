@@ -422,7 +422,7 @@ evctltab_output(struct evctl *tab, struct textout *f)
 	textout_putstr(f, "# name\tnumber\tdefval\n");
 	textout_indent(f);
 	textout_putstr(f, "#\n");
-	for (i = 0; i < 128; i++) {
+	for (i = 0; i < EV_MAXCOARSE + 1; i++) {
 		ctl = &tab[i];
 		if (ctl->name) {
 			textout_indent(f);
