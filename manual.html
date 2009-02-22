@@ -796,9 +796,9 @@ MIDI events:
 
 <tr>    <td>kat		<td>key after-touch (poly)
 
-<tr>    <td>ctl		<td>7bit controller
+<tr>    <td>ctl		<td>7-bit controller
 
-<tr>    <td>xctl	<td>14bit controller
+<tr>    <td>xctl	<td>14-bit controller
 
 <tr>    <td>xpc		<td>bank and program change
 
@@ -898,7 +898,7 @@ Examples:
 { ctl bass }            # match controllers on channel "bass"
 { ctl bass 7 }          # match controller 7 on channel "bass"
 { bend {} }             # match bender
-{ xctl {} 19 }          # match 14bit controller number 19
+{ xctl {} 19 }          # match 14-bit controller number 19
 { xpc  {} 21 1234 }     # match patch 21 on bank 1234
 { nrpn {} 21 }          # NRPN 21 change
 </pre>
@@ -2153,7 +2153,7 @@ resetting all notes/controllers. This allows midish to better share
 MIDI devices with other sequencers.
 
 <li>
-added support for 14bit controllers
+added support for 14-bit controllers
 
 <li>
 added support for RPN/NRPN MIDI events.
@@ -2166,7 +2166,7 @@ made controller interpretation in editing functions configurable:
 ctlconf, ctlconfx, ctlunconf, ctlinfo.
 
 <li>
-added per-device controller precision selection (7bit or 14bit):
+added per-device controller precision selection (7-bit or 14-bit):
 devixctl, devoxctl.
 
 <li>
@@ -2313,7 +2313,7 @@ The following table summarizes the device attributes:
 
 <td>clkrate
 
-<td>number of tick per while note, default is 96, which corresponds
+<td>number of ticks per whole note, default is 96, which corresponds
 to the MIDI standard
 
 <tr>
@@ -2330,14 +2330,14 @@ boolean; if it is set, the real-time MIDI clock events
 
 <td>
 list of continuous controllers that are expected to be
-received with 14bit precision.
+received with 14-bit precision.
 
 <tr>
 
 <td>oxctlset
 
 <td>list of continuous controllers that will be transmitted
-with 14bit precision
+with 14-bit precision
 
 </table>
 
@@ -3816,7 +3816,7 @@ Print some information about the MIDI device.
 
 <dd>
 Setup the list of controllers that are expected to
-be received as 14bit numbers (ie both coarse and fine
+be received as 14-bit numbers (ie both coarse and fine
 MIDI controller messages will be expected). By default
 only coarse values are used, if unsure
 let this list empty.
@@ -3825,7 +3825,7 @@ let this list empty.
 
 <dd>
 Setup the list of controllers that will be transmitted
-as 14bit numbers (both coarse and fine MIDI controller messages).
+as 14-bit numbers (both coarse and fine MIDI controller messages).
 
 </dl>
 
@@ -3847,7 +3847,7 @@ See sec. <a href="#ctl_frames">Controller frames</a>.
 
 <dd>
 Same as <a href="#func_ctlconfx">ctlconf</a> function,
-but for 14bit controllers. Thus defval is in the
+but for 14-bit controllers. Thus defval is in the
 range 0..16383.
 
 <dt><a name="func_ctlunconf">ctlconf ctlname</a>
