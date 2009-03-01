@@ -42,6 +42,7 @@
 #include "textio.h"
 #include "mux.h"
 #include "mididev.h"
+#include "norm.h"
 #include "builtin.h"
 
 unsigned
