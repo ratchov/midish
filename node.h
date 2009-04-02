@@ -55,7 +55,7 @@ unsigned     node_exec(struct node *, struct exec *, struct data **);
 
 
 extern struct node_vmt
-	node_vmt_proc, node_vmt_alist, node_vmt_slist,
+	node_vmt_proc, node_vmt_slist,
 	node_vmt_call, node_vmt_elist, node_vmt_builtin,
 	node_vmt_cst, node_vmt_var, node_vmt_list, node_vmt_range,
 	node_vmt_eq, node_vmt_neq, node_vmt_le,

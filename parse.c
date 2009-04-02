@@ -856,29 +856,10 @@ parse_slist(struct parse *o, struct node **n)
 }
 
 unsigned
-parse_alist(struct parse *o, struct node **n)
-{
-	*n = node_new(&node_vmt_alist, NULL);
-	n = &(*n)->list;
-	for(;;) {
-		if (!parse_getsym(o)) {
-			return 0;
-		}
-		if (o->lex.id != TOK_IDENT) {
-			parse_ungetsym(o);
-			break;
-		}
-		*n = node_new(&node_vmt_cst, data_newref(o->lex.strval));
-		n = &(*n)->next;
-	}
-	return 1;
-}
-
-unsigned
 parse_proc(struct parse *o, struct node **n)
 {
+	struct data *args;
 
-	struct node **a;
 	if (!parse_getsym(o)) {
 		return 0;
 	}
@@ -893,16 +874,15 @@ parse_proc(struct parse *o, struct node **n)
 		parse_recover(o, "proc name expected");
 		return 0;
 	}
-	*n = node_new(&node_vmt_proc, data_newref(o->lex.strval));
-	(*n)->list = node_new(&node_vmt_alist, NULL);
-	a = &(*n)->list->list;
+	args = data_newlist(NULL);
+	data_listadd(args, data_newstring(o->lex.strval));
+	*n = node_new(&node_vmt_proc, args);
 	for(;;) {
 		if (!parse_getsym(o)) {
 			return 0;
 		}
 		if (o->lex.id == TOK_IDENT) {
-			*a = node_new(&node_vmt_cst, data_newref(o->lex.strval));
-			a = &(*a)->next;
+			data_listadd(args, data_newstring(o->lex.strval));
 		} else if (o->lex.id == TOK_LBRACE) {
 			parse_ungetsym(o);
 			break;
@@ -912,7 +892,7 @@ parse_proc(struct parse *o, struct node **n)
 			return 0;
 		}
 	}
-	if (!parse_slist(o, &(*n)->list->next)) {
+	if (!parse_slist(o, &(*n)->list)) {
 		return 0;
 	}
 	if (!parse_endl(o, NULL)) {

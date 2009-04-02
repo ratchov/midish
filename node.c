@@ -196,37 +196,30 @@ unsigned
 node_exec_proc(struct node *o, struct exec *x, struct data **r)
 {
 	struct proc *p;
-	struct node *a;
+	struct data *a;
 	struct name *args;
 
 	args = NULL;
-	for (a = o->list->list; a != NULL; a = a->next) {
-		if (name_lookup(&args, a->data->val.ref)) {
+	for (a = o->data->val.list->next; a != NULL; a = a->next) {
+		if (name_lookup(&args, a->val.ref)) {
 			cons_err("duplicate arguments in proc definition");
 			name_empty(&args);
 			return RESULT_ERR;
 		}
-		name_add(&args, name_new(a->data->val.ref));
+		name_add(&args, name_new(a->val.ref));
 	}
-	p = exec_proclookup(x, o->data->val.ref);
+	p = exec_proclookup(x, o->data->val.list->val.ref);
 	if (p != NULL) {
 		name_empty(&p->args);
 		node_delete(p->code);
 	} else {
-		p = proc_new(o->data->val.ref);
+		p = proc_new(o->data->val.list->val.ref);
 		name_insert((struct name **)&x->procs, (struct name *)p);
 	}
 	p->args = args;
-	p->code = o->list->next;
-	o->list->next = NULL;
+	p->code = o->list;
+	o->list = NULL;
 	return RESULT_OK;
-}
-
-unsigned
-node_exec_alist(struct node *o, struct exec *x, struct data **r)
-{
-	dbg_puts("node_exec_alist should not be executed\n");
-	return RESULT_ERR;
 }
 
 /*
@@ -656,7 +649,6 @@ node_exec_bitnot(struct node *o, struct exec *x, struct data **r)
 
 struct node_vmt
 node_vmt_proc = { "proc", node_exec_proc },
-node_vmt_alist = { "alist", node_exec_alist },
 node_vmt_slist = { "slist", node_exec_slist },
 node_vmt_cst = { "cst", node_exec_cst },
 node_vmt_var = { "var", node_exec_var },
