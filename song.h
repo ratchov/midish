@@ -156,6 +156,8 @@ void song_done(struct song *);
 struct songtrk *song_trknew(struct song *, char *);
 struct songtrk *song_trklookup(struct song *, char *);
 void song_trkdel(struct song *, struct songtrk *);
+void song_trkmute(struct song *, struct songtrk *);
+void song_trkunmute(struct song *, struct songtrk *);
 
 struct songchan *song_channew(struct song *, char *, unsigned, unsigned, int);
 struct songchan *song_chanlookup(struct song *, char *, int);

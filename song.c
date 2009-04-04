@@ -660,7 +660,6 @@ song_ticplay(struct song *o)
 {
 	struct songtrk *i;
 	struct state *st;
-	struct ev ev;
 	unsigned id;
 
 	cons_putpos(o->measure, o->beat, o->tic);
@@ -672,24 +671,10 @@ song_ticplay(struct song *o)
 	SONG_FOREACH_TRK(o, i) {
 		id = i->trackptr->statelist.serial;
 		while ((st = seqptr_evget(i->trackptr))) {
-			ev = st->ev;
-			if (EV_ISVOICE(&ev)) {
-				if (st->phase & EV_PHASE_FIRST)
-					st->tag = 1;
-				if (!i->mute) {
-					if (st->tag) {
-						mixout_putev(&ev, id);
-					} else if (song_debug) {
-						dbg_puts("song_ticplay: ");
-						ev_dbg(&ev);
-						dbg_puts(": no tag\n");
-					}
-				}
-			} else {
-				dbg_puts("song_ticplay: event not implemented : ");
-				dbg_putx(ev.cmd);
-				dbg_puts("\n");
-			}
+			if (st->phase & EV_PHASE_FIRST)
+				st->tag = i->mute ? 0 : 1;
+			if (st->tag)
+				mixout_putev(&st->ev, id);
 		}
 	}
 }
@@ -705,7 +690,7 @@ song_confrestore(struct statelist *slist)
 	struct ev re;
 
 	for (s = slist->first; s != NULL; s = s->next) {
-		if (!EV_ISNOTE(&s->ev)) {
+		if (!s->tag && !EV_ISNOTE(&s->ev)) {
 			if (state_restore(s, &re)) {
 				if (song_debug) {
 					dbg_puts("song_strestore: ");
@@ -723,7 +708,6 @@ song_confrestore(struct statelist *slist)
 				ev_dbg(&s->ev);
 				dbg_puts(": not restored (not tagged)\n");
 			}
-			s->tag = 0;
 		}
 	}
 }
@@ -759,6 +743,28 @@ song_confcancel(struct statelist *slist)
 			}
 		}
 	}
+}
+
+/*
+ * mute the given track by canceling all states
+ */
+void
+song_trkmute(struct song *s, struct songtrk *t)
+{
+	if (s->mode & SONG_PLAY)
+		song_confcancel(&t->trackptr->statelist);
+	t->mute = 1;
+}
+
+/*
+ * unmute the given track by restoring all states
+ */
+void
+song_trkunmute(struct song *s, struct songtrk *t)
+{
+	if (s->mode & SONG_PLAY)
+		song_confrestore(&t->trackptr->statelist);
+	t->mute = 0;
 }
 
 

@@ -494,30 +494,27 @@ blt_getf(struct exec *o, struct data **r)
 }
 
 unsigned
-blt_mutexxx(struct exec *o, struct data **r, int flag)
+blt_mute(struct exec *o, struct data **r)
 {
 	struct songtrk *t;
 
 	if (!exec_lookuptrack(o, "trackname", &t)) {
 		return 0;
 	}
-	if (!song_try_trk(usong, t)) {
-		return 0;
-	}
-	t->mute = flag;
+	song_trkmute(usong, t);
 	return 1;
-}
-
-unsigned
-blt_mute(struct exec *o, struct data **r)
-{
-	return blt_mutexxx(o, r, 1);
 }
 
 unsigned
 blt_unmute(struct exec *o, struct data **r)
 {
-	return blt_mutexxx(o, r, 0);
+	struct songtrk *t;
+
+	if (!exec_lookuptrack(o, "trackname", &t)) {
+		return 0;
+	}
+	song_trkunmute(usong, t);
+	return 1;
 }
 
 unsigned

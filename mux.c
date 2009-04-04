@@ -330,14 +330,16 @@ mux_putev(struct ev *ev)
 #endif
 
 	if (!EV_ISVOICE(ev)) {
-		dbg_puts("mux_putev: only voice events allowed\n");
+		dbg_puts("mux_putev: ");
+		ev_dbg(ev);
+		dbg_puts(": only voice events allowed\n");
 		dbg_panic();
 	}
 	unit = ev->dev;
 	if (unit >= DEFAULT_MAXNDEVS) {
-		dbg_puts("mux_putev: bogus unit number: ");
+		dbg_puts("mux_putev: ");
 		ev_dbg(ev);
-		dbg_puts("\n");
+		dbg_puts(": bogus unit number\n");
 		dbg_panic();
 	}
 	dev = mididev_byunit[unit];
