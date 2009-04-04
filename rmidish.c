@@ -278,7 +278,7 @@ char *builtins[] = {
 	 * generated with:
 	 * 	grep newbuiltin user.c | \
 	 * 	grep -v user_func | \
-	 *	sed -e 's/^.*exec, /    /' -e 's/,.*$/,/' |\
+	 *	sed -e 's/^.*exec, /	/' -e 's/,.*$/,/' |\
 	 *	fmt
 	 */
         "print", "err", "h", "exec", "debug", "panic", "getunit",
@@ -397,6 +397,7 @@ main(int argc, char *argv[])
 				exit(1);
 			}
 			asyncline();
+			rl_redisplay();
 		}
 	}
 	rl_callback_handler_remove();
