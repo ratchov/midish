@@ -37,32 +37,6 @@ proc copy offset {
 }
 
 #
-# cut a piece of the song
-#
-proc gcut amount {
-	let track = [gett];
-	for i in [tlist] {
-		ct $i 
-		sel $amount
-		tcut
-	}
-	ct $track
-}
-
-#
-# insert measures in the song
-#
-proc gins amount {
-	let track = [gett];
-	for i in [tlist] {
-		ct $i
-		tins $amount
-	}
-	ct $track
-	sel $amount
-}
-
-#
 # copy a piece of the song 'where' measures forward
 #
 proc gcopy where {

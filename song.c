@@ -153,6 +153,7 @@ song_done(struct song *o)
 		song_sxdel(o, (struct songsx *)o->sxlist);
 	}
 	track_done(&o->meta);
+	track_done(&o->clip);
 	track_done(&o->rec);
 	metro_done(&o->metro);
 }
