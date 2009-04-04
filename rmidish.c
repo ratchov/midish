@@ -215,7 +215,7 @@ midish_gets(struct midish *p, char *str, size_t maxsize)
 
 struct midish midish;
 char linebuf[LINELENGTH];
-char prompt[PROMPTLENGTH];
+char prompt[PROMPTLENGTH] = "[----:--]>";
 int quit = 0;
 
 /*
@@ -223,14 +223,13 @@ int quit = 0;
  * and if so update the prompt
  */
 void
-asyncline(char *str)
+asyncline(void)
 {
 	unsigned m, b, t;
 
 	if (sscanf(linebuf, "+pos %u %u %u", &m, &b, &t) == 3) {
 		snprintf(prompt, PROMPTLENGTH, "[%04u:%02u]> ", m, b);
 		rl_set_prompt(prompt);
-		rl_redisplay();
 	}
 }
 
@@ -250,7 +249,7 @@ waitready(void)
 		}
 		if (strcmp(linebuf, "+ready\n") == 0)
 			return;
-		asyncline(linebuf);
+		asyncline();
 	}
 }
 
@@ -372,9 +371,9 @@ main(int argc, char *argv[])
 	pfds[1].fd = midish.sout;
 	pfds[1].events = POLLIN;
 
-	rl_attempted_completion_function = complete;
-	rl_callback_handler_install("[----:--]> ", userline);
 	waitready();
+	rl_attempted_completion_function = complete;
+	rl_callback_handler_install(prompt, userline);
 	while (!quit) {
 		n = poll(pfds, 2, -1);
 		if (pfds[0].revents & POLLIN) {
@@ -391,7 +390,7 @@ main(int argc, char *argv[])
 			if (!midish_gets(&midish, linebuf, LINELENGTH)) {
 				exit(1);
 			}
-			asyncline(linebuf);
+			asyncline();
 		}
 	}
 	rl_callback_handler_remove();
