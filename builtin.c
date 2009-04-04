@@ -911,6 +911,7 @@ blt_mins(struct exec *o, struct data **r)
 	struct data *sig;
 	unsigned tic, len, bpm, tpb;
 	unsigned long usec24;
+	struct songtrk *t;
 	struct seqptr *sp;
 	struct track t1, t2, tn;
 	struct ev ev;
@@ -970,24 +971,26 @@ blt_mins(struct exec *o, struct data **r)
 	track_done(&t1);
 	track_done(&t2);
 	track_done(&tn);
+
+	SONG_FOREACH_TRK(usong, t) {
+		song_trkins(usong, t, usong->curpos, amount);
+	}
+	usong->curlen += amount;
 	return 1;
 }
 
 unsigned
 blt_mcut(struct exec *o, struct data **r)
 {
-	long amount;
 	unsigned tic, len;
 	struct track t1, t2;
+	struct songtrk *t;
 
-	if (!exec_lookuplong(o, "amount", &amount)) {
-		return 0;
-	}
 	if (!song_try(usong)) {
 		return 0;
 	}
 	tic = track_findmeasure(&usong->meta, usong->curpos);
-	len = track_findmeasure(&usong->meta, usong->curpos + amount) - tic;
+	len = track_findmeasure(&usong->meta, usong->curpos + usong->curlen) - tic;
 
 	track_init(&t1);
 	track_init(&t2);
@@ -1001,6 +1004,11 @@ blt_mcut(struct exec *o, struct data **r)
 	}
 	track_done(&t1);
 	track_done(&t2);
+
+	SONG_FOREACH_TRK(usong, t) {
+		song_trkcut(usong, t, usong->curpos, usong->curlen);
+	}
+	usong->curlen = 0;
 	return 1;
 }
 
@@ -1404,8 +1412,6 @@ unsigned
 blt_tcut(struct exec *o, struct data **r)
 {
 	struct songtrk *t;
-	unsigned qstep, stic, etic;
-	struct track t1, t2;
 
 	song_getcurtrk(usong, &t);
 	if (t == NULL) {
@@ -1415,27 +1421,7 @@ blt_tcut(struct exec *o, struct data **r)
 	if (!song_try_trk(usong, t)) {
 		return 0;
 	}
-	stic = track_findmeasure(&usong->meta, usong->curpos);
-	etic = track_findmeasure(&usong->meta, usong->curpos + usong->curlen);
-	qstep = usong->curquant / 2;
-	if (stic > qstep) {
-		stic -= qstep;
-	}	
-	if (etic > qstep) {
-		etic -= qstep;
-	}	
-	track_init(&t1);
-	track_init(&t2);
-	track_move(&t->track, 0,   stic, NULL, &t1, 1, 1);
-	track_move(&t->track, etic, ~0U, NULL, &t2, 1, 1);
-	track_shift(&t2, stic);
-	track_clear(&t->track);
-	track_merge(&t->track, &t1);
-	if (!track_isempty(&t2)) {
-		track_merge(&t->track, &t2);
-	}
-	track_done(&t1);
-	track_done(&t2);
+	song_trkcut(usong, t, usong->curpos, usong->curlen);
 	usong->curlen = 0;
 	return 1;
 }
@@ -1445,8 +1431,6 @@ blt_tins(struct exec *o, struct data **r)
 {
 	struct songtrk *t;
 	long amount;
-	unsigned stic, etic, qstep;
-	struct track t1, t2;
 
 	song_getcurtrk(usong, &t);
 	if (t == NULL) {
@@ -1459,27 +1443,7 @@ blt_tins(struct exec *o, struct data **r)
 	if (!song_try_trk(usong, t)) {
 		return 0;
 	}
-	stic = track_findmeasure(&usong->meta, usong->curpos);
-	etic = track_findmeasure(&usong->meta, usong->curpos + amount);
-	qstep = usong->curquant / 2;
-	if (stic > qstep) {
-		stic -= qstep;
-	}	
-	if (etic > qstep) {
-		etic -= qstep;
-	}	
-	track_init(&t1);
-	track_init(&t2);
-	track_move(&t->track, 0 ,  stic, NULL, &t1, 1, 1);
-	track_move(&t->track, stic, ~0U, NULL, &t2, 1, 1);
-	track_shift(&t2, etic);
-	track_clear(&t->track);
-	track_merge(&t->track, &t1);
-	if (!track_isempty(&t2)) {
-		track_merge(&t->track, &t2);
-	}
-	track_done(&t1);
-	track_done(&t2);
+	song_trkins(usong, t, usong->curpos, amount);
 	usong->curlen += amount;
 	return 1;
 }

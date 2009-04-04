@@ -1330,7 +1330,8 @@ To suppress measure number 2 (the first 4/4 measure)
 
 <pre>
 g 2			# go to measure 2
-mcut 1			# remove 1 measure starting a measure 2
+sel 1			# select 1 measure
+mcut			# remove it
 m on			# switch the metronome on
 p			# test it
 s			#
@@ -1520,7 +1521,8 @@ measure number 5:
 
 <pre>
 g 5			# move to measure 5
-tcut 2			# cut 2 measures
+sel 2			# select 2 measures
+tcut 2			# cut them
 </pre>
 
 this command removes 2 measures of ``time'' from the current track;
@@ -3046,11 +3048,10 @@ check the current track for orphaned notes,
 nested notes and other anomalies; also
 removes multiple controllers in the same tick
 
-<dt><a name="func_tcut">tcut amount</a>
+<dt><a name="func_tcut">tcut</a>
 
 <dd>
-cut ``amount'' measures from the current track
-at the current position.
+cut the current selection of the current track.
 
 <dt><a name="func_tclr">tclr</a>
 
@@ -3661,16 +3662,12 @@ The time signature used is num/denom.
 If the time signature is an empty list (ie ``{}'')
 then the time signature at the current position
 is used.
-This function only affects the time structure
-of the song, it does not affect any track
 
-<dt><a name="func_mcut">mcut amount</a>
+<dt><a name="func_mcut">mcut</a>
 
 <dd>
-delete ``amount'' measures starting at
-the current song position.
-This function only affects the time structure
-of the song, it does not affect any track
+cut the current selection of all tracks, including the
+time structure.
 
 <dt><a name="func_minfo">minfo</a>
 
@@ -4274,7 +4271,7 @@ Will Woodruff.
 <hr>
 <small><i>
 Copyright (c) 2003-2009 Alexandre Ratchov<br>
-Last updated feb 20, 2009
+Last updated apr 4, 2009
 </i></small>
 
 </body>

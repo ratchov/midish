@@ -932,8 +932,7 @@ user_mainloop(void)
 	exec_newbuiltin(exec, "mins", blt_mins,
 			name_newarg("amount",
 			name_newarg("sig", NULL)));
-	exec_newbuiltin(exec, "mcut", blt_mcut,
-			name_newarg("amount", NULL));
+	exec_newbuiltin(exec, "mcut", blt_mcut, NULL);
 	exec_newbuiltin(exec, "minfo", blt_minfo, NULL);
 	exec_newbuiltin(exec, "mtempo", blt_mtempo, NULL);
 	exec_newbuiltin(exec, "msig", blt_msig, NULL);
