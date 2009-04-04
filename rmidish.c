@@ -274,14 +274,21 @@ userline(char *rl)
 }
 
 char *builtins[] = {
-        "print", "err", "exec", "debug", "panic", "info", "getunit",
+	/*
+	 * generated with:
+	 * 	grep newbuiltin user.c | \
+	 * 	grep -v user_func | \
+	 *	sed -e 's/^.*exec, /    /' -e 's/,.*$/,/' |\
+	 *	fmt
+	 */
+        "print", "err", "h", "exec", "debug", "panic", "getunit",
         "setunit", "getfac", "fac", "getpos", "g", "getlen", "sel",
         "getq", "setq", "ev", "gett", "ct", "getf", "cf", "getx",
         "cx", "geti", "ci", "geto", "co", "mute", "unmute", "getmute",
         "ls", "save", "load", "reset", "export", "import", "i",
         "p", "r", "s", "t", "mins", "mcut", "minfo", "mtempo",
-        "msig", "mend", "ctlconf", "ctlconfx", "ctlunconf", "ctlinfo", "m",
-        "metrocf", "tlist", "tnew", "tdel", "tren", "texists",
+        "msig", "mend", "ctlconf", "ctlconfx", "ctlunconf", "ctlinfo",
+        "m", "metrocf", "tlist", "tnew", "tdel", "tren", "texists",
         "taddev", "tsetf", "tgetf", "tcheck", "tcut", "tclr",
         "tpaste", "tcopy", "tins", "tmerge", "tquant", "ttransp",
         "tclist", "tinfo", "ilist", "iexists", "iset", "inew",
@@ -289,11 +296,10 @@ char *builtins[] = {
         "olist", "oexists", "oset", "onew", "odel", "oren", "oinfo",
         "ogetc", "ogetd", "oaddev", "ormev", "flist", "fexists",
         "fnew", "fdel", "fren", "finfo", "freset", "fmap", "funmap",
-	"ftransp", "fvcurve",
-        "fchgin", "fchgout", "fswapin", "fswapout", "xlist",
-        "xexists", "xnew", "xdel", "xren", "xinfo", "xrm", "xsetd",
-        "xadd", "shut", "proclist", "builtinlist", "dnew", "ddel",
-        "dclktx", "dclkrx", "dclkrate", "dinfo", "dixctl", "doxctl",
+        "ftransp", "fvcurve", "fchgin", "fchgout", "fswapin",
+        "fswapout", "xlist", "xexists", "xnew", "xdel", "xren",
+        "xinfo", "xrm", "xsetd", "xadd", "dnew", "ddel", "dclktx",
+        "dclkrx", "dclkrate", "dinfo", "dixctl", "doxctl",
 	NULL
 };
 
