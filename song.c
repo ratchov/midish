@@ -1181,7 +1181,6 @@ void
 song_trkins(struct song *s, struct songtrk *t, unsigned pos, unsigned amount)
 {
 	unsigned stic, etic, qstep;
-	struct track t1, t2;
 
 	stic = track_findmeasure(&s->meta, pos);
 	etic = track_findmeasure(&s->meta, pos + amount);
@@ -1191,19 +1190,8 @@ song_trkins(struct song *s, struct songtrk *t, unsigned pos, unsigned amount)
 	}	
 	if (etic > qstep) {
 		etic -= qstep;
-	}	
-	track_init(&t1);
-	track_init(&t2);
-	track_move(&t->track, 0 ,  stic, NULL, &t1, 1, 1);
-	track_move(&t->track, stic, ~0U, NULL, &t2, 1, 1);
-	track_shift(&t2, etic);
-	track_clear(&t->track);
-	track_merge(&t->track, &t1);
-	if (!track_isempty(&t2)) {
-		track_merge(&t->track, &t2);
 	}
-	track_done(&t1);
-	track_done(&t2);
+	track_ins(&t->track, stic, etic - stic);
 }
 
 /*
@@ -1213,7 +1201,6 @@ void
 song_trkcut(struct song *s, struct songtrk *t, unsigned pos, unsigned amount)
 {
 	unsigned qstep, stic, etic;
-	struct track t1, t2;
 
 	stic = track_findmeasure(&s->meta, pos);
 	etic = track_findmeasure(&s->meta, pos + amount);
@@ -1223,17 +1210,7 @@ song_trkcut(struct song *s, struct songtrk *t, unsigned pos, unsigned amount)
 	}	
 	if (etic > qstep) {
 		etic -= qstep;
-	}	
-	track_init(&t1);
-	track_init(&t2);
-	track_move(&t->track, 0,   stic, NULL, &t1, 1, 1);
-	track_move(&t->track, etic, ~0U, NULL, &t2, 1, 1);
-	track_shift(&t2, stic);
-	track_clear(&t->track);
-	track_merge(&t->track, &t1);
-	if (!track_isempty(&t2)) {
-		track_merge(&t->track, &t2);
 	}
-	track_done(&t1);
-	track_done(&t2);
+	track_cut(&t->track, stic, etic - stic);
 }
+

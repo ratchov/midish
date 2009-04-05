@@ -533,6 +533,8 @@ seqptr_rmprev(struct seqptr *sp, struct state *st)
 void
 seqptr_evmerge1(struct seqptr *pd, struct state *s1, struct state *s2)
 {
+	struct state *sd;
+
 	/*
 	 * ignore bogus events
 	 */
@@ -552,7 +554,9 @@ seqptr_evmerge1(struct seqptr *pd, struct state *s1, struct state *s2)
 #endif
 	}
 	if (s1->tag) {
-		(void)seqptr_evput(pd, &s1->ev);
+		sd = statelist_lookup(&pd->statelist, &s1->ev);
+		if (!sd || !state_eq(sd, &s1->ev))
+			(void)seqptr_evput(pd, &s1->ev);
 	}
 }
 
@@ -774,8 +778,7 @@ track_move(struct track *src, unsigned start, unsigned len,
 		for (st = slist.first; st != NULL; st = st->next) {
 			if (!state_inspec(st, es))
 				continue;
-			if (!(st->tag & TAG_COPY) &&
-			    seqptr_restore(dp, st)) {
+			if (!(st->tag & TAG_COPY) && seqptr_restore(dp, st)) {
 				st->tag |= TAG_COPY;
 			}
 		}
@@ -1467,5 +1470,49 @@ track_unconfev(struct track *src, struct evspec *es)
 	}
 	statelist_done(&slist);
 	seqptr_del(sp);
+}
+
+/*
+ * insert the given amount of blank space at the given position
+ */
+void
+track_ins(struct track *t, unsigned stic, unsigned len)
+{
+	struct track t1, t2;
+
+	track_init(&t1);
+	track_init(&t2);
+	track_move(t, 0 ,  stic, NULL, &t1, 1, 1);
+	track_move(t, stic, ~0U, NULL, &t2, 1, 1);
+	track_shift(&t2, stic + len);
+	track_clear(t);
+	track_merge(t, &t1);
+	if (!track_isempty(&t2)) {
+		track_merge(t, &t2);
+	}
+	track_done(&t1);
+	track_done(&t2);
+}
+
+/*
+ * cut the given portion of the track
+ */
+void
+track_cut(struct track *t, unsigned stic, unsigned len)
+{
+	struct track t1, t2;
+
+	track_init(&t1);
+	track_init(&t2);
+	track_move(t, 0,	 stic, NULL, &t1, 1, 1);
+	track_move(t, stic + len, ~0U, NULL, &t2, 1, 1);
+	track_shift(&t2, stic);
+	track_clear(t);
+	track_merge(t, &t1);
+	if (!track_isempty(&t2)) {
+		track_merge(t, &t2);
+	}
+	track_done(&t1);
+	track_done(&t2);
 }
 

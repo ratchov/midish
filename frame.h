@@ -76,5 +76,7 @@ void     track_transpose(struct track *,
 void	 track_check(struct track *);
 void     track_confev(struct track *, struct ev *);
 void	 track_unconfev(struct track *, struct evspec *);
+void	 track_ins(struct track *, unsigned, unsigned);
+void	 track_cut(struct track *, unsigned, unsigned);
 
 #endif /* MIDISH_FRAME_H */

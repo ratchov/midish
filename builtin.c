@@ -909,22 +909,21 @@ blt_mins(struct exec *o, struct data **r)
 {
 	long amount;
 	struct data *sig;
-	unsigned tic, len, bpm, tpb;
+	unsigned tic, len, bpm, tpb, obpm, otpb;
 	unsigned long usec24;
 	struct songtrk *t;
 	struct seqptr *sp;
-	struct track t1, t2, tn;
+	struct track tn;
 	struct ev ev;
-
-	/* XXX: get a {num denom} syntax */
 
 	if (!exec_lookuplong(o, "amount", &amount) ||
 	    !exec_lookuplist(o, "sig", &sig)) {
 		return 0;
 	}
-	track_timeinfo(&usong->meta, usong->curpos, &tic, &usec24, &bpm, &tpb);
+	track_timeinfo(&usong->meta, usong->curpos, &tic, &usec24, &obpm, &otpb);
 	if (sig == NULL) {
-		/* nothing */
+		bpm = obpm;
+		tpb = otpb;
 	} else if (sig->type == DATA_LONG && sig->next != NULL &&
 	    sig->next->type == DATA_LONG && sig->next->next == NULL) {
 		bpm = sig->val.num;
@@ -949,27 +948,29 @@ blt_mins(struct exec *o, struct data **r)
 	track_init(&tn);
 	sp = seqptr_new(&tn);
 	seqptr_ticput(sp, tic);
-	ev.cmd = EV_TIMESIG;
-	ev.timesig_beats = bpm;
-	ev.timesig_tics = tpb;
-	seqptr_evput(sp, &ev);
-	ev.cmd = EV_TEMPO;
-	ev.tempo_usec24 = usec24;
-	seqptr_evput(sp, &ev);
+	if (bpm != obpm || tpb != otpb || tic == 0) {
+		ev.cmd = EV_TIMESIG;
+		ev.timesig_beats = bpm;
+		ev.timesig_tics = tpb;
+		seqptr_evput(sp, &ev);
+	}
+	if (tic == 0) {
+		/* dont remove initial tempo */
+		ev.cmd = EV_TEMPO;
+		ev.tempo_usec24 = usec24;
+		seqptr_evput(sp, &ev);
+	}
 	seqptr_ticput(sp, len);
+	if (bpm != obpm || tpb != otpb) {
+		ev.cmd = EV_TIMESIG;
+		ev.timesig_beats = obpm;
+		ev.timesig_tics = otpb;
+		seqptr_evput(sp, &ev);
+	}
 	seqptr_del(sp);
 
-	track_init(&t1);
-	track_init(&t2);
-	track_move(&usong->meta, 0,   tic, NULL, &t1, 1, 1);
-	track_move(&usong->meta, tic, ~0U, NULL, &t2, 1, 1);
-	track_shift(&t2, tic + len);
-	track_clear(&usong->meta);
-	track_merge(&usong->meta, &t1);
+	track_ins(&usong->meta, tic, len);
 	track_merge(&usong->meta, &tn);
-	track_merge(&usong->meta, &t2);
-	track_done(&t1);
-	track_done(&t2);
 	track_done(&tn);
 
 	SONG_FOREACH_TRK(usong, t) {
