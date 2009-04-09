@@ -988,6 +988,98 @@ blt_mins(struct exec *o, struct data **r)
 }
 
 unsigned
+blt_mdup(struct exec *o, struct data **r)
+{
+	long where;
+	unsigned stic, etic, wtic, qstep;
+	unsigned sbpm, stpb, wbpm, wtpb;
+	unsigned long usec24;
+	struct songtrk *t;
+	struct seqptr *sp;
+	struct track paste, copy;
+	struct ev ev;
+
+	if (!exec_lookuplong(o, "where", &where)) {
+		return 0;
+	}
+	if (where >= 0)
+		where = usong->curpos + usong->curlen + where;
+	else {
+		where = usong->curpos - where;
+		if (where < 0)
+			where = 0;
+	}
+	if (!song_try_meta(usong)) {
+		return 0;
+	}
+
+	track_timeinfo(&usong->meta, usong->curpos, 
+	    &stic, NULL, &sbpm, &stpb);
+	track_timeinfo(&usong->meta, usong->curpos + usong->curlen,
+	    &etic, NULL, NULL, NULL);
+	track_timeinfo(&usong->meta, where,
+	    &wtic, &usec24, &wbpm, &wtpb);
+
+	/*
+	 * backup and restore time signature,
+	 * possibly the tempo
+	 */
+	track_init(&paste);
+	sp = seqptr_new(&paste);
+	seqptr_ticput(sp, wtic);
+	ev.cmd = EV_TIMESIG;
+	ev.timesig_beats = sbpm;
+	ev.timesig_tics = stpb;
+	seqptr_evput(sp, &ev);
+	if (wtic == 0) {
+		/* dont remove initial tempo */
+		ev.cmd = EV_TEMPO;
+		ev.tempo_usec24 = usec24;
+		seqptr_evput(sp, &ev);
+	}
+	seqptr_ticput(sp, etic - stic);
+	ev.cmd = EV_TIMESIG;
+	ev.timesig_beats = wbpm;
+	ev.timesig_tics = wtpb;
+	seqptr_evput(sp, &ev);
+	seqptr_del(sp);
+
+	/*
+	 * copy and shift the portion to duplicate
+	 */
+	track_init(&copy);
+	track_move(&usong->meta, stic, etic - stic, NULL, &copy, 1, 0);
+	track_shift(&copy, wtic);
+	track_merge(&paste, &copy);
+	track_done(&copy);
+
+	/*
+	 * insert space and merge the duplicated portion
+	 */
+	track_ins(&usong->meta, wtic, etic - stic);
+	track_merge(&usong->meta, &paste);
+	track_done(&paste);
+
+	qstep = usong->curquant / 2;
+	if (stic > qstep && wtic > qstep) {
+		stic -= qstep;
+		wtic -= qstep;
+	} 
+	if (etic > qstep) {
+		etic -= qstep;
+	}	
+	SONG_FOREACH_TRK(usong, t) {
+		track_init(&paste);
+		track_move(&t->track, stic, etic - stic, NULL, &paste, 1, 0);
+		track_shift(&paste, wtic);
+		track_ins(&t->track, wtic, etic - stic);
+		track_merge(&t->track, &paste);
+		track_done(&paste);
+	}
+	return 1;
+}
+
+unsigned
 blt_mcut(struct exec *o, struct data **r)
 {
 	unsigned tic, len, qstep;

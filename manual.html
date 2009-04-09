@@ -1350,6 +1350,22 @@ g 17			# go to measure 17
 print [msig]		# print what msig returned	
 </pre>
 
+<p>
+A handy way to duplicate the time structure of a portion
+of the song is given by the <a href="#func_mdup">mdup</a> 
+function. It copies the current selection at another
+place of the song:
+
+<pre>
+g 17			# go to measure 17
+sel 16			# select 16 measures
+mdup 0			# copy them behind the selection
+<pre>
+
+The parameter to <a href="#func_mdup">mdup</a> is the number
+of measures to leave between the the original and the point
+where the replica is inserted.
+
 <h3><a name="section_7_4">7.4 Tempo changes</a></h3>
 
 Tempo changes are achieved simply by moving within
@@ -1522,7 +1538,7 @@ measure number 5:
 <pre>
 g 5			# move to measure 5
 sel 2			# select 2 measures
-tcut 2			# cut them
+tcut			# cut them
 </pre>
 
 this command removes 2 measures of ``time'' from the current track;
@@ -1538,8 +1554,19 @@ g 3
 tins 2
 </pre>
 
-similarly, since this commands inserts time, this will shift all
+similarly, since this commands insert time, this will shift all
 measures following the current position by 2 measures.
+
+<b>Note:</b> the <a href="#func_tcut">tcut</a> and 
+<a href="#func_tins">tins</a> functions cause a part 
+of the track to be shifted.
+
+If there are signature changes in the project, the track contents
+may no more correspond to the project's signature.
+
+The correct way of cutting or inserting a portion of the project is to
+use <a href="#func_mcut">mcut</a> and <a href="#func_mins">mins</a>,
+which preserve the signature.
 
 <p>
 The current selection of a track could be copied
@@ -1553,6 +1580,23 @@ tcopy		# copy current selection
 ct mypiano2	# change current track to ``mypiano2''
 g 5		# go to measure 5
 tpaste		# paste the copy
+</pre>
+
+<p>
+A complete portion of the project (all tracks and time structure
+included) can be copied with the <a href="#func_mdup">mdup</a>
+function. It copies the current selection and inserts it
+at the position given as argument to <a href="#func_mdup">mdup</a>.
+The argument is relative to the end of the current selection (if
+positive) or to the beginning of the current selection (if
+negative). Example:
+
+<pre>
+g 17		# go to measure 17
+sel 4		# select 4 measures
+mdup 0		# create 3 copies
+mdup 0
+mdup 0
 </pre>
 
 <h3><a name="section_8_5">8.5 Track quantization</a></h3>
@@ -2205,7 +2249,7 @@ Below is the list of new functions:
 ci, co, geti, geto, cx, getx, setunit, getunit, goto, getpos, sel,
 getlen, setq, getq, fac, getfac, ct, gett, cf, getf, mute, unmute,
 getmute, ls, save, load, reset, export, import, idle, play, rec, stop,
-tempo, mins, mcut, minfo, mtempo, msig, mend, ctlconf, ctlconfx, ctlunconf,
+tempo, mins, mcut, mdup, minfo, mtempo, msig, mend, ctlconf, ctlconfx, ctlunconf,
 ctlinfo, metro, metrocf, tlist, tnew, tdel, tren, texists, taddev,
 tsetf, tgetf, tcheck, tcut, tins, tclr, tpaste, tcopy, tmerge, tquant,
 ttransp, tclist, tinfo, ilist, olist, iexists, oexists, inew, onew,
@@ -2282,6 +2326,14 @@ adjust note velocity.
 <li>
 add <a href="#func_mend">mend</a> function to return the end of the
 song (ie the first unused measure).
+
+<li>
+make <a href="#func_mins">mins</a> and <a href="#func_mcut">mcut</a> 
+modify all tracks, not only the time structure.
+
+<li>
+add <a href="#func_mdup">mdup</a> function to copy portions of
+the project preserving its time structure.
 
 <li>
 added built-in filter to output channels, so there's no more need
@@ -3669,6 +3721,18 @@ is used.
 cut the current selection of all tracks, including the
 time structure.
 
+<dt><a name="func_mdup">mdup where</a>
+
+<dd>
+duplicate the current selection inserting a copy
+of it at the position given by the ``where'' parameter.
+The target position is a measure number relative to the
+current selection to be copied. 
+
+If ``where'' is postive it's relative to the end of the current
+selecton; if it's negative it's relative to the beginning of the
+current selection.  
+
 <dt><a name="func_minfo">minfo</a>
 
 <dd>
@@ -4271,7 +4335,7 @@ Will Woodruff.
 <hr>
 <small><i>
 Copyright (c) 2003-2009 Alexandre Ratchov<br>
-Last updated apr 4, 2009
+Last updated apr 9, 2009
 </i></small>
 
 </body>

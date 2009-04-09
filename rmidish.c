@@ -276,10 +276,7 @@ userline(char *rl)
 char *builtins[] = {
 	/*
 	 * generated with:
-	 * 	grep newbuiltin user.c | \
-	 * 	grep -v user_func | \
-	 *	sed -e 's/^.*exec, /	/' -e 's/,.*$/,/' |\
-	 *	fmt
+	 * grep blt_ builtin.h |sed -es/^.*blt_/\"/ -es/\(.*$/\",/ |fmt
 	 */
         "print", "err", "h", "exec", "debug", "panic", "getunit",
         "setunit", "getfac", "fac", "getpos", "g", "getlen", "sel",
