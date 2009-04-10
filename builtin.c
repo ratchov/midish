@@ -977,9 +977,7 @@ blt_mins(struct exec *o, struct data **r)
 	qstep = usong->curquant / 2;
 	if (tic > qstep) {
 		tic -= qstep;
-	} else if (tic + len > qstep) {
-		len -= qstep;
-	}	
+	}
 	SONG_FOREACH_TRK(usong, t) {
 		track_ins(&t->track, tic, len);
 	}
@@ -1064,8 +1062,6 @@ blt_mdup(struct exec *o, struct data **r)
 	if (stic > qstep && wtic > qstep) {
 		stic -= qstep;
 		wtic -= qstep;
-	} 
-	if (etic > qstep) {
 		etic -= qstep;
 	}	
 	SONG_FOREACH_TRK(usong, t) {
@@ -1095,8 +1091,6 @@ blt_mcut(struct exec *o, struct data **r)
 	qstep = usong->curquant / 2;
 	if (tic > qstep) {
 		tic -= qstep;
-	} else if (tic + len > qstep) {
-		len -= qstep;
 	}	
 	SONG_FOREACH_TRK(usong, t) {
 		track_cut(&t->track, tic, len);
@@ -1520,9 +1514,7 @@ blt_tcut(struct exec *o, struct data **r)
 	qstep = usong->curquant / 2;
 	if (tic > qstep) {
 		tic -= qstep;
-	} else if (tic + len > qstep) {
-		len -= qstep;
-	}	
+	}
 	track_cut(&t->track, tic, len);
 	usong->curlen = 0;
 	return 1;
@@ -1551,9 +1543,7 @@ blt_tins(struct exec *o, struct data **r)
 	qstep = usong->curquant / 2;
 	if (tic > qstep) {
 		tic -= qstep;
-	} else if (tic + len > qstep) {
-		len -= qstep;
-	}	
+	}
 	track_ins(&t->track, tic, len);
 	usong->curlen += amount;
 	return 1;

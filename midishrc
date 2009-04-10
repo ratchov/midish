@@ -3,6 +3,9 @@
 #
 #dnew 0 "/dev/rmidi4" rw
 #dnew 1 "/dev/rmidi3" rw
+#
+#
+
 
 #
 # some filter rules
@@ -25,32 +28,6 @@ proc ctlmap ic oc {
 proc q rate {
 	tquant $rate
 } 
-
-#
-# copy current selection 'offset' measures forward
-#
-proc copy offset {
-	tcopy
-	g [getpos] + offset
-	tpaste
-	g [getpos] - offset
-}
-
-#
-# copy a piece of the song 'where' measures forward
-#
-proc gcopy where {
-	let track = [gett];
-	for i in [tlist] {
-		ct $i
-		tcopy
-		g [getpos] + $where
-		tpaste
-		g [getpos] - $where
-	}
-	ct $track
-}
-
 
 #
 # unmute all tracks
