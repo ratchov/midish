@@ -949,12 +949,10 @@ blt_mins(struct exec *o, struct data **r)
 	track_init(&tn);
 	sp = seqptr_new(&tn);
 	seqptr_ticput(sp, tic);
-	if (bpm != obpm || tpb != otpb || tic == 0) {
-		ev.cmd = EV_TIMESIG;
-		ev.timesig_beats = bpm;
-		ev.timesig_tics = tpb;
-		seqptr_evput(sp, &ev);
-	}
+	ev.cmd = EV_TIMESIG;
+	ev.timesig_beats = bpm;
+	ev.timesig_tics = tpb;
+	seqptr_evput(sp, &ev);
 	if (tic == 0) {
 		/* dont remove initial tempo */
 		ev.cmd = EV_TEMPO;
@@ -962,12 +960,10 @@ blt_mins(struct exec *o, struct data **r)
 		seqptr_evput(sp, &ev);
 	}
 	seqptr_ticput(sp, len);
-	if (bpm != obpm || tpb != otpb) {
-		ev.cmd = EV_TIMESIG;
-		ev.timesig_beats = obpm;
-		ev.timesig_tics = otpb;
-		seqptr_evput(sp, &ev);
-	}
+	ev.cmd = EV_TIMESIG;
+	ev.timesig_beats = obpm;
+	ev.timesig_tics = otpb;
+	seqptr_evput(sp, &ev);
 	seqptr_del(sp);
 
 	track_ins(&usong->meta, tic, len);
@@ -1078,22 +1074,58 @@ blt_mdup(struct exec *o, struct data **r)
 unsigned
 blt_mcut(struct exec *o, struct data **r)
 {
-	unsigned tic, len, qstep;
+	unsigned bpm, tpb, stic, etic, qstep;
+	unsigned long usec24;
 	struct songtrk *t;
+	struct seqptr *sp;
+	struct track paste;
+	struct ev ev;
+	struct track t1, t2;
 
 	if (!song_try(usong)) {
 		return 0;
 	}
-	tic = track_findmeasure(&usong->meta, usong->curpos);
-	len = track_findmeasure(&usong->meta, usong->curpos + usong->curlen) - tic;
-	track_cut(&usong->meta, tic, len);
+	track_timeinfo(&usong->meta, usong->curpos, 
+	    &stic, NULL, NULL, NULL);
+	track_timeinfo(&usong->meta, usong->curpos + usong->curlen,
+	    &etic, &usec24, &bpm, &tpb);
+	
+	track_init(&paste);
+	sp = seqptr_new(&paste);
+	seqptr_ticput(sp, stic);
+	ev.cmd = EV_TIMESIG;
+	ev.timesig_beats = bpm;
+	ev.timesig_tics = tpb;
+	seqptr_evput(sp, &ev);
+	if (stic == 0) {
+		/* dont remove initial tempo */
+		ev.cmd = EV_TEMPO;
+		ev.tempo_usec24 = usec24;
+		seqptr_evput(sp, &ev);
+	}
+	seqptr_del(sp);
+
+	track_init(&t1);
+	track_init(&t2);
+	track_move(&usong->meta, 0,   stic, NULL, &t1, 1, 1);
+	track_move(&usong->meta, etic, ~0U, NULL, &t2, 1, 1);
+	track_shift(&t2, stic);
+	track_clear(&usong->meta);
+	track_merge(&usong->meta, &t1);
+	track_merge(&usong->meta, &paste);
+	if (!track_isempty(&t2)) {
+		track_merge(&usong->meta, &t2);
+	}
+	track_done(&t1);
+	track_done(&t2);
 
 	qstep = usong->curquant / 2;
-	if (tic > qstep) {
-		tic -= qstep;
+	if (stic > qstep) {
+		stic -= qstep;
+		etic -= qstep;
 	}	
 	SONG_FOREACH_TRK(usong, t) {
-		track_cut(&t->track, tic, len);
+		track_cut(&t->track, stic, etic - stic);
 	}
 	usong->curlen = 0;
 	return 1;
