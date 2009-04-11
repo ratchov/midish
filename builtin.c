@@ -408,7 +408,7 @@ blt_fac(struct exec *o, struct data **r)
 unsigned
 blt_getfac(struct exec *o, struct data **r)
 {
-	*r = data_newlong(usong->tempo_factor);
+	*r = data_newlong(usong->tempo_factor * 100 / 0x100);
 	return 1;
 }
 
