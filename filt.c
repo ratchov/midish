@@ -195,7 +195,7 @@ vcurve(unsigned nweight, unsigned x)
 		else
 			return 1 + (126 - nweight) * (x - 1) / nweight;
 	} else {
-		if (nweight == 127)
+		if (nweight == 126)
 			return 1;
 		else
 			return 127 - nweight * (127 - x) / (126 - nweight);
