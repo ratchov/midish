@@ -37,38 +37,38 @@
 <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
 <meta name="language" content="en">
 <style type="text/css">
-	TABLE { 
-		border-style: solid; 
-		border-width: thin; 
-		border-collapse: collapse;
-	}
-	TH {
-		border-style: solid; 
-		border-width: thin; 
-		padding: 0.5em; 
-		background-color: #f0f0f0
-	}
-	TD { 
-		border-style: solid; 
-		border-width: thin; 
-		padding: 0.5em; 
-	}
-	BODY { 
-		background-color: white;
-		color: black
-	}
-	PRE {
-		padding: 1em;
-		border-width: thin;
-		border-style: dotted;
-		background-color: #f0f0f0
-	}
-	DT {
-		font-weight: bold;
-	}
-	DD {
-		padding: 0.5em;
-	}
+        TABLE { 
+                border-style: solid; 
+                border-width: thin; 
+                border-collapse: collapse;
+        }
+        TH {
+                border-style: solid; 
+                border-width: thin; 
+                padding: 0.5em; 
+                background-color: #f0f0f0
+        }
+        TD { 
+                border-style: solid; 
+                border-width: thin; 
+                padding: 0.5em; 
+        }
+        BODY { 
+                background-color: white;
+                color: black
+        }
+        PRE {
+                padding: 1em;
+                border-width: thin;
+                border-style: dotted;
+                background-color: #f0f0f0
+        }
+        DT {
+                font-weight: bold;
+        }
+        DD {
+                padding: 0.5em;
+        }
 </style>
 </head>
 <body>
@@ -485,16 +485,16 @@ the result is mixed with the currently played tracks
 and finally sent to the MIDI output. No tracks are recorded.
 
 <pre>
-			+--------------+
-			| track_1 play |---\
-			+--------------+   |
-					   |
-			     ...        ---+
-					   |
-			+--------------+   |
-			| track_N play |---+
-			+--------------+   |
-					   |
+                        +--------------+
+                        | track_1 play |---\
+                        +--------------+   |
+                                           |
+                             ...        ---+
+                                           |
+                        +--------------+   |
+                        | track_N play |---+
+                        +--------------+   |
+                                           |
 +---------+             +------------+     |    +----------+
 |         |             |            |     \---&gt;|          |
 | MIDI in |------------&gt;|   filter   |---------&gt;| MIDI out |
@@ -513,26 +513,26 @@ messages are recorded to the <i>current sysex</i> without
 being passed through the filter.
 
 <pre>
-			+--------------+
-			| track_1 play |---\
-			+--------------+   |
-					   |
-			     ...        ---+
-					   |
-			+--------------+   |
-			| track_N play |---+
-			+--------------+   |
-					   |
+                        +--------------+
+                        | track_1 play |---\
+                        +--------------+   |
+                                           |
+                             ...        ---+
+                                           |
+                        +--------------+   |
+                        | track_N play |---+
+                        +--------------+   |
+                                           |
 +---------+             +------------+     |    +----------+
 |         |             |            |     \---&gt;|          |
 | MIDI in |-----+------&gt;|   filter   |----+----&gt;| MIDI out |
 |         |     |       |            |    |     |          |
 +---------+     |       +------------+    |     +----------+
-		|                         |
-		|                         |     +----------------+
-		|       +--------------+  \----&gt;| track_X record |
-		\------&gt;| sysex record |        +----------------+
-			+--------------+
+                |                         |
+                |                         |     +----------------+
+                |       +--------------+  \----&gt;| track_X record |
+                \------&gt;| sysex record |        +----------------+
+                        +--------------+
 </pre>
 
 </ul>
@@ -565,8 +565,8 @@ In this case, the ``/etc/midishrc'' file probably should contain
 the following lines:
 
 <pre>
-dnew 0 "/dev/rmidi4" wo		# attach the module as dev number 0
-dnew 1 "/dev/rmidi3" ro		# attach the keyboard as dev number 1
+dnew 0 "/dev/rmidi4" wo         # attach the module as dev number 0
+dnew 1 "/dev/rmidi3" ro         # attach the keyboard as dev number 1
 </pre>
 
 the ``wo'' parameter means that the device will be opened in
@@ -578,8 +578,8 @@ use the ALSA sequencer ports, as listed by
 ``aseqdump -l'', example:
 
 <pre>
-dnew 0 "28:0" wo		# attach the module as dev number 0
-dnew 1 "32:0" ro		# attach the keyboard as dev number 1
+dnew 0 "28:0" wo                # attach the module as dev number 0
+dnew 1 "32:0" ro                # attach the keyboard as dev number 1
 </pre>
 
 
@@ -592,13 +592,13 @@ song into a file.
 
 <pre>
 send EOF character (control-D) to quit
-[0000:00]&gt; fnew piano				# create filter "piano"
-[0000:00]&gt; fmap {any {1 0}} {any {0 5}}		# dev=1,ch=0 -&gt; dev=0,ch=5
-[0000:00]&gt; tnew pi1				# create track "pi1"
-[0000:00]&gt; r					# start recording
-[0006:02]&gt; s					# stop recording
-[0000:00]&gt; save "mysong"			# save the song into a file
-[0000:00]&gt;					# EOF (control-D) to quit
+[0000:00]&gt; fnew piano                        # create filter "piano"
+[0000:00]&gt; fmap {any {1 0}} {any {0 5}}      # dev=1,ch=0 -&gt; dev=0,ch=5
+[0000:00]&gt; tnew pi1                          # create track "pi1"
+[0000:00]&gt; r                                 # start recording
+[0006:02]&gt; s                                 # stop recording
+[0000:00]&gt; save "mysong"                     # save the song into a file
+[0000:00]&gt;                                   # EOF (control-D) to quit
 </pre>
 
 <h2><a name="dev">2 Devices setup</a></h2>
@@ -640,9 +640,9 @@ play the demo song:
 
 <pre>
 send EOF character (control-D) to quit
-[0000:00]&gt; load "sample.sng"		# load the file
-[0000:00]&gt; p				# start playback
-[0004:02]&gt; s				# stop playback
+[0000:00]&gt; load "sample.sng"         # load the file
+[0000:00]&gt; p                         # start playback
+[0004:02]&gt; s                         # stop playback
 </pre>
 
 When the configuration is setup, put the dnew
@@ -788,27 +788,27 @@ MIDI events:
 
 <table border="1">
 
-<tr>	<th>ref. name	<th>MIDI event
+<tr>    <th>ref. name   <th>MIDI event
 
-<tr>    <td>noff	<td>note off
+<tr>    <td>noff        <td>note off
 
-<tr>    <td>non		<td>note off
+<tr>    <td>non         <td>note off
 
-<tr>    <td>kat		<td>key after-touch (poly)
+<tr>    <td>kat         <td>key after-touch (poly)
 
-<tr>    <td>ctl		<td>7-bit controller
+<tr>    <td>ctl         <td>7-bit controller
 
-<tr>    <td>xctl	<td>14-bit controller
+<tr>    <td>xctl        <td>14-bit controller
 
-<tr>    <td>xpc		<td>bank and program change
+<tr>    <td>xpc         <td>bank and program change
 
-<tr>    <td>cat		<td>channel after-touch (mono)
+<tr>    <td>cat         <td>channel after-touch (mono)
 
-<tr>    <td>bend	<td>pitch bend
+<tr>    <td>bend        <td>pitch bend
 
-<tr>	<td>rpn		<td>RPN change
+<tr>    <td>rpn         <td>RPN change
 
-<tr>	<td>nrpn	<td>NRPN change
+<tr>    <td>nrpn        <td>NRPN change
 
 </table>
 
@@ -887,7 +887,7 @@ Examples:
 <pre>
 {}                      # match everything
 { any }                 # match everything
-{ none }		# match nothing
+{ none }                # match nothing
 { any bass }            # match anything on channel "bass"
 { any {1 4} }           # match anything on device 1, channel 4
 { any {1 0..15} }       # match anything on device 1, any channel
@@ -948,7 +948,7 @@ aftertouch events is normalized in order not to flood output devices.
 Filters are defined as follows:
 
 <pre>
-fnew myfilt			# create filter "myfilt"
+fnew myfilt                     # create filter "myfilt"
 </pre>
 
 initially the filter is empty and will send input to output
@@ -1112,8 +1112,8 @@ device number 1 (the MIDI keyboard) to device number 0
 (the sound module).
 
 <pre>
-fnew mydevmap				# define filter "mydevmap"
-fmap {any {1 0..15}} {any {0 0..15}}	# make it route device 1 -&gt; device 0
+fnew mydevmap                           # define filter "mydevmap"
+fmap {any {1 0..15}} {any {0 0..15}}    # make it route device 1 -&gt; device 0
 </pre>
 
 To test the filter, start performance mode using the
@@ -1128,8 +1128,8 @@ The following example defines a filter that routes events from device
 channel 9 (default drum channel of the sound module).
 
 <pre>
-fnew mydrums				# define filter "mydrums"
-fmap {any {1 0}} {any {0 9}}		# route dev/chan {1 0} to {0 9}
+fnew mydrums                            # define filter "mydrums"
+fmap {any {1 0}} {any {0 9}}            # route dev/chan {1 0} to {0 9}
 </pre>
 
 To test the filter, start performance mode using the
@@ -1169,9 +1169,9 @@ of rules as follows:
 The folling will transpose notes on ``{0 2}'' by 12 halftones:
 
 <pre>
-fnew mypiano					# define filter ``mypiano''
-fmap {any {1 0}} {any  {0 2}}			# route {1 0} -&gt; {0 9}
-ftransp {any {0 2}} 12				# transpose by 12 halftones
+fnew mypiano                                    # define filter ``mypiano''
+fmap {any {1 0}} {any  {0 2}}                   # route {1 0} -&gt; {0 9}
+ftransp {any {0 2}} 12                          # transpose by 12 halftones
 </pre>
 
 First we create the filter, and we add a ``default'' rule to map
@@ -1280,9 +1280,9 @@ command might be used to
 change the mode of the metronome:
 
 <pre>
-m on		# switch the metronome on
-p		# start playback
-s		# stop
+m on            # switch the metronome on
+p               # start playback
+s               # stop
 </pre>
 
 The metronome has two kind of click-sound:
@@ -1317,24 +1317,24 @@ The following starts a song with time signature of 6/8 (at measure 0)
 and change the time signature to 4/4 at measure 2 during 3 measures:
 
 <pre>
-g 0			# go to measure 0
-mins 4 {6 8}		# insert 4 measures at 8/6
-g 2			# move to measure 2
-mins 3 {4 4}		# insert 3 measure at 4/4
-m on			# turn metronome on
-p	                # test it, ie start playback
-s			# stop playback
+g 0                     # go to measure 0
+mins 4 {6 8}            # insert 4 measures at 8/6
+g 2                     # move to measure 2
+mins 3 {4 4}            # insert 3 measure at 4/4
+m on                    # turn metronome on
+p                       # test it, ie start playback
+s                       # stop playback
 </pre>
 
 To suppress measure number 2 (the first 4/4 measure)
 
 <pre>
-g 2			# go to measure 2
-sel 1			# select 1 measure
-mcut			# remove it
-m on			# switch the metronome on
-p			# test it
-s			#
+g 2                     # go to measure 2
+sel 1                   # select 1 measure
+mcut                    # remove it
+m on                    # switch the metronome on
+p                       # test it
+s                       #
 </pre>
 
 <p>
@@ -1346,8 +1346,8 @@ It returns the denominator and the numerator in a two integer list.
 For instance, to print the time signature at measure number 17:
 
 <pre>
-g 17			# go to measure 17
-print [msig]		# print what msig returned	
+g 17                    # go to measure 17
+print [msig]            # print what msig returned      
 </pre>
 
 <p>
@@ -1357,10 +1357,10 @@ function. It copies the current selection at another
 place of the song:
 
 <pre>
-g 17			# go to measure 17
-sel 16			# select 16 measures
-mdup 0			# copy them behind the selection
-<pre>
+g 17                    # go to measure 17
+sel 16                  # select 16 measures
+mdup 0                  # copy them behind the selection
+</pre>
 
 The parameter to <a href="#func_mdup">mdup</a> is the number
 of measures to leave between the the original and the point
@@ -1379,10 +1379,10 @@ For instance, the following changes tempo on measure 0 to 100 beats
 per minute and on measure 2 to 180 beats per minute.
 
 <pre>
-g 0			# go to measure 0
-t 100			# set tempo to 100 bpm
-g 2			# go to measure 2
-t 180			# set tempo to 180 bpm
+g 0                     # go to measure 0
+t 100                   # set tempo to 100 bpm
+g 2                     # go to measure 2
+t 180                   # set tempo to 180 bpm
 </pre>
 
 <p>
@@ -1394,8 +1394,8 @@ It returns the tempo in beats per minute.
 For instance, to print the tempo at measure number 17:
 
 <pre>
-g 17			# go to measure 17
-print [msig]		# print what mtempo returned
+g 17                    # go to measure 17
+print [msig]            # print what mtempo returned
 </pre>
 
 
@@ -1426,16 +1426,16 @@ The following defines a track and record events
 as-is from all MIDI devices:
 
 <pre>
-[0000:00]&gt; tnew mytrack		# create a new track
-[0000:00]&gt; r			# start recording
-[0003:02]&gt; s			# stop
+[0000:00]&gt; tnew mytrack      # create a new track
+[0000:00]&gt; r                 # start recording
+[0003:02]&gt; s                 # stop
 </pre>
 
 tracks are played as follows:
 
 <pre>
-[0000:00]&gt; p			# start playback
-[0001:01]&gt; s			# stop playback
+[0000:00]&gt; p                 # start playback
+[0001:01]&gt; s                 # stop playback
 </pre>
 
 However, with the above configuration this will not
@@ -1450,11 +1450,11 @@ The following creates a filter and uses it to
 record to the above track:
 
 <pre>
-[0000:00]&gt; fnew mypiano			# create the filter
-[0000:00]&gt; fmap {any {1 0}} {any {0 0}}	# dev1/chan0 -&gt; dev0/chan0
-[0000:00]&gt; tnew mytrack			# create the track
-[0000:00]&gt; r					# start recording
-[0001:03]&gt; s					# stop
+[0000:00]&gt; fnew mypiano                      # create the filter
+[0000:00]&gt; fmap {any {1 0}} {any {0 0}}      # dev1/chan0 -&gt; dev0/chan0
+[0000:00]&gt; tnew mytrack                      # create the track
+[0000:00]&gt; r                                 # start recording
+[0001:03]&gt; s                                 # stop
 </pre>
 
 This setup, is more suitable for multitracking. 
@@ -1536,9 +1536,9 @@ To cut a piece of a track, for instance to cut 2 measures starting at
 measure number 5:
 
 <pre>
-g 5			# move to measure 5
-sel 2			# select 2 measures
-tcut			# cut them
+g 5                     # move to measure 5
+sel 2                   # select 2 measures
+tcut                    # cut them
 </pre>
 
 this command removes 2 measures of ``time'' from the current track;
@@ -1576,10 +1576,10 @@ For instance the following will copy the current selection
 at measure 5 of track ``mypiano2''.
 
 <pre>
-tcopy		# copy current selection
-ct mypiano2	# change current track to ``mypiano2''
-g 5		# go to measure 5
-tpaste		# paste the copy
+tcopy           # copy current selection
+ct mypiano2     # change current track to ``mypiano2''
+g 5             # go to measure 5
+tpaste          # paste the copy
 </pre>
 
 <p>
@@ -1592,9 +1592,9 @@ positive) or to the beginning of the current selection (if
 negative). Example:
 
 <pre>
-g 17		# go to measure 17
-sel 4		# select 4 measures
-mdup 0		# create 3 copies
+g 17            # go to measure 17
+sel 4           # select 4 measures
+mdup 0          # create 3 copies
 mdup 0
 mdup 0
 </pre>
@@ -1607,7 +1607,7 @@ will quantize the current selection of the current track
 by rounding notes to the nearest quarter note.
 
 <pre>
-setq 4		# quarter note = 1/4-th of a whole
+setq 4          # quarter note = 1/4-th of a whole
 tquant 75
 </pre>
 
@@ -1728,12 +1728,12 @@ of all controllers:
 
 <pre>
 ctltab {
-	#
-	# name  number  defval
-	#
-	mod     1       0
-	vol     7       nil
-	sustain 64      0
+        #
+        # name  number  defval
+        #
+        mod     1       0
+        vol     7       nil
+        sustain 64      0
 }
 </pre>
 
@@ -1786,8 +1786,8 @@ Sysex messages are automatically recorded on the <i>current
 bank</i>. So, to record a sysex:
 
 <pre>
-cx mybank		# set current sysex bank
-r			# start recording
+cx mybank               # set current sysex bank
+r                       # start recording
 </pre>
 
 The next time performance mode is entered, recorded
@@ -1838,37 +1838,37 @@ The following functions gives some information
 about midish objects:
 
 <pre>
-ls		# summary
-minfo		# list tempo and signature  changes
-iinfo		# list config events of current input channel
-oinfo		# list config events of current output channel
-finfo		# list rules of current filter
-tinfo		# list events distribution of current track
-dinfo 0		# list device 0 properties
+ls              # summary
+minfo           # list tempo and signature  changes
+iinfo           # list config events of current input channel
+oinfo           # list config events of current output channel
+finfo           # list rules of current filter
+tinfo           # list events distribution of current track
+dinfo 0         # list device 0 properties
 </pre>
 
 <p>
 Objects can be listed as follows:
 
 <pre>
-print [tlist]	# print track list
-print [ilist]	# print named input channel list
-print [olist]	# print named output channel list
-print [flist]	# print filter list
-print [xlist]	# print sysex back list
+print [tlist]   # print track list
+print [ilist]   # print named input channel list
+print [olist]   # print named output channel list
+print [flist]   # print filter list
+print [xlist]   # print sysex back list
 </pre>
 
 <p>
 Current values can be obtained as follows:
 
 <pre>
-print [getunit]		# ticks per whole note
-print [getpos]		# print current position
-print [getlen]		# print current selection length
-print [getf]		# current filter
-print [gett]		# current track
-print [getx]		# current sysex bank
-print [tgetf]		# default filter of current track
+print [getunit]         # ticks per whole note
+print [getpos]          # print current position
+print [getlen]          # print current selection length
+print [getf]            # current filter
+print [gett]            # current track
+print [getx]            # current sysex bank
+print [tgetf]           # default filter of current track
 </pre>
 
 <p>
@@ -1876,10 +1876,10 @@ The device and the MIDI channel of a channel definition
 can be obtained as follows:
 
 <pre>
-print [igetc]		# print midi chan number of current input
-print [igetd]		# print device number of current input
-print [ogetc]		# print midi chan number of current output
-print [ogetd]		# print device number of current output
+print [igetc]           # print midi chan number of current input
+print [igetd]           # print device number of current input
+print [ogetc]           # print midi chan number of current output
+print [ogetd]           # print device number of current output
 </pre>
 
 <p>
@@ -1988,8 +1988,8 @@ to turn on General MIDI mode on device number 0:
 
 <pre>
 proc gmon {
-	xnew gm
-	xadd 0 { 0xF0 0x7E 0x7F 0x09 0x01 0xF7 }
+        xnew gm
+        xadd 0 { 0xF0 0x7E 0x7F 0x09 0x01 0xF7 }
 }
 </pre>
 
@@ -2003,8 +2003,8 @@ above procedure to take the device number as argument:
 
 <pre>
 proc gmon devnum {
-	xnew gmon
-	xadd $devnum { 0xF0 0x7E 0x7F 0x09 0x01 0xF7 }
+        xnew gmon
+        xadd $devnum { 0xF0 0x7E 0x7F 0x09 0x01 0xF7 }
 }
 </pre>
 
@@ -2684,13 +2684,13 @@ by "0x", as in the C language. Examples:
 
 <table border="1">
 
-<tr>	<th>token	<th>value
+<tr>    <th>token       <th>value
 
-<tr>    <td>123		<td>123 in decimal
+<tr>    <td>123         <td>123 in decimal
 
-<tr>    <td>0x100	<td>256 in hex
+<tr>    <td>0x100       <td>256 in hex
 
-<tr>    <td>0xF0	<td>240 in hex
+<tr>    <td>0xF0        <td>240 in hex
 
 </table>
 
@@ -2771,9 +2771,9 @@ An ``if..else'' statement, example:
 
 <pre>
 if $i {
-	print "i is not zero";
+        print "i is not zero";
 } else {
-	print "i is zero";
+        print "i is zero";
 }
 </pre>
 
@@ -2788,7 +2788,7 @@ expression is evaluated in the following way:
 
 <p align="center">
 <table border="1">
-<tr>	<th>expression		<th>bool. value
+<tr>    <th>expression          <th>bool. value
 <tr>    <td>non-zero integer    <td>true
 <tr>    <td>zero integer        <td>false
 <tr>    <td>non-empty list      <td>true
@@ -2804,7 +2804,7 @@ A loop over a list:
 
 <pre>
 for i in {"bli" "bla" "blu"} {
-	print $i;
+        print $i;
 }
 </pre>
 
@@ -2843,7 +2843,7 @@ The following constant types are supported:
 
 <table border="1">
 
-<tr>	<th>token				<th> type
+<tr>    <th>token                               <th> type
 
 <tr>    <td>``"this is a string"''         <td> a string
 
@@ -2872,107 +2872,107 @@ The following operators are recognized:
 
 <tr>
 
-<th>oper.	<th>usage               <th>associativity
-		
+<th>oper.       <th>usage               <th>associativity
+                
 <tr>
 
-<td>{}		<td>list definition	<td rowspan="3">left to right
-
-<tr>
-
-<td>()		<td>grouping
+<td>{}          <td>list definition     <td rowspan="3">left to right
 
 <tr>
 
-<td>[]		<td>function call	
-
-<tr>	
-
-<td>!		<td>logical NOT		<td rowspan="3">right to left
+<td>()          <td>grouping
 
 <tr>
 
-<td>~		<td>bitwise NOT
+<td>[]          <td>function call       
+
+<tr>    
+
+<td>!           <td>logical NOT         <td rowspan="3">right to left
 
 <tr>
 
-<td>-		<td>unary minus
+<td>~           <td>bitwise NOT
 
 <tr>
 
-<td>*		<td>multiplication	<td rowspan="3">left to right
+<td>-           <td>unary minus
 
 <tr>
 
-<td>/		<td>division		
+<td>*           <td>multiplication      <td rowspan="3">left to right
 
 <tr>
 
-<td>%		<td>reminder		
+<td>/           <td>division            
 
 <tr>
 
-<td>+		<td>addition		<td rowspan="2">left to right
+<td>%           <td>reminder            
 
 <tr>
 
-<td>-		<td>subtraction		
+<td>+           <td>addition            <td rowspan="2">left to right
 
 <tr>
 
-<td>&lt;&lt;	<td>left shift		<td rowspan="2">left to right
+<td>-           <td>subtraction         
 
 <tr>
 
-<td>&gt;&gt;	<td>right shift
+<td>&lt;&lt;    <td>left shift          <td rowspan="2">left to right
 
 <tr>
 
-<td>&lt;	<td>less		<td rowspan="4">left to right
+<td>&gt;&gt;    <td>right shift
 
 <tr>
 
-<td>&lt;=	<td>less or equal
+<td>&lt;        <td>less                <td rowspan="4">left to right
 
 <tr>
 
-<td>&gt;	<td>greater
+<td>&lt;=       <td>less or equal
 
 <tr>
 
-<td>&gt;=	<td>greater or equal
+<td>&gt;        <td>greater
 
 <tr>
 
-<td>==		<td>equal		<td rowspan="2">left to right
+<td>&gt;=       <td>greater or equal
 
 <tr>
 
-<td>!=		<td>not equal
+<td>==          <td>equal               <td rowspan="2">left to right
 
 <tr>
 
-<td>&amp;	<td>bitwise AND		<td rowspan="3">left to right
+<td>!=          <td>not equal
 
 <tr>
 
-<td>^		<td>bitwise XOR
+<td>&amp;       <td>bitwise AND         <td rowspan="3">left to right
 
 <tr>
 
-<td>|		<td>bitwise OR
+<td>^           <td>bitwise XOR
 
 <tr>
 
-<td>&amp;&amp;	<td>logical AND		<td rowspan="2">left to right
+<td>|           <td>bitwise OR
 
 <tr>
 
-<td>||		<td>logical OR
+<td>&amp;&amp;  <td>logical AND         <td rowspan="2">left to right
 
 <tr>
 
-<td>..		<td>range definition	<td>left to right
+<td>||          <td>logical OR
+
+<tr>
+
+<td>..          <td>range definition    <td>left to right
 
 </table>
 
@@ -3020,8 +3020,8 @@ its body, example:
 
 <pre>
 proc doubleprint x y {
-	print $x
-	print $y
+        print $x
+        print $y
 }
 </pre>
 
@@ -3033,7 +3033,7 @@ with a ``return'' statement:
 
 <pre>
 proc square x {
-	return $x * $x
+        return $x * $x
 }
 </pre>
 
@@ -3520,7 +3520,7 @@ the data start being recorded.
 
 <dt><a name="func_s">s</a>
 
-<dd>	
+<dd>    
 stop performance and release MIDI devices. I.e. stop the effect 
 ``<a href="#func_i">i</a>'',
 ``<a href="#func_p">p</a>'' or
@@ -4111,11 +4111,11 @@ to the following:
 
 <pre>
 while (!eof) {
-	command = get_command_from_user();
-	wait_for("+ready");
-	write_to_midish_stdin(command);
-	result = parse_midish_stdout();
-	do_something(result);
+        command = get_command_from_user();
+        wait_for("+ready");
+        write_to_midish_stdin(command);
+        result = parse_midish_stdout();
+        do_something(result);
 }
 </pre>
 
@@ -4138,14 +4138,14 @@ create a new channel and a new filter
 with the same name in such
 a way that the current input is routed
 to this channel.
-	
+        
 
 <dt>ctldrop ictl
 
 <dd>
 make the current filter drop controller number ``ictl''
 on the current input
-	
+        
 
 <dt>ctlmap ictl octl
 
@@ -4153,40 +4153,40 @@ on the current input
 make the current filter route controller number
 ``ictl'' on the current input
 to controller ``octl'' on the current channel
-	
+        
 
 <dt>gcut
 
 <dd>
 same as ``cut'' but acts on all tracks
 simultaneously ("g" like global).
-	
+        
 
 <dt>gins num
 
 <dd>
 same as ``ins'' but acts on all tracks
 simultaneously ("g" like global).
-	
+        
 
 <dt>gcopy num
 
 <dd>
 same as ``copy'' but acts on all tracks
 simultaneously ("g" like global).
-	
+        
 
 <dt>solo
 
 <dd>
 mute all tracks but current
-	
+        
 
 <dt>nomute
 
 <dd>
 unmute all tracks.
-	
+        
 
 <dt>gmon devnum
 
@@ -4195,7 +4195,7 @@ create a new gmon sysex back and
 generate a ``general midi on'' system exclusive message
 for device number ``devnum'' and store it
 to the current sysex bank.
-	
+        
 
 <dt>gmp patch
 
@@ -4204,28 +4204,28 @@ configures the current channel
 to use general MIDI patch number ``patch''.
 (this will send program change event when
 performance mode is entered).
-	
+        
 
 <dt>vol value
 
 <dd>
 set volume (controller number 7) of
 the current channel
-	
+        
 
 <dt>reverb value
 
 <dd>
 set reverb (controller number 91) of
 the current channel
-	
+        
 
 <dt>chorus value
 
 <dd>
 set chorus (controller number 93) of
 the current channel
-	
+        
 
 <dt>rpn addr val
 
@@ -4233,7 +4233,7 @@ the current channel
 set registered parameter number (RPN) ``addr''
 for the current channel to ``val''. Both ``addr''
 and ``val'' are integers in the range 0..16383.
-	
+        
 
 <dt>nrpn addr val
 
@@ -4241,7 +4241,7 @@ and ``val'' are integers in the range 0..16383.
 set not registered parameter number (NRPN) ``addr''
 for the current channel to ``val''. Both ``addr''
 and ``val'' are integers in the range 0..16383.
-	
+        
 </dl>
 
 <h2><a name="example">21 Example sessions</a></h2>
@@ -4265,10 +4265,10 @@ send EOF character (control-D) to quit
 [0000:00]&gt; fmap {note kbd 63..127} {note piano 63..127}
 [0000:00]&gt; finfo
 {
-	evmap any {1 0} &gt; any {0 5}
-	evmap any {1 0} &gt; any {0 6}
-	evmap note {1 0} 12..62 &gt; note {0 5} 0..50
-	evmap note {1 0} 63..127 &gt; note {0 6} 63..127
+        evmap any {1 0} &gt; any {0 5}
+        evmap any {1 0} &gt; any {0 6}
+        evmap note {1 0} 12..62 &gt; note {0 5} 0..50
+        evmap note {1 0} 63..127 &gt; note {0 6} 63..127
 }
 [0000:00]&gt; i
 [0000:00]&gt; s
@@ -4291,19 +4291,19 @@ record a track.
 
 <pre>
 send EOF character (control-D) to quit
-[0000:00]&gt; inew kbd {1 0}			# select default input channel
-[0000:00]&gt; onew drums {0 9}			# create drum channel
-[0000:00]&gt; tnew dr1				# create track ``dr1''
-[0000:00]&gt; t 90				# tempo to 90 bpm
-[0000:00]&gt; r					# start recording
-[0003:03]&gt; s					# stop
-[0000:00]&gt; setq 16				# set quantization step
-[0000:00]&gt; sel 32				# select 32 measures
-[0000:00]&gt; tquant 75				# quatize to 75%
-[0000:00]&gt; p					# play
-[0001:02]&gt; s					# stop playing
-[0000:00]&gt; save "myrythm"			# save to a file
-[0000:00]&gt;					# hit ^D to quit
+[0000:00]&gt; inew kbd {1 0}                    # select default input channel
+[0000:00]&gt; onew drums {0 9}                  # create drum channel
+[0000:00]&gt; tnew dr1                          # create track ``dr1''
+[0000:00]&gt; t 90                              # tempo to 90 bpm
+[0000:00]&gt; r                                 # start recording
+[0003:03]&gt; s                                 # stop
+[0000:00]&gt; setq 16                           # set quantization step
+[0000:00]&gt; sel 32                            # select 32 measures
+[0000:00]&gt; tquant 75                         # quatize to 75%
+[0000:00]&gt; p                                 # play
+[0001:02]&gt; s                                 # stop playing
+[0000:00]&gt; save "myrythm"                    # save to a file
+[0000:00]&gt;                                   # hit ^D to quit
 </pre>
 
 first, we set the default input channel to ``{1 0}'' (default channel
