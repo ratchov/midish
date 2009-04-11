@@ -23,13 +23,6 @@ proc ctlmap ic oc {
 }
 
 #
-# quantise
-#
-proc q rate {
-	tquant $rate
-} 
-
-#
 # unmute all tracks
 #
 proc nomute {
