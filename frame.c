@@ -1102,7 +1102,7 @@ track_transpose(struct track *src, unsigned start, unsigned len,
 		}
 		if (st->tag) {
 			ev = st->ev;
-			ev.note_num += halftones;
+			ev.note_num += (128 + halftones);
 			ev.note_num &= 0x7f;
 			seqptr_evput(qp, &ev);
 		} else {
@@ -1124,7 +1124,7 @@ track_transpose(struct track *src, unsigned start, unsigned len,
 			st->tag = 0;
 		if (st->tag) {
 			ev = st->ev;
-			ev.note_num += halftones;
+			ev.note_num += (128 + halftones);
 			ev.note_num &= 0x7f;
 			seqptr_evput(qp, &ev);
 		} else {

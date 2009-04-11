@@ -1740,6 +1740,10 @@ blt_ttransp(struct exec *o, struct data **r)
 	if (!exec_lookuplong(o, "halftones", &halftones)) {
 		return 0;
 	}
+	if (halftones < -64 || halftones >= 63) {
+		cons_errs(o->procname, "argument not in the -64..63 range");
+		return 0;
+	}
 	if (!song_try_trk(usong, t)) {
 		return 0;
 	}
