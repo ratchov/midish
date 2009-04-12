@@ -405,13 +405,13 @@ they are sent.
 <li>
 <b>Input channels:</b><br>
 
-they represent ``{device&nbsp;midichannel}'' pair on which MIDI events
+they represent ``{device&nbsp;midi-channel}'' pair on which MIDI events
 arrive, like a MIDI keyboard, a MIDI control surface etc...
 
 <li>
 <b>Output channels:</b><br>
 
-they represent ``{device&nbsp;midichannel}'' pair on which MIDI events
+they represent ``{device&nbsp;midi-channel}'' pair on which MIDI events
 can be sent, like synths. <i>Output channel</i> objects hold some
 properties like patch number, volume, reverb depth or other
 controllers.
@@ -538,7 +538,7 @@ being passed through the filter.
 </ul>
 
 The above performance modes are started with
-the single lettre commands
+the single letter commands
 ``<a href="#func_i">i</a>'',
 ``<a href="#func_p">p</a>'' and
 ``<a href="#func_r">r</a>'' respectively.
@@ -688,7 +688,7 @@ file, to avoid typing it every time midish is started.
 <h2><a name="chan">4 Output channels</a></h2>
 
 As for input channels, midish uses device / MIDI channel pairs
-to represent ouputs too.
+to represent outputs too.
 
 So in this document <i>output channel</i> refers the
 ``{device&nbsp;MIDI-channel}'' pair to which MIDI events will
@@ -717,7 +717,7 @@ defines how input events are routed to the output channel.
 The filter comes with a default rule that routes all input channels to
 the given output channel.
 
-See filter section forfurther detaits.
+See filter section for further details.
 
 <h3><a name="section_4_1">4.1 Channel configuration</a></h3>
 
@@ -877,7 +877,7 @@ format as the first one (not permitted for ``pc'',
 
 In the above, empty lists can also be used. An empty list means "match
 everything". If the ``none'' keyword is used as event set type then the
-event set is the empty set, ie it matches no events.
+event set is the empty set, i.e. it matches no events.
 
 
 <p>
@@ -1063,7 +1063,7 @@ send EOF character (control-D) to quit
 In real life, the filter will probably have to contain multiple rules.
 
 If the input event matches the source set of two rules, then the most
-specific rule wins, ie the event is run only through the rule with the
+specific rule wins, i.e. the event is run only through the rule with the
 smaller source set.
 
 If both rules have the same source set, then the event is duplicated
@@ -1082,7 +1082,7 @@ fmap {any kbd} {any piano}
 fmap {ctl kbd 1} {ctl piano 11}
 </pre>
 
-the first rule will map all events comming from channel ``kbd'' (the
+the first rule will map all events coming from channel ``kbd'' (the
 input) to channel ``piano'' (the output); the second rule maps
 controller 1 (modulation) to controller 11 (expression).
 
@@ -1144,7 +1144,7 @@ To stop performance mode, use
 <h4><a name="section_6_3_3">6.3.3 Controller maps</a></h4>
 
 The following example add a new rule to the above filter that maps the
-modulation wheel (controller 1) of the source channel (ie device 1,
+modulation wheel (controller 1) of the source channel (i.e. device 1,
 midi channel 0) to the expression controller (number 11) of the
 destination channel (device 0, midi channel 9).
 
@@ -1166,7 +1166,7 @@ of rules as follows:
 
 <h4><a name="section_6_3_4">6.3.4 Transpose</a></h4>
 
-The folling will transpose notes on ``{0 2}'' by 12 halftones:
+The following will transpose notes on ``{0 2}'' by 12 halftones:
 
 <pre>
 fnew mypiano                                    # define filter ``mypiano''
@@ -1175,7 +1175,7 @@ ftransp {any {0 2}} 12                          # transpose by 12 halftones
 </pre>
 
 First we create the filter, and we add a ``default'' rule to map
-anything coming from ``{1 0}'' (ie the MIDI keyboard) to ``{0 2}''
+anything coming from ``{1 0}'' (i.e. the MIDI keyboard) to ``{0 2}''
 (the second channel of the synth).
 
 The second rule transposes anything the filter generated
@@ -1322,7 +1322,7 @@ mins 4 {6 8}            # insert 4 measures at 8/6
 g 2                     # move to measure 2
 mins 3 {4 4}            # insert 3 measure at 4/4
 m on                    # turn metronome on
-p                       # test it, ie start playback
+p                       # test it, i.e. start playback
 s                       # stop playback
 </pre>
 
@@ -1465,7 +1465,7 @@ tracks per instrument.
 
 <h3><a name="section_8_3">8.3 Basics about editing tracks</a></h3>
 
-Most track editing functions use the project context, ie
+Most track editing functions use the project context, i.e.
 a set of ``current values'':
 
 <ul>
@@ -1493,13 +1493,13 @@ one might want to process only a subset (eg. only controller number
 7), leaving the rest as-is.
 
 <li>
-current quatization step - this defines how notes at the selection
+current quantization step - this defines how notes at the selection
 boundaries are handled.
 
 It's set using the ``<a href="#func_setq">setq</a>'' command.
 
-Using a quatization step allows to properly process events at the
-selection boundaries, by sligtly enlarging the selection in order to
+Using a quantization step allows to properly process events at the
+selection boundaries, by slightly enlarging the selection in order to
 select for processing events that would be outside the selection.
 
 </ul>
@@ -1528,7 +1528,7 @@ tclr
 see the <a href="#ev_evspec">event set</a> section for more details.
 
 If you don't plan to continue working only on controller number 7
-events, then dont forget to revert the current event selection to the
+events, then don't forget to revert the current event selection to the
 default value (which is ``{}'', all events).
 
 <p>
@@ -1655,7 +1655,7 @@ note frames whose "non" events are in the selected region
 are erased.
 
 <p>
-Conflicting note frames (ie with the same note number)
+Conflicting note frames (i.e. with the same note number)
 are never merged. An attempt to copy a note frame on
 the top of a second one will erase the second one. This avoids
 having nested notes.
@@ -1664,7 +1664,7 @@ having nested notes.
 
 A pitch bend frame is made of "bend" events. It starts with
 a "bend" event whose value is different from the default value
-(ie different from 0x3FFF). It stops when the value reaches
+(i.e. different from 0x3FFF). It stops when the value reaches
 the default value of 0x3FFF. In editing functions a "bend"
 frame may be truncated or split into multiple frames, however
 resulting frames always terminate with the default value. For
@@ -1710,7 +1710,7 @@ The <a href="#func_ctlconf">ctlconf</a> function
 configures the controller. As arguments, it takes the name of
 the controller (an identifier) the controller number and the
 default value of the controller.
-If the default value is ``nil'' (ie no default value),
+If the default value is ``nil'' (i.e. no default value),
 then the controller is considered as of type <i>parameter</i>.
 For instance, following command:
 
@@ -2263,7 +2263,7 @@ doxctl
 </blockquote>
 
 <li>
-output channels are no more the only to be named and/or confugured. Now
+output channels are no more the only to be named and/or configured. Now
 input channels can be named too.
 
 <li>
@@ -2313,7 +2313,7 @@ hidden temporary track and add
 to paste it at the current position.
 
 <li>
-added basic readline completion of builtin functions to rmidish.
+added basic readline completion of built-in functions to rmidish.
 
 <li>
 add <a href="#func_ftransp">ftransp</a> command to
@@ -2325,7 +2325,7 @@ adjust note velocity.
 
 <li>
 add <a href="#func_mend">mend</a> function to return the end of the
-song (ie the first unused measure).
+song (i.e. the first unused measure).
 
 <li>
 make <a href="#func_mins">mins</a> and <a href="#func_mcut">mcut</a> 
@@ -2420,7 +2420,7 @@ The following table summarizes the channel attributes:
 <td>{dev&nbsp;chan}
 
 <td>device and MIDI channel where events are sent to or
-reveived to
+received to
 
 <tr>
 
@@ -3169,13 +3169,13 @@ the current track
 <dt><a name="func_mute">mute trackname</a>
 
 <dd>
-Mute the given track, ie events from ``trackname''
+Mute the given track, i.e. events from ``trackname''
 will not be played during record/playback.
 
 <dt><a name="func_unmute">mute trackname</a>
 
 <dd>
-Unmute the given track, ie events from ``trackname''
+Unmute the given track, i.e. events from ``trackname''
 will be played during record/playback.
 
 <dt><a name="func_getmute">getmute trackname</a>
@@ -3640,7 +3640,7 @@ or ``nil'' if none
 
 <dd>
 set the current sysex bank,
-ie the one that will be recorded. The current
+i.e. the one that will be recorded. The current
 sysex back is the one affected by all sysex
 editing functions.
 
@@ -3711,7 +3711,7 @@ set the tempo at the current song position
 insert ``amount'' blank measures at the
 current song position.
 The time signature used is num/denom.
-If the time signature is an empty list (ie ``{}'')
+If the time signature is an empty list (i.e. ``{}'')
 then the time signature at the current position
 is used.
 
@@ -3729,8 +3729,8 @@ of it at the position given by the ``where'' parameter.
 The target position is a measure number relative to the
 current selection to be copied. 
 
-If ``where'' is postive it's relative to the end of the current
-selecton; if it's negative it's relative to the beginning of the
+If ``where'' is positive it's relative to the end of the current
+selection; if it's negative it's relative to the beginning of the
 current selection.  
 
 <dt><a name="func_minfo">minfo</a>
@@ -3754,13 +3754,13 @@ is a two number list: numerator and denominator.
 <dt><a name="func_mend">mend</a>
 
 <dd>
-Return the ending measure of the song (ie its size in measures).
+Return the ending measure of the song (i.e. its size in measures).
 
 <dt><a name="func_ls">ls</a>
 
 <dd>
 list all tracks, channels, filters and
-varous default values
+various default values
 
 <dt><a name="func_save">save filename</a>
 
@@ -3855,7 +3855,7 @@ to synchronize an external sequencer to midish.
 <dd>
 set device number ``devnum'' to be the master MIDI clock source.
 It will give midish MIDI ticks, MIDI start and MIDI stop events. This
-useful to synchrotize midish to an external sequencer.
+useful to synchronize midish to an external sequencer.
 If ``devnum'' is
 ``nil'', then the internal clock will be used and midish
 will act as master device.
@@ -3877,7 +3877,7 @@ Print some information about the MIDI device.
 
 <dd>
 Setup the list of controllers that are expected to
-be received as 14-bit numbers (ie both coarse and fine
+be received as 14-bit numbers (i.e. both coarse and fine
 MIDI controller messages will be expected). By default
 only coarse values are used, if unsure
 let this list empty.
@@ -4076,7 +4076,7 @@ desired information (if any).
 <p>
 To ease this process, the midish binary can be
 started with the <b>-v</b> flag; in this case it will write
-additionnal information on its standard output, allowing the
+additional information on its standard output, allowing the
 caller to be notified of changes of the state of midish. The
 information is written on a single line starting with the
 <b>+</b> sign, as follows:
@@ -4100,7 +4100,7 @@ No midish function (like <a href="#func_print">print</a>) can
 generate a line starting with the <b>+</b> sign, so it is safe
 to assume that such lines are synchronization lines and not
 the output of a function.  Furthermore, such lines will never
-appear in the middle of the output of a function.  Additionnal
+appear in the middle of the output of a function.  Additional
 information may be available in the same format in future
 versions of midish; thus front-ends should be able to ignore
 unknown lines starting with <b>+</b>.
@@ -4266,7 +4266,7 @@ send EOF character (control-D) to quit
 [0003:03]&gt; s                                 # stop
 [0000:00]&gt; setq 16                           # set quantization step
 [0000:00]&gt; sel 32                            # select 32 measures
-[0000:00]&gt; tquant 75                         # quatize to 75%
+[0000:00]&gt; tquant 75                         # quantize to 75%
 [0000:00]&gt; p                                 # play
 [0001:02]&gt; s                                 # stop playing
 [0000:00]&gt; save "myrythm"                    # save to a file
