@@ -226,19 +226,21 @@ filt_do(struct filt *o, struct ev *in, struct ev *out)
 			break;
 		}
 	}
-	for (d = o->transp; d != NULL; d = d->next) {
-		for (i = 0, ev = out; i < nev; i++, ev++) {
-			if (!EV_ISNOTE(ev) || !evspec_matchev(&d->es, ev))
+	if (!EV_ISNOTE(in))
+		return nev;
+	for (i = 0, ev = out; i < nev; i++, ev++) {
+		for (d = o->vcurve; d != NULL; d = d->next) {
+			if (!evspec_matchev(&d->es, ev))
+				continue;
+			ev->note_vel = vcurve(d->u.vel.nweight, ev->note_vel);
+			break;
+		}
+		for (d = o->transp; d != NULL; d = d->next) {
+			if (!evspec_matchev(&d->es, ev))
 				continue;
 			ev->note_num += d->u.transp.plus;
 			ev->note_num &= 0x7f;
-		}
-	}
-	for (d = o->vcurve; d != NULL; d = d->next) {
-		for (i = 0, ev = out; i < nev; i++, ev++) {
-			if (!EV_ISNOTE(ev) || !evspec_matchev(&d->es, ev))
-				continue;
-			ev->note_vel = vcurve(d->u.vel.nweight, ev->note_vel);
+			break;
 		}
 	}
 	return nev;
@@ -499,8 +501,11 @@ filt_transp(struct filt *f, struct evspec *to, int plus)
 		dbg_puts("filt_transp: note range must be full\n");
 		return;
 	}
+	/*
+	 * delete conflicting destinations
+	 */
 	for (pd = &f->transp; (d = *pd) != NULL;) {
-		if (evspec_isec(&d->es, to)) {
+		if (evspec_isec(&d->es, to) && !evspec_in(to, &d->es) ) {
 			if (filt_debug) {
 				dbg_puts("filt_transp: ");
 				evspec_dbg(&d->es);
@@ -512,22 +517,45 @@ filt_transp(struct filt *f, struct evspec *to, int plus)
 		}
 		pd = &d->next;
 	}
-	if (plus == 0)
-		return;
-
 	/*
-	 * add the new destination to the end of the list,
-	 * in order to obtain the same order as the order in
-	 * which rules are added
+	 * find the most appropriate place to insert the rule
 	 */
+	for (pd = &f->transp; (d = *pd) != NULL;) {
+		d = *pd;
+		if (d == NULL) {
+			if (filt_debug)
+				dbg_puts("filt_transp: no match\n");
+			break;
+		} else if (evspec_eq(to, &d->es)) {
+			if (filt_debug)
+				dbg_puts("filt_transp: exact match\n");
+			goto mod_dst;
+		} else if (evspec_in(to, &d->es)) {
+			if (filt_debug) {
+				dbg_puts("filt_transp: ");
+				evspec_dbg(to);
+				dbg_puts(" in ");
+				evspec_dbg(&d->es);
+				dbg_puts("\n");
+			}
+			break;
+		} else {
+			if (filt_debug) {
+				dbg_puts("filt_transp: ");
+				evspec_dbg(to);
+				dbg_puts(": skipped\n");
+			}
+		}
+		pd = &d->next;
+	}
+	if (plus == 0 && f->transp == NULL)
+		return;
 	d = (struct filtdst *)mem_alloc(sizeof(struct filtdst));
 	d->es = *to;
-	d->u.transp.plus = plus & 0x7f;
-	for (pd = &f->transp; *pd != NULL; pd = &(*pd)->next) {
-		/* nothing */
-	}
-	d->next = NULL;
+	d->next = *pd;
 	*pd = d;
+ mod_dst:
+	d->u.transp.plus = plus & 0x7f;
 }
 
 void
@@ -539,8 +567,11 @@ filt_vcurve(struct filt *f, struct evspec *to, int weight)
 		dbg_puts("filt_vcurve: set must contain notes\n");
 		return;
 	}
+	/*
+	 * delete conflicting destinations
+	 */
 	for (pd = &f->vcurve; (d = *pd) != NULL;) {
-		if (evspec_isec(&d->es, to)) {
+		if (evspec_isec(&d->es, to) && !evspec_in(to, &d->es) ) {
 			if (filt_debug) {
 				dbg_puts("filt_vcurve: ");
 				evspec_dbg(&d->es);
@@ -552,20 +583,43 @@ filt_vcurve(struct filt *f, struct evspec *to, int weight)
 		}
 		pd = &d->next;
 	}
-	if (weight == 0)
-		return;
-
 	/*
-	 * add the new destination to the end of the list,
-	 * in order to obtain the same order as the order in
-	 * which rules are added
+	 * find the most appropriate place to insert the rule
 	 */
+	for (pd = &f->vcurve; (d = *pd) != NULL;) {
+		d = *pd;
+		if (d == NULL) {
+			if (filt_debug)
+				dbg_puts("filt_vcurve: no match\n");
+			break;
+		} else if (evspec_eq(to, &d->es)) {
+			if (filt_debug)
+				dbg_puts("filt_vcurve: exact match\n");
+			goto mod_dst;
+		} else if (evspec_in(to, &d->es)) {
+			if (filt_debug) {
+				dbg_puts("filt_vcurve: ");
+				evspec_dbg(to);
+				dbg_puts(" in ");
+				evspec_dbg(&d->es);
+				dbg_puts("\n");
+			}
+			break;
+		} else {
+			if (filt_debug) {
+				dbg_puts("filt_vcurve: ");
+				evspec_dbg(to);
+				dbg_puts(": skipped\n");
+			}
+		}
+		pd = &d->next;
+	}
+	if (weight == 0 && f->vcurve == NULL)
+		return;
 	d = (struct filtdst *)mem_alloc(sizeof(struct filtdst));
 	d->es = *to;
-	d->u.vel.nweight = (64 - weight) & 0x7f;
-	for (pd = &f->vcurve; *pd != NULL; pd = &(*pd)->next) {
-		/* nothing */
-	}
 	d->next = NULL;
 	*pd = d;
+ mod_dst:
+	d->u.vel.nweight = (64 - weight) & 0x7f;
 }
