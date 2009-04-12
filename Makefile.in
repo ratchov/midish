@@ -67,7 +67,7 @@ rmidish:	rmidish.c
 builtin.o:	builtin.c dbg.h default.h node.h exec.h name.h str.h \
 		data.h cons.h frame.h state.h ev.h song.h track.h filt.h \
 		sysex.h metro.h timo.h user.h smf.h saveload.h textio.h \
-		mux.h mididev.h builtin.h
+		mux.h mididev.h norm.h builtin.h
 cons.o:		cons.c dbg.h textio.h cons.h user.h
 conv.o:		conv.c dbg.h state.h ev.h default.h conv.h
 data.o:		data.c dbg.h str.h cons.h data.h
@@ -83,7 +83,7 @@ main.o:		main.c dbg.h str.h cons.h ev.h default.h mux.h track.h \
 		timo.h user.h mididev.h textio.h
 mdep.o:		mdep.c default.h mux.h mididev.h cons.h user.h exec.h \
 		name.h str.h dbg.h
-mdep_raw.o:	mdep_raw.c dbg.h mididev.h str.h
+mdep_raw.o:	mdep_raw.c dbg.h cons.h mididev.h str.h
 mdep_alsa.o:	mdep_alsa.c dbg.h mididev.h str.h
 metro.o:	metro.c dbg.h mux.h metro.h ev.h default.h timo.h song.h \
 		name.h str.h track.h frame.h state.h filt.h sysex.h
@@ -91,8 +91,8 @@ mididev.o:	mididev.c dbg.h default.h mididev.h pool.h cons.h str.h \
 		ev.h sysex.h mux.h
 mixout.o:	mixout.c dbg.h ev.h default.h filt.h pool.h mux.h timo.h \
 		state.h
-mux.o:		mux.c dbg.h ev.h default.h mux.h mididev.h sysex.h \
-		timo.h state.h conv.h norm.h mixout.h
+mux.o:		mux.c dbg.h ev.h default.h cons.h mux.h mididev.h \
+		sysex.h timo.h state.h conv.h norm.h mixout.h
 name.o:		name.c dbg.h name.h str.h
 node.o:		node.c dbg.h str.h data.h node.h exec.h name.h cons.h
 norm.o:		norm.c dbg.h ev.h default.h norm.h pool.h mux.h filt.h \

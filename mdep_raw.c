@@ -34,6 +34,7 @@
 #include <poll.h>
 #include <stdio.h>
 #include "dbg.h"
+#include "cons.h"
 #include "mididev.h"
 #include "str.h"
 
@@ -69,7 +70,7 @@ raw_new(char *path, unsigned mode)
 	struct raw *dev;
 
 	if (path == NULL) {
-		dbg_puts("path must be set for raw devices\n");
+		cons_err("path must be set for raw devices");
 		return NULL;
 	}
 	dev = (struct raw *)mem_alloc(sizeof(struct raw));

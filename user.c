@@ -593,7 +593,7 @@ exec_lookupval(struct exec *o, char *n, unsigned isfine, unsigned *r)
 		   *r = arg->data->val.num;
 		   return 1;
 	} else {
-		cons_err("bad type of controller value\n");
+		cons_err("bad type of controller value");
 		return 0;
 	}
 }
@@ -750,7 +750,7 @@ data_getctl(struct data *d, unsigned *num)
 		*num = d->val.num;
 	} else if (d->type == DATA_REF) {
 		if (!evctl_lookup(d->val.ref, num)) {
-			cons_errs(d->val.ref, "no such controller\n");
+			cons_errs(d->val.ref, "no such controller");
 			return 0;
 		}
 	} else {

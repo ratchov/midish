@@ -80,7 +80,7 @@
 
 #include "dbg.h"
 #include "ev.h"
-
+#include "cons.h"
 #include "default.h"
 #include "mux.h"
 #include "mididev.h"
@@ -194,7 +194,7 @@ mux_close(void)
 	mux_flush();
 	for (i = mididev_list; i != NULL; i = i->next) {
 		if (i->isysex) {
-			dbg_puts("lost incomplete sysex\n");
+			cons_err("lost incomplete sysex");
 			sysex_del(i->isysex);
 		}
 		mididev_close(i);
@@ -398,8 +398,7 @@ mux_timercb(unsigned long delta)
 		if (dev->isensto) {
 			if (dev->isensto <= delta) {
 				dev->isensto = 0;
-				dbg_putu(dev->unit);
-				dbg_puts(": sensing timeout, disabled\n");
+				cons_erru(dev->unit, "sensing timeout, disabled");
 			} else {
 				dev->isensto -= delta;
 			}
@@ -537,8 +536,7 @@ mux_ackcb(unsigned unit)
 	struct mididev *dev = mididev_byunit[unit];
 
 	if (dev->isensto == 0) {
-		dbg_putu(dev->unit);
-		dbg_puts(": sensing enabled\n");
+		cons_erru(dev->unit, "sensing enabled");
 		dev->isensto = MIDIDEV_ISENSTO;
 	}
 }
