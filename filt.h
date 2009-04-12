@@ -34,11 +34,12 @@
 #include "ev.h"
 
 /*
- * destination to which the output event is mapped
+ * source against which the input event is matched
  */
-struct filtdst {
-	struct evspec es;
-	struct filtdst *next;
+struct filtnode {
+	struct evspec es;		/* events handled by this branch */
+	struct filtnode *dstlist;	/* destinations for this source */
+	struct filtnode *next;		/* next source in the list */
 	union {
 		struct {
 			unsigned nweight;
@@ -49,20 +50,11 @@ struct filtdst {
 	} u;
 };
 
-/*
- * source against which the input event is matched
- */
-struct filtsrc {
-	struct evspec es;		/* events by this entry */
-	struct filtdst *dstlist;	/* destinations for this source */
-	struct filtsrc *next;		/* next source in the list */
-};
-
 #define FILT_MAXNRULES 32
 
 struct filt {
-	struct filtsrc *srclist;
-	struct filtdst *vcurve, *transp;
+	struct filtnode *srclist;
+	struct filtnode *vcurve, *transp;
 };
 
 void filt_init(struct filt *);

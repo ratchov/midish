@@ -154,8 +154,8 @@ filt_init(struct filt *o)
 void
 filt_reset(struct filt *o)
 {
-	struct filtsrc *s;
-	struct filtdst *d;
+	struct filtnode *s;
+	struct filtnode *d;
 
 	while (o->srclist) {
 		s = o->srclist;
@@ -210,8 +210,8 @@ unsigned
 filt_do(struct filt *o, struct ev *in, struct ev *out)
 {
 	struct ev *ev;
-	struct filtsrc *s;
-	struct filtdst *d;
+	struct filtnode *s;
+	struct filtnode *d;
 	unsigned nev, i;
 
 	nev = 0;
@@ -252,8 +252,8 @@ filt_do(struct filt *o, struct ev *in, struct ev *out)
 void
 filt_mapdel(struct filt *f, struct evspec *from, struct evspec *to)
 {
-	struct filtsrc *s, **ps;
-	struct filtdst *d, **pd;
+	struct filtnode *s, **ps;
+	struct filtnode *d, **pd;
 
 	for (ps = &f->srclist; (s = *ps) != NULL;) {
 		if (evspec_in(&s->es, from)) {
@@ -291,8 +291,8 @@ filt_mapdel(struct filt *f, struct evspec *from, struct evspec *to)
 void
 filt_mapnew(struct filt *f, struct evspec *from, struct evspec *to)
 {
-	struct filtsrc *s, **ps;
-	struct filtdst *d, **pd;
+	struct filtnode *s, **ps;
+	struct filtnode *d, **pd;
 
 	if (filt_debug) {
 		dbg_puts("filt_mapnew: adding ");
@@ -383,7 +383,7 @@ filt_mapnew(struct filt *f, struct evspec *from, struct evspec *to)
 		}
 		ps = &s->next;
 	}
-	s = (struct filtsrc *)mem_alloc(sizeof(struct filtsrc));
+	s = (struct filtnode *)mem_alloc(sizeof(struct filtnode));
 	s->es = *from;
 	s->next = *ps;
 	s->dstlist = NULL;
@@ -413,7 +413,7 @@ filt_mapnew(struct filt *f, struct evspec *from, struct evspec *to)
 	 * in order to obtain the same order as the order in
 	 * which rules are added
 	 */
-	d = (struct filtdst *)mem_alloc(sizeof(struct filtdst));
+	d = (struct filtnode *)mem_alloc(sizeof(struct filtnode));
 	d->es = *to;
 	for (pd = &s->dstlist; *pd != NULL; pd = &(*pd)->next) {
 		/* nothing */
@@ -422,10 +422,10 @@ filt_mapnew(struct filt *f, struct evspec *from, struct evspec *to)
 	*pd = d;
 }
 
-struct filtsrc *
+struct filtnode *
 filt_movelist(struct filt *o)
 {
-	struct filtsrc *list, *s;
+	struct filtnode *list, *s;
 
 	for (list = NULL; (s = o->srclist) != NULL;) {
 		o->srclist = s->next;
@@ -439,8 +439,8 @@ void
 filt_chgin(struct filt *o, struct evspec *from, struct evspec *to, int swap)
 {
 	struct evspec newspec;
-	struct filtsrc *s, *list;
-	struct filtdst *d;
+	struct filtnode *s, *list;
+	struct filtnode *d;
 
 	list = filt_movelist(o);
 	while ((s = list) != NULL) {
@@ -465,8 +465,8 @@ void
 filt_chgout(struct filt *o, struct evspec *from, struct evspec *to, int swap)
 {
 	struct evspec newspec;
-	struct filtsrc *s, *list;
-	struct filtdst *d;
+	struct filtnode *s, *list;
+	struct filtnode *d;
 
 	list = filt_movelist(o);
 	while ((s = list) != NULL) {
@@ -490,7 +490,7 @@ filt_chgout(struct filt *o, struct evspec *from, struct evspec *to, int swap)
 void
 filt_transp(struct filt *f, struct evspec *to, int plus)
 {
-	struct filtdst *d, **pd;
+	struct filtnode *d, **pd;
 
 	if (to->cmd != EVSPEC_ANY && to->cmd != EVSPEC_NOTE) {
 		dbg_puts("filt_transp: set must contain notes\n");
@@ -550,7 +550,7 @@ filt_transp(struct filt *f, struct evspec *to, int plus)
 	}
 	if (plus == 0 && f->transp == NULL)
 		return;
-	d = (struct filtdst *)mem_alloc(sizeof(struct filtdst));
+	d = (struct filtnode *)mem_alloc(sizeof(struct filtnode));
 	d->es = *to;
 	d->next = *pd;
 	*pd = d;
@@ -561,7 +561,7 @@ filt_transp(struct filt *f, struct evspec *to, int plus)
 void
 filt_vcurve(struct filt *f, struct evspec *to, int weight)
 {
-	struct filtdst *d, **pd;
+	struct filtnode *d, **pd;
 
 	if (to->cmd != EVSPEC_ANY && to->cmd != EVSPEC_NOTE) {
 		dbg_puts("filt_vcurve: set must contain notes\n");
@@ -616,7 +616,7 @@ filt_vcurve(struct filt *f, struct evspec *to, int weight)
 	}
 	if (weight == 0 && f->vcurve == NULL)
 		return;
-	d = (struct filtdst *)mem_alloc(sizeof(struct filtdst));
+	d = (struct filtnode *)mem_alloc(sizeof(struct filtnode));
 	d->es = *to;
 	d->next = NULL;
 	*pd = d;

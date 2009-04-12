@@ -204,8 +204,8 @@ track_output(struct track *t, struct textout *f)
 void
 filt_output(struct filt *o, struct textout *f)
 {
-	struct filtsrc *s, *snext;
-	struct filtdst *d;
+	struct filtnode *s, *snext;
+	struct filtnode *d;
 	textout_putstr(f, "{\n");
 	textout_shiftright(f);
 
