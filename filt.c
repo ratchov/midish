@@ -54,199 +54,6 @@ rule_dbg(struct evspec *from, struct  evspec *to)
 }
 
 /*
- * transform "in" (matching "from" spec) into "out" so it matches "to"
- * spec. The "from" and "to" specs _must_ have the same dev, ch, v0 and
- * v1 ranges (to ensure the mapping must be bijective).  This routine is
- * supposed to be fast since it's called for each incoming event.
- */
-void
-filt_mapev(struct evspec *from, struct evspec *to,
-    struct ev *in, struct ev *out)
-{
-	*out = *in;
-	if (to->cmd != EVSPEC_ANY && to->cmd != EVSPEC_NOTE)
-		out->cmd = to->cmd;
-	if ((evinfo[from->cmd].flags & EV_HAS_DEV) &&
-	    (evinfo[in->cmd].flags & EV_HAS_DEV)) {
-		out->dev += to->dev_min - from->dev_min;
-	}
-	if ((evinfo[from->cmd].flags & EV_HAS_CH) &&
-	    (evinfo[in->cmd].flags & EV_HAS_CH)) {
-		out->ch += to->ch_min - from->ch_min;
-	}
-	if (evinfo[from->cmd].nranges > 0 &&
-	    evinfo[in->cmd].nranges > 0) {
-		out->v0 += to->v0_min - from->v0_min;
-	}
-	if (evinfo[from->cmd].nranges > 1 &&
-	    evinfo[in->cmd].nranges > 1) {
-		out->v1 += to->v1_min - from->v1_min;
-	}
-	if (filt_debug) {
-		dbg_puts("filt_mapev: (");
-		rule_dbg(from, to);
-		dbg_puts("): ");
-		ev_dbg(in);
-		dbg_puts(" -> ");
-		ev_dbg(out);
-		dbg_puts("\n");
-	}
-}
-
-/*
- * transform "in" spec (included in "from" spec) into "out" spec
- * (included in "to" spec). This routine works in exactly the same way
- * as filt_evmap() but for specs instead of events; so it has the same
- * semantics and constraints.
- */
-void
-filt_mapspec(struct evspec *from, struct evspec *to,
-    struct evspec *in, struct evspec *out)
-{
-	*out = *in;
-	if (to->cmd != EVSPEC_ANY && to->cmd != EVSPEC_NOTE)
-		out->cmd = to->cmd;
-	if ((evinfo[from->cmd].flags & EV_HAS_DEV) &&
-	    (evinfo[in->cmd].flags & EV_HAS_DEV)) {
-		out->dev_min += to->dev_min - from->dev_min;
-		out->dev_max += to->dev_min - from->dev_min;
-	}
-	if ((evinfo[from->cmd].flags & EV_HAS_CH) &&
-	    (evinfo[in->cmd].flags & EV_HAS_CH)) {
-		out->ch_min += to->ch_min - from->ch_min;
-		out->ch_max += to->ch_min - from->ch_min;
-	}
-	if (evinfo[from->cmd].nranges > 0 &&
-	    evinfo[in->cmd].nranges > 0) {
-		out->v0_min += to->v0_min - from->v0_min;
-		out->v0_max += to->v0_min - from->v0_min;
-	}
-	if (evinfo[from->cmd].nranges > 1 &&
-	    evinfo[in->cmd].nranges > 1) {
-		out->v1_min += to->v1_min - from->v1_min;
-		out->v1_max += to->v1_min - from->v1_min;
-	}
-	if (filt_debug) {
-		dbg_puts("filt_mapspec: (");
-		rule_dbg(from, to);
-		dbg_puts("): ");
-		evspec_dbg(in);
-		dbg_puts(" -> ");
-		evspec_dbg(out);
-		dbg_puts("\n");
-	}
-}
-
-/*
- * initialize a filter
- */
-void
-filt_init(struct filt *o)
-{
-	o->map = NULL;
-	o->vcurve = NULL;
-	o->transp = NULL;
-}
-
-/*
- * remove all filtering rules and all states
- */
-void
-filt_reset(struct filt *o)
-{
-	struct filtnode *s;
-	struct filtnode *d;
-
-	while (o->map) {
-		s = o->map;
-		while (s->dstlist) {
-			d = s->dstlist;
-			s->dstlist = d->next;
-			mem_free(d);
-		}
-		o->map = s->next;
-		mem_free(s);
-	}
-}
-
-/*
- * destroy a filter
- */
-void
-filt_done(struct filt *o)
-{
-	filt_reset(o);
-	o->map = (void *)0xdeadbeef;
-}
-
-/*
- * return velocity adjusted by curve with the given weight.
- * the weight must be in the 1..127 range, 64 means neutral
- */
-unsigned
-vcurve(unsigned nweight, unsigned x)
-{
-	if (x == 0)
-		return 0;
-	nweight--;
-	if (x <= nweight) {
-		if (nweight == 0)
-			return 127;
-		else
-			return 1 + (126 - nweight) * (x - 1) / nweight;
-	} else {
-		if (nweight == 126)
-			return 1;
-		else
-			return 127 - nweight * (127 - x) / (126 - nweight);
-	}
-}
-
-/*
- * match event against all sources and for each source
- * generate output events
- */
-unsigned
-filt_do(struct filt *o, struct ev *in, struct ev *out)
-{
-	struct ev *ev;
-	struct filtnode *s;
-	struct filtnode *d;
-	unsigned nev, i;
-
-	nev = 0;
-	for (s = o->map;; s = s->next) {
-		if (s == NULL)
-			break;
-		if (evspec_matchev(&s->es, in)) {
-			for (d = s->dstlist; d != NULL; d = d->next) {
-				filt_mapev(&s->es, &d->es, in, &out[nev]);
-				nev++;
-			}
-			break;
-		}
-	}
-	if (!EV_ISNOTE(in))
-		return nev;
-	for (i = 0, ev = out; i < nev; i++, ev++) {
-		for (d = o->vcurve; d != NULL; d = d->next) {
-			if (!evspec_matchev(&d->es, ev))
-				continue;
-			ev->note_vel = vcurve(d->u.vel.nweight, ev->note_vel);
-			break;
-		}
-		for (d = o->transp; d != NULL; d = d->next) {
-			if (!evspec_matchev(&d->es, ev))
-				continue;
-			ev->note_num += d->u.transp.plus;
-			ev->note_num &= 0x7f;
-			break;
-		}
-	}
-	return nev;
-}
-
-/*
  * allocate and insert a new leaf node at the given location
  */
 struct filtnode *
@@ -359,6 +166,192 @@ filtnode_mkdst(struct filtnode *s, struct evspec *to)
 		pd = &d->next;
 	}
 	return filtnode_new(to, pd);
+}
+
+/*
+ * transform "in" (matching "from" spec) into "out" so it matches "to"
+ * spec. The "from" and "to" specs _must_ have the same dev, ch, v0 and
+ * v1 ranges (to ensure the mapping must be bijective).  This routine is
+ * supposed to be fast since it's called for each incoming event.
+ */
+void
+filt_mapev(struct evspec *from, struct evspec *to,
+    struct ev *in, struct ev *out)
+{
+	*out = *in;
+	if (to->cmd != EVSPEC_ANY && to->cmd != EVSPEC_NOTE)
+		out->cmd = to->cmd;
+	if ((evinfo[from->cmd].flags & EV_HAS_DEV) &&
+	    (evinfo[in->cmd].flags & EV_HAS_DEV)) {
+		out->dev += to->dev_min - from->dev_min;
+	}
+	if ((evinfo[from->cmd].flags & EV_HAS_CH) &&
+	    (evinfo[in->cmd].flags & EV_HAS_CH)) {
+		out->ch += to->ch_min - from->ch_min;
+	}
+	if (evinfo[from->cmd].nranges > 0 &&
+	    evinfo[in->cmd].nranges > 0) {
+		out->v0 += to->v0_min - from->v0_min;
+	}
+	if (evinfo[from->cmd].nranges > 1 &&
+	    evinfo[in->cmd].nranges > 1) {
+		out->v1 += to->v1_min - from->v1_min;
+	}
+	if (filt_debug) {
+		dbg_puts("filt_mapev: (");
+		rule_dbg(from, to);
+		dbg_puts("): ");
+		ev_dbg(in);
+		dbg_puts(" -> ");
+		ev_dbg(out);
+		dbg_puts("\n");
+	}
+}
+
+/*
+ * transform "in" spec (included in "from" spec) into "out" spec
+ * (included in "to" spec). This routine works in exactly the same way
+ * as filt_evmap() but for specs instead of events; so it has the same
+ * semantics and constraints.
+ */
+void
+filt_mapspec(struct evspec *from, struct evspec *to,
+    struct evspec *in, struct evspec *out)
+{
+	*out = *in;
+	if (to->cmd != EVSPEC_ANY && to->cmd != EVSPEC_NOTE)
+		out->cmd = to->cmd;
+	if ((evinfo[from->cmd].flags & EV_HAS_DEV) &&
+	    (evinfo[in->cmd].flags & EV_HAS_DEV)) {
+		out->dev_min += to->dev_min - from->dev_min;
+		out->dev_max += to->dev_min - from->dev_min;
+	}
+	if ((evinfo[from->cmd].flags & EV_HAS_CH) &&
+	    (evinfo[in->cmd].flags & EV_HAS_CH)) {
+		out->ch_min += to->ch_min - from->ch_min;
+		out->ch_max += to->ch_min - from->ch_min;
+	}
+	if (evinfo[from->cmd].nranges > 0 &&
+	    evinfo[in->cmd].nranges > 0) {
+		out->v0_min += to->v0_min - from->v0_min;
+		out->v0_max += to->v0_min - from->v0_min;
+	}
+	if (evinfo[from->cmd].nranges > 1 &&
+	    evinfo[in->cmd].nranges > 1) {
+		out->v1_min += to->v1_min - from->v1_min;
+		out->v1_max += to->v1_min - from->v1_min;
+	}
+	if (filt_debug) {
+		dbg_puts("filt_mapspec: (");
+		rule_dbg(from, to);
+		dbg_puts("): ");
+		evspec_dbg(in);
+		dbg_puts(" -> ");
+		evspec_dbg(out);
+		dbg_puts("\n");
+	}
+}
+
+/*
+ * initialize a filter
+ */
+void
+filt_init(struct filt *o)
+{
+	o->map = NULL;
+	o->vcurve = NULL;
+	o->transp = NULL;
+}
+
+/*
+ * remove all filtering rules and all states
+ */
+void
+filt_reset(struct filt *o)
+{
+	while (o->map)
+		filtnode_del(&o->map);
+	while (o->transp)
+		filtnode_del(&o->transp);
+	while (o->vcurve)
+		filtnode_del(&o->vcurve);
+}
+
+/*
+ * destroy a filter
+ */
+void
+filt_done(struct filt *o)
+{
+	filt_reset(o);
+	o->map = o->transp = o->vcurve = (void *)0xdeadbeef;
+}
+
+/*
+ * return velocity adjusted by curve with the given weight.
+ * the weight must be in the 1..127 range, 64 means neutral
+ */
+unsigned
+vcurve(unsigned nweight, unsigned x)
+{
+	if (x == 0)
+		return 0;
+	nweight--;
+	if (x <= nweight) {
+		if (nweight == 0)
+			return 127;
+		else
+			return 1 + (126 - nweight) * (x - 1) / nweight;
+	} else {
+		if (nweight == 126)
+			return 1;
+		else
+			return 127 - nweight * (127 - x) / (126 - nweight);
+	}
+}
+
+/*
+ * match event against all sources and for each source
+ * generate output events
+ */
+unsigned
+filt_do(struct filt *o, struct ev *in, struct ev *out)
+{
+	struct ev *ev;
+	struct filtnode *s;
+	struct filtnode *d;
+	unsigned nev, i;
+
+	nev = 0;
+	for (s = o->map;; s = s->next) {
+		if (s == NULL)
+			break;
+		if (evspec_matchev(&s->es, in)) {
+			for (d = s->dstlist; d != NULL; d = d->next) {
+				filt_mapev(&s->es, &d->es, in, &out[nev]);
+				nev++;
+			}
+			break;
+		}
+	}
+	if (!EV_ISNOTE(in))
+		return nev;
+	for (i = 0, ev = out; i < nev; i++, ev++) {
+		for (d = o->vcurve; d != NULL; d = d->next) {
+			if (!evspec_matchev(&d->es, ev))
+				continue;
+			ev->note_vel = vcurve(d->u.vel.nweight, ev->note_vel);
+			break;
+		}
+		for (d = o->transp; d != NULL; d = d->next) {
+			if (!evspec_matchev(&d->es, ev))
+				continue;
+			ev->note_num += d->u.transp.plus;
+			ev->note_num &= 0x7f;
+			break;
+		}
+	}
+	return nev;
 }
 
 /*
