@@ -211,9 +211,9 @@ filt_output(struct filt *o, struct textout *f)
 
 	snext = 0;
 	for (;;) {
-		if (snext == o->srclist)
+		if (snext == o->map)
 			break;
-		for (s = o->srclist; s->next != snext; s = s->next) {
+		for (s = o->map; s->next != snext; s = s->next) {
 			/* nothing */
 		}
 		for (d = s->dstlist; d != NULL; d = d->next) {

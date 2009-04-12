@@ -53,8 +53,9 @@ struct filtnode {
 #define FILT_MAXNRULES 32
 
 struct filt {
-	struct filtnode *srclist;
-	struct filtnode *vcurve, *transp;
+	struct filtnode *map;		/* root of map rules */
+	struct filtnode *vcurve;	/* root of vcurve rules */
+	struct filtnode *transp;	/* root of transp rules */
 };
 
 void filt_init(struct filt *);
