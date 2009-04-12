@@ -113,9 +113,11 @@ mixout_putev(struct ev *ev, unsigned id)
 			os = statelist_update(&mixout_slist, &ca);
 			mux_putev(&ca);
 		}
-		dbg_puts("mixout_putev: ");
-		ev_dbg(ev);
-		dbg_puts(" won\n");
+		if (mixout_debug) {
+			dbg_puts("mixout_putev: ");
+			ev_dbg(ev);
+			dbg_puts(" won\n");
+		}
 	}
 	os = statelist_update(&mixout_slist, ev);
 	os->tag = id;

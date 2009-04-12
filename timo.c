@@ -116,10 +116,8 @@ timo_del(struct timo *o)
 			return;
 		}
 	}
-#ifdef TIMO_DEBUG
 	if (timo_debug)
 		dbg_puts("timo_del: not found\n");
-#endif
 }
 
 /*
@@ -173,11 +171,9 @@ timo_init(void)
 void
 timo_done(void)
 {
-#ifdef TIMO_DEBUG
 	if (timo_queue != NULL) {
 		dbg_puts("timo_done: timo_queue not empty!\n");
 		dbg_panic();
 	}
 	timo_queue = (struct timo *)0xdeadbeef;
-#endif
 }

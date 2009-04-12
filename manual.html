@@ -3988,26 +3988,43 @@ the script is terminated.
 
 <dd>
 set debug-flag ``flag'' to (integer) value ``val''.
+It's a developper knob.
 If ``val=0'' the corresponding debug-info are
 turned off. ``flag'' can be:
 
 <ul>
 
 <li>
-``rmidi'' - show raw MIDI traffic on stderr
-
-<li>
 ``filt'' - show events passing through the current filter
 
 <li>
+``mididev'' - show raw MIDI traffic on stderr
+
+<li>
+``mixout'' - show conflicts in the output MIDI merger 
+
+<li>
+``norm'' - show events in the input normalizer
+
+<li>
+``pool'' - show pool usage on exit
+
+<li>
 ``song'' - show start/stop events
+
+<li>
+``timo'' - show timer internal errors
+
+<li>
+``mem'' - show memory usage
 
 </ul>
 
 <dt><a name="func_panic">panic</a>
 
 <dd>
-cause the sequencer to core-dump
+Cause the sequencer to core-dump,
+useful to developpers.
 
 <dt><a name="func_proclist">proclist</a>
 

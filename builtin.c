@@ -56,6 +56,9 @@ blt_panic(struct exec *o, struct data **r)
 unsigned
 blt_debug(struct exec *o, struct data **r)
 {
+	extern unsigned filt_debug, mididev_debug, mux_debug, mixout_debug, 
+	    norm_debug, pool_debug, song_debug,
+	    timo_debug, mem_debug;
 	char *flag;
 	long value;
 
@@ -63,12 +66,22 @@ blt_debug(struct exec *o, struct data **r)
 	    !exec_lookuplong(o, "value", &value)) {
 		return 0;
 	}
-	if (str_eq(flag, "mididev")) {
-		mididev_debug = value;
-	} else if (str_eq(flag, "filt")) {
+	if (str_eq(flag, "filt")) {
 		filt_debug = value;
+	} else if (str_eq(flag, "mididev")) {
+		mididev_debug = value;
+	} else if (str_eq(flag, "mixout")) {
+		mixout_debug = value;
+	} else if (str_eq(flag, "mux")) {
+		mux_debug = value;
+	} else if (str_eq(flag, "norm")) {
+		norm_debug = value;
+	} else if (str_eq(flag, "pool")) {
+		pool_debug = value;
 	} else if (str_eq(flag, "song")) {
 		song_debug = value;
+	} else if (str_eq(flag, "timo")) {
+		timo_debug = value;
 	} else if (str_eq(flag, "mem")) {
 		mem_debug = value;
 	} else {
