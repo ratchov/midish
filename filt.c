@@ -501,7 +501,6 @@ filt_chgout(struct filt *o, struct evspec *from, struct evspec *to, int swap)
 	}
 }
 
-/* XXX: convert the following to cons_err() */
 void
 filt_transp(struct filt *f, struct evspec *from, int plus)
 {
@@ -521,7 +520,6 @@ filt_transp(struct filt *f, struct evspec *from, int plus)
 	s->u.transp.plus = plus & 0x7f;
 }
 
-/* XXX: convert the following to cons_err() */
 void
 filt_vcurve(struct filt *f, struct evspec *from, int weight)
 {

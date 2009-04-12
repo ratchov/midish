@@ -134,7 +134,7 @@ ev_getstr(struct ev *ev)
 }
 
 /*
- * find the event EV_XXX constant corresponding to the given string
+ * find the event EV_XX constant corresponding to the given string
  */
 unsigned
 ev_str2cmd(struct ev *ev, char *str)
@@ -266,7 +266,7 @@ ev_dbg(struct ev *ev)
 }
 
 /*
- * find the EVSPEC_XXX constant corresponding to
+ * find the EVSPEC_XX constant corresponding to
  * the given string
  */
 unsigned

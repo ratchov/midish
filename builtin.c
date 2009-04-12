@@ -2417,8 +2417,8 @@ blt_ftransp(struct exec *o, struct data **r)
 	    !exec_lookuplong(o, "plus", &plus)) {
 		return 0;
 	}
-	if (plus < -64 || plus > 63) {
-		cons_errs(o->procname, "plus must be in the -64..63 range");
+	if (plus < -63 || plus > 63) {
+		cons_errs(o->procname, "plus must be in the -63..63 range");
 		return 0;
 	}
 	if ((es.cmd != EVSPEC_ANY && es.cmd != EVSPEC_NOTE) ||
