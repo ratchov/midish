@@ -61,6 +61,13 @@ dbg_putu(unsigned long n)
 	fprintf(stderr, "%lu", n);
 }
 
+void
+dbg_putpct(unsigned long n)
+{
+	fprintf(stderr, "%lu.%02lu", n / 100, n % 100);
+}
+
+
 /*
  * abort the execution of the program after a fatal error, we should
  * put code here to backup user data
@@ -228,26 +235,18 @@ prof_dbg(struct prof *p)
 	dbg_putu(p->n);
 	if (p->n != 0) {
 		dbg_puts(", min=");
-		dbg_putu(p->min / 100);
-		dbg_puts(".");
-		dbg_putu(p->min % 100);
+		dbg_putpct(p->min);
 		
 		dbg_puts(", max=");
-		dbg_putu(p->max / 100);
-		dbg_puts(".");
-		dbg_putu(p->max % 100);
+		dbg_putpct(p->max);
 		
 		mean = p->sum / p->n;
 		dbg_puts(", mean=");
-		dbg_putu(mean / 100);
-		dbg_puts(".");
-		dbg_putu(mean % 100);
+		dbg_putpct(mean);
 
 		delta = prof_sqrt((p->sumsqr - p->sum * p->sum / p->n) / p->n);
 		dbg_puts(", delta=");
-		dbg_putu(delta / 100);
-		dbg_puts(".");
-		dbg_putu(delta % 100);
+		dbg_putpct(delta);
 	}
 	dbg_puts("\n");
 }
