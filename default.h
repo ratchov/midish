@@ -34,7 +34,7 @@
 /*
  * version string for newly created files
  */
-#define VERSION "midish version 0.3"
+#define VERSION "midish version 0.4"
 
 /*
  * convert tempo (beats per minute) to tic length (number of 24-th of
