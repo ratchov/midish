@@ -87,7 +87,7 @@ mdep_alsa.o:	mdep_alsa.c dbg.h mididev.h str.h
 metro.o:	metro.c dbg.h mux.h metro.h ev.h default.h timo.h song.h \
 		name.h str.h track.h frame.h state.h filt.h sysex.h
 mididev.o:	mididev.c dbg.h default.h mididev.h pool.h cons.h str.h \
-		ev.h sysex.h mux.h
+		ev.h sysex.h mux.h timo.h
 mixout.o:	mixout.c dbg.h ev.h default.h filt.h pool.h mux.h timo.h \
 		state.h
 mux.o:		mux.c dbg.h ev.h default.h cons.h mux.h mididev.h \

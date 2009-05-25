@@ -46,4 +46,6 @@ void timo_update(unsigned);
 void timo_init(void);
 void timo_done(void);
 
+extern unsigned timo_abstime;
+
 #endif /* MIDISH_TIMO_H */

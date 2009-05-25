@@ -66,6 +66,7 @@
 #include "ev.h"
 #include "sysex.h"
 #include "mux.h"
+#include "timo.h"
 
 #define MIDI_SYSEXSTART	0xf0
 #define MIDI_SYSEXSTOP	0xf7
@@ -163,7 +164,9 @@ mididev_flush(struct mididev *o)
 
 	if (!o->eof) {
 		if (mididev_debug && o->oused > 0) {
-			dbg_puts("mididev_flush: dev ");
+			dbg_puts("mididev_flush: ");
+			dbg_putu(timo_abstime / 24);
+			dbg_puts(": dev ");
 			dbg_putu(o->unit);
 			dbg_puts(":");
 			for (i = 0; i < o->oused; i++) {
@@ -202,7 +205,9 @@ mididev_inputcb(struct mididev *o, unsigned char *buf, unsigned count)
 		return;
 	}
 	if (mididev_debug) {
-		dbg_puts("mididev_inputcb: dev ");
+		dbg_puts("mididev_inputcb: ");
+		dbg_putu(timo_abstime / 24);
+		dbg_puts(": dev ");
 		dbg_putu(o->unit);
 		dbg_puts(":");
 		for (i = 0; i < count; i++) {
