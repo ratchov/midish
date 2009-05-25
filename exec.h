@@ -112,15 +112,4 @@ void 	     proc_delete(struct proc *);
 void	     proc_empty(struct name **);
 void 	     proc_dbg(struct proc *);
 
-#define EXEC_OBSOLETE(o)							\
-	do {									\
-		static int signaled = 0;					\
-										\
-		if (signaled)							\
-			break;							\
-		cons_errs(o->procname,						\
-		    "obsolete function, will be removed in next release");	\
-		signaled = 1;							\
-	} while (0)
-
 #endif /* MIDISH_EXEC_H */
