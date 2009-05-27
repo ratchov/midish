@@ -779,7 +779,11 @@ user_func_shut(struct exec *o, struct data **r)
 	struct ev ev;
 	struct mididev *dev;
 
-	if (!song_try(usong)) {
+	/*
+	 * XXX: should raise mode to SONG_IDLE and
+	 * use mixout
+	 */
+	if (!song_try_mode(usong, 0)) {
 		return 0;
 	}
 	mux_open();

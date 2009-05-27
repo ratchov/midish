@@ -377,9 +377,9 @@ metro_output(struct metro *o, struct textout *f)
 {
 	char *mstr;
 
-	if (o->mask & SONG_PLAY) {
+	if (o->mask & (1 << SONG_PLAY)) {
 		mstr = "on";
-	} else if (o->mask & SONG_REC) {
+	} else if (o->mask & (1 << SONG_REC)) {
 		mstr = "rec";
 	} else {
 		mstr = "off";

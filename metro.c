@@ -42,7 +42,7 @@ void
 metro_init(struct metro *o)
 {
 	o->mode = 0;
-	o->mask = SONG_REC;
+	o->mask = (1 << SONG_REC);
 	o->hi.cmd = EV_NON;
 	o->hi.dev = DEFAULT_METRO_DEV;
 	o->hi.ch  = DEFAULT_METRO_CHAN;
@@ -96,9 +96,7 @@ metro_tocb(void *addr)
 void
 metro_tic(struct metro *o, unsigned beat, unsigned tic)
 {
-	unsigned enabled = (o->mask & o->mode);
-
-	if (enabled && tic == 0) {
+	if ((o->mask & (1 << o->mode)) && tic == 0) {
 		/*
 		 * if the last metronome click is sounding
 		 * abord the timeout and stop the click
@@ -139,9 +137,7 @@ metro_shut(struct metro *o)
 void
 metro_setmode(struct metro *o, unsigned mode)
 {
-	unsigned enabled = o->mode & o->mask;
-
-	if (enabled && (mode & o->mask) == 0)
+	if ((o->mask & (1 << o->mode)) && !(o->mask & (1 << mode)))
 		metro_shut(o);
 	o->mode = mode;
 }
@@ -152,9 +148,7 @@ metro_setmode(struct metro *o, unsigned mode)
 void
 metro_setmask(struct metro *o, unsigned mask)
 {
-	unsigned enabled = o->mode & o->mask;
-
-	if (enabled && (o->mode & mask) == 0)
+	if ((o->mask & (1 << o->mode)) && !(mask & (1 << o->mode)))
 		metro_shut(o);
 	o->mask = mask;
 }
@@ -165,9 +159,9 @@ metro_str2mask(struct metro *o, char *mstr, unsigned *rmask)
 	unsigned mask;
 
 	if (str_eq(mstr, "on")) {
-		mask = SONG_PLAY;
+		mask = (1 << SONG_PLAY) + (1 << SONG_REC);
 	} else if (str_eq(mstr, "rec")) {
-		mask = SONG_REC;
+		mask = (1 << SONG_REC);
 	} else if (str_eq(mstr, "off")) {
 		mask = 0;
 	} else {
