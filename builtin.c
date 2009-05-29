@@ -2846,7 +2846,7 @@ blt_dclkrx(struct exec *o, struct data **r)
 		dbg_panic();
 	}
 	if (arg->data->type == DATA_NIL) {
-		mididev_master = NULL;
+		mididev_clksrc = NULL;
 		return 0;
 	} else if (arg->data->type == DATA_LONG) {
 		unit = arg->data->val.num;
@@ -2855,7 +2855,7 @@ blt_dclkrx(struct exec *o, struct data **r)
 			cons_errs(o->procname, "bad device number");
 			return 0;
 		}
-		mididev_master = mididev_byunit[unit];
+		mididev_clksrc = mididev_byunit[unit];
 		return 1;
 	}
 	cons_errs(o->procname, "bad argument type for 'unit'");
@@ -2887,7 +2887,7 @@ blt_dclktx(struct exec *o, struct data **r)
 	}
 	for (i = 0; i < DEFAULT_MAXNDEVS; i++) {
 		if (mididev_byunit[i])
-			mididev_byunit[i]->sendrt = tx[i];
+			mididev_byunit[i]->sendclk = tx[i];
 	}
 	return 1;
 }
@@ -2936,11 +2936,11 @@ blt_dinfo(struct exec *o, struct data **r)
 	textout_putlong(tout, unit);
 	textout_putstr(tout, "\n");
 
-	if (mididev_master == mididev_byunit[unit]) {
+	if (mididev_clksrc == mididev_byunit[unit]) {
 		textout_indent(tout);
 		textout_putstr(tout, "clkrx\t\t\t# master clock source\n");
 	}
-	if (mididev_byunit[unit]->sendrt) {
+	if (mididev_byunit[unit]->sendclk) {
 		textout_indent(tout);
 		textout_putstr(tout, "clktx\t\t\t# sends clock ticks\n");
 	}

@@ -181,7 +181,7 @@ mux_close(void)
 	prof_dbg(&mux_prof);
 #endif
 
-	if (!mididev_master) {
+	if (!mididev_clksrc) {
 		if (mux_phase > MUX_START && mux_phase < MUX_STOP) {
 			mux_chgphase(MUX_STOP);
 			song_stopcb(usong);
@@ -262,7 +262,7 @@ mux_sendtic(void)
 	struct mididev *i;
 
 	for (i = mididev_list; i != NULL; i = i->next) {
-		if (i->sendrt && i != mididev_master) {
+		if (i->sendclk && i != mididev_clksrc) {
 			while (i->ticdelta >= mux_ticrate) {
 				mididev_puttic(i);
 				i->ticdelta -= mux_ticrate;
@@ -281,7 +281,7 @@ mux_sendstart(void)
 	struct mididev *i;
 
 	for (i = mididev_list; i != NULL; i = i->next) {
-		if (i->sendrt && i != mididev_master) {
+		if (i->sendclk && i != mididev_clksrc) {
 			i->ticdelta = i->ticrate;
 			/*
 			 * send a spirious tick just before the start
@@ -303,7 +303,7 @@ mux_sendstop(void)
 	struct mididev *i;
 
 	for (i = mididev_list; i != NULL; i = i->next) {
-		if (i->sendrt && i != mididev_master) {
+		if (i->sendclk && i != mididev_clksrc) {
 			mididev_putstop(i);
 		}
 	}
@@ -417,7 +417,7 @@ mux_timercb(unsigned long delta)
 	/*
 	 * update clocks, when necessary
 	 */
-	if (!mididev_master) {
+	if (!mididev_clksrc) {
 		/*
 		 * internal clock source (no master)
 		 */
@@ -471,10 +471,10 @@ mux_ticcb(unsigned unit)
 {
 	struct mididev *dev = mididev_byunit[unit];
 
-	if (!mididev_master || dev != mididev_master) {
+	if (!mididev_clksrc || dev != mididev_clksrc) {
 		return;
 	}
-	while (mididev_master->ticdelta >= mididev_master->ticrate) {
+	while (mididev_clksrc->ticdelta >= mididev_clksrc->ticrate) {
 		if (mux_phase == MUX_FIRST) {
 			mux_chgphase(MUX_NEXT);
 		} else if (mux_phase == MUX_START) {
@@ -487,9 +487,9 @@ mux_ticcb(unsigned unit)
 			mux_curtic = 0;
 			song_startcb(usong);
 		}
-		mididev_master->ticdelta -= mididev_master->ticrate;
+		mididev_clksrc->ticdelta -= mididev_clksrc->ticrate;
 	}
-	mididev_master->ticdelta += mux_ticrate;
+	mididev_clksrc->ticdelta += mux_ticrate;
 }
 
 /*
@@ -500,7 +500,7 @@ mux_startcb(unsigned unit)
 {
 	struct mididev *dev = mididev_byunit[unit];
 
-	if (!mididev_master || dev != mididev_master) {
+	if (!mididev_clksrc || dev != mididev_clksrc) {
 		return;
 	}
 	mux_chgphase(MUX_START);
@@ -517,7 +517,7 @@ mux_stopcb(unsigned unit)
 {
 	struct mididev *dev = mididev_byunit[unit];
 
-	if (!mididev_master || dev != mididev_master) {
+	if (!mididev_clksrc || dev != mididev_clksrc) {
 		return;
 	}
 	mux_chgphase(MUX_STOP);

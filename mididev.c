@@ -80,7 +80,7 @@ unsigned mididev_debug = 0;
 unsigned mididev_evlen[] = { 2, 2, 2, 2, 1, 1, 2, 0 };
 #define MIDIDEV_EVLEN(status) (mididev_evlen[((status) >> 4) & 7])
 
-struct mididev *mididev_list, *mididev_master;
+struct mididev *mididev_list, *mididev_clksrc;
 struct mididev *mididev_byunit[DEFAULT_MAXNDEVS];
 
 /*
@@ -94,7 +94,7 @@ mididev_init(struct mididev *o, struct devops *ops, unsigned mode)
 	 * (midi_tic, midi_start, midi_stop etc...)
 	 */
 	o->ops = ops;
-	o->sendrt = 0;
+	o->sendclk = 0;
 	o->ticrate = DEFAULT_TPU;
 	o->ticdelta = 0xdeadbeef;
 	o->mode = mode;
@@ -448,7 +448,7 @@ mididev_listinit(void)
 		mididev_byunit[i] = NULL;
 	}
 	mididev_list = NULL;
-	mididev_master = NULL;	/* no master, use internal clock */
+	mididev_clksrc = NULL;	/* no clock source, use internal clock */
 }
 
 /*
@@ -467,7 +467,7 @@ mididev_listdone(void)
 			mididev_byunit[i] = NULL;
 		}
 	}
-	mididev_master = NULL;
+	mididev_clksrc = NULL;
 	mididev_list = NULL;
 }
 
@@ -514,7 +514,7 @@ mididev_detach(unsigned unit)
 		return 0;
 	}
 
-	if (mididev_byunit[unit] == mididev_master) {
+	if (mididev_byunit[unit] == mididev_clksrc) {
 		cons_err("cant detach master device");
 		return 0;
 	}
