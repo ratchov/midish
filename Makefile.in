@@ -49,7 +49,7 @@ distclean:	clean
 
 MIDISH_OBJS = \
 builtin.o cons.o conv.o data.o dbg.o ev.o exec.o filt.o frame.o lex.o \
-main.o mdep.o mdep_raw.o mdep_alsa.o metro.o mididev.o \
+main.o mdep.o mdep_raw.o mdep_alsa.o mdep_sndio.o metro.o mididev.o \
 mixout.o mux.o name.o node.o norm.o parse.o pool.o saveload.o smf.o song.o \
 state.o str.o sysex.o textio.o timo.o track.o user.o 
 
@@ -84,6 +84,7 @@ mdep.o:		mdep.c default.h mux.h mididev.h cons.h user.h exec.h \
 		name.h str.h dbg.h
 mdep_raw.o:	mdep_raw.c dbg.h cons.h mididev.h str.h
 mdep_alsa.o:	mdep_alsa.c dbg.h mididev.h str.h
+mdep_sndio.o:	mdep_sndio.c dbg.h cons.h mididev.h str.h
 metro.o:	metro.c dbg.h mux.h metro.h ev.h default.h timo.h song.h \
 		name.h str.h track.h frame.h state.h filt.h sysex.h
 mididev.o:	mididev.c dbg.h default.h mididev.h pool.h cons.h str.h \

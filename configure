@@ -6,6 +6,7 @@
 prefix=/usr/local		# where to install midish
 readline=no			# do we have readline
 alsa=no				# do we want alsa support ?
+sndio=no			# do we want sndio support ?
 rmidish=yes			# do we want to build rmidish ?
 progs=midish			# programs to build
 unset bindir			# path where to install binaries
@@ -23,6 +24,13 @@ unset readline_include		# path to readline header files
 if [ `uname` = Linux ]; then
 	alsa=yes
 fi
+
+#
+# guess if we want sndio devices support
+#
+#if [ `uname` = OpenBSD ]; then
+#	sndio=yes
+#fi
 
 #
 # guess readline(3) parameters
@@ -49,6 +57,8 @@ Usage: configure [options]
 --readline-include=DIR		path to readline header files
 --enable-alsa			enable alsa sequencer backend [$alsa]
 --disable-alsa			disable alsa sequencer backend
+--enable-sndio			enable libsndio backend [$sndio]
+--disable-sndio			disable libsndio backend
 --enable-rmidish		build rmidish binary [$rmidish]
 --disable-rmidish		don't build rmidish
 END
@@ -84,6 +94,12 @@ for i; do
 	--disable-alsa)
 		alsa=no
 		shift;;
+	--enable-sndio)
+		sndio=yes
+		shift;;
+	--disable-sndio)
+		sndio=no
+		shift;;
 	--enable-rmidish)
 		rmidish=yes
 		shift;;
@@ -107,6 +123,14 @@ mandir=${mandir:-$prefix/man}
 if [ $alsa = yes ]; then
 	defs="$defs -DUSE_ALSA"
 	lib="$lib -lasound"
+fi
+
+#
+# add parameters for libsndio support
+#
+if [ $sndio = yes ]; then
+	defs="$defs -DUSE_SNDIO"
+	lib="$lib -lsndio"
 fi
 
 #
@@ -138,6 +162,7 @@ echo "bindir................... $bindir"
 echo "datadir.................. $datadir"
 echo "mandir................... $mandir"
 echo "alsa..................... $alsa"
+echo "sndio.................... $sndio"
 echo "rmidish.................. $rmidish"
 echo "readline-lib............. ${readline_lib-default}"
 echo "readline-include......... ${readline_include-default}"
