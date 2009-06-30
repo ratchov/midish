@@ -1307,7 +1307,8 @@ track_findmeasure(struct track *t, unsigned m)
  */
 void
 track_timeinfo(struct track *t, unsigned meas, unsigned *abs,
-    unsigned long *usec24, unsigned *bpm, unsigned *tpb) {
+    unsigned long *usec24, unsigned *bpm, unsigned *tpb)
+{
 	struct seqptr *sp;
 	unsigned tic;
 

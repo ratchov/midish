@@ -319,7 +319,6 @@ blt_goto(struct exec *o, struct data **r)
 	usong->curpos = measure;
 	song_lowermode(usong, SONG_IDLE);
 	song_goto(usong, usong->curpos);
-	cons_putpos(measure, 0, 0);
 	return 1;
 }
 
@@ -858,7 +857,6 @@ blt_play(struct exec *o, struct data **r)
 			; /* nothing */
 		cons_err("playback stopped");
 		song_stop(usong);
-		cons_putpos(usong->curpos, 0, 0);
 	}
 	return 1;
 }
@@ -873,7 +871,6 @@ blt_rec(struct exec *o, struct data **r)
 			; /* nothing */
 		cons_err("recording stopped");
 		song_stop(usong);
-		cons_putpos(usong->curpos, 0, 0);
 	}
 	return 1;
 }
@@ -882,7 +879,6 @@ unsigned
 blt_stop(struct exec *o, struct data **r)
 {
 	song_stop(usong);
-	cons_putpos(usong->curpos, 0, 0);
 	return 1;
 }
 

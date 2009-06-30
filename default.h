@@ -43,6 +43,11 @@
 #define TEMPO_TO_USEC24(tempo,tpb) (60L * 24000000L / ((tempo) * (tpb)))
 
 /*
+ * units for absolute postions, we use MMC_SEC units per second
+ */
+#define MMC_SEC 2400
+
+/*
  * special meaning controller numbers
  */
 #define BANK_HI		0

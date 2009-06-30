@@ -582,11 +582,11 @@ song_playsysex(struct song *o)
  * play a meta event
  */
 void
-song_metaput(struct song *o, struct ev *ev)
+song_metaput(struct song *o, struct state *s)
 {
-	switch(ev->cmd) {
+	switch(s->ev.cmd) {
 	case EV_TIMESIG:
-		if (o->beat != 0 || o->tic != 0) {
+		if ((s->flags & STATE_CHANGED) && (o->beat != 0 || o->tic != 0)) {
 			/*
 			 * found an incomplete measure, 
 			 * skip to the beggining of the next one
@@ -595,12 +595,13 @@ song_metaput(struct song *o, struct ev *ev)
 			o->tic = 0;
 			o->measure++;
 		}
-		o->bpm = ev->timesig_beats;
-		o->tpb = ev->timesig_tics;
+		o->bpm = s->ev.timesig_beats;
+		o->tpb = s->ev.timesig_tics;
 		break;
 	case EV_TEMPO:
-		o->tempo = ev->tempo_usec24;
-		mux_chgtempo(o->tempo_factor * o->tempo  / 0x100);
+		o->tempo = s->ev.tempo_usec24;
+		if (mux_isopen)
+			mux_chgtempo(o->tempo_factor * o->tempo  / 0x100);
 		break;
 	default:
 		break;
@@ -663,10 +664,11 @@ song_ticplay(struct song *o)
 	struct state *st;
 	unsigned id;
 
-	cons_putpos(o->measure, o->beat, o->tic);
-
 	while ((st = seqptr_evget(o->metaptr))) {
-		song_metaput(o, &st->ev);
+		song_metaput(o, st);
+	}
+	if (o->tic == 0) {
+		cons_putpos(o->measure, o->beat, o->tic);
 	}
 	metro_tic(&o->metro, o->beat, o->tic);
 	SONG_FOREACH_TRK(o, i) {
@@ -852,43 +854,75 @@ song_sysexcb(struct song *o, struct sysex *sx)
 
 /*
  * cancel the current state, and restore the state of 
- * the current postition, must be in idle mode
+ * the new postition, must be in idle mode
  */
 void
-song_goto(struct song *o, unsigned measure)
+song_loc(struct song *o, unsigned where, unsigned how)
 {
-	struct songtrk *t;
-	unsigned tic, off;
 	struct state *s;
+	struct songtrk *t;
+	unsigned maxdelta, delta, tic;
+	unsigned bpm, tpb, offs;
+	unsigned long long pos, endpos;
+	unsigned long usec24;
 
-	if (o->mode < SONG_IDLE) {
-		cons_putpos(measure, 0, 0);
-		return;
+	seqptr_del(o->metaptr);
+	o->metaptr = seqptr_new(&o->meta);
+
+	switch (how) {
+	case SONG_LOC_MEAS:
+		offs = (o->mode >= SONG_PLAY) ? o->curquant / 2 : 0;
+		break;
+	case SONG_LOC_MMC:
+		pos = 0;
+		endpos = where * (24000000 / MMC_SEC);
+		offs = 0;
+		break;
+	case SONG_LOC_SPP:
+		where *= o->tics_per_unit / 16;
+		offs = 0;
+		break;
+	default:
+		dbg_puts("song_loc: bad argument\n");
+		dbg_panic();
 	}
-
-	/*
-	 * set the current position and the current
-	 * signature and tempo
-	 */
-	o->measure = measure;
-	o->beat = 0;
-	o->tic = 0;
-	if (o->mode >= SONG_REC && o->measure > 0)
-		o->measure--;
-	track_timeinfo(&o->meta, o->measure,
-	    &tic, &o->tempo, &o->bpm, &o->tpb);
-
-	/*
-	 * slightly shift start position, so notes
-	 * within the same quantum are played
-	 */
-	tic = track_findmeasure(&o->meta, o->measure);
-	off = o->curquant / 2;
-	if (off > o->tpb)
-		off = o->tpb;
-	if (off > tic)
-		off = tic;
-	tic -= off;
+	tic = 0;
+	o->measure = o->beat = o->tic = 0;
+		
+	for (;;) {
+		seqptr_getsign(o->metaptr, &bpm, &tpb);
+		seqptr_gettempo(o->metaptr, &usec24);
+		switch (how) {
+		case SONG_LOC_MEAS:
+			maxdelta = (where - o->measure) * bpm * tpb
+			    - o->beat * tpb
+			    - o->tic;
+			break;
+		case SONG_LOC_MMC:
+			maxdelta = (endpos - pos) / usec24;
+			break;
+		case SONG_LOC_SPP:
+			maxdelta = where - tic;
+			break;
+		}
+		if (maxdelta <= offs)
+			break;
+		maxdelta -= offs;
+		delta = seqptr_ticskip(o->metaptr, maxdelta);
+		s = seqptr_evget(o->metaptr);
+		if (s == NULL) {
+			/* XXX: integrate this in ticskip() & co */
+			statelist_outdate(&o->metaptr->statelist);
+			delta = maxdelta;
+		}
+		o->tic += delta;
+		o->beat += o->tic / tpb;
+		o->tic = o->tic % tpb;
+		o->measure += o->beat / bpm;
+		o->beat = o->beat % bpm; 
+		pos += delta * usec24;
+		tic += delta;
+	}
 
 	/*
 	 * move all tracks to the current position
@@ -908,11 +942,6 @@ song_goto(struct song *o, unsigned measure)
 		seqptr_skip(t->trackptr, tic);
 		song_confrestore(&t->trackptr->statelist);
 	}
-
-
-	seqptr_del(o->metaptr);
-	o->metaptr = seqptr_new(&o->meta);
-	seqptr_skip(o->metaptr, tic);
 
 	if (o->mode >= SONG_REC)
 		track_clear(&o->rec);
@@ -935,7 +964,7 @@ song_goto(struct song *o, unsigned measure)
 				ev_dbg(&s->ev);
 				dbg_puts(": restoring meta-event\n");
 			}
-			song_metaput(o, &s->ev);
+			song_metaput(o, s);
 			s->tag = 1;
 		} else {
 			if (song_debug) {
@@ -946,13 +975,46 @@ song_goto(struct song *o, unsigned measure)
 			s->tag = 0;
 		}
 	}
-	if (o->measure > 0 && off > 0) {
-		o->tic = o->tpb - off;
-		o->beat = o->bpm - 1;
-		o->measure--;
+	if (song_debug) {
+		dbg_puts("song_loc: ");
+		dbg_putu(where);
+		dbg_puts(" -> ");
+		dbg_putu(o->measure);
+		dbg_puts(":");
+		dbg_putu(o->beat);
+		dbg_puts(":");
+		dbg_putu(o->tic);
+		dbg_puts("/");
+		dbg_putu(tic);
+		dbg_puts("\n");
 	}
-	if (o->mode <= SONG_IDLE)
+}
+
+/*
+ * cancel the current state, and restore the state of 
+ * the current postition, must be in idle mode
+ */
+void
+song_goto(struct song *o, unsigned measure)
+{
+	if (o->mode >= SONG_IDLE) {
+		/*
+		 * 1 measure of count-down for recording
+		 */
+		if (o->mode >= SONG_REC && measure > 0)
+			measure--;
+
+		/*
+		 * move all tracks to given measure
+		 */
+		song_loc(o, measure, SONG_LOC_MEAS);
+
+		/*
+		 * display initial position
+		 */
 		cons_putpos(o->measure, o->beat, o->tic);
+	} else
+		cons_putpos(measure, 0, 0);
 }
 
 /*
@@ -1062,6 +1124,7 @@ void
 song_stop(struct song *o)
 {
 	song_lowermode(o, 0);
+	cons_putpos(o->curpos, 0, 0);
 }
 
 /*

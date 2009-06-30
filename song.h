@@ -149,6 +149,13 @@ struct song {
 	     i != NULL;					\
 	     i = (struct songsx *)i->name.next)
 
+/*
+ * how to relocate, used by song_loc() & friends
+ */
+#define SONG_LOC_MEAS 	0	/* measure number */
+#define SONG_LOC_MMC 	1	/* MMC absolute time */
+#define SONG_LOC_SPP 	2	/* MIDI song position pointer */
+
 struct song *song_new(void);
 void song_delete(struct song *);
 void song_init(struct song *);
@@ -190,6 +197,7 @@ void song_goto(struct song *, unsigned);
 void song_raisemode(struct song *, unsigned);
 void song_lowermode(struct song *, unsigned);
 
+void song_loc(struct song *, unsigned, unsigned);
 void song_record(struct song *);
 void song_play(struct song *);
 void song_idle(struct song *);
