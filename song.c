@@ -794,7 +794,7 @@ song_stopcb(struct song *o)
 {
 
 	if (song_debug) {
-		dbg_puts("song_rec_stop:\n");
+		dbg_puts("song_stopcb:\n");
 	}
 }
 
@@ -1018,22 +1018,53 @@ song_goto(struct song *o, unsigned measure)
 }
 
 /*
- * raise mode
+ * set the current mode
  */
 void
-song_raisemode(struct song *o, unsigned newmode)
+song_setmode(struct song *o, unsigned newmode)
 {
 	struct songfilt *f;
 	struct songtrk *t;
+	struct state *s;
+	struct ev ev;
 	unsigned oldmode;
 
 	oldmode = o->mode;
-	if (newmode > o->mode)
-		o->mode = newmode;
-
-	if (oldmode < SONG_PLAY && newmode >= SONG_PLAY)
+	o->mode = newmode;
+	if (oldmode >= SONG_REC && newmode < SONG_REC) {
+		/*
+		 * if there is no filter for recording there may be
+		 * unterminated frames, so finalize them.
+		 */
+		for (s = o->recptr->statelist.first; s != NULL; s = s->next) {
+			if (!(s->phase & EV_PHASE_LAST) &&
+			     state_cancel(s, &ev)) {
+				seqptr_evput(o->recptr, &ev);
+			}
+		}
+		song_getcurtrk(o, &t);
+		if (t) {
+			track_merge(&o->curtrk->track, &o->rec);
+		}
+		track_clear(&o->rec);
+	}
+	if (oldmode >= SONG_IDLE && newmode < SONG_IDLE) {
+		/*
+		 * cancel and free states
+		 */
+		SONG_FOREACH_TRK(o, t) {
+			song_confcancel(&t->trackptr->statelist);
+			statelist_empty(&t->trackptr->statelist);
+			seqptr_del(t->trackptr);
+		}
+		seqptr_del(o->recptr);
+		seqptr_del(o->metaptr);
+		norm_setfilt(NULL);
+		mux_close();
+	}
+	if (oldmode < SONG_PLAY && newmode >= SONG_PLAY) {
 		o->complete = 0;
-
+	}
 	if (oldmode < SONG_IDLE && newmode >= SONG_IDLE) {
 		o->measure = 0;
 		o->beat = 0;
@@ -1067,63 +1098,13 @@ song_raisemode(struct song *o, unsigned newmode)
 }
 
 /*
- * lower mode
- */
-void
-song_lowermode(struct song *o, unsigned newmode)
-{
-	struct songtrk *t;
-	struct state *st;
-	struct ev ev;
-	unsigned oldmode;
-
-	oldmode = o->mode;
-	if (newmode < o->mode) 
-		o->mode = newmode;
-
-	metro_setmode(&o->metro, 0);
-
-	if (oldmode >= SONG_REC && newmode < SONG_REC) {
-		/*
-		 * if there is no filter for recording there may be
-		 * unterminated frames, so finalize them.
-		 */
-		for (st = o->recptr->statelist.first; st != NULL; st = st->next) {
-			if (!(st->phase & EV_PHASE_LAST) &&
-			     state_cancel(st, &ev)) {
-				seqptr_evput(o->recptr, &ev);
-			}
-		}
-		song_getcurtrk(o, &t);
-		if (t) {
-			track_merge(&o->curtrk->track, &o->rec);
-		}
-		track_clear(&o->rec);
-	}
-	if (oldmode >= SONG_IDLE && newmode < SONG_IDLE) {
-		/*
-		 * cancel and free states
-		 */
-		SONG_FOREACH_TRK(o, t) {
-			song_confcancel(&t->trackptr->statelist);
-			statelist_empty(&t->trackptr->statelist);
-			seqptr_del(t->trackptr);
-		}
-		seqptr_del(o->recptr);
-		seqptr_del(o->metaptr);
-		norm_setfilt(NULL);
-		mux_close();
-	}
-}
-
-/*
  * stop play/record: undo song_start and things done during the
  * play/record process. Must be called with the mux initialised
  */
 void
 song_stop(struct song *o)
 {
-	song_lowermode(o, 0);
+	song_setmode(o, 0);
 	cons_putpos(o->curpos, 0, 0);
 }
 
@@ -1133,12 +1114,11 @@ song_stop(struct song *o)
 void
 song_play(struct song *o)
 {
-	song_lowermode(o, SONG_PLAY);
-	song_raisemode(o, SONG_PLAY);
+	song_setmode(o, SONG_PLAY);
 	song_goto(o, o->curpos);
 
 	if (song_debug) {
-		dbg_puts("song_play: starting loop, waiting for a start event...\n");
+		dbg_puts("song_play: waiting for a start event...\n");
 	}
 	mux_startwait();
 }
@@ -1154,14 +1134,13 @@ song_record(struct song *o)
 
 	song_getcurtrk(o, &t);
 	if (!t || t->mute) {
-		dbg_puts("song_record: no current track or current track is muted\n");
+		dbg_puts("song_record: no current track (or muted)\n");
 	}
 
-	song_lowermode(o, SONG_REC);
-	song_raisemode(o, SONG_REC);
+	song_setmode(o, SONG_REC);
 	song_goto(o, o->curpos);
 	if (song_debug) {
-		dbg_puts("song_record: started loop, waiting for a start event...\n");
+		dbg_puts("song_record: waiting for a start event...\n");
 	}
 	mux_startwait();
 }
@@ -1172,8 +1151,7 @@ song_record(struct song *o)
 void
 song_idle(struct song *o)
 {
-	song_lowermode(o, SONG_IDLE);
-	song_raisemode(o, SONG_IDLE);
+	song_setmode(o, SONG_IDLE);
 	song_goto(o, o->curpos);
 
 	if (song_debug) {

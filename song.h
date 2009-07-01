@@ -193,11 +193,10 @@ void song_setcurchan(struct song *, struct songchan *, int);
 void song_setunit(struct song *, unsigned);
 unsigned song_endpos(struct song *);
 void song_playconf(struct song *);
-void song_goto(struct song *, unsigned);
-void song_raisemode(struct song *, unsigned);
-void song_lowermode(struct song *, unsigned);
 
 void song_loc(struct song *, unsigned, unsigned);
+void song_setmode(struct song *, unsigned);
+void song_goto(struct song *, unsigned);
 void song_record(struct song *);
 void song_play(struct song *);
 void song_idle(struct song *);

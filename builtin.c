@@ -317,7 +317,7 @@ blt_goto(struct exec *o, struct data **r)
 		return 0;
 	}
 	usong->curpos = measure;
-	song_lowermode(usong, SONG_IDLE);
+	song_setmode(usong, SONG_IDLE);
 	song_goto(usong, usong->curpos);
 	return 1;
 }
