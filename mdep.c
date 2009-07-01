@@ -107,7 +107,7 @@ mux_mdep_wait(void)
 	long delta_usec;
 
 	nfds = 0;
-	if (cons_index == cons_len) {
+	if (cons_index == cons_len && !cons_eof) {
 		cons_pfd = &pfds[nfds];
 		cons_pfd->fd = STDIN_FILENO;
 		cons_pfd->events = POLLIN | POLLHUP;
