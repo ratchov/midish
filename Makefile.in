@@ -29,11 +29,12 @@ PROGS = @progs@
 all:		${PROGS}
 
 install:	${PROGS}
-		mkdir -p ${BIN_DIR} ${MAN1_DIR} ${DOC_DIR} ${EXAMPLES_DIR}
-		cp ${PROGS} smfplay smfrec ${BIN_DIR}
-		cp ${PROGS:=.1} smfplay.1 smfrec.1 ${MAN1_DIR}
-		cp README manual.html ${DOC_DIR}
-		cp midishrc sample.sng ${EXAMPLES_DIR}
+		mkdir -p ${DESTDIR}${BIN_DIR} ${DESTDIR}${MAN1_DIR} \
+		    ${DESTDIR}${DOC_DIR} ${DESTDIR}${EXAMPLES_DIR}
+		cp ${PROGS} smfplay smfrec ${DESTDIR}${BIN_DIR}
+		cp ${PROGS:=.1} smfplay.1 smfrec.1 ${DESTDIR}${MAN1_DIR}
+		cp README manual.html ${DESTDIR}${DOC_DIR}
+		cp midishrc sample.sng ${DESTDIR}${EXAMPLES_DIR}
 
 check:		midish
 		cd regress && ./run-test *.cmd
