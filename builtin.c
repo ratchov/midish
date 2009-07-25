@@ -287,7 +287,7 @@ blt_setunit(struct exec *o, struct data **r)
 		cons_errs(o->procname, "tpu too large");
 		return 0;
 	}
-	if (!song_try_mode(usong, 0)) {
+	if (!song_try(usong)) {
 		return 0;
 	}
 	song_setunit(usong, tpu);
@@ -317,8 +317,6 @@ blt_goto(struct exec *o, struct data **r)
 		return 0;
 	}
 	usong->curpos = measure;
-	song_lowermode(usong, SONG_IDLE);
-	song_goto(usong, usong->curpos);
 	cons_putpos(measure, 0, 0);
 	return 1;
 }
@@ -757,7 +755,7 @@ blt_save(struct exec *o, struct data **r)
 {
 	char *filename;
 
-	if (!song_try_mode(usong, 0)) {
+	if (!song_try(usong)) {
 		return 0;
 	}
 	if (!exec_lookupstring(o, "filename", &filename)) {
@@ -773,7 +771,7 @@ blt_load(struct exec *o, struct data **r)
 	char *filename;
 	unsigned res;
 
-	if (!song_try_mode(usong, 0)) {
+	if (!song_try(usong)) {
 		return 0;
 	}
 	if (!exec_lookupstring(o, "filename", &filename)) {
@@ -789,7 +787,7 @@ blt_load(struct exec *o, struct data **r)
 unsigned
 blt_reset(struct exec *o, struct data **r)
 {
-	if (!song_try_mode(usong, 0)) {
+	if (!song_try(usong)) {
 		return 0;
 	}
 	song_done(usong);
@@ -803,7 +801,7 @@ blt_export(struct exec *o, struct data **r)
 {
 	char *filename;
 
-	if (!song_try_mode(usong, 0)) {
+	if (!song_try(usong)) {
 		return 0;
 	}
 	if (!exec_lookupstring(o, "filename", &filename)) {
@@ -818,7 +816,7 @@ blt_import(struct exec *o, struct data **r)
 	char *filename;
 	struct song *sng;
 
-	if (!song_try_mode(usong, 0)) {
+	if (!song_try(usong)) {
 		return 0;
 	}
 	if (!exec_lookupstring(o, "filename", &filename)) {
@@ -837,6 +835,9 @@ blt_import(struct exec *o, struct data **r)
 unsigned
 blt_idle(struct exec *o, struct data **r)
 {
+	if (!song_try(usong)) {
+		return 0;
+	}
 	song_idle(usong);
 	if (user_flag_batch) {
 		cons_err("press ^C to stop idling");
@@ -851,6 +852,9 @@ blt_idle(struct exec *o, struct data **r)
 unsigned
 blt_play(struct exec *o, struct data **r)
 {
+	if (!song_try(usong)) {
+		return 0;
+	}
 	song_play(usong);
 	if (user_flag_batch) {
 		cons_err("press ^C to stop playback");
@@ -866,6 +870,9 @@ blt_play(struct exec *o, struct data **r)
 unsigned
 blt_rec(struct exec *o, struct data **r)
 {
+	if (!song_try(usong)) {
+		return 0;
+	}
 	song_record(usong);
 	if (user_flag_batch) {
 		cons_err("press ^C to stop recording");
@@ -881,6 +888,10 @@ blt_rec(struct exec *o, struct data **r)
 unsigned
 blt_stop(struct exec *o, struct data **r)
 {
+	if (!mux_isopen) {
+		cons_errs(o->procname, "nothing to stop, ignored");
+		return 1;
+	}
 	song_stop(usong);
 	cons_putpos(usong->curpos, 0, 0);
 	return 1;
@@ -1084,7 +1095,7 @@ blt_mcut(struct exec *o, struct data **r)
 	struct ev ev;
 	struct track t1, t2;
 
-	if (!song_try_mode(usong, 0)) {
+	if (!song_try(usong)) {
 		return 0;
 	}
 	track_timeinfo(&usong->meta, usong->curpos, 
@@ -1236,7 +1247,7 @@ blt_ctlconf_any(struct exec *o, struct data **r, int isfine)
 	char *name;
 	unsigned num, old, val;
 
-	if (!song_try_mode(usong, 0)) {
+	if (!song_try(usong)) {
 		return 0;
 	}
 	if (!exec_lookupname(o, "name", &name) ||
@@ -1272,7 +1283,7 @@ blt_ctlunconf(struct exec *o, struct data **r)
 	char *name;
 	unsigned num;
 
-	if (!song_try_mode(usong, 0)) {
+	if (!song_try(usong)) {
 		return 0;
 	}
 	if (!exec_lookupname(o, "name", &name)) {
@@ -1352,7 +1363,7 @@ blt_tnew(struct exec *o, struct data **r)
 	char *trkname;
 	struct songtrk *t;
 
-	if (!song_try_mode(usong, 0)) {
+	if (!song_try(usong)) {
 		return 0;
 	}
 	if (!exec_lookupname(o, "trackname", &trkname)) {
@@ -2174,7 +2185,7 @@ blt_crmev(struct exec *o, struct data **r, int input)
 	struct songchan *c;
 	struct evspec es;
 
-	if (!song_try_mode(usong, 0)) {
+	if (!song_try(usong)) {
 		return 0;
 	}
 	song_getcurchan(usong, &c, input);
@@ -2783,7 +2794,7 @@ blt_dnew(struct exec *o, struct data **r)
 	struct var *arg;
 	unsigned mode;
 
-	if (!song_try_mode(usong, 0)) {
+	if (!song_try(usong)) {
 		return 0;
 	}
 	if (!exec_lookuplong(o, "devnum", &unit) ||
@@ -2822,7 +2833,7 @@ blt_ddel(struct exec *o, struct data **r)
 {
 	long unit;
 
-	if (!song_try_mode(usong, 0)) {
+	if (!song_try(usong)) {
 		return 0;
 	}
 	if (!exec_lookuplong(o, "devnum", &unit)) {
@@ -2837,7 +2848,7 @@ blt_dclkrx(struct exec *o, struct data **r)
 	struct var *arg;
 	long unit;
 
-	if (!song_try_mode(usong, 0)) {
+	if (!song_try(usong)) {
 		return 0;
 	}
 	arg = exec_varlookup(o, "devnum");
@@ -2846,7 +2857,7 @@ blt_dclkrx(struct exec *o, struct data **r)
 		dbg_panic();
 	}
 	if (arg->data->type == DATA_NIL) {
-		mididev_clksrc = NULL;
+		mididev_master = NULL;
 		return 0;
 	} else if (arg->data->type == DATA_LONG) {
 		unit = arg->data->val.num;
@@ -2855,7 +2866,7 @@ blt_dclkrx(struct exec *o, struct data **r)
 			cons_errs(o->procname, "bad device number");
 			return 0;
 		}
-		mididev_clksrc = mididev_byunit[unit];
+		mididev_master = mididev_byunit[unit];
 		return 1;
 	}
 	cons_errs(o->procname, "bad argument type for 'unit'");
@@ -2868,7 +2879,7 @@ blt_dclktx(struct exec *o, struct data **r)
 	struct data *units, *n;
 	unsigned i, tx[DEFAULT_MAXNDEVS];
 
-	if (!song_try_mode(usong, 0)) {
+	if (!song_try(usong)) {
 		return 0;
 	}
 	if (!exec_lookuplist(o, "devlist", &units)) {
@@ -2887,7 +2898,7 @@ blt_dclktx(struct exec *o, struct data **r)
 	}
 	for (i = 0; i < DEFAULT_MAXNDEVS; i++) {
 		if (mididev_byunit[i])
-			mididev_byunit[i]->sendclk = tx[i];
+			mididev_byunit[i]->sendrt = tx[i];
 	}
 	return 1;
 }
@@ -2897,7 +2908,7 @@ blt_dclkrate(struct exec *o, struct data **r)
 {
 	long unit, tpu;
 
-	if (!song_try_mode(usong, 0)) {
+	if (!song_try(usong)) {
 		return 0;
 	}
 	if (!exec_lookuplong(o, "devnum", &unit) ||
@@ -2936,11 +2947,11 @@ blt_dinfo(struct exec *o, struct data **r)
 	textout_putlong(tout, unit);
 	textout_putstr(tout, "\n");
 
-	if (mididev_clksrc == mididev_byunit[unit]) {
+	if (mididev_master == mididev_byunit[unit]) {
 		textout_indent(tout);
 		textout_putstr(tout, "clkrx\t\t\t# master clock source\n");
 	}
-	if (mididev_byunit[unit]->sendclk) {
+	if (mididev_byunit[unit]->sendrt) {
 		textout_indent(tout);
 		textout_putstr(tout, "clktx\t\t\t# sends clock ticks\n");
 	}
@@ -2962,7 +2973,7 @@ blt_dixctl(struct exec *o, struct data **r)
 	struct data *list;
 	unsigned ctlset;
 
-	if (!song_try_mode(usong, 0)) {
+	if (!song_try(usong)) {
 		return 0;
 	}
 	if (!exec_lookuplong(o, "devnum", &unit) ||
@@ -2987,7 +2998,7 @@ blt_doxctl(struct exec *o, struct data **r)
 	struct data *list;
 	unsigned ctlset;
 
-	if (!song_try_mode(usong, 0)) {
+	if (!song_try(usong)) {
 		return 0;
 	}
 	if (!exec_lookuplong(o, "devnum", &unit) ||

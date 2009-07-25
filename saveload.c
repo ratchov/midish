@@ -377,9 +377,9 @@ metro_output(struct metro *o, struct textout *f)
 {
 	char *mstr;
 
-	if (o->mask & (1 << SONG_PLAY)) {
+	if (o->mask & SONG_PLAY) {
 		mstr = "on";
-	} else if (o->mask & (1 << SONG_REC)) {
+	} else if (o->mask & SONG_REC) {
 		mstr = "rec";
 	} else {
 		mstr = "off";
@@ -1039,14 +1039,7 @@ parse_rule(struct parse *o, struct filt *f)
 		if (!parse_long(o, 0, EV_MAXCOARSE, &keyhi)) {
 			return 0;
 		}
-		evspec_reset(&from);
-		from.cmd = EVSPEC_NOTE;
-		from.dev_min = from.dev_max = idev;
-		from.ch_min = from.ch_max = ich;
-		from.v0_min = keylo;
-		from.v0_max = keyhi;
-		to.cmd = EVSPEC_EMPTY;
-		filt_mapnew(f, &from, &to);
+		filt_conf_keydrop(f, idev, ich, keylo, keyhi);
 	} else if (str_eq(o->lex.strval, "keymap")) {
 		if (!parse_chan(o, &idev, &ich)) {
 			return 0;
@@ -1075,27 +1068,7 @@ parse_rule(struct parse *o, struct filt *f)
 			lex_err(&o->lex, "curve identifier expected");
 			return 0;
 		}
-		if ((int)keyhi + keyplus > EV_MAXCOARSE)
-			keyhi = EV_MAXCOARSE - keyplus;
-		if ((int)keylo + keyplus < 0)
-			keylo = -keyplus;
-		if (keylo >= keyhi) {
-			lex_err(&o->lex, "bad range in keymap rule");
-			return 0;
-		}
-		evspec_reset(&from);
-		evspec_reset(&to);
-		from.cmd = EVSPEC_NOTE;
-		from.dev_min = from.dev_max = idev;
-		from.ch_min = from.ch_max = ich;
-		from.v0_min = keylo;
-		from.v0_max = keyhi;
-		to.cmd = EVSPEC_NOTE;
-		to.dev_min = to.dev_max = odev;
-		to.ch_min = to.ch_max = och;
-		to.v0_min = keylo + keyplus;
-		to.v0_max = keyhi + keyplus;
-		filt_mapnew(f, &from, &to);
+		filt_conf_keymap(f, idev, ich, odev, och, keylo, keyhi, keyplus);
 	} else if (str_eq(o->lex.strval, "ctldrop")) {
 		if (!parse_chan(o, &idev, &ich)) {
 			return 0;
@@ -1103,13 +1076,7 @@ parse_rule(struct parse *o, struct filt *f)
 		if (!parse_long(o, 0, EV_MAXCOARSE, &ictl)) {
 			return 0;
 		}
-		evspec_reset(&from);
-		from.cmd = EVSPEC_XCTL;
-		from.dev_min = from.dev_max = idev;
-		from.ch_min = from.ch_max = ich;
-		from.v0_min = from.v0_max = ictl;
-		to.cmd = EVSPEC_EMPTY;
-		filt_mapnew(f, &from, &to);
+		filt_conf_ctldrop(f, idev, ich, ictl);
 	} else if (str_eq(o->lex.strval, "ctlmap")) {
 		if (!parse_chan(o, &idev, &ich)) {
 			return 0;
@@ -1130,26 +1097,12 @@ parse_rule(struct parse *o, struct filt *f)
 			lex_err(&o->lex, "curve identifier expected");
 			return 0;
 		}
-		evspec_reset(&from);
-		evspec_reset(&to);
-		from.cmd = EVSPEC_CTL;
-		from.dev_min = from.dev_max = idev;
-		from.ch_min = from.ch_max = ich;
-		from.v0_min = from.v0_max = ictl;
-		to.cmd = EVSPEC_CTL;
-		to.dev_min = to.dev_max = odev;
-		to.ch_min = to.ch_max = och;
-		to.v0_min = to.v0_max = octl;
-		filt_mapnew(f, &from, &to);
+		filt_conf_ctlmap(f, idev, ich, odev, och, ictl, octl);
 	} else if (str_eq(o->lex.strval, "chandrop")) {
 		if (!parse_chan(o, &idev, &ich)) {
 			return 0;
 		}
-		evspec_reset(&from);
-		from.dev_min = from.dev_max = idev;
-		from.ch_min = from.ch_max = ich;
-		to.cmd = EVSPEC_EMPTY;
-		filt_mapnew(f, &from, &to);
+		filt_conf_chandrop(f, idev, ich);
 	} else if (str_eq(o->lex.strval, "chanmap")) {
 		if (!parse_chan(o, &idev, &ich)) {
 			return 0;
@@ -1157,21 +1110,12 @@ parse_rule(struct parse *o, struct filt *f)
 		if (!parse_chan(o, &odev, &och)) {
 			return 0;
 		}
-		evspec_reset(&from);
-		evspec_reset(&to);
-		from.dev_min = from.dev_max = idev;
-		from.ch_min = from.ch_max = ich;
-		to.dev_min = to.dev_max = odev;
-		to.ch_min = to.ch_max = och;
-		filt_mapnew(f, &from, &to);
+		filt_conf_chanmap(f, idev, ich, odev, och);
 	} else if (str_eq(o->lex.strval, "devdrop")) {
 		if (!parse_long(o, 0, EV_MAXDEV, &idev)) {
 			return 0;
 		}
-		evspec_reset(&from);
-		from.dev_min = from.dev_max = idev;
-		to.cmd = EVSPEC_EMPTY;
-		filt_mapnew(f, &from, &to);
+		filt_conf_devdrop(f, idev);
 	} else if (str_eq(o->lex.strval, "devmap")) {
 		if (!parse_long(o, 0, EV_MAXDEV, &idev)) {
 			return 0;
@@ -1179,11 +1123,7 @@ parse_rule(struct parse *o, struct filt *f)
 		if (!parse_long(o, 0, EV_MAXDEV, &odev)) {
 			return 0;
 		}
-		evspec_reset(&from);
-		evspec_reset(&to);
-		from.dev_min = from.dev_max = idev;
-		to.dev_min = to.dev_max = odev;
-		filt_mapnew(f, &from, &to);
+		filt_conf_devmap(f, idev, odev);
 	} else if (str_eq(o->lex.strval, "evmap")) {
 		if (!parse_evspec(o, &from)) {
 			return 0;

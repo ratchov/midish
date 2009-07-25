@@ -107,7 +107,7 @@ struct mididev {
 	 */
 	unsigned unit;			/* index in the mididev table */
 	unsigned ticrate, ticdelta;	/* tick rate (default 96) */
-	unsigned sendclk;		/* send MIDI clock */
+	unsigned sendrt;		/* send timing information */
 	unsigned isensto, osensto;	/* active sensing timeouts */
 	unsigned mode;			/* read, write */
 	unsigned ixctlset, oxctlset;	/* bitmap of 14bit controllers */
@@ -143,7 +143,7 @@ void mididev_inputcb(struct mididev *, unsigned char *, unsigned);
 extern unsigned mididev_debug;
 
 extern struct mididev *mididev_list;
-extern struct mididev *mididev_clksrc;
+extern struct mididev *mididev_master;
 extern struct mididev *mididev_byunit[];
 
 struct mididev *raw_new(char *, unsigned);

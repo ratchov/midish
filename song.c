@@ -752,7 +752,7 @@ song_confcancel(struct statelist *slist)
 void
 song_trkmute(struct song *s, struct songtrk *t)
 {
-	if (s->mode >= SONG_PLAY)
+	if (s->mode & SONG_PLAY)
 		song_confcancel(&t->trackptr->statelist);
 	t->mute = 1;
 }
@@ -763,7 +763,7 @@ song_trkmute(struct song *s, struct songtrk *t)
 void
 song_trkunmute(struct song *s, struct songtrk *t)
 {
-	if (s->mode >= SONG_PLAY)
+	if (s->mode & SONG_PLAY)
 		song_confrestore(&t->trackptr->statelist);
 	t->mute = 0;
 }
@@ -778,7 +778,7 @@ song_startcb(struct song *o)
 	if (song_debug) {
 		dbg_puts("song_startcb:\n");
 	}
-	if (o->mode >= SONG_PLAY) {
+	if (o->mode & SONG_PLAY) {
 		song_ticplay(o);
 		mux_flush();
 	}
@@ -804,14 +804,14 @@ song_movecb(struct song *o)
 {
 	unsigned delta;
 
-	if (o->mode >= SONG_REC) {
+	if (o->mode & SONG_REC) {
 		while (seqptr_evget(o->recptr))
 			; /* nothing */
 		delta = seqptr_ticskip(o->recptr, 1);
 		if (delta == 0)
 			seqptr_ticput(o->recptr, 1);
 	}
-	if (o->mode >= SONG_PLAY) {
+	if (o->mode & SONG_PLAY) {
 		(void)song_ticskip(o);
 		song_ticplay(o);
 	}
@@ -824,7 +824,7 @@ song_movecb(struct song *o)
 void
 song_evcb(struct song *o, struct ev *ev)
 {
-	if (o->mode >= SONG_REC) {
+	if (o->mode & SONG_REC) {
 		if (mux_getphase() >= MUX_START)
 			(void)seqptr_evput(o->recptr, ev);
 	}
@@ -839,7 +839,7 @@ song_sysexcb(struct song *o, struct sysex *sx)
 	if (song_debug) {
 		dbg_puts("song_sysexcb:\n");
 	}
-	if (o->mode >= SONG_REC) {
+	if (o->mode & SONG_REC) {
 		if (o->cursx) {
 			if (sx == NULL) {
 				dbg_puts("got null sx\n");
@@ -851,30 +851,29 @@ song_sysexcb(struct song *o, struct sysex *sx)
 }
 
 /*
- * cancel the current state, and restore the state of 
- * the current postition, must be in idle mode
+ * setup everything to start play/record: the current filter, go to
+ * the current position, etc... must be called with the mux
+ * initialized. The 'cb' parameter is a function that will be called
+ * for each input event.
  */
 void
-song_goto(struct song *o, unsigned measure)
+song_start(struct song *o, unsigned mode, unsigned countdown)
 {
+	struct songfilt *f;
 	struct songtrk *t;
 	unsigned tic, off;
 	struct state *s;
 
-	if (o->mode < SONG_IDLE) {
-		cons_putpos(measure, 0, 0);
-		return;
-	}
+	o->mode = mode;
+	o->complete = (mode & SONG_PLAY) ? 0 : 1;
 
 	/*
 	 * set the current position and the current
 	 * signature and tempo
 	 */
-	o->measure = measure;
+	o->measure = o->curpos >= countdown ? o->curpos - countdown : 0;
 	o->beat = 0;
 	o->tic = 0;
-	if (o->mode >= SONG_REC && o->measure > 0)
-		o->measure--;
 	track_timeinfo(&o->meta, o->measure,
 	    &tic, &o->tempo, &o->bpm, &o->tpb);
 
@@ -894,44 +893,39 @@ song_goto(struct song *o, unsigned measure)
 	 * move all tracks to the current position
 	 */
 	SONG_FOREACH_TRK(o, t) {
-		/*
-		 * cancel and free old states
-		 */
-		song_confcancel(&t->trackptr->statelist);
-		statelist_empty(&t->trackptr->statelist);
-		seqptr_del(t->trackptr);
-
-		/*
-		 * allocate and restore new states
-		 */
 		t->trackptr = seqptr_new(&t->track);
 		seqptr_skip(t->trackptr, tic);
-		song_confrestore(&t->trackptr->statelist);
 	}
-
-
-	seqptr_del(o->metaptr);
 	o->metaptr = seqptr_new(&o->meta);
 	seqptr_skip(o->metaptr, tic);
 
-	if (o->mode >= SONG_REC)
-		track_clear(&o->rec);
-#ifdef SONG_DEBUG
-	if (!track_isempty(&o->rec)) {
-		dbg_puts("song_goto: rec track not empty\n");
-		dbg_panic();
-	}
-#endif
-	seqptr_del(o->recptr);
 	o->recptr = seqptr_new(&o->rec);
-	if (o->mode >= SONG_REC) {
-		seqptr_seek(o->recptr, tic);
-	}
+	seqptr_seek(o->recptr, tic);
 
+	mux_open();
+
+	/*
+	 * check for the current filter
+	 */
+	song_getcurfilt(o, &f);
+	norm_setfilt(f != NULL ? &f->filt : NULL);
+
+	/*
+	 * send sysex messages and channel config messages
+	 */
+	song_playsysex(o);
+	song_playconf(o);
+
+	/*
+	 * restore track states
+	 */
+	SONG_FOREACH_TRK(o, t) {
+		song_confrestore(&t->trackptr->statelist);
+	}
 	for (s = o->metaptr->statelist.first; s != NULL; s = s->next) {
 		if (EV_ISMETA(&s->ev)) {
 			if (song_debug) {
-				dbg_puts("song_goto: ");
+				dbg_puts("song_start: ");
 				ev_dbg(&s->ev);
 				dbg_puts(": restoring meta-event\n");
 			}
@@ -939,7 +933,7 @@ song_goto(struct song *o, unsigned measure)
 			s->tag = 1;
 		} else {
 			if (song_debug) {
-				dbg_puts("song_goto: ");
+				dbg_puts("song_start: ");
 				ev_dbg(&s->ev);
 				dbg_puts(": not restored (not tagged)\n");
 			}
@@ -951,107 +945,8 @@ song_goto(struct song *o, unsigned measure)
 		o->beat = o->bpm - 1;
 		o->measure--;
 	}
-	if (o->mode <= SONG_IDLE)
-		cons_putpos(o->measure, o->beat, o->tic);
-}
-
-/*
- * raise mode
- */
-void
-song_raisemode(struct song *o, unsigned newmode)
-{
-	struct songfilt *f;
-	struct songtrk *t;
-	unsigned oldmode;
-
-	oldmode = o->mode;
-	if (newmode > o->mode)
-		o->mode = newmode;
-
-	if (oldmode < SONG_PLAY && newmode >= SONG_PLAY)
-		o->complete = 0;
-
-	if (oldmode < SONG_IDLE && newmode >= SONG_IDLE) {
-		o->measure = 0;
-		o->beat = 0;
-		o->tic = 0;
-
-		/*
-		 * get empty states
-		 */
-		SONG_FOREACH_TRK(o, t) {
-			t->trackptr = seqptr_new(&t->track);
-		}
-		o->metaptr = seqptr_new(&o->meta);
-		o->recptr = seqptr_new(&o->rec);
-
-		mux_open();
-
-		/*
-		 * check for the current filter
-		 */
-		song_getcurfilt(o, &f);
-		norm_setfilt(f != NULL ? &f->filt : NULL);
-
-		/*
-		 * send sysex messages and channel config messages
-		 */
-		song_playsysex(o);
-		song_playconf(o);
-	}
 	metro_setmode(&o->metro, o->mode);
 	mux_flush();
-}
-
-/*
- * lower mode
- */
-void
-song_lowermode(struct song *o, unsigned newmode)
-{
-	struct songtrk *t;
-	struct state *st;
-	struct ev ev;
-	unsigned oldmode;
-
-	oldmode = o->mode;
-	if (newmode < o->mode) 
-		o->mode = newmode;
-
-	metro_setmode(&o->metro, 0);
-
-	if (oldmode >= SONG_REC && newmode < SONG_REC) {
-		/*
-		 * if there is no filter for recording there may be
-		 * unterminated frames, so finalize them.
-		 */
-		for (st = o->recptr->statelist.first; st != NULL; st = st->next) {
-			if (!(st->phase & EV_PHASE_LAST) &&
-			     state_cancel(st, &ev)) {
-				seqptr_evput(o->recptr, &ev);
-			}
-		}
-		song_getcurtrk(o, &t);
-		if (t) {
-			track_merge(&o->curtrk->track, &o->rec);
-		}
-		track_clear(&o->rec);
-	}
-	if (oldmode >= SONG_IDLE && newmode < SONG_IDLE) {
-		/*
-		 * cancel and free states
-		 */
-		SONG_FOREACH_TRK(o, t) {
-			song_confcancel(&t->trackptr->statelist);
-			statelist_empty(&t->trackptr->statelist);
-			seqptr_del(t->trackptr);
-		}
-		seqptr_del(o->recptr);
-		seqptr_del(o->metaptr);
-		norm_setfilt(NULL);
-		mux_close();
-	}
 }
 
 /*
@@ -1061,7 +956,45 @@ song_lowermode(struct song *o, unsigned newmode)
 void
 song_stop(struct song *o)
 {
-	song_lowermode(o, 0);
+	struct songtrk *t;
+	struct state *st;
+	struct ev ev;
+
+	metro_setmode(&o->metro, 0);
+
+	/*
+	 * stop sounding notes
+	 */
+	SONG_FOREACH_TRK(o, t) {
+		song_confcancel(&t->trackptr->statelist);
+	}
+	mux_close();
+
+	SONG_FOREACH_TRK(o, t) {
+		statelist_empty(&t->trackptr->statelist);
+		seqptr_del(t->trackptr);
+	}
+
+	/*
+	 * if there is no filter for recording there may be
+	 * unterminated frames, so finalize them.
+	 */
+	for (st = o->recptr->statelist.first; st != NULL; st = st->next) {
+		if (!(st->phase & EV_PHASE_LAST) && state_cancel(st, &ev)) {
+			seqptr_evput(o->recptr, &ev);
+		}
+	}
+	seqptr_del(o->recptr);
+	seqptr_del(o->metaptr);
+
+	if (o->mode & SONG_REC) {
+		song_getcurtrk(o, &t);
+		if (t) {
+			track_merge(&o->curtrk->track, &o->rec);
+		}
+	}
+	track_clear(&o->rec);
+	o->mode = 0;
 }
 
 /*
@@ -1070,9 +1003,7 @@ song_stop(struct song *o)
 void
 song_play(struct song *o)
 {
-	song_lowermode(o, SONG_PLAY);
-	song_raisemode(o, SONG_PLAY);
-	song_goto(o, o->curpos);
+	song_start(o, SONG_PLAY, 0);
 
 	if (song_debug) {
 		dbg_puts("song_play: starting loop, waiting for a start event...\n");
@@ -1094,9 +1025,7 @@ song_record(struct song *o)
 		dbg_puts("song_record: no current track or current track is muted\n");
 	}
 
-	song_lowermode(o, SONG_REC);
-	song_raisemode(o, SONG_REC);
-	song_goto(o, o->curpos);
+	song_start(o, SONG_PLAY | SONG_REC, 1);
 	if (song_debug) {
 		dbg_puts("song_record: started loop, waiting for a start event...\n");
 	}
@@ -1109,9 +1038,7 @@ song_record(struct song *o)
 void
 song_idle(struct song *o)
 {
-	song_lowermode(o, SONG_IDLE);
-	song_raisemode(o, SONG_IDLE);
-	song_goto(o, o->curpos);
+	song_start(o, 0, 0);
 
 	if (song_debug) {
 		dbg_puts("song_idle: started loop...\n");
@@ -1128,11 +1055,14 @@ song_idle(struct song *o)
  * they cannot get exclusive access to it.
  */
 
+/*
+ * get the whole song
+ */
 unsigned
-song_try_mode(struct song *o, unsigned reqmode)
+song_try(struct song *o)
 {
-	if (o->mode > reqmode) {
-		cons_err("song in use, use ``s'' to release it");
+	if (mux_isopen) {
+		cons_err("song in use, use ``s'' command to release it");
 		return 0;
 	}
 	return 1;
@@ -1177,20 +1107,20 @@ song_try_curchan(struct song *o, int input)
 unsigned
 song_try_curfilt(struct song *o)
 {
-	return song_try_mode(o, 0);
+	return song_try(o);
 }
 
 unsigned
 song_try_cursx(struct song *o)
 {
-	return song_try_mode(o, 0);
+	return song_try(o);
 }
 
 unsigned
 song_try_trk(struct song *o, struct songtrk *f)
 {
-	if (o->mode >= SONG_PLAY) {
-		cons_err("track in use, use ``s'' or ``i'' to release it");
+	if (mux_isopen && (o->mode & (SONG_PLAY | SONG_REC))) {
+		cons_err("track in use, use ``s'' command to release it");
 		return 0;
 	}
 	return 1;
@@ -1199,20 +1129,20 @@ song_try_trk(struct song *o, struct songtrk *f)
 unsigned
 song_try_chan(struct song *o, struct songchan *f, int input)
 {
-	return song_try_mode(o, 0);
+	return song_try(o);
 }
 
 unsigned
 song_try_filt(struct song *o, struct songfilt *f)
 {
-	return song_try_mode(o, 0);
+	return song_try(o);
 }
 
 unsigned
 song_try_sx(struct song *o, struct songsx *x)
 {
-	if (o->mode >= SONG_REC && (o->cursx == x)) {
-		cons_err("sysex in use, use ``s'' or ``i'' to stop recording");
+	if (mux_isopen && (o->mode & SONG_REC) && (o->cursx == x)) {
+		cons_err("sysex in use, stop recording to release it");
 		return 0;
 	}
 	return 1;
@@ -1221,8 +1151,8 @@ song_try_sx(struct song *o, struct songsx *x)
 unsigned
 song_try_meta(struct song *o)
 {
-	if (o->mode >= SONG_PLAY) {
-		cons_err("meta track in use, use ``s'' or ``i'' to release it");
+	if (mux_isopen && (o->mode & (SONG_PLAY | SONG_REC))) {
+		cons_err("meta track in use, use ``s'' command to release it");
 		return 0;
 	}
 	return 1;

@@ -99,7 +99,7 @@ struct song {
 	/*
 	 * clipboard
 	 */
-#define CLIP_OFFS	(256 * 96)
+#define CLIP_OFFS	(256*96)
 	struct track clip;		/* tmp track for copy & paste */
 
 	/*
@@ -111,9 +111,8 @@ struct song {
 	struct track rec;		/* track being recorded */
 	struct seqptr *recptr;		/* cur position in 'rec' track */
 	unsigned measure, beat, tic;	/* cur position (for metronome) */
-#define SONG_IDLE	1		/* filter running */
-#define SONG_PLAY	2		/* above + playback */ 
-#define SONG_REC	3		/* above + recording */ 
+#define SONG_PLAY	1
+#define SONG_REC	2
 	unsigned mode;			/* real-time "mode" */
 	unsigned complete;		/* playback completed */
 	unsigned metro_mask;		/* if enable = (mask | mode) */
@@ -186,16 +185,12 @@ void song_setcurchan(struct song *, struct songchan *, int);
 void song_setunit(struct song *, unsigned);
 unsigned song_endpos(struct song *);
 void song_playconf(struct song *);
-void song_goto(struct song *, unsigned);
-void song_raisemode(struct song *, unsigned);
-void song_lowermode(struct song *, unsigned);
-
 void song_record(struct song *);
 void song_play(struct song *);
 void song_idle(struct song *);
 void song_stop(struct song *);
 
-unsigned song_try_mode(struct song *, unsigned);
+unsigned song_try(struct song *);
 unsigned song_try_curev(struct song *);
 unsigned song_try_curpos(struct song *);
 unsigned song_try_curlen(struct song *);

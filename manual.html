@@ -33,7 +33,7 @@
 
 <html>
 <head>
-<title>Midish 1.0 - User's manual</title>
+<title>Midish 0.4 - User's manual</title>
 <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
 <meta name="language" content="en">
 <style type="text/css">
@@ -73,7 +73,7 @@
 </head>
 <body>
 
-<h1>Midish 1.0<br>user's manual and tutorial</h1>
+<h1>Midish 0.4<br>user's manual and tutorial</h1>
 
 <!-- toc_begin - automatically generated, don't modify -->
 <h2>Table of contents</h2>
@@ -147,7 +147,6 @@
 <li><a href="#changes_02">15.1 Changes from release 0.1 to release 0.2</a>
 <li><a href="#changes_03">15.2 Changes from release 0.2 to release 0.3</a>
 <li><a href="#changes_04">15.3 Changes from release 0.3 to release 0.4</a>
-<li><a href="#section_15_4">15.4 Changes from release 0.4 to release 1.0</a>
 </ul>
 <li><a href="#attributes">16 Project attributes</a>
 <ul>
@@ -274,9 +273,9 @@ To install midish:
 Untar and gunzip the tar-ball:
 
 <pre>
-gunzip midish-1.0.tar.gz
-tar -xf midish-1.0.tar
-cd midish-1.0
+gunzip midish-0.4.tar.gz
+tar -xf midish-0.4.tar
+cd midish-0.4
 </pre>
 
 <li>
@@ -284,7 +283,7 @@ Configure midish, type ``./configure'', it will select reasonable
 defaults.
 
 <p>
-On linux systems it will use the ALSA-style devices, on other systems
+On Linux systems it will use the ALSA-style devices, on other systems
 it will use raw MIDI devices.
 
 Binaries, scripts, examples and documentation will be installed
@@ -471,11 +470,11 @@ and the result is sent to the midi output. No tracks are
 played or recorded.
 
 <pre>
-+---------+             +------------+          +----------+
-|         |             |            |          |          |
-| MIDI in |-------------|   filter   |---------&gt;| MIDI out |
-|         |             |            |          |          |
-+---------+             +------------+          +----------+
++---------+          +------------+          +----------+
+|         |          |            |          |          |
+| MIDI in |---------&gt;|   filter   |---------&gt;| MIDI out |
+|         |          |            |          |          |
++---------+          +------------+          +----------+
 </pre>
 
 <li>
@@ -1102,7 +1101,7 @@ one.
 
 The user doesn't need to care about this constraint since
 <a href="#func_fmap">fmap</a> and <a href="#func_funmap">funmap</a>
-functions will to the right thing an all cases.
+functions will do the right thing in all cases.
 
 <h3><a name="section_6_3">6.3 Examples</a></h3>
 
@@ -1233,10 +1232,10 @@ by the <i>tempo</i>. By default midish uses:
 </ul>
 
 From the musical point of view, a beat often corresponds to
-a quarter note, to an eight note etc...
+a quarter note, to an eighth note etc...
 
 By default
-an whole note corresponds to 96 ticks, thus by default
+a whole note corresponds to 96 ticks, thus by default
 one beat corresponds to one quarter note, i.e.
 the time signature is 4/4.
 
@@ -1277,7 +1276,7 @@ It has three modes:
 
 The
 ``<a href="#func_m">m</a>''
-command might be used to 
+command can be used to 
 change the mode of the metronome:
 
 <pre>
@@ -2342,14 +2341,6 @@ to create filter for every channel.
 
 </ul>
 
-<h3><a name="section_15_4">15.4 Changes from release 0.4 to release 1.0</a></h3>
-
-<ul>
-
-<li>removed all legacy functions
-
-</ul>
-
 <h2><a name="attributes">16 Project attributes</a></h2>
 
 <h3><a name="section_16_1">16.1 Device attributes</a></h3>
@@ -3153,10 +3144,10 @@ are copied
 
 <dd>
 quantize the current selection of the current track using
-the current quatization step
+the current quantization step
 (see <a href="#func_ev">setq</a> function).
 Note positions
-are rounded to the nearest tick multiple of the quatization step;
+are rounded to the nearest tick multiple of the quantization step;
 Rate must be between 0 and 100: 0 means no
 quantization and 100 means full quantization.
 
@@ -3181,7 +3172,7 @@ the current track
 Mute the given track, i.e. events from ``trackname''
 will not be played during record/playback.
 
-<dt><a name="func_unmute">mute trackname</a>
+<dt><a name="func_unmute">unmute trackname</a>
 
 <dd>
 Unmute the given track, i.e. events from ``trackname''
@@ -3558,7 +3549,7 @@ ignoring all other events.
 <dt><a name="func_setq">setq step</a>
 
 <dd>
-set the current quatization step to the given note
+set the current quantization step to the given note
 value, as follow:
 
 <ul>
@@ -3567,9 +3558,9 @@ value, as follow:
 
 <li>6 - quarter note triplet
 
-<li>8 - eigth note
+<li>8 - eighth note
 
-<li>12 - eight note triplet
+<li>12 - eighth note triplet
 
 <li>16 - sixteenth note
 
@@ -3579,9 +3570,9 @@ value, as follow:
 
 </ul>
 
-The quatization step will be used by <a href="#func_tquant">tquant</a>
+The quantization step will be used by <a href="#func_tquant">tquant</a>
 function and also by all editing functions to optimize event
-selection. If the special ``nil'' value is specified as quatization
+selection. If the special ``nil'' value is specified as quantization
 step, then quatization is disabled.
 
 <dt><a name="func_getq">getq</a>
@@ -3777,7 +3768,7 @@ various default values
 save the song into the given file. The ``filename''
 is a quoted string.
 
-<dt><a name="func_load">filename</a>
+<dt><a name="func_load">load filename</a>
 
 <dd>
 load the song from a file named ``filename''.
@@ -3838,7 +3829,7 @@ is the name of the mode, it can be on if the following:
 </ul>
 
 <p>
-If midish is configured to use ALSA (default on linux systems) then
+If midish is configured to use ALSA (default on Linux systems) then
 ``filename'' should contain the ALSA sequencer port, as listed by
 ``aseqdump -l'', (eg. ``28:0'').
 
@@ -3997,7 +3988,7 @@ the script is terminated.
 
 <dd>
 set debug-flag ``flag'' to (integer) value ``val''.
-It's a developper knob.
+It's a developer knob.
 If ``val=0'' the corresponding debug-info are
 turned off. ``flag'' can be:
 

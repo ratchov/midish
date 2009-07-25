@@ -28,9 +28,9 @@ fi
 #
 # guess if we want sndio devices support
 #
-#if [ `uname` = OpenBSD ]; then
-#	sndio=yes
-#fi
+if [ `uname` = OpenBSD ]; then
+	sndio=yes
+fi
 
 #
 # guess readline(3) parameters
