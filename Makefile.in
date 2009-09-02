@@ -72,7 +72,7 @@ cons.o:		cons.c dbg.h textio.h cons.h user.h
 conv.o:		conv.c dbg.h state.h ev.h default.h conv.h
 data.o:		data.c dbg.h str.h cons.h data.h
 dbg.o:		dbg.c dbg.h
-ev.o:		ev.c dbg.h ev.h default.h str.h
+ev.o:		ev.c dbg.h ev.h default.h str.h cons.h
 exec.o:		exec.c dbg.h exec.h name.h str.h data.h node.h cons.h
 filt.o:		filt.c dbg.h ev.h default.h filt.h pool.h mux.h cons.h
 frame.o:	frame.c dbg.h track.h ev.h default.h frame.h state.h \

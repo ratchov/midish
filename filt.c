@@ -168,89 +168,6 @@ filtnode_mkdst(struct filtnode *s, struct evspec *to)
 	return filtnode_new(to, pd);
 }
 
-/*
- * transform "in" (matching "from" spec) into "out" so it matches "to"
- * spec. The "from" and "to" specs _must_ have the same dev, ch, v0 and
- * v1 ranges (to ensure the mapping must be bijective).  This routine is
- * supposed to be fast since it's called for each incoming event.
- */
-void
-filt_mapev(struct evspec *from, struct evspec *to,
-    struct ev *in, struct ev *out)
-{
-	*out = *in;
-	if (to->cmd != EVSPEC_ANY && to->cmd != EVSPEC_NOTE)
-		out->cmd = to->cmd;
-	if ((evinfo[from->cmd].flags & EV_HAS_DEV) &&
-	    (evinfo[in->cmd].flags & EV_HAS_DEV)) {
-		out->dev += to->dev_min - from->dev_min;
-	}
-	if ((evinfo[from->cmd].flags & EV_HAS_CH) &&
-	    (evinfo[in->cmd].flags & EV_HAS_CH)) {
-		out->ch += to->ch_min - from->ch_min;
-	}
-	if (evinfo[from->cmd].nranges > 0 &&
-	    evinfo[in->cmd].nranges > 0) {
-		out->v0 += to->v0_min - from->v0_min;
-	}
-	if (evinfo[from->cmd].nranges > 1 &&
-	    evinfo[in->cmd].nranges > 1) {
-		out->v1 += to->v1_min - from->v1_min;
-	}
-	if (filt_debug) {
-		dbg_puts("filt_mapev: (");
-		rule_dbg(from, to);
-		dbg_puts("): ");
-		ev_dbg(in);
-		dbg_puts(" -> ");
-		ev_dbg(out);
-		dbg_puts("\n");
-	}
-}
-
-/*
- * transform "in" spec (included in "from" spec) into "out" spec
- * (included in "to" spec). This routine works in exactly the same way
- * as filt_evmap() but for specs instead of events; so it has the same
- * semantics and constraints.
- */
-void
-filt_mapspec(struct evspec *from, struct evspec *to,
-    struct evspec *in, struct evspec *out)
-{
-	*out = *in;
-	if (to->cmd != EVSPEC_ANY && to->cmd != EVSPEC_NOTE)
-		out->cmd = to->cmd;
-	if ((evinfo[from->cmd].flags & EV_HAS_DEV) &&
-	    (evinfo[in->cmd].flags & EV_HAS_DEV)) {
-		out->dev_min += to->dev_min - from->dev_min;
-		out->dev_max += to->dev_min - from->dev_min;
-	}
-	if ((evinfo[from->cmd].flags & EV_HAS_CH) &&
-	    (evinfo[in->cmd].flags & EV_HAS_CH)) {
-		out->ch_min += to->ch_min - from->ch_min;
-		out->ch_max += to->ch_min - from->ch_min;
-	}
-	if (evinfo[from->cmd].nranges > 0 &&
-	    evinfo[in->cmd].nranges > 0) {
-		out->v0_min += to->v0_min - from->v0_min;
-		out->v0_max += to->v0_min - from->v0_min;
-	}
-	if (evinfo[from->cmd].nranges > 1 &&
-	    evinfo[in->cmd].nranges > 1) {
-		out->v1_min += to->v1_min - from->v1_min;
-		out->v1_max += to->v1_min - from->v1_min;
-	}
-	if (filt_debug) {
-		dbg_puts("filt_mapspec: (");
-		rule_dbg(from, to);
-		dbg_puts("): ");
-		evspec_dbg(in);
-		dbg_puts(" -> ");
-		evspec_dbg(out);
-		dbg_puts("\n");
-	}
-}
 
 /*
  * initialize a filter
@@ -328,7 +245,16 @@ filt_do(struct filt *o, struct ev *in, struct ev *out)
 			break;
 		if (evspec_matchev(&s->es, in)) {
 			for (d = s->dstlist; d != NULL; d = d->next) {
-				filt_mapev(&s->es, &d->es, in, &out[nev]);
+				ev_map(in, &s->es, &d->es, &out[nev]);
+				if (filt_debug) {
+					dbg_puts("filt_do: (");
+					rule_dbg(&s->es, &d->es);
+					dbg_puts("): ");
+					ev_dbg(in);
+					dbg_puts(" -> ");
+					ev_dbg(&out[nev]);
+					dbg_puts("\n");
+				}
 				nev++;
 			}
 			break;
@@ -406,34 +332,10 @@ filt_mapnew(struct filt *f, struct evspec *from, struct evspec *to)
 	}
 
 	/*
-	 * check if ranges are ok
+	 * check if ranges are ok, do nothing if they are not
 	 */
-	if (to->cmd != EVSPEC_EMPTY) {
-		if (from->cmd != to->cmd) {
-			cons_err("use the same cmd for 'from' and 'to' args");
-			return;
-		}
-		if (evinfo[from->cmd].flags & EV_HAS_DEV &&
-		    from->dev_max - from->dev_min != to->dev_max - to->dev_min) {
-			cons_err("dev ranges must have the same size");
-			return;
-		}
-		if (evinfo[from->cmd].flags & EV_HAS_CH &&
-		    from->ch_max - from->ch_min != to->ch_max - to->ch_min) {
-			cons_err("chan ranges must have the same size");
-			return;
-		}
-		if (evinfo[from->cmd].nranges >= 1 &&
-		    from->v0_max - from->v0_min != to->v0_max - to->v0_min) {
-			cons_err("v0 ranges must have the same size");
-			return;
-		}
-		if (evinfo[from->cmd].nranges >= 2 &&
-		    from->v1_max - from->v1_min != to->v1_max - to->v1_min) {
-			cons_err("v1 ranges must have the same size");
-			return;
-		}
-	}
+	if (to->cmd != EVSPEC_EMPTY && !evspec_isamap(from, to)) 
+		return;
 
 	s = filtnode_mksrc(&f->map, from);
 	filtnode_mkdst(s, to);
@@ -463,11 +365,18 @@ filt_chgin(struct filt *o, struct evspec *from, struct evspec *to, int swap)
 	list = filt_movelist(o);
 	while ((s = list) != NULL) {
 		if (evspec_in(&s->es, from)) {
-			filt_mapspec(from, to, &s->es, &newspec);
+			evspec_map(&s->es, from, to, &newspec);
 		} else if (swap && evspec_in(&s->es, to)) {
-			filt_mapspec(to, from, &s->es, &newspec);
+			evspec_map(&s->es, to, from, &newspec);
 		} else {
 			newspec = s->es;
+		}
+		if (filt_debug) {
+			dbg_puts("filt_chgin: ");
+			evspec_dbg(&s->es);
+			dbg_puts(" -> ");
+			evspec_dbg(&newspec);
+			dbg_puts("\n");
 		}
 		while ((d = s->dstlist) != NULL) {
 			filt_mapnew(o, &newspec, &d->es);
@@ -488,11 +397,18 @@ filt_chgout(struct filt *o, struct evspec *from, struct evspec *to, int swap)
 	while ((s = list) != NULL) {
 		while ((d = s->dstlist) != NULL) {
 			if (evspec_in(&d->es, from)) {
-				filt_mapspec(from, to, &d->es, &newspec);
+				evspec_map(&d->es, from, to, &newspec);
 			} else if (swap && evspec_in(&d->es, to)) {
-				filt_mapspec(to, from, &d->es, &newspec);
+				evspec_map(&d->es, to, from, &newspec);
 			} else {
 				newspec = d->es;
+			}
+			if (filt_debug) {
+				dbg_puts("filt_chgout: ");
+				evspec_dbg(&d->es);
+				dbg_puts(" -> ");
+				evspec_dbg(&newspec);
+				dbg_puts("\n");
 			}
 			filt_mapnew(o, &s->es, &newspec);
 			filtnode_del(&s->dstlist);

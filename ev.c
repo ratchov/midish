@@ -35,6 +35,7 @@
 #include "dbg.h"
 #include "ev.h"
 #include "str.h"
+#include "cons.h"
 
 struct evinfo evinfo[EV_NUMCMD] =
 {
@@ -262,6 +263,36 @@ ev_dbg(struct ev *ev)
 			dbg_putx(ev->timesig_tics);
 			break;
 		}
+	}
+}
+
+/*
+ * transform "in" (matching "from" spec) into "out" so it matches "to"
+ * spec. The "from" and "to" specs _must_ have the same dev, ch, v0 and
+ * v1 ranges (to ensure the mapping must be bijective).  This routine is
+ * supposed to be fast since it's called for each incoming event.
+ */
+void
+ev_map(struct ev *in, struct evspec *from, struct evspec *to, struct ev *out)
+{
+	*out = *in;
+	if (to->cmd != EVSPEC_ANY && to->cmd != EVSPEC_NOTE)
+		out->cmd = to->cmd;
+	if ((evinfo[from->cmd].flags & EV_HAS_DEV) &&
+	    (evinfo[in->cmd].flags & EV_HAS_DEV)) {
+		out->dev += to->dev_min - from->dev_min;
+	}
+	if ((evinfo[from->cmd].flags & EV_HAS_CH) &&
+	    (evinfo[in->cmd].flags & EV_HAS_CH)) {
+		out->ch += to->ch_min - from->ch_min;
+	}
+	if (evinfo[from->cmd].nranges > 0 &&
+	    evinfo[in->cmd].nranges > 0) {
+		out->v0 += to->v0_min - from->v0_min;
+	}
+	if (evinfo[from->cmd].nranges > 1 &&
+	    evinfo[in->cmd].nranges > 1) {
+		out->v1 += to->v1_min - from->v1_min;
 	}
 }
 
@@ -531,6 +562,73 @@ evspec_in(struct evspec *es1, struct evspec *es2)
 	return 1;
 }
 
+/*
+ * check it the given map can work with ev_map()
+ */
+int
+evspec_isamap(struct evspec *from, struct evspec *to)
+{
+	if (from->cmd != to->cmd) {
+		cons_err("use the same cmd for 'from' and 'to' args");
+		return 0;
+	}
+	if (evinfo[from->cmd].flags & EV_HAS_DEV &&
+	    from->dev_max - from->dev_min != to->dev_max - to->dev_min) {
+		cons_err("dev ranges must have the same size");
+		return 0;
+	}
+	if (evinfo[from->cmd].flags & EV_HAS_CH &&
+	    from->ch_max - from->ch_min != to->ch_max - to->ch_min) {
+		cons_err("chan ranges must have the same size");
+		return 0;
+	}
+	if (evinfo[from->cmd].nranges >= 1 &&
+	    from->v0_max - from->v0_min != to->v0_max - to->v0_min) {
+		cons_err("v0 ranges must have the same size");
+		return 0;
+	}
+	if (evinfo[from->cmd].nranges >= 2 &&
+	    from->v1_max - from->v1_min != to->v1_max - to->v1_min) {
+		cons_err("v1 ranges must have the same size");
+		return 0;
+	}
+	return 1;
+}
+
+/*
+ * transform "in" spec (included in "from" spec) into "out" spec
+ * (included in "to" spec). This routine works in exactly the same way
+ * as ev_map() but for specs instead of events; so it has the same
+ * semantics and constraints.
+ */
+void
+evspec_map(struct evspec *in,
+    struct evspec *from, struct evspec *to, struct evspec *out)
+{
+	*out = *in;
+	if (to->cmd != EVSPEC_ANY && to->cmd != EVSPEC_NOTE)
+		out->cmd = to->cmd;
+	if ((evinfo[from->cmd].flags & EV_HAS_DEV) &&
+	    (evinfo[in->cmd].flags & EV_HAS_DEV)) {
+		out->dev_min += to->dev_min - from->dev_min;
+		out->dev_max += to->dev_min - from->dev_min;
+	}
+	if ((evinfo[from->cmd].flags & EV_HAS_CH) &&
+	    (evinfo[in->cmd].flags & EV_HAS_CH)) {
+		out->ch_min += to->ch_min - from->ch_min;
+		out->ch_max += to->ch_min - from->ch_min;
+	}
+	if (evinfo[from->cmd].nranges > 0 &&
+	    evinfo[in->cmd].nranges > 0) {
+		out->v0_min += to->v0_min - from->v0_min;
+		out->v0_max += to->v0_min - from->v0_min;
+	}
+	if (evinfo[from->cmd].nranges > 1 &&
+	    evinfo[in->cmd].nranges > 1) {
+		out->v1_min += to->v1_min - from->v1_min;
+		out->v1_max += to->v1_min - from->v1_min;
+	}
+}
 /*
  * configure a controller (set the name and default value)
  */

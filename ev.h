@@ -152,6 +152,7 @@ void	 ev_dbg(struct ev *);
 unsigned ev_prio(struct ev *);
 unsigned ev_str2cmd(struct ev *, char *);
 unsigned ev_phase(struct ev *);
+void	 ev_map(struct ev *, struct evspec *, struct evspec *, struct ev *);
 
 unsigned evspec_str2cmd(struct evspec *, char *);
 void	 evspec_dbg(struct evspec *);
@@ -160,6 +161,9 @@ unsigned evspec_matchev(struct evspec *, struct ev *);
 unsigned evspec_eq(struct evspec *, struct evspec *);
 unsigned evspec_isec(struct evspec *, struct evspec *);
 unsigned evspec_in(struct evspec *, struct evspec *);
+int	 evspec_isamap(struct evspec *, struct evspec *);
+void	 evspec_map(struct evspec *, struct evspec *,
+     struct evspec *, struct evspec *);
 
 /*
  * describes a controller number; this structures defines
