@@ -857,13 +857,16 @@ cat, bend, rpn, nrpn
 xpc, xctl, none
 
 <li>
-an optional channel range specified as a list containing device number
-range and a MIDI channel number range.
+an optional channel set.
 
-Number ranges are specified as two-numbers separated by the ``..''
-operator like ``12..34''.
+If a name is given, its interpreted as an input or output created with
+<a href="#func_inew">inew</a> or <a href="#func_onew">onew</a>.
 
-If the channel is named, it matches an unique channel.
+If a number is given, it matches all MIDI channels of the
+given device number.
+
+Alternatively, a list containing a device number range and a MIDI channel
+number range can be used (see examples below).
 
 <li>
 an optional number range, specified as a list of two number separated
@@ -889,9 +892,9 @@ Examples:
 {}                      # match everything
 { any }                 # match everything
 { none }                # match nothing
+{ any 1 }		# match anything on device 1
 { any bass }            # match anything on channel "bass"
 { any {1 4} }           # match anything on device 1, channel 4
-{ any {1 0..15} }       # match anything on device 1, any channel
 { note }                # match note events
 { note {1 9} }          # match notes on dev 1, channel 9
 { note {0 3..5} }       # match notes on device 0, channel 3, 4, 5
@@ -901,7 +904,7 @@ Examples:
 { bend {} }             # match bender
 { xctl {} 19 }          # match 14-bit controller number 19
 { xpc  {} 21 1234 }     # match patch 21 on bank 1234
-{ nrpn {} 21 }          # NRPN 21 change
+{ nrpn {} 21 }          # match NRPN 21 change
 </pre>
 
 <h2><a name="filt">6 Filtering/routing</a></h2>
@@ -1114,7 +1117,7 @@ device number 1 (the MIDI keyboard) to device number 0
 
 <pre>
 fnew mydevmap                           # define filter "mydevmap"
-fmap {any {1 0..15}} {any {0 0..15}}    # make it route device 1 -&gt; device 0
+fmap {any 1} {any 0}                    # make it route device 1 -&gt; device 0
 </pre>
 
 To test the filter, start performance mode using the

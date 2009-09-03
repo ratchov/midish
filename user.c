@@ -396,7 +396,15 @@ exec_lookupevspec(struct exec *o, char *name, struct evspec *e, int input)
 			cons_err("bad channel range spec");
 			return 0;
 		}
-	} else {
+	} else if (d->type == DATA_LONG) {
+		if (d->val.num < 0 || d->val.num > EV_MAXDEV) {
+			cons_err("bad device number");
+			return 0;
+		}
+		e->dev_min = e->dev_max = d->val.num;
+		e->ch_min = 0;
+		e->ch_max = EV_MAXCH;
+	} else { 
 		cons_err("list or ref expected as channel range spec");
 		return 0;
 	}
