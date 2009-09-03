@@ -2348,6 +2348,10 @@ to create filter for every channel.
 
 <li>removed all legacy functions
 
+<li>added <a href="#func_tevmap">tevmap</a> function to transform
+a set of events of a track into another set (eg. to change the 
+device number).
+
 </ul>
 
 <h2><a name="attributes">16 Project attributes</a></h2>
@@ -3169,6 +3173,15 @@ Only events matching the current event selection
 (see <a href="#func_ev">ev</a> function)
 are transposed.
 
+<dt><a name="func_tevmap">tevmap evspec1 evspec2</a>
+
+<dd>
+convert events matching evspec1 (source) into events matching
+evspec2 (destination) in the current selection of the current
+track.
+Both evspec1 and evspec2 must have the same number of devices,
+channels, notes, controllers etc..
+
 <dt><a name="func_tmerge">trackmerge sourcetrack</a>
 
 <dd>
@@ -3399,7 +3412,7 @@ Similar to <a href="#func_fchgout">fchgout</a> but swap
 ``evspec1'' and ``evspec2'' in the destination events
 set of each rule.
 
-<dt><a name="func_fevmap">fmap evspec1 evspec2</a>
+<dt><a name="func_fmap">fmap evspec1 evspec2</a>
 
 <dd>
 add a new rule to the current filter, to make it

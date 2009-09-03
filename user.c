@@ -989,6 +989,9 @@ user_mainloop(void)
 			name_newarg("rate", NULL));
 	exec_newbuiltin(exec, "ttransp", blt_ttransp,
 			name_newarg("halftones", NULL));
+	exec_newbuiltin(exec, "tevmap", blt_tevmap,
+			name_newarg("from",
+			name_newarg("to", NULL)));
 	exec_newbuiltin(exec, "tclist", blt_tclist, NULL);
 	exec_newbuiltin(exec, "tinfo", blt_tinfo, NULL);
 

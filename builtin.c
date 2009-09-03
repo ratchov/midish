@@ -1760,6 +1760,37 @@ blt_ttransp(struct exec *o, struct data **r)
 }
 
 unsigned
+blt_tevmap(struct exec *o, struct data **r)
+{
+	struct songtrk *t;
+	struct evspec from, to;
+	unsigned tic, len, qstep;
+
+	song_getcurtrk(usong, &t);
+	if (t == NULL) {
+		cons_errs(o->procname, "no current track");
+		return 0;
+	}
+	if (!exec_lookupevspec(o, "from", &from, 1) ||
+	    !exec_lookupevspec(o, "to", &to, 0)) {
+		return 0;
+	}
+	if (!song_try_trk(usong, t)) {
+		return 0;
+	}
+	tic = track_findmeasure(&usong->meta, usong->curpos);
+	len = track_findmeasure(&usong->meta, usong->curpos + usong->curlen) - tic;
+	qstep = usong->curquant / 2;
+	if (tic > qstep) {
+		tic -= qstep;
+	} else if (tic + len > qstep) {
+		len -= qstep;
+	}
+	track_evmap(&t->track, tic, len, &usong->curev, &from, &to);
+	return 1;
+}
+
+unsigned
 blt_tclist(struct exec *o, struct data **r)
 {
 	struct songtrk *t;

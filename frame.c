@@ -1517,3 +1517,89 @@ track_cut(struct track *t, unsigned stic, unsigned len)
 	track_done(&t2);
 }
 
+/*
+ * map current selection to the given evspec
+ */
+void
+track_evmap(struct track *src, unsigned start, unsigned len, 
+    struct evspec *es, struct evspec *from, struct evspec *to)
+{
+	unsigned delta, tic;
+	struct track qt;
+	struct seqptr *sp, *qp;
+	struct state *st;
+	struct statelist slist;
+	struct ev ev;
+
+	if (!evspec_isamap(from, to))
+		return;
+
+	track_init(&qt);
+	sp = seqptr_new(src);
+	qp = seqptr_new(&qt);
+
+	/*
+	 * go to t start position and untag all frames
+	 * (tagged = will be transposed)
+	 */
+	(void)seqptr_skip(sp, start);
+	statelist_dup(&slist, &sp->statelist);
+	for (st = slist.first; st != NULL; st = st->next) {
+		st->tag = 0;
+	}
+	seqptr_seek(qp, start);
+	tic = start;
+
+	/*
+	 * go ahead and copy all events to transpose during 'len' tics,
+	 */
+	for (;;) {
+		delta = seqptr_ticdel(sp, len, &slist);
+		seqptr_ticput(sp, delta);
+		seqptr_ticput(qp, delta);
+		tic += delta;
+		if (tic >= start + len)
+			break;
+		st = seqptr_evdel(sp, &slist);
+		if (st == NULL)
+			break;
+		if (st->phase & EV_PHASE_FIRST) {
+			if (EV_ISNOTE(&st->ev) && state_inspec(st, es) &&
+			    state_inspec(st, from))
+				st->tag = 1;
+			else
+				st->tag = 0;
+		}
+		if (st->tag) {
+			ev_map(&st->ev, from, to, &ev);
+			seqptr_evput(qp, &ev);
+		} else {
+			seqptr_evput(sp, &st->ev);
+		}
+	}
+
+	/*
+	 * finish transposed (tagged) frames
+	 */
+	for (;;) {
+		delta = seqptr_ticdel(sp, ~0U, &slist);
+		seqptr_ticput(sp, delta);
+		seqptr_ticput(qp, delta);
+		st = seqptr_evdel(sp, &slist);
+		if (st == NULL)
+			break;
+		if (st->phase & EV_PHASE_FIRST)
+			st->tag = 0;
+		if (st->tag) {
+			ev_map(&st->ev, from, to, &ev);
+			seqptr_evput(qp, &ev);
+		} else {
+			seqptr_evput(sp, &st->ev);
+		}
+	}
+	track_merge(src, &qt);
+	statelist_done(&slist);
+	seqptr_del(sp);
+	seqptr_del(qp);
+	track_done(&qt);
+}
