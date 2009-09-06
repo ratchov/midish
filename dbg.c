@@ -32,7 +32,6 @@
 #include <stdlib.h>
 #include "dbg.h"
 
-#define MAGIC_ALLOC	13942
 #define MAGIC_FREE	59811
 
 unsigned mem_nalloc = 0, mem_nfree = 0, mem_debug = 0;
@@ -105,30 +104,23 @@ mem_alloc(unsigned n)
 		dbg_puts("mem_alloc: nbytes = 0\n");
 		dbg_panic();
 	}
-
-	n = 4 +	(n + sizeof(unsigned) - 1) / sizeof(unsigned);
-
+	n = 3 +	(n + sizeof(unsigned) - 1) / sizeof(unsigned);
 	buf = (unsigned *)malloc(n * sizeof(unsigned));
-
 	if (buf == NULL) {
 		dbg_puts("mem_alloc: failed to allocate ");
 		dbg_putx(n);
 		dbg_puts(" words\n");
 		dbg_panic();
 	}
-
-	for (i = 0; i < n; i++) {
+	for (i = 2; i < n; i++)
 		buf[i] = mem_rnd();
-	}
-
-	buf[0] = MAGIC_ALLOC; 	/* state of the block */
-	buf[1] = n;		/* size of the bloc */
-	buf[2] = mem_rnd();	/* a random number */
-	buf[n - 1] = buf[2];
+	while (buf[0] == MAGIC_FREE)
+		buf[0] = mem_rnd();	/* a random number */
+	buf[1] = n;			/* size of the bloc */
+	buf[n - 1] = buf[0];
 
 	mem_nalloc++;
-
-	return buf + 3;
+	return buf + 2;
 }
 
 /*
@@ -142,31 +134,23 @@ mem_free(void *mem)
 	unsigned *buf, n;
 	unsigned i;
 
-	buf = (unsigned *)mem - 3;
+	buf = (unsigned *)mem - 2;
 	n = buf[1];
 
 	if (buf[0] == MAGIC_FREE) {
 		dbg_puts("mem_free: block seems already freed\n");
 		dbg_panic();
 	}
-
-	if (buf[0] != MAGIC_ALLOC) {
-		dbg_puts("mem_free: block header corrupt\n");
+	if (buf[0] != buf[n - 1]) {
+		dbg_puts("mem_free: block corrupted\n");
 		dbg_panic();
 	}
-
-	if (buf[2] != buf[n - 1]) {
-		dbg_puts("mem_free: block corrupt\n");
-		dbg_panic();
-	}
-
-	for (i = 3; i < n; i++) {
+	for (i = 2; i < n; i++)
 		buf[i] = mem_rnd();
-	}
-	buf[0] = MAGIC_FREE;
 
-	free(buf);
+	buf[0] = MAGIC_FREE;
 	mem_nfree++;
+	free(buf);
 }
 
 void
