@@ -992,7 +992,7 @@ song_loc(struct song *o, unsigned where, unsigned how)
 
 /*
  * cancel the current state, and restore the state of 
- * the current postition, must be in idle mode
+ * the given position
  */
 void
 song_goto(struct song *o, unsigned measure)

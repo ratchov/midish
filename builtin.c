@@ -317,10 +317,9 @@ blt_goto(struct exec *o, struct data **r)
 		return 0;
 	}
 	usong->curpos = measure;
-	if (usong->mode >= SONG_IDLE) {
+	if (usong->mode >= SONG_IDLE) 
 		song_setmode(usong, SONG_IDLE);
-		song_goto(usong, usong->curpos);
-	}
+	song_goto(usong, usong->curpos);
 	return 1;
 }
 
