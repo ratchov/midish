@@ -1114,8 +1114,11 @@ song_stop(struct song *o)
 void
 song_play(struct song *o)
 {
+	unsigned m;
+
+	m = (o->mode >= SONG_IDLE) ? o->measure : o->curpos;
 	song_setmode(o, SONG_PLAY);
-	song_goto(o, o->curpos);
+	song_goto(o, m);
 
 	if (song_debug) {
 		dbg_puts("song_play: waiting for a start event...\n");
@@ -1131,14 +1134,16 @@ void
 song_record(struct song *o)
 {
 	struct songtrk *t;
+	unsigned m;
 
 	song_getcurtrk(o, &t);
 	if (!t || t->mute) {
 		dbg_puts("song_record: no current track (or muted)\n");
 	}
 
+	m = (o->mode >= SONG_IDLE) ? o->measure : o->curpos;
 	song_setmode(o, SONG_REC);
-	song_goto(o, o->curpos);
+	song_goto(o, m);
 	if (song_debug) {
 		dbg_puts("song_record: waiting for a start event...\n");
 	}
@@ -1151,8 +1156,11 @@ song_record(struct song *o)
 void
 song_idle(struct song *o)
 {
+	unsigned m;
+
+	m = (o->mode >= SONG_IDLE) ? o->measure : o->curpos;
 	song_setmode(o, SONG_IDLE);
-	song_goto(o, o->curpos);
+	song_goto(o,  m);
 
 	if (song_debug) {
 		dbg_puts("song_idle: started loop...\n");
