@@ -1031,6 +1031,8 @@ song_setmode(struct song *o, unsigned newmode)
 
 	oldmode = o->mode;
 	o->mode = newmode;
+	if (newmode < oldmode)
+		metro_setmode(&o->metro, newmode);
 	if (oldmode >= SONG_REC && newmode < SONG_REC) {
 		/*
 		 * if there is no filter for recording there may be
@@ -1060,6 +1062,7 @@ song_setmode(struct song *o, unsigned newmode)
 		seqptr_del(o->recptr);
 		seqptr_del(o->metaptr);
 		norm_setfilt(NULL);
+		mux_flush();
 		mux_close();
 	}
 	if (oldmode < SONG_PLAY && newmode >= SONG_PLAY) {
@@ -1092,9 +1095,10 @@ song_setmode(struct song *o, unsigned newmode)
 		 */
 		song_playsysex(o);
 		song_playconf(o);
+		mux_flush();
 	}
-	metro_setmode(&o->metro, o->mode);
-	mux_flush();
+	if (newmode > oldmode)
+		metro_setmode(&o->metro, newmode);
 }
 
 /*
