@@ -32,7 +32,7 @@
 #include <stdlib.h>
 #include "dbg.h"
 
-#define MAGIC_FREE	59811
+#define MAGIC_FREE	0xa55f9811
 
 unsigned mem_nalloc = 0, mem_nfree = 0, mem_debug = 0;
 
@@ -112,7 +112,7 @@ mem_alloc(unsigned n)
 		dbg_puts(" words\n");
 		dbg_panic();
 	}
-	for (i = 2; i < n; i++)
+	for (i = 0; i < n; i++)
 		buf[i] = mem_rnd();
 	while (buf[0] == MAGIC_FREE)
 		buf[0] = mem_rnd();	/* a random number */
