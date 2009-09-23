@@ -52,7 +52,7 @@ struct prof {
 	unsigned max;
 	unsigned sum;
 	unsigned sumsqr;
-	unsigned panic;
+	unsigned err;
 };
 
 void prof_reset(struct prof *, char *);

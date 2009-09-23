@@ -246,18 +246,40 @@ prof_reset(struct prof *p, char *name)
 	p->sum = 0;
 	p->sumsqr = 0;
 	p->name = name;
+	p->err = 0;
 }
 
 void
 prof_val(struct prof *p, unsigned val)
 {
+#define MAXVAL ((1 << sizeof(unsigned) * 4) - 1) 
+	unsigned sumsqr;
+
+	if (p->err) {
+		p->err++;
+		return;
+	}
+	if (val > MAXVAL) {
+		dbg_puts("prof_val: ");
+		dbg_putu(val);
+		dbg_puts(": too large\n");
+		p->err++;
+		return;
+	}
+	sumsqr = p->sumsqr + val * val;
+	if (sumsqr < p->sumsqr) {
+		dbg_puts("prof_val: overflow\n");
+		p->err++;
+		return;
+	}
 	if (p->max < val)
 		p->max = val;
 	if (p->min > val)
 		p->min = val;
+	p->sumsqr = sumsqr;
 	p->sum += val;
-	p->sumsqr += (val * val);
 	p->n++;
+#undef MAXVAL
 }
 
 void
@@ -266,7 +288,9 @@ prof_dbg(struct prof *p)
 	unsigned mean, delta;
 
 	dbg_puts(p->name);
-	dbg_puts(": n=");
+	dbg_puts(": err=");
+	dbg_putu(p->err);
+	dbg_puts(", n=");
 	dbg_putu(p->n);
 	if (p->n != 0) {
 		dbg_puts(", min=");
