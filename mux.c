@@ -167,6 +167,7 @@ mux_open(void)
 #ifdef MUX_PROF
 	prof_reset(&mux_prof, "mux/ms");
 #endif
+	dbg_sync = 0;
 }
 
 /*
@@ -177,6 +178,7 @@ mux_close(void)
 {
 	struct mididev *i;
 
+	dbg_sync = 1;
 #ifdef MUX_PROF
 	prof_dbg(&mux_prof);
 #endif

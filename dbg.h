@@ -39,6 +39,7 @@ void	 dbg_puts(char *);
 void	 dbg_putx(unsigned long);
 void	 dbg_putu(unsigned long);
 void	 dbg_panic(void);
+void	 dbg_flush(void);
 void	*mem_alloc(unsigned);
 void	 mem_free(void *);
 void	 mem_stats(void);
@@ -59,5 +60,6 @@ void prof_val(struct prof *, unsigned);
 void prof_dbg(struct prof *);
 
 extern unsigned mem_debug;
+extern unsigned dbg_sync;
 
 #endif /* MIDISH_DBG_H */

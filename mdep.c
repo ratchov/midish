@@ -162,7 +162,7 @@ mux_mdep_wait(void)
 	if (mux_isopen) {
 		if (gettimeofday(&tv, NULL) < 0) {
 			perror("mux_mdep_wait: gettimeofday failed");
-			return 1;
+			dbg_panic();
 		}
 
 		/*
@@ -181,7 +181,7 @@ mux_mdep_wait(void)
 			mux_timercb(24 * delta_usec);
 		}
 	}
-
+	dbg_flush();
 	if (cons_pfd && (cons_pfd->revents & (POLLIN | POLLHUP))) {
 		res = read(STDIN_FILENO, cons_buf, CONS_BUFSIZE);
 		if (res < 0) {

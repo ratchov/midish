@@ -30,42 +30,92 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <string.h>
 #include "dbg.h"
 
 #define MAGIC_FREE	0xa55f9811
+#define DBG_BUFSZ	4096
 
+char dbg_buf[DBG_BUFSZ];
+unsigned dbg_used = 0, dbg_sync = 1;
 unsigned mem_nalloc = 0, mem_nfree = 0, mem_debug = 0;
 
 /*
- * following routines are used to output debug info, use them instead
- * of fprintf(stderr, ...) because the will be turned to no-op in
- * stable version
+ * following routines are used to output debug info; messages are
+ * stored into a buffer rather than being printed on stderr to avoid
+ * disturbing time sensitive operations by TTY output.
  */
 
+/*
+ * write debug info buffer on stderr
+ */
+void
+dbg_flush(void)
+{
+	if (dbg_used ==  0)
+		return;
+	write(STDERR_FILENO, dbg_buf, dbg_used);
+	dbg_used = 0;
+}
+
+/*
+ * store a string in the debug buffer
+ */
 void
 dbg_puts(char *msg)
 {
-	fputs(msg, stderr);
+	char *sp, *dp;
+	int c;
+
+	sp = msg;
+	dp = dbg_buf + dbg_used;
+	while ((c = *sp++) != '\0') {
+		if (dbg_used < DBG_BUFSZ) {
+			*dp++ = c;
+			dbg_used++;
+		}
+		if (dbg_sync && c == '\n')
+			dbg_flush();
+	}
 }
 
+/*
+ * store a hex in the debug buffer
+ */
 void
 dbg_putx(unsigned long n)
 {
-	fprintf(stderr, "%lx", n);
+	dbg_used += snprintf(dbg_buf + dbg_used,
+	    DBG_BUFSZ - dbg_used, "%lx", n);
+	if (dbg_used > DBG_BUFSZ)
+		dbg_used = DBG_BUFSZ;
 }
 
+/*
+ * store a decimal in the debug buffer
+ */
 void
 dbg_putu(unsigned long n)
 {
-	fprintf(stderr, "%lu", n);
+	dbg_used += snprintf(dbg_buf + dbg_used,
+	    DBG_BUFSZ - dbg_used, "%lu", n);
+	if (dbg_used > DBG_BUFSZ)
+		dbg_used = DBG_BUFSZ;
 }
 
+/*
+ * store a percent in the debug buffer
+ */
 void
 dbg_putpct(unsigned long n)
 {
-	fprintf(stderr, "%lu.%02lu", n / 100, n % 100);
+	dbg_used += snprintf(dbg_buf + dbg_used,
+	    DBG_BUFSZ - dbg_used, "%lu.%02lu", n / 100, n % 100);
+	if (dbg_used > DBG_BUFSZ)
+		dbg_used = DBG_BUFSZ;
 }
-
 
 /*
  * abort the execution of the program after a fatal error, we should
@@ -74,6 +124,7 @@ dbg_putpct(unsigned long n)
 void
 dbg_panic(void)
 {
+	dbg_flush();
 	abort();
 }
 
