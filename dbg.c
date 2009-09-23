@@ -76,8 +76,10 @@ dbg_puts(char *msg)
 			*dp++ = c;
 			dbg_used++;
 		}
-		if (dbg_sync && c == '\n')
+		if (dbg_sync && c == '\n') {
 			dbg_flush();
+			dp = dbg_buf;
+		}
 	}
 }
 
