@@ -42,7 +42,7 @@
 #include "user.h"
 #include "filt.h"
 #include "mididev.h"
-#include "default.h"
+#include "defs.h"
 #include "sysex.h"
 #include "textio.h"
 

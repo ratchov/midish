@@ -81,7 +81,7 @@
 #include "dbg.h"
 #include "ev.h"
 #include "cons.h"
-#include "default.h"
+#include "defs.h"
 #include "mux.h"
 #include "mididev.h"
 #include "sysex.h"

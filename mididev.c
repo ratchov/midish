@@ -58,7 +58,7 @@
  */
 
 #include "dbg.h"
-#include "default.h"
+#include "defs.h"
 #include "mididev.h"
 #include "pool.h"
 #include "cons.h"

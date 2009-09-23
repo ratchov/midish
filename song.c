@@ -37,7 +37,7 @@
 #include "song.h"
 #include "cons.h"
 #include "metro.h"
-#include "default.h"
+#include "defs.h"
 #include "mixout.h"
 #include "norm.h"
 

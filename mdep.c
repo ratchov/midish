@@ -45,7 +45,7 @@
 #include <errno.h>
 #include <limits.h>
 
-#include "default.h"
+#include "defs.h"
 #include "mux.h"
 #include "mididev.h"
 #include "cons.h"

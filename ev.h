@@ -31,7 +31,7 @@
 #ifndef MIDISH_EV_H
 #define MIDISH_EV_H
 
-#include "default.h"
+#include "defs.h"
 
 #define EV_NULL		0		/* "null" or end-of-track */
 #define EV_TEMPO	0x2		/* tempo change */

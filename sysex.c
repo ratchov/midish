@@ -43,7 +43,7 @@
 
 #include "dbg.h"
 #include "sysex.h"
-#include "default.h"
+#include "defs.h"
 #include "pool.h"
 
 /* ------------------------------------------ sysex pool routines --- */

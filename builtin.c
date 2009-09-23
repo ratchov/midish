@@ -29,7 +29,7 @@
  */
 
 #include "dbg.h"
-#include "default.h"
+#include "defs.h"
 #include "node.h"
 #include "exec.h"
 #include "data.h"
