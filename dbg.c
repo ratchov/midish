@@ -38,7 +38,7 @@
 #define MAGIC_FREE	0xa55f9811
 #define DBG_BUFSZ	4096
 
-char dbg_buf[DBG_BUFSZ];
+char dbg_buf[DBG_BUFSZ], *dbg_ptr = dbg_buf;
 unsigned dbg_used = 0, dbg_sync = 1;
 unsigned mem_nalloc = 0, mem_nfree = 0, mem_debug = 0;
 
@@ -47,6 +47,13 @@ unsigned mem_nalloc = 0, mem_nfree = 0, mem_debug = 0;
  * stored into a buffer rather than being printed on stderr to avoid
  * disturbing time sensitive operations by TTY output.
  */
+
+#define DBG_PUTC(c) do {			\
+	if (dbg_used < DBG_BUFSZ) {		\
+		*(dbg_ptr++) = (c);		\
+		dbg_used++;			\
+	}					\
+} while (0)
 
 /*
  * write debug info buffer on stderr
@@ -57,6 +64,7 @@ dbg_flush(void)
 	if (dbg_used ==  0)
 		return;
 	write(STDERR_FILENO, dbg_buf, dbg_used);
+	dbg_ptr = dbg_buf;
 	dbg_used = 0;
 }
 
@@ -66,20 +74,13 @@ dbg_flush(void)
 void
 dbg_puts(char *msg)
 {
-	char *sp, *dp;
+	char *p = msg;
 	int c;
 
-	sp = msg;
-	dp = dbg_buf + dbg_used;
-	while ((c = *sp++) != '\0') {
-		if (dbg_used < DBG_BUFSZ) {
-			*dp++ = c;
-			dbg_used++;
-		}
-		if (dbg_sync && c == '\n') {
+	while ((c = *p++) != '\0') {
+		DBG_PUTC(c);
+		if (dbg_sync && c == '\n')
 			dbg_flush();
-			dp = dbg_buf;
-		}
 	}
 }
 
@@ -87,24 +88,58 @@ dbg_puts(char *msg)
  * store a hex in the debug buffer
  */
 void
-dbg_putx(unsigned long n)
+dbg_putx(unsigned long num)
 {
-	dbg_used += snprintf(dbg_buf + dbg_used,
-	    DBG_BUFSZ - dbg_used, "%lx", n);
-	if (dbg_used > DBG_BUFSZ)
-		dbg_used = DBG_BUFSZ;
+	char dig[sizeof(num) * 2], *p = dig, c;
+	unsigned ndig;
+
+	if (num == 0) {
+		DBG_PUTC('0');
+		return;
+	}
+	for (ndig = 0; num != 0; ndig++) {
+		*p++ = num & 0xf;
+		num >>= 4;
+	}
+	for (; ndig != 0; ndig--) {
+		c = *(--p);
+		c += (c < 10) ? '0' : 'a' - 10;
+		DBG_PUTC(c);
+	}
+}
+
+/*
+ * store a signed integer in the debug buffer
+ */
+void
+dbg_puti(signed long num)
+{
+	if (num < 0) {
+		DBG_PUTC('-');
+		num = -num;
+	}
+	dbg_putu(num);
 }
 
 /*
  * store a decimal in the debug buffer
  */
 void
-dbg_putu(unsigned long n)
+dbg_putu(unsigned long num)
 {
-	dbg_used += snprintf(dbg_buf + dbg_used,
-	    DBG_BUFSZ - dbg_used, "%lu", n);
-	if (dbg_used > DBG_BUFSZ)
-		dbg_used = DBG_BUFSZ;
+	char dig[sizeof(num) * 3], *p = dig;
+	unsigned ndig;
+
+	if (num == 0) {
+		DBG_PUTC('0');
+		return;
+	}
+	for (ndig = 0; num != 0; ndig++) {
+		*p++ = num % 10;
+		num /= 10;
+	}
+	for (; ndig != 0; ndig--)
+		DBG_PUTC(*(--p) + '0');
 }
 
 /*
@@ -113,10 +148,11 @@ dbg_putu(unsigned long n)
 void
 dbg_putpct(unsigned long n)
 {
-	dbg_used += snprintf(dbg_buf + dbg_used,
-	    DBG_BUFSZ - dbg_used, "%lu.%02lu", n / 100, n % 100);
-	if (dbg_used > DBG_BUFSZ)
-		dbg_used = DBG_BUFSZ;
+	dbg_putu(n / 100);
+	DBG_PUTC('.');
+	n %= 100;
+	DBG_PUTC('0' + n / 10);
+	DBG_PUTC('0' + n % 10);
 }
 
 /*
@@ -305,7 +341,7 @@ prof_dbg(struct prof *p)
 		dbg_puts(", mean=");
 		dbg_putpct(mean);
 
-		delta = prof_sqrt((p->sumsqr - p->sum * p->sum / p->n) / p->n);
+		delta = prof_sqrt(p->sumsqr / p->n - mean * mean);
 		dbg_puts(", delta=");
 		dbg_putpct(delta);
 	}
