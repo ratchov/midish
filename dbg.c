@@ -39,11 +39,9 @@
  * mem_xxx() routines are simple wrapper around malloc() overwriting memory
  * blocks with random data upon allocation and release.
  */
-#include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <fcntl.h>
-#include <string.h>
 #include "dbg.h"
 
 /*
