@@ -59,8 +59,10 @@
 	}					\
 } while (0)
 
-char dbg_buf[DBG_BUFSZ], *dbg_ptr = dbg_buf;
-unsigned dbg_used = 0, dbg_sync = 1;
+char dbg_buf[DBG_BUFSZ];	/* buffer where traces are stored */
+char *dbg_ptr = dbg_buf;	/* points to first unused character */
+unsigned dbg_used = 0;		/* bytes used in the buffer */
+unsigned dbg_sync = 1;		/* if true, flush after each '\n' */
 
 /*
  * write debug info buffer on stderr
