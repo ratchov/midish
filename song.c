@@ -50,7 +50,7 @@ struct song *
 song_new(void)
 {
 	struct song *o;
-	o = (struct song *)mem_alloc(sizeof(struct song));
+	o = mem_alloc(sizeof(struct song), "song");
 	song_init(o);
 	return o;
 }
@@ -166,7 +166,7 @@ song_trknew(struct song *o, char *name)
 {
 	struct songtrk *t;
 
-	t = (struct songtrk *)mem_alloc(sizeof(struct songtrk));
+	t = mem_alloc(sizeof(struct songtrk), "songtrk");
 	name_init(&t->name, name);
 	track_init(&t->track);
 	t->curfilt = NULL;
@@ -212,7 +212,7 @@ song_channew(struct song *o, char *name, unsigned dev, unsigned ch, int input)
 	struct songchan *c;
 	struct name **list = input ? &o->inlist : &o->outlist;
 
-	c = (struct songchan *)mem_alloc(sizeof(struct songchan));
+	c = mem_alloc(sizeof(struct songchan), "songchan");
 	name_init(&c->name, name);
 	track_init(&c->conf);
 	c->link = NULL;
@@ -294,7 +294,7 @@ song_filtnew(struct song *o, char *name)
 {
 	struct songfilt *f;
 
-	f = (struct songfilt *)mem_alloc(sizeof(struct songfilt));
+	f = mem_alloc(sizeof(struct songfilt), "songfilt");
 	name_init(&f->name, name);
 	filt_init(&f->filt);
 	f->link = NULL;
@@ -349,7 +349,7 @@ song_sxnew(struct song *o, char *name)
 {
 	struct songsx *x;
 
-	x = (struct songsx *)mem_alloc(sizeof(struct songsx));
+	x = mem_alloc(sizeof(struct songsx), "songsx");
 	name_init(&x->name, name);
 	sysexlist_init(&x->sx);
 	name_add(&o->sxlist, (struct name *)x);

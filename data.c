@@ -55,7 +55,7 @@ struct data *
 data_newnil(void)
 {
 	struct data *o;
-	o = (struct data *)mem_alloc(sizeof(struct data));
+	o = (struct data *)mem_alloc(sizeof(struct data), "data");
 	o->type = DATA_NIL;
 	o->next = NULL;
 	return o;

@@ -64,7 +64,7 @@ textin_new(char *filename)
 {
 	struct textin *o;
 
-	o = (struct textin *)mem_alloc(sizeof(struct textin));
+	o = mem_alloc(sizeof(struct textin), "textin");
 	if (filename == NULL) {
 		o->isconsole = 1;
 		o->file = stdin;
@@ -131,7 +131,7 @@ textout_new(char *filename)
 {
 	struct textout *o;
 
-	o = (struct textout *)mem_alloc(sizeof(struct textout));
+	o = mem_alloc(sizeof(struct textout), "textout");
 	if (filename != NULL) {
 		o->file = fopen(filename, "w");
 		if (o->file == NULL) {

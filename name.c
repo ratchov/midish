@@ -51,7 +51,7 @@ struct name *
 name_new(char *name)
 {
 	struct name *o;
-	o = (struct name *)mem_alloc(sizeof(struct name));
+	o = mem_alloc(sizeof(struct name), "name");
 	name_init(o, name);
 	return o;
 }
@@ -163,6 +163,7 @@ struct name *
 name_lookup(struct name **first, char *str)
 {
 	struct name *i;
+
 	for (i = *first; i != NULL; i = i->next) {
 		if (i->str == NULL)
 			continue;

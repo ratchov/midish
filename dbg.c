@@ -27,7 +27,18 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
+/*
+ * dbg_xxx() routines are used to quickly store traces into a trace buffer.
+ * This allows trances to be collected during time sensitive operations without
+ * disturbing them. The buffer can be flused on standard error later, when
+ * slow syscalls are no longer disruptive, eg. at the end of the poll() loop.
+ *
+ * prof_xxx() routines record (small) integers and provide simple statistical
+ * properties on them like the minimum, maximum, average, variance.
+ *
+ * mem_xxx() routines are simple wrapper around malloc() overwriting memory
+ * blocks with random data upon allocation and release.
+ */
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -35,25 +46,23 @@
 #include <string.h>
 #include "dbg.h"
 
-#define MAGIC_FREE	0xa55f9811
-#define DBG_BUFSZ	4096
-
-char dbg_buf[DBG_BUFSZ], *dbg_ptr = dbg_buf;
-unsigned dbg_used = 0, dbg_sync = 1;
-unsigned mem_nalloc = 0, mem_nfree = 0, mem_debug = 0;
+/*
+ * size of buffer where traces are stored
+ */
+#define DBG_BUFSZ	8192
 
 /*
- * following routines are used to output debug info; messages are
- * stored into a buffer rather than being printed on stderr to avoid
- * disturbing time sensitive operations by TTY output.
+ * store a character in the trace buffer
  */
-
 #define DBG_PUTC(c) do {			\
 	if (dbg_used < DBG_BUFSZ) {		\
 		*(dbg_ptr++) = (c);		\
 		dbg_used++;			\
 	}					\
 } while (0)
+
+char dbg_buf[DBG_BUFSZ], *dbg_ptr = dbg_buf;
+unsigned dbg_used = 0, dbg_sync = 1;
 
 /*
  * write debug info buffer on stderr
@@ -167,6 +176,18 @@ dbg_panic(void)
 }
 
 /*
+ * header of a memory block
+ */
+struct mem_hdr {
+	char *owner;		/* who allocaed the block ? */
+	unsigned words;		/* data chunk size expressed in sizeof(int) */
+#define MAGIC_FREE 0xa55f9811	/* a (hopefully) ``rare'' number */
+	unsigned magic;		/* random number, but not MAGIC_FREE */
+};
+
+unsigned mem_nalloc = 0, mem_nfree = 0, mem_debug = 0;
+
+/*
  * return a random number, will be used to randomize memory bocks
  */
 unsigned
@@ -185,31 +206,55 @@ mem_rnd(void)
  * trailer to detect writes outside the block boundaries.
  */
 void *
-mem_alloc(unsigned n)
+mem_alloc(unsigned bytes, char *owner)
 {
-	unsigned i, *buf;
+	unsigned words, i, *p;
+	struct mem_hdr *hdr;
 
-	if (n == 0) {
+	if (bytes == 0) {
 		dbg_puts("mem_alloc: nbytes = 0\n");
 		dbg_panic();
 	}
-	n = 3 +	(n + sizeof(unsigned) - 1) / sizeof(unsigned);
-	buf = (unsigned *)malloc(n * sizeof(unsigned));
-	if (buf == NULL) {
+
+	/*
+	 * calculates the number of ints corresponding to ``bytes''
+	 */
+	words = (bytes + sizeof(int) - 1) / sizeof(int);
+
+	/*
+	 * allocate the header, the data chunk and the trailer
+	 */
+	hdr = malloc(sizeof(struct mem_hdr) + (words + 1) * sizeof(int));
+	if (hdr == NULL) {
 		dbg_puts("mem_alloc: failed to allocate ");
-		dbg_putx(n);
+		dbg_putx(words);
 		dbg_puts(" words\n");
 		dbg_panic();
 	}
-	for (i = 0; i < n; i++)
-		buf[i] = mem_rnd();
-	while (buf[0] == MAGIC_FREE)
-		buf[0] = mem_rnd();	/* a random number */
-	buf[1] = n;			/* size of the bloc */
-	buf[n - 1] = buf[0];
 
+	/*
+	 * find a random magic, but not MAGIC_FREE
+	 */
+	do {
+		hdr->magic = mem_rnd();
+	} while (hdr->magic == MAGIC_FREE);
+
+	/*
+	 * randomize data chunk
+	 */
+	p = (unsigned *)(hdr + 1);
+	for (i = words; i > 0; i--)
+		*p++ = mem_rnd();
+
+	/*
+	 * trailer is equal to the magic
+	 */
+	*p = hdr->magic;
+
+	hdr->owner = owner;
+	hdr->words = words;
 	mem_nalloc++;
-	return buf + 2;
+	return hdr + 1;
 }
 
 /*
@@ -220,26 +265,30 @@ mem_alloc(unsigned n)
 void
 mem_free(void *mem)
 {
-	unsigned *buf, n;
-	unsigned i;
+	struct mem_hdr *hdr;
+	unsigned i, *p;
 
-	buf = (unsigned *)mem - 2;
-	n = buf[1];
+	hdr = (struct mem_hdr *)mem - 1;
+	p = (unsigned *)mem;
 
-	if (buf[0] == MAGIC_FREE) {
+	if (hdr->magic == MAGIC_FREE) {
 		dbg_puts("mem_free: block seems already freed\n");
 		dbg_panic();
 	}
-	if (buf[0] != buf[n - 1]) {
+	if (hdr->magic != p[hdr->words]) {
 		dbg_puts("mem_free: block corrupted\n");
 		dbg_panic();
 	}
-	for (i = 2; i < n; i++)
-		buf[i] = mem_rnd();
 
-	buf[0] = MAGIC_FREE;
+	/*
+	 * randomize block, so it's not usable
+	 */
+	for (i = hdr->words; i > 0; i--)
+		*p++ = mem_rnd();
+
+	hdr->magic = MAGIC_FREE;
 	mem_nfree++;
-	free(buf);
+	free(hdr);
 }
 
 void

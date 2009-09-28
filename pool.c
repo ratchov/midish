@@ -58,7 +58,7 @@ pool_init(struct pool *o, char *name, unsigned itemsize, unsigned itemnum)
 	itemsize += sizeof(unsigned) - 1;
 	itemsize &= ~(sizeof(unsigned) - 1);
 
-	o->data = (unsigned char *)mem_alloc(itemsize * itemnum);
+	o->data = mem_alloc(itemsize * itemnum, "pool");
 	if (!o->data) {
 		dbg_puts("pool_init(");
 		dbg_puts(name);

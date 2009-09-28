@@ -44,7 +44,8 @@ struct node *
 node_new(struct node_vmt *vmt, struct data *data)
 {
 	struct node *o;
-	o = (struct node *)mem_alloc(sizeof(struct node));
+
+	o = mem_alloc(sizeof(struct node), "node");
 	o->vmt = vmt;
 	o->data = data;
 	o->list = o->next = NULL;

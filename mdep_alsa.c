@@ -79,7 +79,7 @@ alsa_new(char *path, unsigned mode)
 {
 	struct alsa *dev;
 
-	dev = (struct alsa *)mem_alloc(sizeof(struct alsa));
+	dev = mem_alloc(sizeof(struct alsa), "alsa");
 	mididev_init(&dev->mididev, &alsa_ops, mode);
 	dev->path = (path != NULL) ? str_new(path) : NULL;
 	dev->seq_handle = NULL;

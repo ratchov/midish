@@ -53,7 +53,7 @@ str_new(char *val)
 		dbg_panic();
 	}
 	cnt = str_len(val) + 1;
-	buf = (char *)mem_alloc(cnt);
+	buf = mem_alloc(cnt, "str");
 	for (s = buf; cnt > 0; cnt--) {
 		*s++ = *val++;
 	}

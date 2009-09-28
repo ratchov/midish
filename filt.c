@@ -61,7 +61,7 @@ filtnode_new(struct evspec *from, struct filtnode **loc)
 {	
 	struct filtnode *s;
 
-	s = (struct filtnode *)mem_alloc(sizeof(struct filtnode));
+	s = mem_alloc(sizeof(struct filtnode), "filtnode");
 	s->dstlist = NULL;
 	s->es = *from;
 	s->next = *loc;

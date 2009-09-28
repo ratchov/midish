@@ -132,7 +132,8 @@ struct parse *
 parse_new(char *filename)
 {
 	struct parse *o;
-	o = (struct parse *)mem_alloc(sizeof(struct parse));
+
+	o = mem_alloc(sizeof(struct parse), "parse");
 	if (!lex_init(&o->lex, filename)) {
 		mem_free(o);
 		return 0;

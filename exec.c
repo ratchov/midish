@@ -60,7 +60,7 @@ struct var *
 var_new(struct name **list, char *name, struct data *data)
 {
 	struct var *o;
-	o = (struct var *)mem_alloc(sizeof(struct var));
+	o = (struct var *)mem_alloc(sizeof(struct var), "var");
 	o->data = data;
 	name_init(&o->name, name);
 	name_insert(list, (struct name *)o);
@@ -113,7 +113,7 @@ struct proc *
 proc_new(char *name)
 {
 	struct proc *o;
-	o = (struct proc *)mem_alloc(sizeof(struct proc));
+	o = (struct proc *)mem_alloc(sizeof(struct proc), "proc");
 	name_init(&o->name, name);
 	o->args = NULL;
 	o->code = NULL;
@@ -180,7 +180,7 @@ struct exec *
 exec_new(void)
 {
 	struct exec *o;
-	o = (struct exec *)mem_alloc(sizeof(struct exec));
+	o = (struct exec *)mem_alloc(sizeof(struct exec), "exec");
 	o->procs = NULL;
 	o->globals = NULL;
 	o->locals = &o->globals;

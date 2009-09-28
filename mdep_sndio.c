@@ -70,7 +70,7 @@ sndio_new(char *path, unsigned mode)
 		cons_err("path must be set for raw devices");
 		return NULL;
 	}
-	dev = (struct sndio *)mem_alloc(sizeof(struct sndio));
+	dev = mem_alloc(sizeof(struct sndio), "sndio");
 	mididev_init(&dev->mididev, &sndio_ops, mode);
 	dev->path = str_new(path);
 	return (struct mididev *)&dev->mididev;
