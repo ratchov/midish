@@ -38,7 +38,7 @@
 void	 dbg_puts(char *);
 void	 dbg_putx(unsigned long);
 void	 dbg_putu(unsigned long);
-void	 dbg_puti(unsigned long);
+void	 dbg_puti(long);
 void	 dbg_panic(void);
 void	 dbg_flush(void);
 void	*mem_alloc(unsigned, char *);
