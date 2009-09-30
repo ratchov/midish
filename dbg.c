@@ -29,8 +29,8 @@
  */
 /*
  * dbg_xxx() routines are used to quickly store traces into a trace buffer.
- * This allows trances to be collected during time sensitive operations without
- * disturbing them. The buffer can be flused on standard error later, when
+ * This allows traces to be collected during time sensitive operations without
+ * disturbing them. The buffer can be flushed on standard error later, when
  * slow syscalls are no longer disruptive, eg. at the end of the poll() loop.
  *
  * prof_xxx() routines record (small) integers and provide simple statistical
