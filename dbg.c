@@ -53,14 +53,11 @@
  * store a character in the trace buffer
  */
 #define DBG_PUTC(c) do {			\
-	if (dbg_used < DBG_BUFSZ) {		\
-		*(dbg_ptr++) = (c);		\
-		dbg_used++;			\
-	}					\
+	if (dbg_used < DBG_BUFSZ)		\
+		dbg_buf[dbg_used++] = (c);	\
 } while (0)
 
 char dbg_buf[DBG_BUFSZ];	/* buffer where traces are stored */
-char *dbg_ptr = dbg_buf;	/* points to first unused character */
 unsigned dbg_used = 0;		/* bytes used in the buffer */
 unsigned dbg_sync = 1;		/* if true, flush after each '\n' */
 
@@ -73,7 +70,6 @@ dbg_flush(void)
 	if (dbg_used ==  0)
 		return;
 	write(STDERR_FILENO, dbg_buf, dbg_used);
-	dbg_ptr = dbg_buf;
 	dbg_used = 0;
 }
 
@@ -102,19 +98,18 @@ dbg_putx(unsigned long num)
 	char dig[sizeof(num) * 2], *p = dig, c;
 	unsigned ndig;
 
-	if (num == 0) {
+	if (num != 0) {
+		for (ndig = 0; num != 0; ndig++) {
+			*p++ = num & 0xf;
+			num >>= 4;
+		}
+		for (; ndig != 0; ndig--) {
+			c = *(--p);
+			c += (c < 10) ? '0' : 'a' - 10;
+			DBG_PUTC(c);
+		}
+	} else 
 		DBG_PUTC('0');
-		return;
-	}
-	for (ndig = 0; num != 0; ndig++) {
-		*p++ = num & 0xf;
-		num >>= 4;
-	}
-	for (; ndig != 0; ndig--) {
-		c = *(--p);
-		c += (c < 10) ? '0' : 'a' - 10;
-		DBG_PUTC(c);
-	}
 }
 
 /*
@@ -139,16 +134,15 @@ dbg_putu(unsigned long num)
 	char dig[sizeof(num) * 3], *p = dig;
 	unsigned ndig;
 
-	if (num == 0) {
+	if (num != 0) {
+		for (ndig = 0; num != 0; ndig++) {
+			*p++ = num % 10;
+			num /= 10;
+		}
+		for (; ndig != 0; ndig--)
+			DBG_PUTC(*(--p) + '0');
+	} else
 		DBG_PUTC('0');
-		return;
-	}
-	for (ndig = 0; num != 0; ndig++) {
-		*p++ = num % 10;
-		num /= 10;
-	}
-	for (; ndig != 0; ndig--)
-		DBG_PUTC(*(--p) + '0');
 }
 
 /*
