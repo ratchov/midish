@@ -323,9 +323,11 @@ function, example (if you're using raw devices):
 dnew 0 "/dev/rmidi3" rw
 </pre>
 
-or if you're using ALSA (default on Linux):
+or if you're using ALSA (default on Linux),
+the following formats are accepted:
 <pre>
 dnew 0 "28:0" rw
+dnew 0 "FLUID Synth (qsynth)" wo 
 </pre>
 
 see next section for details.
@@ -583,6 +585,12 @@ dnew 0 "28:0" wo                # attach the module as dev number 0
 dnew 1 "32:0" ro                # attach the keyboard as dev number 1
 </pre>
 
+Alsa also accepts client names, instead of client numbers,
+ex:
+
+<pre>
+dnew 0 "FLUID Synth (qsynth)" wo 
+</pre>
 
 The following session shows how to record a simple
 track.  First, we define a filter named ``piano'' that routes any
@@ -3856,7 +3864,7 @@ is the name of the mode, it can be on if the following:
 <p>
 If midish is configured to use ALSA (default on Linux systems) then
 ``filename'' should contain the ALSA sequencer port, as listed by
-``aseqdump -l'', (eg. ``28:0'').
+``aseqdump -l'', (eg. ``28:0'', ``FLUID Synth (qsynth)'').
 
 If ``nil'' is given instead of the path, then the port is not
 connected to any existing port; this allows other ALSA sequencer
