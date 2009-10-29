@@ -41,6 +41,7 @@
 
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <sys/resource.h>
 #include <limits.h>
 #include <poll.h>
 #include <unistd.h>
@@ -113,6 +114,12 @@ midish_open(struct midish *p, char *path)
 	p->eof = 0;
 	p->buf_start = 0;
 	p->buf_used = 0;
+
+	/*
+         * lower scheduling priority
+	 */
+	if (setpriority(PRIO_PROCESS, getpid(), 15) < 0)
+		perror("setpriority");
 	return 0;
 }
 
