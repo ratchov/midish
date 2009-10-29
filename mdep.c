@@ -44,6 +44,7 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <limits.h>
+#include <time.h>
 
 #include "defs.h"
 #include "mux.h"
@@ -52,6 +53,8 @@
 #include "user.h"
 #include "exec.h"
 #include "dbg.h"
+
+#define TIMER_USEC	1000
 
 #ifndef RC_NAME
 #define RC_NAME		"midishrc"
@@ -65,11 +68,20 @@
 #define CONS_BUFSIZE	1024
 #define MAXFDS		(DEFAULT_MAXNDEVS + 1)
 
-struct timeval tv, tv_last;
+struct timespec ts, ts_last;
 
 char cons_buf[CONS_BUFSIZE];
 unsigned cons_index, cons_len, cons_eof, cons_quit;
 struct pollfd *cons_pfd;
+
+/*
+ * handler for SIGALRM, invoked periodically
+ */
+void
+mdep_sigalrm(int i)
+{
+	/* nothing to do, we only want poll() to return EINTR */
+}
 
 /*
  * start the mux, must be called just after devices are opened
@@ -77,8 +89,26 @@ struct pollfd *cons_pfd;
 void
 mux_mdep_open(void)
 {
-	if (gettimeofday(&tv_last, NULL) < 0) {
-		perror("mux_mdep_open: initial gettimeofday() failed");
+	static struct sigaction sa;
+	struct itimerval it;
+        
+	if (clock_gettime(CLOCK_MONOTONIC, &ts_last) < 0) {
+		perror("mux_mdep_open: clock_gettime");
+		exit(1);
+	}
+        sa.sa_flags = SA_RESTART;
+        sa.sa_handler = mdep_sigalrm;
+        sigfillset(&sa.sa_mask);
+        if (sigaction(SIGALRM, &sa, NULL) < 0) {
+		perror("mux_mdep_open: sigaction");
+		exit(1);
+	}
+	it.it_interval.tv_sec = 0;
+	it.it_interval.tv_usec = TIMER_USEC;
+	it.it_value.tv_sec = 0;
+	it.it_value.tv_usec = TIMER_USEC;
+	if (setitimer(ITIMER_REAL, &it, NULL) < 0) {
+		perror("mux_mdep_open: setitimer");
 		exit(1);
 	}
 }
@@ -89,6 +119,16 @@ mux_mdep_open(void)
 void
 mux_mdep_close(void)
 {
+	struct itimerval it;
+
+	it.it_value.tv_sec = 0;
+	it.it_value.tv_usec = 0;
+	it.it_interval.tv_sec = 0;
+	it.it_interval.tv_usec = 0;
+	if (setitimer(ITIMER_REAL, &it, NULL) < 0) {
+		perror("mux_mdep_close: setitimer");
+		exit(1);
+	}
 }
 
 /*
@@ -104,7 +144,7 @@ mux_mdep_wait(void)
 	struct pollfd *pfd, pfds[MAXFDS];
 	struct mididev *dev;
 	static unsigned char midibuf[MIDI_BUFSIZE];
-	long delta_usec;
+	long delta_nsec;
 
 	nfds = 0;
 	if (cons_index == cons_len && !cons_eof) {
@@ -123,45 +163,42 @@ mux_mdep_wait(void)
 		nfds += dev->ops->pollfd(dev, pfd, POLLIN);
 		dev->pfd = pfd;
 	}
-	for (;;) {
-		if (cons_quit) {
-			fprintf(stderr, "\n--interrupt--\n");
-			cons_quit = 0;
-			return 0;
-		}
-		res = poll(pfds, nfds, mux_isopen ? 1 : -1);
-		if (res >= 0)
-			break;
-		if (errno == EINTR)
-			continue;
-		perror("mux_mdep_wait: poll failed");
+	if (cons_quit) {
+		fprintf(stderr, "\n--interrupt--\n");
+		cons_quit = 0;
+		return 0;
+	}
+	res = poll(pfds, nfds, -1);
+	if (res < 0 && errno != EINTR) {
+		perror("mux_mdep_wait: poll");
 		exit(1);
 	}
-	for (dev = mididev_list; dev != NULL; dev = dev->next) {
-		pfd = dev->pfd;
-		if (pfd == NULL)
-			continue;
-		revents = dev->ops->revents(dev, pfd);
-		if (revents & POLLIN) {
-			res = dev->ops->read(dev, midibuf, MIDI_BUFSIZE);
-			if (dev->eof) {
-				mux_errorcb(dev->unit);
+	if (res > 0) {
+		for (dev = mididev_list; dev != NULL; dev = dev->next) {
+			pfd = dev->pfd;
+			if (pfd == NULL)
 				continue;
+			revents = dev->ops->revents(dev, pfd);
+			if (revents & POLLIN) {
+				res = dev->ops->read(dev, midibuf, MIDI_BUFSIZE);
+				if (dev->eof) {
+					mux_errorcb(dev->unit);
+					continue;
+				}
+				if (dev->isensto > 0) {
+					dev->isensto = MIDIDEV_ISENSTO;
+				}
+				mididev_inputcb(dev, midibuf, res);
 			}
-			if (dev->isensto > 0) {
-				dev->isensto = MIDIDEV_ISENSTO;
+			if (revents & POLLHUP) {
+				dev->eof = 1;
+				mux_errorcb(dev->unit);
 			}
-			mididev_inputcb(dev, midibuf, res);
-		}
-		if (revents & POLLHUP) {
-			dev->eof = 1;
-			mux_errorcb(dev->unit);
 		}
 	}
-
 	if (mux_isopen) {
-		if (gettimeofday(&tv, NULL) < 0) {
-			perror("mux_mdep_wait: gettimeofday failed");
+		if (clock_gettime(CLOCK_MONOTONIC, &ts) < 0) {
+			perror("mux_mdep_wait: clock_gettime");
 			dbg_panic();
 		}
 
@@ -170,23 +207,24 @@ mux_mdep_wait(void)
 		 * time we called poll(). Warning: because of system
 		 * clock changes this value can be negative.
 		 */
-		delta_usec = 1000000L * (tv.tv_sec - tv_last.tv_sec);
-		delta_usec += tv.tv_usec - tv_last.tv_usec;
-		if (delta_usec > 0) {
-			tv_last = tv;
+		delta_nsec = 1000000000L * (ts.tv_sec - ts_last.tv_sec);
+		delta_nsec += ts.tv_nsec - ts_last.tv_nsec;
+		if (delta_nsec > 0) {
+			ts_last = ts;
 			/*
 			 * update the current position,
 			 * (time unit = 24th of microsecond
 			 */
-			mux_timercb(24 * delta_usec);
+			mux_timercb(24 * delta_nsec / 1000);
 		}
 	}
 	dbg_flush();
 	if (cons_pfd && (cons_pfd->revents & (POLLIN | POLLHUP))) {
 		res = read(STDIN_FILENO, cons_buf, CONS_BUFSIZE);
 		if (res < 0) {
-			perror("stdin");
+			perror("stdin: read");
 			cons_eof = 1;
+			return 1;
 		}
 		if (res == 0) {
 			cons_eof = 1;
@@ -207,18 +245,23 @@ void
 mux_sleep(unsigned millisecs)
 {
 	int res;
+	struct timespec ts, remain;
 
-	for (;;) {
-		res = poll(NULL, (nfds_t)0, millisecs);
+	ts.tv_sec = millisecs / 1000;
+	ts.tv_nsec = (millisecs % 1000) * 1000000;
+
+	while (ts.tv_sec > 0 || ts.tv_nsec > 0) {
+		res = nanosleep(&ts, &remain);
 		if (res >= 0)
 			break;
-		if (errno == EINTR)
-			continue;	
-		perror("mux_sleep: poll failed");
-		exit(1);
+		if (errno != EINTR) {
+			perror("mux_sleep: poll");
+			exit(1);
+		}
+		ts = remain;
 	}
-	if (gettimeofday(&tv_last, NULL) < 0) {
-		perror("mux_sleep: gettimeofday");
+	if (clock_gettime(CLOCK_MONOTONIC, &ts_last) < 0) {
+		perror("mux_sleep: clock_gettime");
 		exit(1);
 	}
 }
@@ -245,7 +288,7 @@ cons_mdep_init(void)
 	sa.sa_flags = SA_RESTART;
 	sa.sa_handler = cons_mdep_sigint;
 	if (sigaction(SIGINT, &sa, NULL) < 0) {
-		perror("sigaction");
+		perror("cons_mdep_init: sigaction");
 		exit(1);
 	}
 }
@@ -259,7 +302,7 @@ cons_mdep_done(void)
 	sa.sa_flags = SA_RESTART;
 	sa.sa_handler = SIG_DFL;
 	if (sigaction(SIGINT, &sa, NULL) < 0) {
-		perror("sigaction");
+		perror("cons_mdep_done: sigaction");
 		exit(1);
 	}
 }
