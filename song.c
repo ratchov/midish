@@ -860,8 +860,11 @@ song_sysexcb(struct song *o, struct sysex *sx)
 /*
  * cancel the current state, and restore the state of 
  * the new postition, must be in idle mode
+ *
+ * return the absolute position as an ``MTC position'',
+ * suitable for a MMC relocate message.
  */
-void
+unsigned
 song_loc(struct song *o, unsigned where, unsigned how)
 {
 	struct state *s;
@@ -873,13 +876,17 @@ song_loc(struct song *o, unsigned where, unsigned how)
 
 	seqptr_del(o->metaptr);
 	o->metaptr = seqptr_new(&o->meta);
+	
+	/*
+	 * XXX: when not in LOC_MTC mode, the MTC position
+	 * can overflow. Limit song_loc() to 24 hours
+	 */
 
 	switch (how) {
 	case SONG_LOC_MEAS:
 		offs = (o->mode >= SONG_PLAY) ? o->curquant / 2 : 0;
 		break;
 	case SONG_LOC_MTC:
-		pos = 0;
 		endpos = (unsigned long long)where * (24000000 / MTC_SEC);
 		offs = 0;
 		break;
@@ -892,6 +899,7 @@ song_loc(struct song *o, unsigned where, unsigned how)
 		dbg_panic();
 	}
 	tic = 0;
+	pos = 0;
 	o->measure = o->beat = o->tic = 0;
 		
 	for (;;) {
@@ -980,6 +988,7 @@ song_loc(struct song *o, unsigned where, unsigned how)
 			s->tag = 0;
 		}
 	}
+	pos /= 24000000 / MTC_SEC;
 	if (song_debug) {
 		dbg_puts("song_loc: ");
 		dbg_putu(where);
@@ -991,8 +1000,11 @@ song_loc(struct song *o, unsigned where, unsigned how)
 		dbg_putu(o->tic);
 		dbg_puts("/");
 		dbg_putu(tic);
+		dbg_puts(", mtc = ");
+		dbg_putu(pos);
 		dbg_puts("\n");
 	}
+	return pos;
 }
 
 /*
@@ -1002,6 +1014,8 @@ song_loc(struct song *o, unsigned where, unsigned how)
 void
 song_goto(struct song *o, unsigned measure)
 {
+	unsigned mmcpos;
+
 	if (o->mode >= SONG_IDLE) {
 		/*
 		 * 1 measure of count-down for recording
@@ -1012,7 +1026,8 @@ song_goto(struct song *o, unsigned measure)
 		/*
 		 * move all tracks to given measure
 		 */
-		song_loc(o, measure, SONG_LOC_MEAS);
+		mmcpos = song_loc(o, measure, SONG_LOC_MEAS);
+		mux_gotoreq(mmcpos);
 
 		/*
 		 * display initial position

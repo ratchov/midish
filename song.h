@@ -194,7 +194,7 @@ void song_setunit(struct song *, unsigned);
 unsigned song_endpos(struct song *);
 void song_playconf(struct song *);
 
-void song_loc(struct song *, unsigned, unsigned);
+unsigned song_loc(struct song *, unsigned, unsigned);
 void song_setmode(struct song *, unsigned);
 void song_goto(struct song *, unsigned);
 void song_record(struct song *);
