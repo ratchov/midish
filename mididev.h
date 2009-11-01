@@ -123,6 +123,7 @@ struct mididev {
 	unsigned unit;			/* index in the mididev table */
 	unsigned ticrate, ticdelta;	/* tick rate (default 96) */
 	unsigned sendclk;		/* send MIDI clock */
+	unsigned sendmmc;		/* send MMC start/stop/relocate */
 	unsigned isensto, osensto;	/* active sensing timeouts */
 	unsigned mode;			/* read, write */
 	unsigned ixctlset, oxctlset;	/* bitmap of 14bit controllers */

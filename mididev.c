@@ -236,6 +236,7 @@ mididev_init(struct mididev *o, struct devops *ops, unsigned mode)
 	 */
 	o->ops = ops;
 	o->sendclk = 0;
+	o->sendmmc = 1;
 	o->ticrate = DEFAULT_TPU;
 	o->ticdelta = 0xdeadbeef;
 	o->mode = mode;

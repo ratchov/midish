@@ -704,6 +704,9 @@ mux_chgticrate(unsigned tpu)
 void
 mux_startreq(void)
 {
+	struct mididev *dev;
+	static unsigned char mmc_start[] = { 0xf0, 0x7f, 0x7f, 0x06, 0x02, 0xf7 };
+
 	mux_reqphase = MUX_STARTWAIT;
 	if (mux_phase != MUX_STOP) {
 		dbg_puts("bad state to call mux_startreq()\n");
@@ -717,6 +720,11 @@ mux_startreq(void)
 		mux_curpos = 0;
 		mux_nextpos = MUX_START_DELAY;
 	}
+
+	for (dev = mididev_list; dev != NULL; dev = dev->next) {
+		if (dev->sendmmc)
+			mididev_sendraw(dev, mmc_start, sizeof(mmc_start));
+	}
 }
 
 /*
@@ -725,9 +733,47 @@ mux_startreq(void)
 void
 mux_stopreq(void)
 {
+	struct mididev *dev;
+	static unsigned char mmc_stop[] = { 0xf0, 0x7f, 0x7f, 0x06, 0x01, 0xf7 };
+
 	mux_reqphase = MUX_STOP;
 	if (mux_phase > MUX_START && mux_phase < MUX_STOP)
 		mux_sendstop();
 	if (mux_phase < MUX_STOP)
 		mux_stopcb();
+
+	for (dev = mididev_list; dev != NULL; dev = dev->next) {
+		if (dev->sendmmc)
+			mididev_sendraw(dev, mmc_stop, sizeof(mmc_stop));
+	}
 }
+
+/*
+ * relocate MIDI clock to given position
+ */
+void
+mux_gotoreq(unsigned mmcpos)
+{
+	struct mididev *dev;
+	unsigned char mmc_reloc[13];
+
+	mmc_reloc[0] =  0xf0;
+	mmc_reloc[1] =  0x7f;
+	mmc_reloc[2] =  0x7f;
+	mmc_reloc[3] =  0x06;
+	mmc_reloc[4] =  0x44;
+	mmc_reloc[5] =  0x06;
+	mmc_reloc[6] =  0x01;
+	mmc_reloc[7] =  (mmcpos / (3600 * MTC_SEC))	% 24;
+	mmc_reloc[8] =  (mmcpos / (60   * MTC_SEC))	% 60;
+	mmc_reloc[9] =  (mmcpos / MTC_SEC)		% 60;
+	mmc_reloc[10] = (mmcpos / (MTC_SEC / 24))	% 24; 
+	mmc_reloc[11] = (mmcpos / (MTC_SEC / 24 / 100)) % 100;
+	mmc_reloc[12] = 0xf7;
+
+	for (dev = mididev_list; dev != NULL; dev = dev->next) {
+		if (dev->sendmmc)
+			mididev_sendraw(dev, mmc_reloc, sizeof(mmc_reloc));
+	}
+}
+

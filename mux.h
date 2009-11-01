@@ -88,6 +88,7 @@ void mux_chgtempo(unsigned long);
 void mux_chgticrate(unsigned);
 void mux_startreq(void);
 void mux_stopreq(void);
+void mux_gotoreq(unsigned);
 int mux_mdep_wait(void); /* XXX: hide this prototype */
 
 /*
