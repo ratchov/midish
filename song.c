@@ -845,18 +845,16 @@ song_evcb(struct song *o, struct ev *ev)
 void
 song_sysexcb(struct song *o, struct sysex *sx)
 {
-	if (song_debug) {
+	if (song_debug)
 		dbg_puts("song_sysexcb:\n");
+	if (sx == NULL) {
+		dbg_puts("got null sx\n");
+		return;
 	}
-	if (o->mode >= SONG_REC) {
-		if (o->cursx) {
-			if (sx == NULL) {
-				dbg_puts("got null sx\n");
-			} else {
-				sysexlist_put(&o->cursx->sx, sx);
-			}
-		}
-	}
+	if (o->mode >= SONG_REC && o->cursx)
+		sysexlist_put(&o->cursx->sx, sx);
+	else
+		sysex_del(sx);
 }
 
 /*
