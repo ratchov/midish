@@ -69,19 +69,160 @@
 #include "timo.h"
 
 #define MIDI_SYSEXSTART	0xf0
+#define MIDI_QFRAME	0xf1
 #define MIDI_SYSEXSTOP	0xf7
 #define MIDI_TIC	0xf8
 #define MIDI_START	0xfa
 #define MIDI_STOP	0xfc
 #define MIDI_ACK	0xfe
 
+#define MTC_FPS_24	0
+#define MTC_FPS_25	1
+#define MTC_FPS_30	3
+#define MTC_FULL_LEN	10	/* size of MTC ``full frame'' sysex */
+
 unsigned mididev_debug = 0;
 
 unsigned mididev_evlen[] = { 2, 2, 2, 2, 1, 1, 2, 0 };
 #define MIDIDEV_EVLEN(status) (mididev_evlen[((status) >> 4) & 7])
 
-struct mididev *mididev_list, *mididev_clksrc;
+struct mididev *mididev_list, *mididev_clksrc, *mididev_mtcsrc;
 struct mididev *mididev_byunit[DEFAULT_MAXNDEVS];
+
+/*
+ * initialize the mtc "parser" to a state, when a full message or 2 complete
+ * frames are needed to lock to the master
+ */
+void
+mtc_init(struct mtc *mtc)
+{
+	mtc->tps = 0;
+	mtc->qfr = 0;
+	mtc->pos = 0xdeadbeef;
+	mtc->state = MTC_STOP;
+	mtc->timo = 0;
+};
+
+/*
+ * convert MTC-style frames per second into MTC_SEC units
+ * return 0 if not supported
+ */
+int
+mtc_setfps(struct mtc *mtc, unsigned id)
+{
+	switch (id) {
+	case MTC_FPS_24:
+		mtc->tps = MTC_SEC / (24 * 4);
+		break;
+	case MTC_FPS_25:
+		mtc->tps = MTC_SEC / (25 * 4);
+		break;
+	case MTC_FPS_30:
+		mtc->tps = MTC_SEC / (30 * 4);
+		break;
+	default:
+		if (mtc->tps != 0) {
+			dbg_putu(id);
+			dbg_puts(": not supported MTC frame rate\n");
+		}
+		mtc->tps = 0;
+		return 0;
+	}
+	return 1;
+}
+
+/*
+ * called when timeout expires, ie MTC stopped
+ */
+void
+mtc_timo(struct mtc *mtc)
+{
+	if (mididev_debug)
+		dbg_puts("mtc_timo: stopped\n");
+	mtc->state = MTC_STOP;
+	mux_mtcstop();
+}
+
+/*
+ * handle a quarter frame message
+ */
+void
+mtc_tick(struct mtc *mtc, unsigned data)
+{
+	unsigned pos;
+
+	if (mtc->state == MTC_STOP)
+		return;
+	if (data >> 4 != mtc->qfr) {
+		if (mididev_debug)
+			dbg_puts("mtc sync err\n");
+		return;
+	}
+	if (mtc->state == MTC_RUN) {
+		mtc->pos += mtc->tps;
+		mux_mtctick(mtc->tps * (24000000 / MTC_SEC));
+	} else {
+		mtc->state = MTC_RUN;
+		mux_mtctick(0);
+	}
+	mtc->nibble[mtc->qfr++] = data & 0xf;
+	if (mtc->qfr < 8)
+		return;
+	mtc->timo = 24000000 / 4;
+	pos = mtc->tps * 4 * (mtc->nibble[0] +  (mtc->nibble[1]      << 4)) +
+	    MTC_SEC *        (mtc->nibble[2] +  (mtc->nibble[3]      << 4)) +
+	    MTC_SEC * 60 *   (mtc->nibble[4] +  (mtc->nibble[5]      << 4)) +
+	    MTC_SEC * 3600 * (mtc->nibble[6] + ((mtc->nibble[7] & 1) << 4));
+	pos += 7 * mtc->tps;
+	if (pos != mtc->pos) {
+		dbg_puts("mtc_tick: went off by ");
+		dbg_puti((int)pos - (int)mtc->pos);
+		dbg_puts(" ticks\n");
+		if (pos > mtc->pos &&
+		    pos < mtc->pos + MTC_SEC / 6) {
+			mux_mtctick(pos - mtc->pos);
+			mtc->pos = pos;
+		} else {
+			mtc->state = MTC_STOP;
+			mux_mtcstop();
+		}
+	}
+	mtc->qfr = 0;
+}
+
+/*
+ * handle a full frame message
+ */
+void
+mtc_full(struct mtc *mtc, struct sysex *x)
+{
+	unsigned char *data;
+
+	if (x->first == NULL ||
+	    x->first->next != NULL ||
+	    x->first->used != 10)
+		return;
+	data = x->first->data;
+	if (data[1] != 0x7f ||
+	    data[2] != 0x7f ||
+	    data[3] != 0x01 ||
+	    data[4] != 0x01)
+		return;
+	if (!mtc_setfps(mtc, data[5] >> 5))
+		return;
+	mtc->qfr = 0;
+	mtc->pos = MTC_SEC * 3600 * (data[5] & 0x1f) +
+	    MTC_SEC * 60 * data[6] +
+	    MTC_SEC * data[7] +
+	    mtc->tps * 4 * data[8];
+	mtc->state = MTC_START;
+	if (mididev_debug) {
+		dbg_puts("mtc_full: start at ");
+		dbg_putu(mtc->pos);
+		dbg_puts("\n");
+	}
+	mux_mtcstart(mtc->pos);
+}
 
 /*
  * initialize the device independent part of the device structure
@@ -133,6 +274,7 @@ mididev_open(struct mididev *o)
 	o->oused = 0;
 	o->istatus = o->ostatus = 0;
 	o->isysex = NULL;
+	mtc_init(&o->imtc);
 	o->ops->open(o);
 }
 
@@ -223,13 +365,18 @@ mididev_inputcb(struct mididev *o, unsigned char *buf, unsigned count)
 		if (data >= 0xf8) {
 			switch(data) {
 			case MIDI_TIC:
-				mux_ticcb(o->unit);
+				if (o == mididev_clksrc)
+					mux_ticcb();
 				break;
 			case MIDI_START:
-				mux_startcb(o->unit);
+				if (o == mididev_clksrc) {
+					o->ticdelta = o->ticrate;
+					mux_startcb();
+				}
 				break;
 			case MIDI_STOP:
-				mux_stopcb(o->unit);
+				if (o == mididev_clksrc)
+					mux_stopcb();
 				break;
 			case MIDI_ACK:
 				mux_ackcb(o->unit);
@@ -269,6 +416,8 @@ mididev_inputcb(struct mididev *o, unsigned char *buf, unsigned count)
 			case MIDI_SYSEXSTOP:
 				if (o->isysex) {
 					sysex_add(o->isysex, data);
+					if (o == mididev_mtcsrc)
+						mtc_full(&o->imtc, o->isysex);
 					mux_sysexcb(o->unit, o->isysex);
 					o->isysex = NULL;
 				}
@@ -309,12 +458,16 @@ mididev_inputcb(struct mididev *o, unsigned char *buf, unsigned count)
 				mux_evcb(o->unit, &ev);
 			}
 		} else if (o->istatus == MIDI_SYSEXSTART) {
+			sysex_add(o->isysex, data);
+		} else if (o->istatus == MIDI_QFRAME) {
 			/*
 			 * NOTE: MIDI uses running status only for voice events
 			 *	 so, if you add new system common messages
 			 *       here don't forget to reset the running status
 			 */
-			sysex_add(o->isysex, data);
+			if (o == mididev_mtcsrc)
+				mtc_tick(&o->imtc, data);
+			o->istatus = 0;
 		}
 	}
 }
@@ -448,6 +601,7 @@ mididev_listinit(void)
 		mididev_byunit[i] = NULL;
 	}
 	mididev_list = NULL;
+	mididev_mtcsrc = NULL;	/* no external timer, use internal timer */
 	mididev_clksrc = NULL;	/* no clock source, use internal clock */
 }
 
@@ -516,7 +670,8 @@ mididev_detach(unsigned unit)
 		return 0;
 	}
 
-	if (mididev_byunit[unit] == mididev_clksrc) {
+	if (mididev_byunit[unit] == mididev_clksrc ||
+	    mididev_byunit[unit] == mididev_mtcsrc) {
 		cons_err("cant detach master device");
 		return 0;
 	}

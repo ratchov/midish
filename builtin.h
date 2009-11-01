@@ -163,6 +163,7 @@ unsigned blt_xadd(struct exec *, struct data **);
 
 unsigned blt_dnew(struct exec *, struct data **);
 unsigned blt_ddel(struct exec *, struct data **);
+unsigned blt_dmtcrx(struct exec *, struct data **);
 unsigned blt_dclkrx(struct exec *, struct data **);
 unsigned blt_dclktx(struct exec *, struct data **);
 unsigned blt_dclkrate(struct exec *, struct data **);

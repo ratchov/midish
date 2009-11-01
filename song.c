@@ -792,9 +792,16 @@ song_startcb(struct song *o)
 void
 song_stopcb(struct song *o)
 {
+	struct songtrk *t;
 
-	if (song_debug) {
+	if (song_debug)
 		dbg_puts("song_stopcb:\n");
+
+	/*
+	 * stop all sounding notes
+	 */
+	SONG_FOREACH_TRK(o, t) {
+		song_confcancel(&t->trackptr->statelist);
 	}
 }
 
@@ -873,9 +880,9 @@ song_loc(struct song *o, unsigned where, unsigned how)
 	case SONG_LOC_MEAS:
 		offs = (o->mode >= SONG_PLAY) ? o->curquant / 2 : 0;
 		break;
-	case SONG_LOC_MMC:
+	case SONG_LOC_MTC:
 		pos = 0;
-		endpos = where * (24000000 / MMC_SEC);
+		endpos = (unsigned long long)where * (24000000 / MTC_SEC);
 		offs = 0;
 		break;
 	case SONG_LOC_SPP:
@@ -898,7 +905,7 @@ song_loc(struct song *o, unsigned where, unsigned how)
 			    - o->beat * tpb
 			    - o->tic;
 			break;
-		case SONG_LOC_MMC:
+		case SONG_LOC_MTC:
 			maxdelta = (endpos - pos) / usec24;
 			break;
 		case SONG_LOC_SPP:
@@ -920,7 +927,7 @@ song_loc(struct song *o, unsigned where, unsigned how)
 		o->tic = o->tic % tpb;
 		o->measure += o->beat / bpm;
 		o->beat = o->beat % bpm; 
-		pos += delta * usec24;
+		pos += (unsigned long long)delta * usec24;
 		tic += delta;
 	}
 
@@ -1018,6 +1025,17 @@ song_goto(struct song *o, unsigned measure)
 }
 
 /*
+ * relocate requested from a device
+ */
+void
+song_gotocb(struct song *o, unsigned mtcpos)
+{
+	song_loc(o, mtcpos, SONG_LOC_MTC);
+	cons_putpos(o->measure, o->beat, o->tic);
+}
+
+
+/*
  * set the current mode
  */
 void
@@ -1050,6 +1068,9 @@ song_setmode(struct song *o, unsigned newmode)
 		}
 		track_clear(&o->rec);
 	}
+	if (oldmode >= SONG_PLAY && newmode < SONG_PLAY) {
+		mux_stopreq();
+	}
 	if (oldmode >= SONG_IDLE && newmode < SONG_IDLE) {
 		/*
 		 * cancel and free states
@@ -1064,9 +1085,6 @@ song_setmode(struct song *o, unsigned newmode)
 		norm_setfilt(NULL);
 		mux_flush();
 		mux_close();
-	}
-	if (oldmode < SONG_PLAY && newmode >= SONG_PLAY) {
-		o->complete = 0;
 	}
 	if (oldmode < SONG_IDLE && newmode >= SONG_IDLE) {
 		o->measure = 0;
@@ -1096,6 +1114,10 @@ song_setmode(struct song *o, unsigned newmode)
 		song_playsysex(o);
 		song_playconf(o);
 		mux_flush();
+	}
+	if (oldmode < SONG_PLAY && newmode >= SONG_PLAY) {
+		o->complete = 0;
+		mux_startreq();
 	}
 	if (newmode > oldmode)
 		metro_setmode(&o->metro, newmode);
@@ -1127,7 +1149,6 @@ song_play(struct song *o)
 	if (song_debug) {
 		dbg_puts("song_play: waiting for a start event...\n");
 	}
-	mux_startwait();
 }
 
 /*
@@ -1151,7 +1172,6 @@ song_record(struct song *o)
 	if (song_debug) {
 		dbg_puts("song_record: waiting for a start event...\n");
 	}
-	mux_startwait();
 }
 
 /*

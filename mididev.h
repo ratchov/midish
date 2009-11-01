@@ -93,6 +93,21 @@ struct devops {
 	void (*del)(struct mididev *);
 };
 
+/*
+ * private structure for the MTC messages parser
+ */
+struct mtc {
+	unsigned char nibble[8];	/* nibbles of hr:min:sec:fr */
+	unsigned qfr;			/* quarter frame counter */
+	unsigned tps;			/* ticks per second */
+	unsigned pos;			/* absolute tick */
+#define MTC_STOP	0		/* stopped */
+#define MTC_START	1		/* got a full frame but no tick yet */
+#define MTC_RUN		2		/* got at least 1 tick */
+	unsigned state;			/* one of above */
+	unsigned timo;
+};
+
 struct mididev {
 	struct devops *ops;
 
@@ -121,10 +136,11 @@ struct mididev {
 	unsigned	  istatus;		/* input running status */
 	unsigned 	  icount;		/* bytes in idata[] */
 	unsigned char	  idata[2];		/* current event's data */
+	struct sysex	 *isysex;		/* input sysex */
+	struct mtc	  imtc;			/* MTC parser */
 	unsigned 	  oused;		/* bytes in obuf */
 	unsigned	  ostatus;		/* output running status */
 	unsigned char	  obuf[MIDIDEV_BUFLEN];	/* output buffer */
-	struct sysex	 *isysex;	
 };
 
 void mididev_init(struct mididev *, struct devops *, unsigned);
@@ -140,10 +156,13 @@ void mididev_open(struct mididev *);
 void mididev_close(struct mididev *);
 void mididev_inputcb(struct mididev *, unsigned char *, unsigned);
 
+void mtc_timo(struct mtc *); /* XXX, use timeouts */
+
 extern unsigned mididev_debug;
 
 extern struct mididev *mididev_list;
 extern struct mididev *mididev_clksrc;
+extern struct mididev *mididev_mtcsrc;
 extern struct mididev *mididev_byunit[];
 
 struct mididev *raw_new(char *, unsigned);

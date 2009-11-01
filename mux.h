@@ -35,8 +35,7 @@
 #define MUX_START 		1	/* just got a start */
 #define MUX_FIRST		2	/* just got the first tic */
 #define MUX_NEXT		3	/* just got the next tic */
-#define MUX_STOPWAIT		4	/* waiting for the stop event */
-#define MUX_STOP		5	/* nothing to do */
+#define MUX_STOP		4	/* nothing to do */
 
 #define MUX_LINESIZE		1024
 
@@ -63,6 +62,7 @@ void song_stopcb(struct song *);
 void song_movecb(struct song *);
 void song_evcb(struct song *, struct ev *);
 void song_sysexcb(struct song *, struct sysex *);
+void song_gotocb(struct song *, unsigned);
 
 struct norm;
 void norm_evcb(struct ev *);
@@ -86,20 +86,24 @@ unsigned mux_getphase(void);
 struct sysex *mux_getsysex(void);
 void mux_chgtempo(unsigned long);
 void mux_chgticrate(unsigned);
-void mux_startwait(void);
-void mux_stopwait(void);
+void mux_startreq(void);
+void mux_stopreq(void);
 int mux_mdep_wait(void); /* XXX: hide this prototype */
 
 /*
  * call-backs called by midi device drivers
  */
 void mux_timercb(unsigned long);
-void mux_startcb(unsigned);
-void mux_stopcb(unsigned);
-void mux_ticcb(unsigned);
+void mux_startcb(void);
+void mux_stopcb(void);
+void mux_ticcb(void);
 void mux_ackcb(unsigned);
 void mux_evcb(unsigned, struct ev *);
 void mux_sysexcb(unsigned, struct sysex *);
 void mux_errorcb(unsigned);
+
+void mux_mtcstart(unsigned);
+void mux_mtctick(unsigned);
+void mux_mtcstop(void);
 
 #endif /* MIDISH_MUX_H */

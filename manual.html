@@ -224,7 +224,7 @@ progressive track quantization
 multiple MIDI devices handling
 
 <li>
-synchronization to external MIDI devices
+synchronization to external audio and MIDI software/hardware
 
 <li>
 import and export of standard MIDI files
@@ -2357,11 +2357,19 @@ to create filter for every channel.
 
 <ul>
 
-<li>removed all legacy functions
+<li>
+removed all legacy functions
 
-<li>added <a href="#func_tevmap">tevmap</a> function to transform
+<li>
+added <a href="#func_tevmap">tevmap</a> function to transform
 a set of events of a track into another set (eg. to change the 
 device number).
+
+<li>
+allow midish to synchronize to a MTC source, meaning that it can
+be used with audio applications.
+
+Added <a href="#func_dmtcrx">dmtcrx</a> function.
 
 </ul>
 
@@ -3875,6 +3883,23 @@ consume events midish sends to it.
 
 <dd>
 detach device number ``devnum''
+
+<dt><a name="func_dmtcrx">dmtcrx devnum</a>
+
+<dd>
+use device number ``devnum'' as MTC source.
+
+In this case, midish will relocate, start and stop according to
+incoming MTC messages.
+
+Midish will generate its clock ticks from MTC, meaning that it will
+run at the same speed as the MTC device.
+
+This is useful to synchronize midish to an audio multi-tracker or any
+MTC capable audio application.
+
+If ``devnum'' is ``nil'', then MTC messages are ignored and the
+internal timer will be used instead.
 
 <dt><a name="func_dclktx">dclktx { devnum1 devnum2 ... }</a>
 

@@ -33,11 +33,11 @@
  *	- midi input and output
  *	- internal external/timer
  *
- * the time unit is the 24th of microsecond (thus the tempo is stored
+ * the clock unit is the 24th of microsecond (thus the tempo is stored
  * with the same accuracy as in standard midi files).
  *
  * the timer has the following states:
- * STOP -> STARTWAIT -> START -> FIRST_TIC -> NEXT_TIC -> STOPWAIT -> STOP
+ * STOP -> STARTWAIT -> START -> FIRST_TIC -> NEXT_TIC -> STOP
  *
  * STARTWAIT:
  *
@@ -65,13 +65,6 @@
  *	we received another "tick" event, move the music one
  *	step forward.
  *
- * STOPWAIT:
- *
- *	the music is over, so the upper layer puts this module in the
- *	STOPWAIT state. So we just wait for the "stop" MIDI event;
- *	that's necessary because other MIDI sequencers may not have
- *	finished.
- *
  * STOP:
  *
  *	nothing to do, ignore any MIDI sync events.
@@ -98,15 +91,16 @@
  * delay between the START event and the first TIC in 24ths of a micro
  * second, here we use 1 tic at 30bpm
  */
-#define MUX_START_DELAY	  (2000000UL)
+#define MUX_START_DELAY	  (24000000UL / 3)
 
 unsigned mux_isopen = 0;
 unsigned mux_debug = 0;
 unsigned mux_ticrate;
 unsigned long mux_ticlength, mux_curpos, mux_nextpos;
 unsigned mux_curtic;
-unsigned mux_phase;
+unsigned mux_phase, mux_reqphase;
 void *mux_addr;
+
 
 #ifdef MUX_PROF
 struct prof mux_prof;
@@ -163,11 +157,12 @@ mux_open(void)
 
 	mux_curpos = 0;
 	mux_nextpos = 0;
+	mux_reqphase = MUX_STOP;
 	mux_phase = MUX_STOP;
 #ifdef MUX_PROF
 	prof_reset(&mux_prof, "mux/ms");
 #endif
-	dbg_sync = 0;
+	dbg_sync = 1;
 }
 
 /*
@@ -182,15 +177,6 @@ mux_close(void)
 #ifdef MUX_PROF
 	prof_dbg(&mux_prof);
 #endif
-
-	if (!mididev_clksrc) {
-		if (mux_phase > MUX_START && mux_phase < MUX_STOP) {
-			mux_chgphase(MUX_STOP);
-			song_stopcb(usong);
-			mux_sendstop();
-			mux_flush();
-		}
-	}
 	norm_stop();
 	mixout_stop();
 	mux_flush();
@@ -224,9 +210,6 @@ mux_dbgphase(unsigned phase)
 		break;
 	case MUX_NEXT:
 		dbg_puts("NEXT");
-		break;
-	case MUX_STOPWAIT:
-		dbg_puts("STOPWAIT");
 		break;
 	case MUX_STOP:
 		dbg_puts("STOP");
@@ -375,6 +358,85 @@ mux_sendraw(unsigned unit, unsigned char *buf, unsigned len)
 }
 
 /*
+ * called when (external) MTC timer starts.
+ */
+void
+mux_mtcstart(unsigned mtcpos)
+{
+	/*
+	 * if using external clock, ignore MTC
+	 */
+	if (mididev_clksrc)
+		return;
+
+	/*
+	 * ignore position change if we're not using MTC because
+	 * it's already set
+	 */
+	if (mididev_mtcsrc)
+		song_gotocb(usong, mtcpos);
+
+	if (mux_phase != MUX_STARTWAIT) {
+		if (mux_debug)
+			dbg_puts("mux_mtcstart: ignored mtc start\n");
+		return;
+	}
+
+	/*
+	 * generate clock
+	 */
+	if (mux_debug)
+		dbg_puts("mux_mtcstart: generated clk start\n");
+	mux_sendstart();
+	mux_startcb();
+	mux_flush();
+}
+
+/*
+ * called periodically by the MTC timer
+ */
+void
+mux_mtctick(unsigned delta)
+{
+	/*
+	 * if using external clock, ignore MTC
+	 */
+	if (mididev_clksrc)
+		return;
+
+	mux_curpos += delta;
+
+	while (mux_curpos >= mux_nextpos) {
+		mux_curpos -= mux_nextpos;
+		mux_nextpos = mux_ticlength;
+		mux_sendtic();
+		mux_ticcb();
+		mux_flush();
+	}
+}
+
+/*
+ * called when the MTC timer stops
+ */
+void
+mux_mtcstop(void)
+{
+	/*
+	 * if using external clock, ignore MTC
+	 */
+	if (mididev_clksrc)
+		return;
+
+	if (mux_phase >= MUX_START) {
+		if (mux_debug)
+			dbg_puts("mux_mtcstop: generated stop\n");
+		mux_sendstop();
+		mux_stopcb();
+		mux_flush();
+	}
+}
+
+/*
  * call-back called every time the clock changed, the argument
  * contains the number of 24th of seconds elapsed since the last call
  */
@@ -386,7 +448,6 @@ mux_timercb(unsigned long delta)
 #ifdef MUX_PROF
 	prof_val(&mux_prof, delta / (24 * 10));
 #endif
-	mux_curpos += delta;
 
 	/*
 	 * run expired timeouts
@@ -394,7 +455,8 @@ mux_timercb(unsigned long delta)
 	timo_update(delta);
 
 	/*
-	 * handle active sensing
+	 * handle timeouts not using the timo.c interface
+	 * XXX: convert this to timo_xxx() routines
 	 */
 	for (dev = mididev_list; dev != NULL; dev = dev->next) {
 		if (dev->isensto) {
@@ -414,69 +476,54 @@ mux_timercb(unsigned long delta)
 				dev->osensto -= delta;
 			}
 		}
+		if (dev->imtc.timo) {
+			if (dev->imtc.timo <= delta) {
+				dev->imtc.timo = 0;
+				mtc_timo(&dev->imtc);
+			} else {
+				dev->imtc.timo -= delta;
+			}
+		}
 	}
 
 	/*
-	 * update clocks, when necessary
+	 * if there's no ext MTC source, then generate one internally
+	 * using the current sequencer state as hints
 	 */
-	if (!mididev_clksrc) {
-		/*
-		 * internal clock source (no master)
-		 */
-		if (mux_phase == MUX_STARTWAIT) {
-			mux_chgphase(MUX_START);
-			mux_sendstart();
-			mux_curpos = 0;
-			mux_nextpos = MUX_START_DELAY;
-			if (mux_debug) {
-				dbg_puts("mux_timercb: generated start\n");
+	if (!mididev_mtcsrc && !mididev_clksrc) {
+		switch (mux_phase) {
+		case MUX_STARTWAIT:
+			dbg_puts("mux_timercb: startwait: bad state\n");
+			dbg_panic();
+			break;
+		case MUX_START:
+			mux_curpos += delta;
+			if (mux_curpos >= mux_nextpos) {
+				mux_curpos = 0;
+				mux_nextpos = 0;
+				mux_mtctick(0);
 			}
-			mux_flush();
-		}
-
-		if (mux_phase == MUX_STOPWAIT) {
-			mux_chgphase(MUX_STOP);
-			if (mux_debug) {
-				dbg_puts("mux_timercb: generated stop\n");
-			}
-			song_stopcb(usong);
-			mux_sendstop();
-			mux_flush();
-		}
-
-		while (mux_curpos >= mux_nextpos) {
-			mux_curpos -= mux_nextpos;
-			mux_nextpos = mux_ticlength;
-			if (mux_phase == MUX_FIRST) {
-				mux_chgphase(MUX_NEXT);
-			} else if (mux_phase == MUX_START) {
-				mux_chgphase(MUX_FIRST);
-			}
-			mux_sendtic();
-			if (mux_phase == MUX_NEXT) {
-				mux_curtic++;
-				song_movecb(usong);
-			} else if (mux_phase == MUX_FIRST) {
-				mux_curtic = 0;
-				song_startcb(usong);
-			}
-			mux_flush();
+			break;
+		case MUX_FIRST:
+		case MUX_NEXT:
+			mux_mtctick(delta);
+			break;
 		}
 	}
 }
 
 /*
- * called when a MIDI TICK is received from an external device
+ * called when a MIDI TICK is received
  */
 void
-mux_ticcb(unsigned unit)
+mux_ticcb(void)
 {
-	struct mididev *dev = mididev_byunit[unit];
-
-	if (!mididev_clksrc || dev != mididev_clksrc) {
-		return;
-	}
-	while (mididev_clksrc->ticdelta >= mididev_clksrc->ticrate) {
+	for (;;) {
+		if (mididev_clksrc != NULL &&
+		    mididev_clksrc->ticdelta < mididev_clksrc->ticrate) {
+			mididev_clksrc->ticdelta += mux_ticrate;
+			break;
+		}
 		if (mux_phase == MUX_FIRST) {
 			mux_chgphase(MUX_NEXT);
 		} else if (mux_phase == MUX_START) {
@@ -489,43 +536,43 @@ mux_ticcb(unsigned unit)
 			mux_curtic = 0;
 			song_startcb(usong);
 		}
+		if (mididev_clksrc == NULL)
+			break;
 		mididev_clksrc->ticdelta -= mididev_clksrc->ticrate;
 	}
-	mididev_clksrc->ticdelta += mux_ticrate;
 }
 
 /*
  * called when a MIDI START event is received from an external device
  */
 void
-mux_startcb(unsigned unit)
+mux_startcb(void)
 {
-	struct mididev *dev = mididev_byunit[unit];
-
-	if (!mididev_clksrc || dev != mididev_clksrc) {
-		return;
-	}
-	mux_chgphase(MUX_START);
 	if (mux_debug) {
 		dbg_puts("mux_startcb: got start event\n");
 	}
+
+	/*
+	 * if the MIDI START event comes from a device
+	 * move to the beginning (dont support SPP yet)
+	 */
+	if (mididev_clksrc)
+		song_gotocb(usong, 0);
+
+	if (mux_phase == MUX_STARTWAIT)
+		mux_chgphase(MUX_START);
 }
 
 /*
  * called when a MIDI STOP event is received from an external device
  */
 void
-mux_stopcb(unsigned unit)
+mux_stopcb(void)
 {
-	struct mididev *dev = mididev_byunit[unit];
-
-	if (!mididev_clksrc || dev != mididev_clksrc) {
-		return;
-	}
-	mux_chgphase(MUX_STOP);
 	if (mux_debug) {
-		dbg_puts("mux_startcb: got stop\n");
+		dbg_puts("mux_stopcb: got stop\n");
 	}
+	mux_chgphase(mux_reqphase);
 	song_stopcb(usong);
 }
 
@@ -551,6 +598,7 @@ mux_evcb(unsigned unit, struct ev *ev)
 {
 	struct ev rev;
 	struct mididev *dev = mididev_byunit[ev->dev];
+
 #ifdef MUX_DEBUG
 	if (mux_debug) {
 		dbg_puts("mux_evcb: ");
@@ -583,6 +631,23 @@ mux_errorcb(unsigned unit)
 void
 mux_sysexcb(unsigned unit, struct sysex *sysex)
 {
+	unsigned char *data;
+
+	/*
+	 * discard real-time messages, that should not be
+	 * recorded
+	 */
+	if (sysex->first != NULL &&
+	    sysex->first->next == NULL &&
+	    sysex->first->used >= 6) {
+		data = sysex->first->data;
+		if (data[0] == 0xf0 &&
+		    data[1] == 0x7f &&
+		    data[3] == 1) {
+			sysex_del(sysex);
+			return;
+		}
+	}
 	song_sysexcb(usong, sysex);
 }
 
@@ -633,21 +698,36 @@ mux_chgticrate(unsigned tpu)
 }
 
 /*
- * start waiting for a MIDI START event (or start immediately if
- * we're the clock master)
+ * start waiting for a MIDI START event (or generate one if
+ * we're the clock master).
  */
 void
-mux_startwait(void)
+mux_startreq(void)
 {
+	mux_reqphase = MUX_STARTWAIT;
+	if (mux_phase != MUX_STOP) {
+		dbg_puts("bad state to call mux_startreq()\n");
+		dbg_panic();
+	}
 	mux_chgphase(MUX_STARTWAIT);
+	if (!mididev_clksrc && !mididev_mtcsrc) {
+		if (mux_debug)
+			dbg_puts("mux_startreq: generated mtc start\n");
+		mux_mtcstart(0xdeadbeef);
+		mux_curpos = 0;
+		mux_nextpos = MUX_START_DELAY;
+	}
 }
 
 /*
- * start waiting for a MIDI STOP event (or stop immediately if we're
- * the clock master)
+ * stop the MIDI clock
  */
 void
-mux_stopwait(void)
+mux_stopreq(void)
 {
-	mux_chgphase(MUX_STOPWAIT);
+	mux_reqphase = MUX_STOP;
+	if (mux_phase > MUX_START && mux_phase < MUX_STOP)
+		mux_sendstop();
+	if (mux_phase < MUX_STOP)
+		mux_stopcb();
 }

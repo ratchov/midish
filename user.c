@@ -1104,6 +1104,8 @@ user_mainloop(void)
 			name_newarg("mode", NULL))));
 	exec_newbuiltin(exec, "ddel", blt_ddel,
 			name_newarg("devnum", NULL));
+	exec_newbuiltin(exec, "dmtcrx", blt_dmtcrx,
+			name_newarg("devnum", NULL));
 	exec_newbuiltin(exec, "dclktx", blt_dclktx,
 			name_newarg("devlist", NULL));
 	exec_newbuiltin(exec, "dclkrx", blt_dclkrx,

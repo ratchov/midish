@@ -2860,6 +2860,38 @@ blt_ddel(struct exec *o, struct data **r)
 }
 
 unsigned
+blt_dmtcrx(struct exec *o, struct data **r)
+{
+	struct var *arg;
+	long unit;
+
+	if (!song_try_mode(usong, 0)) {
+		return 0;
+	}
+	arg = exec_varlookup(o, "devnum");
+	if (!arg) {
+		dbg_puts("blt_dmtcrx: no such var\n");
+		dbg_panic();
+	}
+	if (arg->data->type == DATA_NIL) {
+		mididev_mtcsrc = NULL;
+		return 0;
+	} else if (arg->data->type == DATA_LONG) {
+		unit = arg->data->val.num;
+		if (unit < 0 || unit >= DEFAULT_MAXNDEVS ||
+		    !mididev_byunit[unit]) {
+			cons_errs(o->procname, "bad device number");
+			return 0;
+		}
+		mididev_mtcsrc = mididev_byunit[unit];
+		mididev_clksrc = NULL;
+		return 1;
+	}
+	cons_errs(o->procname, "bad argument type for 'unit'");
+	return 0;
+}
+
+unsigned
 blt_dclkrx(struct exec *o, struct data **r)
 {
 	struct var *arg;
@@ -2884,6 +2916,7 @@ blt_dclkrx(struct exec *o, struct data **r)
 			return 0;
 		}
 		mididev_clksrc = mididev_byunit[unit];
+		mididev_mtcsrc = NULL;
 		return 1;
 	}
 	cons_errs(o->procname, "bad argument type for 'unit'");
