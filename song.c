@@ -1008,36 +1008,6 @@ song_loc(struct song *o, unsigned where, unsigned how)
 }
 
 /*
- * cancel the current state, and restore the state of 
- * the given position
- */
-void
-song_goto(struct song *o, unsigned measure)
-{
-	unsigned mmcpos;
-
-	if (o->mode >= SONG_IDLE) {
-		/*
-		 * 1 measure of count-down for recording
-		 */
-		if (o->mode >= SONG_REC && measure > 0)
-			measure--;
-
-		/*
-		 * move all tracks to given measure
-		 */
-		mmcpos = song_loc(o, measure, SONG_LOC_MEAS);
-		mux_gotoreq(mmcpos);
-
-		/*
-		 * display initial position
-		 */
-		cons_putpos(o->measure, o->beat, o->tic);
-	} else
-		cons_putpos(measure, 0, 0);
-}
-
-/*
  * relocate requested from a device
  */
 void
@@ -1062,6 +1032,9 @@ song_setmode(struct song *o, unsigned newmode)
 
 	oldmode = o->mode;
 	o->mode = newmode;
+	if (oldmode >= SONG_PLAY) {
+		mux_stopreq();
+	}
 	if (newmode < oldmode)
 		metro_setmode(&o->metro, newmode);
 	if (oldmode >= SONG_REC && newmode < SONG_REC) {
@@ -1081,9 +1054,6 @@ song_setmode(struct song *o, unsigned newmode)
 		}
 		track_clear(&o->rec);
 	}
-	if (oldmode >= SONG_PLAY && newmode < SONG_PLAY) {
-		mux_stopreq();
-	}
 	if (oldmode >= SONG_IDLE && newmode < SONG_IDLE) {
 		/*
 		 * cancel and free states
@@ -1098,6 +1068,9 @@ song_setmode(struct song *o, unsigned newmode)
 		norm_setfilt(NULL);
 		mux_flush();
 		mux_close();
+	}
+	if (oldmode < SONG_PLAY && newmode >= SONG_PLAY) {
+		o->complete = 0;
 	}
 	if (oldmode < SONG_IDLE && newmode >= SONG_IDLE) {
 		o->measure = 0;
@@ -1128,12 +1101,38 @@ song_setmode(struct song *o, unsigned newmode)
 		song_playconf(o);
 		mux_flush();
 	}
-	if (oldmode < SONG_PLAY && newmode >= SONG_PLAY) {
-		o->complete = 0;
-		mux_startreq();
-	}
 	if (newmode > oldmode)
 		metro_setmode(&o->metro, newmode);
+}
+
+/*
+ * cancel the current state, and restore the state of 
+ * the given position
+ */
+void
+song_goto(struct song *o, unsigned measure)
+{
+	unsigned mmcpos;
+
+	if (o->mode >= SONG_IDLE) {
+		/*
+		 * 1 measure of count-down for recording
+		 */
+		if (o->mode >= SONG_REC && measure > 0)
+			measure--;
+
+		/*
+		 * move all tracks to given measure
+		 */
+		mmcpos = song_loc(o, measure, SONG_LOC_MEAS);
+		mux_gotoreq(mmcpos);
+
+		/*
+		 * display initial position
+		 */
+		cons_putpos(o->measure, o->beat, o->tic);
+	} else
+		cons_putpos(measure, 0, 0);
 }
 
 /*
@@ -1158,6 +1157,7 @@ song_play(struct song *o)
 	m = (o->mode >= SONG_IDLE) ? o->measure : o->curpos;
 	song_setmode(o, SONG_PLAY);
 	song_goto(o, m);
+	mux_startreq();
 
 	if (song_debug) {
 		dbg_puts("song_play: waiting for a start event...\n");
@@ -1182,6 +1182,7 @@ song_record(struct song *o)
 	m = (o->mode >= SONG_IDLE) ? o->measure : o->curpos;
 	song_setmode(o, SONG_REC);
 	song_goto(o, m);
+	mux_startreq();
 	if (song_debug) {
 		dbg_puts("song_record: waiting for a start event...\n");
 	}
