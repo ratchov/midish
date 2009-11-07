@@ -1658,6 +1658,7 @@ blt_tcopy(struct exec *o, struct data **r)
 	qstep = usong->curquant / 2;
 	if (tic > qstep && tic2 > qstep) {
 		tic -= qstep;
+		tic2 -= qstep;
 	} else if (tic + len > qstep) {
 		len -= qstep;
 	}	
