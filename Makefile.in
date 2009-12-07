@@ -2,15 +2,16 @@
 # parameters for the GNU readline(3) library, used to
 # build rmidish (front-end to midish)
 #
-READLINE_INCLUDE = @readline_include@	# extra headers path
-READLINE_LIB = @readline_lib@		# extra libraries path
+READLINE_INCLUDE = @readline_include@	# extra includes path (-I options)
+READLINE_LIB = @readline_lib@		# extra libraries path (-L options)
 
 #
 # extra parameters
 #
-INCLUDE = @include@	# extra includes
-LIB = @lib@		# extra libs
-DEFS = @defs@ 		# extra defines
+INCLUDE = 		# extra includes paths (-I options)
+LIB =			# extra libraries paths (-L options)
+DEFS = @defs@ 		# extra defines (-D options)
+LDADD = @ldadd@		# extra libraries (-l options)
 
 #
 # binaries, documentation, man pages and examples will be installed in 
@@ -55,11 +56,12 @@ mixout.o mux.o name.o node.o norm.o parse.o pool.o saveload.o smf.o song.o \
 state.o str.o sysex.o textio.o timo.o track.o user.o 
 
 midish:		${MIDISH_OBJS}
-		${CC} ${LDFLAGS} ${MIDISH_OBJS} -o midish ${LIB}
+		${CC} ${LDFLAGS} ${LIB} -o midish ${LDADD} ${MIDISH_OBJS}
 
 rmidish:	rmidish.c
-		${CC} ${CFLAGS} ${READLINE_INCLUDE} rmidish.c \
-		${LDFLAGS} -o rmidish ${READLINE_LIB} -lreadline -ltermcap
+		${CC} ${CFLAGS} ${READLINE_INCLUDE} \
+		${LDFLAGS} -o rmidish ${READLINE_LIB} -lreadline -lncurses \
+		rmidish.c
 
 .c.o:
 		${CC} ${CFLAGS} ${INCLUDE} ${DEFS} -c $<

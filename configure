@@ -13,8 +13,7 @@ unset bindir			# path where to install binaries
 unset datadir			# path where to install doc and examples
 unset mandir			# path where to install man pages
 unset defs			# no extra #defines
-unset lib			# no extra lib paths
-unset include			# no extra header files paths
+unset ldadd			# no extra libraries (-l options)
 unset readline_lib		# path to readline library
 unset readline_include		# path to readline header files
 
@@ -122,7 +121,7 @@ mandir=${mandir:-$prefix/man}
 #
 if [ $alsa = yes ]; then
 	defs="$defs -DUSE_ALSA"
-	lib="$lib -lasound"
+	ldadd="$ldadd -lasound"
 fi
 
 #
@@ -130,7 +129,7 @@ fi
 #
 if [ $sndio = yes ]; then
 	defs="$defs -DUSE_SNDIO"
-	lib="$lib -lsndio"
+	ldadd="$ldadd -lsndio"
 fi
 
 #
@@ -149,11 +148,10 @@ sed \
 -e "s:@bindir@:$bindir:" \
 -e "s:@datadir@:$datadir:" \
 -e "s:@mandir@:$mandir:" \
--e "s:@readline_lib@:$readline_lib:" \
--e "s:@readline_include@:$readline_include:" \
+-e "s:@readline_lib@:${readline_lib+-L}$readline_lib:" \
+-e "s:@readline_include@:${readline_include+-I}$readline_include:" \
 -e "s:@defs@:$defs:" \
--e "s:@include@:$include:" \
--e "s:@lib@:$lib:" \
+-e "s:@ldadd@:$ldadd:" \
 -e "s:@progs@:$progs:" \
 < Makefile.in >Makefile
 
