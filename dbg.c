@@ -31,12 +31,12 @@
  * dbg_xxx() routines are used to quickly store traces into a trace buffer.
  * This allows traces to be collected during time sensitive operations without
  * disturbing them. The buffer can be flushed on standard error later, when
- * slow syscalls are no longer disruptive, eg. at the end of the poll() loop.
+ * slow syscalls are no longer disruptive, e.g. at the end of the poll() loop.
  *
  * prof_xxx() routines record (small) integers and provide simple statistical
- * properties on them like the minimum, maximum, average, variance.
+ * properties like: minimum, maximum, average and variance.
  *
- * mem_xxx() routines are simple wrapper around malloc() overwriting memory
+ * mem_xxx() routines are simple wrappers around malloc() overwriting memory
  * blocks with random data upon allocation and release.
  */
 #include <stdlib.h>
@@ -45,7 +45,7 @@
 #include "dbg.h"
 
 /*
- * size of buffer where traces are stored
+ * size of the buffer where traces are stored
  */
 #define DBG_BUFSZ	8192
 
@@ -113,19 +113,6 @@ dbg_putx(unsigned long num)
 }
 
 /*
- * store a signed integer in the debug buffer
- */
-void
-dbg_puti(signed long num)
-{
-	if (num < 0) {
-		DBG_PUTC('-');
-		num = -num;
-	}
-	dbg_putu(num);
-}
-
-/*
  * store a decimal in the debug buffer
  */
 void
@@ -146,6 +133,19 @@ dbg_putu(unsigned long num)
 }
 
 /*
+ * store a signed integer in the trace buffer
+ */
+void
+dbg_puti(long num)
+{
+	if (num < 0) {
+		DBG_PUTC('-');
+		num = -num;
+	}
+	dbg_putu(num);
+}
+
+/*
  * store a percent in the debug buffer
  */
 void
@@ -159,7 +159,7 @@ dbg_putpct(unsigned long n)
 }
 
 /*
- * abort the execution of the program after a fatal error, we should
+ * abort program execution after a fatal error, we should
  * put code here to backup user data
  */
 void
@@ -188,6 +188,7 @@ unsigned
 mem_rnd(void)
 {
 	static unsigned seed = 1989123;
+
 	seed = (seed * 1664525) + 1013904223;
 	return seed;
 }
