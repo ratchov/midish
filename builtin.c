@@ -2893,6 +2893,36 @@ blt_dmtcrx(struct exec *o, struct data **r)
 }
 
 unsigned
+blt_dmmctx(struct exec *o, struct data **r)
+{
+	struct data *units, *n;
+	unsigned i, tx[DEFAULT_MAXNDEVS];
+
+	if (!song_try_mode(usong, 0)) {
+		return 0;
+	}
+	if (!exec_lookuplist(o, "devlist", &units)) {
+		return 0;
+	}
+	for (i = 0; i < DEFAULT_MAXNDEVS; i++)
+		tx[i] = 0;
+	for (n = units; n != NULL; n = n->next) {
+		if (n->type != DATA_LONG ||
+		    n->val.num < 0 || n->val.num >= DEFAULT_MAXNDEVS ||
+		    !mididev_byunit[n->val.num]) {
+			cons_errs(o->procname, "bad device number");
+			return 0;
+		}
+		tx[n->val.num] = 1;
+	}
+	for (i = 0; i < DEFAULT_MAXNDEVS; i++) {
+		if (mididev_byunit[i])
+			mididev_byunit[i]->sendmmc = tx[i];
+	}
+	return 1;
+}
+
+unsigned
 blt_dclkrx(struct exec *o, struct data **r)
 {
 	struct var *arg;
