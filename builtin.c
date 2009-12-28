@@ -3028,6 +3028,14 @@ blt_dinfo(struct exec *o, struct data **r)
 	textout_putlong(tout, unit);
 	textout_putstr(tout, "\n");
 
+	if (mididev_mtcsrc == mididev_byunit[unit]) {
+		textout_indent(tout);
+		textout_putstr(tout, "mtcrx\t\t\t# master MTC source\n");
+	}
+	if (mididev_byunit[unit]->sendmmc) {
+		textout_indent(tout);
+		textout_putstr(tout, "mmctx\t\t\t# sends MMC messages\n");
+	}
 	if (mididev_clksrc == mididev_byunit[unit]) {
 		textout_indent(tout);
 		textout_putstr(tout, "clkrx\t\t\t# master clock source\n");
