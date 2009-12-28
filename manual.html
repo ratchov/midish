@@ -2375,7 +2375,9 @@ Added <a href="#func_dmtcrx">dmtcrx</a> function.
 <li>
 send MMC start, stop and relocate messages allowing
 MMC-capable audio applications to be controlled from
-midish
+midish.
+
+Added <a href="#func_dmmctx">dmmctx</a> function.
 
 </ul>
 
@@ -3906,6 +3908,15 @@ MTC capable audio application.
 
 If ``devnum'' is ``nil'', then MTC messages are ignored and the
 internal timer will be used instead.
+
+<dt><a name="func_dmmctx">dmmctx { devnum1 devnum2 ... }</a>
+
+<dd>
+Configure the given devices to transmit MMC start, stop
+and relocate messages.
+Useful to control MMC-capable audio applications
+from midish.
+By default, devices transmit MMC.
 
 <dt><a name="func_dclktx">dclktx { devnum1 devnum2 ... }</a>
 
