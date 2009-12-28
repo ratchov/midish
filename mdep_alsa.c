@@ -28,9 +28,6 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-/*
- * TODO: use the same handle for multiple ports
- */
 #ifdef USE_ALSA
 #include <sys/types.h>
 #include <limits.h>
@@ -47,8 +44,8 @@
 struct alsa {
 	struct mididev mididev;		/* device stuff */
 	snd_seq_t *seq_handle;		/* sequencer connection */
-	int my_port;			/* port id of myself */
-	char *path;			/* eg. "128:0", translates in dst */
+	int port;			/* port id of midish endpoint */
+	char *path;			/* e.g. "128:0", translated in dst */
 	snd_midi_event_t *iparser;	/* midi input event parser */
 	snd_midi_event_t *oparser;	/* midi output event parser */
 	int nfds;
@@ -83,7 +80,7 @@ alsa_new(char *path, unsigned mode)
 	mididev_init(&dev->mididev, &alsa_ops, mode);
 	dev->path = (path != NULL) ? str_new(path) : NULL;
 	dev->seq_handle = NULL;
-	dev->my_port = -1;
+	dev->port = -1;
 	dev->iparser = NULL;
 	dev->oparser = NULL;
 	return (struct mididev *)&dev->mididev;
@@ -115,7 +112,7 @@ alsa_open(struct mididev *addr)
 		return;	
 	}
 	snprintf(name, sizeof(name), "midish/%u", dev->mididev.unit);
-	if (snd_seq_set_client_name(dev->seq_handle, "midish") < 0) {
+	if (snd_seq_set_client_name(dev->seq_handle, name) < 0) {
 		dbg_puts("alsa_open: could set client name\n");
 		dev->mididev.eof = 1;
 		return;
@@ -133,9 +130,9 @@ alsa_open(struct mididev *addr)
 	}
 	if (dev->mididev.mode == (MIDIDEV_MODE_IN | MIDIDEV_MODE_OUT))
 		mode |= SND_SEQ_PORT_CAP_DUPLEX;
-	dev->my_port = snd_seq_create_simple_port(dev->seq_handle, name, mode,
+	dev->port = snd_seq_create_simple_port(dev->seq_handle, "default", mode,
 	    SND_SEQ_PORT_TYPE_MIDI_GENERIC | SND_SEQ_PORT_TYPE_APPLICATION);
-	if (dev->my_port < 0) {
+	if (dev->port < 0) {
 		dbg_puts("alsa_open: could not create port\n");
 		dev->mididev.eof = 1;
 		return;
@@ -173,14 +170,14 @@ alsa_open(struct mididev *addr)
 		}
 		if ((dev->mididev.mode & MIDIDEV_MODE_IN) &&
 		    snd_seq_connect_from(dev->seq_handle, 
-			dev->my_port, dst.client, dst.port) < 0) {
+			dev->port, dst.client, dst.port) < 0) {
 			dbg_puts("alsa_open: couldn't connect to input\n");
 			dev->mididev.eof = 1;
 			return;
 		}
 		if ((dev->mididev.mode & MIDIDEV_MODE_OUT) &&
 		    snd_seq_connect_to(dev->seq_handle, 
-			dev->my_port, dst.client, dst.port) < 0) {
+			dev->port, dst.client, dst.port) < 0) {
 			dbg_puts("alsa_open: couldn't connect to output\n");
 			dev->mididev.eof = 1;
 			return;
@@ -202,9 +199,9 @@ alsa_close(struct mididev *addr)
 		snd_midi_event_free(dev->oparser);
 		dev->oparser = NULL;
 	}
-	if (dev->my_port) {
-		snd_seq_delete_simple_port(dev->seq_handle, dev->my_port);
-		dev->my_port = -1;
+	if (dev->port) {
+		snd_seq_delete_simple_port(dev->seq_handle, dev->port);
+		dev->port = -1;
 	}
 	(void)snd_seq_close(dev->seq_handle);
 	dev->seq_handle = NULL;
@@ -233,7 +230,7 @@ alsa_read(struct mididev *addr, unsigned char *buf, unsigned count)
 		}
 		len = snd_midi_event_decode(dev->iparser, buf, todo, ev);
 		if (len < 0) {
-			/* can fail for ALSA specific stuff we dont care */
+			/* fails for ALSA specific stuff we dont care about */
 			continue;
 		} 
 		todo -= len;			
@@ -269,7 +266,7 @@ alsa_write(struct mididev *addr, unsigned char *buf, unsigned count)
 			continue;
 		snd_seq_ev_set_direct(&ev);
 		snd_seq_ev_set_dest(&ev, SND_SEQ_ADDRESS_SUBSCRIBERS, 255);
-		snd_seq_ev_set_source(&ev, dev->my_port);
+		snd_seq_ev_set_source(&ev, dev->port);
 		if (snd_seq_event_output_direct(dev->seq_handle, &ev) < 0) {
 			dev->mididev.eof = 1;
 			return 0;
