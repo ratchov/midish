@@ -301,7 +301,8 @@ char *builtins[] = {
 	"fexists", "finfo", "freset", "fmap", "funmap", "ftransp", "fvcurve",
 	"fchgin", "fchgout", "fswapin", "fswapout", "xlist", "xexists",
 	"xnew", "xdel", "xren", "xinfo", "xrm", "xsetd", "xadd", "dnew",
-	"ddel", "dclkrx", "dclktx", "dclkrate", "dinfo", "dixctl", "doxctl",
+	"ddel", "dmtcrx", "dmmctx", "dclkrx", "dclktx", "dclkrate", "dinfo",
+	"dixctl", "doxctl",
 	NULL
 };
 
