@@ -122,7 +122,8 @@ mixout_putev(struct ev *ev, unsigned id)
 	os = statelist_update(&mixout_slist, ev);
 	os->tag = id;
 	os->tic = 0;
-	mux_putev(ev);
+	if ((os->flags & (STATE_BOGUS | STATE_NESTED)) == 0)
+		mux_putev(ev);
 }
 
 
