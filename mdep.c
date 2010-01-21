@@ -91,7 +91,14 @@ mux_mdep_open(void)
 {
 	static struct sigaction sa;
 	struct itimerval it;
+	sigset_t set;
         
+	sigemptyset(&set);
+	sigaddset(&set, SIGPIPE);
+	if (sigprocmask(SIG_BLOCK, &set, NULL)) {
+		perror("mux_mdep_open: sigprocmask");
+		exit(1);
+	}
 	if (clock_gettime(CLOCK_MONOTONIC, &ts_last) < 0) {
 		perror("mux_mdep_open: clock_gettime");
 		exit(1);
