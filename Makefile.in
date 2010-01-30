@@ -37,6 +37,12 @@ install:	${PROGS}
 		cp README manual.html ${DESTDIR}${DOC_DIR}
 		cp midishrc sample.sng ${DESTDIR}${EXAMPLES_DIR}
 
+uninstall:
+		cd ${DESTDIR}${BIN_DIR} && rm -f ${PROGS} smfplay smfrec
+		cd ${DESTDIR}${MAN1_DIR} && rm -f ${PROGS:=.1} smfplay.1 smfrec.1
+		cd ${DESTDIR}${DOC_DIR} && rm -f README manual.html
+		cd ${DESTDIR}${EXAMPLES_DIR} && rm -f midishrc sample.sng 
+
 check:		midish
 		cd regress && ./run-test *.cmd
 
