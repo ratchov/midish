@@ -2857,6 +2857,10 @@ blt_ddel(struct exec *o, struct data **r)
 	if (!exec_lookuplong(o, "devnum", &unit)) {
 		return 0;
 	}
+	if (mididev_mtcsrc == mididev_byunit[unit])
+		mididev_mtcsrc = NULL;
+	if (mididev_clksrc == mididev_byunit[unit])
+		mididev_clksrc = NULL;
 	return mididev_detach(unit);
 }
 
