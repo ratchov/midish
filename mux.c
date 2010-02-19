@@ -363,6 +363,8 @@ mux_sendraw(unsigned unit, unsigned char *buf, unsigned len)
 void
 mux_mtcstart(unsigned mtcpos)
 {
+	unsigned delta;
+
 	/*
 	 * if using external clock, ignore MTC
 	 */
@@ -374,13 +376,21 @@ mux_mtcstart(unsigned mtcpos)
 	 * it's already set
 	 */
 	if (mididev_mtcsrc)
-		song_gotocb(usong, mtcpos);
+		delta = song_gotocb(usong, mtcpos);
 
 	if (mux_phase != MUX_STARTWAIT) {
 		if (mux_debug)
 			dbg_puts("mux_mtcstart: ignored mtc start\n");
 		return;
 	}
+	if (mux_curpos != 0) {
+		dbg_puts("mux_mtcstart: STARTWAIT state, but curpos != 0\n");
+		dbg_panic();
+	}
+	if (delta >= mux_ticlength)
+		dbg_puts("mux_mtcstart: delta larger than 1 tick\n");
+
+	mux_curpos = delta;
 
 	/*
 	 * generate clock
@@ -557,7 +567,7 @@ mux_startcb(void)
 	 * move to the beginning (dont support SPP yet)
 	 */
 	if (mididev_clksrc)
-		song_gotocb(usong, 0);
+		(void)song_gotocb(usong, 0);
 
 	if (mux_phase == MUX_STARTWAIT)
 		mux_chgphase(MUX_START);

@@ -1008,13 +1008,25 @@ song_loc(struct song *o, unsigned where, unsigned how)
 }
 
 /*
- * relocate requested from a device
+ * relocate requested from a device. Move the song to the
+ * tick just before the given MTC position, and return
+ * the time (24-th of us) between the requested position
+ * and the current tick. This way the mux module will "skip"
+ * this duration to ensure we're perfectly in sync.
  */
-void
+unsigned
 song_gotocb(struct song *o, unsigned mtcpos)
 {
-	song_loc(o, mtcpos, SONG_LOC_MTC);
+	unsigned newpos;
+
+	newpos = song_loc(o, mtcpos, SONG_LOC_MTC);
 	cons_putpos(o->measure, o->beat, o->tic);
+
+	if (newpos > mtcpos) {
+		dbg_puts("song_gotocb: negative offset\n");
+		dbg_panic();
+	}
+	return (mtcpos - newpos) * (24000000 / MTC_SEC);
 }
 
 
