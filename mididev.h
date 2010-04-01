@@ -45,7 +45,7 @@
 #define MIDIDEV_MODE_OUT	2	/* can output */
 
 /*
- * device output buffer lenght in bytes
+ * device output buffer length in bytes
  */
 #define MIDIDEV_BUFLEN	0x400
 
@@ -59,12 +59,12 @@ struct devops {
 	 */
 	void (*open)(struct mididev *);
 	/*
-	 * try to read the given number of bytes, and retrun the number
+	 * try to read the given number of bytes, and return the number
 	 * of bytes actually read, set the ``eof'' flag on error
 	 */
 	unsigned (*read)(struct mididev *, unsigned char *, unsigned);
 	/*
-	 * try to write the given number of bytes, and retrun the number
+	 * try to write the given number of bytes, and return the number
 	 * of bytes actually written, set the ``eof'' flag on error
 	 */
 	unsigned (*write)(struct mididev *, unsigned char *, unsigned);
@@ -75,7 +75,7 @@ struct devops {
 	/*
 	 * fill the given array of pollfd structures with the given
 	 * events so that poll(2) can be called, return the number of
-	 * elemets filled
+	 * elements filled
 	 */
 	unsigned (*pollfd)(struct mididev *, struct pollfd *, int);
 	/*

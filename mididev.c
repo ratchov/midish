@@ -38,7 +38,7 @@
  *
  * this modules converts midi bytes (ie 'unsigned char') to midi events
  * (struct ev) and calls mux_xxx callbacks to handle midi
- * input. Similatly, it converts midi events to bytes and sends them on
+ * input. Similarly, it converts midi events to bytes and sends them on
  * the wire
  *
  * the module provides the following methods:
@@ -53,7 +53,7 @@
  *
  * - mididev_put{ev,start,stop,tic,ack}() routines send respectively
  *   a voice event, clock start, clock stop, clock tick and midi
- *   active sens.
+ *   active sense.
  *
  */
 
