@@ -364,12 +364,27 @@ void
 mux_mtcstart(unsigned mtcpos)
 {
 	/*
-	 * If using external clock, or we're not ready (because
-	 * message comes from a ext device) then ignore MTC START
+	 * not using MTC, do nothing
 	 */
-	if (mux_phase != MUX_STARTWAIT || mididev_clksrc) {
+	if (mididev_clksrc)
+		return;
+
+	/*
+	 * if already started, trigger a MTC stop to enter
+	 * a state in which we can start
+	 */
+	if (mux_phase >= MUX_START && mux_phase <= MUX_NEXT) {
 		if (mux_debug)
-			dbg_puts("mux_mtcstart: ignored mtc start\n");
+			dbg_puts("mux_mtcstart: triggered stop\n");
+		mux_mtcstop();
+	}
+
+	/*
+	 * check if we're trying to start, if not just return
+	 */
+	if (mux_phase == MUX_STOP) {
+		if (mux_debug)
+			dbg_puts("mux_mtcstart: ignored mtc start (stopped)\n");
 		return;
 	}
 
