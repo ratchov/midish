@@ -248,23 +248,36 @@ Requirements:
 <ul>
 
 <li>
-a MIDI sound module
+A MIDI sound module and a MIDI keyboard
+(without any MIDI devices midish will be probably useless).
 
 <li>
-a MIDI keyboard
-
-<li>
-a POSIX unix-like operating system with "raw" MIDI support.
+A POSIX unix-like operating system with "raw" MIDI support.
 Works on OpenBSD (its development platform)
 and Linux.
 
 <li>
-the readline(3) library, which depends
-on the ncurses(3) library on most systems.
+A ``C'' complier (gcc), the ``make'' utility, and other common
+unix tools
+
+<li>
+The readline library (which depends on the ncurses library on most
+systems)
+
+<li>
+The ALSA library (on Linux only).
 
 </ul>
 
-(without any MIDI devices midish will be probably useless).
+Certain Linux distributions split libraries in two packages: one with run-time
+files only and one with development files.
+
+Both are necessary to build midish.
+
+Usually development packages have the ``-dev'' or ``-devel'' suffix.
+
+For instance, on Debian, package names are ``libreadline-dev'' and
+``libasound2-dev''.
 
 <p>
 To install midish:
