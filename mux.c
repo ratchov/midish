@@ -358,32 +358,49 @@ mux_sendraw(unsigned unit, unsigned char *buf, unsigned len)
 }
 
 /*
- * called when (external) MTC timer starts.
+ * called when MTC timer starts (full frame message).
  */
 void
 mux_mtcstart(unsigned mtcpos)
 {
 	/*
-	 * if using external clock, ignore MTC
+	 * not using MTC, do nothing
 	 */
 	if (mididev_clksrc)
 		return;
 
 	/*
-	 * ignore position change if we're not using MTC because
-	 * it's already set
+	 * if already started, trigger a MTC stop to enter
+	 * a state in which we can start
 	 */
-	if (mididev_mtcsrc)
-		song_gotocb(usong, mtcpos);
-
-	if (mux_phase != MUX_STARTWAIT) {
+	if (mux_phase >= MUX_START && mux_phase <= MUX_NEXT) {
 		if (mux_debug)
-			dbg_puts("mux_mtcstart: ignored mtc start\n");
+			dbg_puts("mux_mtcstart: triggered stop\n");
+		mux_mtcstop();
+	}
+
+	/*
+	 * check if we're trying to start, if not just return
+	 */
+	if (mux_phase == MUX_STOP) {
+		if (mux_debug)
+			dbg_puts("mux_mtcstart: ignored mtc start (stopped)\n");
 		return;
 	}
 
 	/*
-	 * generate clock
+	 * ignore position change if we're not using MTC because
+	 * it's already set (e.g., internally generated MTC start)
+	 */
+	if (mididev_mtcsrc) {
+		mux_nextpos = mux_ticlength;
+		mux_curpos = song_gotocb(usong, mtcpos);
+		if (mux_curpos >= mux_ticlength)
+			dbg_puts("mux_mtcstart: offset larger than 1 tick\n");
+	}
+
+	/*
+	 * generate clock start
 	 */
 	if (mux_debug)
 		dbg_puts("mux_mtcstart: generated clk start\n");
@@ -437,7 +454,7 @@ mux_mtcstop(void)
 }
 
 /*
- * call-back called every time the clock changed, the argument
+ * call-back called every time the clock changes, the argument
  * contains the number of 24th of seconds elapsed since the last call
  */
 void
@@ -548,19 +565,23 @@ mux_ticcb(void)
 void
 mux_startcb(void)
 {
-	if (mux_debug) {
+	if (mux_debug)
 		dbg_puts("mux_startcb: got start event\n");
+	if (mux_phase != MUX_STARTWAIT) {
+		dbg_puts("mux_startcb: ignored MIDI start (not ready)\n");
+		return;
 	}
 
 	/*
 	 * if the MIDI START event comes from a device
-	 * move to the beginning (dont support SPP yet)
+	 * move to the beginning (we don't support SPP yet)
 	 */
-	if (mididev_clksrc)
+	if (mididev_clksrc) {
+		mux_curpos = 0;
+		mux_nextpos = mux_ticlength;
 		song_gotocb(usong, 0);
-
-	if (mux_phase == MUX_STARTWAIT)
-		mux_chgphase(MUX_START);
+	}
+	mux_chgphase(MUX_START);
 }
 
 /*
@@ -569,9 +590,8 @@ mux_startcb(void)
 void
 mux_stopcb(void)
 {
-	if (mux_debug) {
+	if (mux_debug)
 		dbg_puts("mux_stopcb: got stop\n");
-	}
 	mux_chgphase(mux_reqphase);
 	song_stopcb(usong);
 }
@@ -716,9 +736,12 @@ mux_startreq(void)
 	if (!mididev_clksrc && !mididev_mtcsrc) {
 		if (mux_debug)
 			dbg_puts("mux_startreq: generated mtc start\n");
-		mux_mtcstart(0xdeadbeef);
 		mux_curpos = 0;
 		mux_nextpos = MUX_START_DELAY;
+		mux_mtcstart(0xdeadbeef);
+	} else {
+		mux_curpos = 0;
+		mux_nextpos = mux_ticlength;
 	}
 
 	for (dev = mididev_list; dev != NULL; dev = dev->next) {

@@ -36,6 +36,7 @@
 #include <poll.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdarg.h>
 #include <alsa/asoundlib.h>
 #include "dbg.h"
 #include "mididev.h"
@@ -71,6 +72,22 @@ struct devops alsa_ops = {
 	alsa_del
 };
 
+void
+alsa_err(const char *file, int ln, const char *fn, int e, const char *fmt, ...)
+{
+	va_list ap;
+
+	if (e != EINTR) {
+		fprintf(stderr, "%s: ", fn);
+		va_start(ap, fmt);
+		vfprintf(stderr, fmt, ap);
+		va_end(ap);
+		if (e != 0)
+			fprintf(stderr, ": %s", snd_strerror(e));
+		fprintf(stderr, "\n");
+	}
+}
+
 struct mididev *
 alsa_new(char *path, unsigned mode)
 {
@@ -105,6 +122,13 @@ alsa_open(struct mididev *addr)
 	unsigned int mode;
 	char name[32];
 	
+	/*
+	 * alsa displays annoying ``Interrupted system call'' messages caused
+	 * by poll(4) system call being interrupted by SIGALRM, which is not
+	 * an error. So, add an error handler that ignores EINTR.
+	 */
+	(void)snd_lib_error_set_handler(alsa_err);
+
 	if (snd_seq_open(&dev->seq_handle, "default",
 		SND_SEQ_OPEN_DUPLEX, 0) < 0) {
 		dbg_puts("alsa_open: could not open ALSA sequencer\n");

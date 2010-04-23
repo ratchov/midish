@@ -771,6 +771,33 @@ song_trkunmute(struct song *s, struct songtrk *t)
 }
 
 /*
+ * merge recorded track into current track
+ */
+void
+song_mergerec(struct song *o)
+{
+	struct songtrk *t;
+	struct state *s;
+	struct ev ev;
+
+	/*
+	 * if there is no filter for recording there may be
+	 * unterminated frames, so finalize them.
+	 */
+	for (s = o->recptr->statelist.first; s != NULL; s = s->next) {
+		if (!(s->phase & EV_PHASE_LAST) &&
+		     state_cancel(s, &ev)) {
+			seqptr_evput(o->recptr, &ev);
+		}
+	}
+	song_getcurtrk(o, &t);
+	if (t) {
+		track_merge(&o->curtrk->track, &o->rec);
+	}
+	track_clear(&o->rec);
+}
+
+/*
  * call-back called when the first midi tick arrives
  */
 void
@@ -960,7 +987,7 @@ song_loc(struct song *o, unsigned where, unsigned how)
 		track_clear(&o->rec);
 #ifdef SONG_DEBUG
 	if (!track_isempty(&o->rec)) {
-		dbg_puts("song_goto: rec track not empty\n");
+		dbg_puts("song_loc: rec track not empty\n");
 		dbg_panic();
 	}
 #endif
@@ -973,7 +1000,7 @@ song_loc(struct song *o, unsigned where, unsigned how)
 	for (s = o->metaptr->statelist.first; s != NULL; s = s->next) {
 		if (EV_ISMETA(&s->ev)) {
 			if (song_debug) {
-				dbg_puts("song_goto: ");
+				dbg_puts("song_loc: ");
 				ev_dbg(&s->ev);
 				dbg_puts(": restoring meta-event\n");
 			}
@@ -981,7 +1008,7 @@ song_loc(struct song *o, unsigned where, unsigned how)
 			s->tag = 1;
 		} else {
 			if (song_debug) {
-				dbg_puts("song_goto: ");
+				dbg_puts("song_loc: ");
 				ev_dbg(&s->ev);
 				dbg_puts(": not restored (not tagged)\n");
 			}
@@ -1008,15 +1035,26 @@ song_loc(struct song *o, unsigned where, unsigned how)
 }
 
 /*
- * relocate requested from a device
+ * relocate requested from a device. Move the song to the
+ * tick just before the given MTC position, and return
+ * the time (24-th of us) between the requested position
+ * and the current tick. This way the mux module will "skip"
+ * this duration to ensure we're perfectly in sync.
  */
-void
+unsigned
 song_gotocb(struct song *o, unsigned mtcpos)
 {
-	song_loc(o, mtcpos, SONG_LOC_MTC);
-	cons_putpos(o->measure, o->beat, o->tic);
-}
+	unsigned newpos;
 
+	newpos = song_loc(o, mtcpos, SONG_LOC_MTC);
+	cons_putpos(o->measure, o->beat, o->tic);
+
+	if (newpos > mtcpos) {
+		dbg_puts("song_gotocb: negative offset\n");
+		dbg_panic();
+	}
+	return (mtcpos - newpos) * (24000000 / MTC_SEC);
+}
 
 /*
  * set the current mode
@@ -1026,8 +1064,6 @@ song_setmode(struct song *o, unsigned newmode)
 {
 	struct songfilt *f;
 	struct songtrk *t;
-	struct state *s;
-	struct ev ev;
 	unsigned oldmode;
 
 	oldmode = o->mode;
@@ -1037,23 +1073,8 @@ song_setmode(struct song *o, unsigned newmode)
 	}
 	if (newmode < oldmode)
 		metro_setmode(&o->metro, newmode);
-	if (oldmode >= SONG_REC && newmode < SONG_REC) {
-		/*
-		 * if there is no filter for recording there may be
-		 * unterminated frames, so finalize them.
-		 */
-		for (s = o->recptr->statelist.first; s != NULL; s = s->next) {
-			if (!(s->phase & EV_PHASE_LAST) &&
-			     state_cancel(s, &ev)) {
-				seqptr_evput(o->recptr, &ev);
-			}
-		}
-		song_getcurtrk(o, &t);
-		if (t) {
-			track_merge(&o->curtrk->track, &o->rec);
-		}
-		track_clear(&o->rec);
-	}
+	if (oldmode >= SONG_REC && newmode < SONG_REC)
+		song_mergerec(o);
 	if (oldmode >= SONG_IDLE && newmode < SONG_IDLE) {
 		/*
 		 * cancel and free states

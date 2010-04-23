@@ -1,7 +1,7 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <!--
 /*
- * Copyright (c) 2003-2007 Alexandre Ratchov &lt;alex@caoua.org&gt;
+ * Copyright (c) 2003-2010 Alexandre Ratchov &lt;alex@caoua.org&gt;
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -248,23 +248,36 @@ Requirements:
 <ul>
 
 <li>
-a MIDI sound module
+A MIDI sound module and a MIDI keyboard
+(without any MIDI devices midish will be probably useless).
 
 <li>
-a MIDI keyboard
-
-<li>
-a POSIX unix-like operating system with "raw" MIDI support.
+A POSIX unix-like operating system with "raw" MIDI support.
 Works on OpenBSD (its development platform)
 and Linux.
 
 <li>
-the readline(3) library, which depends
-on the ncurses(3) library on most systems.
+A ``C'' complier (gcc), the ``make'' utility, and other common
+unix tools
+
+<li>
+The readline library (which depends on the ncurses library on most
+systems)
+
+<li>
+The ALSA library (on Linux only).
 
 </ul>
 
-(without any MIDI devices midish will be probably useless).
+Certain Linux distributions split libraries in two packages: one with run-time
+files only and one with development files.
+
+Both are necessary to build midish.
+
+Usually development packages have the ``-dev'' or ``-devel'' suffix.
+
+For instance, on Debian, package names are ``libreadline-dev'' and
+``libasound2-dev''.
 
 <p>
 To install midish:
@@ -285,7 +298,8 @@ Configure midish, type ``./configure'', it will select reasonable
 defaults.
 
 <p>
-On Linux systems it will use the ALSA-style devices, on other systems
+On Linux systems it will use ALSA devices, on OpenBSD
+it will use sndio(7) devices and on other systems
 it will use raw MIDI devices.
 
 Binaries, scripts, examples and documentation will be installed
@@ -304,7 +318,7 @@ midish and rmidish, the readline(3) front-end to midish.
 
 <li>
 Install binaries, documentation and examples by
-typing ``make install''.
+typing ``make install'', possibly as root.
 
 <li>
 If there isn't a ``/etc/midishrc'' file,
@@ -329,6 +343,13 @@ the following formats are accepted:
 <pre>
 dnew 0 "28:0" rw
 dnew 0 "FLUID Synth (qsynth)" wo 
+</pre>
+
+on OpenBSD, the following formats are accepted:
+<pre>
+dnew 0 "rmidi:3" rw
+dnew 0 "midithru:0" rw
+dnew 0 "aucat:0" rw
 </pre>
 
 see next section for details.
@@ -361,7 +382,7 @@ print "hello world"
 </pre>
 
 <p>
-Once MIDI devices are setup, one of the performance modes
+Once MIDI devices are set up, one of the performance modes
 can be started or stopped with one of the following
 single letter commands:
 
@@ -416,14 +437,14 @@ arrive, like a MIDI keyboard, a MIDI control surface etc...
 <b>Output channels:</b><br>
 
 they represent ``{device&nbsp;midi-channel}'' pair on which MIDI events
-can be sent, like synths. <i>Output channel</i> objects hold some
+can be sent, like synths. <i>Output channel</i> objects hold
 properties like patch number, volume, reverb depth or other
 controllers.
 
 <li>
 <b>Filters:</b><br>
 
-a filter is a set of rules that says which MIDI event to discard
+a filter is a set of rules that determines which MIDI event to discard
 and how to transform incoming events. The filter also "sanitizes" the
 input MIDI stream by removing nested notes, duplicate controllers and
 other anomalies.
@@ -455,13 +476,13 @@ metronome configuration, the current position, current selection...
 
 </ul>
 
-The above objects are grouped in a <i>project</i> (a song) and manipulated
+Above objects are grouped in a <i>project</i> (a song) and manipulated
 in prompt mode by issuing interactively commands.
 
 <p>
 Performance mode is used to play/record the project. When performance
 mode is entered, MIDI devices are opened, and all sysex messages and
-channel configuration events are sent to them. There are three
+channel configuration events are sent. There are three
 performance modes:
 
 <ul>
@@ -470,7 +491,7 @@ performance modes:
 <b>"Idle" mode</b><br>
 
 The MIDI input passes through the <i>current filter</i>
-and the result is sent to the midi output. No tracks are
+and the result is sent to the MIDI output. No tracks are
 played or recorded.
 
 <pre>
@@ -510,7 +531,7 @@ and finally sent to the MIDI output. No tracks are recorded.
 <b>Record mode</b><br>
 
 The MIDI input passes through the <i>current filter</i>
-and is recorded to the <i>current track</i>.
+and is recorded on the <i>current track</i>.
 The result is mixed with the currently played tracks
 and finally sent to the MIDI output. System exclusive
 messages are recorded to the <i>current sysex</i> without
@@ -593,6 +614,16 @@ ex:
 dnew 0 "FLUID Synth (qsynth)" wo 
 </pre>
 
+<p>
+If you're using OpenBSD, insted of /dev/rmidi3 and /dev/rmidi4,
+use the sndio(7) port names:
+
+<pre>
+dnew 0 "rmidi:3" wo             # attach the module as dev number 0
+dnew 1 "rmidi:4" ro             # attach the keyboard as dev number 1
+</pre>
+
+<p>
 The following session shows how to record a simple
 track.  First, we define a filter named ``piano'' that routes any
 event from device 1, channel 0 (input channel of the keyboard) to
@@ -628,13 +659,17 @@ dnew 0 "/dev/rmidi4" rw
 dnew 1 "/dev/rmidi3" rw
 </pre>
 
-If you're using ALSA, then use the ALSA port names (as listed by
+If you're using ALSA, then use ALSA port names (as listed by
 ``aseqdump -l'' command) instead of the device node paths.
 
 If ``nil'' is given instead of the path, then the port is not
 connected to any existing port; this allows other ALSA sequencer
 clients to subscribe to it and to provide events to midish or to
 consume events midish sends to it.
+
+<p>
+If you're using OpenBSD, then use sndio(7) port names (hardware ports,
+software MIDI thru boxes, aucat(1) control devices).
 
 <p>
 <b>Note:</b>
@@ -655,13 +690,13 @@ send EOF character (control-D) to quit
 [0004:02]&gt; s                         # stop playback
 </pre>
 
-When the configuration is setup, put the dnew
+When devices are set up, put the corresponding dnew
 commands in the user's ``$HOME/.midishrc''. It will be
 automatically executed the next time midish is run.
 
 <h2><a name="inputs">3 Input channels</a></h2>
 
-Because midish handles multiple input sources, instead of
+Since midish handles multiple input sources, instead of
 using MIDI channels, it uses device / MIDI channel pairs
 to represent inputs.
 
@@ -698,7 +733,7 @@ file, to avoid typing it every time midish is started.
 <h2><a name="chan">4 Output channels</a></h2>
 
 As for input channels, midish uses device / MIDI channel pairs
-to represent outputs too.
+to represent outputs.
 
 So in this document <i>output channel</i> refers the
 ``{device&nbsp;MIDI-channel}'' pair to which MIDI events will
@@ -721,7 +756,7 @@ this defines a named channel ``mybass'' that can
 be used instead of the ``{0 4}'' pair.
 
 <p>
-Output channels expose a built-in filter with the same name that
+Output channels expose a built-in filter with the same name; it
 defines how input events are routed to the output channel.
 
 The filter comes with a default rule that routes all input channels to
@@ -731,16 +766,18 @@ See filter section for further details.
 
 <h3><a name="section_4_1">4.1 Channel configuration</a></h3>
 
-A output channel represents one musical instrument; midish allows to
-attach to the channel definition basic channel configuration events
-like program changes and controllers.
+An output channel represents one musical instrument; midish allows
+basic channel configuration events (like program changes and
+controllers) to be attached to the channel definition.
 
 Such events are sent to the output when performance mode is entered,
-for instance just before playback is started. This approach avoids
-flooding MIDI devices with slow events (like program changes).
+for instance just before playback is started.
+
+This approach avoids flooding MIDI devices with slow events (like
+program changes).
 
 <p>
-For instance;
+For instance,
 to select patch 34 on channel ``mybass'', attach
 a ``program change'' event:
 
@@ -4396,8 +4433,8 @@ Willem van Engen.
 <p>
 <hr>
 <small><i>
-Copyright (c) 2003-2009 Alexandre Ratchov<br>
-Last updated dec 28, 2009
+Copyright (c) 2003-2010 Alexandre Ratchov<br>
+Last updated apr 19, 2010
 </i></small>
 
 </body>
