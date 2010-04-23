@@ -715,6 +715,9 @@ track_move(struct track *src, unsigned start, unsigned len,
 #define TAG_KEEP	1		/* frame is not erased */
 #define TAG_COPY	2		/* frame is copied */
 
+	/* please gcc */
+	sp = dp = NULL;
+
 	if (len == 0)
 		return;
 	if (copy) {
