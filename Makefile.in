@@ -62,12 +62,12 @@ mixout.o mux.o name.o node.o norm.o parse.o pool.o saveload.o smf.o song.o \
 state.o str.o sysex.o textio.o timo.o track.o user.o 
 
 midish:		${MIDISH_OBJS}
-		${CC} ${LDFLAGS} ${LIB} -o midish ${LDADD} ${MIDISH_OBJS}
+		${CC} ${LDFLAGS} ${LIB} -o midish ${MIDISH_OBJS} ${LDADD} 
 
 rmidish:	rmidish.c
 		${CC} ${CFLAGS} ${READLINE_INCLUDE} \
-		${LDFLAGS} -o rmidish ${READLINE_LIB} -lreadline -lncurses \
-		rmidish.c
+		${LDFLAGS} -o rmidish ${READLINE_LIB} \
+		rmidish.c -lreadline -lncurses
 
 .c.o:
 		${CC} ${CFLAGS} ${INCLUDE} ${DEFS} -c $<
