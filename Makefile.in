@@ -6,20 +6,13 @@ READLINE_INCLUDE = @readline_include@	# extra includes path (-I options)
 READLINE_LIB = @readline_lib@		# extra libraries path (-L options)
 
 #
-# override build-in make settings
-#
-@cc@
-@cflags@
-@ldflags@
-
-#
 # extra parameters
 #
 INCLUDE = 		# extra includes paths (-I options)
 LIB =			# extra libraries paths (-L options)
 DEFS = @defs@ 		# extra defines (-D options)
 LDADD = @ldadd@		# extra libraries (-l options)
-
+@vars@
 #
 # binaries, documentation, man pages and examples will be installed in 
 # ${BIN_DIR}, ${MAN1_DIR}, ${DOC_DIR} and ${EXAMPLES_DIR}

@@ -9,9 +9,9 @@ alsa=no				# do we want alsa support ?
 sndio=no			# do we want sndio support ?
 rmidish=yes			# do we want to build rmidish ?
 progs=midish			# programs to build
-cc="#CC = gcc"			# set CC to a commented example
-cflags="#CFLAGS = -Wall -O2"	# set CFLAGS to a commented example
-ldflags="#LDFLAGS ="		# set LDFLAGS to a commented example
+unset vars			# variables definitions passed as-is
+unset cflags			# compilation flags
+unset ldflags			# linking flags
 unset bindir			# path where to install binaries
 unset datadir			# path where to install doc and examples
 unset mandir			# path where to install man pages
@@ -66,7 +66,12 @@ Usage: configure [options]
 END
 }
 
+# shell word separator (none)
 IFS=''
+
+# sed-quoted new-line
+nl='\
+'
 
 for i; do
 	case "$i" in
@@ -108,14 +113,8 @@ for i; do
 	--disable-rmidish)
 		rmidish=no
 		shift;;
-	CC=*)
-		cc="$i"
-		shift;;
-	CFLAGS=*)
-		cflags="$i"
-		shift;;
-	LDFLAGS=*)
-		ldflags="$i"
+	CC=*|CFLAGS=*|LDFLAGS=*)
+		vars="${vars+$vars$nl}$i"
 		shift;;
 	*)
 		help
@@ -155,6 +154,16 @@ if [ $rmidish = yes ]; then
 	progs="$progs rmidish"
 fi
 
+#
+# if variables defined, then insert a comment
+#
+vars=${vars+"\\
+# \\
+# the following were passed as arguments to configure script\\
+# \\
+$vars\\
+"}
+
 echo "configure: creating Makefile"
 sed \
 -e "s:@bindir@:$bindir:" \
@@ -165,9 +174,7 @@ sed \
 -e "s:@defs@:$defs:" \
 -e "s:@ldadd@:$ldadd:" \
 -e "s:@progs@:$progs:" \
--e "s:@cc@:$cc:" \
--e "s:@cflags@:$cflags:" \
--e "s:@ldflags@:$ldflags:" \
+-e "s:@vars@:${vars}:" \
 < Makefile.in >Makefile
 
 echo
