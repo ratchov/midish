@@ -9,9 +9,9 @@ alsa=no				# do we want alsa support ?
 sndio=no			# do we want sndio support ?
 rmidish=yes			# do we want to build rmidish ?
 progs=midish			# programs to build
-unset cc			# eg CC=gcc
-unset cflags			# eg CFLAGS=-Wall
-unset ldflags			# eg LDFLAGS=-static
+cc="#CC = gcc"			# set CC to a commented example
+cflags="#CFLAGS = -Wall -O2"	# set CFLAGS to a commented example
+ldflags="#LDFLAGS ="		# set LDFLAGS to a commented example
 unset bindir			# path where to install binaries
 unset datadir			# path where to install doc and examples
 unset mandir			# path where to install man pages

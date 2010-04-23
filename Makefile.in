@@ -6,7 +6,7 @@ READLINE_INCLUDE = @readline_include@	# extra includes path (-I options)
 READLINE_LIB = @readline_lib@		# extra libraries path (-L options)
 
 #
-# Compilers
+# override build-in make settings
 #
 @cc@
 @cflags@
