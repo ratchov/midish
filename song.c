@@ -903,7 +903,12 @@ song_loc(struct song *o, unsigned where, unsigned how)
 
 	seqptr_del(o->metaptr);
 	o->metaptr = seqptr_new(&o->meta);
-	
+
+	/* please gcc */
+	endpos = 0xdeadbeef;
+	offs = 0xdeadbeef;
+	maxdelta = 0xdeadbeef;
+
 	/*
 	 * XXX: when not in LOC_MTC mode, the MTC position
 	 * can overflow. Limit song_loc() to 24 hours

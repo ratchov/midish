@@ -12,7 +12,7 @@ INCLUDE = 		# extra includes paths (-I options)
 LIB =			# extra libraries paths (-L options)
 DEFS = @defs@ 		# extra defines (-D options)
 LDADD = @ldadd@		# extra libraries (-l options)
-
+@vars@
 #
 # binaries, documentation, man pages and examples will be installed in 
 # ${BIN_DIR}, ${MAN1_DIR}, ${DOC_DIR} and ${EXAMPLES_DIR}
@@ -37,6 +37,12 @@ install:	${PROGS}
 		cp README manual.html ${DESTDIR}${DOC_DIR}
 		cp midishrc sample.sng ${DESTDIR}${EXAMPLES_DIR}
 
+uninstall:
+		cd ${DESTDIR}${BIN_DIR} && rm -f ${PROGS} smfplay smfrec
+		cd ${DESTDIR}${MAN1_DIR} && rm -f ${PROGS:=.1} smfplay.1 smfrec.1
+		cd ${DESTDIR}${DOC_DIR} && rm -f README manual.html
+		cd ${DESTDIR}${EXAMPLES_DIR} && rm -f midishrc sample.sng 
+
 check:		midish
 		cd regress && ./run-test *.cmd
 
@@ -56,12 +62,12 @@ mixout.o mux.o name.o node.o norm.o parse.o pool.o saveload.o smf.o song.o \
 state.o str.o sysex.o textio.o timo.o track.o user.o 
 
 midish:		${MIDISH_OBJS}
-		${CC} ${LDFLAGS} ${LIB} -o midish ${LDADD} ${MIDISH_OBJS}
+		${CC} ${LDFLAGS} ${LIB} -o midish ${MIDISH_OBJS} ${LDADD} 
 
 rmidish:	rmidish.c
 		${CC} ${CFLAGS} ${READLINE_INCLUDE} \
-		${LDFLAGS} -o rmidish ${READLINE_LIB} -lreadline -lncurses \
-		rmidish.c
+		${LDFLAGS} ${READLINE_LIB} -o rmidish \
+		rmidish.c -lreadline -lncurses
 
 .c.o:
 		${CC} ${CFLAGS} ${INCLUDE} ${DEFS} -c $<
