@@ -9,6 +9,9 @@ alsa=no				# do we want alsa support ?
 sndio=no			# do we want sndio support ?
 rmidish=yes			# do we want to build rmidish ?
 progs=midish			# programs to build
+unset cc			# eg CC=gcc
+unset cflags			# eg CFLAGS=-Wall
+unset ldflags			# eg LDFLAGS=-static
 unset bindir			# path where to install binaries
 unset datadir			# path where to install doc and examples
 unset mandir			# path where to install man pages
@@ -68,24 +71,24 @@ IFS=''
 for i; do
 	case "$i" in
 	--prefix=*)
-		prefix=${i#--prefix=}
+		prefix="${i#--prefix=}"
 		shift;;
 	--bindir=*)
-		bindir=${i#--bindir=}
+		bindir="${i#--bindir=}"
 		shift;;
 	--datadir=*)
-		datadir=${i#--datadir=}
+		datadir="${i#--datadir=}"
 		shift;;
 	--mandir=*)
-		mandir=${i#--mandir=}
+		mandir="${i#--mandir=}"
 		shift;;
 	--readline-lib=*)
 		readline=yes
-		readline_lib=${i#--readline-lib=}
+		readline_lib="${i#--readline-lib=}"
 		shift;;
 	--readline-include=*)
 		readline=yes
-		readline_include=${i#--readline-include=}
+		readline_include="${i#--readline-include=}"
 		shift;;
 	--enable-alsa)
 		alsa=yes
@@ -105,6 +108,15 @@ for i; do
 	--disable-rmidish)
 		rmidish=no
 		shift;;
+	CC=*)
+		cc="$i"
+		shift;;
+	CFLAGS=*)
+		cflags="$i"
+		shift;;
+	LDFLAGS=*)
+		ldflags="$i"
+		shift;;
 	*)
 		help
 		exit 1
@@ -112,9 +124,9 @@ for i; do
 	esac
 done
 
-bindir=${bindir:-$prefix/bin}
-datadir=${datadir:-$prefix/share}
-mandir=${mandir:-$prefix/man}
+bindir="${bindir:-$prefix/bin}"
+datadir="${datadir:-$prefix/share}"
+mandir="${mandir:-$prefix/man}"
 
 #
 # add parameters for ALSA support
@@ -153,6 +165,9 @@ sed \
 -e "s:@defs@:$defs:" \
 -e "s:@ldadd@:$ldadd:" \
 -e "s:@progs@:$progs:" \
+-e "s:@cc@:$cc:" \
+-e "s:@cflags@:$cflags:" \
+-e "s:@ldflags@:$ldflags:" \
 < Makefile.in >Makefile
 
 echo

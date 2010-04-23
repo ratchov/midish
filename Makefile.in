@@ -6,6 +6,13 @@ READLINE_INCLUDE = @readline_include@	# extra includes path (-I options)
 READLINE_LIB = @readline_lib@		# extra libraries path (-L options)
 
 #
+# Compilers
+#
+@cc@
+@cflags@
+@ldflags@
+
+#
 # extra parameters
 #
 INCLUDE = 		# extra includes paths (-I options)
