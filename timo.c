@@ -80,11 +80,11 @@ timo_add(struct timo *o, unsigned delta)
 
 #ifdef TIMO_DEBUG
 	if (o->set) {
-		dbg_puts("timo_set: already set\n");
+		dbg_puts("timo_add: already set\n");
 		dbg_panic();
 	}
 	if (delta == 0) {
-		dbg_puts("timo_set: zero timeout is evil\n");
+		dbg_puts("timo_add: zero timeout is evil\n");
 		dbg_panic();
 	}
 #endif
