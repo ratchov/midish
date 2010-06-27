@@ -37,38 +37,71 @@
 <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
 <meta name="language" content="en">
 <style type="text/css">
-        TABLE { 
-                border-style: solid; 
-                border-width: thin; 
-                border-collapse: collapse;
-        }
-        TH {
-                border-style: solid; 
-                border-width: thin; 
-                padding: 0.5em; 
-                background-color: #f0f0f0
-        }
-        TD { 
-                border-style: solid; 
-                border-width: thin; 
-                padding: 0.5em; 
-        }
-        BODY { 
-                background-color: white;
-                color: black
-        }
-        PRE {
-                padding: 1em;
-                border-width: thin;
-                border-style: dotted;
-                background-color: #f0f0f0
-        }
-        DT {
-                font-weight: bold;
-        }
-        DD {
-                padding: 0.5em;
-        }
+@media screen, print {
+	h1 {
+		text-align: center
+	}
+	table { 
+		border-style: solid; 
+		border-width: thin; 
+		border-collapse: collapse;
+	}
+	th {
+		border-style: solid; 
+		border-width: thin; 
+		padding: 0.5em; 
+	}
+	td { 
+		border-style: solid; 
+		border-width: thin; 
+		padding: 0.5em; 
+	}
+	pre {
+		padding-top: 1em;
+		padding-bottom: 1em;
+		padding-left: 1em;
+		padding-right: 1em;
+	}
+	dt {
+		font-weight: bold;
+	}
+	dd {
+		padding: 0.5em;
+	}
+}
+@media screen {
+	body { 
+		margin-top: 1em;
+		margin-bottom: 1em;
+		margin-left: auto;
+		margin-right: auto;
+		padding-top: 1em;
+		padding-bottom: 0em;
+		padding-left: 1em;
+		padding-right: 1em;
+		border-style: dashed;
+		border-top-width: thin;
+		border-bottom-width: thin;
+		border-left-width: thin;
+		border-right-width: thin;
+		position: relative;
+		max-width: 44em;
+		border-color: #ccc;
+		background-color: #fff;
+	}
+	th {
+		background-color: #eee
+	}
+	pre {
+		background-color: #eee
+	}
+}
+@media print {
+	pre {
+		border-style: dotted; 
+		border-width: thin; 
+	}
+}
 </style>
 </head>
 <body>
@@ -4431,7 +4464,6 @@ and
 Willem van Engen.
 
 <p>
-<hr>
 <small><i>
 Copyright (c) 2003-2010 Alexandre Ratchov<br>
 Last updated apr 19, 2010
