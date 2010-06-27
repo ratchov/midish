@@ -1,4 +1,4 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
 <!--
 /*
  * Copyright (c) 2003-2010 Alexandre Ratchov &lt;alex@caoua.org&gt;
@@ -45,6 +45,8 @@
 		border-style: solid; 
 		border-width: thin; 
 		border-collapse: collapse;
+		margin-left: auto;
+		margin-right: auto;
 	}
 	th {
 		border-style: solid; 
@@ -229,6 +231,7 @@
 <h2><a name="intro">1 Introduction</a></h2>
 <h3><a name="section_1_1">1.1 What is midish?</a></h3>
 
+<p>
 Midish is an open-source MIDI sequencer/filter for
 Unix-like operating systems (tested on OpenBSD and Linux).
 Implemented as a simple command-line interpreter (like a shell)
@@ -276,6 +279,7 @@ a 2-clause BSD-style license.
 
 <h3><a name="install">1.2 Installation</a></h3>
 
+<p>
 Requirements:
 
 <ul>
@@ -302,6 +306,7 @@ The ALSA library (on Linux only).
 
 </ul>
 
+<p>
 Certain Linux distributions split libraries in two packages: one with run-time
 files only and one with development files.
 
@@ -391,6 +396,7 @@ see next section for details.
 
 <h3><a name="section_1_3">1.3 Invocation</a></h3>
 
+<p>
 Midish is a MIDI sequencer/filter driven by a command-line
 interpreter (like a shell).
 
@@ -407,6 +413,7 @@ To start midish, just type:
 rmidish
 </pre>
 
+<p>
 Then, commands are issued interactively on the midish prompt,
 example:
 
@@ -440,6 +447,7 @@ recording
 stop one of the above and close MIDI devices.
 </ul>
 
+<p>
 In performance mode certain features are not available (like
 most editing functions).
 
@@ -449,6 +457,8 @@ devices are closed and thus are available to other
 applications.
 
 <h3><a name="section_1_4">1.4 How does it work</a></h3>
+
+<p>
 Midish uses the following objects to represent a project:
 
 <ul>
@@ -509,6 +519,7 @@ metronome configuration, the current position, current selection...
 
 </ul>
 
+<p>
 Above objects are grouped in a <i>project</i> (a song) and manipulated
 in prompt mode by issuing interactively commands.
 
@@ -595,6 +606,7 @@ being passed through the filter.
 
 </ul>
 
+<p>
 The above performance modes are started with
 the single letter commands
 ``<a href="#func_i">i</a>'',
@@ -607,6 +619,7 @@ it, use the
 
 <h3><a name="section_1_5">1.5 An example</a></h3>
 
+<p>
 Suppose that there are two devices:
 
 <ul>
@@ -619,6 +632,7 @@ Suppose that there are two devices:
 
 </ul>
 
+<p>
 In this case, the ``/etc/midishrc'' file probably should contain
 the following lines:
 
@@ -627,6 +641,7 @@ dnew 0 "/dev/rmidi4" wo         # attach the module as dev number 0
 dnew 1 "/dev/rmidi3" ro         # attach the keyboard as dev number 1
 </pre>
 
+<p>
 the ``wo'' parameter means that the device will be opened in
 write-only mode.  
 
@@ -640,6 +655,7 @@ dnew 0 "28:0" wo                # attach the module as dev number 0
 dnew 1 "32:0" ro                # attach the keyboard as dev number 1
 </pre>
 
+<p>
 Alsa also accepts client names, instead of client numbers,
 ex:
 
@@ -677,6 +693,7 @@ send EOF character (control-D) to quit
 
 <h2><a name="dev">2 Devices setup</a></h2>
 
+<p>
 In midish, MIDI devices are numbered from 0 to 15.
 Each MIDI device has its <i>device number</i>. 
 
@@ -692,6 +709,7 @@ dnew 0 "/dev/rmidi4" rw
 dnew 1 "/dev/rmidi3" rw
 </pre>
 
+<p>
 If you're using ALSA, then use ALSA port names (as listed by
 ``aseqdump -l'' command) instead of the device node paths.
 
@@ -723,12 +741,14 @@ send EOF character (control-D) to quit
 [0004:02]&gt; s                         # stop playback
 </pre>
 
+<p>
 When devices are set up, put the corresponding dnew
 commands in the user's ``$HOME/.midishrc''. It will be
 automatically executed the next time midish is run.
 
 <h2><a name="inputs">3 Input channels</a></h2>
 
+<p>
 Since midish handles multiple input sources, instead of
 using MIDI channels, it uses device / MIDI channel pairs
 to represent inputs.
@@ -743,6 +763,7 @@ Channels are handled by two-item lists, like this:
 {1 0}                   # device 1, MIDI channel 0
 </pre>
 
+<p>
 Channels can also be named using the 
 ``<a href="#func_inew">inew</a>'' command,
 as follows:
@@ -751,6 +772,7 @@ as follows:
 inew keyboard {1 0}
 </pre>
 
+<p>
 this defines a named input channel ``keyboard'' that can
 be used instead of the ``{1 0}'' pair.
 
@@ -765,6 +787,7 @@ file, to avoid typing it every time midish is started.
 
 <h2><a name="chan">4 Output channels</a></h2>
 
+<p>
 As for input channels, midish uses device / MIDI channel pairs
 to represent outputs.
 
@@ -778,6 +801,7 @@ Output channels are handled by two-item lists, like this:
 {0 4}                   # device 0, MIDI channel 4
 </pre>
 
+<p>
 they can also be named using the 
 ``<a href="#func_onew">onew</a>'' command, as follows:
 
@@ -785,6 +809,7 @@ they can also be named using the
 onew mybass {0 4}
 </pre>
 
+<p>
 this defines a named channel ``mybass'' that can
 be used instead of the ``{0 4}'' pair.
 
@@ -799,6 +824,7 @@ See filter section for further details.
 
 <h3><a name="section_4_1">4.1 Channel configuration</a></h3>
 
+<p>
 An output channel represents one musical instrument; midish allows
 basic channel configuration events (like program changes and
 controllers) to be attached to the channel definition.
@@ -818,6 +844,7 @@ a ``program change'' event:
 oaddev mybass {pc mybass 32}
 </pre>
 
+<p>
 the list argument gives the event to attach to the channel.
 See the <a href="#ev_ev">event</a> section for
 more details about events.
@@ -829,6 +856,7 @@ To set the volume (controller 7) of this channel to 120:
 oaddev mybass {ctl mybass 7 120}
 </pre>
 
+<p>
 If several events of the same type are attached
 then just the last one is kept. So, the following
 will change the volume to 125 by replacing the above event:
@@ -841,6 +869,7 @@ oaddev mybass {ctl mybass 7 125}
 
 <h3><a name="ev_ev">5.1 Event specification</a></h3>
 
+<p>
 An event is specified as a list containing:
 
 <ul>
@@ -861,10 +890,11 @@ a second number (not for ``cat'' and ``bend'')
 
 </ul>
 
+<p>
 Event references correspond to the following
 MIDI events:
 
-<p align="center">
+<p>
 
 <table border="1">
 
@@ -892,7 +922,7 @@ MIDI events:
 
 </table>
 
-<p align="left">
+<p>
 Examples:
 <br>
 note-on event on device 2, channel 9, note 64 with velocity 100:
@@ -901,12 +931,14 @@ note-on event on device 2, channel 9, note 64 with velocity 100:
 {non {2 9} 64 100}
 </pre>
 
+<p>
 program change device 1, channel 3, patch 34, bank 1234
 
 <pre>
 {xpc {1 3} 34 1234}
 </pre>
 
+<p>
 set controller number 7 to 99
 on device/channel drums:
 
@@ -916,6 +948,7 @@ on device/channel drums:
 
 <h3><a name="ev_evspec">5.2 Event set specification</a></h3>
 
+<p>
 Filter and track editing functions use <i>event sets</i> to select the
 set of events they will affect.
 
@@ -958,6 +991,7 @@ format as the first one (not permitted for ``pc'',
 
 </ul>
 
+<p>
 In the above, empty lists can also be used. An empty list means "match
 everything". If the ``none'' keyword is used as event set type then the
 event set is the empty set, i.e. it matches no events.
@@ -988,6 +1022,7 @@ Examples:
 
 <h2><a name="filt">6 Filtering/routing</a></h2>
 
+<p>
 A <i>filter</i> transforms incoming MIDI events and send them to the
 output. 
 
@@ -1015,6 +1050,7 @@ etc...
 
 </ul>
 
+<p>
 Multiple filters can be defined, however only the
 <i>current filter</i> will run in performance
 mode.
@@ -1034,6 +1070,7 @@ Filters are defined as follows:
 fnew myfilt                     # create filter "myfilt"
 </pre>
 
+<p>
 initially the filter is empty and will send input to output
 as-is.
 
@@ -1050,6 +1087,7 @@ section for details.
 
 <h3><a name="section_6_1">6.1 Filter rules</a></h3>
 
+<p>
 The filter is configured through a list of filtering rules provided
 by the user.
 
@@ -1066,6 +1104,7 @@ A rule is defined as
 
 </ul>
 
+<p>
 When the filter is running if an incoming event is contained in the
 source set, then it is rewritten to match the destination set.
 
@@ -1075,6 +1114,7 @@ With the following rule:
 note {1 3} -&gt; note {2 8}
 </pre>
 
+<p>
 note events arriving on device 1 midi-channel 3 are sent
 to device 2, midi-channel 8.
 
@@ -1092,6 +1132,7 @@ For instance, the following rule:
 note {0 0} 40..49 -&gt; note {0 0} 60..69
 </pre>
 
+<p>
 will map notes on channel ``{0 0}'' by rewriting:
 
 <ul>
@@ -1143,6 +1184,7 @@ send EOF character (control-D) to quit
 
 <h3><a name="section_6_2">6.2 Rules hierarchy</a></h3>
 
+<p>
 In real life, the filter will probably have to contain multiple rules.
 
 If the input event matches the source set of two rules, then the most
@@ -1165,6 +1207,7 @@ fmap {any kbd} {any piano}
 fmap {ctl kbd 1} {ctl piano 11}
 </pre>
 
+<p>
 the first rule will map all events coming from channel ``kbd'' (the
 input) to channel ``piano'' (the output); the second rule maps
 controller 1 (modulation) to controller 11 (expression).
@@ -1190,6 +1233,7 @@ functions will do the right thing in all cases.
 
 <h4><a name="section_6_3_1">6.3.1 Device redirections</a></h4>
 
+<p>
 The following example defines a filter that routes events from
 device number 1 (the MIDI keyboard) to device number 0
 (the sound module).
@@ -1199,6 +1243,7 @@ fnew mydevmap                           # define filter "mydevmap"
 fmap {any 1} {any 0}                    # make it route device 1 -&gt; device 0
 </pre>
 
+<p>
 To test the filter, start performance mode using the
 ``<a href="#func_i">i</a>'' command and
 then type
@@ -1206,6 +1251,7 @@ then type
 
 <h4><a name="section_6_3_2">6.3.2 Channel maps</a></h4>
 
+<p>
 The following example defines a filter that routes events from device
 1, midi channel 0 (first channel of the keyboard) to device 0, midi
 channel 9 (default drum channel of the sound module).
@@ -1215,6 +1261,7 @@ fnew mydrums                            # define filter "mydrums"
 fmap {any {1 0}} {any {0 9}}            # route dev/chan {1 0} to {0 9}
 </pre>
 
+<p>
 To test the filter, start performance mode using the
 ``<a href="#func_i">i</a>'' command.
 
@@ -1226,6 +1273,7 @@ To stop performance mode, use
 
 <h4><a name="section_6_3_3">6.3.3 Controller maps</a></h4>
 
+<p>
 The following example add a new rule to the above filter that maps the
 modulation wheel (controller 1) of the source channel (i.e. device 1,
 midi channel 0) to the expression controller (number 11) of the
@@ -1235,6 +1283,7 @@ destination channel (device 0, midi channel 9).
 fmap {ctl {1 0} 1} {ctl {0 9} 11}
 </pre>
 
+<p>
 Rules of the filter can be listed with the 
 <a href="#func_finfo">finfo</a>
 functions, which should display the list
@@ -1249,6 +1298,7 @@ of rules as follows:
 
 <h4><a name="section_6_3_4">6.3.4 Transpose</a></h4>
 
+<p>
 The following will transpose notes on ``{0 2}'' by 12 halftones:
 
 <pre>
@@ -1257,6 +1307,7 @@ fmap {any {1 0}} {any  {0 2}}                   # route {1 0} -&gt; {0 9}
 ftransp {any {0 2}} 12                          # transpose by 12 halftones
 </pre>
 
+<p>
 First we create the filter, and we add a ``default'' rule to map
 anything coming from ``{1 0}'' (i.e. the MIDI keyboard) to ``{0 2}''
 (the second channel of the synth).
@@ -1270,6 +1321,7 @@ rule always applies to events outgoing from the filter.
 
 <h4><a name="section_6_3_5">6.3.5 Keyboard splits</a></h4>
 
+<p>
 In the same way it is possible to create a keyboard-split with two
 key-rules and two channel-rules.
 The following example splits the
@@ -1295,6 +1347,7 @@ for more details.
 
 <h2><a name="time">7 Time structure</a></h2>
 
+<p>
 In midish, time is split in <i>measures</i>. Each measure
 is split in <i>beats</i> and each beat is split in
 <i>ticks</i>. The <i>tick</i> is the fundamental
@@ -1314,6 +1367,7 @@ by the <i>tempo</i>. By default midish uses:
 
 </ul>
 
+<p>
 From the musical point of view, a beat often corresponds to
 a quarter note, to an eighth note etc...
 
@@ -1324,6 +1378,7 @@ the time signature is 4/4.
 
 <h3><a name="section_7_1">7.1 Moving within the song</a></h3>
 
+<p>
 The following selects the current position in the song to
 measure number 3:
 
@@ -1331,6 +1386,7 @@ measure number 3:
 g 3
 </pre>
 
+<p>
 This will make
 ``<a href="#func_p">p</a>''
 and
@@ -1343,6 +1399,7 @@ the track starting at this position.
 
 <h3><a name="section_7_2">7.2 Metronome</a></h3>
 
+<p>
 In order to "hear" time, a metronome can be used.
 
 It has three modes:
@@ -1357,6 +1414,7 @@ It has three modes:
 
 </ul>
 
+<p>
 The
 ``<a href="#func_m">m</a>''
 command can be used to 
@@ -1368,6 +1426,7 @@ p               # start playback
 s               # stop
 </pre>
 
+<p>
 The metronome has two kind of click-sound:
 
 <ul>
@@ -1380,6 +1439,7 @@ low-click: on the other beats.
 
 </ul>
 
+<p>
 The click-sound can be configured by giving a couple
 of note-on events, as follows:
 
@@ -1387,12 +1447,14 @@ of note-on events, as follows:
 metrocf {non {0 9} 48 127} {non {0 9} 64 100}
 </pre>
 
+<p>
 this configures the high-click with note 48, velocity 127 on
 device 0, channel 9 and the low-click with note 64, velocity 100
 on device 0, channel 9.
 
 <h3><a name="section_7_3">7.3 Time signature changes</a></h3>
 
+<p>
 Time signature changes are achieved by inserting or
 deleting measures. 
 
@@ -1409,6 +1471,7 @@ p                       # test it, i.e. start playback
 s                       # stop playback
 </pre>
 
+<p>
 To suppress measure number 2 (the first 4/4 measure)
 
 <pre>
@@ -1445,12 +1508,14 @@ sel 16                  # select 16 measures
 mdup 0                  # copy them behind the selection
 </pre>
 
+<p>
 The parameter to <a href="#func_mdup">mdup</a> is the number
 of measures to leave between the the original and the point
 where the replica is inserted.
 
 <h3><a name="section_7_4">7.4 Tempo changes</a></h3>
 
+<p>
 Tempo changes are achieved simply by moving within
 the song and using the
 ``<a href="#func_t">t</a>'' command to change
@@ -1484,6 +1549,7 @@ print [msig]            # print what mtempo returned
 
 <h2><a name="track">8 Tracks</a></h2>
 
+<p>
 A track is a piece of music, namely an ordered in time list
 of MIDI events. In play mode, midish play simultaneously
 all defined tracks, in record-mode it plays all defined tracks
@@ -1505,6 +1571,7 @@ MIDI events from all devices are recorded as-is.
 
 <h3><a name="section_8_1">8.1 Recording a track without a filter</a></h3>
 
+<p>
 The following defines a track and record events
 as-is from all MIDI devices:
 
@@ -1514,6 +1581,7 @@ as-is from all MIDI devices:
 [0003:02]&gt; s                 # stop
 </pre>
 
+<p>
 tracks are played as follows:
 
 <pre>
@@ -1521,6 +1589,7 @@ tracks are played as follows:
 [0001:01]&gt; s                 # stop playback
 </pre>
 
+<p>
 However, with the above configuration this will not
 work as expected because events from the input
 keyboard (device number 1) will be recorded as-is and then
@@ -1529,6 +1598,7 @@ to the sound module (device number 0).
 
 <h3><a name="section_8_2">8.2 Recording a track with a filter</a></h3>
 
+<p>
 The following creates a filter and uses it to
 record to the above track:
 
@@ -1540,6 +1610,7 @@ record to the above track:
 [0001:03]&gt; s                                 # stop
 </pre>
 
+<p>
 This setup, is more suitable for multitracking. 
 
 The correct approach for multitracking is to create a filter for each
@@ -1548,6 +1619,7 @@ tracks per instrument.
 
 <h3><a name="section_8_3">8.3 Basics about editing tracks</a></h3>
 
+<p>
 Most track editing functions use the project context, i.e.
 a set of ``current values'':
 
@@ -1587,17 +1659,20 @@ select for processing events that would be outside the selection.
 
 </ul>
 
+<p>
 So editing tracks consists in modifying above parameters and issuing
 commands to process the current selection.
 
 <h3><a name="section_8_4">8.4 Copy, cut, insert</a></h3>
 
+<p>
 To clear the current selection of the current track:
 
 <pre>
 tclr
 </pre>
 
+<p>
 above command will clear only events matching the current 
 event type, which by defaults is set to ``any event''.
 
@@ -1608,6 +1683,7 @@ ev {ctl {} 7}
 tclr
 </pre>
 
+<p>
 see the <a href="#ev_evspec">event set</a> section for more details.
 
 If you don't plan to continue working only on controller number 7
@@ -1624,6 +1700,7 @@ sel 2                   # select 2 measures
 tcut                    # cut them
 </pre>
 
+<p>
 this command removes 2 measures of ``time'' from the current track;
 thus this will shift all measures following the current position by 2
 measures.
@@ -1637,6 +1714,7 @@ g 3
 tins 2
 </pre>
 
+<p>
 similarly, since this commands insert time, this will shift all
 measures following the current position by 2 measures.
 
@@ -1684,6 +1762,7 @@ mdup 0
 
 <h3><a name="section_8_5">8.5 Track quantization</a></h3>
 
+<p>
 A track can be quantized by rounding note-positions
 to the nearest exact position. The following
 will quantize the current selection of the current track
@@ -1694,6 +1773,7 @@ setq 4          # quarter note = 1/4-th of a whole
 tquant 75
 </pre>
 
+<p>
 The last arguments gives the percent of quantization.
 100% means full quantization and 0% leans no
 quantization at all. This is useful because full quantization
@@ -1701,6 +1781,7 @@ often sounds to regular especially on acoustic patches.
 
 <h3><a name="section_8_6">8.6 Checking a track</a></h3>
 
+<p>
 It is possible that a MIDI device transmits
 bogus MIDI data. The following scans the track
 and removes bogus notes
@@ -1711,12 +1792,14 @@ ct badtrack
 tcheck
 </pre>
 
+<p>
 This function can be useful to remove
 nested notes when a track is recorded twice (or more)
 without being erased.
 
 <h2><a name="frames">9 Frames, more about filtering and editing</a></h2>
 
+<p>
 In midish, MIDI events are packed into <i>frames</i>. For
 instance a note-on event followed by a note-off with the same
 note number constitute a <i>frame</i>. All filtering and
@@ -1728,6 +1811,7 @@ consistency of tracks and MIDI I/O streams.
 
 <h3><a name="section_9_1">9.1 Note frames</a></h3>
 
+<p>
 Note frames are made of a starting "non" event any optional
 "kat" events and the stopping "noff" event. In editing functions
 note frames are copied/moved/deleted as a whole; they are never
@@ -1745,6 +1829,7 @@ having nested notes.
 
 <h3><a name="section_9_2">9.2 Pitch bend frames</a></h3>
 
+<p>
 A pitch bend frame is made of "bend" events. It starts with
 a "bend" event whose value is different from the default value
 (i.e. different from 0x3FFF). It stops when the value reaches
@@ -1764,6 +1849,7 @@ frames.
 
 <h3><a name="ctl_frames">9.3 Controller frames</a></h3>
 
+<p>
 The way controller events are packed in a frame depend
 on the controller type. Currently the following
 controllers are supported:
@@ -1787,6 +1873,7 @@ in editing functions.
 
 </ul>
 
+<p>
 The user can specify for each controller number the desired
 behavior.
 The <a href="#func_ctlconf">ctlconf</a> function
@@ -1801,6 +1888,7 @@ For instance, following command:
 ctlconf expr 11 127
 </pre>
 
+<p>
 configures controller number 11 of type <i>frame</i> and with
 default value of 127. The controller name can be
 any identifier, it can be used for other functions to
@@ -1833,6 +1921,7 @@ together, they are single event frames.
 
 <h2><a name="sysex">10 System exclusive messages</a></h2>
 
+<p>
 Midish can send system exclusive messages
 to MIDI devices before starting performance mode.
 Typically, this feature can be used to change
@@ -1844,12 +1933,14 @@ named banks. To create a sysex bank named ``mybank'':
 xnew mybank
 </pre>
 
+<p>
 Then, messages can be added:
 
 <pre>
 xadd 0 {0xF0 0x7E 0x7F 0x09 0x01 0xF7}
 </pre>
 
+<p>
 This will store the "General-MIDI ON" messages into the
 bank. The second argument (here "0") is the device number
 to which the message will be sent when performance mode
@@ -1873,6 +1964,7 @@ cx mybank               # set current sysex bank
 r                       # start recording
 </pre>
 
+<p>
 The next time performance mode is entered, recorded
 sysex messages will be sent back to the device.
 
@@ -1883,12 +1975,14 @@ can be obtained as follows:
 xinfo
 </pre>
 
+<p>
 A bank can be cleared by:
 
 <pre>
 xrm {}
 </pre>
 
+<p>
 the second argument is a (empty) pattern, that matches
 any sysex message in the bank. The following will remove
 only sysex messages starting with 0xF0 0x7E 0x7F:
@@ -1897,6 +1991,7 @@ only sysex messages starting with 0xF0 0x7E 0x7F:
 xrm {0xF0 0x7E 0x7F}
 </pre>
 
+<p>
 Sysex messages recorded from any device can be configured
 to be sent to other devices. To change the device number
 of all messages to 1:
@@ -1905,6 +2000,7 @@ of all messages to 1:
 xsetd 1 {}
 </pre>
 
+<p>
 the second argument is an empty pattern, thus it matches
 any sysex message in the bank.
 
@@ -1917,6 +2013,7 @@ xsetd 1 {0xF0 0x7E 0x7F}
 
 <h2><a name="info">11 Obtaining information</a></h2>
 
+<p>
 The following functions gives some information
 about midish objects:
 
@@ -1976,17 +2073,20 @@ print [texists mytrack]
 print [xexists mysx]
 </pre>
 
+<p>
 this will print 1 if the corresponding object exists
 and 0 otherwise.
 
 <h2><a name="save">12 Saving and loading songs</a></h2>
 
+<p>
 A song can be saved into a file as follows:
 
 <pre>
 save "myfile"
 </pre>
 
+<p>
 In a similar way, the song can be load from a file
 as follows:
 
@@ -2002,6 +2102,7 @@ settings) are not saved.
 
 <h2><a name="export">13 Import/export standard MIDI files</a></h2>
 
+<p>
 Standard MIDI files type 0 or 1 can be imported. Each
 track in the standard MIDI file corresponds to a track in midish.
 Tracks are named ``trk00'', ``trk01'', ...
@@ -2018,6 +2119,7 @@ time signature changes
 
 </ul>
 
+<p>
 all meta-events are removed from the "voice" tracks and
 are moved into the midish's meta-track. Finally tracks
 are checked for anomalies. Example:
@@ -2043,6 +2145,7 @@ export "mysong.mid"
 
 <h2><a name="interpreter">14 The interpreter's language</a></h2>
 
+<p>
 Even to achieve some simple tasks with midish, it's
 sometimes necessary to write several long statements.  To
 make midish more usable, it suggested to use variables
@@ -2050,6 +2153,7 @@ and/or to define procedures, as follows.
 
 <h3><a name="section_14_1">14.1 Global variables</a></h3>
 
+<p>
 Variables can be used to store numbers, strings and
 references to tracks, channels and filters, like:
 
@@ -2058,12 +2162,14 @@ let x = 53              # store 53 into "x"
 print $x                # prints "53"
 </pre>
 
+<p>
 The ``let'' keyword is used to assign values to
 variables and the dollar sign (``$'') is used
 to obtain variable values.
 
 <h3><a name="section_14_2">14.2 Defining simple procedures</a></h3>
 
+<p>
 For instance, let
 us create a procedure named ``gmon'' that creates
 a sysex bank and stores a the standard sysex message
@@ -2076,6 +2182,7 @@ proc gmon {
 }
 </pre>
 
+<p>
 The ``proc'' keyword is followed by the procedure
 name ``gmon'' and then follows a list of statements between
 braces. 
@@ -2091,6 +2198,7 @@ proc gmon devnum {
 }
 </pre>
 
+<p>
 After the name of the procedure follows the argument names list
 that can be arbitrary identifiers. The value of an argument
 is obtained by preceding the variable name by the dollar
@@ -2108,6 +2216,7 @@ It will be automatically executed the next time you run midish.
 
 
 <h2><a name="changes">15 Changes</a></h2>
+
 <h3><a name="changes_02">15.1 Changes from release 0.1 to release 0.2</a></h3>
 
 <ul>
@@ -2329,6 +2438,7 @@ compatibility.
 Below is the list of new functions:
 
 <blockquote>
+<p>
 ci, co, geti, geto, cx, getx, setunit, getunit, goto, getpos, sel,
 getlen, setq, getq, fac, getfac, ct, gett, cf, getf, mute, unmute,
 getmute, ls, save, load, reset, export, import, idle, play, rec, stop,
@@ -2455,9 +2565,10 @@ Added <a href="#func_dmmctx">dmmctx</a> function.
 
 <h3><a name="section_16_1">16.1 Device attributes</a></h3>
 
+<p>
 The following table summarizes the device attributes:
 
-<p align="center">
+<p>
 
 <table border="1">
 
@@ -2507,9 +2618,10 @@ with 14-bit precision
 
 <h3><a name="section_16_2">16.2 Channel attributes</a></h3>
 
+<p>
 The following table summarizes the channel attributes:
 
-<p align="center">
+<p>
 
 <table border="1">
 
@@ -2542,9 +2654,10 @@ received to
 
 <h3><a name="section_16_3">16.3 Filter attributes</a></h3>
 
+<p>
 The following table summarizes the filter attributes:
 
-<p align="center">
+<p>
 
 <table border="1">
 
@@ -2571,9 +2684,10 @@ The following table summarizes the filter attributes:
 
 <h3><a name="section_16_4">16.4 Track attributes</a></h3>
 
+<p>
 The following table summarizes the track attributes:
 
-<p align="center">
+<p>
 
 <table border="1">
 
@@ -2607,9 +2721,10 @@ current filter, then is is recorded with the song's default filter.
 
 <h3><a name="section_16_5">16.5 Sysex attributes</a></h3>
 
+<p>
 The following table summarizes the sysex back attributes:
 
-<p align="center">
+<p>
 
 <table border="1">
 
@@ -2637,9 +2752,10 @@ number to which the message has to be sent.
 
 <h3><a name="section_16_6">16.6 Song attributes</a></h3>
 
+<p>
 The following table summarizes the song attributes:
 
-<p align="center">
+<p>
 
 <table border="1">
 
@@ -2765,6 +2881,7 @@ the track editing functions
 
 <h3><a name="section_17_1">17.1 Lexical structure</a></h3>
 
+<p>
 The input line is split into tokens:
 
 <ul>
@@ -2790,7 +2907,7 @@ numbers should be in decimal or hex format and may
 not exceed 2^31. Hex numbers are preceded
 by "0x", as in the C language. Examples:
 
-<p align="center">
+<p>
 
 <table border="1">
 
@@ -2834,6 +2951,7 @@ character.
 
 </ul>
 
+<p>
 Multiple lines ending with ``\'' are parsed as a
 single line. Anything else generates a ``bad token'' error.
 
@@ -2871,7 +2989,6 @@ let x = 123
 let y = 1 + 2 * (3 + x)
 </pre>
 
-<p>
 The left-hand side should be the name of
 a variable and the right hand side an
 expression (see the expression section).
@@ -2887,6 +3004,7 @@ if $i {
 }
 </pre>
 
+<p>
 the ``else'' and the second block are
 not mandatory. Note that since newline
 character is interpreted as a ``;'', the
@@ -2896,7 +3014,7 @@ keyword is true the first block is executed,
 otherwise the second one (if any) is executed. The
 expression is evaluated in the following way:
 
-<p align="center">
+<p>
 <table border="1">
 <tr>    <th>expression          <th>bool. value
 <tr>    <td>non-zero integer    <td>true
@@ -2918,6 +3036,7 @@ for i in {"bli" "bla" "blu"} {
 }
 </pre>
 
+<p>
 the block is executed for each value
 of the list to which ``$i'' is set.
 
@@ -2943,13 +3062,14 @@ exit
 
 <h3><a name="section_17_3">17.3 Expressions</a></h3>
 
+<p>
 An expression can be an arithmetic expression of constants,
 expressions, variable values, return values of
 function calls.
 
 The following constant types are supported:
 
-<p align="center">
+<p>
 
 <table border="1">
 
@@ -2975,9 +3095,10 @@ let i = 123             # puts 123 in i
 print $i                # prints the value of i
 </pre>
 
+<p>
 The following operators are recognized:
 
-<p align="center">
+<p>
 <table border="1">
 
 <tr>
@@ -3093,12 +3214,14 @@ Examples:
 2 * (3 + 4) + $x
 </pre>
 
+<p>
 is an usual integer arithmetic expression.
 
 <pre>
 [tlist]
 </pre>
 
+<p>
 is the returned value of the procedure
 ``<a href="#func_tlist">tlist</a>''.
 
@@ -3106,12 +3229,14 @@ is the returned value of the procedure
 12..56
 </pre>
 
+<p>
 is the range of integer between 12 and 65 (included).
 
 <pre>
 {"bla" 3 zer}
 </pre>
 
+<p>
 is a list containing the string ``"bla"'' the integer
 3 and the name ``zer''. A list is a set of
 expressions separated by spaces and enclosed between
@@ -3123,6 +3248,7 @@ braces, a more complicated example is:
 
 <h3><a name="section_17_4">17.4 Procedure definition</a></h3>
 
+<p>
 A procedure is defined with the keyword
 ``proc'' followed by the name of the procedure,
 the names of its arguments and a block containing
@@ -3135,6 +3261,7 @@ proc doubleprint x y {
 }
 </pre>
 
+<p>
 Arguments and variables defined within a procedure
 are local to that procedure
 and may shadow a global variable with the same
@@ -3689,6 +3816,7 @@ value, as follow:
 
 </ul>
 
+<p>
 The quantization step will be used by <a href="#func_tquant">tquant</a>
 function and also by all editing functions to optimize event
 selection. If the special ``nil'' value is specified as quantization
@@ -4379,6 +4507,7 @@ and ``val'' are integers in the range 0..16383.
 
 <h3><a name="section_21_1">21.1 Example - MIDI filtering</a></h3>
 
+<p>
 The following session show how to
 configure a keyboard split:
 
@@ -4406,6 +4535,7 @@ send EOF character (control-D) to quit
 [0000:00]&gt; save "piano-bass"
 </pre>
 
+<p>
 First we set the default input to device 1, channel 6, on
 which the keyboard is available.  Then we define 2
 named-channels ``bass'' on device 0, channel 5 and
@@ -4417,6 +4547,7 @@ transposed by -12 half-tones (one octave).
 
 <h3><a name="section_21_2">21.2 Example - recording a track</a></h3>
 
+<p>
 The following session show how to
 record a track.
 
@@ -4437,6 +4568,7 @@ send EOF character (control-D) to quit
 [0000:00]&gt;                                   # hit ^D to quit
 </pre>
 
+<p>
 first, we set the default input channel to ``{1 0}'' (default channel
 of the keyboard).
 
@@ -4451,6 +4583,7 @@ start playback and we save the song into a file.
 
 <h2><a name="section_22">22 Thanks</a></h2>
 
+<p>
 Many thanks to all who contributed (new features, bug fixes, bug
 reports, packaging efforts and other improvements):
 
