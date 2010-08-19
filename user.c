@@ -1129,6 +1129,8 @@ user_mainloop(void)
 	 */
 	if (!user_flag_batch) {
 		exec_runrcfile(exec);
+		if (mididev_list == NULL)
+			cons_err("Warning, no MIDI devices configured.");
 	}
 
 	/*
