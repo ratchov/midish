@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2008 Willem van Engen <wvengen@stack.nl>
- * Copyright (c) 2003-2007 Alexandre Ratchov <alex@caoua.org>
+ * Copyright (c) 2003-2010 Alexandre Ratchov <alex@caoua.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
