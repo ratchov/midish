@@ -88,7 +88,7 @@ cons_putpos(unsigned measure, unsigned beat, unsigned tic)
 
 /*
  * follows routines that report user non-fatal errors please use them
- * instead of dbg_xxx (the later are only for debugging)
+ * instead of dbg_xxx (the latter are only for debugging)
  */
 
 void
