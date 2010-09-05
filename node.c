@@ -39,6 +39,8 @@
 #include "node.h"
 #include "exec.h"
 #include "cons.h"
+#include "user.h"
+#include "textio.h"
 
 struct node *
 node_new(struct node_vmt *vmt, struct data *data)
@@ -301,6 +303,10 @@ node_exec_ignore(struct node *o, struct exec *x, struct data **r)
 	result = node_exec(o->list, x, r);
 	if (result == RESULT_ERR || result == RESULT_EXIT) {
 		return result;
+	}
+	if (*r != NULL && (*r)->type != DATA_NIL) {
+		data_print(*r);
+		textout_putstr(tout, "\n");
 	}
 	data_delete(*r);
 	*r = NULL;

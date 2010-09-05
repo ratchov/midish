@@ -102,7 +102,8 @@ mixout.o:	mixout.c dbg.h ev.h defs.h filt.h pool.h mux.h timo.h \
 mux.o:		mux.c dbg.h ev.h defs.h cons.h mux.h mididev.h sysex.h \
 		timo.h state.h conv.h norm.h mixout.h
 name.o:		name.c dbg.h name.h str.h
-node.o:		node.c dbg.h str.h data.h node.h exec.h name.h cons.h
+node.o:		node.c dbg.h str.h data.h node.h exec.h name.h cons.h \
+		user.h textio.h
 norm.o:		norm.c dbg.h ev.h defs.h norm.h pool.h mux.h filt.h \
 		mixout.h state.h timo.h
 parse.o:	parse.c dbg.h textio.h lex.h data.h parse.h node.h \
