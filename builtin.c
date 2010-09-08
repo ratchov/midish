@@ -1828,7 +1828,7 @@ blt_tinfo(struct exec *o, struct data **r)
 	struct songtrk *t;
 	struct seqptr *mp, *tp;
 	struct state *st;
-	unsigned len, count, count_next, tpb, bpm;
+	unsigned len, count, count_next, tpb, bpm, m;
 
 	song_getcurtrk(usong, &t);
 	if (t == NULL) {
@@ -1839,6 +1839,7 @@ blt_tinfo(struct exec *o, struct data **r)
 	textout_shiftright(tout);
 	textout_indent(tout);
 
+	m = 0;
 	count_next = 0;
 	tp = seqptr_new(&t->track);
 	mp = seqptr_new(&usong->meta);
@@ -1873,16 +1874,21 @@ blt_tinfo(struct exec *o, struct data **r)
 				}
 	                }
 		}
-		textout_putlong(tout, count);
-		textout_putstr(tout, " ");
-		if (len > 0) {
-			if (len < usong->curquant / 2) {
-				textout_putlong(tout, count_next);
-				textout_putstr(tout, " ");
+		if (m >= usong->curpos &&
+		    m < usong->curpos + usong->curlen) {
+			textout_putlong(tout, count);
+			textout_putstr(tout, " ");
+			if (len > 0) {
+				if (len < usong->curquant / 2) {
+					textout_putlong(tout, count_next);
+					textout_putstr(tout, " ");
+				}
 			}
-			break;
-		}
+		}		
+		if (len > 0)
+			break;		
 		(void)seqptr_skip(mp, bpm * tpb);
+		m++;
 	}
 	seqptr_del(mp);
 	seqptr_del(tp);
