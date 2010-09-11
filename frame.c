@@ -741,7 +741,7 @@ track_move(struct track *src, unsigned start, unsigned len,
 	 */
 	if (blank) {
 		for (st = slist.first; st != NULL; st = st->next) {
-			if (state_inspec(st, es) &&
+			if (!EV_ISNOTE(&st->ev) && state_inspec(st, es) &&
 			    seqptr_cancel(sp, st))
 				st->tag &= ~TAG_KEEP;
 		}
@@ -779,7 +779,7 @@ track_move(struct track *src, unsigned start, unsigned len,
 	 */
 	if (copy) {
 		for (st = slist.first; st != NULL; st = st->next) {
-			if (!state_inspec(st, es))
+			if (EV_ISNOTE(&st->ev) || !state_inspec(st, es))
 				continue;
 			if (!(st->tag & TAG_COPY) && seqptr_restore(dp, st)) {
 				st->tag |= TAG_COPY;
