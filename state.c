@@ -192,11 +192,9 @@ state_inspec(struct state *st, struct evspec *spec)
 	case EVSPEC_ANY:
 		goto ch;
 	case EVSPEC_NOTE:
-		if (!(st->phase & EV_PHASE_FIRST)) {
-			dbg_puts("state_inspec: not first\n");
-			dbg_panic();
-		}
-		if (st->ev.cmd == EV_NON) {
+		if (st->ev.cmd == EV_NON ||
+		    st->ev.cmd == EV_KAT ||
+		    st->ev.cmd == EV_NOFF) {
 			goto v0;
 		}
 		break;
