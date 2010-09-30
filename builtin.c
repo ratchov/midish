@@ -2053,11 +2053,19 @@ blt_cren(struct exec *o, struct data **r, int input)
 		return 0;
 	}
 	if (song_chanlookup(usong, name, input)) {
-		cons_errss(o->procname, name, "name already in use");
+		cons_errss(o->procname, name, "channel name already in use");
+		return 0;
+	}
+	if (c->link && song_filtlookup(usong, name)) {
+		cons_errss(o->procname, name, "filt name already in use");
 		return 0;
 	}
 	str_delete(c->name.str);
 	c->name.str = str_new(name);
+	if (c->link) {
+		str_delete(c->link->name.str);
+		c->link->name.str = str_new(name);
+	}		
 	return 1;
 }
 
@@ -2325,11 +2333,19 @@ blt_fren(struct exec *o, struct data **r)
 		return 0;
 	}
 	if (song_filtlookup(usong, name)) {
-		cons_errss(o->procname, name, "already in use");
+		cons_errss(o->procname, name, "filt name already in use");
+		return 0;
+	}
+	if (f->link && song_chanlookup(usong, name, 0)) {
+		cons_errss(o->procname, name, "chan name already in use");
 		return 0;
 	}
 	str_delete(f->name.str);
 	f->name.str = str_new(name);
+	if (f->link) {
+		str_delete(f->link->name.str);
+		f->link->name.str = str_new(name);
+	}		
 	return 1;
 }
 
