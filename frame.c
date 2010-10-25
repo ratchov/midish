@@ -1543,7 +1543,7 @@ track_evmap(struct track *src, unsigned start, unsigned len,
 
 	/*
 	 * go to t start position and untag all frames
-	 * (tagged = will be transposed)
+	 * (tagged = will be mapped)
 	 */
 	(void)seqptr_skip(sp, start);
 	statelist_dup(&slist, &sp->statelist);
@@ -1554,7 +1554,7 @@ track_evmap(struct track *src, unsigned start, unsigned len,
 	tic = start;
 
 	/*
-	 * go ahead and copy all events to transpose during 'len' tics,
+	 * go ahead and copy all events to map during 'len' tics,
 	 */
 	for (;;) {
 		delta = seqptr_ticdel(sp, len, &slist);
@@ -1567,8 +1567,7 @@ track_evmap(struct track *src, unsigned start, unsigned len,
 		if (st == NULL)
 			break;
 		if (st->phase & EV_PHASE_FIRST) {
-			if (EV_ISNOTE(&st->ev) && state_inspec(st, es) &&
-			    state_inspec(st, from))
+			if (state_inspec(st, es) && state_inspec(st, from))
 				st->tag = 1;
 			else
 				st->tag = 0;
@@ -1582,7 +1581,7 @@ track_evmap(struct track *src, unsigned start, unsigned len,
 	}
 
 	/*
-	 * finish transposed (tagged) frames
+	 * finish mapped (tagged) frames
 	 */
 	for (;;) {
 		delta = seqptr_ticdel(sp, ~0U, &slist);
