@@ -21,18 +21,17 @@ unset readline_lib		# path to readline library
 unset readline_include		# path to readline header files
 
 #
-# guess if we want alsa devices support
+# guess OS-specific parameters
 #
-if [ `uname` = Linux ]; then
-	alsa=yes
-fi
-
-#
-# guess if we want sndio devices support
-#
-if [ `uname` = OpenBSD ]; then
-	sndio=yes
-fi
+case `uname` in
+	Linux)
+		alsa=yes
+		ldadd="-lrt"
+		;;
+	OpenBSD)
+		sndio=yes
+		;;
+esac
 
 #
 # guess readline(3) parameters
