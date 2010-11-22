@@ -71,29 +71,4 @@ void filt_vcurve(struct filt *, struct evspec *, int);
 
 extern unsigned filt_debug;
 
-void filt_conf_devdrop(struct filt *, unsigned);
-void filt_conf_nodevdrop(struct filt *, unsigned);
-void filt_conf_devmap(struct filt *, unsigned, unsigned);
-void filt_conf_nodevmap(struct filt *, unsigned);
-void filt_conf_chandrop(struct filt *, unsigned, unsigned);
-void filt_conf_nochandrop(struct filt *, unsigned, unsigned);
-void filt_conf_chanmap(struct filt *, unsigned, unsigned, unsigned, unsigned);
-void filt_conf_nochanmap(struct filt *, unsigned, unsigned );
-void filt_conf_ctldrop(struct filt *, unsigned, unsigned, unsigned);
-void filt_conf_noctldrop(struct filt *, unsigned, unsigned, unsigned);
-void filt_conf_ctlmap(struct filt *, unsigned, unsigned, unsigned, unsigned, unsigned, unsigned);
-void filt_conf_noctlmap(struct filt *, unsigned, unsigned, unsigned);
-void filt_conf_keydrop(struct filt *, unsigned, unsigned, unsigned, unsigned);
-void filt_conf_nokeydrop(struct filt *, unsigned, unsigned, unsigned, unsigned);
-void filt_conf_keymap(struct filt *, unsigned, unsigned, unsigned, unsigned, unsigned, unsigned, int);
-void filt_conf_nokeymap(struct filt *, unsigned, unsigned, unsigned, unsigned);
-void filt_conf_chgich(struct filt *, unsigned, unsigned, unsigned, unsigned);
-void filt_conf_chgidev(struct filt *, unsigned, unsigned);
-void filt_conf_swapich(struct filt *, unsigned, unsigned, unsigned, unsigned);
-void filt_conf_swapidev(struct filt *, unsigned, unsigned);
-void filt_conf_chgoch(struct filt *, unsigned, unsigned, unsigned, unsigned);
-void filt_conf_chgodev(struct filt *, unsigned, unsigned);
-void filt_conf_swapoch(struct filt *, unsigned, unsigned, unsigned, unsigned);
-void filt_conf_swapodev(struct filt *, unsigned, unsigned);
-
 #endif /* MIDISH_FILT_H */
