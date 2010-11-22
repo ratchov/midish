@@ -343,9 +343,8 @@ filt_mapnew(struct filt *f, struct evspec *from, struct evspec *to)
 	filtnode_mkdst(s, to);
 }
 
-/* XXX: make this a filtnode_detach() */
 struct filtnode *
-filt_movelist(struct filt *o)
+filt_detach(struct filt *o)
 {
 	struct filtnode *list, *s;
 
@@ -364,7 +363,7 @@ filt_chgin(struct filt *o, struct evspec *from, struct evspec *to, int swap)
 	struct filtnode *s, *list;
 	struct filtnode *d;
 
-	list = filt_movelist(o);
+	list = filt_detach(o);
 	while ((s = list) != NULL) {
 		if (evspec_in(&s->es, from)) {
 			evspec_map(&s->es, from, to, &newspec);
@@ -395,7 +394,7 @@ filt_chgout(struct filt *o, struct evspec *from, struct evspec *to, int swap)
 	struct filtnode *s, *list;
 	struct filtnode *d;
 
-	list = filt_movelist(o);
+	list = filt_detach(o);
 	while ((s = list) != NULL) {
 		while ((d = s->dstlist) != NULL) {
 			if (evspec_in(&d->es, from)) {
