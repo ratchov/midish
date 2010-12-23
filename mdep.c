@@ -151,7 +151,7 @@ mux_mdep_wait(void)
 	struct pollfd *pfd, pfds[MAXFDS];
 	struct mididev *dev;
 	static unsigned char midibuf[MIDI_BUFSIZE];
-	long delta_nsec;
+	long long delta_nsec;
 
 	nfds = 0;
 	if (cons_index == cons_len && !cons_eof) {
@@ -214,15 +214,23 @@ mux_mdep_wait(void)
 		 * time we called poll(). Warning: because of system
 		 * clock changes this value can be negative.
 		 */
-		delta_nsec = 1000000000L * (ts.tv_sec - ts_last.tv_sec);
+		delta_nsec = 1000000000LL * (ts.tv_sec - ts_last.tv_sec);
 		delta_nsec += ts.tv_nsec - ts_last.tv_nsec;
 		if (delta_nsec > 0) {
 			ts_last = ts;
-			/*
-			 * update the current position,
-			 * (time unit = 24th of microsecond
-			 */
-			mux_timercb(24 * delta_nsec / 1000);
+			if (delta_nsec < 1000000000LL) {
+				/*
+				 * update the current position,
+				 * (time unit = 24th of microsecond)
+				 */
+				mux_timercb(24 * delta_nsec / 1000);
+			} else {
+				/*
+				 * delta is too large (eg. the program was
+				 * suspended and then resumed), just ignore it
+				 */
+				dbg_puts("ignored huge clock delta\n");
+			}
 		}
 	}
 	dbg_flush();
