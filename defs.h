@@ -47,7 +47,12 @@
  * this number mus be multiple of all supported quarter frame frequencies
  * ie 96, 100, 120
  */
-#define MTC_SEC 2400
+#define MTC_SEC		2400
+
+/*
+ * MTC counters wrap every 24 hours
+ */
+#define MTC_PERIOD	(24 * 60 * 60 * MTC_SEC)
 
 /*
  * special meaning controller numbers

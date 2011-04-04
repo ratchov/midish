@@ -150,6 +150,7 @@ void
 mtc_tick(struct mtc *mtc, unsigned data)
 {
 	unsigned pos;
+	int delta;
 
 	if (mtc->state == MTC_STOP)
 		return;
@@ -160,6 +161,9 @@ mtc_tick(struct mtc *mtc, unsigned data)
 	}
 	if (mtc->state == MTC_RUN) {
 		mtc->pos += mtc->tps;
+		if (mtc->pos >= MTC_PERIOD)
+			pos -= MTC_PERIOD;
+		mtc->pos %= 24 * 3600 * MTC_SEC;
 		mux_mtctick(mtc->tps * (24000000 / MTC_SEC));
 	} else {
 		mtc->state = MTC_RUN;
@@ -174,13 +178,19 @@ mtc_tick(struct mtc *mtc, unsigned data)
 	    MTC_SEC * 60 *   (mtc->nibble[4] +  (mtc->nibble[5]      << 4)) +
 	    MTC_SEC * 3600 * (mtc->nibble[6] + ((mtc->nibble[7] & 1) << 4));
 	pos += 7 * mtc->tps;
+	if (pos >= MTC_PERIOD)
+		pos -= MTC_PERIOD;
 	if (pos != mtc->pos) {
+		delta = (int)pos - (int)mtc->pos;
+		if (delta < MTC_PERIOD / 2)
+			delta += MTC_PERIOD;
+		if (delta >= MTC_PERIOD / 2)
+			delta -= MTC_PERIOD;
 		dbg_puts("mtc_tick: went off by ");
-		dbg_puti((int)pos - (int)mtc->pos);
+		dbg_puti(delta);
 		dbg_puts(" ticks\n");
-		if (pos > mtc->pos &&
-		    pos < mtc->pos + MTC_SEC / 6) {
-			mux_mtctick(pos - mtc->pos);
+		if (delta > 0 && delta < MTC_SEC / 6) {
+			mux_mtctick(delta);
 			mtc->pos = pos;
 		} else {
 			mtc->state = MTC_STOP;
