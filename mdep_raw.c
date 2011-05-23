@@ -27,7 +27,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
+#ifdef USE_RAW
 #include <sys/types.h>
 #include <unistd.h>
 #include <fcntl.h>
@@ -176,3 +176,4 @@ raw_revents(struct mididev *addr, struct pollfd *pfd)
 {
 	return pfd->revents;
 }
+#endif

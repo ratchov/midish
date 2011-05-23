@@ -127,19 +127,17 @@ datadir="${datadir:-$prefix/share}"
 mandir="${mandir:-$prefix/man}"
 
 #
-# add parameters for ALSA support
-#
-if [ $alsa = yes ]; then
-	defs="$defs -DUSE_ALSA"
-	ldadd="$ldadd -lasound"
-fi
-
-#
-# add parameters for libsndio support
+# add parameters specific to backends
 #
 if [ $sndio = yes ]; then
 	defs="$defs -DUSE_SNDIO"
 	ldadd="$ldadd -lsndio"
+	alsa=no
+elif [ $alsa = yes ]; then
+	defs="$defs -DUSE_ALSA"
+	ldadd="$ldadd -lasound"	
+else
+	defs="$defs -DUSE_RAW"
 fi
 
 #
