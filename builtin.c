@@ -2070,7 +2070,9 @@ blt_oren(struct exec *o, struct data **r)
 unsigned
 blt_cset(struct exec *o, struct data **r, int input)
 {
+	struct evspec from, to;
 	struct songchan *c, *i;
+	struct songfilt *f;
 	unsigned dev, ch;
 
 	song_getcurchan(usong, &c, input);
@@ -2089,8 +2091,24 @@ blt_cset(struct exec *o, struct data **r, int input)
 	if (!song_try_chan(usong, c, input)) {
 		return 0;
 	}
+	SONG_FOREACH_FILT(usong, f) {
+		if (!song_try_filt(usong, f))
+			return 0;
+	}
+	evspec_reset(&from);
+	from.dev_min = from.dev_max = c->dev;
+	from.ch_min = from.ch_max = c->ch;	
 	c->dev = dev;
 	c->ch = ch;
+	evspec_reset(&to);
+	to.dev_min = to.dev_max = c->dev;
+	to.ch_min = to.ch_max = c->ch;
+	SONG_FOREACH_FILT(usong, f) {
+		if (input)
+			filt_chgin(&f->filt, &from, &to, 0);
+		else
+			filt_chgout(&f->filt, &from, &to, 0);
+	}
 	track_setchan(&c->conf, dev, ch);
 	return 1;
 }

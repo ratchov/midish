@@ -2561,6 +2561,10 @@ make <a href="#func_tinfo">tinfo</a> display only current selection
 <li>
 switch to ISC <a href="#copyright">license</a>
 
+<li>
+make <a href="#func_iset">iset</a> and <a href="#func_oset">oset</a>
+update all filters to use the new setting.
+
 </ul>
 
 <h2><a name="attributes">16 Project attributes</a></h2>
@@ -3459,6 +3463,9 @@ and assigned the given device and MIDI channel.
 
 <dd>
 set the device/channel pair of the current channel.
+All filters are updated to use the new channel setting
+as if the appropriate <a href="#func_fchin">fchin</a>
+function was invoked for each filter.
 
 <dt><a name="func_idel">idel</a>
 
@@ -3523,6 +3530,9 @@ defaut it maps all inputs to the newly created output channel.
 
 <dd>
 set the device/channel pair of the current channel.
+All filters are updated to use the new channel setting
+as if the appropriate <a href="#func_fchout">fchout</a>
+function was invoked for each filter.
 
 <dt><a name="func_odel">odel</a>
 
