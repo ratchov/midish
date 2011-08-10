@@ -743,12 +743,10 @@ blt_save(struct exec *o, struct data **r)
 {
 	char *filename;
 
-	if (!song_try_mode(usong, 0)) {
-		return 0;
-	}
 	if (!exec_lookupstring(o, "filename", &filename)) {
 		return 0;
 	}
+	song_stop(usong);
 	song_save(usong, filename);
 	return 1;
 }
@@ -759,12 +757,10 @@ blt_load(struct exec *o, struct data **r)
 	char *filename;
 	unsigned res;
 
-	if (!song_try_mode(usong, 0)) {
-		return 0;
-	}
 	if (!exec_lookupstring(o, "filename", &filename)) {
 		return 0;
 	}
+	song_stop(usong);
 	song_done(usong);
 	song_init(usong);
 	res = song_load(usong, filename);
@@ -775,9 +771,7 @@ blt_load(struct exec *o, struct data **r)
 unsigned
 blt_reset(struct exec *o, struct data **r)
 {
-	if (!song_try_mode(usong, 0)) {
-		return 0;
-	}
+	song_stop(usong);
 	song_done(usong);
 	song_init(usong);
 	cons_putpos(usong->curpos, 0, 0);
@@ -789,12 +783,10 @@ blt_export(struct exec *o, struct data **r)
 {
 	char *filename;
 
-	if (!song_try_mode(usong, 0)) {
-		return 0;
-	}
 	if (!exec_lookupstring(o, "filename", &filename)) {
 		return 0;
 	}
+	song_stop(usong);
 	return song_exportsmf(usong, filename);
 }
 
@@ -804,9 +796,6 @@ blt_import(struct exec *o, struct data **r)
 	char *filename;
 	struct song *sng;
 
-	if (!song_try_mode(usong, 0)) {
-		return 0;
-	}
 	if (!exec_lookupstring(o, "filename", &filename)) {
 		return 0;
 	}
@@ -814,6 +803,7 @@ blt_import(struct exec *o, struct data **r)
 	if (sng == NULL) {
 		return 0;
 	}
+	song_stop(usong);
 	song_delete(usong);
 	usong = sng;
 	cons_putpos(usong->curpos, 0, 0);
