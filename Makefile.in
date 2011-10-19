@@ -90,8 +90,8 @@ main.o:		main.c dbg.h str.h cons.h ev.h defs.h mux.h track.h \
 		timo.h user.h mididev.h textio.h
 mdep.o:		mdep.c defs.h mux.h mididev.h cons.h user.h exec.h \
 		name.h str.h dbg.h
-mdep_raw.o:	mdep_raw.c dbg.h cons.h mididev.h str.h
 mdep_alsa.o:	mdep_alsa.c dbg.h mididev.h str.h
+mdep_raw.o:	mdep_raw.c dbg.h cons.h mididev.h str.h
 mdep_sndio.o:	mdep_sndio.c dbg.h cons.h mididev.h str.h
 metro.o:	metro.c dbg.h mux.h metro.h ev.h defs.h timo.h song.h \
 		name.h str.h track.h frame.h state.h filt.h sysex.h
@@ -111,7 +111,7 @@ parse.o:	parse.c dbg.h textio.h lex.h data.h parse.h node.h \
 pool.o:		pool.c dbg.h pool.h
 saveload.o:	saveload.c dbg.h name.h str.h song.h track.h ev.h defs.h \
 		frame.h state.h filt.h sysex.h metro.h timo.h parse.h \
-		lex.h textio.h saveload.h conv.h
+		lex.h textio.h saveload.h conv.h version.h
 smf.o:		smf.c dbg.h sysex.h track.h ev.h defs.h song.h name.h \
 		str.h frame.h state.h filt.h metro.h timo.h smf.h cons.h \
 		conv.h

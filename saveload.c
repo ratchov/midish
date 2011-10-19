@@ -23,6 +23,7 @@
 #include "saveload.h"
 #include "frame.h"
 #include "conv.h"
+#include "version.h"
 
 /* ------------------------------------------------------------------- */
 
@@ -1913,7 +1914,7 @@ song_save(struct song *o, char *name)
 	}
 	textout_putstr(f,
 	    "#\n"
-	    "# song file of " VERSION "\n"
+	    "# " VERSION "\n"
 	    "#\n"
 	    );
 	song_output(o, f);

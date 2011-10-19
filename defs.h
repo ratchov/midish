@@ -18,11 +18,6 @@
 #define MIDISH_DEFAULT_H
 
 /*
- * version string for newly created files
- */
-#define VERSION "midish version 1.1"
-
-/*
  * convert tempo (beats per minute) to tic length (number of 24-th of
  * microsecond)
  */
