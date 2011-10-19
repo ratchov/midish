@@ -75,7 +75,7 @@ rmidish:	rmidish.c
 builtin.o:	builtin.c dbg.h defs.h node.h exec.h name.h str.h data.h \
 		cons.h frame.h state.h ev.h song.h track.h filt.h \
 		sysex.h metro.h timo.h user.h smf.h saveload.h textio.h \
-		mux.h mididev.h norm.h builtin.h
+		mux.h mididev.h norm.h builtin.h version.h
 cons.o:		cons.c dbg.h textio.h cons.h user.h
 conv.o:		conv.c dbg.h state.h ev.h defs.h conv.h
 data.o:		data.c dbg.h str.h cons.h data.h

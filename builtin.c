@@ -30,6 +30,14 @@
 #include "mididev.h"
 #include "norm.h"
 #include "builtin.h"
+#include "version.h"
+
+unsigned
+blt_version(struct exec *o, struct data **r)
+{
+	cons_err(VERSION);
+	return 1;
+}
 
 unsigned
 blt_panic(struct exec *o, struct data **r)

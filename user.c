@@ -870,6 +870,7 @@ user_mainloop(void)
 	exec_newbuiltin(exec, "debug", blt_debug,
 			name_newarg("flag",
 			name_newarg("value", NULL)));
+	exec_newbuiltin(exec, "version", blt_version, NULL);
 	exec_newbuiltin(exec, "panic", blt_panic, NULL);
 	exec_newbuiltin(exec, "info", user_func_info, NULL);
 

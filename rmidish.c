@@ -271,6 +271,7 @@ char *builtins[] = {
 	 * generated with:
 	 * grep blt_ builtin.h |sed -es/^.*blt_/\"/ -es/\(.*$/\",/ |fmt
 	 */
+	"version",
 	"panic", "debug", "exec", "print", "err", "h", "ev", "ci", "geti",
 	"co", "geto", "cx", "getx", "setunit", "getunit", "goto", "getpos",
 	"sel", "getlen", "setq", "getq", "fac", "getfac", "ct", "gett",

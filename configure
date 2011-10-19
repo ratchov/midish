@@ -175,7 +175,7 @@ sed \
 < Makefile.in >Makefile
 
 if [ ! -e version.h ]; then
-	echo "#define VERSION \"midish\"" >version.h
+	echo "#define VERSION \"midish (unoffical release)\"" >version.h
 fi
 
 echo
