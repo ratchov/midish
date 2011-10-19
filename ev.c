@@ -403,13 +403,15 @@ evspec_matchev(struct evspec *es, struct ev *ev)
 			return 0;
 	}
 	if (evinfo[es->cmd].nranges > 0 &&
-	    evinfo[ev->cmd].nranges > 0) {
+	    evinfo[ev->cmd].nranges > 0 &&
+	    ev->v0 != EV_UNDEF) {
 		if (ev->v0 < es->v0_min ||
 		    ev->v0 > es->v0_max)
 			return 0;
 	}
 	if (evinfo[es->cmd].nranges > 1 &&
-	    evinfo[ev->cmd].nranges > 1) {
+	    evinfo[ev->cmd].nranges > 1 &&
+	    ev->v1 != EV_UNDEF) {
 		if (ev->v1 < es->v1_min ||
 		    ev->v1 > es->v1_max)
 			return 0;
