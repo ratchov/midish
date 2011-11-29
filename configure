@@ -4,45 +4,35 @@
 # defaults
 #
 prefix=/usr/local		# where to install midish
-readline=no			# do we have readline
 alsa=no				# do we want alsa support ?
 sndio=no			# do we want sndio support ?
 rmidish=yes			# do we want to build rmidish ?
 progs=midish			# programs to build
-unset vars			# variables definitions passed as-is
-unset cflags			# compilation flags
-unset ldflags			# linking flags
-unset bindir			# path where to install binaries
-unset datadir			# path where to install doc and examples
-unset mandir			# path where to install man pages
-unset defs			# no extra #defines
-unset ldadd			# no extra libraries (-l options)
-unset readline_lib		# path to readline library
-unset readline_include		# path to readline header files
+vars=				# variables definitions passed as-is
+bindir=				# path where to install binaries
+datadir=			# path where to install doc and examples
+mandir=				# path where to install man pages
+defs=				# no extra #defines
+lib=				# path to readline library
+include=			# path to readline header files
+rt_ldadd=			# extra -l's for posix real-time extensions
+readline_ldadd=-lreadline	# extra -l's for GNU readline(3)
+sndio_ldadd=			# extra -l's for sndio(7)
+alsa_ldadd=			# extra -l's for ALSA
 
 #
-# guess OS-specific parameters
+# few OS-specific tweaks
 #
 case `uname` in
 	Linux)
 		alsa=yes
-		ldadd="-lrt"
+		rt_ldadd="-lrt"
 		;;
 	OpenBSD)
 		sndio=yes
+		readline_ldadd="$readline_ldadd -lncurses"
 		;;
 esac
-
-#
-# guess readline(3) parameters
-#
-if [ -e /usr/include/readline/readline.h ]; then
-	readline=yes
-elif [ -e /usr/local/include/readline/readline.h ]; then
-	readline=yes
-	readline_include=/usr/local/include
-	readline_lib=/usr/local/lib
-fi
 
 #
 # display help screeen
@@ -54,8 +44,6 @@ Usage: configure [options]
 --bindir=DIR			install executables in DIR [\$prefix/bin]
 --datadir=DIR			install read-only data in DIR [\$prefix/share]
 --mandir=DIR			install man pages in DIR [\$prefix/man]
---readline-lib=DIR		path to readline library
---readline-include=DIR		path to readline header files
 --enable-alsa			enable alsa sequencer backend [$alsa]
 --disable-alsa			disable alsa sequencer backend
 --enable-sndio			enable libsndio backend [$sndio]
@@ -86,14 +74,6 @@ for i; do
 	--mandir=*)
 		mandir="${i#--mandir=}"
 		shift;;
-	--readline-lib=*)
-		readline=yes
-		readline_lib="${i#--readline-lib=}"
-		shift;;
-	--readline-include=*)
-		readline=yes
-		readline_include="${i#--readline-include=}"
-		shift;;
 	--enable-alsa)
 		alsa=yes
 		shift;;
@@ -113,7 +93,7 @@ for i; do
 		rmidish=no
 		shift;;
 	CC=*|CFLAGS=*|LDFLAGS=*)
-		vars="${vars+$vars$nl}$i"
+		vars="$vars$i$nl"
 		shift;;
 	*)
 		help
@@ -131,47 +111,36 @@ mandir="${mandir:-$prefix/man}"
 #
 if [ $sndio = yes ]; then
 	defs="$defs -DUSE_SNDIO"
-	ldadd="$ldadd -lsndio"
+	sndio_ldadd="-lsndio"
 	alsa=no
 elif [ $alsa = yes ]; then
 	defs="$defs -DUSE_ALSA"
-	ldadd="$ldadd -lasound"	
+	alsa_ldadd="-lasound"
 else
 	defs="$defs -DUSE_RAW"
 fi
 
 #
-# add rmidish front-end if readline is present
+# add rmidish front-end if selected
 #
 if [ $rmidish = yes ]; then
-	if [ $readline != yes ]; then
-		echo "Can't build rmidish without readline library"
-		exit 1
-	fi
 	progs="$progs rmidish"
 fi
-
-#
-# if variables defined, then insert a comment
-#
-vars=${vars+"\\
-# \\
-# the following were passed as arguments to configure script\\
-# \\
-$vars\\
-"}
 
 echo "configure: creating Makefile"
 sed \
 -e "s:@bindir@:$bindir:" \
 -e "s:@datadir@:$datadir:" \
 -e "s:@mandir@:$mandir:" \
--e "s:@readline_lib@:${readline_lib+-L}$readline_lib:" \
--e "s:@readline_include@:${readline_include+-I}$readline_include:" \
 -e "s:@defs@:$defs:" \
--e "s:@ldadd@:$ldadd:" \
+-e "s:@include@:$include:" \
+-e "s:@lib@:$lib:" \
+-e "s:@rt_ldadd@:$rt_ldadd:" \
+-e "s:@readline_ldadd@:$readline_ldadd:" \
+-e "s:@sndio_ldadd@:$sndio_ldadd:" \
+-e "s:@alsa_ldadd@:$alsa_ldadd:" \
 -e "s:@progs@:$progs:" \
--e "s:@vars@:${vars}:" \
+-e "s:@vars@:$vars:" \
 < Makefile.in >Makefile
 
 if [ ! -e version.h ]; then
@@ -185,8 +154,8 @@ echo "mandir................... $mandir"
 echo "alsa..................... $alsa"
 echo "sndio.................... $sndio"
 echo "rmidish.................. $rmidish"
-echo "readline-lib............. ${readline_lib-default}"
-echo "readline-include......... ${readline_include-default}"
 echo
 echo "Do \"make && make install\" to compile and install midish"
 echo
+
+

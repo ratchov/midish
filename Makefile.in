@@ -1,17 +1,17 @@
 #
-# parameters for the GNU readline(3) library, used to
-# build rmidish (front-end to midish)
+# extra -l options for respective libraries
 #
-READLINE_INCLUDE = @readline_include@	# extra includes path (-I options)
-READLINE_LIB = @readline_lib@		# extra libraries path (-L options)
+RT_LDADD = @rt_ldadd@
+READLINE_LDADD = @readline_ldadd@
+ALSA_LDADD = @alsa_ldadd@
+SNDIO_LDADD = @sndio_ldadd@
 
 #
-# extra parameters
+# extra -I, -L, and -D options
 #
-INCLUDE = 		# extra includes paths (-I options)
-LIB =			# extra libraries paths (-L options)
-DEFS = @defs@ 		# extra defines (-D options)
-LDADD = @ldadd@		# extra libraries (-l options)
+INCLUDE = @include@
+LIB = @lib@
+DEFS = @defs@
 @vars@
 #
 # binaries, documentation, man pages and examples will be installed in 
@@ -62,12 +62,12 @@ mixout.o mux.o name.o node.o norm.o parse.o pool.o saveload.o smf.o song.o \
 state.o str.o sysex.o textio.o timo.o track.o user.o 
 
 midish:		${MIDISH_OBJS}
-		${CC} ${LDFLAGS} ${LIB} -o midish ${MIDISH_OBJS} ${LDADD} 
+		${CC} ${LDFLAGS} ${LIB} -o midish ${MIDISH_OBJS} \
+		${RT_LDADD} ${ALSA_LDADD} ${SNDIO_LDADD}
 
 rmidish:	rmidish.c
-		${CC} ${CFLAGS} ${READLINE_INCLUDE} \
-		${LDFLAGS} ${READLINE_LIB} -o rmidish \
-		rmidish.c -lreadline -lncurses
+		${CC} ${CFLAGS} ${INCLUDE} ${DEFS} \
+		${LDFLAGS} ${LIB} -o rmidish rmidish.c ${READLINE_LDADD}
 
 .c.o:
 		${CC} ${CFLAGS} ${INCLUDE} ${DEFS} -c $<
