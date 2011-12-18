@@ -148,8 +148,7 @@ mtc_tick(struct mtc *mtc, unsigned data)
 	if (mtc->state == MTC_RUN) {
 		mtc->pos += mtc->tps;
 		if (mtc->pos >= MTC_PERIOD)
-			pos -= MTC_PERIOD;
-		mtc->pos %= 24 * 3600 * MTC_SEC;
+			mtc->pos -= MTC_PERIOD;
 		mux_mtctick(mtc->tps * (24000000 / MTC_SEC));
 	} else {
 		mtc->state = MTC_RUN;
