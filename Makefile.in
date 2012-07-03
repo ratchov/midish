@@ -47,8 +47,8 @@ check:		midish
 		cd regress && ./run-test *.cmd
 
 clean:
-		rm -f -- ${PROGS} *.o *~ *.bak *.tmp *.ln *.s *.out *.core core
-		cd regress && rm -f -- *~ *.tmp? *.core *.log *.diff *.orig *.rej
+		rm -f -- ${PROGS} *.o
+		cd regress && rm -f -- *.tmp1 *.tmp2 *.log *.diff
 
 distclean:	clean
 		rm -f -- Makefile
