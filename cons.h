@@ -25,6 +25,7 @@ int  cons_mdep_getc(void);
 int  cons_getc(void);
 unsigned cons_break(void);
 void cons_putpos(unsigned, unsigned, unsigned);
+void cons_puttag(char *);
 
 void cons_err(char *);
 void cons_errs(char *, char *);

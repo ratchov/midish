@@ -635,8 +635,10 @@ song_ticskip(struct song *o)
 	SONG_FOREACH_TRK(o, i) {
 		neot |= seqptr_ticskip(i->trackptr, 1);
 	}
-	if (neot == 0)
+	if (neot == 0 && !o->complete) {
+		cons_puttag("complete");
 		o->complete = 1;
+	}
 }
 
 /*
