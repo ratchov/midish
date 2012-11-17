@@ -28,6 +28,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <sys/resource.h>
+#include <errno.h>
 #include <limits.h>
 #include <poll.h>
 #include <unistd.h>
@@ -143,11 +144,15 @@ midish_getc(struct midish *p)
 		count = MIDISH_BUFLEN - end;
 		if (count > avail)
 			count = avail;
-		n = read(p->sout, p->buf + end, count);
-		if (n < 0) {
-			perror("midish_getc: read");
-			return -1;
-		}
+		do {
+			n = read(p->sout, p->buf + end, count);
+			if (n < 0) {
+				if (errno == EINTR)
+					continue;
+				perror("midish_getc: read");
+				return -1;
+			}
+		} while (0);
 		if (n == 0) {
 			p->eof = 1;
 			return -1;
