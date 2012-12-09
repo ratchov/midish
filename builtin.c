@@ -2829,6 +2829,21 @@ blt_xadd(struct exec *o, struct data **r)
 }
 
 unsigned
+blt_dlist(struct exec *o, struct data **r)
+{
+	struct data *d, *n;
+	struct mididev *i;
+
+	d = data_newlist(NULL);
+	for (i = mididev_list; i != NULL; i = i->next) {
+		n = data_newlong(i->unit);
+		data_listadd(d, n);
+	}
+	*r = d;
+	return 1;
+}
+
+unsigned
 blt_dnew(struct exec *o, struct data **r)
 {
 	long unit;
