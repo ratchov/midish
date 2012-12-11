@@ -199,23 +199,20 @@ conv_packev(struct statelist *l, unsigned xctlset,
 					conv_setctl(l, ev);
 					break;
 				}
-				rev->ctl_num = ev->ctl_num;
-				rev->ctl_val = ev->ctl_val << 7;
 			} else if (ev->ctl_num < 64) {
 				num = ev->ctl_num - 32;
-				if (!EVCTL_ISFINE(xctlset, num)) {
-					break;
+				if (EVCTL_ISFINE(xctlset, num)) {
+					val = conv_getctl(l, ev, num);
+					if (val == EV_UNDEF)
+						break;
+					rev->ctl_num = num;
+					rev->ctl_val = ev->ctl_val + (val << 7);
+					goto done;
 				}
-				val = conv_getctl(l, ev, num);
-				if (val == EV_UNDEF) {
-					break;
-				}
-				rev->ctl_num = num;
-				rev->ctl_val = ev->ctl_val + (val << 7);
-			} else {
-				rev->ctl_num = ev->ctl_num;
-				rev->ctl_val = ev->ctl_val << 7;
 			}
+			rev->ctl_num = ev->ctl_num;
+			rev->ctl_val = ev->ctl_val << 7;
+		done:
 			rev->cmd = EV_XCTL;
 			rev->dev = ev->dev;
 			rev->ch = ev->ch;
