@@ -113,6 +113,7 @@ struct mididev {
 	unsigned isensto, osensto;	/* active sensing timeouts */
 	unsigned mode;			/* read, write */
 	unsigned ixctlset, oxctlset;	/* bitmap of 14bit controllers */
+	unsigned ievset, oevset;	/* bitmap of CONV_{XPC,NRPN,RPN} */
 	unsigned eof;			/* i/o error pending */
 	unsigned runst;			/* use running status for output */
 	unsigned sync;			/* flush buffer after each message */

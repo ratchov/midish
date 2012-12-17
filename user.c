@@ -687,6 +687,37 @@ data_list2ctlset(struct data *d, unsigned *res)
 	return 1;
 }
 
+/*
+ * convert a list to bitmap of CONV_xxx constants
+ */
+unsigned
+data_list2xev(struct data *d, unsigned *res)
+{
+	static unsigned cmds[] = {EV_XPC, EV_NRPN, EV_RPN};
+	unsigned i, conv, cmd;
+
+	conv = 0;
+	while (d) {
+		if (d->type != DATA_REF) {
+		err:
+			cons_err("xpc, rpn, or nrpn expected as flag");
+			return 0;
+		}
+		i = 0;
+		for (;;) {
+			if (i == sizeof(cmds) / sizeof(int))
+				goto err;
+			cmd = cmds[i];
+			if (str_eq(d->val.ref, evinfo[cmd].ev))
+				break;
+			i++;
+		}
+		conv |= (1 << cmd);
+		d = d->next;
+	}
+	*res = conv;
+	return 1;
+}
 
 /*
  * check if the pattern in data (list of integers)
@@ -1111,6 +1142,12 @@ user_mainloop(void)
 	exec_newbuiltin(exec, "doxctl", blt_doxctl,
 			name_newarg("devnum",
 			name_newarg("ctlset", NULL)));
+	exec_newbuiltin(exec, "diev", blt_diev,
+			name_newarg("devnum",
+			name_newarg("flags", NULL)));
+	exec_newbuiltin(exec, "doev", blt_doev,
+			name_newarg("devnum",
+			name_newarg("flags", NULL)));
 
 	/*
 	 * run the user startup script: $HOME/.midishrc or /etc/midishrc

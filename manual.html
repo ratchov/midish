@@ -1,7 +1,7 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
 <!--
 
-Copyright (c) 2003-2011 Alexandre Ratchov &lt;alex@caoua.org&gt;
+Copyright (c) 2003-2012 Alexandre Ratchov &lt;alex@caoua.org&gt;
 
 Permission to use, copy, modify, and distribute this software for any
 purpose with or without fee is hereby granted, provided that the above
@@ -2576,6 +2576,11 @@ add <a href="#func_version">version</a> function to display midish version
 <li>
 in verbose mode, add message for playback completion
 
+<li>
+add <a href="#func_diev">diev</a>
+and <a href="#func_diev">doev</a> functions to control whether
+midish interprets bank select, NRPN/RPN and data entry controllers.
+
 </ul>
 
 <h2><a name="attributes">16 Project attributes</a></h2>
@@ -2630,6 +2635,20 @@ received with 14-bit precision.
 
 <td>list of continuous controllers that will be transmitted
 with 14-bit precision
+
+<tr>
+
+<td>iev
+
+<td>list of compound event types the device transmits;
+it's a subset of ``xpc'', ``nrpn'', ``rpn''.
+
+<tr>
+
+<td>oev
+
+<td>list of compound event types the device accepts;
+it's a subset of ``xpc'', ``nrpn'', ``rpn''.
 
 </table>
 
@@ -4183,6 +4202,40 @@ let this list empty.
 <dd>
 Setup the list of controllers that will be transmitted
 as 14-bit numbers (both coarse and fine MIDI controller messages).
+
+<dt><a name="func_diev">diev devnum list</a>
+
+<dd>
+Configure the device to process as a single event the following
+patterns of input MIDI messages.
+
+<ul>
+
+<li>
+``xpc'' - group bank select controllers (0 and 32) with program
+changes into a signle ``xpc'' event.
+
+<li>
+``nrpn'' - group NRPN controllers (98 and 99) with data entry
+controllers (6 and 38) into a single ``nrpn'' event.
+
+<li>
+``rpn'' - same as ``nrpn'', but for RPN controllers (100 and 101).
+
+</ul>
+
+By default all of the above are enabled, which allows banks, NRPNs
+and RPNs to be handled by midish the standard way.
+
+It makes sense to disable grouping of above messages on rare hardware
+that maps above-mentioned controller numbers (0, 6, 32, 38, 98, 99,
+100, 101) to other parameters than bank number and NRPN/RPN.
+
+<dt><a name="func_doev">doev devnum list</a>
+
+<dd>
+Same as <a href="#func_doev">diev</a> but for output MIDI
+messages.
 
 </dl>
 

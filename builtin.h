@@ -159,5 +159,7 @@ unsigned blt_dclkrate(struct exec *, struct data **);
 unsigned blt_dinfo(struct exec *, struct data **);
 unsigned blt_dixctl(struct exec *, struct data **);
 unsigned blt_doxctl(struct exec *, struct data **);
+unsigned blt_diev(struct exec *, struct data **);
+unsigned blt_doev(struct exec *, struct data **);
 
 #endif /* MIDISH_BUILTIN_H */

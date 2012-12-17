@@ -130,7 +130,7 @@ conv_getctx(struct statelist *slist, struct ev *ev, unsigned hi, unsigned lo)
  * filled and 1 is returned.
  */
 unsigned
-conv_packev(struct statelist *l, unsigned xctlset,
+conv_packev(struct statelist *l, unsigned xctlset, unsigned flags,
 	    struct ev *ev, struct ev *rev)
 {
 	unsigned num, val;
@@ -140,85 +140,99 @@ conv_packev(struct statelist *l, unsigned xctlset,
 		rev->dev = ev->dev;
 		rev->ch = ev->ch;
 		rev->pc_prog = ev->pc_prog;
-		rev->pc_bank = conv_getctx(l, ev, BANK_HI, BANK_LO);
+		rev->pc_bank = (flags & CONV_XPC) ?
+		    conv_getctx(l, ev, BANK_HI, BANK_LO) : 0;
 		return 1;
 	} else if (ev->cmd == EV_CTL) {
 		switch (ev->ctl_num) {
 		case BANK_HI:
+			if (!(flags & CONV_XPC))
+				break;
 			conv_rmctl(l, ev, BANK_LO);
 			conv_setctl(l, ev);
-			break;
+			return 0;
 		case RPN_HI:
+			if (!(flags & CONV_XPC))
+				break;
 			conv_rmctl(l, ev, NRPN_LO);
 			conv_rmctl(l, ev, RPN_LO);
 			conv_setctl(l, ev);
-			break;
+			return 0;
 		case NRPN_HI:
+			if (!(flags & CONV_NRPN))
+				break;
 			conv_rmctl(l, ev, RPN_LO);
 			conv_rmctl(l, ev, NRPN_LO);
 			conv_setctl(l, ev);
-			break;
+			return 0;
 		case DATAENT_HI:
+			if (!(flags & (CONV_RPN | CONV_NRPN)))
+				break;
 			conv_rmctl(l, ev, DATAENT_LO);
 			conv_setctl(l, ev);
-			break;
+			return 0;
 		case BANK_LO:
+			if (!(flags & CONV_XPC))
+				break;
 			conv_setctl(l, ev);
-			break;
+			return 0;
 		case NRPN_LO:
+			if (!(flags & CONV_NRPN))
+				break;
 			conv_rmctl(l, ev, RPN_LO);
 			conv_setctl(l, ev);
-			break;
+			return 0;
 		case RPN_LO:
+			if (!(flags & CONV_RPN))
+				break;
 			conv_rmctl(l, ev, NRPN_LO);
 			conv_setctl(l, ev);
-			break;
+			return 0;
 		case DATAENT_LO:
+			if (!(flags & (CONV_RPN | CONV_NRPN)))
+				break;
 			num = conv_getctx(l, ev, NRPN_HI, NRPN_LO);
 			if (num != EV_UNDEF) {
 				rev->cmd = EV_NRPN;
 			} else {
-				num = conv_getctx(l, ev, RPN_HI, NRPN_LO);
-				if (num == EV_UNDEF) {
-					break;
-				}
+				num = conv_getctx(l, ev,
+				    RPN_HI, NRPN_LO);
+				if (num == EV_UNDEF)
+					return 0;
 				rev->cmd = EV_RPN;
 			}
 			val = conv_getctl(l, ev, DATAENT_HI);
-			if (val == EV_UNDEF) {
-				break;
-			}
+			if (val == EV_UNDEF)
+				return 0;
 			rev->dev = ev->dev;
 			rev->ch = ev->ch;
 			rev->ctl_num = num;
 			rev->ctl_val = ev->ctl_val + (val << 7);
 			return 1;
-		default:
-			if (ev->ctl_num < 32) {
-				if (EVCTL_ISFINE(xctlset, ev->ctl_num)) {
-					conv_setctl(l, ev);
-					break;
-				}
-			} else if (ev->ctl_num < 64) {
-				num = ev->ctl_num - 32;
-				if (EVCTL_ISFINE(xctlset, num)) {
-					val = conv_getctl(l, ev, num);
-					if (val == EV_UNDEF)
-						break;
-					rev->ctl_num = num;
-					rev->ctl_val = ev->ctl_val + (val << 7);
-					goto done;
-				}
-			}
-			rev->ctl_num = ev->ctl_num;
-			rev->ctl_val = ev->ctl_val << 7;
-		done:
-			rev->cmd = EV_XCTL;
-			rev->dev = ev->dev;
-			rev->ch = ev->ch;
-			return 1;
 		}
-		return 0;
+		if (ev->ctl_num < 32) {
+			if (EVCTL_ISFINE(xctlset, ev->ctl_num)) {
+				conv_setctl(l, ev);
+				return 0;
+			}
+		} else if (ev->ctl_num < 64) {
+			num = ev->ctl_num - 32;
+			if (EVCTL_ISFINE(xctlset, num)) {
+				val = conv_getctl(l, ev, num);
+				if (val == EV_UNDEF)
+					return 0;
+				rev->ctl_num = num;
+				rev->ctl_val = ev->ctl_val + (val << 7);
+				goto done;
+			}
+		}
+		rev->ctl_num = ev->ctl_num;
+		rev->ctl_val = ev->ctl_val << 7;
+	done:
+		rev->cmd = EV_XCTL;
+		rev->dev = ev->dev;
+		rev->ch = ev->ch;
+		return 1;
 	} else {
 		*rev = *ev;
 		return 1;
@@ -231,13 +245,35 @@ conv_packev(struct statelist *l, unsigned xctlset,
  * the array.
  */
 unsigned
-conv_unpackev(struct statelist *slist, unsigned xctlset,
+conv_unpackev(struct statelist *slist, unsigned xctlset, unsigned flags,
 	      struct ev *ev, struct ev *rev)
 {
 	unsigned val, hi;
 	unsigned nev = 0;
 
 	if (ev->cmd == EV_XCTL) {
+		switch (ev->ctl_num) {
+		case BANK_HI:
+		case BANK_LO:
+			if (flags & CONV_XPC)
+				return 0;
+			break;
+		case NRPN_HI:
+		case NRPN_LO:
+			if (flags & CONV_NRPN)
+				return 0;
+			break;
+		case RPN_HI:
+		case RPN_LO:
+			if (flags & CONV_RPN)
+				return 0;
+			break;
+		case DATAENT_HI:
+		case DATAENT_LO:
+			if (flags & (CONV_NRPN | CONV_RPN))
+				return 0;
+			break;
+		}
 		if (ev->ctl_num < 32 && EVCTL_ISFINE(xctlset, ev->ctl_num)) {
 			hi = ev->ctl_val >> 7;
 			val = conv_getctl(slist, ev, ev->ctl_num);
@@ -268,24 +304,26 @@ conv_unpackev(struct statelist *slist, unsigned xctlset,
 			return 1;
 		}
 	} else if (ev->cmd == EV_XPC) {
-		val = conv_getctx(slist, ev, BANK_HI, BANK_LO);
-		if (val != ev->pc_bank && ev->pc_bank != EV_UNDEF) {
-			rev->cmd = EV_CTL;
-			rev->dev = ev->dev;
-			rev->ch = ev->ch;
-			rev->ctl_num = BANK_HI;
-			rev->ctl_val = ev->pc_bank >> 7;
-			conv_setctl(slist, rev);
-			rev++;
-			nev++;
-			rev->cmd = EV_CTL;
-			rev->dev = ev->dev;
-			rev->ch = ev->ch;
-			rev->ctl_num = BANK_LO;
-			rev->ctl_val = ev->pc_bank & 0x7f;
-			conv_setctl(slist, rev);
-			rev++;
-			nev++;
+		if (flags & CONV_XPC) {
+			val = conv_getctx(slist, ev, BANK_HI, BANK_LO);
+			if (val != ev->pc_bank && ev->pc_bank != EV_UNDEF) {
+				rev->cmd = EV_CTL;
+				rev->dev = ev->dev;
+				rev->ch = ev->ch;
+				rev->ctl_num = BANK_HI;
+				rev->ctl_val = ev->pc_bank >> 7;
+				conv_setctl(slist, rev);
+				rev++;
+				nev++;
+				rev->cmd = EV_CTL;
+				rev->dev = ev->dev;
+				rev->ch = ev->ch;
+				rev->ctl_num = BANK_LO;
+				rev->ctl_val = ev->pc_bank & 0x7f;
+				conv_setctl(slist, rev);
+				rev++;
+				nev++;
+			}
 		}
 		rev->cmd = EV_PC;
 		rev->dev = ev->dev;
@@ -295,6 +333,8 @@ conv_unpackev(struct statelist *slist, unsigned xctlset,
 		nev++;
 		return nev;
 	} else if (ev->cmd == EV_NRPN) {
+		if (!(flags & CONV_NRPN))
+			return 0;
 		val = conv_getctx(slist, ev, NRPN_HI, NRPN_LO);
 		if (val != ev->rpn_num) {
 			conv_rmctl(slist, ev, RPN_HI);
@@ -333,6 +373,8 @@ conv_unpackev(struct statelist *slist, unsigned xctlset,
 		nev++;
 		return nev;
 	} else if (ev->cmd == EV_RPN) {
+		if (!(flags & CONV_RPN))
+			return 0;
 		val = conv_getctx(slist, ev, RPN_HI, RPN_LO);
 		if (val != ev->rpn_num) {
 			conv_rmctl(slist, ev, NRPN_HI);

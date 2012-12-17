@@ -65,6 +65,7 @@ unsigned data_list2range(struct data *, unsigned, unsigned, unsigned *, unsigned
 unsigned data_matchsysex(struct data *, struct sysex *, unsigned *);
 unsigned data_list2ctl(struct data *, unsigned *);
 unsigned data_list2ctlset(struct data *, unsigned *);
+unsigned data_list2xev(struct data *, unsigned *);
 unsigned data_getctl(struct data *, unsigned *);
 
 /* track functions */

@@ -294,6 +294,7 @@ char *builtins[] = {
 	"fswapin", "fswapout", "xlist", "xexists", "xnew", "xdel", "xren",
 	"xinfo", "xrm", "xsetd", "xadd", "dlist", "dnew", "ddel", "dmtcrx",
 	"dmmctx", "dclkrx", "dclktx", "dclkrate", "dinfo", "dixctl", "doxctl",
+	"diev", "doev",
 	NULL
 };
 

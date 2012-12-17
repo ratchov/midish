@@ -315,7 +315,8 @@ mux_putev(struct ev *ev)
 	}
 	dev = mididev_byunit[unit];
 	if (dev != NULL) {
-		nev = conv_unpackev(&mux_ostate, dev->oxctlset, ev, rev);
+		nev = conv_unpackev(&mux_ostate,
+		    dev->oxctlset, dev->oevset, ev, rev);
 		for (i = 0; i < nev; i++) {
 			mididev_putev(dev, &rev[i]);
 		}
@@ -612,7 +613,7 @@ mux_evcb(unsigned unit, struct ev *ev)
 		dbg_puts("\n");
 	}
 #endif
-	if (conv_packev(&mux_istate, dev->ixctlset, ev, &rev)) {
+	if (conv_packev(&mux_istate, dev->ixctlset, dev->ievset, ev, &rev)) {
 		norm_evcb(&rev);
 	}
 }

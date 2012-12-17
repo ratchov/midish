@@ -53,6 +53,7 @@
 #include "sysex.h"
 #include "mux.h"
 #include "timo.h"
+#include "conv.h"
 
 #define MIDI_SYSEXSTART	0xf0
 #define MIDI_QFRAME	0xf1
@@ -237,6 +238,8 @@ mididev_init(struct mididev *o, struct devops *ops, unsigned mode)
 	o->mode = mode;
 	o->ixctlset = 0;	/* all input controllers are 7bit */
 	o->oxctlset = 0;
+	o->ievset = CONV_XPC | CONV_NRPN | CONV_RPN;
+	o->oevset = CONV_XPC | CONV_NRPN | CONV_RPN;
 	o->eof = 1;
 
 	/*

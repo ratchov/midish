@@ -17,14 +17,23 @@
 #ifndef MIDISH_CONV_H
 #define MIDISH_CONV_H
 
+#include "ev.h"
+
 #define CONV_NUMREV 4
+
+/*
+ * constants to define a set of packed events
+ */
+#define CONV_XPC	(1 << EV_XPC)
+#define CONV_NRPN	(1 << EV_NRPN)
+#define CONV_RPN	(1 << EV_RPN)
 
 struct ev;
 struct statelist;
 
-unsigned conv_packev(struct statelist *, unsigned,
+unsigned conv_packev(struct statelist *, unsigned, unsigned,
     struct ev *, struct ev *);
-unsigned conv_unpackev(struct statelist *, unsigned,
+unsigned conv_unpackev(struct statelist *, unsigned, unsigned,
     struct ev *, struct ev *);
 
 #endif /* MIDISH_CONV_H */

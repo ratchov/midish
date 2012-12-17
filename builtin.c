@@ -3054,7 +3054,9 @@ blt_dclkrate(struct exec *o, struct data **r)
 unsigned
 blt_dinfo(struct exec *o, struct data **r)
 {
+	struct mididev *dev;
 	long unit;
+	int i, more;
 
 	if (!exec_lookuplong(o, "devnum", &unit)) {
 		return 0;
@@ -3063,6 +3065,7 @@ blt_dinfo(struct exec *o, struct data **r)
 		cons_errs(o->procname, "bad device number");
 		return 0;
 	}
+	dev = mididev_byunit[unit];
 	textout_putstr(tout, "{\n");
 	textout_shiftright(tout);
 
@@ -3071,22 +3074,69 @@ blt_dinfo(struct exec *o, struct data **r)
 	textout_putlong(tout, unit);
 	textout_putstr(tout, "\n");
 
-	if (mididev_mtcsrc == mididev_byunit[unit]) {
+	if (mididev_mtcsrc == dev) {
 		textout_indent(tout);
 		textout_putstr(tout, "mtcrx\t\t\t# master MTC source\n");
 	}
-	if (mididev_byunit[unit]->sendmmc) {
+	if (dev->sendmmc) {
 		textout_indent(tout);
 		textout_putstr(tout, "mmctx\t\t\t# sends MMC messages\n");
 	}
-	if (mididev_clksrc == mididev_byunit[unit]) {
+	if (mididev_clksrc == dev) {
 		textout_indent(tout);
 		textout_putstr(tout, "clkrx\t\t\t# master clock source\n");
 	}
-	if (mididev_byunit[unit]->sendclk) {
+	if (dev->sendclk) {
 		textout_indent(tout);
 		textout_putstr(tout, "clktx\t\t\t# sends clock ticks\n");
 	}
+	textout_indent(tout);
+	textout_putstr(tout, "ixctl {");
+	for (i = 0, more = 0; i < 32; i++) {
+		if (dev->ixctlset & (1 << i)) {
+			if (more)
+				textout_putstr(tout, " ");
+			textout_putlong(tout, i);
+			more = 1;
+		}
+	}
+	textout_putstr(tout, "}\n");
+
+	textout_indent(tout);
+	textout_putstr(tout, "oxctl {");
+	for (i = 0, more = 0; i < 32; i++) {
+		if (dev->oxctlset & (1 << i)) {
+			if (more)
+				textout_putstr(tout, " ");
+			textout_putlong(tout, i);
+			more = 1;
+		}
+	}
+	textout_putstr(tout, "}\n");
+
+	textout_indent(tout);
+	textout_putstr(tout, "iev {");
+	for (i = 0, more = 0; i < EV_NUMCMD; i++) {
+		if (dev->ievset & (1 << i)) {
+			if (more)
+				textout_putstr(tout, " ");
+			textout_putstr(tout, evinfo[i].ev);
+			more = 1;
+		}
+	}
+	textout_putstr(tout, "}\n");
+
+	textout_indent(tout);
+	textout_putstr(tout, "oev {");
+	for (i = 0, more = 0; i < EV_NUMCMD; i++) {
+		if (dev->oevset & (1 << i)) {
+			if (more)
+				textout_putstr(tout, " ");
+			textout_putstr(tout, evinfo[i].ev);
+			more = 1;
+		}
+	}
+	textout_putstr(tout, "}\n");
 
 	textout_indent(tout);
 	textout_putstr(tout, "clkrate ");
@@ -3145,5 +3195,55 @@ blt_doxctl(struct exec *o, struct data **r)
 		return 0;
 	}
 	mididev_byunit[unit]->oxctlset = ctlset;
+	return 1;
+}
+
+unsigned
+blt_diev(struct exec *o, struct data **r)
+{
+	long unit;
+	struct data *list;
+	unsigned flags;
+
+	if (!song_try_mode(usong, 0)) {
+		return 0;
+	}
+	if (!exec_lookuplong(o, "devnum", &unit) ||
+	    !exec_lookuplist(o, "flags", &list)) {
+		return 0;
+	}
+	if (unit < 0 || unit >= DEFAULT_MAXNDEVS || !mididev_byunit[unit]) {
+		cons_errs(o->procname, "bad device number");
+		return 0;
+	}
+	if (!data_list2xev(list, &flags)) {
+		return 0;
+	}
+	mididev_byunit[unit]->ievset = flags;
+	return 1;
+}
+
+unsigned
+blt_doev(struct exec *o, struct data **r)
+{
+	long unit;
+	struct data *list;
+	unsigned flags;
+
+	if (!song_try_mode(usong, 0)) {
+		return 0;
+	}
+	if (!exec_lookuplong(o, "devnum", &unit) ||
+	    !exec_lookuplist(o, "flags", &list)) {
+		return 0;
+	}
+	if (unit < 0 || unit >= DEFAULT_MAXNDEVS || !mididev_byunit[unit]) {
+		cons_errs(o->procname, "bad device number");
+		return 0;
+	}
+	if (!data_list2xev(list, &flags)) {
+		return 0;
+	}
+	mididev_byunit[unit]->oevset = flags;
 	return 1;
 }
