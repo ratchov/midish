@@ -1755,7 +1755,7 @@ blt_tevmap(struct exec *o, struct data **r)
 		cons_errs(o->procname, "no current track");
 		return 0;
 	}
-	if (!exec_lookupevspec(o, "from", &from, 1) ||
+	if (!exec_lookupevspec(o, "from", &from, 0) ||
 	    !exec_lookupevspec(o, "to", &to, 0)) {
 		return 0;
 	}
