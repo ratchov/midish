@@ -60,14 +60,14 @@ proc gmp patch {
 # XV-2020 specific macros
 #
 # configures a instrument with the given bank/patch or bank rhythm
-# bank 1,2,3,4 corresponds to preset A,B,C,D
-# patches/rhythmes are counted from 1 to 128
+# bank 0,1,2,3 corresponds to preset A, B, C and D
+# patches/rhythms are counted from 0 to 127
 #
 proc xvp bank patch {
-	oaddev { xpc [geto] ($patch - 1) (87 * 128 + (64 + $bank - 1)) }
+	oaddev { xpc [geto] ($patch) (11200 + $bank) }
 }
 proc xvr bank patch { 
-	oaddev { xpc [geto] ($patch - 1) (86 * 128 + (64 + $bank - 1)) }
+	oaddev { xpc [geto] ($patch) (11072 + $bank) }
 }
 
 #
