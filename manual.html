@@ -372,9 +372,9 @@ dnew 0 "FLUID Synth (qsynth)" wo
 
 on OpenBSD, the following formats are accepted:
 <pre>
-dnew 0 "rmidi:3" rw
-dnew 0 "midithru:0" rw
-dnew 0 "aucat:0" rw
+dnew 0 "rmidi/3" rw
+dnew 0 "midithru/0" rw
+dnew 0 "snd/0" rw
 </pre>
 
 see next section for details.
@@ -655,8 +655,8 @@ If you're using OpenBSD, insted of /dev/rmidi3 and /dev/rmidi4,
 use the sndio(7) port names:
 
 <pre>
-dnew 0 "rmidi:3" wo             # attach the module as dev number 0
-dnew 1 "rmidi:4" ro             # attach the keyboard as dev number 1
+dnew 0 "rmidi/3" wo             # attach the module as dev number 0
+dnew 1 "rmidi/4" ro             # attach the keyboard as dev number 1
 </pre>
 
 <p>
