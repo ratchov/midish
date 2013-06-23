@@ -933,3 +933,75 @@ bad3:	song_delete(o);
 bad2:	smf_close(&f);
 bad1:	return 0;
 }
+
+int
+syx_import(char *path, struct sysexlist *l, int unit)
+{
+	FILE *f;
+	struct sysex *sx = NULL;
+	int c;
+
+	f = fopen(path, "r");
+	if (f == NULL) {
+		cons_errs(path, "failed to open file");
+		return 0;
+	}
+	sysexlist_clear(l);
+	for (;;) {
+		c = fgetc(f);
+		if (c == EOF)
+			break;
+		if (c == 0xf0)
+			sx = sysex_new(unit);
+		if (sx == NULL) {
+			cons_errs(path, "corrupted .syx file");
+			goto err;
+		}
+		sysex_add(sx, c);
+		if (c == 0xf7) {
+			if (sysex_check(sx)) {
+				sysexlist_put(l, sx);
+				sx = NULL;
+				continue;
+			} else {
+				cons_err("corrupted sysex message, ignored");
+				sysex_del(sx);
+				goto err;
+			}
+		}
+	}
+	fclose(f);
+	return 1;
+err:
+	sysexlist_clear(l);
+	fclose(f);
+	return 0;
+}
+
+int
+syx_export(char *path, struct sysexlist *l)
+{
+	FILE *f;
+	struct sysex *x;
+	struct chunk *c;
+	ssize_t n;
+
+	f = fopen(path, "w");
+	if (f == NULL) {
+		cons_errs(path, "failed to open file");
+		return 0;
+	}
+	for (x = l->first; x != NULL; x = x->next) {
+		for (c = x->first; c != NULL; c = c->next) {
+			n = fwrite(c->data, 1, c->used, f);
+			if (n != c->used) {
+				cons_errs(path, "write failed");
+				fclose(f);
+				return 0;
+			}
+				
+		}
+	}
+	fclose(f);
+	return 1;
+}

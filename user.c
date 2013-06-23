@@ -1111,6 +1111,11 @@ user_mainloop(void)
 	exec_newbuiltin(exec, "xadd", blt_xadd,
 			name_newarg("devnum",
 			name_newarg("data", NULL)));
+	exec_newbuiltin(exec, "ximport", blt_ximport,
+		        name_newarg("devnum",
+			name_newarg("path", NULL)));
+	exec_newbuiltin(exec, "xexport", blt_xexport,
+			name_newarg("path", NULL));
 
 	exec_newbuiltin(exec, "shut", user_func_shut, NULL);
 	exec_newbuiltin(exec, "proclist", user_func_proclist, NULL);

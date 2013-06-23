@@ -49,6 +49,7 @@ unsigned      sysex_check(struct sysex *);
 
 void 	      sysexlist_init(struct sysexlist *);
 void	      sysexlist_done(struct sysexlist *);
+void	      sysexlist_clear(struct sysexlist *);
 void	      sysexlist_put(struct sysexlist *, struct sysex *);
 struct sysex *sysexlist_get(struct sysexlist *);
 void	      sysexlist_dbg(struct sysexlist *);

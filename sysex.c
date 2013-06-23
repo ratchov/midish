@@ -203,6 +203,17 @@ sysexlist_init(struct sysexlist *o)
 void
 sysexlist_done(struct sysexlist *o)
 {
+	sysexlist_clear(o);
+	o->first = (void *)0xdeadbeef;
+	o->lastptr = (void *)0xdeadbeef;
+}
+
+/*
+ * clear the sysex list
+ */
+void
+sysexlist_clear(struct sysexlist *o)
+{
 	struct sysex *i, *inext;
 
 	for (i = o->first; i != NULL; i = inext) {
@@ -225,12 +236,13 @@ sysexlist_put(struct sysexlist *o, struct sysex *e)
 }
 
 /*
- * detach the first sysex message on the list
+ * detach the first sysex message from the list
  */
 struct sysex *
 sysexlist_get(struct sysexlist *o)
 {
 	struct sysex *e;
+
 	if (o->first) {
 		e = o->first;
 		o->first = e->next;

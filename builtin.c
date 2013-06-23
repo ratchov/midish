@@ -2829,6 +2829,70 @@ blt_xadd(struct exec *o, struct data **r)
 }
 
 unsigned
+blt_ximport(struct exec *o, struct data **r)
+{
+	struct songsx *c;
+	struct sysex *x;
+	struct var *arg;
+	char *path;
+	long unit;
+
+	song_getcursx(usong, &c);
+	if (c == NULL) {
+		cons_errs(o->procname, "no current sysex");
+		return 0;
+	}
+	if (!exec_lookuplong(o, "devnum", &unit)) {
+		return 0;
+	}
+	if (unit < 0 || unit >= DEFAULT_MAXNDEVS) {
+		cons_errs(o->procname, "devnum out of range");
+		return 0;
+	}
+	arg = exec_varlookup(o, "path");
+	if (!arg) {
+		dbg_puts("blt_ximport: path: no such param\n");
+		return 0;
+	}
+	if (arg->data->type != DATA_STRING) {
+		cons_errs(o->procname, "path must be string");
+		return 0;
+	}
+	path = arg->data->val.str;
+	if (!syx_import(path, &c->sx, unit))
+		return 0;
+	return 1;
+}
+
+unsigned
+blt_xexport(struct exec *o, struct data **r)
+{
+	struct songsx *c;
+	struct sysex *x;
+	struct var *arg;
+	char *path;
+
+	song_getcursx(usong, &c);
+	if (c == NULL) {
+		cons_errs(o->procname, "no current sysex");
+		return 0;
+	}
+	arg = exec_varlookup(o, "path");
+	if (!arg) {
+		dbg_puts("blt_xexport: path: no such param\n");
+		return 0;
+	}
+	if (arg->data->type != DATA_STRING) {
+		cons_errs(o->procname, "path must be string");
+		return 0;
+	}
+	path = arg->data->val.str;
+	if (!syx_export(path, &c->sx))
+		return 0;
+	return 1;
+}
+
+unsigned
 blt_dlist(struct exec *o, struct data **r)
 {
 	struct data *d, *n;

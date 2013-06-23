@@ -292,12 +292,11 @@ char *builtins[] = {
 	"flist", "fnew", "fdel", "fren", "fexists", "finfo", "freset",
 	"fmap", "funmap", "ftransp", "fvcurve", "fchgin", "fchgout",
 	"fswapin", "fswapout", "xlist", "xexists", "xnew", "xdel", "xren",
-	"xinfo", "xrm", "xsetd", "xadd", "dlist", "dnew", "ddel", "dmtcrx",
-	"dmmctx", "dclkrx", "dclktx", "dclkrate", "dinfo", "dixctl", "doxctl",
-	"diev", "doev",
+	"xinfo", "xrm", "xsetd", "xadd", "ximport", "xexport", "dlist",
+	"dnew", "ddel", "dmtcrx", "dmmctx", "dclkrx", "dclktx", "dclkrate",
+	"dinfo", "dixctl", "doxctl", "diev", "doev",
 	NULL
 };
-
 
 char *
 genbuiltin(const char *text, int state)

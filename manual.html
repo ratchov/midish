@@ -2581,6 +2581,10 @@ add <a href="#func_diev">diev</a>
 and <a href="#func_diev">doev</a> functions to control whether
 midish interprets bank select, NRPN/RPN and data entry controllers.
 
+<li>
+add <a href="#func_ximport">ximport</a>
+and <a href="#func_xexport">xexport</a> to export and import .syx files.
+
 </ul>
 
 <h2><a name="attributes">16 Project attributes</a></h2>
@@ -3775,6 +3779,19 @@ the message will be sent when performance mode is entered
 print all sysex messages of the current sysex bank. Messages that are
 too long to be desplayed on a single line are truncated and 
 the ``...'' string is displayed.
+
+<dt><a name="func_ximport">ximport devnum path</a>
+
+<dd>
+replace contents of the current sysex bank by
+contents of the given .syx file; messages are assigned
+to ``devnum'' device number.
+
+<dt><a name="func_xexport">xexport path</a>
+
+<dd>
+store contents of the current sysex bank in the
+given .syx file
 
 </dl>
 

@@ -19,7 +19,10 @@
 
 struct song;
 
-unsigned song_exportsmf(struct song *o, char *);
+unsigned song_exportsmf(struct song *, char *);
 struct song *song_importsmf(char *);
+
+int syx_import(char *, struct sysexlist *, int);
+int syx_export(char *, struct sysexlist *);
 
 #endif /* MIDISH_SMF_H */
