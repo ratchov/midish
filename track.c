@@ -281,3 +281,19 @@ track_chanmap(struct track *o, char *map)
 		}
 	}
 }
+
+/*
+ * return the number of events of the given type
+ */
+unsigned
+track_evcnt(struct track *o, unsigned cmd)
+{
+	struct seqev *se;
+	unsigned cnt = 0;
+
+	for (se = o->first; se != NULL; se = se->next) {
+		if (se->ev.cmd == cmd)
+			cnt++;
+	}
+	return cnt;
+}

@@ -1329,6 +1329,40 @@ song_try_meta(struct song *o)
 	return 1;
 }
 
+unsigned
+song_try_ev(struct song *o, unsigned cmd)
+{
+	struct songfilt *f;
+	struct songchan *c;
+	struct songtrk *t;
+
+	SONG_FOREACH_TRK(o, t) {
+		if (track_evcnt(&t->track, cmd)) {
+			cons_errs(t->name.str, "event in use by track");
+			return 0;
+		}
+	}
+	SONG_FOREACH_CHAN(o, c, o->inlist) {
+		if (track_evcnt(&c->conf, cmd)) {
+			cons_errs(c->name.str, "event in use by input");
+			return 0;
+		}
+	}
+	SONG_FOREACH_CHAN(o, c, o->outlist) {
+		if (track_evcnt(&c->conf, cmd)) {
+			cons_errs(c->name.str, "event in use by output");
+			return 0;
+		}
+	}
+	SONG_FOREACH_FILT(o, f) {
+		if (filt_evcnt(&f->filt, cmd)) {
+			cons_errs(f->name.str, "event in use by filter");
+			return 0;
+		}
+	}
+	return 1;
+}
+
 void
 song_confev(struct song *o, struct songchan *c, int input, struct ev *ev)
 {

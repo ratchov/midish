@@ -218,7 +218,7 @@ exec_lookupev(struct exec *o, char *name, struct ev *ev, int input)
 {
 	struct var *arg;
 	struct data *d;
-	unsigned dev, ch, max, num;
+	unsigned dev, ch, num;
 
 	arg = exec_varlookup(o, name);
 	if (!arg) {
@@ -234,20 +234,33 @@ exec_lookupev(struct exec *o, char *name, struct ev *ev, int input)
 	d = d->val.list;
 	if (!d || d->type != DATA_REF ||
 	    !ev_str2cmd(ev, d->val.ref) ||
-	    !EV_ISVOICE(ev)) {
+	    (!EV_ISVOICE(ev) && !EV_ISSX(ev))) {
 		cons_err("bad status in event spec");
 		return 0;
 	}
 	d = d->next;
 	if (!d) {
-		cons_err("no channel in event spec");
+		cons_err("channel and/or device missing in event spec");
 		return 0;
 	}
-	if (!data_list2chan(d, &dev, &ch, input)) {
-		return 0;
+	if (evinfo[ev->cmd].flags & EV_HAS_CH) {
+		if (!data_list2chan(d, &dev, &ch, input)) {
+			return 0;
+		}
+		ev->dev = dev;
+		ev->ch = ch;
+	} else {
+		if (d->type != DATA_LONG) {
+			cons_err("device number expected in event spec");
+			return 0;
+		}
+		if (d->val.num < 0 || d->val.num >= DEFAULT_MAXNDEVS) {
+			cons_err("device number out of range in event spec");
+			return 0;
+		}
+		ev->dev = d->val.num;
+		ev->ch = 0;
 	}
-	ev->dev = dev;
-	ev->ch = ch;
 	d = d->next;
 	if (ev->cmd == EV_XCTL || ev->cmd == EV_CTL) {
 		if (!d || !data_getctl(d, &num)) {
@@ -255,33 +268,27 @@ exec_lookupev(struct exec *o, char *name, struct ev *ev, int input)
 		}
 		ev->ctl_num = num;
 	} else {
-		if (ev->cmd == EV_BEND || ev->cmd == EV_NRPN || ev->cmd == EV_RPN) {
-			max = EV_MAXFINE;
-		} else {
-			max = EV_MAXCOARSE;
-		}
-		if (!d || d->type != DATA_LONG || d->val.num < 0 || d->val.num > max) {
-			cons_err("bad byte0 in event spec");
+		if (d == NULL ||
+		    d->type != DATA_LONG ||
+		    d->val.num < 0 ||
+		    d->val.num > evinfo[ev->cmd].v0_max) {
+			cons_err("bad v0 in event spec");
 			return 0;
 		}
 		ev->v0 = d->val.num;
 	}
 	d = d->next;
-	if (ev->cmd == EV_PC || ev->cmd == EV_CAT || ev->cmd == EV_BEND) {
-		if (d) {
+	if (evinfo[ev->cmd].nparams < 2) {
+		if (d != NULL) {
 			cons_err("extra data in event spec");
 			return 0;
 		}
 	} else {
-		if (ev->cmd == EV_XPC || ev->cmd == EV_XCTL ||
-		    ev->cmd == EV_NRPN || ev->cmd == EV_RPN) {
-			max = EV_MAXFINE;
-		} else {
-			max = EV_MAXCOARSE;
-		}
-		if (!d || d->type != DATA_LONG ||
-		    d->val.num < 0 || d->val.num > max) {
-			cons_err("bad byte1 in event spec");
+		if (d == NULL ||
+		    d->type != DATA_LONG ||
+		    d->val.num < 0 ||
+		    d->val.num > evinfo[ev->cmd].v1_max) {
+			cons_err("bad v1 in event spec");
 			return 0;
 		}
 		ev->v1 = d->val.num;
@@ -363,8 +370,8 @@ exec_lookupevspec(struct exec *o, char *name, struct evspec *e, int input)
 		e->dev_min = e->dev_max = i->dev;
 		e->ch_min = e->ch_max = i->ch;
 	} else if (d->type == DATA_LIST) {
-		if (!d->val.list) {		/* empty list = any chan/dev */
-			/* nothing */
+		if (!d->val.list) {
+			/* empty list = any chan/dev */
 		} else if (d->val.list &&
 		    d->val.list->next &&
 		    !d->val.list->next->next) {
@@ -980,12 +987,15 @@ user_mainloop(void)
 	exec_newbuiltin(exec, "ctlunconf", blt_ctlunconf,
 			name_newarg("name", NULL));
 	exec_newbuiltin(exec, "ctlinfo", blt_ctlinfo, NULL);
+	exec_newbuiltin(exec, "evsx", blt_evsx,
+			name_newarg("name",
+			name_newarg("pattern", NULL)));
+	exec_newbuiltin(exec, "evsxinfo", blt_evsxinfo, NULL);
 	exec_newbuiltin(exec, "m", blt_metro,
 			name_newarg("onoff", NULL));
 	exec_newbuiltin(exec, "metrocf", blt_metrocf,
 			name_newarg("eventhi",
 			name_newarg("eventlo", NULL)));
-
 	exec_newbuiltin(exec, "tlist", blt_tlist, NULL);
 	exec_newbuiltin(exec, "tnew", blt_tnew,
 			name_newarg("trackname", NULL));

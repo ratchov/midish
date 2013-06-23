@@ -54,6 +54,7 @@ void filt_chgin(struct filt *, struct evspec *, struct evspec *, int);
 void filt_chgout(struct filt *, struct evspec *, struct evspec *, int);
 void filt_transp(struct filt *, struct evspec *, int);
 void filt_vcurve(struct filt *, struct evspec *, int);
+unsigned filt_evcnt(struct filt *, unsigned);
 
 extern unsigned filt_debug;
 

@@ -149,6 +149,11 @@ state_match(struct state *st, struct ev *ev)
 		}
 		break;
 	default:
+		if (EV_ISSX(ev)) {
+			if (ev->cmd != st->ev.cmd)
+				return 0;
+			break;
+		}
 		dbg_puts("state_match: ");
 		state_dbg(st);
 		dbg_puts(": bad event type\n");
@@ -169,69 +174,45 @@ state_match(struct state *st, struct ev *ev)
 unsigned
 state_inspec(struct state *st, struct evspec *spec)
 {
+	struct evinfo *ei;
+
 	if (spec == NULL) {
 		return 1;
 	}
+	ei = evinfo + st->ev.cmd;
 	switch(spec->cmd) {
 	case EVSPEC_EMPTY:
 		return 0;
 	case EVSPEC_ANY:
 		goto ch;
 	case EVSPEC_NOTE:
-		if (st->ev.cmd == EV_NON ||
-		    st->ev.cmd == EV_KAT ||
-		    st->ev.cmd == EV_NOFF) {
-			goto v0;
-		}
-		break;
-	case EVSPEC_CAT:
-		if (st->ev.cmd == EV_CAT) {
-			goto ch;
-		}
-		break;
-	case EVSPEC_BEND:
-		if (st->ev.cmd == EV_BEND) {
-			goto ch;
-		}
-		break;
-	case EVSPEC_XPC:
-		if (st->ev.cmd == EV_XPC) {
-			goto v1;
-		}
-		break;
-	case EVSPEC_NRPN:
-		if (st->ev.cmd == EV_NRPN) {
-			goto v1;
-		}
-		break;
-	case EVSPEC_RPN:
-		if (st->ev.cmd == EV_RPN) {
-			goto v1;
-		}
-		break;
-	case EVSPEC_XCTL:
-		if (st->ev.cmd == EV_XCTL) {
-			goto v0;
-		}
+		if (!EV_ISNOTE(&st->ev))
+			return 0;
 		break;
 	default:
-		break;
+		if (st->ev.cmd != spec->cmd)
+			return 0;
 	}
-	return 0;
-
-v1:	if (st->ev.v1 < spec->v1_min ||
-	    st->ev.v1 > spec->v1_max) {
-		return 0;
+	if (ei->nparams >= 1) {
+		if (st->ev.v0 < spec->v0_min ||
+		    st->ev.v0 > spec->v0_max)
+			return 0;
 	}
-v0:	if (st->ev.v0 < spec->v0_min ||
-	    st->ev.v0 > spec->v0_max) {
-		return 0;
+	if (ei->nparams >= 2) {
+		if (st->ev.v1 < spec->v1_min ||
+		    st->ev.v1 > spec->v1_max)
+			return 0;
 	}
-ch:	if (st->ev.dev < spec->dev_min ||
-	    st->ev.dev > spec->dev_max ||
-	    st->ev.ch < spec->ch_min ||
-	    st->ev.ch > spec->ch_max) {
-		return 0;
+ch:
+	if (ei->flags & EV_HAS_DEV) {
+		if (st->ev.dev < spec->dev_min ||
+		    st->ev.dev > spec->dev_max)
+			return 0;
+	}
+	if (ei->flags & EV_HAS_CH) {
+		if (st->ev.ch < spec->ch_min ||
+		    st->ev.ch > spec->ch_max)
+			return 0;
 	}
 	return 1;
 }
@@ -243,6 +224,8 @@ ch:	if (st->ev.dev < spec->dev_min ||
 unsigned
 state_eq(struct state *st, struct ev *ev)
 {
+	struct evinfo *ei;
+
 	if (EV_ISVOICE(&st->ev)) {
 		switch(st->ev.cmd) {
 		case EV_CAT:
@@ -257,6 +240,13 @@ state_eq(struct state *st, struct ev *ev)
 				return 0;
 			break;
 		}
+	} else if (EV_ISSX(&st->ev)) {
+		if (st->ev.cmd != ev->cmd)
+			return 0;
+		ei = evinfo + st->ev.cmd;
+		if ((ei->nparams >= 1 && st->ev.v0 != ev->v0) ||
+		    (ei->nparams >= 2 && st->ev.v1 != ev->v1))
+			return 0;
 	} else if (st->ev.cmd == EV_TEMPO) {
 		if (st->ev.tempo_usec24 != ev->tempo_usec24) {
 			return 0;

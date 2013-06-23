@@ -202,6 +202,7 @@ unsigned song_try_chan(struct song *, struct songchan *, int);
 unsigned song_try_filt(struct song *, struct songfilt *);
 unsigned song_try_sx(struct song *, struct songsx *);
 unsigned song_try_meta(struct song *);
+unsigned song_try_ev(struct song *, unsigned);
 
 extern unsigned song_debug;
 

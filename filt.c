@@ -435,3 +435,27 @@ filt_vcurve(struct filt *f, struct evspec *from, int weight)
 	s = filtnode_mksrc(&f->vcurve, from);
 	s->u.vel.nweight = (64 - weight) & 0x7f;
 }
+
+unsigned
+filt_evcnt(struct filt *f, unsigned cmd)
+{
+	struct filtnode *s;
+	struct filtnode *d;
+	unsigned cnt = 0;
+
+	for (s = f->map; s != NULL; s = s->next) {
+		for (d = s->dstlist; d != NULL; d = d->next) {
+			if (d->es.cmd == cmd)
+				cnt++;
+		}
+	}
+	for (s = f->vcurve; s != NULL; s = s->next) {
+		if (d->es.cmd == cmd)
+			cnt++;
+	}
+	for (s = f->transp; s != NULL; s = s->next) {
+		if (d->es.cmd == cmd)
+			cnt++;
+	}
+	return 0;
+}

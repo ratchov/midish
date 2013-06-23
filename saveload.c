@@ -102,10 +102,24 @@ ev_output(struct ev *e, struct textout *f)
 			textout_putlong(f, e->timesig_tics);
 			break;
 		default:
-			textout_putstr(f, "# ignored event\n");
-			dbg_puts("ignoring event: ");
-			ev_dbg(e);
-			dbg_puts("\n");
+			if (EV_ISSX(e)) {
+				textout_putstr(f, evinfo[e->cmd].ev);
+				textout_putstr(f, " ");
+				textout_putlong(f, e->dev);
+				if (evinfo[e->cmd].nparams >= 1) {					
+					textout_putstr(f, " ");
+					textout_putlong(f, e->v0);
+				}
+				if (evinfo[e->cmd].nparams >= 2) {					
+					textout_putstr(f, " ");
+					textout_putlong(f, e->v1);
+				}
+			} else {
+				textout_putstr(f, "# ignored event\n");
+				dbg_puts("ignoring event: ");
+				ev_dbg(e);
+				dbg_puts("\n");
+			}
 			break;
 		}
 	return;
@@ -431,6 +445,53 @@ evctltab_output(struct evctl *tab, struct textout *f)
 }
 
 void
+evsx_output(struct textout *f)
+{
+	unsigned char *p;
+	unsigned i;
+
+	for (i = 0; i < EVSX_NMAX; i++) {
+		if (evinfo[EV_SX0 + i].ev == NULL)
+			continue;
+		textout_indent(f);
+		textout_putstr(f, "evsx ");
+		textout_putstr(f, evinfo[EV_SX0 + i].ev);
+		textout_putstr(f, " {\n");
+		textout_shiftright(f);
+		textout_indent(f);
+		textout_putstr(f, "pattern");
+		p = evinfo[EV_SX0 + i].pattern;
+		for (;;) {
+			textout_putstr(f, " ");
+			switch (*p) {
+			case EVSX_V0_HI:
+				textout_putstr(f, "v0_hi");
+				break;
+			case EVSX_V0_LO:
+				textout_putstr(f, "v0_lo");
+				break;
+			case EVSX_V1_HI:
+				textout_putstr(f, "v1_hi");
+				break;
+			case EVSX_V1_LO:
+				textout_putstr(f, "v1_lo");
+				break;
+			default:
+				textout_putbyte(f, *p);
+				if (*p == 0xf7)
+					goto end;
+			}
+			p++;
+		}
+	end:
+		textout_putstr(f, "\n");	
+		textout_shiftleft(f);
+		textout_indent(f);
+		textout_putstr(f, "}\n");
+	}
+}
+
+void
 song_output(struct song *o, struct textout *f)
 {
 	struct songtrk *t;
@@ -455,6 +516,8 @@ song_output(struct song *o, struct textout *f)
 	textout_putstr(f, "meta ");
 	track_output(&o->meta, f);
 	textout_putstr(f, "\n");
+
+	evsx_output(f);
 
 	SONG_FOREACH_IN(o, i) {
 		textout_indent(f);
@@ -729,6 +792,7 @@ unsigned
 parse_ev(struct parse *o, struct ev *ev)
 {
 	unsigned long val, val2;
+	struct evinfo *ei;
 
 	if (!parse_getsym(o)) {
 		return 0;
@@ -869,7 +933,23 @@ parse_ev(struct parse *o, struct ev *ev)
 		ev->v0 += (val << 7);
 		break;
 	default:
-		goto ignore;
+		if (EV_ISSX(ev) && evinfo[ev->cmd].ev != NULL) {
+			ei = evinfo + ev->cmd;
+			if (!parse_long(o, 0, EV_MAXDEV, &val))
+				return 0;
+			ev->dev = val;
+			if (ei->nparams >= 1) {
+				if (!parse_long(o, 0, ei->v0_max, &val))
+					return 0;
+				ev->v0 = val;
+			}
+			if (ei->nparams >= 2) {
+				if (!parse_long(o, 0, ei->v1_max, &val))
+					return 0;
+				ev->v1 = val;
+			}
+		} else
+			goto ignore;
 	}
 	if (!parse_nl(o)) {
 		return 0;
@@ -1312,6 +1392,103 @@ err1:
 }
 
 unsigned
+parse_evsx(struct parse *o, char *ref)
+{
+	unsigned long val;
+	unsigned size = 0;
+	unsigned char *pattern;
+	char *name;
+	unsigned cmd;
+
+	/*
+	 * find a free slot
+	 */
+	if (evsx_lookup(ref, &cmd))
+		evsx_unconf(cmd);
+	for (cmd = EV_SX0;; cmd++) {
+		if (cmd == EV_SX0 + EVSX_NMAX) {
+			lex_err(&o->lex, "too many sysex patterns");
+			return 0;
+		}
+		if (evinfo[cmd].ev == NULL)
+			break;
+	}
+	name = str_new(ref);
+	pattern = mem_alloc(EVSX_MAXSIZE, "evsx");
+
+	if (!parse_getsym(o)) {
+		goto err1;
+	}
+	if (o->lex.id != TOK_LBRACE) {
+		lex_err(&o->lex, "'{' expected while parsing evsx");
+		goto err1;
+	}
+	
+	for (;;) {
+		if (!parse_getsym(o)) {
+			goto err1;
+		}
+		if (o->lex.id == TOK_ENDLINE) {
+			/* nothing */
+		} else if (o->lex.id == TOK_RBRACE) {
+			break;
+		} else if (o->lex.id == TOK_IDENT) {
+			if (str_eq(o->lex.strval, "pattern")) {
+				for (;;) {
+					if (!parse_getsym(o)) {
+						goto err1;
+					}
+					if (o->lex.id == TOK_ENDLINE) {
+						break;
+					}
+					if (size == EVSX_MAXSIZE) {
+						lex_err(&o->lex, "pattern too long");
+						goto err1;
+					}
+					if (o->lex.id == TOK_NUM) {
+						parse_ungetsym(o);
+						if (!parse_long(o, 0, 0xff, &val)) {
+							goto err1;
+						}
+						pattern[size++] = val;
+					} else if (o->lex.id == TOK_IDENT) {
+						if (str_eq(o->lex.strval, "v0_hi"))
+							val = EVSX_V0_HI;
+						else if (str_eq(o->lex.strval, "v0_lo"))
+							val = EVSX_V0_LO;
+						else if (str_eq(o->lex.strval, "v1_hi"))
+							val = EVSX_V1_HI;
+						else if (str_eq(o->lex.strval, "v1_lo"))
+							val = EVSX_V1_LO;
+						else {	
+							lex_err(&o->lex, "unexpected atom in pattern");
+							return 0;
+						}
+						pattern[size++] = val;
+					}
+				}
+			} else {
+				goto unknown;
+			}
+		} else {
+		unknown:
+			parse_ungetsym(o);
+			if (!parse_ukline(o)) {
+				goto err1;
+			}
+			lex_err(&o->lex, "unknown line format in sysex, ignored");
+		}
+	}
+	if (!evsx_set(cmd, name, pattern, size))
+		goto err1;
+	return 1;
+err1:
+	str_delete(name);
+	mem_free(pattern);
+	return 0;
+}
+
+unsigned
 parse_songchan(struct parse *o, struct song *s, struct songchan *i)
 {
 	unsigned long val, val2;
@@ -1640,7 +1817,21 @@ parse_song(struct parse *o, struct song *s)
 		} else if (o->lex.id == TOK_RBRACE) {
 			break;
 		} else if (o->lex.id == TOK_IDENT) {
-			if (str_eq(o->lex.strval, "songtrk")) {
+			if (str_eq(o->lex.strval, "evsx")) {
+				if (!parse_getsym(o)) {
+					return 0;
+				}
+				if (o->lex.id != TOK_IDENT) {
+					lex_err(&o->lex, "identifier expected after 'evsx' in song");
+					return 0;
+				}
+				if (!parse_evsx(o, o->lex.strval)) {
+					return 0;
+				}
+				if (!parse_nl(o)) {
+					return 0;
+				}
+			} else if (str_eq(o->lex.strval, "songtrk")) {
 				if (!parse_getsym(o)) {
 					return 0;
 				}

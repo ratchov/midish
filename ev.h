@@ -19,6 +19,11 @@
 
 #include "defs.h"
 
+/*
+ * number of user-parametrable sysex patterns
+ */
+#define EVSX_NMAX	16
+
 #define EV_NULL		0		/* "null" or end-of-track */
 #define EV_TEMPO	0x2		/* tempo change */
 #define EV_TIMESIG	0x3		/* time signature change */
@@ -33,7 +38,8 @@
 #define EV_PC		0xc		/* MIDI prog. change */
 #define EV_CAT		0xd		/* MIDI channel aftertouch */
 #define EV_BEND		0xe		/* MIDI pitch bend */
-#define EV_NUMCMD	0xf
+#define EV_SX0		0x10		/* user sysex pattern */
+#define EV_NUMCMD	(EV_SX0 + EVSX_NMAX)
 
 #define EV_ISVOICE(ev)	(((ev)->cmd <= EV_BEND) && ((ev)->cmd >= EV_NRPN))
 
@@ -42,6 +48,9 @@
 #define EV_ISNOTE(ev)	((ev)->cmd == EV_NON  || \
 			 (ev)->cmd == EV_NOFF || \
 			 (ev)->cmd == EV_KAT)
+
+#define EV_ISSX(ev)	((ev)->cmd >= EV_SX0 && \
+			 (ev)->cmd <= EV_SX0 + EVSX_NMAX)
 
 /*
  * some special values for events
@@ -130,6 +139,17 @@ struct evinfo {
 	unsigned v0_max;	/* max ev->v0 */
 	unsigned v1_min;	/* min ev->v1 */
 	unsigned v1_max;	/* max ev->v1 */
+	/*
+	 * sysex patterns specific
+	 */
+#define EVSX_V0_HI	0x80
+#define EVSX_V0_LO	0x81
+#define EVSX_V1_HI	0x82
+#define EVSX_V1_LO	0x83
+#define EVSX_SUM	0x84
+#define EVSX_NEGSUM	0x85
+#define EVSX_MAXSIZE	32
+	unsigned char *pattern;
 };
 
 extern struct evinfo evinfo[EV_NUMCMD];
@@ -184,5 +204,11 @@ unsigned evctl_lookup(char *, unsigned *);
 void	 evctl_init(void);
 void	 evctl_done(void);
 unsigned evctl_isreserved(unsigned);
+
+void	 evsx_unconf(unsigned);
+unsigned evsx_lookup(char *, unsigned *);
+unsigned evsx_conf(char *, unsigned char *, unsigned);
+unsigned evsx_set(unsigned, char *, unsigned char *, unsigned);
+void	 evsx_reset(void);
 
 #endif /* MIDISH_EV_H */

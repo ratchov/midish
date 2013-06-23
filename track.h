@@ -52,5 +52,6 @@ void	      seqev_rm(struct seqev *);
 
 void	      track_setchan(struct track *, unsigned, unsigned);
 void	      track_chanmap(struct track *, char *);
+unsigned      track_evcnt(struct track *, unsigned);
 
 #endif /* MIDISH_TRACK_H */

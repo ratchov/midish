@@ -28,78 +28,111 @@ struct evinfo evinfo[EV_NUMCMD] =
 	{ "nil", "none",
 	  0,
 	  0, 0,
-	  0, 0, 0, 0
+	  0, 0, 0, 0,
+	  NULL
 	},
 	{ NULL,	"any",
 	  EV_HAS_DEV | EV_HAS_CH,
 	  0, 0,
-	  0, 0, 0, 0
+	  0, 0, 0, 0,
+	  NULL
 	},
 	{ "tempo", NULL,
 	  0,
 	  1, 0xdeadbeef,
-	  TEMPO_MIN, TEMPO_MAX, 0, 0
+	  TEMPO_MIN, TEMPO_MAX, 0, 0,
+	  NULL
 	},
 	{ "timesig", NULL,
 	  0,
 	  2, 0xdeadbeef,
-	  1, 16, 1, 32
+	  1, 16, 1, 32,
+	  NULL
 	},
 	{ "nrpn", "nrpn",
 	  EV_HAS_DEV | EV_HAS_CH,
 	  2, 2,
-	  0, EV_MAXFINE, 0, EV_MAXFINE
+	  0, EV_MAXFINE, 0, EV_MAXFINE,
+	  NULL
 	},
 	{ "rpn", "rpn",
 	  EV_HAS_DEV | EV_HAS_CH,
 	  2, 2,
-	  0, EV_MAXFINE, 0, EV_MAXFINE
+	  0, EV_MAXFINE, 0, EV_MAXFINE,
+	  NULL
 	},
 	{ "xctl", "xctl",
 	  EV_HAS_DEV | EV_HAS_CH,
 	  2, 1,
-	  0, EV_MAXCOARSE, 0, EV_MAXFINE
+	  0, EV_MAXCOARSE, 0, EV_MAXFINE,
+	  NULL
 	},
 	{ "xpc", "xpc",
 	  EV_HAS_DEV | EV_HAS_CH,
 	  2, 2,
-	  0, EV_MAXCOARSE, 0, EV_MAXFINE
+	  0, EV_MAXCOARSE, 0, EV_MAXFINE,
+	  NULL
 	},
 	{ "noff", NULL,
 	  EV_HAS_DEV | EV_HAS_CH,
 	  2, 0xdeadbeef,
-	  0, EV_MAXCOARSE, 0, EV_MAXCOARSE
+	  0, EV_MAXCOARSE, 0, EV_MAXCOARSE,
+	  NULL
 	},
 	{ "non", "note",
 	  EV_HAS_DEV | EV_HAS_CH,
 	  2, 1,
-	  0, EV_MAXCOARSE, 0, EV_MAXCOARSE
+	  0, EV_MAXCOARSE, 0, EV_MAXCOARSE,
+	  NULL
 	},
 	{ "kat", NULL,
 	  EV_HAS_DEV | EV_HAS_CH,
 	  2, 0xdeadbeef,
-	  0, EV_MAXCOARSE, 0, EV_MAXCOARSE
+	  0, EV_MAXCOARSE, 0, EV_MAXCOARSE,
+	  NULL
 	},
 	{ "ctl", "ctl",
 	  EV_HAS_DEV | EV_HAS_CH,
 	  2, 1,
-	  0, EV_MAXCOARSE, 0, EV_MAXCOARSE
+	  0, EV_MAXCOARSE, 0, EV_MAXCOARSE,
+	  NULL
 	},
 	{ "pc", "pc",
 	  EV_HAS_DEV | EV_HAS_CH,
 	  1, 1,
-	  0, EV_MAXCOARSE, 0, 0
+	  0, EV_MAXCOARSE, 0, 0,
+	  NULL
 	},
 	{ "cat", "cat",
 	  EV_HAS_DEV | EV_HAS_CH,
 	  1, 0,
-	  0, EV_MAXCOARSE, 0, 0
+	  0, EV_MAXCOARSE, 0, 0,
+	  NULL
 	},
 	{ "bend", "bend",
 	  EV_HAS_DEV | EV_HAS_CH,
 	  1, 0,
-	  0, EV_MAXFINE, 0, 0
-	}
+	  0, EV_MAXFINE, 0, 0,
+	  NULL
+	},
+	{ NULL, NULL, 0, 0, 0, 0, 0, 0, 0, NULL }, /* unused slot */
+	{ NULL, NULL, 0, 0, 0, 0, 0, 0, 0, NULL }, /* sysex pattern 0 */
+	{ NULL, NULL, 0, 0, 0, 0, 0, 0, 0, NULL }, /* sysex pattern 1 */
+	{ NULL, NULL, 0, 0, 0, 0, 0, 0, 0, NULL }, /* sysex pattern 2 */
+	{ NULL, NULL, 0, 0, 0, 0, 0, 0, 0, NULL }, /* sysex pattern 3 */
+	{ NULL, NULL, 0, 0, 0, 0, 0, 0, 0, NULL }, /* sysex pattern 4 */
+	{ NULL, NULL, 0, 0, 0, 0, 0, 0, 0, NULL }, /* sysex pattern 5 */
+	{ NULL, NULL, 0, 0, 0, 0, 0, 0, 0, NULL }, /* sysex pattern 6 */
+	{ NULL, NULL, 0, 0, 0, 0, 0, 0, 0, NULL }, /* sysex pattern 7 */
+	{ NULL, NULL, 0, 0, 0, 0, 0, 0, 0, NULL }, /* sysex pattern 8 */
+	{ NULL, NULL, 0, 0, 0, 0, 0, 0, 0, NULL }, /* sysex pattern 9 */
+	{ NULL, NULL, 0, 0, 0, 0, 0, 0, 0, NULL }, /* sysex pattern 0xa */
+	{ NULL, NULL, 0, 0, 0, 0, 0, 0, 0, NULL }, /* sysex pattern 0xb */
+	{ NULL, NULL, 0, 0, 0, 0, 0, 0, 0, NULL }, /* sysex pattern 0xc */
+	{ NULL, NULL, 0, 0, 0, 0, 0, 0, 0, NULL }, /* sysex pattern 0xd */
+	{ NULL, NULL, 0, 0, 0, 0, 0, 0, 0, NULL }, /* sysex pattern 0xe */
+	{ NULL, NULL, 0, 0, 0, 0, 0, 0, 0, NULL }  /* sysex pattern 0xf */
+
 };
 
 struct evctl evctl_tab[EV_MAXCOARSE + 1];
@@ -127,6 +160,7 @@ unsigned
 ev_str2cmd(struct ev *ev, char *str)
 {
 	unsigned i;
+
 	for (i = 0; i < EV_NUMCMD; i++) {
 		if (evinfo[i].ev && str_eq(evinfo[i].ev, str)) {
 			ev->cmd = i;
@@ -248,6 +282,19 @@ ev_dbg(struct ev *ev)
 			dbg_puts(" ");
 			dbg_putx(ev->timesig_tics);
 			break;
+		default:
+			if (EV_ISSX(ev)) {
+				dbg_puts(" ");
+				dbg_putx(ev->dev);
+				if (evinfo[ev->cmd].nparams >= 1) {
+					dbg_puts(" ");
+					dbg_putx(ev->v0);
+				}
+				if (evinfo[ev->cmd].nparams >= 2) {
+					dbg_puts(" ");
+					dbg_putx(ev->v1);
+				}
+			}
 		}
 	}
 }
@@ -716,4 +763,112 @@ evctl_isreserved(unsigned num)
 	} else {
 		return 0;
 	}
+}
+
+/*
+ * find the sysex pattern corresponding to the given name
+ */
+unsigned
+evsx_lookup(char *name, unsigned *ret)
+{
+	int cmd;
+
+	for (cmd = EV_SX0; cmd < EV_SX0 + EVSX_NMAX; cmd++) {
+		if (evinfo[cmd].ev != NULL &&
+		    str_eq(evinfo[cmd].ev, name)) {
+			*ret = cmd;
+			return 1;
+		}
+	}
+	return 0;
+}
+
+/*
+ * free the given sysex pattern
+ */
+void
+evsx_unconf(unsigned cmd)
+{
+	str_delete(evinfo[cmd].ev);
+	mem_free(evinfo[cmd].pattern);
+	evinfo[cmd].ev = NULL;
+	evinfo[cmd].spec = NULL;
+	evinfo[cmd].pattern = NULL;
+}
+
+void
+evsx_reset(void)
+{
+	unsigned cmd;
+
+	for (cmd = EV_SX0; cmd < EV_SX0 + EVSX_NMAX; cmd++) {
+		if (evinfo[cmd].ev != NULL)
+			evsx_unconf(cmd);
+	}
+}
+
+unsigned
+evsx_set(unsigned cmd, char *name, unsigned char *pattern, unsigned size)
+{
+	unsigned i;
+	int has_v0_hi, has_v0_lo, has_v1_hi, has_v1_lo;
+
+	/*
+	 * check pattern
+	 */
+	if (size < 2 || pattern[0] != 0xf0 || pattern[size - 1] != 0xf7) {
+		cons_err("sysex pattern must be in the 0xf0 ... 0xf7 format");
+		return 0;
+	}
+	has_v0_hi = has_v0_lo = has_v1_hi = has_v1_lo = 0;
+	for (i = 1; i < size - 1; i++) {
+		switch (pattern[i]) {
+		case EVSX_V0_HI:
+			has_v0_hi++;
+			break;
+		case EVSX_V0_LO:
+			has_v0_lo++;
+			break;
+		case EVSX_V1_HI:
+			has_v1_hi++;
+			break;
+		case EVSX_V1_LO:
+			has_v1_lo++;
+			break;
+		default:
+			if (pattern[i] > 0x7f) {
+				cons_err("sysex pattern data out of range");
+				return 0;
+			}
+		}
+	}
+	if (has_v0_hi > 1 || has_v0_lo > 1 || has_v1_hi > 1 || has_v1_lo > 1) {
+		cons_err("duplicate atom in sysex pattern");
+		return 0;
+	}
+	if (!has_v0_hi) {
+		cons_err("v0 atom required in sysex pattern");
+		return 0;
+	}
+	if (has_v0_lo && !has_v0_hi) {
+		cons_err("v0_lo but no v0_hi in sysex pattern");
+		return 0;
+	}
+	if (has_v1_lo && !has_v1_hi) {
+		cons_err("v1_lo but no v1_hi in sysex pattern");
+		return 0;
+	}
+	evinfo[cmd].pattern = pattern;
+	evinfo[cmd].ev = evinfo[cmd].spec = name;
+	evinfo[cmd].flags = EV_HAS_DEV;
+	evinfo[cmd].nparams = has_v0_hi + has_v1_hi;
+	evinfo[cmd].v0_min = 0;
+	evinfo[cmd].v0_max = has_v0_lo ? EV_MAXFINE : EV_MAXCOARSE;
+	evinfo[cmd].v1_min = 0;
+	evinfo[cmd].v1_max = has_v1_lo ? EV_MAXFINE : EV_MAXCOARSE;
+	dbg_puts("evsx: nparams = ");
+	dbg_putu(evinfo[cmd].nparams);
+	dbg_puts("\n");
+	evinfo[cmd].nranges = 0;
+	return 1;
 }

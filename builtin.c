@@ -770,6 +770,7 @@ blt_load(struct exec *o, struct data **r)
 	}
 	song_stop(usong);
 	song_done(usong);
+	evsx_reset();
 	song_init(usong);
 	res = song_load(usong, filename);
 	cons_putpos(usong->curpos, 0, 0);
@@ -781,6 +782,7 @@ blt_reset(struct exec *o, struct data **r)
 {
 	song_stop(usong);
 	song_done(usong);
+	evsx_reset();
 	song_init(usong);
 	cons_putpos(usong->curpos, 0, 0);
 	return 1;
@@ -1272,6 +1274,100 @@ unsigned
 blt_ctlinfo(struct exec *o, struct data **r)
 {
 	evctltab_output(evctl_tab, tout);
+	return 1;
+}
+
+unsigned
+blt_evsx(struct exec *o, struct data **r)
+{
+	struct data *byte;
+	struct var *arg;
+	char *pattern, *name, *ref;
+	unsigned spec, size, cmd;
+
+	if (!song_try_mode(usong, 0))
+		return 0;
+	if (!exec_lookupname(o, "name", &ref))
+		return 0;
+	if (evsx_lookup(ref, &cmd)) {
+		if (!song_try_ev(usong, cmd))
+			return 0;
+		evsx_unconf(cmd);
+	}
+	for (cmd = 0; cmd < EV_NUMCMD; cmd++) {
+		if (evinfo[cmd].ev && str_eq(evinfo[cmd].ev, ref)) {
+			cons_errs(o->procname, "name already in use");
+			return 0;
+		}
+	}
+	for (cmd = EV_SX0;; cmd++) {
+		if (cmd == EV_SX0 + EVSX_NMAX) {
+			cons_errs(o->procname, "too many sysex patterns");
+			return 0;
+		}
+		if (evinfo[cmd].ev == NULL)
+			break;
+	}
+	name = str_new(ref);
+	pattern = mem_alloc(EVSX_MAXSIZE, "evsx");
+	arg = exec_varlookup(o, "pattern");
+	if (!arg) {
+		dbg_puts("exec_lookupev: no such var\n");
+		dbg_panic();
+	}
+	if (arg->data->type != DATA_LIST) {
+		cons_errs(o->procname, "data must be a list");
+		goto err1;
+	}
+	size = 0;
+	for (byte = arg->data->val.list; byte != NULL; byte = byte->next) {
+		if (size == EVSX_MAXSIZE) {
+			cons_errs(o->procname, "pattern too long");
+			goto err1;
+		}
+		if (byte->type == DATA_LONG) {
+			if (byte->val.num < 0 ||
+			    byte->val.num > 0xff) {
+				cons_errs(o->procname,
+				    "out of range byte in sysex pattern");
+				goto err1;
+			}
+			pattern[size++] = byte->val.num;
+		} else if (byte->type == DATA_REF) {
+			if (str_eq(byte->val.ref, "v0") ||
+			    str_eq(byte->val.ref, "v0_hi")) {
+				spec = EVSX_V0_HI;
+			} else if (str_eq(byte->val.ref, "v0_lo")) {
+				spec = EVSX_V0_LO;
+			} else if (str_eq(byte->val.ref, "v1") ||
+			    str_eq(byte->val.ref, "v1_hi")) {
+				spec = EVSX_V1_HI;
+			} else if (str_eq(byte->val.ref, "v1_lo")) {
+				spec = EVSX_V1_LO;
+			} else {
+				cons_errs(o->procname,
+				    "bad atom in sysex pattern");
+				goto err1;
+			}
+			pattern[size++] = spec;
+		} else {	
+			cons_errs(o->procname, "bad pattern");
+			goto err1;
+		}
+	}
+	if (!evsx_set(cmd, name, pattern, size))
+		goto err1;
+	return 1;
+err1:
+	mem_free(pattern);
+	str_delete(name);
+	return 0;
+}
+
+unsigned
+blt_evsxinfo(struct exec *o, struct data **r)
+{
+	evsx_output(tout);
 	return 1;
 }
 
@@ -2189,8 +2285,14 @@ blt_caddev(struct exec *o, struct data **r, int input)
 	if (!exec_lookupev(o, "event", &ev, input)) {
 		return 0;
 	}
+	if (!EV_ISVOICE(&ev)) {
+		cons_errs(o->procname,
+		    "only voice events can be added to channels");
+		return 0;
+	}
 	if (ev.ch != c->ch || ev.dev != c->dev) {
-		cons_errs(o->procname, "dev/chan mismatch in event spec");
+		cons_errs(o->procname,
+		    "event device or channel mismatch channel ones");
 		return 0;
 	}
 	if (ev_phase(&ev) != (EV_PHASE_FIRST | EV_PHASE_LAST)) {
@@ -2832,7 +2934,6 @@ unsigned
 blt_ximport(struct exec *o, struct data **r)
 {
 	struct songsx *c;
-	struct sysex *x;
 	struct var *arg;
 	char *path;
 	long unit;
@@ -2868,7 +2969,6 @@ unsigned
 blt_xexport(struct exec *o, struct data **r)
 {
 	struct songsx *c;
-	struct sysex *x;
 	struct var *arg;
 	char *path;
 
