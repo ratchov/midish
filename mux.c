@@ -300,7 +300,7 @@ mux_putev(struct ev *ev)
 	}
 #endif
 
-	if (!EV_ISVOICE(ev)) {
+	if (!EV_ISVOICE(ev) && !EV_ISSX(ev)) {
 		dbg_puts("mux_putev: ");
 		ev_dbg(ev);
 		dbg_puts(": only voice events allowed\n");
@@ -638,21 +638,64 @@ mux_errorcb(unsigned unit)
 void
 mux_sysexcb(unsigned unit, struct sysex *sysex)
 {
-	unsigned char *data;
+	unsigned char *p, *q, *data;
+	struct ev ev;
+	unsigned cmd;
 
-	/*
-	 * discard real-time messages, that should not be
-	 * recorded
-	 */
 	if (sysex->first != NULL &&
-	    sysex->first->next == NULL &&
-	    sysex->first->used >= 6) {
+	    sysex->first->next == NULL) {
 		data = sysex->first->data;
-		if (data[0] == 0xf0 &&
+
+		/*
+		 * discard real-time messages, that should not be
+		 * recorded
+		 */
+		if (sysex->first->used >= 6 &&
+		    data[0] == 0xf0 &&
 		    data[1] == 0x7f &&
 		    data[3] == 1) {
 			sysex_del(sysex);
 			return;
+		}
+		
+		/*
+		 * handle custom events
+		 */
+		for (cmd = EV_SX0; cmd < EV_SX0 + EVSX_NMAX; cmd++) {
+			if (evinfo[cmd].ev == NULL)
+				continue;
+			q = data;
+			p = evinfo[cmd].pattern;
+			ev.v0 = ev.v1 = 0;
+			for (;; p++, data++) {
+				switch (*p) {
+				case EVSX_V0_HI:
+					ev.v0 |= *data << 7;
+					continue;
+				case EVSX_V0_LO:
+					ev.v0 |= *data;
+					continue;
+				case EVSX_V1_HI:
+					ev.v1 |= *data << 7;
+					continue;
+				case EVSX_V1_LO:
+					ev.v1 |= *data;
+					continue;
+				}
+				if (*p != *data)
+					break;
+				if (*p == 0xf7) {
+					ev.cmd = cmd;
+					ev.dev = unit;
+					if (evinfo[cmd].v0_max == EV_MAXCOARSE)
+						ev.v0 >>= 7;
+					if (evinfo[cmd].v1_max == EV_MAXCOARSE)
+						ev.v1 >>= 7;
+					norm_evcb(&ev);
+					sysex_del(sysex);
+					return;
+				}
+			}
 		}
 	}
 	song_sysexcb(usong, sysex);

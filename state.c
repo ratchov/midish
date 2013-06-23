@@ -149,7 +149,7 @@ state_match(struct state *st, struct ev *ev)
 		}
 		break;
 	default:
-		if (EV_ISSX(ev)) {
+		if (EV_ISSX(&st->ev)) {
 			if (ev->cmd != st->ev.cmd)
 				return 0;
 			break;

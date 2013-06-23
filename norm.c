@@ -69,7 +69,7 @@ norm_putev(struct ev *ev)
 	struct ev filtout[FILT_MAXNRULES];
 	unsigned i, nev;
 
-	if (!EV_ISVOICE(ev)) {
+	if (!EV_ISVOICE(ev) && !EV_ISSX(ev)) {
 		return;
 	}
 	if (norm_filt) {
@@ -208,7 +208,7 @@ norm_evcb(struct ev *ev)
 		dbg_puts("norm_evcb: cb = NULL, bad initialisation\n");
 		dbg_panic();
 	}
-	if (!EV_ISVOICE(ev)) {
+	if (!EV_ISVOICE(ev) && !EV_ISSX(ev)) {
 		dbg_puts("norm_evcb: only voice events allowed\n");
 		dbg_panic();
 	}
