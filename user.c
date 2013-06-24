@@ -541,34 +541,6 @@ data_print(struct data *d)
 }
 
 /*
- * convert 2 integer lists to channels
- */
-unsigned
-data_num2chan(struct data *o, unsigned *res_dev, unsigned *res_ch)
-{
-	long dev, ch;
-
-	if (o == NULL ||
-	    o->next == NULL ||
-	    o->next->next != NULL ||
-	    o->type != DATA_LONG ||
-	    o->next->type != DATA_LONG) {
-		cons_err("bad {dev midichan} in spec");
-		return 0;
-	}
-	dev = o->val.num;
-	ch = o->next->val.num;
-	if (ch < 0 || ch > EV_MAXCH ||
-	    dev < 0 || dev > EV_MAXDEV) {
-		cons_err("bad dev/midichan ranges");
-		return 0;
-	}
-	*res_dev = dev;
-	*res_ch = ch;
-	return 1;
-}
-
-/*
  * lookup the value of the given controller
  */
 unsigned
@@ -608,9 +580,28 @@ unsigned
 data_list2chan(struct data *o, unsigned *res_dev, unsigned *res_ch, int input)
 {
 	struct songchan *i;
+	long dev, ch;
 
 	if (o->type == DATA_LIST) {
-		return data_num2chan(o->val.list, res_dev, res_ch);
+		o = o->val.list;
+		if (o == NULL ||
+		    o->next == NULL ||
+		    o->next->next != NULL ||
+		    o->type != DATA_LONG ||
+		    o->next->type != DATA_LONG) {
+			cons_err("bad {dev midichan} pair");
+			return 0;
+		}
+		dev = o->val.num;
+		ch = o->next->val.num;
+		if (ch < 0 || ch > EV_MAXCH ||
+		    dev < 0 || dev > EV_MAXDEV) {
+			cons_err("bad dev/midichan ranges");
+			return 0;
+		}
+		*res_dev = dev;
+		*res_ch = ch;
+		return 1;
 	} else if (o->type == DATA_REF) {
 		i = song_chanlookup(usong, o->val.ref, input);
 		if (i == NULL) {
