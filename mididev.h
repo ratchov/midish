@@ -102,7 +102,7 @@ struct mididev {
 	 */
 	struct pollfd *pfd;
 	struct mididev *next;
-	
+
 	/*
 	 * device settings
 	 */

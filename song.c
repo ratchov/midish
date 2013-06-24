@@ -224,7 +224,7 @@ song_chandel(struct song *o, struct songchan *c, int input)
 {
 	struct songfilt *f;
 	struct name **list = input ? &o->inlist : &o->outlist;
-	
+
 	if (input) {
 		if (o->curin == c)
 			o->curin = NULL;
@@ -574,7 +574,7 @@ song_metaput(struct song *o, struct state *s)
 	case EV_TIMESIG:
 		if ((s->flags & STATE_CHANGED) && (o->beat != 0 || o->tic != 0)) {
 			/*
-			 * found an incomplete measure, 
+			 * found an incomplete measure,
 			 * skip to the beggining of the next one
 			 */
 			o->beat = 0;
@@ -873,7 +873,7 @@ song_sysexcb(struct song *o, struct sysex *sx)
 }
 
 /*
- * cancel the current state, and restore the state of 
+ * cancel the current state, and restore the state of
  * the new postition, must be in idle mode
  *
  * return the absolute position as an ``MTC position'',
@@ -921,7 +921,7 @@ song_loc(struct song *o, unsigned where, unsigned how)
 	tic = 0;
 	pos = 0;
 	o->measure = o->beat = o->tic = 0;
-		
+
 	for (;;) {
 		seqptr_getsign(o->metaptr, &bpm, &tpb);
 		seqptr_gettempo(o->metaptr, &usec24);
@@ -952,7 +952,7 @@ song_loc(struct song *o, unsigned where, unsigned how)
 		o->beat += o->tic / tpb;
 		o->tic = o->tic % tpb;
 		o->measure += o->beat / bpm;
-		o->beat = o->beat % bpm; 
+		o->beat = o->beat % bpm;
 		pos += (unsigned long long)delta * usec24;
 		tic += delta;
 	}
@@ -1120,7 +1120,7 @@ song_setmode(struct song *o, unsigned newmode)
 }
 
 /*
- * cancel the current state, and restore the state of 
+ * cancel the current state, and restore the state of
  * the given position
  */
 void

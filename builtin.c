@@ -132,7 +132,7 @@ blt_panic(struct exec *o, struct data **r)
 unsigned
 blt_debug(struct exec *o, struct data **r)
 {
-	extern unsigned filt_debug, mididev_debug, mux_debug, mixout_debug, 
+	extern unsigned filt_debug, mididev_debug, mux_debug, mixout_debug,
 	    norm_debug, pool_debug, song_debug,
 	    timo_debug, mem_debug;
 	char *flag;
@@ -225,7 +225,7 @@ blt_h(struct exec *o, struct data **r)
 	for (arg = proc->args; arg != NULL; arg = arg->next) {
 		textout_putstr(tout, " ");
 		textout_putstr(tout, arg->str);
-	}      
+	}
 	textout_putstr(tout, "\n");
 	return 1;
 }
@@ -393,7 +393,7 @@ blt_goto(struct exec *o, struct data **r)
 		return 0;
 	}
 	usong->curpos = measure;
-	if (usong->mode >= SONG_IDLE) 
+	if (usong->mode >= SONG_IDLE)
 		song_setmode(usong, SONG_IDLE);
 	song_goto(usong, usong->curpos);
 	return 1;
@@ -471,9 +471,9 @@ blt_setq(struct exec *o, struct data **r)
 unsigned
 blt_getq(struct exec *o, struct data **r)
 {
-	if (usong->curquant > 0) 
+	if (usong->curquant > 0)
 		*r = data_newlong(usong->tics_per_unit / usong->curquant);
-	else 
+	else
 		*r = data_newnil();
 	return 1;
 }
@@ -960,7 +960,7 @@ blt_tempo(struct exec *o, struct data **r)
 		return 0;
 	}
 	if (tempo < 40 || tempo > 240) {
-		cons_errs(o->procname, 
+		cons_errs(o->procname,
 		    "tempo must be between 40 and 240 beats per measure");
 		return 0;
 	}
@@ -996,15 +996,15 @@ blt_mins(struct exec *o, struct data **r)
 	    sig->next->type == DATA_LONG && sig->next->next == NULL) {
 		bpm = sig->val.num;
 		sig = sig->next;
-		if (sig->val.num != 1 && sig->val.num != 2 && 
+		if (sig->val.num != 1 && sig->val.num != 2 &&
 		    sig->val.num != 4 && sig->val.num != 8) {
-			cons_errs(o->procname, 
+			cons_errs(o->procname,
 			    "denominator must be 1, 2, 4 or 8");
 			return 0;
 		}
 		tpb = usong->tics_per_unit / sig->val.num;
 	} else {
-		cons_errs(o->procname, 
+		cons_errs(o->procname,
 		    "signature must be {num denom} or {} list");
 		return 0;
 	}
@@ -1074,7 +1074,7 @@ blt_mdup(struct exec *o, struct data **r)
 		return 0;
 	}
 
-	track_timeinfo(&usong->meta, usong->curpos, 
+	track_timeinfo(&usong->meta, usong->curpos,
 	    &stic, NULL, &sbpm, &stpb);
 	track_timeinfo(&usong->meta, usong->curpos + usong->curlen,
 	    &etic, NULL, NULL, NULL);
@@ -1126,7 +1126,7 @@ blt_mdup(struct exec *o, struct data **r)
 		stic -= qstep;
 		wtic -= qstep;
 		etic -= qstep;
-	}	
+	}
 	SONG_FOREACH_TRK(usong, t) {
 		track_init(&paste);
 		track_move(&t->track, stic, etic - stic, NULL, &paste, 1, 0);
@@ -1152,11 +1152,11 @@ blt_mcut(struct exec *o, struct data **r)
 	if (!song_try_mode(usong, 0)) {
 		return 0;
 	}
-	track_timeinfo(&usong->meta, usong->curpos, 
+	track_timeinfo(&usong->meta, usong->curpos,
 	    &stic, NULL, NULL, NULL);
 	track_timeinfo(&usong->meta, usong->curpos + usong->curlen,
 	    &etic, &usec24, &bpm, &tpb);
-	
+
 	track_init(&paste);
 	sp = seqptr_new(&paste);
 	seqptr_ticput(sp, stic);
@@ -1190,7 +1190,7 @@ blt_mcut(struct exec *o, struct data **r)
 	if (stic > qstep) {
 		stic -= qstep;
 		etic -= qstep;
-	}	
+	}
 	SONG_FOREACH_TRK(usong, t) {
 		track_cut(&t->track, stic, etic - stic);
 	}
@@ -1229,8 +1229,8 @@ blt_minfo(struct exec *o, struct data **r)
 		if (seqptr_skip(mp, tpb * bpm) > 0)
 			stop = 1;
 		seqptr_gettempo(mp, &tempo2);
-		
-		if (tpb != otpb || bpm != obpm || 
+
+		if (tpb != otpb || bpm != obpm ||
 		    tempo1 != otempo1 || tempo2 != otempo2) {
 			otpb = tpb;
 			obpm = bpm;
@@ -1244,11 +1244,11 @@ blt_minfo(struct exec *o, struct data **r)
 			textout_putstr(tout, " ");
 			textout_putlong(tout, usong->tics_per_unit / tpb);
 			textout_putstr(tout, "}\t");
-			textout_putlong(tout, 
+			textout_putlong(tout,
 			    60L * 24000000L / (tempo1 * tpb));
 			if (tempo2 != tempo1) {
 				textout_putstr(tout, "\t# - ");
-				textout_putlong(tout, 
+				textout_putlong(tout,
 				    60L * 24000000L / (tempo2 * tpb));
 			}
 			textout_putstr(tout, "\n");
@@ -1432,7 +1432,7 @@ blt_evsx(struct exec *o, struct data **r)
 				goto err1;
 			}
 			pattern[size++] = spec;
-		} else {	
+		} else {
 			cons_errs(o->procname, "bad pattern");
 			goto err1;
 		}
@@ -1763,7 +1763,7 @@ blt_tclr(struct exec *o, struct data **r)
 		tic -= qstep;
 	} else if (tic + len > qstep) {
 		len -= qstep;
-	}	
+	}
 	track_move(&t->track, tic, len, &usong->curev, NULL, 0, 1);
 	return 1;
 }
@@ -1823,7 +1823,7 @@ blt_tcopy(struct exec *o, struct data **r)
 		tic2 -= qstep;
 	} else if (tic + len > qstep) {
 		len -= qstep;
-	}	
+	}
 	track_clear(&usong->clip);
 	track_move(&t->track, tic, len, &usong->curev, &usong->clip, 1, 0);
 	track_shift(&usong->clip, tic2);
@@ -2046,9 +2046,9 @@ blt_tinfo(struct exec *o, struct data **r)
 					textout_putstr(tout, " ");
 				}
 			}
-		}		
+		}
 		if (len > 0)
-			break;		
+			break;
 		(void)seqptr_skip(mp, bpm * tpb);
 		m++;
 	}
@@ -2227,7 +2227,7 @@ blt_cren(struct exec *o, struct data **r, int input)
 	if (c->link) {
 		str_delete(c->link->name.str);
 		c->link->name.str = str_new(name);
-	}		
+	}
 	return 1;
 }
 
@@ -2273,7 +2273,7 @@ blt_cset(struct exec *o, struct data **r, int input)
 	}
 	evspec_reset(&from);
 	from.dev_min = from.dev_max = c->dev;
-	from.ch_min = from.ch_max = c->ch;	
+	from.ch_min = from.ch_max = c->ch;
 	c->dev = dev;
 	c->ch = ch;
 	evspec_reset(&to);
@@ -2531,7 +2531,7 @@ blt_fren(struct exec *o, struct data **r)
 	if (f->link) {
 		str_delete(f->link->name.str);
 		f->link->name.str = str_new(name);
-	}		
+	}
 	return 1;
 }
 
@@ -2705,7 +2705,7 @@ blt_fchgxxx(struct exec *o, struct data **r, int input, int swap)
 		return 0;
 	}
 	if (evspec_isec(&from, &to)) {
-		cons_errs(o->procname, 
+		cons_errs(o->procname,
 		    "\"from\" and \"to\" event ranges must be disjoint");
 	}
 	if (mux_isopen)
@@ -3124,7 +3124,7 @@ blt_dnew(struct exec *o, struct data **r)
 	} else if (str_eq(modename, "rw")) {
 		mode = MIDIDEV_MODE_IN | MIDIDEV_MODE_OUT;
 	} else {
-		cons_errss(o->procname, modename, 
+		cons_errss(o->procname, modename,
 		    "bad mode (allowed: ro, wo, rw)");
 		return 0;
 	}

@@ -586,7 +586,7 @@ mididev_putev(struct mididev *o, struct ev *ev)
 	}
 end:
 	if (o->sync)
-		mididev_flush(o);	
+		mididev_flush(o);
 }
 
 /*

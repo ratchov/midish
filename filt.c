@@ -44,7 +44,7 @@ rule_dbg(struct evspec *from, struct  evspec *to)
  */
 struct filtnode *
 filtnode_new(struct evspec *from, struct filtnode **loc)
-{	
+{
 	struct filtnode *s;
 
 	s = mem_alloc(sizeof(struct filtnode), "filtnode");
@@ -322,7 +322,7 @@ filt_mapnew(struct filt *f, struct evspec *from, struct evspec *to)
 	/*
 	 * check if ranges are ok, do nothing if they are not
 	 */
-	if (to->cmd != EVSPEC_EMPTY && !evspec_isamap(from, to)) 
+	if (to->cmd != EVSPEC_EMPTY && !evspec_isamap(from, to))
 		return;
 
 	s = filtnode_mksrc(&f->map, from);
@@ -413,7 +413,7 @@ filt_transp(struct filt *f, struct evspec *from, int plus)
 		dbg_puts("filt_transp: set must contain notes\n");
 		return;
 	}
-	if (from->cmd == EVSPEC_NOTE && 
+	if (from->cmd == EVSPEC_NOTE &&
 	    (from->v0_min != 0 || from->v0_max != EV_MAXCOARSE)) {
 		dbg_puts("filt_transp: note range must be full\n");
 		return;

@@ -98,8 +98,8 @@ struct song {
 	struct seqptr *recptr;		/* cur position in 'rec' track */
 	unsigned measure, beat, tic;	/* cur position (for metronome) */
 #define SONG_IDLE	1		/* filter running */
-#define SONG_PLAY	2		/* above + playback */ 
-#define SONG_REC	3		/* above + recording */ 
+#define SONG_PLAY	2		/* above + playback */
+#define SONG_REC	3		/* above + recording */
 	unsigned mode;			/* real-time "mode" */
 	unsigned complete;		/* playback completed */
 	unsigned metro_mask;		/* if enable = (mask | mode) */

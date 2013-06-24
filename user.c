@@ -127,7 +127,7 @@ exec_lookupchan_getnum(struct exec *o, char *var,
  * 'var'.  ('var' must be a reference)
  */
 unsigned
-exec_lookupchan_getref(struct exec *o, char *var, 
+exec_lookupchan_getref(struct exec *o, char *var,
     struct songchan **res, int input)
 {
 	struct var *arg;
@@ -399,7 +399,7 @@ exec_lookupevspec(struct exec *o, char *name, struct evspec *e, int input)
 		e->dev_min = e->dev_max = d->val.num;
 		e->ch_min = 0;
 		e->ch_max = EV_MAXCH;
-	} else { 
+	} else {
 		cons_err("list or ref expected as channel range spec");
 		return 0;
 	}

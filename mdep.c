@@ -78,7 +78,7 @@ mux_mdep_open(void)
 	static struct sigaction sa;
 	struct itimerval it;
 	sigset_t set;
-        
+
 	sigemptyset(&set);
 	sigaddset(&set, SIGPIPE);
 	if (sigprocmask(SIG_BLOCK, &set, NULL)) {

@@ -1044,7 +1044,7 @@ track_scale(struct track *t, unsigned oldunit, unsigned newunit)
  * transpose the given track
  */
 void
-track_transpose(struct track *src, unsigned start, unsigned len, 
+track_transpose(struct track *src, unsigned start, unsigned len,
     struct evspec *es, int halftones)
 {
 	unsigned delta, tic;
@@ -1510,7 +1510,7 @@ track_cut(struct track *t, unsigned stic, unsigned len)
  * map current selection to the given evspec
  */
 void
-track_evmap(struct track *src, unsigned start, unsigned len, 
+track_evmap(struct track *src, unsigned start, unsigned len,
     struct evspec *es, struct evspec *from, struct evspec *to)
 {
 	unsigned delta, tic;

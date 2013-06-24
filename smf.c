@@ -999,7 +999,7 @@ syx_export(char *path, struct sysexlist *l)
 				fclose(f);
 				return 0;
 			}
-				
+
 		}
 	}
 	fclose(f);

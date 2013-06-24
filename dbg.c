@@ -94,7 +94,7 @@ dbg_putx(unsigned long num)
 			c += (c < 10) ? '0' : 'a' - 10;
 			DBG_PUTC(c);
 		}
-	} else 
+	} else
 		DBG_PUTC('0');
 }
 
@@ -289,7 +289,7 @@ prof_sqrt(unsigned op)
 {
 	unsigned t, res = 0;
 	unsigned one = 1 << (8 * sizeof(unsigned) / 2);
- 
+
 	while (one > op)
 		one >>= 2;
 
@@ -320,7 +320,7 @@ prof_reset(struct prof *p, char *name)
 void
 prof_val(struct prof *p, unsigned val)
 {
-#define MAXVAL ((1 << sizeof(unsigned) * 4) - 1) 
+#define MAXVAL ((1 << sizeof(unsigned) * 4) - 1)
 	unsigned sumsqr;
 
 	if (p->err) {
@@ -363,10 +363,10 @@ prof_dbg(struct prof *p)
 	if (p->n != 0) {
 		dbg_puts(", min=");
 		dbg_putpct(p->min);
-		
+
 		dbg_puts(", max=");
 		dbg_putpct(p->max);
-		
+
 		mean = p->sum / p->n;
 		dbg_puts(", mean=");
 		dbg_putpct(mean);

@@ -657,7 +657,7 @@ mux_sysexcb(unsigned unit, struct sysex *sysex)
 			sysex_del(sysex);
 			return;
 		}
-		
+
 		/*
 		 * handle custom events
 		 */
@@ -820,7 +820,7 @@ mux_gotoreq(unsigned mmcpos)
 	mmc_reloc[7] =  (mmcpos / (3600 * MTC_SEC))	% 24;
 	mmc_reloc[8] =  (mmcpos / (60   * MTC_SEC))	% 60;
 	mmc_reloc[9] =  (mmcpos / MTC_SEC)		% 60;
-	mmc_reloc[10] = (mmcpos / (MTC_SEC / 24))	% 24; 
+	mmc_reloc[10] = (mmcpos / (MTC_SEC / 24))	% 24;
 	mmc_reloc[11] = (mmcpos / (MTC_SEC / 24 / 100)) % 100;
 	mmc_reloc[12] = 0xf7;
 

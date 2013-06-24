@@ -107,7 +107,7 @@ alsa_open(struct mididev *addr)
 	struct snd_seq_addr dst;
 	unsigned int mode;
 	char name[32];
-	
+
 	/*
 	 * alsa displays annoying ``Interrupted system call'' messages caused
 	 * by poll(4) system call being interrupted by SIGALRM, which is not
@@ -119,7 +119,7 @@ alsa_open(struct mididev *addr)
 		SND_SEQ_OPEN_DUPLEX, 0) < 0) {
 		dbg_puts("alsa_open: could not open ALSA sequencer\n");
 		dev->mididev.eof = 1;
-		return;	
+		return;
 	}
 	snprintf(name, sizeof(name), "midish/%u", dev->mididev.unit);
 	if (snd_seq_set_client_name(dev->seq_handle, name) < 0) {
@@ -147,7 +147,7 @@ alsa_open(struct mididev *addr)
 		dev->mididev.eof = 1;
 		return;
 	}
-	
+
 	/*
 	 * now we have the port, create parsers
 	 */
@@ -155,7 +155,7 @@ alsa_open(struct mididev *addr)
 		if (snd_midi_event_new(MIDIDEV_BUFLEN, &dev->iparser) < 0) {
 			dev->iparser = NULL;
 			dbg_puts("alsa_open: could not create in parser\n");
-			dev->mididev.eof = 1;		
+			dev->mididev.eof = 1;
 			return;
 		}
 	}
@@ -165,7 +165,7 @@ alsa_open(struct mididev *addr)
 			dbg_puts("alsa_open: couldn't create out parser\n");
 			dev->mididev.eof = 1;
 			return;
-		}  
+		}
 	}
 
 	/*
@@ -179,14 +179,14 @@ alsa_open(struct mididev *addr)
 			return;
 		}
 		if ((dev->mididev.mode & MIDIDEV_MODE_IN) &&
-		    snd_seq_connect_from(dev->seq_handle, 
+		    snd_seq_connect_from(dev->seq_handle,
 			dev->port, dst.client, dst.port) < 0) {
 			dbg_puts("alsa_open: couldn't connect to input\n");
 			dev->mididev.eof = 1;
 			return;
 		}
 		if ((dev->mididev.mode & MIDIDEV_MODE_OUT) &&
-		    snd_seq_connect_to(dev->seq_handle, 
+		    snd_seq_connect_to(dev->seq_handle,
 			dev->port, dst.client, dst.port) < 0) {
 			dbg_puts("alsa_open: couldn't connect to output\n");
 			dev->mididev.eof = 1;
@@ -226,10 +226,10 @@ alsa_read(struct mididev *addr, unsigned char *buf, unsigned count)
 	snd_seq_event_t *ev;
 	long len;
 	int err;
-	
+
 	if (!dev->seq_handle || !dev->iparser)
 		return 0;
-		
+
 	while (todo > 0 &&
 	    snd_seq_event_input_pending(dev->seq_handle, 1) > 0) {
 		err = snd_seq_event_input(dev->seq_handle, &ev);
@@ -242,8 +242,8 @@ alsa_read(struct mididev *addr, unsigned char *buf, unsigned count)
 		if (len < 0) {
 			/* fails for ALSA specific stuff we dont care about */
 			continue;
-		} 
-		todo -= len;			
+		}
+		todo -= len;
 		buf += len;
 	}
 	return count - todo;
@@ -256,9 +256,9 @@ alsa_write(struct mididev *addr, unsigned char *buf, unsigned count)
 	unsigned todo = count;
 	snd_seq_event_t ev;
 	long len;
-	
+
 	if (!dev->seq_handle || !dev->oparser)
-		return 0;	
+		return 0;
 
 	while (todo > 0) {
 		/*

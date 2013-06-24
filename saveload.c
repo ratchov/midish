@@ -106,11 +106,11 @@ ev_output(struct ev *e, struct textout *f)
 				textout_putstr(f, evinfo[e->cmd].ev);
 				textout_putstr(f, " ");
 				textout_putlong(f, e->dev);
-				if (evinfo[e->cmd].nparams >= 1) {					
+				if (evinfo[e->cmd].nparams >= 1) {
 					textout_putstr(f, " ");
 					textout_putlong(f, e->v0);
 				}
-				if (evinfo[e->cmd].nparams >= 2) {					
+				if (evinfo[e->cmd].nparams >= 2) {
 					textout_putstr(f, " ");
 					textout_putlong(f, e->v1);
 				}
@@ -484,7 +484,7 @@ evsx_output(struct textout *f)
 			p++;
 		}
 	end:
-		textout_putstr(f, "\n");	
+		textout_putstr(f, "\n");
 		textout_shiftleft(f);
 		textout_indent(f);
 		textout_putstr(f, "}\n");
@@ -1423,7 +1423,7 @@ parse_evsx(struct parse *o, char *ref)
 		lex_err(&o->lex, "'{' expected while parsing evsx");
 		goto err1;
 	}
-	
+
 	for (;;) {
 		if (!parse_getsym(o)) {
 			goto err1;
@@ -1460,7 +1460,7 @@ parse_evsx(struct parse *o, char *ref)
 							val = EVSX_V1_HI;
 						else if (str_eq(o->lex.strval, "v1_lo"))
 							val = EVSX_V1_LO;
-						else {	
+						else {
 							lex_err(&o->lex, "unexpected atom in pattern");
 							return 0;
 						}
@@ -1532,7 +1532,7 @@ parse_songchan(struct parse *o, struct song *s, struct songchan *i)
 				if (!parse_nl(o)) {
 					return 0;
 				}
-				lex_err(&o->lex, 
+				lex_err(&o->lex,
 				    "ignored obsolete 'curinput' line");
 			} else {
 				goto unknown;
@@ -1645,7 +1645,7 @@ parse_songfilt(struct parse *o, struct song *s, struct songfilt *g)
 					return 0;
 				}
 				if (o->lex.id != TOK_IDENT) {
-					lex_err(&o->lex, 
+					lex_err(&o->lex,
 					    "identifier expected "
 					    "after 'curchan' in songfilt");
 					return 0;
@@ -1653,7 +1653,7 @@ parse_songfilt(struct parse *o, struct song *s, struct songfilt *g)
 				if (!parse_nl(o)) {
 					return 0;
 				}
-				lex_err(&o->lex, 
+				lex_err(&o->lex,
 				    "ignored obsolete 'curchan' line");
 			} else if (str_eq(o->lex.strval, "filt")) {
 				if (!parse_filt(o, &g->filt)) {

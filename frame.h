@@ -59,7 +59,7 @@ void     track_quantize(struct track *, unsigned, unsigned,
 void     track_scale(struct track *, unsigned, unsigned);
 void     track_transpose(struct track *, unsigned, unsigned,
 	 struct evspec *, int);
-void	 track_evmap(struct track *, unsigned, unsigned, 
+void	 track_evmap(struct track *, unsigned, unsigned,
 	 struct evspec *, struct evspec *, struct evspec *);
 void	 track_check(struct track *);
 void     track_confev(struct track *, struct ev *);
