@@ -1364,7 +1364,8 @@ blt_evsx(struct exec *o, struct data **r)
 {
 	struct data *byte;
 	struct var *arg;
-	char *pattern, *name, *ref;
+	char *name, *ref;
+	unsigned char *pattern;
 	unsigned spec, size, cmd;
 
 	if (!song_try_mode(usong, 0))
