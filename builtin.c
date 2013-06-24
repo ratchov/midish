@@ -33,6 +33,88 @@
 #include "version.h"
 
 unsigned
+blt_info(struct exec *o, struct data **r)
+{
+	exec_dumpprocs(o);
+	exec_dumpvars(o);
+	return 1;
+}
+
+unsigned
+blt_shut(struct exec *o, struct data **r)
+{
+	unsigned i;
+	struct ev ev;
+	struct mididev *dev;
+
+	/*
+	 * XXX: should raise mode to SONG_IDLE and
+	 * use mixout
+	 */
+	if (!song_try_mode(usong, 0)) {
+		return 0;
+	}
+	mux_open();
+	for (dev = mididev_list; dev != NULL; dev = dev->next) {
+		for (i = 0; i < EV_MAXCH; i++) {
+			ev.cmd = EV_XCTL;
+			ev.dev = dev->unit;
+			ev.ch = i;
+			ev.ctl_num = 121;
+			ev.ctl_val = 0;
+			mux_putev(&ev);
+			ev.cmd = EV_XCTL;
+			ev.dev = dev->unit;
+			ev.ch = i;
+			ev.ctl_num = 123;
+			ev.ctl_val = 0;
+			mux_putev(&ev);
+			ev.cmd = EV_BEND;
+			ev.dev = dev->unit;
+			ev.ch = i;
+			ev.bend_val = EV_BEND_DEFAULT;
+			mux_putev(&ev);
+		}
+	}
+	mux_close();
+	return 1;
+}
+
+unsigned
+blt_proclist(struct exec *o, struct data **r)
+{
+	struct proc *i;
+	struct data *d, *n;
+
+	d = data_newlist(NULL);
+	PROC_FOREACH(i, o->procs) {
+		if (i->code->vmt == &node_vmt_slist) {
+			n = data_newref(i->name.str);
+			data_listadd(d, n);
+		}
+	}
+	*r = d;
+	return 1;
+}
+
+unsigned
+blt_builtinlist(struct exec *o, struct data **r)
+{
+	struct proc *i;
+	struct data *d, *n;
+
+	d = data_newlist(NULL);
+	PROC_FOREACH(i, o->procs) {
+		if (i->code->vmt == &node_vmt_builtin) {
+			n = data_newref(i->name.str);
+			data_listadd(d, n);
+		}
+	}
+	*r = d;
+	return 1;
+}
+
+unsigned
 blt_version(struct exec *o, struct data **r)
 {
 	cons_err(VERSION);

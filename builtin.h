@@ -20,6 +20,11 @@
 struct exec;
 struct data;
 
+unsigned blt_info(struct exec *, struct data **);
+unsigned blt_shut(struct exec *, struct data **);
+unsigned blt_proclist(struct exec *, struct data **);
+unsigned blt_builtinlist(struct exec *, struct data **);
+
 unsigned blt_version(struct exec *, struct data **);
 unsigned blt_panic(struct exec *, struct data **);
 unsigned blt_debug(struct exec *, struct data **);

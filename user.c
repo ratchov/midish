@@ -46,8 +46,6 @@ struct song *usong;
 unsigned user_flag_batch = 0;
 unsigned user_flag_verb = 0;
 
-/* -------------------------------------------------- some tools --- */
-
 /*
  * execute the script in the given file inside the 'exec' environment.
  * the script has acces to all global variables, but not to the local
@@ -163,6 +161,7 @@ exec_lookupfilt(struct exec *o, char *var, struct songfilt **res)
 {
 	char *name;
 	struct songfilt *f;
+
 	if (!exec_lookupname(o, var, &name)) {
 		return 0;
 	}
@@ -184,6 +183,7 @@ exec_lookupsx(struct exec *o, char *var, struct songsx **res)
 {
 	char *name;
 	struct songsx *t;
+
 	if (!exec_lookupname(o, var, &name)) {
 		return 0;
 	}
@@ -375,12 +375,14 @@ exec_lookupevspec(struct exec *o, char *name, struct evspec *e, int input)
 		} else if (d->val.list &&
 		    d->val.list->next &&
 		    !d->val.list->next->next) {
-			if (!data_getrange(d->val.list, 0, EV_MAXDEV, &lo, &hi)) {
+			if (!data_getrange(d->val.list, 0,
+				EV_MAXDEV, &lo, &hi)) {
 				return 0;
 			}
 			e->dev_min = lo;
 			e->dev_max = hi;
-			if (!data_getrange(d->val.list->next, 0, EV_MAXCH, &lo, &hi)) {
+			if (!data_getrange(d->val.list->next, 0,
+				EV_MAXCH, &lo, &hi)) {
 				return 0;
 			}
 			e->ch_min = lo;
@@ -625,7 +627,8 @@ data_getchan(struct data *o, unsigned *res_dev, unsigned *res_ch, int input)
  */
 unsigned
 data_getrange(struct data *d, unsigned min, unsigned max,
-    unsigned *lo, unsigned *hi) {
+    unsigned *lo, unsigned *hi)
+{
     	if (d->type == DATA_LONG) {
 		*lo = *hi = d->val.num;
 	} else if (d->type == DATA_LIST) {
@@ -783,92 +786,6 @@ data_getctl(struct data *d, unsigned *num)
 	return 1;
 }
 
-/* ---------------------------------------- interpreter functions --- */
-
-
-unsigned
-user_func_info(struct exec *o, struct data **r)
-{
-	exec_dumpprocs(o);
-	exec_dumpvars(o);
-	return 1;
-}
-
-
-unsigned
-user_func_shut(struct exec *o, struct data **r)
-{
-	unsigned i;
-	struct ev ev;
-	struct mididev *dev;
-
-	/*
-	 * XXX: should raise mode to SONG_IDLE and
-	 * use mixout
-	 */
-	if (!song_try_mode(usong, 0)) {
-		return 0;
-	}
-	mux_open();
-	for (dev = mididev_list; dev != NULL; dev = dev->next) {
-		for (i = 0; i < EV_MAXCH; i++) {
-			ev.cmd = EV_XCTL;
-			ev.dev = dev->unit;
-			ev.ch = i;
-			ev.ctl_num = 121;
-			ev.ctl_val = 0;
-			mux_putev(&ev);
-			ev.cmd = EV_XCTL;
-			ev.dev = dev->unit;
-			ev.ch = i;
-			ev.ctl_num = 123;
-			ev.ctl_val = 0;
-			mux_putev(&ev);
-			ev.cmd = EV_BEND;
-			ev.dev = dev->unit;
-			ev.ch = i;
-			ev.bend_val = EV_BEND_DEFAULT;
-			mux_putev(&ev);
-		}
-	}
-	mux_close();
-	return 1;
-}
-
-unsigned
-user_func_proclist(struct exec *o, struct data **r)
-{
-	struct proc *i;
-	struct data *d, *n;
-
-	d = data_newlist(NULL);
-	PROC_FOREACH(i, o->procs) {
-		if (i->code->vmt == &node_vmt_slist) {
-			n = data_newref(i->name.str);
-			data_listadd(d, n);
-		}
-	}
-	*r = d;
-	return 1;
-}
-
-unsigned
-user_func_builtinlist(struct exec *o, struct data **r)
-{
-	struct proc *i;
-	struct data *d, *n;
-
-	d = data_newlist(NULL);
-	PROC_FOREACH(i, o->procs) {
-		if (i->code->vmt == &node_vmt_builtin) {
-			n = data_newref(i->name.str);
-			data_listadd(d, n);
-		}
-	}
-	*r = d;
-	return 1;
-}
-
 unsigned
 user_mainloop(void)
 {
@@ -901,7 +818,7 @@ user_mainloop(void)
 			name_newarg("value", NULL)));
 	exec_newbuiltin(exec, "version", blt_version, NULL);
 	exec_newbuiltin(exec, "panic", blt_panic, NULL);
-	exec_newbuiltin(exec, "info", user_func_info, NULL);
+	exec_newbuiltin(exec, "info", blt_info, NULL);
 
 	exec_newbuiltin(exec, "getunit", blt_getunit, NULL);
 	exec_newbuiltin(exec, "setunit", blt_setunit,
@@ -1118,9 +1035,9 @@ user_mainloop(void)
 	exec_newbuiltin(exec, "xexport", blt_xexport,
 			name_newarg("path", NULL));
 
-	exec_newbuiltin(exec, "shut", user_func_shut, NULL);
-	exec_newbuiltin(exec, "proclist", user_func_proclist, NULL);
-	exec_newbuiltin(exec, "builtinlist", user_func_builtinlist, NULL);
+	exec_newbuiltin(exec, "shut", blt_shut, NULL);
+	exec_newbuiltin(exec, "proclist", blt_proclist, NULL);
+	exec_newbuiltin(exec, "builtinlist", blt_builtinlist, NULL);
 
 	exec_newbuiltin(exec, "dnew", blt_dnew,
 			name_newarg("devnum",
