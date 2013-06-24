@@ -769,11 +769,11 @@ evctl_isreserved(unsigned num)
  * find the sysex pattern corresponding to the given name
  */
 unsigned
-evsx_lookup(char *name, unsigned *ret)
+evpat_lookup(char *name, unsigned *ret)
 {
 	int cmd;
 
-	for (cmd = EV_SX0; cmd < EV_SX0 + EVSX_NMAX; cmd++) {
+	for (cmd = EV_PAT0; cmd < EV_PAT0 + EV_NPAT; cmd++) {
 		if (evinfo[cmd].ev != NULL &&
 		    str_eq(evinfo[cmd].ev, name)) {
 			*ret = cmd;
@@ -787,7 +787,7 @@ evsx_lookup(char *name, unsigned *ret)
  * free the given sysex pattern
  */
 void
-evsx_unconf(unsigned cmd)
+evpat_unconf(unsigned cmd)
 {
 	str_delete(evinfo[cmd].ev);
 	mem_free(evinfo[cmd].pattern);
@@ -797,18 +797,18 @@ evsx_unconf(unsigned cmd)
 }
 
 void
-evsx_reset(void)
+evpat_reset(void)
 {
 	unsigned cmd;
 
-	for (cmd = EV_SX0; cmd < EV_SX0 + EVSX_NMAX; cmd++) {
+	for (cmd = EV_PAT0; cmd < EV_PAT0 + EV_NPAT; cmd++) {
 		if (evinfo[cmd].ev != NULL)
-			evsx_unconf(cmd);
+			evpat_unconf(cmd);
 	}
 }
 
 unsigned
-evsx_set(unsigned cmd, char *name, unsigned char *pattern, unsigned size)
+evpat_set(unsigned cmd, char *name, unsigned char *pattern, unsigned size)
 {
 	unsigned i;
 	int has_v0_hi, has_v0_lo, has_v1_hi, has_v1_lo;
@@ -823,16 +823,16 @@ evsx_set(unsigned cmd, char *name, unsigned char *pattern, unsigned size)
 	has_v0_hi = has_v0_lo = has_v1_hi = has_v1_lo = 0;
 	for (i = 1; i < size - 1; i++) {
 		switch (pattern[i]) {
-		case EVSX_V0_HI:
+		case EV_PATV0_HI:
 			has_v0_hi++;
 			break;
-		case EVSX_V0_LO:
+		case EV_PATV0_LO:
 			has_v0_lo++;
 			break;
-		case EVSX_V1_HI:
+		case EV_PATV1_HI:
 			has_v1_hi++;
 			break;
-		case EVSX_V1_LO:
+		case EV_PATV1_LO:
 			has_v1_lo++;
 			break;
 		default:
@@ -866,7 +866,7 @@ evsx_set(unsigned cmd, char *name, unsigned char *pattern, unsigned size)
 	evinfo[cmd].v0_max = has_v0_lo ? EV_MAXFINE : EV_MAXCOARSE;
 	evinfo[cmd].v1_min = 0;
 	evinfo[cmd].v1_max = has_v1_lo ? EV_MAXFINE : EV_MAXCOARSE;
-	dbg_puts("evsx: nparams = ");
+	dbg_puts("evpat: nparams = ");
 	dbg_putu(evinfo[cmd].nparams);
 	dbg_puts("\n");
 	evinfo[cmd].nranges = 0;

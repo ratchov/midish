@@ -31,7 +31,7 @@ struct song;
 
 void ev_output(struct ev *, struct textout *);
 void evspec_output(struct evspec *, struct textout *);
-void evsx_output(struct textout *);
+void evpat_output(struct textout *);
 void track_output(struct track *, struct textout *);
 void rule_output(struct rule *, struct textout *);
 void filt_output(struct filt *, struct textout *);

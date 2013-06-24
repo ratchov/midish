@@ -534,16 +534,16 @@ mididev_putev(struct mididev *o, struct ev *ev)
 		p = evinfo[ev->cmd].pattern;
 		for (;;) {
 			switch (*p) {
-			case EVSX_V0_HI:
+			case EV_PATV0_HI:
 				mididev_out(o, ev->v0 >> 7);
 				break;
-			case EVSX_V0_LO:
+			case EV_PATV0_LO:
 				mididev_out(o, ev->v0 & 0x7f);
 				break;
-			case EVSX_V1_HI:
+			case EV_PATV1_HI:
 				mididev_out(o, ev->v1 >> 7);
 				break;
-			case EVSX_V1_LO:
+			case EV_PATV1_LO:
 				mididev_out(o, ev->v1 & 0x7f);
 				break;
 			default:

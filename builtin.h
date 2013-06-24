@@ -79,8 +79,8 @@ unsigned blt_ctlconf(struct exec *, struct data **);
 unsigned blt_ctlconfx(struct exec *, struct data **);
 unsigned blt_ctlunconf(struct exec *, struct data **);
 unsigned blt_ctlinfo(struct exec *, struct data **);
-unsigned blt_evsx(struct exec *, struct data **);
-unsigned blt_evsxinfo(struct exec *, struct data **);
+unsigned blt_evpat(struct exec *, struct data **);
+unsigned blt_evinfo(struct exec *, struct data **);
 unsigned blt_metro(struct exec *, struct data **);
 unsigned blt_metrocf(struct exec *, struct data **);
 

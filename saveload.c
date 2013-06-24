@@ -445,35 +445,35 @@ evctltab_output(struct evctl *tab, struct textout *f)
 }
 
 void
-evsx_output(struct textout *f)
+evpat_output(struct textout *f)
 {
 	unsigned char *p;
 	unsigned i;
 
-	for (i = 0; i < EVSX_NMAX; i++) {
-		if (evinfo[EV_SX0 + i].ev == NULL)
+	for (i = 0; i < EV_NPAT; i++) {
+		if (evinfo[EV_PAT0 + i].ev == NULL)
 			continue;
 		textout_indent(f);
-		textout_putstr(f, "evsx ");
-		textout_putstr(f, evinfo[EV_SX0 + i].ev);
+		textout_putstr(f, "evpat ");
+		textout_putstr(f, evinfo[EV_PAT0 + i].ev);
 		textout_putstr(f, " {\n");
 		textout_shiftright(f);
 		textout_indent(f);
 		textout_putstr(f, "pattern");
-		p = evinfo[EV_SX0 + i].pattern;
+		p = evinfo[EV_PAT0 + i].pattern;
 		for (;;) {
 			textout_putstr(f, " ");
 			switch (*p) {
-			case EVSX_V0_HI:
+			case EV_PATV0_HI:
 				textout_putstr(f, "v0_hi");
 				break;
-			case EVSX_V0_LO:
+			case EV_PATV0_LO:
 				textout_putstr(f, "v0_lo");
 				break;
-			case EVSX_V1_HI:
+			case EV_PATV1_HI:
 				textout_putstr(f, "v1_hi");
 				break;
-			case EVSX_V1_LO:
+			case EV_PATV1_LO:
 				textout_putstr(f, "v1_lo");
 				break;
 			default:
@@ -517,7 +517,7 @@ song_output(struct song *o, struct textout *f)
 	track_output(&o->meta, f);
 	textout_putstr(f, "\n");
 
-	evsx_output(f);
+	evpat_output(f);
 
 	SONG_FOREACH_IN(o, i) {
 		textout_indent(f);
@@ -1392,7 +1392,7 @@ err1:
 }
 
 unsigned
-parse_evsx(struct parse *o, char *ref)
+parse_evpat(struct parse *o, char *ref)
 {
 	unsigned long val;
 	unsigned size = 0;
@@ -1403,10 +1403,10 @@ parse_evsx(struct parse *o, char *ref)
 	/*
 	 * find a free slot
 	 */
-	if (evsx_lookup(ref, &cmd))
-		evsx_unconf(cmd);
-	for (cmd = EV_SX0;; cmd++) {
-		if (cmd == EV_SX0 + EVSX_NMAX) {
+	if (evpat_lookup(ref, &cmd))
+		evpat_unconf(cmd);
+	for (cmd = EV_PAT0;; cmd++) {
+		if (cmd == EV_PAT0 + EV_NPAT) {
 			lex_err(&o->lex, "too many sysex patterns");
 			return 0;
 		}
@@ -1414,13 +1414,13 @@ parse_evsx(struct parse *o, char *ref)
 			break;
 	}
 	name = str_new(ref);
-	pattern = mem_alloc(EVSX_MAXSIZE, "evsx");
+	pattern = mem_alloc(EV_PATSIZE, "evpat");
 
 	if (!parse_getsym(o)) {
 		goto err1;
 	}
 	if (o->lex.id != TOK_LBRACE) {
-		lex_err(&o->lex, "'{' expected while parsing evsx");
+		lex_err(&o->lex, "'{' expected while parsing evpat");
 		goto err1;
 	}
 
@@ -1441,7 +1441,7 @@ parse_evsx(struct parse *o, char *ref)
 					if (o->lex.id == TOK_ENDLINE) {
 						break;
 					}
-					if (size == EVSX_MAXSIZE) {
+					if (size == EV_PATSIZE) {
 						lex_err(&o->lex, "pattern too long");
 						goto err1;
 					}
@@ -1453,13 +1453,13 @@ parse_evsx(struct parse *o, char *ref)
 						pattern[size++] = val;
 					} else if (o->lex.id == TOK_IDENT) {
 						if (str_eq(o->lex.strval, "v0_hi"))
-							val = EVSX_V0_HI;
+							val = EV_PATV0_HI;
 						else if (str_eq(o->lex.strval, "v0_lo"))
-							val = EVSX_V0_LO;
+							val = EV_PATV0_LO;
 						else if (str_eq(o->lex.strval, "v1_hi"))
-							val = EVSX_V1_HI;
+							val = EV_PATV1_HI;
 						else if (str_eq(o->lex.strval, "v1_lo"))
-							val = EVSX_V1_LO;
+							val = EV_PATV1_LO;
 						else {
 							lex_err(&o->lex, "unexpected atom in pattern");
 							return 0;
@@ -1479,7 +1479,7 @@ parse_evsx(struct parse *o, char *ref)
 			lex_err(&o->lex, "unknown line format in sysex, ignored");
 		}
 	}
-	if (!evsx_set(cmd, name, pattern, size))
+	if (!evpat_set(cmd, name, pattern, size))
 		goto err1;
 	return 1;
 err1:
@@ -1817,15 +1817,15 @@ parse_song(struct parse *o, struct song *s)
 		} else if (o->lex.id == TOK_RBRACE) {
 			break;
 		} else if (o->lex.id == TOK_IDENT) {
-			if (str_eq(o->lex.strval, "evsx")) {
+			if (str_eq(o->lex.strval, "evpat")) {
 				if (!parse_getsym(o)) {
 					return 0;
 				}
 				if (o->lex.id != TOK_IDENT) {
-					lex_err(&o->lex, "identifier expected after 'evsx' in song");
+					lex_err(&o->lex, "identifier expected after 'evpat' in song");
 					return 0;
 				}
-				if (!parse_evsx(o, o->lex.strval)) {
+				if (!parse_evpat(o, o->lex.strval)) {
 					return 0;
 				}
 				if (!parse_nl(o)) {

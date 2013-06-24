@@ -852,7 +852,7 @@ blt_load(struct exec *o, struct data **r)
 	}
 	song_stop(usong);
 	song_done(usong);
-	evsx_reset();
+	evpat_reset();
 	song_init(usong);
 	res = song_load(usong, filename);
 	cons_putpos(usong->curpos, 0, 0);
@@ -864,7 +864,7 @@ blt_reset(struct exec *o, struct data **r)
 {
 	song_stop(usong);
 	song_done(usong);
-	evsx_reset();
+	evpat_reset();
 	song_init(usong);
 	cons_putpos(usong->curpos, 0, 0);
 	return 1;
@@ -1360,7 +1360,7 @@ blt_ctlinfo(struct exec *o, struct data **r)
 }
 
 unsigned
-blt_evsx(struct exec *o, struct data **r)
+blt_evpat(struct exec *o, struct data **r)
 {
 	struct data *byte;
 	struct var *arg;
@@ -1372,10 +1372,10 @@ blt_evsx(struct exec *o, struct data **r)
 		return 0;
 	if (!exec_lookupname(o, "name", &ref))
 		return 0;
-	if (evsx_lookup(ref, &cmd)) {
+	if (evpat_lookup(ref, &cmd)) {
 		if (!song_try_ev(usong, cmd))
 			return 0;
-		evsx_unconf(cmd);
+		evpat_unconf(cmd);
 	}
 	for (cmd = 0; cmd < EV_NUMCMD; cmd++) {
 		if (evinfo[cmd].ev && str_eq(evinfo[cmd].ev, ref)) {
@@ -1383,8 +1383,8 @@ blt_evsx(struct exec *o, struct data **r)
 			return 0;
 		}
 	}
-	for (cmd = EV_SX0;; cmd++) {
-		if (cmd == EV_SX0 + EVSX_NMAX) {
+	for (cmd = EV_PAT0;; cmd++) {
+		if (cmd == EV_PAT0 + EV_NPAT) {
 			cons_errs(o->procname, "too many sysex patterns");
 			return 0;
 		}
@@ -1392,7 +1392,7 @@ blt_evsx(struct exec *o, struct data **r)
 			break;
 	}
 	name = str_new(ref);
-	pattern = mem_alloc(EVSX_MAXSIZE, "evsx");
+	pattern = mem_alloc(EV_PATSIZE, "evpat");
 	arg = exec_varlookup(o, "pattern");
 	if (!arg) {
 		dbg_puts("exec_lookupev: no such var\n");
@@ -1404,7 +1404,7 @@ blt_evsx(struct exec *o, struct data **r)
 	}
 	size = 0;
 	for (byte = arg->data->val.list; byte != NULL; byte = byte->next) {
-		if (size == EVSX_MAXSIZE) {
+		if (size == EV_PATSIZE) {
 			cons_errs(o->procname, "pattern too long");
 			goto err1;
 		}
@@ -1419,14 +1419,14 @@ blt_evsx(struct exec *o, struct data **r)
 		} else if (byte->type == DATA_REF) {
 			if (str_eq(byte->val.ref, "v0") ||
 			    str_eq(byte->val.ref, "v0_hi")) {
-				spec = EVSX_V0_HI;
+				spec = EV_PATV0_HI;
 			} else if (str_eq(byte->val.ref, "v0_lo")) {
-				spec = EVSX_V0_LO;
+				spec = EV_PATV0_LO;
 			} else if (str_eq(byte->val.ref, "v1") ||
 			    str_eq(byte->val.ref, "v1_hi")) {
-				spec = EVSX_V1_HI;
+				spec = EV_PATV1_HI;
 			} else if (str_eq(byte->val.ref, "v1_lo")) {
-				spec = EVSX_V1_LO;
+				spec = EV_PATV1_LO;
 			} else {
 				cons_errs(o->procname,
 				    "bad atom in sysex pattern");
@@ -1438,7 +1438,7 @@ blt_evsx(struct exec *o, struct data **r)
 			goto err1;
 		}
 	}
-	if (!evsx_set(cmd, name, pattern, size))
+	if (!evpat_set(cmd, name, pattern, size))
 		goto err1;
 	return 1;
 err1:
@@ -1448,9 +1448,9 @@ err1:
 }
 
 unsigned
-blt_evsxinfo(struct exec *o, struct data **r)
+blt_evinfo(struct exec *o, struct data **r)
 {
-	evsx_output(tout);
+	evpat_output(tout);
 	return 1;
 }
 

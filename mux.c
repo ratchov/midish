@@ -661,7 +661,7 @@ mux_sysexcb(unsigned unit, struct sysex *sysex)
 		/*
 		 * handle custom events
 		 */
-		for (cmd = EV_SX0; cmd < EV_SX0 + EVSX_NMAX; cmd++) {
+		for (cmd = EV_PAT0; cmd < EV_PAT0 + EV_NPAT; cmd++) {
 			if (evinfo[cmd].ev == NULL)
 				continue;
 			ev.v0 = ev.v1 = 0;
@@ -669,16 +669,16 @@ mux_sysexcb(unsigned unit, struct sysex *sysex)
 			q = data;
 			for (;; p++, q++) {
 				switch (*p) {
-				case EVSX_V0_HI:
+				case EV_PATV0_HI:
 					ev.v0 |= *q << 7;
 					continue;
-				case EVSX_V0_LO:
+				case EV_PATV0_LO:
 					ev.v0 |= *q;
 					continue;
-				case EVSX_V1_HI:
+				case EV_PATV1_HI:
 					ev.v1 |= *q << 7;
 					continue;
-				case EVSX_V1_LO:
+				case EV_PATV1_LO:
 					ev.v1 |= *q;
 					continue;
 				}

@@ -895,10 +895,10 @@ user_mainloop(void)
 	exec_newbuiltin(exec, "ctlunconf", blt_ctlunconf,
 			name_newarg("name", NULL));
 	exec_newbuiltin(exec, "ctlinfo", blt_ctlinfo, NULL);
-	exec_newbuiltin(exec, "evsx", blt_evsx,
+	exec_newbuiltin(exec, "evpat", blt_evpat,
 			name_newarg("name",
 			name_newarg("pattern", NULL)));
-	exec_newbuiltin(exec, "evsxinfo", blt_evsxinfo, NULL);
+	exec_newbuiltin(exec, "evinfo", blt_evinfo, NULL);
 	exec_newbuiltin(exec, "m", blt_metro,
 			name_newarg("onoff", NULL));
 	exec_newbuiltin(exec, "metrocf", blt_metrocf,
