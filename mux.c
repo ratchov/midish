@@ -664,25 +664,25 @@ mux_sysexcb(unsigned unit, struct sysex *sysex)
 		for (cmd = EV_SX0; cmd < EV_SX0 + EVSX_NMAX; cmd++) {
 			if (evinfo[cmd].ev == NULL)
 				continue;
-			q = data;
-			p = evinfo[cmd].pattern;
 			ev.v0 = ev.v1 = 0;
-			for (;; p++, data++) {
+			p = evinfo[cmd].pattern;
+			q = data;
+			for (;; p++, q++) {
 				switch (*p) {
 				case EVSX_V0_HI:
-					ev.v0 |= *data << 7;
+					ev.v0 |= *q << 7;
 					continue;
 				case EVSX_V0_LO:
-					ev.v0 |= *data;
+					ev.v0 |= *q;
 					continue;
 				case EVSX_V1_HI:
-					ev.v1 |= *data << 7;
+					ev.v1 |= *q << 7;
 					continue;
 				case EVSX_V1_LO:
-					ev.v1 |= *data;
+					ev.v1 |= *q;
 					continue;
 				}
-				if (*p != *data)
+				if (*p != *q)
 					break;
 				if (*p == 0xf7) {
 					ev.cmd = cmd;
