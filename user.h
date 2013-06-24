@@ -60,12 +60,12 @@ unsigned exec_lookupval(struct exec *, char *, unsigned, unsigned *);
 
 void data_print(struct data *);
 unsigned data_num2chan(struct data *, unsigned *, unsigned *);
-unsigned data_list2chan(struct data *, unsigned *, unsigned *, int);
-unsigned data_list2range(struct data *, unsigned, unsigned, unsigned *, unsigned *);
+unsigned data_getchan(struct data *, unsigned *, unsigned *, int);
+unsigned data_getrange(struct data *, unsigned, unsigned, unsigned *, unsigned *);
 unsigned data_matchsysex(struct data *, struct sysex *, unsigned *);
 unsigned data_list2ctl(struct data *, unsigned *);
-unsigned data_list2ctlset(struct data *, unsigned *);
-unsigned data_list2xev(struct data *, unsigned *);
+unsigned data_getctlset(struct data *, unsigned *);
+unsigned data_getxev(struct data *, unsigned *);
 unsigned data_getctl(struct data *, unsigned *);
 
 /* track functions */

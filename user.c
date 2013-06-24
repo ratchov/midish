@@ -118,7 +118,7 @@ exec_lookupchan_getnum(struct exec *o, char *var,
 		dbg_puts("exec_lookupchan_getnum: no such var\n");
 		dbg_panic();
 	}
-	if (!data_list2chan(arg->data, dev, ch, input)) {
+	if (!data_getchan(arg->data, dev, ch, input)) {
 		return 0;
 	}
 	return 1;
@@ -244,7 +244,7 @@ exec_lookupev(struct exec *o, char *name, struct ev *ev, int input)
 		return 0;
 	}
 	if (evinfo[ev->cmd].flags & EV_HAS_CH) {
-		if (!data_list2chan(d, &dev, &ch, input)) {
+		if (!data_getchan(d, &dev, &ch, input)) {
 			return 0;
 		}
 		ev->dev = dev;
@@ -375,12 +375,12 @@ exec_lookupevspec(struct exec *o, char *name, struct evspec *e, int input)
 		} else if (d->val.list &&
 		    d->val.list->next &&
 		    !d->val.list->next->next) {
-			if (!data_list2range(d->val.list, 0, EV_MAXDEV, &lo, &hi)) {
+			if (!data_getrange(d->val.list, 0, EV_MAXDEV, &lo, &hi)) {
 				return 0;
 			}
 			e->dev_min = lo;
 			e->dev_max = hi;
-			if (!data_list2range(d->val.list->next, 0, EV_MAXCH, &lo, &hi)) {
+			if (!data_getrange(d->val.list->next, 0, EV_MAXCH, &lo, &hi)) {
 				return 0;
 			}
 			e->ch_min = lo;
@@ -419,7 +419,7 @@ exec_lookupevspec(struct exec *o, char *name, struct evspec *e, int input)
 		}
 		e->v0_min = e->v0_max = hi;
 	} else {
-		if (!data_list2range(d, e->v0_min, e->v0_max, &min, &max)) {
+		if (!data_getrange(d, e->v0_min, e->v0_max, &min, &max)) {
 			return 0;
 		}
 		e->v0_min = min;
@@ -437,7 +437,7 @@ exec_lookupevspec(struct exec *o, char *name, struct evspec *e, int input)
 	if (evinfo[e->cmd].nranges < 2) {
 		goto toomany;
 	}
-	if (!data_list2range(d, e->v1_min, e->v1_max, &min, &max)) {
+	if (!data_getrange(d, e->v1_min, e->v1_max, &min, &max)) {
 		return 0;
 	}
 	e->v1_min = min;
@@ -577,7 +577,7 @@ exec_lookupval(struct exec *o, char *n, unsigned isfine, unsigned *r)
  *	- a pair of integers '{ dev midichan }'
  */
 unsigned
-data_list2chan(struct data *o, unsigned *res_dev, unsigned *res_ch, int input)
+data_getchan(struct data *o, unsigned *res_dev, unsigned *res_ch, int input)
 {
 	struct songchan *i;
 	long dev, ch;
@@ -624,7 +624,7 @@ data_list2chan(struct data *o, unsigned *res_dev, unsigned *res_ch, int input)
  *	- a single integer (then min = max)
  */
 unsigned
-data_list2range(struct data *d, unsigned min, unsigned max,
+data_getrange(struct data *d, unsigned min, unsigned max,
     unsigned *lo, unsigned *hi) {
     	if (d->type == DATA_LONG) {
 		*lo = *hi = d->val.num;
@@ -660,7 +660,7 @@ data_list2range(struct data *d, unsigned min, unsigned max,
  * convert a list to bitmap of continuous controllers
  */
 unsigned
-data_list2ctlset(struct data *d, unsigned *res)
+data_getctlset(struct data *d, unsigned *res)
 {
 	unsigned ctlset;
 
@@ -689,7 +689,7 @@ data_list2ctlset(struct data *d, unsigned *res)
  * convert a list to bitmap of CONV_xxx constants
  */
 unsigned
-data_list2xev(struct data *d, unsigned *res)
+data_getxev(struct data *d, unsigned *res)
 {
 	static unsigned cmds[] = {EV_XPC, EV_NRPN, EV_RPN};
 	unsigned i, conv, cmd;

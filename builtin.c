@@ -3330,7 +3330,7 @@ blt_dixctl(struct exec *o, struct data **r)
 		cons_errs(o->procname, "bad device number");
 		return 0;
 	}
-	if (!data_list2ctlset(list, &ctlset)) {
+	if (!data_getctlset(list, &ctlset)) {
 		return 0;
 	}
 	mididev_byunit[unit]->ixctlset = ctlset;
@@ -3355,7 +3355,7 @@ blt_doxctl(struct exec *o, struct data **r)
 		cons_errs(o->procname, "bad device number");
 		return 0;
 	}
-	if (!data_list2ctlset(list, &ctlset)) {
+	if (!data_getctlset(list, &ctlset)) {
 		return 0;
 	}
 	mididev_byunit[unit]->oxctlset = ctlset;
@@ -3380,7 +3380,7 @@ blt_diev(struct exec *o, struct data **r)
 		cons_errs(o->procname, "bad device number");
 		return 0;
 	}
-	if (!data_list2xev(list, &flags)) {
+	if (!data_getxev(list, &flags)) {
 		return 0;
 	}
 	mididev_byunit[unit]->ievset = flags;
@@ -3405,7 +3405,7 @@ blt_doev(struct exec *o, struct data **r)
 		cons_errs(o->procname, "bad device number");
 		return 0;
 	}
-	if (!data_list2xev(list, &flags)) {
+	if (!data_getxev(list, &flags)) {
 		return 0;
 	}
 	mididev_byunit[unit]->oevset = flags;
