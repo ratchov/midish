@@ -876,7 +876,6 @@ song_importsmf(char *filename)
 	struct songtrk *t;
 	unsigned format, ntrks, timecode, i;
 	char trackname[MAXTRACKNAME];
-	struct songsx *sx;
 	struct smf f;
 
 	if (!smf_open(&f, filename, "r")) {
@@ -905,7 +904,6 @@ song_importsmf(char *filename)
 
 	o = song_new();
 	song_setunit(o, timecode * 4);   /* timecode = tics per quarter */
-	sx = song_sxnew(o, "sx");
 
 	for (i = 0; i < ntrks; i++) {
 		snprintf(trackname, MAXTRACKNAME, "trk%02u", i);
