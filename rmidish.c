@@ -376,6 +376,8 @@ main(int argc, char *argv[])
 	rl_callback_handler_install(prompt, userline);
 	while (!quit) {
 		n = poll(pfds, 2, -1);
+		if (n < 0 && errno == EINTR)
+			continue;
 		if (pfds[0].revents & POLLIN) {
 			/*
 			 * got characters on the console,
