@@ -2542,11 +2542,6 @@ blt_fexists(struct exec *o, struct data **r)
 	char *name;
 	struct songfilt *f;
 
-	song_getcurfilt(usong, &f);
-	if (f == NULL) {
-		cons_errs(o->procname, "no current filt");
-		return 0;
-	}
 	if (!exec_lookupname(o, "filtname", &name)) {
 		return 0;
 	}
