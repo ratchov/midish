@@ -276,13 +276,14 @@ char *builtins[] = {
 	 * generated with:
 	 * grep blt_ builtin.h |sed -es/^.*blt_/\"/ -es/\(.*$/\",/ |fmt
 	 */
-	"version", "panic", "debug", "exec", "print", "err", "h", "ev",
-	"ci", "geti", "co", "geto", "cx", "getx", "setunit", "getunit",
-	"goto", "getpos", "sel", "getlen", "setq", "getq", "fac", "getfac",
-	"ct", "gett", "cf", "getf", "mute", "unmute", "getmute", "ls",
-	"save", "load", "reset", "export", "import", "idle", "play", "rec",
-	"stop", "tempo", "mins", "mcut", "mdup", "minfo", "mtempo", "msig",
-	"mend", "ctlconf", "ctlconfx", "ctlunconf", "ctlinfo", "metro",
+	"info", "shut", "proclist", "builtinlist", "version", "panic",
+	"debug", "exec", "print", "err", "h", "ev", "ci", "geti", "co",
+	"geto", "cx", "getx", "setunit", "getunit", "goto", "getpos", "sel",
+	"getlen", "setq", "getq", "fac", "getfac", "ct", "gett", "cf",
+	"getf", "mute", "unmute", "getmute", "ls", "save", "load", "reset",
+	"export", "import", "idle", "play", "rec", "stop", "tempo", "mins",
+	"mcut", "mdup", "minfo", "mtempo", "msig", "mend", "ctlconf",
+	"ctlconfx", "ctlunconf", "ctlinfo", "evpat", "evinfo", "metro",
 	"metrocf", "tlist", "tnew", "tdel", "tren", "texists", "taddev",
 	"tsetf", "tgetf", "tcheck", "tcut", "tins", "tclr", "tpaste",
 	"tcopy", "tmerge", "tquant", "ttransp", "tevmap", "tclist", "tinfo",

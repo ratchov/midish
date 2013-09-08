@@ -599,6 +599,10 @@ smf_gettrack(struct smf *o, struct song *s, struct songtrk *t)
 	track_clear(&t->track);
 	pos = t->track.first;
 	songsx = (struct songsx *)s->sxlist;	/* first (and unique) sysex in song */
+	if (songsx == NULL) {
+		dbg_puts("smf_gettack: no sysex list\n");
+		songsx = song_sxnew(s, "smf");
+	}
 	statelist_init(&slist);
 	for (;;) {
 		if (o->index >= o->length) {
