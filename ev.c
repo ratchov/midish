@@ -287,7 +287,7 @@ ev_dbg(struct ev *ev)
 				dbg_puts(" ");
 				dbg_putx(ev->dev);
 				if (evinfo[ev->cmd].nparams >= 1) {
-					dbg_puts("v0 = ");
+					dbg_puts(" ");
 					dbg_putx(ev->v0);
 				}
 				if (evinfo[ev->cmd].nparams >= 2) {
