@@ -687,10 +687,6 @@ mux_sysexcb(unsigned unit, struct sysex *sysex)
 				if (*p == 0xf7) {
 					ev.cmd = cmd;
 					ev.dev = unit;
-					if (evinfo[cmd].v0_max == EV_MAXCOARSE)
-						ev.v0 >>= 7;
-					if (evinfo[cmd].v1_max == EV_MAXCOARSE)
-						ev.v1 >>= 7;
 					norm_evcb(&ev);
 					sysex_del(sysex);
 					return;
