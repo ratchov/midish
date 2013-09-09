@@ -553,7 +553,7 @@ mididev_putev(struct mididev *o, struct ev *ev)
 			}
 			p++;
 		}
-		o->runst = 0;
+		o->ostatus = 0;
 	}
 	if (!EV_ISVOICE(ev)) {
 		return;
