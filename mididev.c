@@ -531,6 +531,7 @@ mididev_putev(struct mididev *o, struct ev *ev)
 	unsigned s;
 
 	if (EV_ISSX(ev)) {
+		o->ostatus = 0;
 		p = evinfo[ev->cmd].pattern;
 		for (;;) {
 			switch (*p) {
@@ -553,7 +554,6 @@ mididev_putev(struct mididev *o, struct ev *ev)
 			}
 			p++;
 		}
-		o->ostatus = 0;
 	}
 	if (!EV_ISVOICE(ev)) {
 		return;
