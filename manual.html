@@ -116,6 +116,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 <ul>
 <li><a href="#ev_ev">5.1 Event specification</a>
 <li><a href="#ev_evspec">5.2 Event set specification</a>
+<li><a href="#ev_evpat">5.3 User-defined events</a>
 </ul>
 <li><a href="#filt">6 Filtering/routing</a>
 <ul>
@@ -196,7 +197,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 <li><a href="#func_rt">18.6 Real-time functions</a>
 <li><a href="#func_song">18.7 Song functions</a>
 <li><a href="#func_dev">18.8 Device functions</a>
-<li><a href="#func_misc">18.9 Controller functions</a>
+<li><a href="#func_ev">18.9 Event functions</a>
 <li><a href="#func_misc">18.10 Misc. functions</a>
 </ul>
 <li><a href="#section_19">19 Using midish in other programs</a>
@@ -1006,6 +1007,14 @@ Examples:
 { xpc  {} 21 1234 }     # match patch 21 on bank 1234
 { nrpn {} 21 }          # match NRPN 21 change
 </pre>
+
+<h3><a name="ev_evpat">5.3 User-defined events</a></h3>
+
+<p>
+Short system-exclusive patterns can be handled as events.
+
+Such events are defined with the <a href="#func_evpat">evpat</a>
+function.
 
 <h2><a name="filt">6 Filtering/routing</a></h2>
 
@@ -2584,6 +2593,11 @@ midish interprets bank select, NRPN/RPN and data entry controllers.
 <li>
 add <a href="#func_ximport">ximport</a>
 and <a href="#func_xexport">xexport</a> to export and import .syx files.
+
+<li>
+add support for user-defined events and the corresponding
+<a href="#func_evpat">evpat</a> and
+<a href="#func_evinfo">evinfo</a> functions.
 
 </ul>
 
@@ -4256,7 +4270,7 @@ messages.
 
 </dl>
 
-<h3><a name="func_misc">18.9 Controller functions</a></h3>
+<h3><a name="func_ev">18.9 Event functions</a></h3>
 
 <dl>
 
@@ -4288,6 +4302,39 @@ the identifier that was used with
 
 <dd>
 Print the list of configured controllers
+
+</dl>
+
+<dt><a name="func_evpat">evpat name sysex_pattern</a>
+
+<dd>
+Define a new event type corresponding to the given system exclusive
+message pattern.
+
+The pattern is a list of bytes or event parameter identifiers (aka
+atoms).
+
+The following atoms are supported: v0, v0_lo, v0_hi, v1, v1_lo, v1_hi.
+
+They correspond to the full 7-bit value (coarse parameter), the low
+7-bit nibble and the high 7-bit nibble (fine grained parameters) of
+the first and second parameters respectively.
+
+Example:
+
+<pre>
+evpat master {0xf0 0x7f 0x7f 0x04 0x01 v0_lo v0_hi 0xf7}
+</pre>
+
+defines a new event type for the standard master volume system
+exclusive message.
+
+</dl>
+
+<dt><a name="func_evinfo">evinfo</a>
+
+<dd>
+Print the list of event patterns.
 
 </dl>
 
