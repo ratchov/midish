@@ -28,7 +28,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <fcntl.h>
-#include "dbg.h"
+#include "utils.h"
 
 /*
  * size of the buffer where traces are stored

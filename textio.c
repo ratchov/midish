@@ -26,7 +26,7 @@
 #include <stdio.h>
 #include <errno.h>
 
-#include "dbg.h"
+#include "utils.h"
 #include "textio.h"
 #include "cons.h"
 

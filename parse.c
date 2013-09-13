@@ -85,7 +85,7 @@
  * prog:	[ line line ... line ] EOF
  */
 
-#include "dbg.h"
+#include "utils.h"
 #include "textio.h"
 #include "lex.h"
 #include "data.h"

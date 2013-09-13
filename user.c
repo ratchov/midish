@@ -21,7 +21,7 @@
  * each function is described in the manual.html file
  */
 
-#include "dbg.h"
+#include "utils.h"
 #include "defs.h"
 #include "node.h"
 #include "exec.h"

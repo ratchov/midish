@@ -19,7 +19,7 @@
 #include <fcntl.h>
 #include <poll.h>
 #include <stdio.h>
-#include "dbg.h"
+#include "utils.h"
 #include "cons.h"
 #include "mididev.h"
 #include "str.h"

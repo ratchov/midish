@@ -27,7 +27,7 @@
  * list.
  */
 
-#include "dbg.h"
+#include "utils.h"
 #include "sysex.h"
 #include "defs.h"
 #include "pool.h"

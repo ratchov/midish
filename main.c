@@ -17,7 +17,7 @@
 #include <stdio.h>
 #include <unistd.h>
 
-#include "dbg.h"
+#include "utils.h"
 #include "str.h"
 #include "cons.h"
 #include "ev.h"

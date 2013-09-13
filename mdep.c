@@ -38,7 +38,7 @@
 #include "cons.h"
 #include "user.h"
 #include "exec.h"
-#include "dbg.h"
+#include "utils.h"
 
 #define TIMER_USEC	1000
 

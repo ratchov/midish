@@ -19,7 +19,7 @@
  * tokens.
  */
 
-#include "dbg.h"
+#include "utils.h"
 #include "lex.h"
 #include "str.h"
 #include "textio.h"

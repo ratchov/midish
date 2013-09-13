@@ -18,7 +18,7 @@
  * name is a singly-linked list of strings
  */
 
-#include "dbg.h"
+#include "utils.h"
 #include "name.h"
 
 void

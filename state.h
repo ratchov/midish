@@ -18,7 +18,7 @@
 #define MIDISH_STATE_H
 
 #include "ev.h"
-#include "dbg.h"
+#include "utils.h"
 
 struct seqev;
 struct statelist;

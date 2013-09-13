@@ -21,7 +21,7 @@
  * length
  */
 
-#include "dbg.h"
+#include "utils.h"
 #include "str.h"
 
 /*

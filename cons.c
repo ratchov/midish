@@ -17,7 +17,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "dbg.h"
+#include "utils.h"
 #include "textio.h"
 #include "cons.h"
 #include "user.h"

@@ -19,7 +19,7 @@
  * node of the tree represents one instruction.
  */
 
-#include "dbg.h"
+#include "utils.h"
 #include "str.h"
 #include "data.h"
 #include "node.h"

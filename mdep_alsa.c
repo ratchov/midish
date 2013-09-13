@@ -24,7 +24,7 @@
 #include <string.h>
 #include <stdarg.h>
 #include <alsa/asoundlib.h>
-#include "dbg.h"
+#include "utils.h"
 #include "mididev.h"
 #include "str.h"
 

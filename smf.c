@@ -19,7 +19,7 @@
 #include <errno.h>
 #include <string.h>
 
-#include "dbg.h"
+#include "utils.h"
 #include "sysex.h"
 #include "track.h"
 #include "song.h"
