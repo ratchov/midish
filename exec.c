@@ -46,7 +46,7 @@ struct var *
 var_new(struct name **list, char *name, struct data *data)
 {
 	struct var *o;
-	o = (struct var *)mem_alloc(sizeof(struct var), "var");
+	o = (struct var *)xmalloc(sizeof(struct var), "var");
 	o->data = data;
 	name_init(&o->name, name);
 	name_insert(list, (struct name *)o);
@@ -64,21 +64,21 @@ var_delete(struct name **list, struct var *o)
 		data_delete(o->data);
 	}
 	name_done(&o->name);
-	mem_free(o);
+	xfree(o);
 }
 
 /*
  * print "name = value" on stderr
  */
 void
-var_dbg(struct var *o)
+var_log(struct var *o)
 {
-	str_dbg(o->name.str);
-	dbg_puts(" = ");
+	str_log(o->name.str);
+	log_puts(" = ");
 	if (o->data != NULL)
-		data_dbg(o->data);
+		data_log(o->data);
 	else
-		dbg_puts("<null>");
+		log_puts("<null>");
 }
 
 /*
@@ -99,7 +99,7 @@ struct proc *
 proc_new(char *name)
 {
 	struct proc *o;
-	o = (struct proc *)mem_alloc(sizeof(struct proc), "proc");
+	o = (struct proc *)xmalloc(sizeof(struct proc), "proc");
 	name_init(&o->name, name);
 	o->args = NULL;
 	o->code = NULL;
@@ -115,7 +115,7 @@ proc_delete(struct proc *o)
 	node_delete(o->code);
 	name_empty(&o->args);
 	name_done(&o->name);
-	mem_free(o);
+	xfree(o);
 }
 
 /*
@@ -139,24 +139,24 @@ proc_empty(struct name **first)
  *	code_tree
  */
 void
-proc_dbg(struct proc *o)
+proc_log(struct proc *o)
 {
 	struct name *i;
-	str_dbg(o->name.str);
-	dbg_puts("(");
+	str_log(o->name.str);
+	log_puts("(");
 	if (o->args) {
 		i = o->args;
 		for (;;) {
-			dbg_puts(i->str);
+			log_puts(i->str);
 			i = i->next;
 			if (!i) {
 				break;
 			}
-			dbg_puts(", ");
+			log_puts(", ");
 		}
 	}
-	dbg_puts(")\n");
-	node_dbg(o->code, 0);
+	log_puts(")\n");
+	node_log(o->code, 0);
 }
 
 /*
@@ -166,7 +166,7 @@ struct exec *
 exec_new(void)
 {
 	struct exec *o;
-	o = (struct exec *)mem_alloc(sizeof(struct exec), "exec");
+	o = (struct exec *)xmalloc(sizeof(struct exec), "exec");
 	o->procs = NULL;
 	o->globals = NULL;
 	o->locals = &o->globals;
@@ -183,12 +183,12 @@ void
 exec_delete(struct exec *o)
 {
 	if (o->depth != 0) {
-		dbg_puts("exec_done: depth != 0\n");
-		dbg_panic();
+		log_puts("exec_done: depth != 0\n");
+		panic();
 	}
 	var_empty(&o->globals);
 	proc_empty(&o->procs);
-	mem_free(o);
+	xfree(o);
 }
 
 /*
@@ -260,15 +260,15 @@ exec_dumpprocs(struct exec *o)
 	struct name *n;
 
 	PROC_FOREACH(p, o->procs) {
-		dbg_puts(p->name.str);
-		dbg_puts("(");
+		log_puts(p->name.str);
+		log_puts("(");
 		for (n = p->args; n != NULL; n = n->next) {
-			dbg_puts(n->str);
+			log_puts(n->str);
 			if (n->next) {
-				dbg_puts(", ");
+				log_puts(", ");
 			}
 		}
-		dbg_puts(")\n");
+		log_puts(")\n");
 	}
 }
 
@@ -283,10 +283,10 @@ exec_dumpvars(struct exec *o)
 {
 	struct var *v;
 	VAR_FOREACH(v, o->globals) {
-		dbg_puts(v->name.str);
-		dbg_puts(" = ");
-		data_dbg(v->data);
-		dbg_puts("\n");
+		log_puts(v->name.str);
+		log_puts(" = ");
+		data_log(v->data);
+		log_puts("\n");
 	}
 }
 

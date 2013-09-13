@@ -14,7 +14,7 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 /*
- * dbg_xxx() routines are used to quickly store traces into a trace buffer.
+ * log_xxx() routines are used to quickly store traces into a trace buffer.
  * This allows traces to be collected during time sensitive operations without
  * disturbing them. The buffer can be flushed on standard error later, when
  * slow syscalls are no longer disruptive, e.g. at the end of the poll() loop.
@@ -33,45 +33,45 @@
 /*
  * size of the buffer where traces are stored
  */
-#define DBG_BUFSZ	8192
+#define LOG_BUFSZ	8192
 
 /*
  * store a character in the trace buffer
  */
-#define DBG_PUTC(c) do {			\
-	if (dbg_used < DBG_BUFSZ)		\
-		dbg_buf[dbg_used++] = (c);	\
+#define LOG_PUTC(c) do {			\
+	if (log_used < LOG_BUFSZ)		\
+		log_buf[log_used++] = (c);	\
 } while (0)
 
-char dbg_buf[DBG_BUFSZ];	/* buffer where traces are stored */
-unsigned dbg_used = 0;		/* bytes used in the buffer */
-unsigned dbg_sync = 1;		/* if true, flush after each '\n' */
+char log_buf[LOG_BUFSZ];	/* buffer where traces are stored */
+unsigned log_used = 0;		/* bytes used in the buffer */
+unsigned log_sync = 1;		/* if true, flush after each '\n' */
 
 /*
  * write debug info buffer on stderr
  */
 void
-dbg_flush(void)
+log_flush(void)
 {
-	if (dbg_used ==  0)
+	if (log_used ==  0)
 		return;
-	write(STDERR_FILENO, dbg_buf, dbg_used);
-	dbg_used = 0;
+	write(STDERR_FILENO, log_buf, log_used);
+	log_used = 0;
 }
 
 /*
  * store a string in the debug buffer
  */
 void
-dbg_puts(char *msg)
+log_puts(char *msg)
 {
 	char *p = msg;
 	int c;
 
 	while ((c = *p++) != '\0') {
-		DBG_PUTC(c);
-		if (dbg_sync && c == '\n')
-			dbg_flush();
+		LOG_PUTC(c);
+		if (log_sync && c == '\n')
+			log_flush();
 	}
 }
 
@@ -79,7 +79,7 @@ dbg_puts(char *msg)
  * store a hex in the debug buffer
  */
 void
-dbg_putx(unsigned long num)
+log_putx(unsigned long num)
 {
 	char dig[sizeof(num) * 2], *p = dig, c;
 	unsigned ndig;
@@ -92,17 +92,17 @@ dbg_putx(unsigned long num)
 		for (; ndig != 0; ndig--) {
 			c = *(--p);
 			c += (c < 10) ? '0' : 'a' - 10;
-			DBG_PUTC(c);
+			LOG_PUTC(c);
 		}
 	} else
-		DBG_PUTC('0');
+		LOG_PUTC('0');
 }
 
 /*
  * store a decimal in the debug buffer
  */
 void
-dbg_putu(unsigned long num)
+log_putu(unsigned long num)
 {
 	char dig[sizeof(num) * 3], *p = dig;
 	unsigned ndig;
@@ -113,35 +113,35 @@ dbg_putu(unsigned long num)
 			num /= 10;
 		}
 		for (; ndig != 0; ndig--)
-			DBG_PUTC(*(--p) + '0');
+			LOG_PUTC(*(--p) + '0');
 	} else
-		DBG_PUTC('0');
+		LOG_PUTC('0');
 }
 
 /*
  * store a signed integer in the trace buffer
  */
 void
-dbg_puti(long num)
+log_puti(long num)
 {
 	if (num < 0) {
-		DBG_PUTC('-');
+		LOG_PUTC('-');
 		num = -num;
 	}
-	dbg_putu(num);
+	log_putu(num);
 }
 
 /*
  * store a percent in the debug buffer
  */
 void
-dbg_putpct(unsigned long n)
+log_pct(unsigned long n)
 {
-	dbg_putu(n / 100);
-	DBG_PUTC('.');
+	log_putu(n / 100);
+	LOG_PUTC('.');
 	n %= 100;
-	DBG_PUTC('0' + n / 10);
-	DBG_PUTC('0' + n % 10);
+	LOG_PUTC('0' + n / 10);
+	LOG_PUTC('0' + n % 10);
 }
 
 /*
@@ -149,9 +149,9 @@ dbg_putpct(unsigned long n)
  * put code here to backup user data
  */
 void
-dbg_panic(void)
+panic(void)
 {
-	dbg_flush();
+	log_flush();
 	abort();
 }
 
@@ -171,7 +171,7 @@ unsigned mem_nalloc = 0, mem_nfree = 0, mem_debug = 0;
  * return a random number, will be used to randomize memory bocks
  */
 unsigned
-mem_rnd(void)
+memrnd(void)
 {
 	static unsigned seed = 1989123;
 
@@ -187,14 +187,14 @@ mem_rnd(void)
  * trailer to detect writes outside the block boundaries.
  */
 void *
-mem_alloc(unsigned bytes, char *owner)
+xmalloc(unsigned bytes, char *owner)
 {
 	unsigned words, i, *p;
 	struct mem_hdr *hdr;
 
 	if (bytes == 0) {
-		dbg_puts("mem_alloc: nbytes = 0\n");
-		dbg_panic();
+		log_puts("xmalloc: nbytes = 0\n");
+		panic();
 	}
 
 	/*
@@ -207,17 +207,17 @@ mem_alloc(unsigned bytes, char *owner)
 	 */
 	hdr = malloc(sizeof(struct mem_hdr) + (words + 1) * sizeof(int));
 	if (hdr == NULL) {
-		dbg_puts("mem_alloc: failed to allocate ");
-		dbg_putx(words);
-		dbg_puts(" words\n");
-		dbg_panic();
+		log_puts("xmalloc: failed to allocate ");
+		log_putx(words);
+		log_puts(" words\n");
+		panic();
 	}
 
 	/*
 	 * find a random magic, but not MAGIC_FREE
 	 */
 	do {
-		hdr->magic = mem_rnd();
+		hdr->magic = memrnd();
 	} while (hdr->magic == MAGIC_FREE);
 
 	/*
@@ -225,7 +225,7 @@ mem_alloc(unsigned bytes, char *owner)
 	 */
 	p = (unsigned *)(hdr + 1);
 	for (i = words; i > 0; i--)
-		*p++ = mem_rnd();
+		*p++ = memrnd();
 
 	/*
 	 * trailer is equal to the magic
@@ -244,7 +244,7 @@ mem_alloc(unsigned bytes, char *owner)
  * usable once freed
  */
 void
-mem_free(void *mem)
+xfree(void *mem)
 {
 	struct mem_hdr *hdr;
 	unsigned i, *p;
@@ -253,19 +253,19 @@ mem_free(void *mem)
 	p = (unsigned *)mem;
 
 	if (hdr->magic == MAGIC_FREE) {
-		dbg_puts("mem_free: block seems already freed\n");
-		dbg_panic();
+		log_puts("xfree: block seems already freed\n");
+		panic();
 	}
 	if (hdr->magic != p[hdr->words]) {
-		dbg_puts("mem_free: block corrupted\n");
-		dbg_panic();
+		log_puts("xfree: block corrupted\n");
+		panic();
 	}
 
 	/*
 	 * randomize block, so it's not usable
 	 */
 	for (i = hdr->words; i > 0; i--)
-		*p++ = mem_rnd();
+		*p++ = memrnd();
 
 	hdr->magic = MAGIC_FREE;
 	mem_nfree++;
@@ -276,11 +276,11 @@ void
 mem_stats(void)
 {
 	if (mem_debug) {
-		dbg_puts("mem_stats: used=");
-		dbg_putu(mem_nalloc - mem_nfree);
-		dbg_puts(", alloc=");
-		dbg_putu(mem_nalloc);
-		dbg_puts("\n");
+		log_puts("mem_stats: used=");
+		log_putu(mem_nalloc - mem_nfree);
+		log_puts(", alloc=");
+		log_putu(mem_nalloc);
+		log_puts("\n");
 	}
 }
 
@@ -328,15 +328,15 @@ prof_val(struct prof *p, unsigned val)
 		return;
 	}
 	if (val > MAXVAL) {
-		dbg_puts("prof_val: ");
-		dbg_putu(val);
-		dbg_puts(": too large\n");
+		log_puts("prof_val: ");
+		log_putu(val);
+		log_puts(": too large\n");
 		p->err++;
 		return;
 	}
 	sumsqr = p->sumsqr + val * val;
 	if (sumsqr < p->sumsqr) {
-		dbg_puts("prof_val: overflow\n");
+		log_puts("prof_val: overflow\n");
 		p->err++;
 		return;
 	}
@@ -351,29 +351,29 @@ prof_val(struct prof *p, unsigned val)
 }
 
 void
-prof_dbg(struct prof *p)
+prof_log(struct prof *p)
 {
 	unsigned mean, delta;
 
-	dbg_puts(p->name);
-	dbg_puts(": err=");
-	dbg_putu(p->err);
-	dbg_puts(", n=");
-	dbg_putu(p->n);
+	log_puts(p->name);
+	log_puts(": err=");
+	log_putu(p->err);
+	log_puts(", n=");
+	log_putu(p->n);
 	if (p->n != 0) {
-		dbg_puts(", min=");
-		dbg_putpct(p->min);
+		log_puts(", min=");
+		log_pct(p->min);
 
-		dbg_puts(", max=");
-		dbg_putpct(p->max);
+		log_puts(", max=");
+		log_pct(p->max);
 
 		mean = p->sum / p->n;
-		dbg_puts(", mean=");
-		dbg_putpct(mean);
+		log_puts(", mean=");
+		log_pct(mean);
 
 		delta = prof_sqrt(p->sumsqr / p->n - mean * mean);
-		dbg_puts(", delta=");
-		dbg_putpct(delta);
+		log_puts(", delta=");
+		log_pct(delta);
 	}
-	dbg_puts("\n");
+	log_puts("\n");
 }

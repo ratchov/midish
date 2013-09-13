@@ -36,7 +36,7 @@ struct song *
 song_new(void)
 {
 	struct song *o;
-	o = mem_alloc(sizeof(struct song), "song");
+	o = xmalloc(sizeof(struct song), "song");
 	song_init(o);
 	return o;
 }
@@ -48,7 +48,7 @@ void
 song_delete(struct song *o)
 {
 	song_done(o);
-	mem_free(o);
+	xfree(o);
 }
 
 /*
@@ -152,7 +152,7 @@ song_trknew(struct song *o, char *name)
 {
 	struct songtrk *t;
 
-	t = mem_alloc(sizeof(struct songtrk), "songtrk");
+	t = xmalloc(sizeof(struct songtrk), "songtrk");
 	name_init(&t->name, name);
 	track_init(&t->track);
 	t->curfilt = NULL;
@@ -176,7 +176,7 @@ song_trkdel(struct song *o, struct songtrk *t)
 	name_remove(&o->trklist, (struct name *)t);
 	track_done(&t->track);
 	name_done(&t->name);
-	mem_free(t);
+	xfree(t);
 }
 
 /*
@@ -198,7 +198,7 @@ song_channew(struct song *o, char *name, unsigned dev, unsigned ch, int input)
 	struct songchan *c;
 	struct name **list = input ? &o->inlist : &o->outlist;
 
-	c = mem_alloc(sizeof(struct songchan), "songchan");
+	c = xmalloc(sizeof(struct songchan), "songchan");
 	name_init(&c->name, name);
 	track_init(&c->conf);
 	c->link = NULL;
@@ -241,7 +241,7 @@ song_chandel(struct song *o, struct songchan *c, int input)
 		c->link = NULL;
 		song_filtdel(o, f);
 	}
-	mem_free(c);
+	xfree(c);
 }
 
 /*
@@ -280,7 +280,7 @@ song_filtnew(struct song *o, char *name)
 {
 	struct songfilt *f;
 
-	f = mem_alloc(sizeof(struct songfilt), "songfilt");
+	f = xmalloc(sizeof(struct songfilt), "songfilt");
 	name_init(&f->name, name);
 	filt_init(&f->filt);
 	f->link = NULL;
@@ -315,7 +315,7 @@ song_filtdel(struct song *o, struct songfilt *f)
 		f->link = NULL;
 		song_chandel(o, c, 0);
 	}
-	mem_free(f);
+	xfree(f);
 }
 
 /*
@@ -335,7 +335,7 @@ song_sxnew(struct song *o, char *name)
 {
 	struct songsx *x;
 
-	x = mem_alloc(sizeof(struct songsx), "songsx");
+	x = xmalloc(sizeof(struct songsx), "songsx");
 	name_init(&x->name, name);
 	sysexlist_init(&x->sx);
 	name_add(&o->sxlist, (struct name *)x);
@@ -355,7 +355,7 @@ song_sxdel(struct song *o, struct songsx *x)
 	name_remove(&o->sxlist, (struct name *)x);
 	sysexlist_done(&x->sx);
 	name_done(&x->name);
-	mem_free(x);
+	xfree(x);
 }
 
 /*
@@ -492,12 +492,12 @@ song_playconfev(struct song *o, struct songchan *c, int input, struct ev *in)
 	struct ev ev = *in;
 
 	if (!EV_ISVOICE(&ev)) {
-		dbg_puts("song_playconfev: ");
-		dbg_puts(c->name.str);
-		dbg_puts(": ");
-		ev_dbg(&ev);
-		dbg_puts(": not a voice event");
-		dbg_puts("\n");
+		log_puts("song_playconfev: ");
+		log_puts(c->name.str);
+		log_puts(": ");
+		ev_log(&ev);
+		log_puts(": not a voice event");
+		log_puts("\n");
 		return;
 	}
 	ev.dev = c->dev;
@@ -623,13 +623,13 @@ song_ticskip(struct song *o)
 	}
 #if 0
 	if (song_debug) {
-		dbg_puts("song_ticskip: ");
-		dbg_putu(o->measure);
-		dbg_puts(":");
-		dbg_putu(o->beat);
-		dbg_puts(":");
-		dbg_putu(o->tic);
-		dbg_puts("\n");
+		log_puts("song_ticskip: ");
+		log_putu(o->measure);
+		log_puts(":");
+		log_putu(o->beat);
+		log_puts(":");
+		log_putu(o->tic);
+		log_puts("\n");
 	}
 #endif
 	SONG_FOREACH_TRK(o, i) {
@@ -684,20 +684,20 @@ song_confrestore(struct statelist *slist)
 		if (!s->tag && !EV_ISNOTE(&s->ev)) {
 			if (state_restore(s, &re)) {
 				if (song_debug) {
-					dbg_puts("song_strestore: ");
-					ev_dbg(&s->ev);
-					dbg_puts(": restored -> ");
-					ev_dbg(&re);
-					dbg_puts("\n");
+					log_puts("song_strestore: ");
+					ev_log(&s->ev);
+					log_puts(": restored -> ");
+					ev_log(&re);
+					log_puts("\n");
 				}
 				mixout_putev(&re, slist->serial);
 			}
 			s->tag = 1;
 		} else {
 			if (song_debug) {
-				dbg_puts("song_strestore: ");
-				ev_dbg(&s->ev);
-				dbg_puts(": not restored (not tagged)\n");
+				log_puts("song_strestore: ");
+				ev_log(&s->ev);
+				log_puts(": not restored (not tagged)\n");
 			}
 		}
 	}
@@ -717,20 +717,20 @@ song_confcancel(struct statelist *slist)
 		if (s->tag) {
 			if (state_cancel(s, &ca)) {
 				if (song_debug) {
-					dbg_puts("song_stcancel: ");
-					ev_dbg(&s->ev);
-					dbg_puts(": canceled -> ");
-					ev_dbg(&ca);
-					dbg_puts("\n");
+					log_puts("song_stcancel: ");
+					ev_log(&s->ev);
+					log_puts(": canceled -> ");
+					ev_log(&ca);
+					log_puts("\n");
 				}
 				mixout_putev(&ca, slist->serial);
 			}
 			s->tag = 0;
 		} else {
 			if (song_debug) {
-				dbg_puts("song_stcancel: ");
-				ev_dbg(&s->ev);
-				dbg_puts(": not canceled (no tag)\n");
+				log_puts("song_stcancel: ");
+				ev_log(&s->ev);
+				log_puts(": not canceled (no tag)\n");
 			}
 		}
 	}
@@ -793,7 +793,7 @@ song_startcb(struct song *o)
 {
 
 	if (song_debug) {
-		dbg_puts("song_startcb:\n");
+		log_puts("song_startcb:\n");
 	}
 	if (o->mode >= SONG_PLAY) {
 		song_ticplay(o);
@@ -810,7 +810,7 @@ song_stopcb(struct song *o)
 	struct songtrk *t;
 
 	if (song_debug)
-		dbg_puts("song_stopcb:\n");
+		log_puts("song_stopcb:\n");
 
 	/*
 	 * stop all sounding notes
@@ -861,9 +861,9 @@ void
 song_sysexcb(struct song *o, struct sysex *sx)
 {
 	if (song_debug)
-		dbg_puts("song_sysexcb:\n");
+		log_puts("song_sysexcb:\n");
 	if (sx == NULL) {
-		dbg_puts("got null sx\n");
+		log_puts("got null sx\n");
 		return;
 	}
 	if (o->mode >= SONG_REC && o->cursx)
@@ -915,8 +915,8 @@ song_loc(struct song *o, unsigned where, unsigned how)
 		offs = 0;
 		break;
 	default:
-		dbg_puts("song_loc: bad argument\n");
-		dbg_panic();
+		log_puts("song_loc: bad argument\n");
+		panic();
 	}
 	tic = 0;
 	pos = 0;
@@ -980,8 +980,8 @@ song_loc(struct song *o, unsigned where, unsigned how)
 		track_clear(&o->rec);
 #ifdef SONG_DEBUG
 	if (!track_isempty(&o->rec)) {
-		dbg_puts("song_loc: rec track not empty\n");
-		dbg_panic();
+		log_puts("song_loc: rec track not empty\n");
+		panic();
 	}
 #endif
 	seqptr_del(o->recptr);
@@ -993,36 +993,36 @@ song_loc(struct song *o, unsigned where, unsigned how)
 	for (s = o->metaptr->statelist.first; s != NULL; s = s->next) {
 		if (EV_ISMETA(&s->ev)) {
 			if (song_debug) {
-				dbg_puts("song_loc: ");
-				ev_dbg(&s->ev);
-				dbg_puts(": restoring meta-event\n");
+				log_puts("song_loc: ");
+				ev_log(&s->ev);
+				log_puts(": restoring meta-event\n");
 			}
 			song_metaput(o, s);
 			s->tag = 1;
 		} else {
 			if (song_debug) {
-				dbg_puts("song_loc: ");
-				ev_dbg(&s->ev);
-				dbg_puts(": not restored (not tagged)\n");
+				log_puts("song_loc: ");
+				ev_log(&s->ev);
+				log_puts(": not restored (not tagged)\n");
 			}
 			s->tag = 0;
 		}
 	}
 	pos /= 24000000 / MTC_SEC;
 	if (song_debug) {
-		dbg_puts("song_loc: ");
-		dbg_putu(where);
-		dbg_puts(" -> ");
-		dbg_putu(o->measure);
-		dbg_puts(":");
-		dbg_putu(o->beat);
-		dbg_puts(":");
-		dbg_putu(o->tic);
-		dbg_puts("/");
-		dbg_putu(tic);
-		dbg_puts(", mtc = ");
-		dbg_putu(pos);
-		dbg_puts("\n");
+		log_puts("song_loc: ");
+		log_putu(where);
+		log_puts(" -> ");
+		log_putu(o->measure);
+		log_puts(":");
+		log_putu(o->beat);
+		log_puts(":");
+		log_putu(o->tic);
+		log_puts("/");
+		log_putu(tic);
+		log_puts(", mtc = ");
+		log_putu(pos);
+		log_puts("\n");
 	}
 	return pos;
 }
@@ -1043,8 +1043,8 @@ song_gotocb(struct song *o, unsigned mtcpos)
 	cons_putpos(o->measure, o->beat, o->tic);
 
 	if (newpos > mtcpos) {
-		dbg_puts("song_gotocb: negative offset\n");
-		dbg_panic();
+		log_puts("song_gotocb: negative offset\n");
+		panic();
 	}
 	return (mtcpos - newpos) * (24000000 / MTC_SEC);
 }
@@ -1174,7 +1174,7 @@ song_play(struct song *o)
 	mux_startreq();
 
 	if (song_debug) {
-		dbg_puts("song_play: waiting for a start event...\n");
+		log_puts("song_play: waiting for a start event...\n");
 	}
 }
 
@@ -1190,7 +1190,7 @@ song_record(struct song *o)
 
 	song_getcurtrk(o, &t);
 	if (!t || t->mute) {
-		dbg_puts("song_record: no current track (or muted)\n");
+		log_puts("song_record: no current track (or muted)\n");
 	}
 
 	m = (o->mode >= SONG_IDLE) ? o->measure : o->curpos;
@@ -1198,7 +1198,7 @@ song_record(struct song *o)
 	song_goto(o, m);
 	mux_startreq();
 	if (song_debug) {
-		dbg_puts("song_record: waiting for a start event...\n");
+		log_puts("song_record: waiting for a start event...\n");
 	}
 }
 
@@ -1215,7 +1215,7 @@ song_idle(struct song *o)
 	song_goto(o,  m);
 
 	if (song_debug) {
-		dbg_puts("song_idle: started loop...\n");
+		log_puts("song_idle: started loop...\n");
 	}
 }
 

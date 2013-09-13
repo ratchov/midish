@@ -59,7 +59,7 @@ raw_new(char *path, unsigned mode)
 		cons_err("path must be set for raw devices");
 		return NULL;
 	}
-	dev = mem_alloc(sizeof(struct raw), "raw");
+	dev = xmalloc(sizeof(struct raw), "raw");
 	mididev_init(&dev->mididev, &raw_ops, mode);
 	dev->path = str_new(path);
 	return (struct mididev *)&dev->mididev;
@@ -72,7 +72,7 @@ raw_del(struct mididev *addr)
 
 	mididev_done(&dev->mididev);
 	str_delete(dev->path);
-	mem_free(dev);
+	xfree(dev);
 }
 
 void
@@ -88,8 +88,8 @@ raw_open(struct mididev *addr)
 	} else if (dev->mididev.mode == (MIDIDEV_MODE_IN | MIDIDEV_MODE_OUT)) {
 		mode = O_RDWR;
 	} else {
-		dbg_puts("raw_open: not allowed mode\n");
-		dbg_panic();
+		log_puts("raw_open: not allowed mode\n");
+		panic();
 		mode = 0;
 	}
 	dev->fd = open(dev->path, mode, 0666);

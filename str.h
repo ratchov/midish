@@ -19,7 +19,7 @@
 
 char	*str_new(char *);
 void	 str_delete(char *);
-void	 str_dbg(char *);
+void	 str_log(char *);
 unsigned str_eq(char *, char *);
 unsigned str_len(char *);
 

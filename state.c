@@ -67,29 +67,29 @@ state_del(struct state *s)
  * dump the state to stderr
  */
 void
-state_dbg(struct state *s)
+state_log(struct state *s)
 {
-	ev_dbg(&s->ev);
+	ev_log(&s->ev);
 	if (s->flags & STATE_NEW) {
-		dbg_puts(" NEW");
+		log_puts(" NEW");
 	}
 	if (s->flags & STATE_CHANGED) {
-		dbg_puts(" CHANGED");
+		log_puts(" CHANGED");
 	}
 	if (s->flags & STATE_BOGUS) {
-		dbg_puts(" BOGUS");
+		log_puts(" BOGUS");
 	}
 	if (s->flags & STATE_NESTED) {
-		dbg_puts(" NESTED");
+		log_puts(" NESTED");
 	}
 	if (s->phase & EV_PHASE_FIRST) {
-		dbg_puts(" FIRST");
+		log_puts(" FIRST");
 	}
 	if (s->phase & EV_PHASE_NEXT) {
-		dbg_puts(" NEXT");
+		log_puts(" NEXT");
 	}
 	if (s->phase & EV_PHASE_LAST) {
-		dbg_puts(" LAST");
+		log_puts(" LAST");
 	}
 }
 
@@ -154,16 +154,16 @@ state_match(struct state *st, struct ev *ev)
 				return 0;
 			break;
 		}
-		dbg_puts("state_match: ");
-		state_dbg(st);
-		dbg_puts(": bad event type\n");
-		dbg_panic();
+		log_puts("state_match: ");
+		state_log(st);
+		log_puts(": bad event type\n");
+		panic();
 		break;
 	}
 #ifdef STATE_DEBUG
-	dbg_puts("state_match: ");
-	ev_dbg(&st->ev);
-	dbg_puts(": ok\n");
+	log_puts("state_match: ");
+	ev_log(&st->ev);
+	log_puts(": ok\n");
 #endif
 	return 1;
 }
@@ -257,8 +257,8 @@ state_eq(struct state *st, struct ev *ev)
 			return 0;
 		}
 	} else {
-		dbg_puts("state_eq: not defined\n");
-		dbg_panic();
+		log_puts("state_eq: not defined\n");
+		panic();
 	}
 	return 1;
 }
@@ -311,8 +311,8 @@ state_cancel(struct state *st, struct ev *rev)
 		 * other events have their EV_PHASE_LAST bit set, so
 		 * we never come here
 		 */
-		dbg_puts("state_cancel: unknown event type\n");
-		dbg_panic();
+		log_puts("state_cancel: unknown event type\n");
+		panic();
 	}
 	return 1;
 }
@@ -336,13 +336,13 @@ state_restore(struct state *st, struct ev *rev)
 		 * we never use this function for NOTE events, so
 		 * if we're here, there is problem somewhere...
 		 */
-		dbg_puts("state_restore: can't restore note events\n");
-		dbg_panic();
+		log_puts("state_restore: can't restore note events\n");
+		panic();
 	}
 	if ((st->phase & EV_PHASE_LAST) && !(st->phase & EV_PHASE_FIRST)) {
-		dbg_puts("state_restore: ");
-		state_dbg(st);
-		dbg_puts(": called for last event!\n");
+		log_puts("state_restore: ");
+		state_log(st);
+		log_puts(": called for last event!\n");
 		return 0;
 	}
 	*rev = st->ev;
@@ -383,9 +383,9 @@ statelist_done(struct statelist *o)
 		 * the EV_CTL case is here for conv_xxx() functions
 		 */
 		if (!(i->phase & EV_PHASE_LAST) && i->ev.cmd != EV_CTL) {
-			dbg_puts("statelist_done: ");
-			ev_dbg(&i->ev);
-			dbg_puts(": unterminated frame\n");
+			log_puts("statelist_done: ");
+			ev_log(&i->ev);
+			log_puts(": unterminated frame\n");
 		}
 		inext = i->next;
 		statelist_rm(o, i);
@@ -393,7 +393,7 @@ statelist_done(struct statelist *o)
 	}
 
 #ifdef STATE_PROF
-	prof_dbg(&o->prof);
+	prof_log(&o->prof);
 #endif
 }
 
@@ -402,10 +402,10 @@ statelist_dump(struct statelist *o)
 {
 	struct state *i;
 
-	dbg_puts("statelist_dump:\n");
+	log_puts("statelist_dump:\n");
 	for (i = o->first; i != NULL; i = i->next) {
-		ev_dbg(&i->ev);
-		dbg_puts("\n");
+		ev_log(&i->ev);
+		log_puts("\n");
 	}
 }
 
@@ -577,9 +577,9 @@ statelist_update(struct statelist *statelist, struct ev *ev)
 			phase = EV_PHASE_FIRST | EV_PHASE_LAST;
 			st->flags |= STATE_BOGUS;
 #ifdef STATE_DEBUG
-			dbg_puts("statelist_update: ");
-			ev_dbg(ev);
-			dbg_puts(": not first and no state\n");
+			log_puts("statelist_update: ");
+			ev_log(ev);
+			log_puts(": not first and no state\n");
 #endif
 		} else {
 			phase &= ~EV_PHASE_NEXT;
@@ -590,9 +590,9 @@ statelist_update(struct statelist *statelist, struct ev *ev)
 		 * event starts a new one that's conflicting
 		 */
 #ifdef STATE_DEBUG
-		dbg_puts("statelist_update: ");
-		ev_dbg(ev);
-		dbg_puts(": nested events, stacked\n");
+		log_puts("statelist_update: ");
+		ev_log(ev);
+		log_puts(": nested events, stacked\n");
 #endif
 		st = state_new();
 		statelist_add(statelist, st);
@@ -607,9 +607,9 @@ statelist_update(struct statelist *statelist, struct ev *ev)
 	state_copyev(st, ev, phase);
 	statelist->changed = 1;
 #ifdef STATE_DEBUG
-	dbg_puts("statelist_update: updated: ");
-	state_dbg(st);
-	dbg_puts("\n");
+	log_puts("statelist_update: updated: ");
+	state_log(st);
+	log_puts("\n");
 #endif
 	return st;
 }

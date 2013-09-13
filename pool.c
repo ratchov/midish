@@ -44,12 +44,12 @@ pool_init(struct pool *o, char *name, unsigned itemsize, unsigned itemnum)
 	itemsize += sizeof(unsigned) - 1;
 	itemsize &= ~(sizeof(unsigned) - 1);
 
-	o->data = mem_alloc(itemsize * itemnum, "pool");
+	o->data = xmalloc(itemsize * itemnum, "pool");
 	if (!o->data) {
-		dbg_puts("pool_init(");
-		dbg_puts(name);
-		dbg_puts("): out of memory\n");
-		dbg_panic();
+		log_puts("pool_init(");
+		log_puts(name);
+		log_puts("): out of memory\n");
+		panic();
 	}
 	o->first = NULL;
 	o->itemsize = itemsize;
@@ -80,25 +80,25 @@ pool_init(struct pool *o, char *name, unsigned itemsize, unsigned itemnum)
 void
 pool_done(struct pool *o)
 {
-	mem_free(o->data);
+	xfree(o->data);
 #ifdef POOL_DEBUG
 	if (o->used != 0) {
-		dbg_puts("pool_done(");
-		dbg_puts(o->name);
-		dbg_puts("): WARNING ");
-		dbg_putu(o->used);
-		dbg_puts(" items still allocated\n");
+		log_puts("pool_done(");
+		log_puts(o->name);
+		log_puts("): WARNING ");
+		log_putu(o->used);
+		log_puts(" items still allocated\n");
 	}
 	if (pool_debug) {
-		dbg_puts("pool_done(");
-		dbg_puts(o->name);
-		dbg_puts("): using ");
-		dbg_putu((1023 + o->itemnum * o->itemsize) / 1024);
-		dbg_puts("kB maxused = ");
-		dbg_putu(100 * o->maxused / o->itemnum);
-		dbg_puts("% allocs = ");
-		dbg_putu(100 * o->newcnt / o->itemnum);
-		dbg_puts("%\n");
+		log_puts("pool_done(");
+		log_puts(o->name);
+		log_puts("): using ");
+		log_putu((1023 + o->itemnum * o->itemsize) / 1024);
+		log_puts("kB maxused = ");
+		log_putu(100 * o->maxused / o->itemnum);
+		log_puts("% allocs = ");
+		log_putu(100 * o->newcnt / o->itemnum);
+		log_puts("%\n");
 	}
 #endif
 }
@@ -114,10 +114,10 @@ pool_new(struct pool *o)
 	struct poolent *e;
 
 	if (!o->first) {
-		dbg_puts("pool_new(");
-		dbg_puts(o->name);
-		dbg_puts("): pool is empty\n");
-		dbg_panic();
+		log_puts("pool_new(");
+		log_puts(o->name);
+		log_puts("): pool is empty\n");
+		panic();
 	}
 
 	/*
@@ -151,10 +151,10 @@ pool_del(struct pool *o, void *p)
 	 * entries than the poll size
 	 */
 	if (o->used == 0) {
-		dbg_puts("pool_del(");
-		dbg_puts(o->name);
-		dbg_puts("): pool is full\n");
-		dbg_panic();
+		log_puts("pool_del(");
+		log_puts(o->name);
+		log_puts("): pool is full\n");
+		panic();
 	}
 	o->used--;
 
@@ -165,7 +165,7 @@ pool_del(struct pool *o, void *p)
 	buf = (unsigned *)e;
 	n = o->itemsize / sizeof(unsigned);
 	for (i = 0; i < n; i++)
-		*(buf++) = mem_rnd();
+		*(buf++) = memrnd();
 #endif
 	/*
 	 * link on the free list

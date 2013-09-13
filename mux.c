@@ -101,7 +101,7 @@ void mux_sendstop(void);
 void mux_mdep_open(void);
 void mux_mdep_close(void);
 
-void mux_dbgphase(unsigned phase);
+void mux_logphase(unsigned phase);
 void mux_chgphase(unsigned phase);
 
 /*
@@ -148,7 +148,7 @@ mux_open(void)
 #ifdef MUX_PROF
 	prof_reset(&mux_prof, "mux/ms");
 #endif
-	dbg_sync = 1;
+	log_sync = 1;
 }
 
 /*
@@ -159,9 +159,9 @@ mux_close(void)
 {
 	struct mididev *i;
 
-	dbg_sync = 1;
+	log_sync = 1;
 #ifdef MUX_PROF
-	prof_dbg(&mux_prof);
+	prof_log(&mux_prof);
 #endif
 	norm_stop();
 	mixout_stop();
@@ -182,26 +182,26 @@ mux_close(void)
 
 #ifdef MUX_DEBUG
 void
-mux_dbgphase(unsigned phase)
+mux_logphase(unsigned phase)
 {
 	switch(phase) {
 	case MUX_STARTWAIT:
-		dbg_puts("STARTWAIT");
+		log_puts("STARTWAIT");
 		break;
 	case MUX_START:
-		dbg_puts("START");
+		log_puts("START");
 		break;
 	case MUX_FIRST:
-		dbg_puts("FIRST");
+		log_puts("FIRST");
 		break;
 	case MUX_NEXT:
-		dbg_puts("NEXT");
+		log_puts("NEXT");
 		break;
 	case MUX_STOP:
-		dbg_puts("STOP");
+		log_puts("STOP");
 		break;
 	default:
-		dbg_puts("unknown");
+		log_puts("unknown");
 		break;
 	}
 }
@@ -214,11 +214,11 @@ void
 mux_chgphase(unsigned phase)
 {
 #ifdef MUX_DEBUG
-	dbg_puts("mux_phase: ");
-	mux_dbgphase(mux_phase);
-	dbg_puts(" -> ");
-	mux_dbgphase(phase);
-	dbg_puts("\n");
+	log_puts("mux_phase: ");
+	mux_logphase(mux_phase);
+	log_puts(" -> ");
+	mux_logphase(phase);
+	log_puts("\n");
 #endif
 	mux_phase = phase;
 }
@@ -294,24 +294,24 @@ mux_putev(struct ev *ev)
 
 #ifdef MUX_DEBUG
 	if (mux_debug) {
-		dbg_puts("mux_putev: ");
-		ev_dbg(ev);
-		dbg_puts("\n");
+		log_puts("mux_putev: ");
+		ev_log(ev);
+		log_puts("\n");
 	}
 #endif
 
 	if (!EV_ISVOICE(ev) && !EV_ISSX(ev)) {
-		dbg_puts("mux_putev: ");
-		ev_dbg(ev);
-		dbg_puts(": only voice events allowed\n");
-		dbg_panic();
+		log_puts("mux_putev: ");
+		ev_log(ev);
+		log_puts(": only voice events allowed\n");
+		panic();
 	}
 	unit = ev->dev;
 	if (unit >= DEFAULT_MAXNDEVS) {
-		dbg_puts("mux_putev: ");
-		ev_dbg(ev);
-		dbg_puts(": bogus unit number\n");
-		dbg_panic();
+		log_puts("mux_putev: ");
+		ev_log(ev);
+		log_puts(": bogus unit number\n");
+		panic();
 	}
 	dev = mididev_byunit[unit];
 	if (dev != NULL) {
@@ -362,7 +362,7 @@ mux_mtcstart(unsigned mtcpos)
 	 */
 	if (mux_phase >= MUX_START && mux_phase <= MUX_NEXT) {
 		if (mux_debug)
-			dbg_puts("mux_mtcstart: triggered stop\n");
+			log_puts("mux_mtcstart: triggered stop\n");
 		mux_mtcstop();
 	}
 
@@ -371,7 +371,7 @@ mux_mtcstart(unsigned mtcpos)
 	 */
 	if (mux_phase == MUX_STOP) {
 		if (mux_debug)
-			dbg_puts("mux_mtcstart: ignored mtc start (stopped)\n");
+			log_puts("mux_mtcstart: ignored mtc start (stopped)\n");
 		return;
 	}
 
@@ -383,14 +383,14 @@ mux_mtcstart(unsigned mtcpos)
 		mux_nextpos = mux_ticlength;
 		mux_curpos = song_gotocb(usong, mtcpos);
 		if (mux_curpos >= mux_ticlength)
-			dbg_puts("mux_mtcstart: offset larger than 1 tick\n");
+			log_puts("mux_mtcstart: offset larger than 1 tick\n");
 	}
 
 	/*
 	 * generate clock start
 	 */
 	if (mux_debug)
-		dbg_puts("mux_mtcstart: generated clk start\n");
+		log_puts("mux_mtcstart: generated clk start\n");
 	mux_sendstart();
 	mux_startcb();
 	mux_flush();
@@ -433,7 +433,7 @@ mux_mtcstop(void)
 
 	if (mux_phase >= MUX_START) {
 		if (mux_debug)
-			dbg_puts("mux_mtcstop: generated stop\n");
+			log_puts("mux_mtcstop: generated stop\n");
 		mux_sendstop();
 		mux_stopcb();
 		mux_flush();
@@ -497,8 +497,8 @@ mux_timercb(unsigned long delta)
 	if (!mididev_mtcsrc && !mididev_clksrc) {
 		switch (mux_phase) {
 		case MUX_STARTWAIT:
-			dbg_puts("mux_timercb: startwait: bad state\n");
-			dbg_panic();
+			log_puts("mux_timercb: startwait: bad state\n");
+			panic();
 			break;
 		case MUX_START:
 			mux_curpos += delta;
@@ -553,9 +553,9 @@ void
 mux_startcb(void)
 {
 	if (mux_debug)
-		dbg_puts("mux_startcb: got start event\n");
+		log_puts("mux_startcb: got start event\n");
 	if (mux_phase != MUX_STARTWAIT) {
-		dbg_puts("mux_startcb: ignored MIDI start (not ready)\n");
+		log_puts("mux_startcb: ignored MIDI start (not ready)\n");
 		return;
 	}
 
@@ -578,7 +578,7 @@ void
 mux_stopcb(void)
 {
 	if (mux_debug)
-		dbg_puts("mux_stopcb: got stop\n");
+		log_puts("mux_stopcb: got stop\n");
 	mux_chgphase(mux_reqphase);
 	song_stopcb(usong);
 }
@@ -608,9 +608,9 @@ mux_evcb(unsigned unit, struct ev *ev)
 
 #ifdef MUX_DEBUG
 	if (mux_debug) {
-		dbg_puts("mux_evcb: ");
-		ev_dbg(ev);
-		dbg_puts("\n");
+		log_puts("mux_evcb: ");
+		ev_log(ev);
+		log_puts("\n");
 	}
 #endif
 	if (conv_packev(&mux_istate, dev->ixctlset, dev->ievset, ev, &rev)) {
@@ -755,13 +755,13 @@ mux_startreq(void)
 
 	mux_reqphase = MUX_STARTWAIT;
 	if (mux_phase != MUX_STOP) {
-		dbg_puts("bad state to call mux_startreq()\n");
-		dbg_panic();
+		log_puts("bad state to call mux_startreq()\n");
+		panic();
 	}
 	mux_chgphase(MUX_STARTWAIT);
 	if (!mididev_clksrc && !mididev_mtcsrc) {
 		if (mux_debug)
-			dbg_puts("mux_startreq: generated mtc start\n");
+			log_puts("mux_startreq: generated mtc start\n");
 		mux_curpos = 0;
 		mux_nextpos = MUX_START_DELAY;
 		mux_mtcstart(0xdeadbeef);

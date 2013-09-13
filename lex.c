@@ -124,8 +124,8 @@ void
 lex_ungetchar(struct lex *o, int c)
 {
 	if (o->lookchar >= 0) {
-		dbg_puts("lex_ungetchar: lookchar already set\n");
-		dbg_panic();
+		log_puts("lex_ungetchar: lookchar already set\n");
+		panic();
 	}
 	o->lookchar = c;
 }
@@ -377,47 +377,47 @@ lex_scan(struct lex *o)
 }
 
 void
-lex_dbg(struct lex *o)
+lex_log(struct lex *o)
 {
 	struct tokdef *t;
 
 	if (o->id == 0) {
-		dbg_puts("NULL");
+		log_puts("NULL");
 		return;
 	} else if (o->id == TOK_ENDLINE) {
-		dbg_puts("\\n");
+		log_puts("\\n");
 		return;
 	}
 	for (t = lex_op; t->id != 0; t++) {
 		if (t->id == o->id) {
-			dbg_puts(t->str);
+			log_puts(t->str);
 			return;
 		}
 	}
 	for (t = lex_kw; t->id != 0; t++) {
 		if (t->id == o->id) {
-			dbg_puts(t->str);
+			log_puts(t->str);
 			return;
 		}
 	}
 	switch(o->id) {
 	case TOK_IDENT:
-		dbg_puts("IDENT{");
-		dbg_puts(o->strval);
-		dbg_puts("}");
+		log_puts("IDENT{");
+		log_puts(o->strval);
+		log_puts("}");
 		break;
 	case TOK_NUM:
-		dbg_puts("NUM{");
-		dbg_putu(o->longval);
-		dbg_puts("}");
+		log_puts("NUM{");
+		log_putu(o->longval);
+		log_puts("}");
 		break;
 	case TOK_STRING:
-		dbg_puts("STRING{\"");
-		dbg_puts(o->strval);
-		dbg_puts("\"}");
+		log_puts("STRING{\"");
+		log_puts(o->strval);
+		log_puts("\"}");
 		break;
 	default:
-		dbg_puts("UNKNOWN");
+		log_puts("UNKNOWN");
 		break;
 	}
 }

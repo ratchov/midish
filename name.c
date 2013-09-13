@@ -37,7 +37,7 @@ struct name *
 name_new(char *name)
 {
 	struct name *o;
-	o = mem_alloc(sizeof(struct name), "name");
+	o = xmalloc(sizeof(struct name), "name");
 	name_init(o, name);
 	return o;
 }
@@ -55,16 +55,16 @@ void
 name_delete(struct name *o)
 {
 	name_done(o);
-	mem_free(o);
+	xfree(o);
 }
 
 void
-name_dbg(struct name *o)
+name_log(struct name *o)
 {
 	for (; o != NULL; o = o->next) {
-		str_dbg(o->str);
+		str_log(o->str);
 		if (o->next) {
-			dbg_puts(".");
+			log_puts(".");
 		}
 	}
 }
@@ -101,8 +101,8 @@ name_remove(struct name **first, struct name *v)
 		}
 		i = &(*i)->next;
 	}
-	dbg_puts("name_remove: not found\n");
-	dbg_panic();
+	log_puts("name_remove: not found\n");
+	panic();
 }
 
 void

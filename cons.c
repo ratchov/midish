@@ -86,7 +86,7 @@ cons_puttag(char *tag)
 
 /*
  * follows routines that report user non-fatal errors please use them
- * instead of dbg_xxx (the latter are only for debugging)
+ * instead of log_xxx (the latter are only for debugging)
  */
 
 void

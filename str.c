@@ -35,11 +35,11 @@ str_new(char *val)
 	char *s, *buf;
 
 	if (val == NULL) {
-		dbg_puts("str_new: NULL pointer argument\n");
-		dbg_panic();
+		log_puts("str_new: NULL pointer argument\n");
+		panic();
 	}
 	cnt = str_len(val) + 1;
-	buf = mem_alloc(cnt, "str");
+	buf = xmalloc(cnt, "str");
 	for (s = buf; cnt > 0; cnt--) {
 		*s++ = *val++;
 	}
@@ -54,10 +54,10 @@ void
 str_delete(char *s)
 {
 	if (s == NULL) {
-		dbg_puts("str_delete: NULL pointer argument\n");
-		dbg_panic();
+		log_puts("str_delete: NULL pointer argument\n");
+		panic();
 	}
-	mem_free(s);
+	xfree(s);
 }
 
 /*
@@ -65,12 +65,12 @@ str_delete(char *s)
  * is NULL
  */
 void
-str_dbg(char *s)
+str_log(char *s)
 {
 	if (s == NULL) {
-		dbg_puts("<nullstring>");
+		log_puts("<nullstring>");
 	} else {
-		dbg_puts(s);
+		log_puts(s);
 	}
 }
 
@@ -83,8 +83,8 @@ str_eq(char *s1, char *s2)
 {
 
 	if (s1 == NULL || s2 == NULL) {
-		dbg_puts("std_id: NULL pointer argument\n");
-		dbg_panic();
+		log_puts("std_id: NULL pointer argument\n");
+		panic();
 	}
 	for (;;) {
 		if (*s1 == '\0' && *s2 == '\0') {

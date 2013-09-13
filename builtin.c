@@ -124,7 +124,7 @@ blt_version(struct exec *o, struct data **r)
 unsigned
 blt_panic(struct exec *o, struct data **r)
 {
-	dbg_panic();
+	panic();
 	/* not reached */
 	return 0;
 }
@@ -185,7 +185,7 @@ blt_print(struct exec *o, struct data **r)
 
 	arg = exec_varlookup(o, "value");
 	if (!arg) {
-		dbg_puts("blt_print: 'value': no such param\n");
+		log_puts("blt_print: 'value': no such param\n");
 		return 0;
 	}
 	data_print(arg->data);
@@ -253,7 +253,7 @@ blt_cc(struct exec *o, struct data **r, int input)
 
 	arg = exec_varlookup(o, "channame");
 	if (!arg) {
-		dbg_puts("blt_cc: channame: no such param\n");
+		log_puts("blt_cc: channame: no such param\n");
 		return 0;
 	}
 	if (arg->data->type == DATA_NIL) {
@@ -316,7 +316,7 @@ blt_cx(struct exec *o, struct data **r)
 
 	arg = exec_varlookup(o, "sysexname");
 	if (!arg) {
-		dbg_puts("blt_setx: 'sysexname': no such param\n");
+		log_puts("blt_setx: 'sysexname': no such param\n");
 		return 0;
 	}
 	if (arg->data->type == DATA_NIL) {
@@ -440,7 +440,7 @@ blt_setq(struct exec *o, struct data **r)
 
 	arg = exec_varlookup(o, "step");
 	if (!arg) {
-		dbg_puts("blt_setq: step: no such param\n");
+		log_puts("blt_setq: step: no such param\n");
 		return 0;
 	}
 	if (!song_try_curquant(usong)) {
@@ -512,7 +512,7 @@ blt_ct(struct exec *o, struct data **r)
 
 	arg = exec_varlookup(o, "trackname");
 	if (!arg) {
-		dbg_puts("blt_sett: 'trackname': no such param\n");
+		log_puts("blt_sett: 'trackname': no such param\n");
 		return 0;
 	}
 	if (arg->data->type == DATA_NIL) {
@@ -549,7 +549,7 @@ blt_cf(struct exec *o, struct data **r)
 
 	arg = exec_varlookup(o, "filtname");
 	if (!arg) {
-		dbg_puts("blt_setf: filtname: no such param\n");
+		log_puts("blt_setf: filtname: no such param\n");
 		return 0;
 	}
 	if (arg->data->type == DATA_NIL) {
@@ -1392,11 +1392,11 @@ blt_evpat(struct exec *o, struct data **r)
 			break;
 	}
 	name = str_new(ref);
-	pattern = mem_alloc(EV_PATSIZE, "evpat");
+	pattern = xmalloc(EV_PATSIZE, "evpat");
 	arg = exec_varlookup(o, "pattern");
 	if (!arg) {
-		dbg_puts("exec_lookupev: no such var\n");
-		dbg_panic();
+		log_puts("exec_lookupev: no such var\n");
+		panic();
 	}
 	if (arg->data->type != DATA_LIST) {
 		cons_errs(o->procname, "data must be a list");
@@ -1442,7 +1442,7 @@ blt_evpat(struct exec *o, struct data **r)
 		goto err1;
 	return 1;
 err1:
-	mem_free(pattern);
+	xfree(pattern);
 	str_delete(name);
 	return 0;
 }
@@ -1634,7 +1634,7 @@ blt_tsetf(struct exec *o, struct data **r)
 	}
 	arg = exec_varlookup(o, "filtname");
 	if (!arg) {
-		dbg_puts("blt_tsetf: filtname: no such param\n");
+		log_puts("blt_tsetf: filtname: no such param\n");
 		return 0;
 	}
 	if (arg->data->type == DATA_NIL) {
@@ -2971,8 +2971,8 @@ blt_xadd(struct exec *o, struct data **r)
 	}
 	arg = exec_varlookup(o, "data");
 	if (!arg) {
-		dbg_puts("exec_lookupev: no such var\n");
-		dbg_panic();
+		log_puts("exec_lookupev: no such var\n");
+		panic();
 	}
 	if (arg->data->type != DATA_LIST) {
 		cons_errs(o->procname, "data must be a list of numbers");
@@ -3030,7 +3030,7 @@ blt_ximport(struct exec *o, struct data **r)
 	}
 	arg = exec_varlookup(o, "path");
 	if (!arg) {
-		dbg_puts("blt_ximport: path: no such param\n");
+		log_puts("blt_ximport: path: no such param\n");
 		return 0;
 	}
 	if (arg->data->type != DATA_STRING) {
@@ -3057,7 +3057,7 @@ blt_xexport(struct exec *o, struct data **r)
 	}
 	arg = exec_varlookup(o, "path");
 	if (!arg) {
-		dbg_puts("blt_xexport: path: no such param\n");
+		log_puts("blt_xexport: path: no such param\n");
 		return 0;
 	}
 	if (arg->data->type != DATA_STRING) {
@@ -3102,7 +3102,7 @@ blt_dnew(struct exec *o, struct data **r)
 	}
 	arg = exec_varlookup(o, "path");
 	if (!arg) {
-		dbg_puts("blt_dnew: path: no such param\n");
+		log_puts("blt_dnew: path: no such param\n");
 		return 0;
 	}
 	if (arg->data->type == DATA_NIL) {
@@ -3156,8 +3156,8 @@ blt_dmtcrx(struct exec *o, struct data **r)
 	}
 	arg = exec_varlookup(o, "devnum");
 	if (!arg) {
-		dbg_puts("blt_dmtcrx: no such var\n");
-		dbg_panic();
+		log_puts("blt_dmtcrx: no such var\n");
+		panic();
 	}
 	if (arg->data->type == DATA_NIL) {
 		mididev_mtcsrc = NULL;
@@ -3218,8 +3218,8 @@ blt_dclkrx(struct exec *o, struct data **r)
 	}
 	arg = exec_varlookup(o, "devnum");
 	if (!arg) {
-		dbg_puts("blt_dclkrx: no such var\n");
-		dbg_panic();
+		log_puts("blt_dclkrx: no such var\n");
+		panic();
 	}
 	if (arg->data->type == DATA_NIL) {
 		mididev_clksrc = NULL;

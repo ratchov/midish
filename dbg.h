@@ -21,16 +21,16 @@
 #define NULL 0
 #endif
 
-void	 dbg_puts(char *);
-void	 dbg_putx(unsigned long);
-void	 dbg_putu(unsigned long);
-void	 dbg_puti(long);
-void	 dbg_panic(void);
-void	 dbg_flush(void);
-void	*mem_alloc(unsigned, char *);
-void	 mem_free(void *);
+void	 log_puts(char *);
+void	 log_putx(unsigned long);
+void	 log_putu(unsigned long);
+void	 log_puti(long);
+void	 panic(void);
+void	 log_flush(void);
+void	*xmalloc(unsigned, char *);
+void	 xfree(void *);
 void	 mem_stats(void);
-unsigned mem_rnd(void);
+unsigned memrnd(void);
 
 struct prof {
 	char *name;
@@ -44,9 +44,9 @@ struct prof {
 
 void prof_reset(struct prof *, char *);
 void prof_val(struct prof *, unsigned);
-void prof_dbg(struct prof *);
+void prof_log(struct prof *);
 
 extern unsigned mem_debug;
-extern unsigned dbg_sync;
+extern unsigned log_sync;
 
 #endif /* MIDISH_DBG_H */

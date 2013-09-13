@@ -44,7 +44,7 @@ void	      sysex_pool_done(void);
 struct sysex *sysex_new(unsigned);
 void	      sysex_del(struct sysex *);
 void	      sysex_add(struct sysex *, unsigned);
-void	      sysex_dbg(struct sysex *);
+void	      sysex_log(struct sysex *);
 unsigned      sysex_check(struct sysex *);
 
 void 	      sysexlist_init(struct sysexlist *);
@@ -52,6 +52,6 @@ void	      sysexlist_done(struct sysexlist *);
 void	      sysexlist_clear(struct sysexlist *);
 void	      sysexlist_put(struct sysexlist *, struct sysex *);
 struct sysex *sysexlist_get(struct sysexlist *);
-void	      sysexlist_dbg(struct sysexlist *);
+void	      sysexlist_log(struct sysexlist *);
 
 #endif /* MIDISH_SYSEX_H */

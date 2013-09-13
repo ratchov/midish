@@ -62,8 +62,8 @@ metro_tocb(void *addr)
 	struct ev ev;
 
 	if (o->ev == NULL) {
-		dbg_puts("metro_tocb: no click sounding\n");
-		dbg_panic();
+		log_puts("metro_tocb: no click sounding\n");
+		panic();
 	}
 	ev.cmd = EV_NOFF;
 	ev.dev = o->ev->dev;
@@ -88,7 +88,7 @@ metro_tic(struct metro *o, unsigned beat, unsigned tic)
 		 * abord the timeout and stop the click
 		 */
 		if (o->ev) {
-			dbg_puts("metro_tic: nested clicks\n");
+			log_puts("metro_tic: nested clicks\n");
 			timo_del(&o->to);
 			metro_tocb(o);
 		}

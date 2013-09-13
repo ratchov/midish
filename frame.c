@@ -411,9 +411,9 @@ seqptr_rmlast(struct seqptr *sp, struct state *st)
 	struct seqev *i, *prev, *cur, *next;
 
 #ifdef FRAME_DEBUG
-	dbg_puts("seqptr_rmlast: ");
-	ev_dbg(&st->ev);
-	dbg_puts(" removing last event\n");
+	log_puts("seqptr_rmlast: ");
+	ev_log(&st->ev);
+	log_puts(" removing last event\n");
 #endif
 	/*
 	 * start a the first event of the frame and iterate until the
@@ -471,9 +471,9 @@ seqptr_rmprev(struct seqptr *sp, struct state *st)
 	struct seqev *i, *next;
 
 #ifdef FRAME_DEBUG
-	dbg_puts("seqptr_rmprev: ");
-	ev_dbg(&st->ev);
-	dbg_puts(" removing whole frame\n");
+	log_puts("seqptr_rmprev: ");
+	ev_log(&st->ev);
+	log_puts(" removing whole frame\n");
 #endif
 	/*
 	 * start a the first event of the frame and iterate until the
@@ -533,9 +533,9 @@ seqptr_evmerge1(struct seqptr *pd, struct state *s1, struct state *s2)
 		s1->tag = (!s2 || (s2->phase & EV_PHASE_LAST)) ? 1 : 0;
 #ifdef FRAME_DEBUG
 		if (!s1->tag) {
-			dbg_puts("seqptr_evmerge1: ");
-			ev_dbg(&s1->ev);
-			dbg_puts(" started in silent state\n");
+			log_puts("seqptr_evmerge1: ");
+			ev_log(&s1->ev);
+			log_puts(" started in silent state\n");
 		}
 #endif
 	}
@@ -573,10 +573,10 @@ seqptr_evmerge2(struct seqptr *pd, struct state *s1, struct state *s2)
 	if (s2->phase & EV_PHASE_FIRST) {
 		if (s1 && s1->tag) {
 			if (sd == NULL) {
-				dbg_puts("seqptr_merge2: ");
-				ev_dbg(&s1->ev);
-				dbg_puts(": no conflict\n");
-				dbg_panic();
+				log_puts("seqptr_merge2: ");
+				ev_log(&s1->ev);
+				log_puts(": no conflict\n");
+				panic();
 			}
 			if (EV_ISNOTE(&s2->ev)) {
 				if (!(s1->phase & EV_PHASE_LAST))
@@ -938,8 +938,8 @@ track_quantize(struct track *src, unsigned start, unsigned len,
 		delta = tic + ofs - qtic;
 #ifdef FRAME_DEBUG
 		if (delta < 0) {
-			dbg_puts("track_quantize: delta < 0\n");
-			dbg_panic();
+			log_puts("track_quantize: delta < 0\n");
+			panic();
 		}
 #endif
 		seqptr_ticput(qp, delta);
@@ -985,13 +985,13 @@ track_quantize(struct track *src, unsigned start, unsigned len,
 	seqptr_del(qp);
 	track_done(&qt);
 	if (notes > 0) {
-		dbg_puts("track_quantize: fluct = ");
-		dbg_putu(fluct);
-		dbg_puts(", notes = ");
-		dbg_putu(notes);
-		dbg_puts(", avg = ");
-		dbg_putu(100 * fluct / notes);
-		dbg_puts("% of a tick\n");
+		log_puts("track_quantize: fluct = ");
+		log_putu(fluct);
+		log_puts(", notes = ");
+		log_putu(notes);
+		log_puts(", avg = ");
+		log_putu(100 * fluct / notes);
+		log_puts("% of a tick\n");
 	}
 }
 
@@ -1155,14 +1155,14 @@ track_check(struct track *src)
 		}
 		if (st->phase & EV_PHASE_FIRST) {
 			if (st->flags & STATE_BOGUS) {
-				dbg_puts("track_check: ");
-				ev_dbg(&st->ev);
-				dbg_puts(": bogus\n");
+				log_puts("track_check: ");
+				ev_log(&st->ev);
+				log_puts(": bogus\n");
 				st->tag = 0;
 			} else if (st->flags & STATE_NESTED) {
-				dbg_puts("track_check: ");
-				ev_dbg(&st->ev);
-				dbg_puts(": nested\n");
+				log_puts("track_check: ");
+				ev_log(&st->ev);
+				log_puts(": nested\n");
 				st->tag = 0;
 			} else {
 				st->tag = 1;
@@ -1176,9 +1176,9 @@ track_check(struct track *src)
 			if (dst == NULL || !state_eq(dst, &st->ev)) {
 				seqptr_evput(sp, &st->ev);
 			} else {
-				dbg_puts("track_check: ");
-				ev_dbg(&st->ev);
-				dbg_puts(": duplicated\n");
+				log_puts("track_check: ");
+				ev_log(&st->ev);
+				log_puts(": duplicated\n");
 			}
 		}
 	}
@@ -1189,9 +1189,9 @@ track_check(struct track *src)
 	for (st = sp->statelist.first; st != NULL; st = stnext) {
 		stnext = st->next;
 		if (!(st->phase & EV_PHASE_LAST)) {
-			dbg_puts("track_check: ");
-			ev_dbg(&st->ev);
-			dbg_puts(": unterminated\n");
+			log_puts("track_check: ");
+			ev_log(&st->ev);
+			log_puts(": unterminated\n");
 			(void)seqptr_rmprev(sp, st);
 		}
 	}
@@ -1280,11 +1280,11 @@ track_findmeasure(struct track *t, unsigned m)
 	seqptr_del(sp);
 
 #ifdef FRAME_DEBUG
-	dbg_puts("track_findmeasure: ");
-	dbg_putu(m);
-	dbg_puts(" -> ");
-	dbg_putu(tic);
-	dbg_puts("\n");
+	log_puts("track_findmeasure: ");
+	log_putu(m);
+	log_puts(" -> ");
+	log_putu(tic);
+	log_puts("\n");
 #endif
 
 	return tic;
@@ -1398,10 +1398,10 @@ track_confev(struct track *src, struct ev *ev)
 	struct state *st;
 
 	if (ev_phase(ev) != (EV_PHASE_FIRST | EV_PHASE_LAST)) {
-		dbg_puts("track_confev: ");
-		ev_dbg(ev);
-		dbg_puts(": bad phase, ignored");
-		dbg_puts("\n");
+		log_puts("track_confev: ");
+		ev_log(ev);
+		log_puts(": bad phase, ignored");
+		log_puts("\n");
 		return;
 	}
 

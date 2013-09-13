@@ -192,7 +192,7 @@ mux_mdep_wait(void)
 	if (mux_isopen) {
 		if (clock_gettime(CLOCK_MONOTONIC, &ts) < 0) {
 			perror("mux_mdep_wait: clock_gettime");
-			dbg_panic();
+			panic();
 		}
 
 		/*
@@ -215,11 +215,11 @@ mux_mdep_wait(void)
 				 * delta is too large (eg. the program was
 				 * suspended and then resumed), just ignore it
 				 */
-				dbg_puts("ignored huge clock delta\n");
+				log_puts("ignored huge clock delta\n");
 			}
 		}
 	}
-	dbg_flush();
+	log_flush();
 	if (cons_pfd && (cons_pfd->revents & (POLLIN | POLLHUP))) {
 		res = read(STDIN_FILENO, cons_buf, CONS_BUFSIZE);
 		if (res < 0) {

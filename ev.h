@@ -154,14 +154,14 @@ struct evinfo {
 
 extern struct evinfo evinfo[EV_NUMCMD];
 
-void	 ev_dbg(struct ev *);
+void	 ev_log(struct ev *);
 unsigned ev_prio(struct ev *);
 unsigned ev_str2cmd(struct ev *, char *);
 unsigned ev_phase(struct ev *);
 void	 ev_map(struct ev *, struct evspec *, struct evspec *, struct ev *);
 
 unsigned evspec_str2cmd(struct evspec *, char *);
-void	 evspec_dbg(struct evspec *);
+void	 evspec_log(struct evspec *);
 void	 evspec_reset(struct evspec *);
 unsigned evspec_matchev(struct evspec *, struct ev *);
 unsigned evspec_eq(struct evspec *, struct evspec *);

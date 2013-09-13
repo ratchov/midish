@@ -130,20 +130,20 @@ sysex_add(struct sysex *o, unsigned data)
  * dump the sysex message on stderr
  */
 void
-sysex_dbg(struct sysex *o)
+sysex_log(struct sysex *o)
 {
 	struct chunk *ck;
 	unsigned i;
-	dbg_puts("unit = ");
-	dbg_putx(o->unit);
-	dbg_puts(", data = { ");
+	log_puts("unit = ");
+	log_putx(o->unit);
+	log_puts(", data = { ");
 	for (ck = o->first; ck != NULL; ck = ck->next) {
 		for (i = 0; i < ck->used; i++) {
-			dbg_putx(ck->data[i]);
-			dbg_puts(" ");
+			log_putx(ck->data[i]);
+			log_puts(" ");
 		}
 	}
-	dbg_puts("}");
+	log_puts("}");
 }
 
 /*
@@ -258,25 +258,25 @@ sysexlist_get(struct sysexlist *o)
  * dump a sysex list on stderr
  */
 void
-sysexlist_dbg(struct sysexlist *o)
+sysexlist_log(struct sysexlist *o)
 {
 	struct sysex *e;
 	unsigned i;
-	dbg_puts("sysex_dbg:\n");
+	log_puts("sysex_log:\n");
 	for (e = o->first; e != NULL; e = e->next) {
-		dbg_puts("unit = ");
-		dbg_putx(e->unit);
-		dbg_puts(", data = { ");
+		log_puts("unit = ");
+		log_putx(e->unit);
+		log_puts(", data = { ");
 		if (e->first) {
 			for (i = 0; i < e->first->used; i++) {
 				if (i > 16) {
-					dbg_puts("... ");
+					log_puts("... ");
 					break;
 				}
-				dbg_putx(e->first->data[i]);
-				dbg_puts(" ");
+				log_putx(e->first->data[i]);
+				log_puts(" ");
 			}
 		}
-		dbg_puts("}\n");
+		log_puts("}\n");
 	}
 }

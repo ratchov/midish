@@ -58,7 +58,7 @@ struct data *data_newuser(void *);
 struct data *data_newrange(unsigned, unsigned);
 void	     data_delete(struct data *);
 void	     data_setfield(struct data *, char *);
-void	     data_dbg(struct data *);
+void	     data_log(struct data *);
 void	     data_listadd(struct data *, struct data *);
 void	     data_listremove(struct data *, struct data *);
 struct data *data_listlookup(struct data *, struct name *);

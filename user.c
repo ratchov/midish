@@ -113,8 +113,8 @@ exec_lookupchan_getnum(struct exec *o, char *var,
 
 	arg = exec_varlookup(o, var);
 	if (!arg) {
-		dbg_puts("exec_lookupchan_getnum: no such var\n");
-		dbg_panic();
+		log_puts("exec_lookupchan_getnum: no such var\n");
+		panic();
 	}
 	if (!data_getchan(arg->data, dev, ch, input)) {
 		return 0;
@@ -135,8 +135,8 @@ exec_lookupchan_getref(struct exec *o, char *var,
 
 	arg = exec_varlookup(o, var);
 	if (!arg) {
-		dbg_puts("exec_lookupchan: no such var\n");
-		dbg_panic();
+		log_puts("exec_lookupchan: no such var\n");
+		panic();
 	}
 	if (arg->data->type == DATA_REF) {
 		i = song_chanlookup(usong, arg->data->val.ref, input);
@@ -222,8 +222,8 @@ exec_lookupev(struct exec *o, char *name, struct ev *ev, int input)
 
 	arg = exec_varlookup(o, name);
 	if (!arg) {
-		dbg_puts("exec_lookupev: no such var\n");
-		dbg_panic();
+		log_puts("exec_lookupev: no such var\n");
+		panic();
 	}
 	d = arg->data;
 
@@ -324,8 +324,8 @@ exec_lookupevspec(struct exec *o, char *name, struct evspec *e, int input)
 
 	arg = exec_varlookup(o, name);
 	if (!arg) {
-		dbg_puts("exec_lookupev: no such var\n");
-		dbg_panic();
+		log_puts("exec_lookupev: no such var\n");
+		panic();
 	}
 	d = arg->data;
 	if (d->type != DATA_LIST) {
@@ -463,9 +463,9 @@ exec_lookupevspec(struct exec *o, char *name, struct evspec *e, int input)
 	}
 
 #if 0
-	dbg_puts("lookupevspec: ");
-	evspec_dbg(e);
-	dbg_puts("\n");
+	log_puts("lookupevspec: ");
+	evspec_log(e);
+	log_puts("\n");
 #endif
 
 	return 1;
@@ -487,8 +487,8 @@ exec_lookupctl(struct exec *o, char *var, unsigned *num)
 
 	arg = exec_varlookup(o, var);
 	if (!arg) {
-		dbg_puts("exec_lookupctl: no such var\n");
-		dbg_panic();
+		log_puts("exec_lookupctl: no such var\n");
+		panic();
 	}
 	return data_getctl(arg->data, num);
 }
@@ -537,7 +537,7 @@ data_print(struct data *d)
 		textout_putlong(tout, d->val.range.max);
 		break;
 	default:
-		dbg_puts("data_print: unknown type\n");
+		log_puts("data_print: unknown type\n");
 		break;
 	}
 }
@@ -553,8 +553,8 @@ exec_lookupval(struct exec *o, char *n, unsigned isfine, unsigned *r)
 
 	arg = exec_varlookup(o, n);
 	if (!arg) {
-		dbg_puts("exec_lookupval: no such var\n");
-		dbg_panic();
+		log_puts("exec_lookupval: no such var\n");
+		panic();
 	}
 	if (arg->data->type == DATA_NIL) {
 		*r = EV_UNDEF;
@@ -1095,7 +1095,7 @@ user_mainloop(void)
 	data = NULL;
 	for (;;) {
 		/*
-		 * print mem_alloc() and mem_free() stats, useful to
+		 * print xmalloc() and xfree() stats, useful to
 		 * track memory leaks
 		 */
 		mem_stats();

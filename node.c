@@ -33,7 +33,7 @@ node_new(struct node_vmt *vmt, struct data *data)
 {
 	struct node *o;
 
-	o = mem_alloc(sizeof(struct node), "node");
+	o = xmalloc(sizeof(struct node), "node");
 	o->vmt = vmt;
 	o->data = data;
 	o->list = o->next = NULL;
@@ -54,35 +54,35 @@ node_delete(struct node *o)
 	if (o->data) {
 		data_delete(o->data);
 	}
-	mem_free(o);
+	xfree(o);
 }
 
 void
-node_dbg(struct node *o, unsigned depth)
+node_log(struct node *o, unsigned depth)
 {
 #define NODE_MAXDEPTH 30
 	static char str[2 * NODE_MAXDEPTH + 1] = "";
 	struct node *i;
 
-	dbg_puts(str);
-	dbg_puts(o != NULL && o->next != NULL ? "+-" : "\\-");
+	log_puts(str);
+	log_puts(o != NULL && o->next != NULL ? "+-" : "\\-");
 	if (o == NULL) {
-		dbg_puts("<EMPTY>\n");
+		log_puts("<EMPTY>\n");
 		return;
 	}
-	dbg_puts(o->vmt->name);
+	log_puts(o->vmt->name);
 	if (o->data) {
-		dbg_puts("(");
-		data_dbg(o->data);
-		dbg_puts(")");
+		log_puts("(");
+		data_log(o->data);
+		log_puts(")");
 	}
-	dbg_puts(depth >= NODE_MAXDEPTH && o->list ? "[...]\n" : "\n");
+	log_puts(depth >= NODE_MAXDEPTH && o->list ? "[...]\n" : "\n");
 	if (depth < NODE_MAXDEPTH) {
 		str[2 * depth] = o->next ? '|' : ' ';
 		str[2 * depth + 1] = ' ';
 		str[2 * depth + 2] = '\0';
 		for (i = o->list; i != NULL; i = i->next) {
-			node_dbg(i, depth + 1);
+			node_log(i, depth + 1);
 		}
 		str[2 * depth] = '\0';
 	}
@@ -101,8 +101,8 @@ void
 node_replace(struct node **n, struct node *e)
 {
 	if (e->list != NULL) {
-		dbg_puts("node_replace: e->list != NULL\n");
-		dbg_panic();
+		log_puts("node_replace: e->list != NULL\n");
+		panic();
 	}
 	e->list = *n;
 	e->next = (*n)->next;

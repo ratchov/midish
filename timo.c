@@ -66,12 +66,12 @@ timo_add(struct timo *o, unsigned delta)
 
 #ifdef TIMO_DEBUG
 	if (o->set) {
-		dbg_puts("timo_add: already set\n");
-		dbg_panic();
+		log_puts("timo_add: already set\n");
+		panic();
 	}
 	if (delta == 0) {
-		dbg_puts("timo_add: zero timeout is evil\n");
-		dbg_panic();
+		log_puts("timo_add: zero timeout is evil\n");
+		panic();
 	}
 #endif
 	val = timo_abstime + delta;
@@ -103,7 +103,7 @@ timo_del(struct timo *o)
 		}
 	}
 	if (timo_debug)
-		dbg_puts("timo_del: not found\n");
+		log_puts("timo_del: not found\n");
 }
 
 /*
@@ -158,8 +158,8 @@ void
 timo_done(void)
 {
 	if (timo_queue != NULL) {
-		dbg_puts("timo_done: timo_queue not empty!\n");
-		dbg_panic();
+		log_puts("timo_done: timo_queue not empty!\n");
+		panic();
 	}
 	timo_queue = (struct timo *)0xdeadbeef;
 }

@@ -54,7 +54,7 @@ struct lex {
 unsigned lex_init(struct lex *, char *);
 void     lex_done(struct lex *);
 unsigned lex_scan(struct lex *);
-void	 lex_dbg(struct lex *);
+void	 lex_log(struct lex *);
 
 unsigned lex_getchar(struct lex *, int *);
 void	 lex_ungetchar(struct lex *, int);

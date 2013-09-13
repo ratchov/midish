@@ -96,7 +96,7 @@ norm_start(void)
 	timo_set(&norm_timo, norm_timocb, NULL);
 	timo_add(&norm_timo, NORM_TIMO);
 	if (norm_debug) {
-		dbg_puts("norm_start()\n");
+		log_puts("norm_start()\n");
 	}
 }
 
@@ -110,17 +110,17 @@ norm_stop(void)
 	struct ev ca;
 
 	if (norm_debug) {
-		dbg_puts("norm_stop()\n");
+		log_puts("norm_stop()\n");
 	}
 	for (s = norm_slist.first; s != NULL; s = snext) {
 		snext = s->next;
 		if (state_cancel(s, &ca)) {
 			if (norm_debug) {
-				dbg_puts("norm_stop: ");
-				ev_dbg(&s->ev);
-				dbg_puts(": cancelled by: ");
-				ev_dbg(&ca);
-				dbg_puts("\n");
+				log_puts("norm_stop: ");
+				ev_log(&s->ev);
+				log_puts(": cancelled by: ");
+				ev_log(&ca);
+				log_puts("\n");
 			}
 			s = statelist_update(&norm_slist, &ca);
 			norm_putev(&s->ev);
@@ -145,11 +145,11 @@ norm_shut(void)
 			continue;
 		if (state_cancel(s, &ca)) {
 			if (norm_debug) {
-				dbg_puts("norm_shut: ");
-				ev_dbg(&s->ev);
-				dbg_puts(": cancelled by: ");
-				ev_dbg(&ca);
-				dbg_puts("\n");
+				log_puts("norm_shut: ");
+				ev_log(&s->ev);
+				log_puts(": cancelled by: ");
+				ev_log(&ca);
+				log_puts("\n");
 			}
 			norm_putev(&ca);
 		}
@@ -184,9 +184,9 @@ norm_kill(struct ev *ev)
 			norm_putev(&st->ev);
 		}
 		st->tag &= ~TAG_PASS;
-		dbg_puts("norm_kill: ");
-		ev_dbg(&st->ev);
-		dbg_puts(": killed\n");
+		log_puts("norm_kill: ");
+		ev_log(&st->ev);
+		log_puts(": killed\n");
 	}
 }
 
@@ -199,18 +199,18 @@ norm_evcb(struct ev *ev)
 	struct state *st;
 
 	if (norm_debug) {
-		dbg_puts("norm_run: ");
-		ev_dbg(ev);
-		dbg_puts("\n");
+		log_puts("norm_run: ");
+		ev_log(ev);
+		log_puts("\n");
 	}
 #ifdef NORM_DEBUG
 	if (o->cb == NULL) {
-		dbg_puts("norm_evcb: cb = NULL, bad initialisation\n");
-		dbg_panic();
+		log_puts("norm_evcb: cb = NULL, bad initialisation\n");
+		panic();
 	}
 	if (!EV_ISVOICE(ev) && !EV_ISSX(ev)) {
-		dbg_puts("norm_evcb: only voice events allowed\n");
-		dbg_panic();
+		log_puts("norm_evcb: only voice events allowed\n");
+		panic();
 	}
 #endif
 
@@ -225,9 +225,9 @@ norm_evcb(struct ev *ev)
 		st->tag = TAG_PASS;
 		if (st->flags & (STATE_BOGUS | STATE_NESTED)) {
 			if (norm_debug) {
-				dbg_puts("norm_evcb: ");
-				ev_dbg(ev);
-				dbg_puts(": bogus/nested frame\n");
+				log_puts("norm_evcb: ");
+				ev_log(ev);
+				log_puts(": bogus/nested frame\n");
 			}
 			norm_kill(ev);
 		}

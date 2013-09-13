@@ -116,9 +116,9 @@ ev_output(struct ev *e, struct textout *f)
 				}
 			} else {
 				textout_putstr(f, "# ignored event\n");
-				dbg_puts("ignoring event: ");
-				ev_dbg(e);
-				dbg_puts("\n");
+				log_puts("ignoring event: ");
+				ev_log(e);
+				log_puts("\n");
 			}
 			break;
 		}
@@ -1414,7 +1414,7 @@ parse_evpat(struct parse *o, char *ref)
 			break;
 	}
 	name = str_new(ref);
-	pattern = mem_alloc(EV_PATSIZE, "evpat");
+	pattern = xmalloc(EV_PATSIZE, "evpat");
 
 	if (!parse_getsym(o)) {
 		goto err1;
@@ -1484,7 +1484,7 @@ parse_evpat(struct parse *o, char *ref)
 	return 1;
 err1:
 	str_delete(name);
-	mem_free(pattern);
+	xfree(pattern);
 	return 0;
 }
 

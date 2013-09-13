@@ -219,8 +219,8 @@ smf_put32(struct smf *o, unsigned *used, unsigned val)
 		(*used) += 4;
 	} else {
 		if (o->index + 4 > o->length) {
-			dbg_puts("smf_put32: bad chunk length\n");
-			dbg_panic();
+			log_puts("smf_put32: bad chunk length\n");
+			panic();
 		}
 		buf[0] = (val >> 24) & 0xff;
 		buf[1] = (val >> 16) & 0xff;
@@ -242,8 +242,8 @@ smf_put24(struct smf *o, unsigned *used, unsigned val)
 		(*used) += 3;
 	} else {
 		if (o->index + 3 > o->length) {
-			dbg_puts("smf_put24: bad chunk length\n");
-			dbg_panic();
+			log_puts("smf_put24: bad chunk length\n");
+			panic();
 		}
 		buf[0] = (val >> 16) & 0xff;
 		buf[1] = (val >> 8) & 0xff;
@@ -264,8 +264,8 @@ smf_put16(struct smf *o, unsigned *used, unsigned val)
 		(*used) += 2;
 	} else {
 		if (o->index + 2 > o->length) {
-			dbg_puts("smf_put16: bad chunk length\n");
-			dbg_panic();
+			log_puts("smf_put16: bad chunk length\n");
+			panic();
 		}
 		buf[0] = (val >> 8) & 0xff;
 		buf[1] = val & 0xff;
@@ -285,8 +285,8 @@ smf_putc(struct smf *o, unsigned *used, unsigned val)
 		(*used) ++;
 	} else {
 		if (o->index + 1 > o->length) {
-			dbg_puts("smf_putc: bad chunk length\n");
-			dbg_panic();
+			log_puts("smf_putc: bad chunk length\n");
+			panic();
 		}
 		fputc((int)val & 0xff, o->file);
 		o->index++;
@@ -314,8 +314,8 @@ smf_putvar(struct smf *o, unsigned *used, unsigned val)
 				(*used) += index;
 			} else {
 				if (o->index + index > o->length) {
-					dbg_puts("smf_putvar: bad chunk length\n");
-					dbg_panic();
+					log_puts("smf_putvar: bad chunk length\n");
+					panic();
 				}
 				o->index += index;
 				fwrite(buf, 1, index, o->file);
@@ -323,8 +323,8 @@ smf_putvar(struct smf *o, unsigned *used, unsigned val)
 			return;
 		}
 	}
-	dbg_puts("smf_putvar: bogus value\n");
-	dbg_panic();
+	log_puts("smf_putvar: bogus value\n");
+	panic();
 #undef MAXBYTES
 }
 
@@ -411,8 +411,8 @@ smf_puttrack(struct smf *o, unsigned *used, struct song *s, struct track *t)
 				denom = 4;
 				break;
 			default:
-				dbg_puts("smf_puttrack: bad time signature\n");
-				dbg_panic();
+				log_puts("smf_puttrack: bad time signature\n");
+				panic();
 			}
 			smf_putvar(o, used, delta);
 			delta = 0;
@@ -600,7 +600,7 @@ smf_gettrack(struct smf *o, struct song *s, struct songtrk *t)
 	pos = t->track.first;
 	songsx = (struct songsx *)s->sxlist;	/* first (and unique) sysex in song */
 	if (songsx == NULL) {
-		dbg_puts("smf_gettack: no sysex list\n");
+		log_puts("smf_gettack: no sysex list\n");
 		songsx = song_sxnew(s, "smf");
 	}
 	statelist_init(&slist);
@@ -652,16 +652,16 @@ smf_gettrack(struct smf *o, struct song *s, struct songtrk *t)
 					goto err;
 				}
 				/*
-				dbg_puts("cc=");
-				dbg_putu(dummy);
-				dbg_puts(", dd=");
+				log_puts("cc=");
+				log_putu(dummy);
+				log_puts(", dd=");
 				*/
 				if (!smf_getc(o, &dummy)) {
 					goto err;
 				}
 				/*
-				dbg_putu(dummy);
-				dbg_puts("\n");
+				log_putu(dummy);
+				log_puts("\n");
 				*/
 				goto putev;
 			} else {
@@ -698,8 +698,8 @@ smf_gettrack(struct smf *o, struct song *s, struct songtrk *t)
 			} else {
 				cons_err("corrupted sysex message, ignored");
 				/*
-				sysex_dbg(sx);
-				dbg_puts("\n");
+				sysex_log(sx);
+				log_puts("\n");
 				*/
 				sysex_del(sx);
 			}
@@ -736,11 +736,11 @@ smf_gettrack(struct smf *o, struct song *s, struct songtrk *t)
 				seqev_ins(pos, se);
 			}
 			/*
-			dbg_puts("ev: ");
-			dbg_putu(abspos);
-			dbg_puts(" ");
-			ev_dbg(&ev);
-			dbg_puts("\n");
+			log_puts("ev: ");
+			log_putu(abspos);
+			log_puts(" ");
+			ev_log(&ev);
+			log_puts("\n");
 			*/
 		} else if (c < 0x80) {
 			if (status == 0) {

@@ -32,11 +32,11 @@
 unsigned filt_debug = 0;
 
 void
-rule_dbg(struct evspec *from, struct  evspec *to)
+rule_log(struct evspec *from, struct  evspec *to)
 {
-	evspec_dbg(from);
-	dbg_puts(" > ");
-	evspec_dbg(to);
+	evspec_log(from);
+	log_puts(" > ");
+	evspec_log(to);
 }
 
 /*
@@ -47,7 +47,7 @@ filtnode_new(struct evspec *from, struct filtnode **loc)
 {
 	struct filtnode *s;
 
-	s = mem_alloc(sizeof(struct filtnode), "filtnode");
+	s = xmalloc(sizeof(struct filtnode), "filtnode");
 	s->dstlist = NULL;
 	s->es = *from;
 	s->next = *loc;
@@ -66,7 +66,7 @@ filtnode_del(struct filtnode **loc)
 	while (s->dstlist)
 		filtnode_del(&s->dstlist);
 	*loc = s->next;
-	mem_free(s);
+	xfree(s);
 }
 
 /*
@@ -84,9 +84,9 @@ filtnode_mksrc(struct filtnode **root, struct evspec *from)
 	for (ps = root; (s = *ps) != NULL;) {
 		if (evspec_isec(&s->es, from) && !evspec_in(from, &s->es)) {
 			if (filt_debug) {
-				dbg_puts("filtnode_mksrc: ");
-				evspec_dbg(&s->es);
-				dbg_puts(": src intersect\n");
+				log_puts("filtnode_mksrc: ");
+				evspec_log(&s->es);
+				log_puts(": src intersect\n");
 			}
 			filtnode_del(ps);
 			continue;
@@ -100,23 +100,23 @@ filtnode_mksrc(struct filtnode **root, struct evspec *from)
 	for (ps = root; (s = *ps) != NULL;) {
 		if (evspec_eq(from, &s->es)) {
 			if (filt_debug)
-				dbg_puts("filtnode_mksrc: exact match\n");
+				log_puts("filtnode_mksrc: exact match\n");
 			return s;
 		}
 		if (evspec_in(from, &s->es)) {
 			if (filt_debug) {
-				dbg_puts("filtnode_mksrc: ");
-				evspec_dbg(from);
-				dbg_puts(" in ");
-				evspec_dbg(&s->es);
-				dbg_puts("\n");
+				log_puts("filtnode_mksrc: ");
+				evspec_log(from);
+				log_puts(" in ");
+				evspec_log(&s->es);
+				log_puts("\n");
 			}
 			break;
 		}
 		if (filt_debug) {
-			dbg_puts("filtnode_mksrc: ");
-			evspec_dbg(from);
-			dbg_puts(": skipped\n");
+			log_puts("filtnode_mksrc: ");
+			evspec_log(from);
+			log_puts(": skipped\n");
 		}
 		ps = &s->next;
 	}
@@ -142,9 +142,9 @@ filtnode_mkdst(struct filtnode *s, struct evspec *to)
 		    to->cmd == EVSPEC_EMPTY ||
 		    d->es.cmd == EVSPEC_EMPTY) {
 			if (filt_debug) {
-				dbg_puts("filtnode_mkdst: ");
-				rule_dbg(&s->es, &d->es);
-				dbg_puts(": src intersect\n");
+				log_puts("filtnode_mkdst: ");
+				rule_log(&s->es, &d->es);
+				log_puts(": src intersect\n");
 			}
 			filtnode_del(pd);
 			continue;
@@ -235,13 +235,13 @@ filt_do(struct filt *o, struct ev *in, struct ev *out)
 					continue;
 				ev_map(in, &s->es, &d->es, &out[nev]);
 				if (filt_debug) {
-					dbg_puts("filt_do: (");
-					rule_dbg(&s->es, &d->es);
-					dbg_puts("): ");
-					ev_dbg(in);
-					dbg_puts(" -> ");
-					ev_dbg(&out[nev]);
-					dbg_puts("\n");
+					log_puts("filt_do: (");
+					rule_log(&s->es, &d->es);
+					log_puts("): ");
+					ev_log(in);
+					log_puts(" -> ");
+					ev_log(&out[nev]);
+					log_puts("\n");
 				}
 				nev++;
 			}
@@ -282,9 +282,9 @@ filt_mapdel(struct filt *f, struct evspec *from, struct evspec *to)
 			for (pd = &s->dstlist; (d = *pd) != NULL;) {
 				if (evspec_in(&d->es, to)) {
 					if (filt_debug) {
-						dbg_puts("filt_mapdel: ");
-						rule_dbg(&s->es, &d->es);
-						dbg_puts(": removed\n");
+						log_puts("filt_mapdel: ");
+						rule_log(&s->es, &d->es);
+						log_puts(": removed\n");
 					}
 					filtnode_del(pd);
 					continue;
@@ -294,9 +294,9 @@ filt_mapdel(struct filt *f, struct evspec *from, struct evspec *to)
 		}
 		if (s->dstlist == NULL) {
 			if (filt_debug) {
-				dbg_puts("filt_mapdel: ");
-				evspec_dbg(&s->es);
-				dbg_puts(": empty, removed\n");
+				log_puts("filt_mapdel: ");
+				evspec_log(&s->es);
+				log_puts(": empty, removed\n");
 			}
 			filtnode_del(ps);
 			continue;
@@ -314,9 +314,9 @@ filt_mapnew(struct filt *f, struct evspec *from, struct evspec *to)
 	struct filtnode *s;
 
 	if (filt_debug) {
-		dbg_puts("filt_mapnew: adding ");
-		rule_dbg(from, to);
-		dbg_puts("\n");
+		log_puts("filt_mapnew: adding ");
+		rule_log(from, to);
+		log_puts("\n");
 	}
 
 	/*
@@ -359,11 +359,11 @@ filt_chgin(struct filt *o, struct evspec *from, struct evspec *to, int swap)
 			newspec = s->es;
 		}
 		if (filt_debug) {
-			dbg_puts("filt_chgin: ");
-			evspec_dbg(&s->es);
-			dbg_puts(" -> ");
-			evspec_dbg(&newspec);
-			dbg_puts("\n");
+			log_puts("filt_chgin: ");
+			evspec_log(&s->es);
+			log_puts(" -> ");
+			evspec_log(&newspec);
+			log_puts("\n");
 		}
 		while ((d = s->dstlist) != NULL) {
 			filt_mapnew(o, &newspec, &d->es);
@@ -391,11 +391,11 @@ filt_chgout(struct filt *o, struct evspec *from, struct evspec *to, int swap)
 				newspec = d->es;
 			}
 			if (filt_debug) {
-				dbg_puts("filt_chgout: ");
-				evspec_dbg(&d->es);
-				dbg_puts(" -> ");
-				evspec_dbg(&newspec);
-				dbg_puts("\n");
+				log_puts("filt_chgout: ");
+				evspec_log(&d->es);
+				log_puts(" -> ");
+				evspec_log(&newspec);
+				log_puts("\n");
 			}
 			filt_mapnew(o, &s->es, &newspec);
 			filtnode_del(&s->dstlist);
@@ -410,12 +410,12 @@ filt_transp(struct filt *f, struct evspec *from, int plus)
 	struct filtnode *s;
 
 	if (from->cmd != EVSPEC_ANY && from->cmd != EVSPEC_NOTE) {
-		dbg_puts("filt_transp: set must contain notes\n");
+		log_puts("filt_transp: set must contain notes\n");
 		return;
 	}
 	if (from->cmd == EVSPEC_NOTE &&
 	    (from->v0_min != 0 || from->v0_max != EV_MAXCOARSE)) {
-		dbg_puts("filt_transp: note range must be full\n");
+		log_puts("filt_transp: note range must be full\n");
 		return;
 	}
 
@@ -429,7 +429,7 @@ filt_vcurve(struct filt *f, struct evspec *from, int weight)
 	struct filtnode *s;
 
 	if (from->cmd != EVSPEC_ANY && from->cmd != EVSPEC_NOTE) {
-		dbg_puts("filt_vcurve: set must contain notes\n");
+		log_puts("filt_vcurve: set must contain notes\n");
 		return;
 	}
 	s = filtnode_mksrc(&f->vcurve, from);

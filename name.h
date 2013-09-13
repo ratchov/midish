@@ -33,7 +33,7 @@ void	     name_init(struct name *, char *);
 void	     name_done(struct name *);
 struct name *name_new(char *);
 struct name *name_newarg(char *, struct name *);
-void	     name_dbg(struct name *);
+void	     name_log(struct name *);
 void	     name_delete(struct name *);
 void	     name_insert(struct name **, struct name *);
 void	     name_add(struct name **, struct name *);

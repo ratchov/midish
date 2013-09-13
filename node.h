@@ -34,7 +34,7 @@ struct node_vmt {
 
 struct node *node_new(struct node_vmt *, struct data *);
 void	     node_delete(struct node *);
-void	     node_dbg(struct node *, unsigned);
+void	     node_log(struct node *, unsigned);
 void	     node_insert(struct node **, struct node *);
 void	     node_replace(struct node **, struct node *);
 unsigned     node_exec(struct node *, struct exec *, struct data **);

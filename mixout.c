@@ -56,7 +56,7 @@ mixout_start(void)
 	timo_set(&mixout_timo, mixout_timocb, NULL);
 	timo_add(&mixout_timo, MIXOUT_TIMO);
 	if (mixout_debug) {
-		dbg_puts("mixout_start()\n");
+		log_puts("mixout_start()\n");
 	}
 }
 
@@ -64,7 +64,7 @@ void
 mixout_stop(void)
 {
 	if (mixout_debug) {
-		dbg_puts("mixout_stop()\n");
+		log_puts("mixout_stop()\n");
 	}
 	timo_del(&mixout_timo);
 	statelist_done(&mixout_slist);
@@ -80,29 +80,29 @@ mixout_putev(struct ev *ev, unsigned id)
 	if (os != NULL && os->tag != id) {
 		if (os->tag < id) {
 			if (mixout_debug) {
-				dbg_puts("mixout_putev: [");
-				dbg_putu(id);
-				dbg_puts("] ");
-				ev_dbg(ev);
-				dbg_puts(" ignored\n");
+				log_puts("mixout_putev: [");
+				log_putu(id);
+				log_puts("] ");
+				ev_log(ev);
+				log_puts(" ignored\n");
 			}
 			return;
 		}
 		if (state_cancel(os, &ca)) {
 			if (mixout_debug) {
-				dbg_puts("mixout_putev: [");
-				dbg_putu(os->tag);
-				dbg_puts("] ");
-				ev_dbg(ev);
-				dbg_puts(" kicked\n");
+				log_puts("mixout_putev: [");
+				log_putu(os->tag);
+				log_puts("] ");
+				ev_log(ev);
+				log_puts(" kicked\n");
 			}
 			os = statelist_update(&mixout_slist, &ca);
 			mux_putev(&ca);
 		}
 		if (mixout_debug) {
-			dbg_puts("mixout_putev: ");
-			ev_dbg(ev);
-			dbg_puts(" won\n");
+			log_puts("mixout_putev: ");
+			ev_log(ev);
+			log_puts(" won\n");
 		}
 	}
 	os = statelist_update(&mixout_slist, ev);
@@ -129,9 +129,9 @@ mixout_timocb(void *addr)
 		} else if (i->phase == (EV_PHASE_FIRST | EV_PHASE_LAST)) {
 			if (i->tic >= MIXOUT_MAXTICS) {
 				if (mixout_debug) {
-					dbg_puts("mixout_timo: ");
-					state_dbg(i);
-					dbg_puts(": timed out\n");
+					log_puts("mixout_timo: ");
+					state_log(i);
+					log_puts(": timed out\n");
 				}
 				statelist_rm(&mixout_slist, i);
 				state_del(i);

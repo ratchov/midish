@@ -56,7 +56,7 @@ sndio_new(char *path, unsigned mode)
 		cons_err("path must be set for raw devices");
 		return NULL;
 	}
-	dev = mem_alloc(sizeof(struct sndio), "sndio");
+	dev = xmalloc(sizeof(struct sndio), "sndio");
 	mididev_init(&dev->mididev, &sndio_ops, mode);
 	dev->path = str_new(path);
 	return (struct mididev *)&dev->mididev;
@@ -69,7 +69,7 @@ sndio_del(struct mididev *addr)
 
 	mididev_done(&dev->mididev);
 	str_delete(dev->path);
-	mem_free(dev);
+	xfree(dev);
 }
 
 void
@@ -84,9 +84,9 @@ sndio_open(struct mididev *addr)
 		mode |= MIO_IN;
 	dev->hdl = mio_open(dev->path, mode, 0);
 	if (dev->hdl == NULL) {
-		dbg_puts("sndio_open: ");
-		dbg_puts(dev->path);
-		dbg_puts(": failed to open device\n");
+		log_puts("sndio_open: ");
+		log_puts(dev->path);
+		log_puts(": failed to open device\n");
 		dev->mididev.eof = 1;
 		return;
 	}
@@ -111,9 +111,9 @@ sndio_read(struct mididev *addr, unsigned char *buf, unsigned count)
 
 	res = mio_read(dev->hdl, buf, count);
 	if (res == 0 && mio_eof(dev->hdl)) {
-		dbg_puts("sndio_read: ");
-		dbg_puts(dev->path);
-		dbg_puts(": read failed\n");
+		log_puts("sndio_read: ");
+		log_puts(dev->path);
+		log_puts(": read failed\n");
 		dev->mididev.eof = 1;
 		return 0;
 	}
@@ -128,9 +128,9 @@ sndio_write(struct mididev *addr, unsigned char *buf, unsigned count)
 
 	res = mio_write(dev->hdl, buf, count);
 	if (res < count) {
-		dbg_puts("sndio_write: ");
-		dbg_puts(dev->path);
-		dbg_puts(": short write\n");
+		log_puts("sndio_write: ");
+		log_puts(dev->path);
+		log_puts(": short write\n");
 		dev->mididev.eof = 1;
 		return 0;
 	}

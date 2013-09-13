@@ -63,9 +63,9 @@ seqev_del(struct seqev *se)
 void
 seqev_dump(struct seqev *i)
 {
-	dbg_putu(i->delta);
-	dbg_puts("\t");
-	ev_dbg(&i->ev);
+	log_putu(i->delta);
+	log_puts("\t");
+	ev_log(&i->ev);
 }
 
 /*
@@ -109,12 +109,12 @@ track_dump(struct track *o)
 
 	for (i = o->first; i != NULL; i = i->next) {
 		tic += i->delta;
-		dbg_putu(num);
-		dbg_puts("\t");
-		dbg_putu(tic);
-		dbg_puts("\t+");
+		log_putu(num);
+		log_puts("\t");
+		log_putu(tic);
+		log_puts("\t+");
 		seqev_dump(i);
-		dbg_puts("\n");
+		log_puts("\n");
 		num++;
 	}
 }
@@ -180,8 +180,8 @@ seqev_rm(struct seqev *pos)
 {
 #ifdef TRACK_DEBUG
 	if (pos->ev.cmd == EV_NULL) {
-		dbg_puts("seqev_rm: unexpected end of track\n");
-		dbg_panic();
+		log_puts("seqev_rm: unexpected end of track\n");
+		panic();
 	}
 #endif
 	pos->next->delta += pos->delta;
@@ -274,7 +274,7 @@ track_chanmap(struct track *o, char *map)
 			dev = se->ev.dev;
 			ch  = se->ev.ch;
 			if (dev >= DEFAULT_MAXNDEVS || ch >= 16) {
-				dbg_puts("track_chanmap: bogus dev/ch pair, stopping\n");
+				log_puts("track_chanmap: bogus dev/ch pair, stopping\n");
 				break;
 			}
 			map[dev * 16 + ch] = 1;

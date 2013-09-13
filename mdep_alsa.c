@@ -79,7 +79,7 @@ alsa_new(char *path, unsigned mode)
 {
 	struct alsa *dev;
 
-	dev = mem_alloc(sizeof(struct alsa), "alsa");
+	dev = xmalloc(sizeof(struct alsa), "alsa");
 	mididev_init(&dev->mididev, &alsa_ops, mode);
 	dev->path = (path != NULL) ? str_new(path) : NULL;
 	dev->seq_handle = NULL;
@@ -97,7 +97,7 @@ alsa_del(struct mididev *addr)
 	mididev_done(&dev->mididev);
 	if (dev->path)
 		str_delete(dev->path);
-	mem_free(dev);
+	xfree(dev);
 }
 
 void
@@ -117,13 +117,13 @@ alsa_open(struct mididev *addr)
 
 	if (snd_seq_open(&dev->seq_handle, "default",
 		SND_SEQ_OPEN_DUPLEX, 0) < 0) {
-		dbg_puts("alsa_open: could not open ALSA sequencer\n");
+		log_puts("alsa_open: could not open ALSA sequencer\n");
 		dev->mididev.eof = 1;
 		return;
 	}
 	snprintf(name, sizeof(name), "midish/%u", dev->mididev.unit);
 	if (snd_seq_set_client_name(dev->seq_handle, name) < 0) {
-		dbg_puts("alsa_open: could set client name\n");
+		log_puts("alsa_open: could set client name\n");
 		dev->mididev.eof = 1;
 		return;
 	}
@@ -143,7 +143,7 @@ alsa_open(struct mididev *addr)
 	dev->port = snd_seq_create_simple_port(dev->seq_handle, "default", mode,
 	    SND_SEQ_PORT_TYPE_MIDI_GENERIC | SND_SEQ_PORT_TYPE_APPLICATION);
 	if (dev->port < 0) {
-		dbg_puts("alsa_open: could not create port\n");
+		log_puts("alsa_open: could not create port\n");
 		dev->mididev.eof = 1;
 		return;
 	}
@@ -154,7 +154,7 @@ alsa_open(struct mididev *addr)
 	if (dev->mididev.mode & MIDIDEV_MODE_IN) {
 		if (snd_midi_event_new(MIDIDEV_BUFLEN, &dev->iparser) < 0) {
 			dev->iparser = NULL;
-			dbg_puts("alsa_open: could not create in parser\n");
+			log_puts("alsa_open: could not create in parser\n");
 			dev->mididev.eof = 1;
 			return;
 		}
@@ -162,7 +162,7 @@ alsa_open(struct mididev *addr)
 	if (dev->mididev.mode & MIDIDEV_MODE_OUT) {
 		if (snd_midi_event_new(MIDIDEV_BUFLEN, &dev->oparser) < 0) {
 			dev->oparser = NULL;
-			dbg_puts("alsa_open: couldn't create out parser\n");
+			log_puts("alsa_open: couldn't create out parser\n");
 			dev->mididev.eof = 1;
 			return;
 		}
@@ -174,21 +174,21 @@ alsa_open(struct mididev *addr)
 	if (dev->path != NULL) {
 		if (snd_seq_parse_address(dev->seq_handle, &dst,
 			dev->path) < 0) {
-			dbg_puts("alsa_open: couldn't parse alsa port\n");
+			log_puts("alsa_open: couldn't parse alsa port\n");
 			dev->mididev.eof = 1;
 			return;
 		}
 		if ((dev->mididev.mode & MIDIDEV_MODE_IN) &&
 		    snd_seq_connect_from(dev->seq_handle,
 			dev->port, dst.client, dst.port) < 0) {
-			dbg_puts("alsa_open: couldn't connect to input\n");
+			log_puts("alsa_open: couldn't connect to input\n");
 			dev->mididev.eof = 1;
 			return;
 		}
 		if ((dev->mididev.mode & MIDIDEV_MODE_OUT) &&
 		    snd_seq_connect_to(dev->seq_handle,
 			dev->port, dst.client, dst.port) < 0) {
-			dbg_puts("alsa_open: couldn't connect to output\n");
+			log_puts("alsa_open: couldn't connect to output\n");
 			dev->mididev.eof = 1;
 			return;
 		}
@@ -234,7 +234,7 @@ alsa_read(struct mididev *addr, unsigned char *buf, unsigned count)
 	    snd_seq_event_input_pending(dev->seq_handle, 1) > 0) {
 		err = snd_seq_event_input(dev->seq_handle, &ev);
 		if (err < 0) {
-			dbg_puts("alsa_read: snd_seq_event_input() failed\n");
+			log_puts("alsa_read: snd_seq_event_input() failed\n");
 			dev->mididev.eof = 1;
 			return 0;
 		}
@@ -266,7 +266,7 @@ alsa_write(struct mididev *addr, unsigned char *buf, unsigned count)
 		 */
 		len = snd_midi_event_encode(dev->oparser, buf, todo, &ev);
 		if (len < 0) {
-			dbg_puts("alsa_write: failed to encode buf\n");
+			log_puts("alsa_write: failed to encode buf\n");
 			dev->mididev.eof = 1;
 			return 0;
 		}
@@ -299,7 +299,7 @@ alsa_pollfd(struct mididev *addr, struct pollfd *pfd, int events)
 	struct alsa *dev = (struct alsa *)addr;
 
   	if (!dev->seq_handle) {
-		dbg_puts("alsa_pollfd: no handle\n");
+		log_puts("alsa_pollfd: no handle\n");
 		return 0;
 	}
 	return snd_seq_poll_descriptors(dev->seq_handle, pfd, INT_MAX, events);
@@ -312,12 +312,12 @@ alsa_revents(struct mididev *addr, struct pollfd *pfd)
 	unsigned short revents;
 
   	if (!dev->seq_handle) {
-		dbg_puts("alsa_revents: no handle\n");
+		log_puts("alsa_revents: no handle\n");
 		return 0;
 	}
 	if (snd_seq_poll_descriptors_revents(dev->seq_handle,
 		pfd, dev->nfds, &revents) < 0) {
-		dbg_puts("alsa_revents: snd_..._revents() failed\n");
+		log_puts("alsa_revents: snd_..._revents() failed\n");
 		return 0;
 	}
 	return revents;

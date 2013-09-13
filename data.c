@@ -41,7 +41,7 @@ struct data *
 data_newnil(void)
 {
 	struct data *o;
-	o = (struct data *)mem_alloc(sizeof(struct data), "data");
+	o = (struct data *)xmalloc(sizeof(struct data), "data");
 	o->type = DATA_NIL;
 	o->next = NULL;
 	return o;
@@ -183,8 +183,8 @@ data_listremove(struct data *o, struct data *v)
 		}
 		i = &(*i)->next;
 	}
-	dbg_puts("data_listremove: not found\n");
-	dbg_panic();
+	log_puts("data_listremove: not found\n");
+	panic();
 }
 
 /*
@@ -213,8 +213,8 @@ data_clear(struct data *o)
 	case DATA_RANGE:
 		break;
 	default:
-		dbg_puts("data_clear: unknown type\n");
-		dbg_panic();
+		log_puts("data_clear: unknown type\n");
+		panic();
 		break;
 	}
 	o->type = DATA_NIL;
@@ -224,55 +224,55 @@ void
 data_delete(struct data *o)
 {
 	data_clear(o);
-	mem_free(o);
+	xfree(o);
 }
 
 void
-data_dbg(struct data *o)
+data_log(struct data *o)
 {
 	struct data *i;
 
 	switch(o->type) {
 	case DATA_NIL:
-		dbg_puts("(nil)");
+		log_puts("(nil)");
 		break;
 	case DATA_USER:
-		dbg_puts("(user)");
+		log_puts("(user)");
 		break;
 	case DATA_LONG:
 		if (o->val.num < 0) {
-			dbg_puts("-");
-			dbg_putu((unsigned) - o->val.num );
+			log_puts("-");
+			log_putu((unsigned) - o->val.num );
 		} else {
-			dbg_putu((unsigned)   o->val.num);
+			log_putu((unsigned)   o->val.num);
 		}
 		break;
 	case DATA_STRING:
-		dbg_puts("\"");
-		dbg_puts(o->val.str);
-		dbg_puts("\"");
+		log_puts("\"");
+		log_puts(o->val.str);
+		log_puts("\"");
 		break;
 	case DATA_REF:
-		dbg_puts("@");
-		str_dbg(o->val.ref);
+		log_puts("@");
+		str_log(o->val.ref);
 		break;
 	case DATA_LIST:
-		dbg_puts("{");
+		log_puts("{");
 		for (i = o->val.list; i != NULL; i = i->next) {
-			data_dbg(i);
+			data_log(i);
 			if (i->next) {
-				dbg_puts(" ");
+				log_puts(" ");
 			}
 		}
-		dbg_puts("}");
+		log_puts("}");
 		break;
 	case DATA_RANGE:
-		dbg_putu(o->val.range.min);
-		dbg_puts(":");
-		dbg_putu(o->val.range.max);
+		log_putu(o->val.range.min);
+		log_puts(":");
+		log_putu(o->val.range.max);
 		break;
 	default:
-		dbg_puts("(unknown type)");
+		log_puts("(unknown type)");
 		break;
 	}
 }
@@ -285,8 +285,8 @@ data_assign(struct data *dst, struct data *src)
 {
 	struct data *n, *i, **j;
 	if (dst == src) {
-		dbg_puts("data_assign: src and dst are the same\n");
-		dbg_panic();
+		log_puts("data_assign: src and dst are the same\n");
+		panic();
 	}
 	data_clear(dst);
 	switch(src->type) {
@@ -322,8 +322,8 @@ data_assign(struct data *dst, struct data *src)
 		dst->val.range.max = src->val.range.max;
 		break;
 	default:
-		dbg_puts("data_assign: bad data type\n");
-		dbg_panic();
+		log_puts("data_assign: bad data type\n");
+		panic();
 	}
 }
 
@@ -366,8 +366,8 @@ data_id(struct data *op1, struct data *op2)
 		    op1->val.range.max == op2->val.range.max;
 		break;
 	default:
-		dbg_puts("data_id: bad data types\n");
-		dbg_panic();
+		log_puts("data_id: bad data types\n");
+		panic();
 	}
 	/* not reached */
 	return 0;
@@ -397,8 +397,8 @@ data_eval(struct data *o)
 	case DATA_RANGE:
 		return 1;
 	default:
-		dbg_puts("data_eval: bad data type\n");
-		dbg_panic();
+		log_puts("data_eval: bad data type\n");
+		panic();
 	}
 	/* not reached */
 	return 0;

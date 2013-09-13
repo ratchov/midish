@@ -50,7 +50,7 @@ textin_new(char *filename)
 {
 	struct textin *o;
 
-	o = mem_alloc(sizeof(struct textin), "textin");
+	o = xmalloc(sizeof(struct textin), "textin");
 	if (filename == NULL) {
 		o->isconsole = 1;
 		o->file = stdin;
@@ -59,7 +59,7 @@ textin_new(char *filename)
 		o->file = fopen(filename, "r");
 		if (o->file == NULL) {
 			cons_errs(filename, "failed to open input file");
-			mem_free(o);
+			xfree(o);
 			return 0;
 		}
 	}
@@ -73,7 +73,7 @@ textin_delete(struct textin *o)
 	if (!o->isconsole) {
 		fclose(o->file);
 	}
-	mem_free(o);
+	xfree(o);
 }
 
 unsigned
@@ -117,12 +117,12 @@ textout_new(char *filename)
 {
 	struct textout *o;
 
-	o = mem_alloc(sizeof(struct textout), "textout");
+	o = xmalloc(sizeof(struct textout), "textout");
 	if (filename != NULL) {
 		o->file = fopen(filename, "w");
 		if (o->file == NULL) {
 			cons_errs(filename, "failed to open output file");
-			mem_free(o);
+			xfree(o);
 			return 0;
 		}
 		o->isconsole = 0;
@@ -140,7 +140,7 @@ textout_delete(struct textout *o)
 	if (!o->isconsole) {
 		fclose(o->file);
 	}
-	mem_free(o);
+	xfree(o);
 }
 
 void

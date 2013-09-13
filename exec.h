@@ -75,7 +75,7 @@ struct exec {
 
 struct var *var_new(struct name **, char *, struct data *);
 void        var_delete(struct name **, struct var *);
-void	    var_dbg(struct var *);
+void	    var_log(struct var *);
 void	    var_empty(struct name **);
 
 struct exec *exec_new(void);
@@ -96,6 +96,6 @@ unsigned exec_lookupbool(struct exec *, char *, long *);
 struct proc *proc_new(char *);
 void 	     proc_delete(struct proc *);
 void	     proc_empty(struct name **);
-void 	     proc_dbg(struct proc *);
+void 	     proc_log(struct proc *);
 
 #endif /* MIDISH_EXEC_H */

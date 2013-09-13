@@ -119,9 +119,9 @@ parse_new(char *filename)
 {
 	struct parse *o;
 
-	o = mem_alloc(sizeof(struct parse), "parse");
+	o = xmalloc(sizeof(struct parse), "parse");
 	if (!lex_init(&o->lex, filename)) {
-		mem_free(o);
+		xfree(o);
 		return 0;
 	}
 	o->lookavail = 0;
@@ -132,7 +132,7 @@ void
 parse_delete(struct parse *o)
 {
 	lex_done(&o->lex);
-	mem_free(o);
+	xfree(o);
 }
 
 unsigned
@@ -149,8 +149,8 @@ void
 parse_ungetsym(struct parse *o)
 {
 	if (o->lookavail) {
-		dbg_puts("parse_ungetsym: looksym already set\n");
-		dbg_panic();
+		log_puts("parse_ungetsym: looksym already set\n");
+		panic();
 	}
 	o->lookavail = 1;
 }
