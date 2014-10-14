@@ -1651,7 +1651,7 @@ blt_tsetf(struct exec *o, struct data **r)
 	}
 	t->curfilt = f;
 	song_setcurfilt(usong, f);
-	return 0;
+	return 1;
 }
 
 unsigned
