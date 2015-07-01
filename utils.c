@@ -25,18 +25,22 @@
  * mem_xxx() routines are simple wrappers around malloc() overwriting memory
  * blocks with random data upon allocation and release.
  */
+#include <errno.h>
+#include <signal.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include "utils.h"
+#include "tty.h"
 
 /*
- * size of the buffer where traces are stored
+ * log buffer size
  */
 #define LOG_BUFSZ	8192
 
 /*
- * store a character in the trace buffer
+ * store a character in the log
  */
 #define LOG_PUTC(c) do {			\
 	if (log_used < LOG_BUFSZ)		\
@@ -44,23 +48,40 @@
 } while (0)
 
 char log_buf[LOG_BUFSZ];	/* buffer where traces are stored */
-unsigned log_used = 0;		/* bytes used in the buffer */
-unsigned log_sync = 1;		/* if true, flush after each '\n' */
+unsigned int log_used = 0;	/* bytes used in the buffer */
+unsigned int log_sync = 1;	/* if true, flush after each '\n' */
 
 /*
- * write debug info buffer on stderr
+ * write the log buffer on stderr
  */
 void
 log_flush(void)
 {
-	if (log_used ==  0)
+	if (log_used == 0)
 		return;
-	write(STDERR_FILENO, log_buf, log_used);
+	tty_write(log_buf, log_used);
 	log_used = 0;
 }
 
 /*
- * store a string in the debug buffer
+ * store a string in the log
+ */
+void
+log_putc(char *data, size_t count)
+{
+	int c;
+
+	while (count > 0) {
+		c = *data++;
+		LOG_PUTC(c);
+		if (log_sync && c == '\n')
+			log_flush();
+		count--;
+	}
+}
+
+/*
+ * store a string in the log
  */
 void
 log_puts(char *msg)
@@ -76,13 +97,13 @@ log_puts(char *msg)
 }
 
 /*
- * store a hex in the debug buffer
+ * store a hex in the log
  */
 void
 log_putx(unsigned long num)
 {
 	char dig[sizeof(num) * 2], *p = dig, c;
-	unsigned ndig;
+	unsigned int ndig;
 
 	if (num != 0) {
 		for (ndig = 0; num != 0; ndig++) {
@@ -94,18 +115,18 @@ log_putx(unsigned long num)
 			c += (c < 10) ? '0' : 'a' - 10;
 			LOG_PUTC(c);
 		}
-	} else
+	} else 
 		LOG_PUTC('0');
 }
 
 /*
- * store a decimal in the debug buffer
+ * store a unsigned decimal in the log
  */
 void
 log_putu(unsigned long num)
 {
 	char dig[sizeof(num) * 3], *p = dig;
-	unsigned ndig;
+	unsigned int ndig;
 
 	if (num != 0) {
 		for (ndig = 0; num != 0; ndig++) {
@@ -119,7 +140,7 @@ log_putu(unsigned long num)
 }
 
 /*
- * store a signed integer in the trace buffer
+ * store a signed decimal in the log
  */
 void
 log_puti(long num)
@@ -129,6 +150,20 @@ log_puti(long num)
 		num = -num;
 	}
 	log_putu(num);
+}
+
+/*
+ * same as perror() but messages goes to the log buffer
+ */
+void
+log_perror(char *str)
+{
+	int n = errno;
+
+	log_puts(str);
+	log_puts(": ");
+	log_puts(strerror(n));
+	log_puts("\n");
 }
 
 /*

@@ -20,6 +20,7 @@
 #include "utils.h"
 #include "textio.h"
 #include "cons.h"
+#include "tty.h"
 #include "user.h"
 
 unsigned cons_ready;
@@ -66,9 +67,17 @@ cons_getc(void)
 void
 cons_putpos(unsigned measure, unsigned beat, unsigned tic)
 {
+	char buf[32];
+
 	if (user_flag_verb) {
 		fprintf(stdout, "+pos %u %u %u\n", measure, beat, tic);
 		fflush(stdout);
+	}
+	if (tic == 0) {
+		snprintf(buf, sizeof(buf), "[%04u:%02u]> ", measure, beat);
+		//log_puts(buf);
+		//log_puts("\n");
+		tty_setprompt(buf);
 	}
 }
 
@@ -92,35 +101,57 @@ cons_puttag(char *tag)
 void
 cons_err(char *mesg)
 {
-	fprintf(stderr, "%s\n", mesg);
+	log_puts(mesg);
+	log_puts("\n");
 }
 
 void
 cons_errs(char *s, char *mesg)
 {
-	fprintf(stderr, "%s: %s\n", s, mesg);
+	log_puts(s);
+	log_puts(": ");
+	log_puts(mesg);
+	log_puts("\n");
 }
 
 void
 cons_erru(unsigned long u, char *mesg)
 {
-	fprintf(stderr, "%lu: %s\n", u, mesg);
+	log_putu(u);
+	log_puts(": ");
+	log_puts(mesg);
+	log_puts("\n");
 }
 
 void
 cons_errss(char *s0, char *s1, char *mesg)
 {
-	fprintf(stderr, "%s: %s: %s\n", s0, s1, mesg);
+	log_puts(s0);
+	log_puts(": ");
+	log_puts(s1);
+	log_puts(": ");
+	log_puts(mesg);
+	log_puts("\n");
 }
 
 void
 cons_errsu(char *s, unsigned long u, char *mesg)
 {
-	fprintf(stderr, "%s: %lu: %s\n", s, u, mesg);
+	log_puts(s);
+	log_puts(": ");
+	log_putu(u);
+	log_puts(": ");
+	log_puts(mesg);
+	log_puts("\n");
 }
 
 void
 cons_erruu(unsigned long u0, unsigned long u1, char *mesg)
 {
-	fprintf(stderr, "%lu.%lu: %s\n", u0, u1, mesg);
+	log_putu(u0);
+	log_puts(": ");
+	log_putu(u1);
+	log_puts(": ");
+	log_puts(mesg);
+	log_puts("\n");
 }

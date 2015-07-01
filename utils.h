@@ -25,6 +25,7 @@ void	 log_puts(char *);
 void	 log_putx(unsigned long);
 void	 log_putu(unsigned long);
 void	 log_puti(long);
+void	 log_perror(char *);
 void	 panic(void);
 void	 log_flush(void);
 void	*xmalloc(unsigned, char *);

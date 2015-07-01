@@ -94,7 +94,7 @@ raw_open(struct mididev *addr)
 	}
 	dev->fd = open(dev->path, mode, 0666);
 	if (dev->fd < 0) {
-		perror(dev->path);
+		log_perror(dev->path);
 		dev->mididev.eof = 1;
 		return;
 	}
@@ -119,7 +119,7 @@ raw_read(struct mididev *addr, unsigned char *buf, unsigned count)
 
 	res = read(dev->fd, buf, count);
 	if (res < 0) {
-		perror(dev->path);
+		log_perror(dev->path);
 		dev->mididev.eof = 1;
 		return 0;
 	}
@@ -134,7 +134,7 @@ raw_write(struct mididev *addr, unsigned char *buf, unsigned count)
 
 	res = write(dev->fd, buf, count);
 	if (res < 0) {
-		perror(dev->path);
+		log_perror(dev->path);
 		dev->mididev.eof = 1;
 		return 0;
 	}

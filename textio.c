@@ -24,11 +24,14 @@
  */
 
 #include <stdio.h>
+#include <string.h>
 #include <errno.h>
 
 #include "utils.h"
 #include "textio.h"
 #include "cons.h"
+
+#define INDENT_MAX	8
 
 struct textin
 {
@@ -87,7 +90,7 @@ textin_getchar(struct textin *o, int *c)
 	if (*c < 0) {
 		*c = CHAR_EOF;
 		if (ferror(o->file)) {
-			perror("fgetc");
+			log_perror("fgetc");
 		}
 		return 1;
 	}
@@ -146,10 +149,17 @@ textout_delete(struct textout *o)
 void
 textout_indent(struct textout *o)
 {
-	unsigned i;
-	for (i = 0; i < o->indent; i++) {
-		fputc('\t', o->file);
+	char buf[INDENT_MAX + 1], *p;
+	unsigned i, imax;
+
+	imax = o->indent;
+	if (imax > INDENT_MAX)
+		imax = INDENT_MAX;
+	for (p = buf, i = 0; i < o->indent; i++) {
+		*p++ = '\t';
 	}
+	*p++ = 0;
+	textout_putstr(o, buf);
 }
 
 void
@@ -167,23 +177,31 @@ textout_shiftright(struct textout *o)
 void
 textout_putstr(struct textout *o, char *str)
 {
-	fputs(str, o->file);
+	if (o->isconsole)
+		log_puts(str);
+	else
+		fwrite(str, strlen(str), 1, o->file);
 }
 
 void
 textout_putlong(struct textout *o, unsigned long val)
 {
-	fprintf(o->file, "%lu", val);
+	char buf[sizeof(val) * 3 + 1];
+
+	snprintf(buf, sizeof(buf), "%lu", val);
+	textout_putstr(o, buf);
 }
 
 void
 textout_putbyte(struct textout *o, unsigned val)
 {
-	fprintf(o->file, "0x%02x", val & 0xff);
+	char buf[sizeof(val) * 2 + 1];
+
+	snprintf(buf, sizeof(buf), "0x%02x", val & 0xff);
+	textout_putstr(o, buf);
 }
 
 /* ------------------------------------------------------------------ */
-
 
 struct textout *tout;
 struct textin *tin;

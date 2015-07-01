@@ -28,6 +28,7 @@
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <errno.h>
 #include <limits.h>
 #include <time.h>
@@ -38,6 +39,7 @@
 #include "cons.h"
 #include "user.h"
 #include "exec.h"
+#include "tty.h"
 #include "utils.h"
 
 #define TIMER_USEC	1000
@@ -54,10 +56,11 @@
 #define CONS_BUFSIZE	1024
 #define MAXFDS		(DEFAULT_MAXNDEVS + 1)
 
+volatile sig_atomic_t cons_quit = 0, resize_flag = 0, cont_flag = 0;
 struct timespec ts, ts_last;
 
 char cons_buf[CONS_BUFSIZE];
-unsigned cons_index, cons_len, cons_eof, cons_quit;
+unsigned cons_index, cons_len, cons_eof;
 struct pollfd *cons_pfd;
 
 /*
@@ -67,6 +70,18 @@ void
 mdep_sigalrm(int i)
 {
 	/* nothing to do, we only want poll() to return EINTR */
+}
+
+void
+mdep_sigwinch(int s)
+{
+	resize_flag = 1;
+}
+
+void
+mdep_sigcont(int s)
+{
+	cont_flag = 1;
 }
 
 /*
@@ -82,18 +97,18 @@ mux_mdep_open(void)
 	sigemptyset(&set);
 	sigaddset(&set, SIGPIPE);
 	if (sigprocmask(SIG_BLOCK, &set, NULL)) {
-		perror("mux_mdep_open: sigprocmask");
+		log_perror("mux_mdep_open: sigprocmask");
 		exit(1);
 	}
 	if (clock_gettime(CLOCK_MONOTONIC, &ts_last) < 0) {
-		perror("mux_mdep_open: clock_gettime");
+		log_perror("mux_mdep_open: clock_gettime");
 		exit(1);
 	}
         sa.sa_flags = SA_RESTART;
         sa.sa_handler = mdep_sigalrm;
         sigfillset(&sa.sa_mask);
         if (sigaction(SIGALRM, &sa, NULL) < 0) {
-		perror("mux_mdep_open: sigaction");
+		log_perror("mux_mdep_open: sigaction");
 		exit(1);
 	}
 	it.it_interval.tv_sec = 0;
@@ -101,7 +116,7 @@ mux_mdep_open(void)
 	it.it_value.tv_sec = 0;
 	it.it_value.tv_usec = TIMER_USEC;
 	if (setitimer(ITIMER_REAL, &it, NULL) < 0) {
-		perror("mux_mdep_open: setitimer");
+		log_perror("mux_mdep_open: setitimer");
 		exit(1);
 	}
 }
@@ -119,7 +134,7 @@ mux_mdep_close(void)
 	it.it_interval.tv_sec = 0;
 	it.it_interval.tv_usec = 0;
 	if (setitimer(ITIMER_REAL, &it, NULL) < 0) {
-		perror("mux_mdep_close: setitimer");
+		log_perror("mux_mdep_close: setitimer");
 		exit(1);
 	}
 }
@@ -134,19 +149,17 @@ mux_mdep_wait(void)
 {
 	int res, revents;
 	nfds_t nfds;
-	struct pollfd *pfd, pfds[MAXFDS];
+	struct pollfd *pfd, *tty_pfds, pfds[MAXFDS];
 	struct mididev *dev;
 	static unsigned char midibuf[MIDI_BUFSIZE];
 	long long delta_nsec;
 
 	nfds = 0;
 	if (cons_index == cons_len && !cons_eof) {
-		cons_pfd = &pfds[nfds];
-		cons_pfd->fd = STDIN_FILENO;
-		cons_pfd->events = POLLIN | POLLHUP;
-		nfds++;
+		tty_pfds = &pfds[nfds];
+		nfds += tty_pollfd(tty_pfds);
 	} else
-		cons_pfd = NULL;
+		tty_pfds = NULL;
 	for (dev = mididev_list; dev != NULL; dev = dev->next) {
 		if (!(dev->mode & MIDIDEV_MODE_IN) || dev->eof) {
 			dev->pfd = NULL;
@@ -161,9 +174,17 @@ mux_mdep_wait(void)
 		cons_quit = 0;
 		return 0;
 	}
+	if (resize_flag) {
+		resize_flag = 0;
+		tty_winch();
+	}
+	if (cont_flag) {
+		cont_flag = 0;
+		tty_reset();
+	}
 	res = poll(pfds, nfds, -1);
 	if (res < 0 && errno != EINTR) {
-		perror("mux_mdep_wait: poll");
+		log_perror("mux_mdep_wait: poll");
 		exit(1);
 	}
 	if (res > 0) {
@@ -191,7 +212,7 @@ mux_mdep_wait(void)
 	}
 	if (mux_isopen) {
 		if (clock_gettime(CLOCK_MONOTONIC, &ts) < 0) {
-			perror("mux_mdep_wait: clock_gettime");
+			log_perror("mux_mdep_wait: clock_gettime");
 			panic();
 		}
 
@@ -220,18 +241,10 @@ mux_mdep_wait(void)
 		}
 	}
 	log_flush();
-	if (cons_pfd && (cons_pfd->revents & (POLLIN | POLLHUP))) {
-		res = read(STDIN_FILENO, cons_buf, CONS_BUFSIZE);
-		if (res < 0) {
-			perror("stdin: read");
+	if (tty_pfds) {
+		revents = tty_revents(tty_pfds);
+		if (revents & POLLHUP)
 			cons_eof = 1;
-			return 1;
-		}
-		if (res == 0) {
-			cons_eof = 1;
-		}
-		cons_len = res;
-		cons_index = 0;
 	}
 	return 1;
 }
@@ -256,13 +269,13 @@ mux_sleep(unsigned millisecs)
 		if (res >= 0)
 			break;
 		if (errno != EINTR) {
-			perror("mux_sleep: poll");
+			log_perror("mux_sleep: poll");
 			exit(1);
 		}
 		ts = remain;
 	}
 	if (clock_gettime(CLOCK_MONOTONIC, &ts_last) < 0) {
-		perror("mux_sleep: clock_gettime");
+		log_perror("mux_sleep: clock_gettime");
 		exit(1);
 	}
 }
@@ -273,6 +286,26 @@ cons_mdep_sigint(int s)
 	if (cons_quit)
 		_exit(1);
 	cons_quit = 1;
+}
+
+void
+cons_cb(void *arg, char *str)
+{
+	size_t len;
+
+	if (str == NULL) {
+		cons_quit = 1;
+		return;
+	}
+	len = strlen(str);
+	if (len >= CONS_BUFSIZE) {
+		cons_err("line too long");
+		return;
+	}
+	memcpy(cons_buf, str, len);
+	cons_buf[len] = '\n';
+	cons_len = len + 1;
+	cons_index = 0;
 }
 
 void
@@ -289,9 +322,21 @@ cons_mdep_init(void)
 	sa.sa_flags = SA_RESTART;
 	sa.sa_handler = cons_mdep_sigint;
 	if (sigaction(SIGINT, &sa, NULL) < 0) {
-		perror("cons_mdep_init: sigaction");
+		log_perror("cons_mdep_init: sigaction(int)");
 		exit(1);
 	}
+	sa.sa_handler = mdep_sigwinch;
+	if (sigaction(SIGWINCH, &sa, NULL) < 0) {
+		log_perror("cons_mdep_init: sigaction(winch) failed");
+		exit(1);
+	}	
+	sa.sa_handler = mdep_sigcont;
+	if (sigaction(SIGCONT, &sa, NULL) < 0) {
+		log_perror("cons_mdep_init: sigaction(cont) failed");
+		exit(1);
+	}
+	tty_init(cons_cb, NULL);
+	tty_setprompt("> ");
 }
 
 void
@@ -299,11 +344,20 @@ cons_mdep_done(void)
 {
 	struct sigaction sa;
 
+	tty_done();
 	sigfillset(&sa.sa_mask);
 	sa.sa_flags = SA_RESTART;
 	sa.sa_handler = SIG_DFL;
 	if (sigaction(SIGINT, &sa, NULL) < 0) {
-		perror("cons_mdep_done: sigaction");
+		log_perror("cons_mdep_done: sigaction(int)");
+		exit(1);
+	}
+	if (sigaction(SIGWINCH, &sa, NULL) < 0) {
+		log_perror("cons_mdep_done: sigaction(winch)");
+		exit(1);
+	}
+	if (sigaction(SIGCONT, &sa, NULL) < 0) {
+		log_perror("cons_mdep_done: sigaction(cont)");
 		exit(1);
 	}
 }

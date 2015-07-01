@@ -59,7 +59,7 @@ MIDISH_OBJS = \
 builtin.o cons.o conv.o data.o ev.o exec.o filt.o frame.o lex.o \
 main.o mdep.o mdep_raw.o mdep_alsa.o mdep_sndio.o metro.o mididev.o \
 mixout.o mux.o name.o node.o norm.o parse.o pool.o saveload.o smf.o song.o \
-state.o str.o sysex.o textio.o timo.o track.o user.o utils.o 
+state.o str.o sysex.o textio.o timo.o track.o tty.o user.o utils.o 
 
 midish:		${MIDISH_OBJS}
 		${CC} ${LDFLAGS} ${LIB} -o midish ${MIDISH_OBJS} \
@@ -124,8 +124,9 @@ sysex.o:	sysex.c utils.h sysex.h defs.h pool.h
 textio.o:	textio.c utils.h textio.h cons.h
 timo.o:		timo.c utils.h timo.h
 track.o:	track.c utils.h pool.h track.h ev.h defs.h
+tty.o:		tty.c tty.h utils.h
 user.o:		user.c utils.h defs.h node.h exec.h name.h str.h data.h \
 		cons.h textio.h lex.h parse.h mux.h mididev.h track.h \
 		ev.h song.h frame.h state.h filt.h sysex.h metro.h \
 		timo.h user.h builtin.h smf.h saveload.h
-utils.o:	utils.c utils.h
+utils.o:	utils.c utils.h tty.h
