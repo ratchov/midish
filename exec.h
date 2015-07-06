@@ -19,7 +19,7 @@
 
 #include "name.h"
 
-enum RESULT_ID {
+enum RESULT {
 	RESULT_ERR = 0,
 	RESULT_OK, RESULT_BREAK, RESULT_CONTINUE, RESULT_RETURN, RESULT_EXIT
 };
@@ -71,6 +71,7 @@ struct exec {
 	char *procname;		/* current proc name, for err messages */
 #define EXEC_MAXDEPTH	40
 	unsigned depth;		/* max depth of nested proc calls */
+	unsigned result;	/* result of last operation */
 };
 
 struct var *var_new(struct name **, char *, struct data *);

@@ -14,18 +14,17 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
+#include <limits.h>
 #include "utils.h"
 #include "name.h"
 #include "song.h"
 #include "filt.h"
-#include "parse.h"
 #include "textio.h"
 #include "saveload.h"
 #include "frame.h"
 #include "conv.h"
 #include "version.h"
-
-/* ------------------------------------------------------------------- */
+#include "cons.h"
 
 void
 chan_output(unsigned dev, unsigned ch, struct textout *f)
@@ -36,7 +35,6 @@ chan_output(unsigned dev, unsigned ch, struct textout *f)
 	textout_putlong(f, ch % 16);
 	textout_putstr(f, "}");
 }
-
 
 void
 ev_output(struct ev *e, struct textout *f)
@@ -622,95 +620,316 @@ song_output(struct song *o, struct textout *f)
 
 /* ---------------------------------------------------------------------- */
 
-unsigned parse_ukline(struct parse *o);
-unsigned parse_ukblock(struct parse *o);
-unsigned parse_delta(struct parse *o, unsigned *delta);
-unsigned parse_ev(struct parse *o, struct ev *ev);
-unsigned parse_track(struct parse *o, struct track *t);
-unsigned parse_songtrk(struct parse *o, struct song *s, struct songtrk *t);
-unsigned parse_song(struct parse *o, struct song *s);
+enum SYM_ID {
+	TOK_EOF = 0, TOK_LBRACE, TOK_RBRACE, TOK_LT, TOK_GT, TOK_NIL,
+	TOK_RANGE, TOK_ENDLINE, TOK_WORD, TOK_NUM
+};
+
+struct load {
+	unsigned id;
+#define TOK_MAXLEN	31
+	char strval[TOK_MAXLEN + 1];
+	unsigned long longval;
+	struct textin *in;		/* input file */
+	int lookchar;			/* used by ungetchar */
+	unsigned line, col;		/* for error reporting */
+	unsigned lookavail;
+};
+
+unsigned      load_getsym(struct load *);
+void	      load_ungetsym(struct load *);
+
+/* ----------------------------------------------------- tokdefs --- */
 
 unsigned
-parse_ukline(struct parse *o)
+load_getchar(struct load *o, int *c)
 {
-	if (!parse_getsym(o)) {
-		return 0;
-	}
-	if (o->lex.id != TOK_IDENT && o->lex.id != TOK_NUM &&
-	    o->lex.id != TOK_ENDLINE) {
-		lex_err(&o->lex, "ident, number, newline or '}' expected");
-		return 0;
-	}
-	parse_ungetsym(o);
-	for (;;) {
-		if (!parse_getsym(o)) {
+	if (o->lookchar < 0) {
+		textin_getpos(o->in, &o->line, &o->col);
+		if (!textin_getchar(o->in, c)) {
 			return 0;
 		}
-		if (o->lex.id == TOK_RBRACE || o->lex.id == TOK_EOF) {
-			parse_ungetsym(o);
-			break;
-		} else if (o->lex.id == TOK_ENDLINE) {
-			break;
-		} else if (o->lex.id == TOK_LBRACE) {
-			parse_ungetsym(o);
-			if (!parse_ukblock(o)) {
-				return 0;
+	} else {
+		*c = o->lookchar;
+		o->lookchar = -1;
+	}
+	return 1;
+}
+
+void
+load_ungetchar(struct load *o, int c)
+{
+	if (o->lookchar >= 0) {
+		log_puts("load_ungetchar: lookchar already set\n");
+		panic();
+	}
+	o->lookchar = c;
+}
+
+void
+load_err(struct load *o, char *msg)
+{
+	cons_erruu(o->line + 1, o->col + 1, msg);
+}
+
+unsigned
+load_scan(struct load *o)
+{
+	int c, cn;
+	unsigned i, dig, base;
+	unsigned long val, maxq, maxr;
+
+	for (;;) {
+		if (!load_getchar(o, &c))
+			return 0;
+
+		if (c == CHAR_EOF) {
+			o->id = TOK_EOF;
+			return 1;
+		}
+
+		/* skip comments */
+		if (c == '#') {
+			do {
+				if (!load_getchar(o, &c))
+					return 0;
+			} while (c != '\n' && c != CHAR_EOF);
+			load_ungetchar(o, c);
+			continue;
+		}
+
+		if (c >= '0' && c <= '9') {
+			base = 10;
+			if (c == '0') {
+				if (!load_getchar(o, &c))
+					return 0;
+				if (c == 'x' || c == 'X') {
+					base = 16;
+					if (!load_getchar(o, &c))
+						return 0;
+					if ((c < '0' || c > '9') &&
+					    (c < 'A' || c > 'F') &&
+					    (c < 'a' || c > 'f')) {
+						load_ungetchar(o, c);
+						load_err(o, "bad hex number");
+						return 0;
+					}
+				}
 			}
+
+			val = 0;
+			maxq = ULONG_MAX / base;
+			maxr = ULONG_MAX % base;
+			for (;;) {
+				if (c >= 'a' && c <= 'z') {
+					dig = 10 + c - 'a';
+				} else if (c >= 'A' && c <= 'Z') {
+					dig = 10 + c - 'A';
+				} else if (c >= '0' && c <= '9') {
+					dig = c - '0';
+				} else {
+					load_ungetchar(o, c);
+					break;
+				}
+				if (dig >= base) {
+					load_err(o, "bad number");
+					return 0;
+				}
+				if ((val > maxq) ||
+				    (val == maxq && dig > maxr)) {
+					load_err(o, "number too large");
+					return 0;
+				}
+				val = val * base + dig;
+				if (!load_getchar(o, &c))
+					return 0;
+			}
+			o->longval = val;
+			o->id = TOK_NUM;
+			return 1;
+		}
+
+		if ((c >= 'a' && c <= 'z') ||
+		    (c >= 'A' && c <= 'Z') ||
+		    (c == '_')) {
+			i = 0;
+			for (;;) {
+				if (i >= TOK_MAXLEN) {
+					load_err(o, "word too long");
+					return 0;
+				}
+				o->strval[i++] = c;
+				if (!load_getchar(o, &c)) {
+					return 0;
+				}
+				if ((c < 'a' || c > 'z') &&
+				    (c < 'A' || c > 'Z') &&
+				    (c < '0' || c > '9') &&
+				    (c != '_')) {
+					o->strval[i++] = '\0';
+					load_ungetchar(o, c);
+					break;
+				}
+			}
+			if (str_eq(o->strval, "nil"))
+				o->id = TOK_NIL;
+			else
+				o->id = TOK_WORD;
+			return 1;
+		}
+
+		switch (c) {
+		case ' ':
+		case '\t':
+		case '\r':
+			continue;
+		case '\n':
+			o->id = TOK_ENDLINE;
+			return 1;
+		case '{':
+			o->id = TOK_LBRACE;
+			return 1;
+		case '}':
+			o->id = TOK_RBRACE;
+			return 1;
+		case '<':
+			o->id = TOK_LT;
+			return 1;
+		case '>':
+			o->id = TOK_GT;
+			return 1;
+		case '.':
+			if (!load_getchar(o, &cn))
+				return 0;
+			if (cn == '.') {
+				o->id = TOK_RANGE;
+				return 1;
+			}
+			load_ungetchar(o, cn);
+		}
+		load_err(o, "bad token");
+		return 0;
+	}
+	/* not reached */
+}
+
+int
+load_init(struct load *o, char *filename)
+{
+	o->lookchar = -1;
+	o->in = textin_new(filename);
+	if (!o->in)
+		return 0;
+	o->lookavail = 0;
+	return 1;
+}
+
+void
+load_done(struct load *o)
+{
+	textin_delete(o->in);
+}
+
+unsigned
+load_getsym(struct load *o)
+{
+	if (o->lookavail) {
+		o->lookavail = 0;
+		return 1;
+	}
+	return load_scan(o);
+}
+
+void
+load_ungetsym(struct load *o)
+{
+	if (o->lookavail) {
+		log_puts("load_ungetsym: looksym already set\n");
+		panic();
+	}
+	o->lookavail = 1;
+}
+
+unsigned load_ukline(struct load *o);
+unsigned load_ukblock(struct load *o);
+unsigned load_delta(struct load *o, unsigned *delta);
+unsigned load_ev(struct load *o, struct ev *ev);
+unsigned load_track(struct load *o, struct track *t);
+unsigned load_songtrk(struct load *o, struct song *s, struct songtrk *t);
+unsigned load_song(struct load *o, struct song *s);
+
+unsigned
+load_ukline(struct load *o)
+{
+	if (!load_getsym(o))
+		return 0;
+	if (o->id != TOK_WORD && o->id != TOK_NUM && o->id != TOK_ENDLINE) {
+		load_err(o, "ident, number, newline or '}' expected");
+		return 0;
+	}
+	load_ungetsym(o);
+	for (;;) {
+		if (!load_getsym(o))
+			return 0;
+		if (o->id == TOK_RBRACE || o->id == TOK_EOF) {
+			load_ungetsym(o);
+			break;
+		} else if (o->id == TOK_ENDLINE) {
+			break;
+		} else if (o->id == TOK_LBRACE) {
+			load_ungetsym(o);
+			if (!load_ukblock(o))
+				return 0;
 		}
 	}
 	return 1;
 }
 
 unsigned
-parse_ukblock(struct parse *o)
+load_ukblock(struct load *o)
 {
-	if (!parse_getsym(o)) {
+	if (!load_getsym(o))
 		return 0;
-	}
-	if (o->lex.id != TOK_LBRACE) {
-		lex_err(&o->lex, "'{' expected while parsing block");
+	if (o->id != TOK_LBRACE) {
+		load_err(o, "'{' expected while parsing block");
 		return 0;
 	}
 	for (;;) {
-		if (!parse_getsym(o)) {
+		if (!load_getsym(o))
 			return 0;
-		}
-		if (o->lex.id == TOK_RBRACE) {
+		if (o->id == TOK_RBRACE) {
 			break;
 		} else {
-			parse_ungetsym(o);
-			if (!parse_ukline(o)) {
+			load_ungetsym(o);
+			if (!load_ukline(o))
 				return 0;
-			}
 		}
 	}
 	return 1;
 }
 
 unsigned
-parse_nl(struct parse *o)
+load_nl(struct load *o)
 {
-	if (!parse_getsym(o)) {
+	if (!load_getsym(o))
 		return 0;
-	}
-	if (o->lex.id == TOK_RBRACE || o->lex.id != TOK_EOF) {
-		parse_ungetsym(o);
-	} else if (o->lex.id != TOK_ENDLINE) {
-		lex_err(&o->lex, "new line expected");
+	if (o->id == TOK_RBRACE || o->id != TOK_EOF) {
+		load_ungetsym(o);
+	} else if (o->id != TOK_ENDLINE) {
+		load_err(o, "new line expected");
 		return 0;
 	}
 	return 1;
 }
 
 unsigned
-parse_empty(struct parse *o)
+load_empty(struct load *o)
 {
 	for (;;) {
-		if (!parse_getsym(o)) {
+		if (!load_getsym(o))
 			return 0;
-		}
-		if (o->lex.id != TOK_ENDLINE) {
-			parse_ungetsym(o);
+		if (o->id != TOK_ENDLINE) {
+			load_ungetsym(o);
 			break;
 		}
 	}
@@ -719,100 +938,92 @@ parse_empty(struct parse *o)
 
 
 unsigned
-parse_long(struct parse *o, unsigned long min, unsigned long max, unsigned long *data)
+load_long(struct load *o, unsigned long min, unsigned long max, unsigned long *data)
 {
-	if (!parse_getsym(o)) {
+	if (!load_getsym(o))
+		return 0;
+	if (o->id != TOK_NUM) {
+		load_err(o, "number expected");
 		return 0;
 	}
-	if (o->lex.id != TOK_NUM) {
-		lex_err(&o->lex, "number expected");
+	if (o->longval < min || o->longval > max) {
+		load_err(o, "number out of allowed range");
 		return 0;
 	}
-	if (o->lex.longval < min || o->lex.longval > max) {
-		lex_err(&o->lex, "number out of allowed range");
-		return 0;
-	}
-	*data = (unsigned)o->lex.longval;
+	*data = (unsigned)o->longval;
 	return 1;
 }
 
 unsigned
-parse_delta(struct parse *o, unsigned *delta)
+load_delta(struct load *o, unsigned *delta)
 {
-	if (!parse_getsym(o)) {
+	if (!load_getsym(o))
+		return 0;
+	if (o->id != TOK_NUM) {
+		load_err(o, "numeric constant expected in event offset");
 		return 0;
 	}
-	if (o->lex.id != TOK_NUM) {
-		lex_err(&o->lex, "numeric constant expected in event offset");
+	*delta = o->longval;
+	if (!load_nl(o))
 		return 0;
-	}
-	*delta = o->lex.longval;
-	if (!parse_nl(o)) {
-		return 0;
-	}
 	return 1;
 }
 
 unsigned
-parse_chan(struct parse *o, unsigned long *dev, unsigned long *ch)
+load_chan(struct load *o, unsigned long *dev, unsigned long *ch)
 {
-	if (!parse_getsym(o)) {
+	if (!load_getsym(o))
 		return 0;
-	}
-	if (o->lex.id == TOK_LBRACE) {
-		if (!parse_long(o, 0, EV_MAXDEV, dev)) {
+	if (o->id == TOK_LBRACE) {
+		if (!load_long(o, 0, EV_MAXDEV, dev))
 			return 0;
-		}
-		if (!parse_long(o, 0, EV_MAXCH, ch)) {
+		if (!load_long(o, 0, EV_MAXCH, ch))
 			return 0;
-		}
-		if (!parse_getsym(o)) {
+		if (!load_getsym(o))
 			return 0;
-		}
-		if (o->lex.id != TOK_RBRACE) {
-			lex_err(&o->lex, "'}' expected in channel spec");
+		if (o->id != TOK_RBRACE) {
+			load_err(o, "'}' expected in channel spec");
 			return 0;
 		}
 		return 1;
-	} else if (o->lex.id == TOK_NUM) {
-		*dev = o->lex.longval / (EV_MAXCH + 1);
-		*ch = o->lex.longval % (EV_MAXCH + 1);
+	} else if (o->id == TOK_NUM) {
+		*dev = o->longval / (EV_MAXCH + 1);
+		*ch = o->longval % (EV_MAXCH + 1);
 		if (*dev > EV_MAXDEV) {
-			lex_err(&o->lex, "dev/chan out of range");
+			load_err(o, "dev/chan out of range");
 			return 0;
 		}
 		return 1;
 	} else {
-		lex_err(&o->lex, "bad channel spec");
+		load_err(o, "bad channel spec");
 		return 0;
 	}
 }
 
 unsigned
-parse_ev(struct parse *o, struct ev *ev)
+load_ev(struct load *o, struct ev *ev)
 {
 	unsigned long val, val2;
 	struct evinfo *ei;
 
-	if (!parse_getsym(o)) {
+	if (!load_getsym(o))
+		return 0;
+	if (o->id != TOK_WORD) {
+		load_err(o, "event name expected");
 		return 0;
 	}
-	if (o->lex.id != TOK_IDENT) {
-		lex_err(&o->lex, "event name expected");
-		return 0;
-	}
-	if (!ev_str2cmd(ev, o->lex.strval)) {
+	if (!ev_str2cmd(ev, o->strval)) {
 	ignore:
-		parse_ungetsym(o);
-		if (!parse_ukline(o)) {
+		load_ungetsym(o);
+		if (!load_ukline(o)) {
 			return 0;
 		}
-		lex_err(&o->lex, "unknown event, ignored");
+		load_err(o, "unknown event, ignored");
 		ev->cmd = EV_NULL;
 		return 1;
 	}
 	if (EV_ISVOICE(ev)) {
-		if (!parse_chan(o, &val, &val2)) {
+		if (!load_chan(o, &val, &val2)) {
 			return 0;
 		}
 		ev->dev = val;
@@ -820,56 +1031,55 @@ parse_ev(struct parse *o, struct ev *ev)
 	}
 	switch (ev->cmd) {
 	case EV_TEMPO:
-		if (!parse_long(o, TEMPO_MIN, TEMPO_MAX, &val)) {
+		if (!load_long(o, TEMPO_MIN, TEMPO_MAX, &val)) {
 			return 0;
 		}
 		ev->tempo_usec24 = val;
 		break;
 	case EV_TIMESIG:
-		if (!parse_long(o, 1, TIMESIG_BEATS_MAX, &val)) {
+		if (!load_long(o, 1, TIMESIG_BEATS_MAX, &val)) {
 			return 0;
 		}
 		ev->timesig_beats = val;
-		if (!parse_long(o, 1, TIMESIG_TICS_MAX, &val)) {
+		if (!load_long(o, 1, TIMESIG_TICS_MAX, &val)) {
 			return 0;
 		}
 		ev->timesig_tics = val;
 		break;
 	case EV_NRPN:
 	case EV_RPN:
-		if (!parse_long(o, 0, EV_MAXFINE, &val)) {
+		if (!load_long(o, 0, EV_MAXFINE, &val)) {
 			return 0;
 		}
 		ev->rpn_num = val;
-		if (!parse_long(o, 0, EV_MAXFINE, &val)) {
+		if (!load_long(o, 0, EV_MAXFINE, &val)) {
 			return 0;
 		}
 		ev->rpn_val = val;
 		break;
 	case EV_XCTL:
-		if (!parse_long(o, 0, EV_MAXCOARSE, &val)) {
+		if (!load_long(o, 0, EV_MAXCOARSE, &val)) {
 			return 0;
 		}
 		ev->ctl_num = val;
-		if (!parse_long(o, 0, EV_MAXFINE, &val)) {
+		if (!load_long(o, 0, EV_MAXFINE, &val)) {
 			return 0;
 		}
 		ev->ctl_val = val;
 		break;
 	case EV_XPC:
-		if (!parse_long(o, 0, EV_MAXCOARSE, &val)) {
+		if (!load_long(o, 0, EV_MAXCOARSE, &val)) {
 			return 0;
 		}
 		ev->pc_prog = val;
-		if (!parse_getsym(o)) {
+		if (!load_getsym(o))
 			return 0;
-		}
-		if (o->lex.id == TOK_NIL) {
+		if (o->id == TOK_NIL) {
 			ev->pc_bank = EV_UNDEF;
 			break;
 		}
-		parse_ungetsym(o);
-		if (!parse_long(o, 0, EV_MAXFINE, &val)) {
+		load_ungetsym(o);
+		if (!load_long(o, 0, EV_MAXFINE, &val)) {
 			return 0;
 		}
 		ev->pc_bank = val;
@@ -877,17 +1087,17 @@ parse_ev(struct parse *o, struct ev *ev)
 	case EV_NON:
 	case EV_NOFF:
 	case EV_CTL:
-		if (!parse_long(o, 0, EV_MAXCOARSE, &val)) {
+		if (!load_long(o, 0, EV_MAXCOARSE, &val)) {
 			return 0;
 		}
 		ev->v0 = val;
-		if (!parse_long(o, 0, EV_MAXCOARSE, &val)) {
+		if (!load_long(o, 0, EV_MAXCOARSE, &val)) {
 			return 0;
 		}
 		ev->v1 = val;
 		break;
 	case EV_KAT:
-		if (!parse_long(o, 0, EV_MAXCOARSE, &val)) {
+		if (!load_long(o, 0, EV_MAXCOARSE, &val)) {
 			return 0;
 		}
 		ev->v0 = val;
@@ -898,36 +1108,35 @@ parse_ev(struct parse *o, struct ev *ev)
 		 * events, in order to allow user to load its
 		 * files. Remove this code when no more needed
 		 */
-		if (!parse_getsym(o)) {
+		if (!load_getsym(o))
 			return 0;
-		}
-		if (o->lex.id != TOK_NUM) {
-			parse_ungetsym(o);
-			if (!parse_nl(o)) {
+		if (o->id != TOK_NUM) {
+			load_ungetsym(o);
+			if (!load_nl(o)) {
 				return 0;
 			}
 			ev->cmd = EV_NULL;
 			return 1;
 		}
-		parse_ungetsym(o);
-		if (!parse_long(o, 0, EV_MAXCOARSE, &val)) {
+		load_ungetsym(o);
+		if (!load_long(o, 0, EV_MAXCOARSE, &val)) {
 			return 0;
 		}
 		ev->v1 = val;
 		break;
 	case EV_PC:
 	case EV_CAT:
-		if (!parse_long(o, 0, EV_MAXCOARSE, &val)) {
+		if (!load_long(o, 0, EV_MAXCOARSE, &val)) {
 			return 0;
 		}
 		ev->v0 = val;
 		break;
 	case EV_BEND:
-		if (!parse_long(o, 0, EV_MAXCOARSE, &val)) {
+		if (!load_long(o, 0, EV_MAXCOARSE, &val)) {
 			return 0;
 		}
 		ev->v0 = val;
-		if (!parse_long(o, 0, EV_MAXCOARSE, &val)) {
+		if (!load_long(o, 0, EV_MAXCOARSE, &val)) {
 			return 0;
 		}
 		ev->v0 += (val << 7);
@@ -935,23 +1144,23 @@ parse_ev(struct parse *o, struct ev *ev)
 	default:
 		if (EV_ISSX(ev) && evinfo[ev->cmd].ev != NULL) {
 			ei = evinfo + ev->cmd;
-			if (!parse_long(o, 0, EV_MAXDEV, &val))
+			if (!load_long(o, 0, EV_MAXDEV, &val))
 				return 0;
 			ev->dev = val;
 			if (ei->nparams >= 1) {
-				if (!parse_long(o, 0, ei->v0_max, &val))
+				if (!load_long(o, 0, ei->v0_max, &val))
 					return 0;
 				ev->v0 = val;
 			}
 			if (ei->nparams >= 2) {
-				if (!parse_long(o, 0, ei->v1_max, &val))
+				if (!load_long(o, 0, ei->v1_max, &val))
 					return 0;
 				ev->v1 = val;
 			}
 		} else
 			goto ignore;
 	}
-	if (!parse_nl(o)) {
+	if (!load_nl(o)) {
 		return 0;
 	}
 	return 1;
@@ -959,42 +1168,41 @@ parse_ev(struct parse *o, struct ev *ev)
 
 
 unsigned
-parse_track(struct parse *o, struct track *t)
+load_track(struct load *o, struct track *t)
 {
 	unsigned delta;
 	struct seqev *pos, *se;
 	struct statelist slist;
 	struct ev ev, rev;
 
-	if (!parse_getsym(o)) {
+	if (!load_getsym(o))
 		return 0;
-	}
-	if (o->lex.id != TOK_LBRACE) {
-		lex_err(&o->lex, "'{' expected while parsing track");
+	if (o->id != TOK_LBRACE) {
+		load_err(o, "'{' expected while parsing track");
 		return 0;
 	}
 	track_clear(t);
 	statelist_init(&slist);
 	pos = t->first;
 	for (;;) {
-		if (!parse_getsym(o)) {
+		if (!load_getsym(o)) {
 			statelist_done(&slist);
 			return 0;
 		}
-		if (o->lex.id == TOK_ENDLINE) {
+		if (o->id == TOK_ENDLINE) {
 			/* nothing */
-		} else if (o->lex.id == TOK_RBRACE) {
+		} else if (o->id == TOK_RBRACE) {
 			break;
-		} else if (o->lex.id == TOK_NUM) {
-			parse_ungetsym(o);
-			if (!parse_delta(o, &delta)) {
+		} else if (o->id == TOK_NUM) {
+			load_ungetsym(o);
+			if (!load_delta(o, &delta)) {
 				statelist_done(&slist);
 				return 0;
 			}
 			pos->delta += delta;
 		} else {
-			parse_ungetsym(o);
-			if (!parse_ev(o, &ev)) {
+			load_ungetsym(o);
+			if (!load_ev(o, &ev)) {
 				statelist_done(&slist);
 				return 0;
 			}
@@ -1014,21 +1222,21 @@ parse_track(struct parse *o, struct track *t)
 }
 
 unsigned
-parse_range(struct parse *o, unsigned min, unsigned max,
+load_range(struct load *o, unsigned min, unsigned max,
     unsigned *rmin, unsigned *rmax)
 {
 	unsigned long tmin, tmax;
 
-	if (!parse_long(o, min, max, &tmin))
+	if (!load_long(o, min, max, &tmin))
 		return 0;
-	if (!parse_getsym(o))
+	if (!load_getsym(o))
 		return 0;
-	if (o->lex.id != TOK_RANGE) {
-		parse_ungetsym(o);
+	if (o->id != TOK_RANGE) {
+		load_ungetsym(o);
 		*rmin = *rmax = tmin;
 		return 1;
 	}
-	if (!parse_long(o, min, max, &tmax))
+	if (!load_long(o, min, max, &tmax))
 		return 0;
 	*rmin = tmin;
 	*rmax = tmax;
@@ -1036,78 +1244,67 @@ parse_range(struct parse *o, unsigned min, unsigned max,
 }
 
 unsigned
-parse_evspec(struct parse *o, struct evspec *es)
+load_evspec(struct load *o, struct evspec *es)
 {
 	struct evinfo *info;
 
-	if (!parse_getsym(o)) {
+	if (!load_getsym(o))
+		return 0;
+	if (o->id != TOK_WORD) {
+		load_err(o, "event spec name expected");
 		return 0;
 	}
-	if (o->lex.id != TOK_IDENT) {
-		lex_err(&o->lex, "event spec name expected");
+	if (!evspec_str2cmd(es, o->strval))
 		return 0;
-	}
-	if (!evspec_str2cmd(es, o->lex.strval)) {
-		return 0;
-	}
 	info = &evinfo[es->cmd];
 	if ((info->flags & EV_HAS_DEV) && (info->flags & EV_HAS_CH)) {
-		if (!parse_getsym(o)) {
+		if (!load_getsym(o))
+			return 0;
+		if (o->id != TOK_LBRACE) {
+			load_err(o, "'{' expected");
 			return 0;
 		}
-		if (o->lex.id != TOK_LBRACE) {
-			lex_err(&o->lex, "'{' expected");
+		if (!load_range(o, 0, EV_MAXDEV, &es->dev_min, &es->dev_max) ||
+		    !load_range(o, 0, EV_MAXCH, &es->ch_min, &es->ch_max))
 			return 0;
-		}
-		if (!parse_range(o, 0, EV_MAXDEV, &es->dev_min, &es->dev_max) ||
-		    !parse_range(o, 0, EV_MAXCH, &es->ch_min, &es->ch_max))
+		if (!load_getsym(o))
 			return 0;
-		if (!parse_getsym(o)) {
-			return 0;
-		}
-		if (o->lex.id != TOK_RBRACE) {
-			lex_err(&o->lex, "'}' expected");
+		if (o->id != TOK_RBRACE) {
+			load_err(o, "'}' expected");
 			return 0;
 		}
 	}
-	if (info->nranges == 0) {
+	if (info->nranges == 0)
 		return 1;
-	}
-	if (!parse_range(o, 0, info->v0_max, &es->v0_min, &es->v0_max)) {
+	if (!load_range(o, 0, info->v0_max, &es->v0_min, &es->v0_max))
 		return 0;
-	}
-	if (info->nranges == 1) {
+	if (info->nranges == 1)
 		return 1;
-	}
-	if (!parse_range(o, 0, info->v1_max, &es->v1_min, &es->v1_max)) {
+	if (!load_range(o, 0, info->v1_max, &es->v1_min, &es->v1_max))
 		return 0;
-	}
 	return 1;
 }
 
 unsigned
-parse_rule(struct parse *o, struct filt *f)
+load_rule(struct load *o, struct filt *f)
 {
 	unsigned long idev, ich, odev, och, ictl, octl, keylo, keyhi, ukeyplus;
 	struct evspec from, to;
 	int keyplus;
-	if (!parse_getsym(o)) {
+
+	if (!load_getsym(o))
+		return 0;
+	if (o->id != TOK_WORD) {
+		load_err(o, "filter-type identifier expected");
 		return 0;
 	}
-	if (o->lex.id != TOK_IDENT) {
-		lex_err(&o->lex, "filter-type identifier expected");
-		return 0;
-	}
-	if (str_eq(o->lex.strval, "keydrop")) {
-		if (!parse_chan(o, &idev, &ich)) {
+	if (str_eq(o->strval, "keydrop")) {
+		if (!load_chan(o, &idev, &ich))
 			return 0;
-		}
-		if (!parse_long(o, 0, EV_MAXCOARSE, &keylo)) {
+		if (!load_long(o, 0, EV_MAXCOARSE, &keylo))
 			return 0;
-		}
-		if (!parse_long(o, 0, EV_MAXCOARSE, &keyhi)) {
+		if (!load_long(o, 0, EV_MAXCOARSE, &keyhi))
 			return 0;
-		}
 		evspec_reset(&from);
 		from.cmd = EVSPEC_NOTE;
 		from.dev_min = from.dev_max = idev;
@@ -1116,20 +1313,20 @@ parse_rule(struct parse *o, struct filt *f)
 		from.v0_max = keyhi;
 		to.cmd = EVSPEC_EMPTY;
 		filt_mapnew(f, &from, &to);
-	} else if (str_eq(o->lex.strval, "keymap")) {
-		if (!parse_chan(o, &idev, &ich)) {
+	} else if (str_eq(o->strval, "keymap")) {
+		if (!load_chan(o, &idev, &ich)) {
 			return 0;
 		}
-		if (!parse_chan(o, &odev, &och)) {
+		if (!load_chan(o, &odev, &och)) {
 			return 0;
 		}
-		if (!parse_long(o, 0, EV_MAXCOARSE, &keylo)) {
+		if (!load_long(o, 0, EV_MAXCOARSE, &keylo)) {
 			return 0;
 		}
-		if (!parse_long(o, 0, EV_MAXCOARSE, &keyhi)) {
+		if (!load_long(o, 0, EV_MAXCOARSE, &keyhi)) {
 			return 0;
 		}
-		if (!parse_long(o, 0, EV_MAXCOARSE, &ukeyplus)) {
+		if (!load_long(o, 0, EV_MAXCOARSE, &ukeyplus)) {
 			return 0;
 		}
 		if (ukeyplus > 63) {
@@ -1137,11 +1334,10 @@ parse_rule(struct parse *o, struct filt *f)
 		} else {
 			keyplus = ukeyplus;
 		}
-		if (!parse_getsym(o)) {
+		if (!load_getsym(o))
 			return 0;
-		}
-		if (o->lex.id != TOK_IDENT) {
-			lex_err(&o->lex, "curve identifier expected");
+		if (o->id != TOK_WORD) {
+			load_err(o, "curve identifier expected");
 			return 0;
 		}
 		if ((int)keyhi + keyplus > EV_MAXCOARSE)
@@ -1149,7 +1345,7 @@ parse_rule(struct parse *o, struct filt *f)
 		if ((int)keylo + keyplus < 0)
 			keylo = -keyplus;
 		if (keylo >= keyhi) {
-			lex_err(&o->lex, "bad range in keymap rule");
+			load_err(o, "bad range in keymap rule");
 			return 0;
 		}
 		evspec_reset(&from);
@@ -1165,11 +1361,11 @@ parse_rule(struct parse *o, struct filt *f)
 		to.v0_min = keylo + keyplus;
 		to.v0_max = keyhi + keyplus;
 		filt_mapnew(f, &from, &to);
-	} else if (str_eq(o->lex.strval, "ctldrop")) {
-		if (!parse_chan(o, &idev, &ich)) {
+	} else if (str_eq(o->strval, "ctldrop")) {
+		if (!load_chan(o, &idev, &ich)) {
 			return 0;
 		}
-		if (!parse_long(o, 0, EV_MAXCOARSE, &ictl)) {
+		if (!load_long(o, 0, EV_MAXCOARSE, &ictl)) {
 			return 0;
 		}
 		evspec_reset(&from);
@@ -1179,24 +1375,23 @@ parse_rule(struct parse *o, struct filt *f)
 		from.v0_min = from.v0_max = ictl;
 		to.cmd = EVSPEC_EMPTY;
 		filt_mapnew(f, &from, &to);
-	} else if (str_eq(o->lex.strval, "ctlmap")) {
-		if (!parse_chan(o, &idev, &ich)) {
+	} else if (str_eq(o->strval, "ctlmap")) {
+		if (!load_chan(o, &idev, &ich)) {
 			return 0;
 		}
-		if (!parse_chan(o, &odev, &och)) {
+		if (!load_chan(o, &odev, &och)) {
 			return 0;
 		}
-		if (!parse_long(o, 0, EV_MAXCOARSE, &ictl)) {
+		if (!load_long(o, 0, EV_MAXCOARSE, &ictl)) {
 			return 0;
 		}
-		if (!parse_long(o, 0, EV_MAXCOARSE, &octl)) {
+		if (!load_long(o, 0, EV_MAXCOARSE, &octl)) {
 			return 0;
 		}
-		if (!parse_getsym(o)) {
+		if (!load_getsym(o))
 			return 0;
-		}
-		if (o->lex.id != TOK_IDENT) {
-			lex_err(&o->lex, "curve identifier expected");
+		if (o->id != TOK_WORD) {
+			load_err(o, "curve identifier expected");
 			return 0;
 		}
 		evspec_reset(&from);
@@ -1210,8 +1405,8 @@ parse_rule(struct parse *o, struct filt *f)
 		to.ch_min = to.ch_max = och;
 		to.v0_min = to.v0_max = octl;
 		filt_mapnew(f, &from, &to);
-	} else if (str_eq(o->lex.strval, "chandrop")) {
-		if (!parse_chan(o, &idev, &ich)) {
+	} else if (str_eq(o->strval, "chandrop")) {
+		if (!load_chan(o, &idev, &ich)) {
 			return 0;
 		}
 		evspec_reset(&from);
@@ -1219,11 +1414,11 @@ parse_rule(struct parse *o, struct filt *f)
 		from.ch_min = from.ch_max = ich;
 		to.cmd = EVSPEC_EMPTY;
 		filt_mapnew(f, &from, &to);
-	} else if (str_eq(o->lex.strval, "chanmap")) {
-		if (!parse_chan(o, &idev, &ich)) {
+	} else if (str_eq(o->strval, "chanmap")) {
+		if (!load_chan(o, &idev, &ich)) {
 			return 0;
 		}
-		if (!parse_chan(o, &odev, &och)) {
+		if (!load_chan(o, &odev, &och)) {
 			return 0;
 		}
 		evspec_reset(&from);
@@ -1233,19 +1428,19 @@ parse_rule(struct parse *o, struct filt *f)
 		to.dev_min = to.dev_max = odev;
 		to.ch_min = to.ch_max = och;
 		filt_mapnew(f, &from, &to);
-	} else if (str_eq(o->lex.strval, "devdrop")) {
-		if (!parse_long(o, 0, EV_MAXDEV, &idev)) {
+	} else if (str_eq(o->strval, "devdrop")) {
+		if (!load_long(o, 0, EV_MAXDEV, &idev)) {
 			return 0;
 		}
 		evspec_reset(&from);
 		from.dev_min = from.dev_max = idev;
 		to.cmd = EVSPEC_EMPTY;
 		filt_mapnew(f, &from, &to);
-	} else if (str_eq(o->lex.strval, "devmap")) {
-		if (!parse_long(o, 0, EV_MAXDEV, &idev)) {
+	} else if (str_eq(o->strval, "devmap")) {
+		if (!load_long(o, 0, EV_MAXDEV, &idev)) {
 			return 0;
 		}
-		if (!parse_long(o, 0, EV_MAXDEV, &odev)) {
+		if (!load_long(o, 0, EV_MAXDEV, &odev)) {
 			return 0;
 		}
 		evspec_reset(&from);
@@ -1253,122 +1448,115 @@ parse_rule(struct parse *o, struct filt *f)
 		from.dev_min = from.dev_max = idev;
 		to.dev_min = to.dev_max = odev;
 		filt_mapnew(f, &from, &to);
-	} else if (str_eq(o->lex.strval, "evmap")) {
-		if (!parse_evspec(o, &from)) {
+	} else if (str_eq(o->strval, "evmap")) {
+		if (!load_evspec(o, &from)) {
 			return 0;
 		}
-		if (!parse_getsym(o)) {
+		if (!load_getsym(o))
+			return 0;
+		if (o->id != TOK_GT) {
+			load_err(o, "'>' expected");
 			return 0;
 		}
-		if (o->lex.id != TOK_GT) {
-			lex_err(&o->lex, "'>' expected");
-			return 0;
-		}
-		if (!parse_evspec(o, &to)) {
+		if (!load_evspec(o, &to)) {
 			return 0;
 		}
 		filt_mapnew(f, &from, &to);
-	} else if (str_eq(o->lex.strval, "transp")) {
-		if (!parse_evspec(o, &to)) {
+	} else if (str_eq(o->strval, "transp")) {
+		if (!load_evspec(o, &to)) {
 			return 0;
 		}
-		if (!parse_long(o, 0, EV_MAXCOARSE, &ukeyplus)) {
+		if (!load_long(o, 0, EV_MAXCOARSE, &ukeyplus)) {
 			return 0;
 		}
 		filt_transp(f, &to, ukeyplus);
-	} else if (str_eq(o->lex.strval, "vcurve")) {
-		if (!parse_evspec(o, &to)) {
+	} else if (str_eq(o->strval, "vcurve")) {
+		if (!load_evspec(o, &to)) {
 			return 0;
 		}
-		if (!parse_long(o, 1, EV_MAXCOARSE, &ukeyplus)) {
+		if (!load_long(o, 1, EV_MAXCOARSE, &ukeyplus)) {
 			return 0;
 		}
 		filt_vcurve(f, &to, ukeyplus);
 	} else {
-		parse_ungetsym(o);
-		if (!parse_ukline(o)) {
+		load_ungetsym(o);
+		if (!load_ukline(o)) {
 			return 0;
 		}
-		lex_err(&o->lex, "unknown filter rule, ignored");
+		load_err(o, "unknown filter rule, ignored");
 		return 1;
 	}
-	if (!parse_nl(o)) {
+	if (!load_nl(o)) {
 		return 0;
 	}
 	return 1;
 }
 
 unsigned
-parse_filt(struct parse *o, struct filt *f)
+load_filt(struct load *o, struct filt *f)
 {
-	if (!parse_getsym(o)) {
+	if (!load_getsym(o))
 		return 0;
-	}
-	if (o->lex.id != TOK_LBRACE) {
-		lex_err(&o->lex, "'{' expected while parsing filt");
+	if (o->id != TOK_LBRACE) {
+		load_err(o, "'{' expected while parsing filt");
 		return 0;
 	}
 	for (;;) {
-		if (!parse_getsym(o)) {
+		if (!load_getsym(o))
 			return 0;
-		}
-		if (o->lex.id == TOK_ENDLINE) {
+		if (o->id == TOK_ENDLINE) {
 			/* nothing */
-		} else if (o->lex.id == TOK_RBRACE) {
+		} else if (o->id == TOK_RBRACE) {
 			break;
 		} else {
-			parse_ungetsym(o);
-			if (!parse_rule(o, f)) {
+			load_ungetsym(o);
+			if (!load_rule(o, f))
 				return 0;
-			}
 		}
 	}
 	return 1;
 }
 
 unsigned
-parse_sysex(struct parse *o, struct sysex **res)
+load_sysex(struct load *o, struct sysex **res)
 {
 	struct sysex *sx;
 	unsigned long val;
 
-	if (!parse_getsym(o)) {
+	if (!load_getsym(o))
 		return 0;
-	}
-	if (o->lex.id != TOK_LBRACE) {
-		lex_err(&o->lex, "'{' expected while parsing sysex");
+	if (o->id != TOK_LBRACE) {
+		load_err(o, "'{' expected while parsing sysex");
 		return 0;
 	}
 	sx = sysex_new(0);
 	for (;;) {
-		if (!parse_getsym(o)) {
+		if (!load_getsym(o))
 			goto err1;
-		}
-		if (o->lex.id == TOK_ENDLINE) {
+		if (o->id == TOK_ENDLINE) {
 			/* nothing */
-		} else if (o->lex.id == TOK_RBRACE) {
+		} else if (o->id == TOK_RBRACE) {
 			break;
-		} else if (o->lex.id == TOK_IDENT) {
-			if (str_eq(o->lex.strval, "data")) {
+		} else if (o->id == TOK_WORD) {
+			if (str_eq(o->strval, "data")) {
 				for (;;) {
-					if (!parse_getsym(o)) {
+					if (!load_getsym(o))
 						goto err1;
-					}
-					if (o->lex.id == TOK_ENDLINE) {
+					if (o->id == TOK_ENDLINE) {
 						break;
 					}
-					parse_ungetsym(o);
-					if (!parse_long(o, 0, 0xff, &val)) {
+					load_ungetsym(o);
+					if (!load_long(o, 0, 0xff, &val)) {
 						goto err1;
 					}
 					sysex_add(sx, val);
 				}
-			} else if (str_eq(o->lex.strval, "unit")) {
-				if (!parse_long(o, 0, EV_MAXDEV, &val)) {
+			} else if (str_eq(o->strval, "unit")) {
+				if (!load_long(o, 0, EV_MAXDEV, &val)) {
 					goto err1;
 				}
 				sx->unit = val;
-				if (!parse_nl(o)) {
+				if (!load_nl(o)) {
 					goto err1;
 				}
 			} else {
@@ -1376,11 +1564,11 @@ parse_sysex(struct parse *o, struct sysex **res)
 			}
 		} else {
 		unknown:
-			parse_ungetsym(o);
-			if (!parse_ukline(o)) {
+			load_ungetsym(o);
+			if (!load_ukline(o)) {
 				goto err1;
 			}
-			lex_err(&o->lex, "unknown line format in sysex, ignored");
+			load_err(o, "unknown line format in sysex, ignored");
 		}
 	}
 	*res = sx;
@@ -1392,7 +1580,7 @@ err1:
 }
 
 unsigned
-parse_evpat(struct parse *o, char *ref)
+load_evpat(struct load *o, char *ref)
 {
 	unsigned long val;
 	unsigned size = 0;
@@ -1407,7 +1595,7 @@ parse_evpat(struct parse *o, char *ref)
 		evpat_unconf(cmd);
 	for (cmd = EV_PAT0;; cmd++) {
 		if (cmd == EV_PAT0 + EV_NPAT) {
-			lex_err(&o->lex, "too many sysex patterns");
+			load_err(o, "too many sysex patterns");
 			return 0;
 		}
 		if (evinfo[cmd].ev == NULL)
@@ -1416,52 +1604,49 @@ parse_evpat(struct parse *o, char *ref)
 	name = str_new(ref);
 	pattern = xmalloc(EV_PATSIZE, "evpat");
 
-	if (!parse_getsym(o)) {
+	if (!load_getsym(o))
 		goto err1;
-	}
-	if (o->lex.id != TOK_LBRACE) {
-		lex_err(&o->lex, "'{' expected while parsing evpat");
+	if (o->id != TOK_LBRACE) {
+		load_err(o, "'{' expected while parsing evpat");
 		goto err1;
 	}
 
 	for (;;) {
-		if (!parse_getsym(o)) {
+		if (!load_getsym(o))
 			goto err1;
-		}
-		if (o->lex.id == TOK_ENDLINE) {
+		if (o->id == TOK_ENDLINE) {
 			/* nothing */
-		} else if (o->lex.id == TOK_RBRACE) {
+		} else if (o->id == TOK_RBRACE) {
 			break;
-		} else if (o->lex.id == TOK_IDENT) {
-			if (str_eq(o->lex.strval, "pattern")) {
+		} else if (o->id == TOK_WORD) {
+			if (str_eq(o->strval, "pattern")) {
 				for (;;) {
-					if (!parse_getsym(o)) {
+					if (!load_getsym(o))
 						goto err1;
-					}
-					if (o->lex.id == TOK_ENDLINE) {
+					if (o->id == TOK_ENDLINE) {
 						break;
 					}
 					if (size == EV_PATSIZE) {
-						lex_err(&o->lex, "pattern too long");
+						load_err(o, "pattern too long");
 						goto err1;
 					}
-					if (o->lex.id == TOK_NUM) {
-						parse_ungetsym(o);
-						if (!parse_long(o, 0, 0xff, &val)) {
+					if (o->id == TOK_NUM) {
+						load_ungetsym(o);
+						if (!load_long(o, 0, 0xff, &val)) {
 							goto err1;
 						}
 						pattern[size++] = val;
-					} else if (o->lex.id == TOK_IDENT) {
-						if (str_eq(o->lex.strval, "v0_hi"))
+					} else if (o->id == TOK_WORD) {
+						if (str_eq(o->strval, "v0_hi"))
 							val = EV_PATV0_HI;
-						else if (str_eq(o->lex.strval, "v0_lo"))
+						else if (str_eq(o->strval, "v0_lo"))
 							val = EV_PATV0_LO;
-						else if (str_eq(o->lex.strval, "v1_hi"))
+						else if (str_eq(o->strval, "v1_hi"))
 							val = EV_PATV1_HI;
-						else if (str_eq(o->lex.strval, "v1_lo"))
+						else if (str_eq(o->strval, "v1_lo"))
 							val = EV_PATV1_LO;
 						else {
-							lex_err(&o->lex, "unexpected atom in pattern");
+							load_err(o, "unexpected atom in pattern");
 							return 0;
 						}
 						pattern[size++] = val;
@@ -1472,11 +1657,11 @@ parse_evpat(struct parse *o, char *ref)
 			}
 		} else {
 		unknown:
-			parse_ungetsym(o);
-			if (!parse_ukline(o)) {
+			load_ungetsym(o);
+			if (!load_ukline(o)) {
 				goto err1;
 			}
-			lex_err(&o->lex, "unknown line format in sysex, ignored");
+			load_err(o, "unknown line format in sysex, ignored");
 		}
 	}
 	if (!evpat_set(cmd, name, pattern, size))
@@ -1489,309 +1674,268 @@ err1:
 }
 
 unsigned
-parse_songchan(struct parse *o, struct song *s, struct songchan *i)
+load_songchan(struct load *o, struct song *s, struct songchan *i)
 {
 	unsigned long val, val2;
-	if (!parse_getsym(o)) {
+
+	if (!load_getsym(o))
 		return 0;
-	}
-	if (o->lex.id != TOK_LBRACE) {
-		lex_err(&o->lex, "'{' expected while parsing songchan");
+	if (o->id != TOK_LBRACE) {
+		load_err(o, "'{' expected while parsing songchan");
 		return 0;
 	}
 	for (;;) {
-		if (!parse_getsym(o)) {
+		if (!load_getsym(o))
 			return 0;
-		}
-		if (o->lex.id == TOK_ENDLINE) {
+		if (o->id == TOK_ENDLINE) {
 			/* nothing */
-		} else if (o->lex.id == TOK_RBRACE) {
+		} else if (o->id == TOK_RBRACE) {
 			break;
-		} else if (o->lex.id == TOK_IDENT) {
-			if (str_eq(o->lex.strval, "conf")) {
-				if (!parse_track(o, &i->conf)) {
+		} else if (o->id == TOK_WORD) {
+			if (str_eq(o->strval, "conf")) {
+				if (!load_track(o, &i->conf))
 					return 0;
-				}
-				if (!parse_nl(o)) {
+				if (!load_nl(o))
 					return 0;
-				}
 				track_setchan(&i->conf, i->dev, i->ch);
-			} else if (str_eq(o->lex.strval, "chan")) {
-				if (!parse_chan(o, &val, &val2)) {
+			} else if (str_eq(o->strval, "chan")) {
+				if (!load_chan(o, &val, &val2))
 					return 0;
-				}
 				i->dev = val;
 				i->ch = val2;
-				if (!parse_nl(o)) {
+				if (!load_nl(o))
 					return 0;
-				}
-			} else if (str_eq(o->lex.strval, "curinput")) {
-				if (!parse_chan(o, &val, &val2)) {
+			} else if (str_eq(o->strval, "curinput")) {
+				if (!load_chan(o, &val, &val2))
 					return 0;
-				}
-				if (!parse_nl(o)) {
+				if (!load_nl(o))
 					return 0;
-				}
-				lex_err(&o->lex,
+				load_err(o,
 				    "ignored obsolete 'curinput' line");
 			} else {
 				goto unknown;
 			}
 		} else {
 		unknown:
-			parse_ungetsym(o);
-			if (!parse_ukline(o)) {
+			load_ungetsym(o);
+			if (!load_ukline(o)) {
 				return 0;
 			}
-			lex_err(&o->lex, "unknown line format in songchan, ignored");
+			load_err(o, "unknown line format, ignored");
 		}
 	}
 	return 1;
 }
 
-
 unsigned
-parse_songtrk(struct parse *o, struct song *s, struct songtrk *t)
+load_songtrk(struct load *o, struct song *s, struct songtrk *t)
 {
 	struct songfilt *f;
 	unsigned long val;
 
-	if (!parse_getsym(o)) {
+	if (!load_getsym(o))
 		return 0;
-	}
-	if (o->lex.id != TOK_LBRACE) {
-		lex_err(&o->lex, "'{' expected while parsing songtrk");
+	if (o->id != TOK_LBRACE) {
+		load_err(o, "'{' expected while parsing songtrk");
 		return 0;
 	}
 	for (;;) {
-		if (!parse_getsym(o)) {
+		if (!load_getsym(o))
 			return 0;
-		}
-		if (o->lex.id == TOK_ENDLINE) {
+		if (o->id == TOK_ENDLINE) {
 			/* nothing */
-		} else if (o->lex.id == TOK_RBRACE) {
+		} else if (o->id == TOK_RBRACE) {
 			break;
-		} else if (o->lex.id == TOK_IDENT) {
-			if (str_eq(o->lex.strval, "curfilt")) {
-				if (!parse_getsym(o)) {
+		} else if (o->id == TOK_WORD) {
+			if (str_eq(o->strval, "curfilt")) {
+				if (!load_getsym(o))
+					return 0;
+				if (o->id != TOK_WORD) {
+					load_err(o, "word expected");
 					return 0;
 				}
-				if (o->lex.id != TOK_IDENT) {
-					lex_err(&o->lex, "identifier expected after 'curfilt' in songtrk");
-					return 0;
-				}
-				f = song_filtlookup(s, o->lex.strval);
+				f = song_filtlookup(s, o->strval);
 				if (!f) {
-					f = song_filtnew(s, o->lex.strval);
+					f = song_filtnew(s, o->strval);
 					song_setcurfilt(s, NULL);
 				}
 				t->curfilt = f;
-				if (!parse_nl(o)) {
+				if (!load_nl(o))
 					return 0;
-				}
-			} else if (str_eq(o->lex.strval, "track")) {
-				if (!parse_track(o, &t->track)) {
+			} else if (str_eq(o->strval, "track")) {
+				if (!load_track(o, &t->track))
 					return 0;
-				}
-				if (!parse_nl(o)) {
+				if (!load_nl(o))
 					return 0;
-				}
-			} else if (str_eq(o->lex.strval, "mute")) {
-				if (!parse_long(o, 0, 1, &val)) {
+			} else if (str_eq(o->strval, "mute")) {
+				if (!load_long(o, 0, 1, &val))
 					return 0;
-				}
 				t->mute = val;
-				if (!parse_nl(o)) {
+				if (!load_nl(o))
 					return 0;
-				}
-			} else {
+			} else
 				goto unknown;
-			}
 		} else {
 		unknown:
-			parse_ungetsym(o);
-			if (!parse_ukline(o)) {
+			load_ungetsym(o);
+			if (!load_ukline(o))
 				return 0;
-			}
-			lex_err(&o->lex, "unknown line format in songtrk, ignored");
+			load_err(o, "unknown line format, ignored");
 		}
 	}
 
 	return 1;
 }
 
-
 unsigned
-parse_songfilt(struct parse *o, struct song *s, struct songfilt *g)
+load_songfilt(struct load *o, struct song *s, struct songfilt *g)
 {
-	if (!parse_getsym(o)) {
+	if (!load_getsym(o))
 		return 0;
-	}
-	if (o->lex.id != TOK_LBRACE) {
-		lex_err(&o->lex, "'{' expected while parsing songfilt");
+	if (o->id != TOK_LBRACE) {
+		load_err(o, "'{' expected while parsing songfilt");
 		return 0;
 	}
 	for (;;) {
-		if (!parse_getsym(o)) {
+		if (!load_getsym(o))
 			return 0;
-		}
-		if (o->lex.id == TOK_ENDLINE) {
+		if (o->id == TOK_ENDLINE) {
 			/* nothing */
-		} else if (o->lex.id == TOK_RBRACE) {
+		} else if (o->id == TOK_RBRACE) {
 			break;
-		} else if (o->lex.id == TOK_IDENT) {
-			if (str_eq(o->lex.strval, "curchan")) {
-				if (!parse_getsym(o)) {
+		} else if (o->id == TOK_WORD) {
+			if (str_eq(o->strval, "curchan")) {
+				if (!load_getsym(o))
+					return 0;
+				if (o->id != TOK_WORD) {
+					load_err(o, "word expected");
 					return 0;
 				}
-				if (o->lex.id != TOK_IDENT) {
-					lex_err(&o->lex,
-					    "identifier expected "
-					    "after 'curchan' in songfilt");
+				if (!load_nl(o))
 					return 0;
-				}
-				if (!parse_nl(o)) {
-					return 0;
-				}
-				lex_err(&o->lex,
+				load_err(o,
 				    "ignored obsolete 'curchan' line");
-			} else if (str_eq(o->lex.strval, "filt")) {
-				if (!parse_filt(o, &g->filt)) {
+			} else if (str_eq(o->strval, "filt")) {
+				if (!load_filt(o, &g->filt))
 					return 0;
-				}
-			} else {
+			} else
 				goto unknown;
-			}
 		} else {
 		unknown:
-			parse_ungetsym(o);
-			if (!parse_ukline(o)) {
+			load_ungetsym(o);
+			if (!load_ukline(o))
 				return 0;
-			}
-			lex_err(&o->lex, "unknown line format in songfilt, ignored");
+			load_err(o, "unknown line format, ignored");
 		}
 	}
 	return 1;
 }
 
-
-
 unsigned
-parse_songsx(struct parse *o, struct song *s, struct songsx *g)
+load_songsx(struct load *o, struct song *s, struct songsx *g)
 {
 	struct sysex *sx;
 
-	if (!parse_getsym(o)) {
+	if (!load_getsym(o))
 		return 0;
-	}
-	if (o->lex.id != TOK_LBRACE) {
-		lex_err(&o->lex, "'{' expected while parsing songsx");
+	if (o->id != TOK_LBRACE) {
+		load_err(o, "'{' expected while parsing songsx");
 		return 0;
 	}
 	for (;;) {
-		if (!parse_getsym(o)) {
+		if (!load_getsym(o))
 			return 0;
-		}
-		if (o->lex.id == TOK_ENDLINE) {
+		if (o->id == TOK_ENDLINE) {
 			/* nothing */
-		} else if (o->lex.id == TOK_RBRACE) {
+		} else if (o->id == TOK_RBRACE) {
 			break;
-		} else if (o->lex.id == TOK_IDENT) {
-			if (str_eq(o->lex.strval, "sysex")) {
-				if (!parse_sysex(o, &sx)) {
+		} else if (o->id == TOK_WORD) {
+			if (str_eq(o->strval, "sysex")) {
+				if (!load_sysex(o, &sx))
 					return 0;
-				}
 				sysexlist_put(&g->sx, sx);
 			} else {
 				goto unknown;
 			}
 		} else {
 		unknown:
-			parse_ungetsym(o);
-			if (!parse_ukline(o)) {
+			load_ungetsym(o);
+			if (!load_ukline(o))
 				return 0;
-			}
-			lex_err(&o->lex, "unknown line format in songsx, ignored");
+			load_err(o, "unknown line format, ignored");
 		}
 	}
 	return 1;
 }
 
 unsigned
-parse_metro(struct parse *o, struct metro *m)
+load_metro(struct load *o, struct metro *m)
 {
 	struct ev ev;
 	unsigned mask;
 
-	if (!parse_getsym(o)) {
+	if (!load_getsym(o))
 		return 0;
-	}
-	if (o->lex.id != TOK_LBRACE) {
-		lex_err(&o->lex, "'{' expected while parsing metro");
+	if (o->id != TOK_LBRACE) {
+		load_err(o, "'{' expected while parsing metro");
 		return 0;
 	}
 	for (;;) {
-		if (!parse_getsym(o)) {
+		if (!load_getsym(o))
 			return 0;
-		}
-		if (o->lex.id == TOK_ENDLINE) {
+		if (o->id == TOK_ENDLINE) {
 			/* nothing */
-		} else if (o->lex.id == TOK_RBRACE) {
+		} else if (o->id == TOK_RBRACE) {
 			break;
-		} else if (o->lex.id == TOK_IDENT) {
-			if (str_eq(o->lex.strval, "enabled")) {
-				if (!parse_getsym(o)) {
+		} else if (o->id == TOK_WORD) {
+			if (str_eq(o->strval, "enabled")) {
+				if (!load_getsym(o))
 					return 0;
-				}
-				if (!parse_nl(o)) {
+				if (!load_nl(o))
 					return 0;
-				}
-			} else if (str_eq(o->lex.strval, "mask")) {
-				if (!parse_getsym(o)) {
+			} else if (str_eq(o->strval, "mask")) {
+				if (!load_getsym(o))
 					return 0;
-				}
-				if (!metro_str2mask(m, o->lex.strval, &mask)) {
-					lex_err(&o->lex, "skipped unknown metronome mask");
+				if (!metro_str2mask(m, o->strval, &mask)) {
+					load_err(o, "skipped unknown "
+					    "metronome mask");
 				}
 				metro_setmask(m, mask);
-				if (!parse_nl(o)) {
+				if (!load_nl(o))
 					return 0;
-				}
-			} else if (str_eq(o->lex.strval, "lo")) {
-				if (!parse_ev(o, &ev)) {
+			} else if (str_eq(o->strval, "lo")) {
+				if (!load_ev(o, &ev))
 					return 0;
-				}
 				if (ev.cmd != EV_NON) {
-					lex_err(&o->lex, "'lo' must be followed by a 'non' event\n");
+					load_err(o, "'lo' must be followed "
+					  "by a 'non' event");
 				} else {
 					m->lo = ev;
 				}
-			} else if (str_eq(o->lex.strval, "hi")) {
-				if (!parse_ev(o, &ev)) {
+			} else if (str_eq(o->strval, "hi")) {
+				if (!load_ev(o, &ev))
 					return 0;
-				}
 				if (ev.cmd != EV_NON) {
-					lex_err(&o->lex, "'hi' must be followed by a 'non' event\n");
-				} else {
+					load_err(o, "'hi' must be followed "
+					    "by a 'non' event\n");
+				} else
 					m->hi = ev;
-				}
 			} else {
 				goto unknown;
 			}
 		} else {
 		unknown:
-			parse_ungetsym(o);
-			if (!parse_ukline(o)) {
+			load_ungetsym(o);
+			if (!load_ukline(o))
 				return 0;
-			}
-			lex_err(&o->lex, "unknown line format in song, ignored");
+			load_err(o, "unknown line format, ignored");
 		}
 	}
 	return 1;
 }
 
 unsigned
-parse_song(struct parse *o, struct song *s)
+load_song(struct load *o, struct song *s)
 {
 	struct songtrk *t;
 	struct songchan *i;
@@ -1801,267 +1945,236 @@ parse_song(struct parse *o, struct song *s)
 	unsigned long num, num2;
 	int input;
 
-	if (!parse_getsym(o)) {
+	if (!load_getsym(o))
 		return 0;
-	}
-	if (o->lex.id != TOK_LBRACE) {
-		lex_err(&o->lex, "'{' expected while parsing song");
+	if (o->id != TOK_LBRACE) {
+		load_err(o, "'{' expected while parsing song");
 		return 0;
 	}
 	for (;;) {
-		if (!parse_getsym(o)) {
+		if (!load_getsym(o)) {
 			return 0;
 		}
-		if (o->lex.id == TOK_ENDLINE) {
+		if (o->id == TOK_ENDLINE) {
 			/* nothing */
-		} else if (o->lex.id == TOK_RBRACE) {
+		} else if (o->id == TOK_RBRACE) {
 			break;
-		} else if (o->lex.id == TOK_IDENT) {
-			if (str_eq(o->lex.strval, "evpat")) {
-				if (!parse_getsym(o)) {
+		} else if (o->id == TOK_WORD) {
+			if (str_eq(o->strval, "evpat")) {
+				if (!load_getsym(o))
+					return 0;
+				if (o->id != TOK_WORD) {
+					load_err(o, "word expected");
 					return 0;
 				}
-				if (o->lex.id != TOK_IDENT) {
-					lex_err(&o->lex, "identifier expected after 'evpat' in song");
+				if (!load_evpat(o, o->strval))
+					return 0;
+				if (!load_nl(o))
+					return 0;
+			} else if (str_eq(o->strval, "songtrk")) {
+				if (!load_getsym(o))
+					return 0;
+				if (o->id != TOK_WORD) {
+					load_err(o, "word expected");
 					return 0;
 				}
-				if (!parse_evpat(o, o->lex.strval)) {
-					return 0;
-				}
-				if (!parse_nl(o)) {
-					return 0;
-				}
-			} else if (str_eq(o->lex.strval, "songtrk")) {
-				if (!parse_getsym(o)) {
-					return 0;
-				}
-				if (o->lex.id != TOK_IDENT) {
-					lex_err(&o->lex, "identifier expected after 'songtrk' in song");
-					return 0;
-				}
-				t = song_trklookup(s, o->lex.strval);
+				t = song_trklookup(s, o->strval);
 				if (t == NULL) {
-					t = song_trknew(s, o->lex.strval);
+					t = song_trknew(s, o->strval);
 					song_setcurtrk(s, NULL);
 				}
-				if (!parse_songtrk(o, s, t)) {
+				if (!load_songtrk(o, s, t))
 					return 0;
-				}
-				if (!parse_nl(o)) {
+				if (!load_nl(o))
 					return 0;
-				}
-			} else if (str_eq(o->lex.strval, "songin")) {
+			} else if (str_eq(o->strval, "songin")) {
 				input = 1;
 				goto chan_do;
-			} else if (str_eq(o->lex.strval, "songout") ||
-				str_eq(o->lex.strval, "songchan")) {
+			} else if (str_eq(o->strval, "songout") ||
+				str_eq(o->strval, "songchan")) {
 				input = 0;
 			chan_do:
-				if (!parse_getsym(o)) {
+				if (!load_getsym(o))
+					return 0;
+				if (o->id != TOK_WORD) {
+					load_err(o, "word expected");
 					return 0;
 				}
-				if (o->lex.id != TOK_IDENT) {
-					lex_err(&o->lex, "identifier expected after 'songchan' in song");
-					return 0;
-				}
-				i = song_chanlookup(s, o->lex.strval, input);
+				i = song_chanlookup(s, o->strval, input);
 				if (i == NULL) {
-					i = song_channew(s, o->lex.strval,
+					i = song_channew(s, o->strval,
 					    0, 0, input);
 					song_setcurchan(s, NULL, input);
 				}
-				if (!parse_songchan(o, s, i)) {
+				if (!load_songchan(o, s, i))
+					return 0;
+				if (!load_nl(o))
+					return 0;
+			} else if (str_eq(o->strval, "songfilt")) {
+				if (!load_getsym(o))
+					return 0;
+				if (o->id != TOK_WORD) {
+					load_err(o, "word expected");
 					return 0;
 				}
-				if (!parse_nl(o)) {
-					return 0;
-				}
-			} else if (str_eq(o->lex.strval, "songfilt")) {
-				if (!parse_getsym(o)) {
-					return 0;
-				}
-				if (o->lex.id != TOK_IDENT) {
-					lex_err(&o->lex, "identifier expected after 'songfilt' in song");
-					return 0;
-				}
-				g = song_filtlookup(s, o->lex.strval);
+				g = song_filtlookup(s, o->strval);
 				if (!g) {
-					g = song_filtnew(s, o->lex.strval);
+					g = song_filtnew(s, o->strval);
 					song_setcurfilt(s, NULL);
 				}
-				if (!parse_songfilt(o, s, g)) {
+				if (!load_songfilt(o, s, g))
+					return 0;
+				if (!load_nl(o))
+					return 0;
+			} else if (str_eq(o->strval, "songsx")) {
+				if (!load_getsym(o))
+					return 0;
+				if (o->id != TOK_WORD) {
+					load_err(o, "word expected");
 					return 0;
 				}
-				if (!parse_nl(o)) {
-					return 0;
-				}
-			} else if (str_eq(o->lex.strval, "songsx")) {
-				if (!parse_getsym(o)) {
-					return 0;
-				}
-				if (o->lex.id != TOK_IDENT) {
-					lex_err(&o->lex, "identifier expected after 'songsx' in song");
-					return 0;
-				}
-				l = song_sxlookup(s, o->lex.strval);
+				l = song_sxlookup(s, o->strval);
 				if (!l) {
-					l = song_sxnew(s, o->lex.strval);
+					l = song_sxnew(s, o->strval);
 					song_setcursx(s, NULL);
 				}
-				if (!parse_songsx(o, s, l)) {
+				if (!load_songsx(o, s, l))
 					return 0;
-				}
-				if (!parse_nl(o)) {
+				if (!load_nl(o))
 					return 0;
-				}
-			} else if (str_eq(o->lex.strval, "meta")) {
-				if (!parse_track(o, &s->meta)) {
+			} else if (str_eq(o->strval, "meta")) {
+				if (!load_track(o, &s->meta))
 					return 0;
-				}
-				if (!parse_nl(o)) {
+				if (!load_nl(o))
 					return 0;
-				}
-			} else if (str_eq(o->lex.strval, "tics_per_unit")) {
-				if (!parse_long(o, 0, ~1U, &num)) {
+			} else if (str_eq(o->strval, "tics_per_unit")) {
+				if (!load_long(o, 0, ~1U, &num))
 					return 0;
-				}
 				if ((num % 96) != 0) {
-					lex_err(&o->lex, "warning, rounded tic_per_unit to a multiple of 96");
+					load_err(o, "warning, rounding "
+					    "tic_per_unit to a multiple "
+					    "of 96");
 					num = 96 * (num / 96);
 					if (num < 96) {
 						num = 96;
 					}
 				}
-				if (!parse_nl(o)) {
+				if (!load_nl(o))
 					return 0;
-				}
 				s->tics_per_unit = num;
-			} else if (str_eq(o->lex.strval, "tempo_factor")) {
-				if (!parse_long(o, 0, ~1U, &num)) {
+			} else if (str_eq(o->strval, "tempo_factor")) {
+				if (!load_long(o, 0, ~1U, &num))
 					return 0;
-				}
-				if (!parse_nl(o)) {
+				if (!load_nl(o))
 					return 0;
-				}
 				if (num < 0x80 || num > 0x200) {
-					lex_err(&o->lex, "warning, tempo factor out of bounds\n");
-				} else {
+					load_err(o, "warning, tempo factor "
+					    "out of bounds\n");
+				} else
 					s->tempo_factor = num;
-				}
-			} else if (str_eq(o->lex.strval, "curtrk")) {
-				if (!parse_getsym(o)) {
+			} else if (str_eq(o->strval, "curtrk")) {
+				if (!load_getsym(o))
+					return 0;
+				if (o->id != TOK_WORD) {
+					load_err(o, "word expected");
 					return 0;
 				}
-				if (o->lex.id != TOK_IDENT) {
-					lex_err(&o->lex, "identifier expected afer 'curtrk' in song");
-					return 0;
-				}
-				t = song_trklookup(s, o->lex.strval);
+				t = song_trklookup(s, o->strval);
 				if (t) {
 					s->curtrk = t;
 				} else {
-					lex_err(&o->lex, "warning, cant set current track, not such track");
+					load_err(o, "warning, can't set "
+					  "current track, not such track");
 				}
-				if (!parse_nl(o)) {
+				if (!load_nl(o))
+					return 0;
+			} else if (str_eq(o->strval, "curfilt")) {
+				if (!load_getsym(o))
+					return 0;
+				if (o->id != TOK_WORD) {
+					load_err(o, "word expected");
 					return 0;
 				}
-			} else if (str_eq(o->lex.strval, "curfilt")) {
-				if (!parse_getsym(o)) {
-					return 0;
-				}
-				if (o->lex.id != TOK_IDENT) {
-					lex_err(&o->lex, "identifier expected afer 'curfilt' in song");
-					return 0;
-				}
-				g = song_filtlookup(s, o->lex.strval);
+				g = song_filtlookup(s, o->strval);
 				if (g) {
 					s->curfilt = g;
 				} else {
-					lex_err(&o->lex, "warning, cant set current filt, not such filt");
+					load_err(o, "warning, can't set "
+					    "current filt, not such filt");
 				}
-				if (!parse_nl(o)) {
+				if (!load_nl(o))
+					return 0;
+			} else if (str_eq(o->strval, "cursx")) {
+				if (!load_getsym(o))
+					return 0;
+				if (o->id != TOK_WORD) {
+					load_err(o, "word expected");
 					return 0;
 				}
-			} else if (str_eq(o->lex.strval, "cursx")) {
-				if (!parse_getsym(o)) {
-					return 0;
-				}
-				if (o->lex.id != TOK_IDENT) {
-					lex_err(&o->lex, "identifier expected afer 'cursx' in song");
-					return 0;
-				}
-				l = song_sxlookup(s, o->lex.strval);
+				l = song_sxlookup(s, o->strval);
 				if (l) {
 					s->cursx = l;
 				} else {
-					lex_err(&o->lex, "warning, cant set current sysex, not such sysex");
+					load_err(o, "warning, cant set "
+					    "current sysex, not such sysex");
 				}
-				if (!parse_nl(o)) {
+				if (!load_nl(o))
 					return 0;
-				}
-			} else if (str_eq(o->lex.strval, "curin")) {
+			} else if (str_eq(o->strval, "curin")) {
 				input = 1;
 				goto curchan_do;
-			} else if (str_eq(o->lex.strval, "curout") ||
-			    str_eq(o->lex.strval, "curchan")) {
+			} else if (str_eq(o->strval, "curout") ||
+			    str_eq(o->strval, "curchan")) {
 				input = 0;
 			curchan_do:
-				if (!parse_getsym(o)) {
+				if (!load_getsym(o))
+					return 0;
+				if (o->id != TOK_WORD) {
+					load_err(o, "word expected");
 					return 0;
 				}
-				if (o->lex.id != TOK_IDENT) {
-					lex_err(&o->lex, "identifier expected afer 'curchan' in song");
-					return 0;
-				}
-				i = song_chanlookup(s, o->lex.strval, input);
+				i = song_chanlookup(s, o->strval, input);
 				if (i) {
 					song_setcurchan(s, i, input);
 				} else {
-					lex_err(&o->lex, "warning, cant set current chan, not such chan");
+					load_err(o, "warning, cant set "
+					    "current chan, not such chan");
 				}
-				if (!parse_nl(o)) {
+				if (!load_nl(o))
 					return 0;
-				}
-			} else if (str_eq(o->lex.strval, "curpos")) {
-				if (!parse_long(o, 0, ~1U, &num)) {
+			} else if (str_eq(o->strval, "curpos")) {
+				if (!load_long(o, 0, ~1U, &num))
 					return 0;
-				}
-				if (!parse_nl(o)) {
+				if (!load_nl(o))
 					return 0;
-				}
 				s->curpos = num;
-			} else if (str_eq(o->lex.strval, "curlen")) {
-				if (!parse_long(o, 0, ~1U, &num)) {
+			} else if (str_eq(o->strval, "curlen")) {
+				if (!load_long(o, 0, ~1U, &num))
 					return 0;
-				}
-				if (!parse_nl(o)) {
+				if (!load_nl(o))
 					return 0;
-				}
 				s->curlen = num;
-			} else if (str_eq(o->lex.strval, "curquant")) {
-				if (!parse_long(o, 0, ~1U, &num)) {
+			} else if (str_eq(o->strval, "curquant")) {
+				if (!load_long(o, 0, ~1U, &num))
 					return 0;
-				}
 				if (num > s->tics_per_unit) {
-					lex_err(&o->lex, "warning, truncated curquant because it was too large");
+					load_err(o, "warning, truncated "
+					    "curquant because it was "
+					    "too large");
 					num = s->tics_per_unit;
 				}
-				if (!parse_nl(o)) {
+				if (!load_nl(o))
 					return 0;
-				}
 				s->curquant = num;
-			} else if (str_eq(o->lex.strval, "curev")) {
-				if (!parse_evspec(o, &es)) {
+			} else if (str_eq(o->strval, "curev")) {
+				if (!load_evspec(o, &es))
 					return 0;
-				}
-				if (!parse_nl(o)) {
+				if (!load_nl(o))
 					return 0;
-				}
 				s->curev = es;
-			} else if (str_eq(o->lex.strval, "curinput")) {
-				if (!parse_chan(o, &num, &num2)) {
+			} else if (str_eq(o->strval, "curinput")) {
+				if (!load_chan(o, &num, &num2))
 					return 0;
-				}
 				i = song_chanlookup_bynum(s, num, num2, 1);
 				if (i == NULL) {
 					i = song_channew(s, "old_style_curin",
@@ -2071,26 +2184,21 @@ parse_song(struct parse *o, struct song *s)
 					i->dev = num;
 					i->ch = num2;
 				}
-				if (!parse_nl(o)) {
+				if (!load_nl(o))
 					return 0;
-				}
-			} else if (str_eq(o->lex.strval, "metro")) {
-				if (!parse_metro(o, &s->metro)) {
+			} else if (str_eq(o->strval, "metro")) {
+				if (!load_metro(o, &s->metro))
 					return 0;
-				}
-				if (!parse_nl(o)) {
+				if (!load_nl(o))
 					return 0;
-				}
-			} else {
+			} else
 				goto unknown;
-			}
 		} else {
 		unknown:
-			parse_ungetsym(o);
-			if (!parse_ukline(o)) {
+			load_ungetsym(o);
+			if (!load_ukline(o))
 				return 0;
-			}
-			lex_err(&o->lex, "unknown line format in song, ignored");
+			load_err(o, "unknown line format, ignored");
 		}
 	}
 	return 1;
@@ -2118,17 +2226,15 @@ song_save(struct song *o, char *name)
 unsigned
 song_load(struct song *o, char *filename)
 {
-	struct parse *parse;
+	struct load p;
 	unsigned res;
 
-	parse = parse_new(filename);
-	if (!parse) {
+	if (!load_init(&p, filename))
 		return 0;
-	}
-	res = parse_empty(parse);
+	res = load_empty(&p);
 	if (res != 0) {
-		res = parse_song(parse, o);
+		res = load_song(&p, o);
 	}
-	parse_delete(parse);
+	load_done(&p);
 	return res;
 }

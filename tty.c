@@ -652,8 +652,10 @@ tty_winch(void)
 		tty_twidth = ws.ws_col;
 		if (tty_twidth == 0)
 			tty_twidth = 80;
-	} else
+	} else {
+		log_perror("TIOCGWINSZ");
 		tty_twidth = 80;
+	}
 	tty_oused = 0;
 	tty_toutput("\r\x1b[K", 4);
 	tty_tflush();

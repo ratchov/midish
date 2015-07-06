@@ -172,6 +172,7 @@ exec_new(void)
 	o->locals = &o->globals;
 	o->procname = "top-level";
 	o->depth = 0;
+	o->result = RESULT_OK;
 	return o;
 }
 

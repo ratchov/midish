@@ -17,7 +17,7 @@
 #ifndef MIDISH_TEXTIO_H
 #define MIDISH_TEXTIO_H
 
-#define CHAR_EOF (~0)
+#define CHAR_EOF (-1)
 
 struct textin;
 struct textout;

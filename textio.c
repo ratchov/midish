@@ -87,7 +87,7 @@ textin_getchar(struct textin *o, int *c)
 	} else {
 		*c = fgetc(o->file);
 	}
-	if (*c < 0) {
+	if (*c == EOF) {
 		*c = CHAR_EOF;
 		if (ferror(o->file)) {
 			log_perror("fgetc");

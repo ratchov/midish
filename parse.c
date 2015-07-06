@@ -13,10 +13,8 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
-
 /*
- *
- * a simple LL(1)-like parser. Uses the following grammar:
+ * A simple LL(1)-like parser for the followingi grammar:
  *
  * endl:	"\n"
  * 		";"
@@ -63,15 +61,17 @@
  *
  * or:		and "||" and
  *
+ * range:	or ".." or
+ *
  * expr:	or
  *
  * call:	ident [ expr expr ... expr ]
  *
  * stmt:	"let" ident "=" expr endl
- * 		"for" ident "in" expr slist endl
- * 		"if" expr slist [ else slist ] endl
- * 		"for" ident "in" expr slist endl
- * 		"return" expr endl
+ * 		"for" ident "in" expr slist
+ * 		"if" expr slist [ else slist ]
+ * 		"for" ident "in" expr slist
+ * 		"return" expr
  * 		call endl
  * 		endl
  *
@@ -85,850 +85,1135 @@
  * prog:	[ line line ... line ] EOF
  */
 
-#include "utils.h"
-#include "textio.h"
-#include "lex.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include "data.h"
 #include "parse.h"
 #include "node.h"
+#include "utils.h"
+#include "exec.h"
+#include "cons.h"
 
-#include "cons.h"	/* cons_errxxx */
+#define IS_SPACE(c)	((c) == ' ' || (c) == '\r' || (c) == '\t')
+#define IS_PRINTABLE(c)	((c) >= ' ' && (c) != 0x7f)
+#define IS_DIGIT(c)	((c) >= '0' && (c) <= '9')
+#define IS_ALPHA(c)	(((c) >= 'A' && (c) <= 'Z') || ((c) >= 'a' && (c) <= 'z'))
+#define IS_IDFIRST(c)	(IS_ALPHA(c) || (c) == '_')
+#define IS_IDNEXT(c)	(IS_IDFIRST(c) || IS_DIGIT(c))
+#define IS_QUOTE(c)	((c) == '"')
 
-/* ------------------------------------------------------------- */
-
-void
-parse_recover(struct parse *o, char *msg)
-{
-	lex_err(&o->lex, msg);
-	for (;;) {
-		if (o->lex.id == TOK_EOF) {
-			parse_ungetsym(o);
-			break;
-		}
-		if (o->lex.id == TOK_ENDLINE) {
-			break;
-		}
-		if (!parse_getsym(o)) {
-			break;
-		}
-	}
-}
-
-struct parse *
-parse_new(char *filename)
-{
-	struct parse *o;
-
-	o = xmalloc(sizeof(struct parse), "parse");
-	if (!lex_init(&o->lex, filename)) {
-		xfree(o);
-		return 0;
-	}
-	o->lookavail = 0;
-	return o;
-}
-
-void
-parse_delete(struct parse *o)
-{
-	lex_done(&o->lex);
-	xfree(o);
-}
-
-unsigned
-parse_getsym(struct parse *o)
-{
-	if (o->lookavail) {
-		o->lookavail = 0;
-		return 1;
-	}
-	return lex_scan(&o->lex);
-}
-
-void
-parse_ungetsym(struct parse *o)
-{
-	if (o->lookavail) {
-		log_puts("parse_ungetsym: looksym already set\n");
-		panic();
-	}
-	o->lookavail = 1;
-}
-
-unsigned
-parse_isfirst(struct parse *o, unsigned *first)
-{
-	while (*first != 0) {
-		if (*first == o->lex.id) {
-			return 1;
-		}
-		first++;
-	}
-	return 0;
-}
-
-/* ------------------------------------------------------------- */
-
-unsigned first_endl[] =
-{
-	TOK_ENDLINE, TOK_SEMICOLON, 0
+/*
+ * tokinizer states
+ */
+enum LEX_STATE {
+	LEX_ANY, LEX_ERROR, LEX_COMMENT, LEX_BREAK, LEX_BASE, LEX_NUM,
+	LEX_IDENT, LEX_STRING, LEX_OP
 };
 
-unsigned first_proc[] =
-{
-	TOK_PROC, 0
+/*
+ * parser states
+ */
+enum {
+	PARSE_RANGE, PARSE_RANGE_1,
+	PARSE_OR, PARSE_OR_1,
+	PARSE_AND, PARSE_AND_1,
+	PARSE_BITOR, PARSE_BITOR_1,
+	PARSE_BITXOR, PARSE_BITXOR_1,
+	PARSE_BITAND, PARSE_BITAND_1,
+	PARSE_EQ, PARSE_EQ_1,
+	PARSE_CMP, PARSE_CMP_1,
+	PARSE_SHIFT, PARSE_SHIFT_1,
+	PARSE_SUB, PARSE_SUB_1,
+	PARSE_DIV, PARSE_DIV_1,
+	PARSE_UN,
+	PARSE_CST,
+	PARSE_LIST_1, PARSE_LIST_2,
+	PARSE_PAR_1, PARSE_PAR_2,
+	PARSE_VAR_1,
+	PARSE_FUNC_1, PARSE_FUNC_2,
+	PARSE_CALL, PARSE_CALL_1, PARSE_CALL_2,
+	PARSE_STMT,
+	PARSE_IF_1, PARSE_IF_2, PARSE_IF_3, PARSE_IF_4, 
+	PARSE_FOR_1, PARSE_FOR_2, PARSE_FOR_3, PARSE_FOR_4, 
+	PARSE_RET_1,		
+	PARSE_LET_1, PARSE_LET_2,
+	PARSE_ENDL,
+	PARSE_SLIST, PARSE_SLIST_1, PARSE_SLIST_2,
+	PARSE_PROC, PARSE_PROC_1, PARSE_PROC_2,
+	PARSE_PROG, PARSE_PROG_1,
+	PARSE_ERROR
 };
 
-unsigned first_assign[] =
-{
-	TOK_LET, 0
+unsigned parse_debug = 0;
+
+struct tokname {
+	unsigned id;		/* token id */
+	char *str;		/* corresponding string */
+} lex_kw[] = {
+	{ TOK_IF,		"if" 		},
+	{ TOK_ELSE,		"else" 		},
+	{ TOK_PROC,		"proc"		},
+	{ TOK_LET,		"let"		},
+	{ TOK_RETURN,		"return"	},
+	{ TOK_FOR,		"for"		},
+	{ TOK_IN,		"in"		},
+	{ TOK_EXIT,		"exit"		},
+	{ TOK_NIL,		"nil"		}
+}, lex_op[] = {
+	{ TOK_RANGE,		".."		},
+	{ TOK_DOT,		"."		},
+	{ TOK_EQ, 		"=="		},
+	{ TOK_ASSIGN,		"=" 		},
+	{ TOK_NEQ, 		"!="		},
+	{ TOK_EXCLAM, 		"!"		},
+	{ TOK_GE, 		">="		},
+	{ TOK_RSHIFT, 		">>"		},
+	{ TOK_GT, 		">"		},
+	{ TOK_LE, 		"<="		},
+	{ TOK_LSHIFT, 		"<<"		},
+	{ TOK_LT, 		"<"		},
+	{ TOK_AND, 		"&&"		},
+	{ TOK_BITAND, 		"&"		},
+	{ TOK_OR, 		"||"		},
+	{ TOK_BITOR, 		"|"		},
+	{ TOK_PLUS,		"+" 		},
+	{ TOK_MINUS,		"-" 		},
+	{ TOK_STAR,		"*" 		},
+	{ TOK_SLASH,		"/" 		},
+	{ TOK_PCT,		"%" 		},
+	{ TOK_LPAR,		"(" 		},
+	{ TOK_RPAR,  		")" 		},
+	{ TOK_LBRACE,  		"{" 		},
+	{ TOK_RBRACE,  		"}" 		},
+	{ TOK_LBRACKET, 	"[" 		},
+	{ TOK_RBRACKET,		"]" 		},
+	{ TOK_COMMA, 		"," 		},
+	{ TOK_SEMICOLON,	";" 		},
+	{ TOK_COLON, 		":" 		},
+	{ TOK_BITXOR, 		"^"		},
+	{ TOK_TILDE,		"~"		},
+	{ TOK_AT,		"@"		},
+	{ TOK_DOLLAR,		"$"		},
+	{ TOK_ENDLINE,		"\n"		}
 };
 
-unsigned first_call[] =
-{
-	TOK_IDENT, 0
+#define LEX_NKW (sizeof(lex_kw) / sizeof(lex_kw[0]))
+#define LEX_NOP (sizeof(lex_op) / sizeof(lex_op[0]))
+
+/*
+ * names of parser pstates (debug only)
+ */
+char *parse_pstates[] = {
+	"PARSE_RANGE", "PARSE_RANGE_1",
+	"PARSE_OR", "PARSE_OR_1",
+	"PARSE_AND", "PARSE_AND_1",
+	"PARSE_BITOR", "PARSE_BITOR_1",
+	"PARSE_BITXOR", "PARSE_BITXOR_1",
+	"PARSE_BITAND", "PARSE_BITAND_1",
+	"PARSE_EQ", "PARSE_EQ_1",
+	"PARSE_CMP", "PARSE_CMP_1",
+	"PARSE_SHIFT", "PARSE_SHIFT_1",
+	"PARSE_SUB", "PARSE_SUB_1",
+	"PARSE_DIV", "PARSE_DIV_1",
+	"PARSE_UN",
+	"PARSE_CST",
+	"PARSE_LIST_1", "PARSE_LIST_2",
+	"PARSE_PAR_1", "PARSE_PAR_2",
+	"PARSE_VAR_1",
+	"PARSE_FUNC_1", "PARSE_FUNC_2",
+	"PARSE_CALL", "PARSE_CALL_1", "PARSE_CALL_2",
+	"PARSE_STMT",
+	"PARSE_IF_1", "PARSE_IF_2", "PARSE_IF_3", "PARSE_IF_4",
+	"PARSE_FOR_1", "PARSE_FOR_2", "PARSE_FOR_3", "PARSE_FOR_4",
+	"PARSE_RET_1",
+	"PARSE_LET_1", "PARSE_LET_2",
+	"PARSE_ENDL",
+	"PARSE_SLIST", "PARSE_SLIST_1", "PARSE_SLIST_2",
+	"PARSE_PROC", "PARSE_PROC_1", "PARSE_PROC_2",
+	"PARSE_PROG", "PARSE_PROG_1",
+	"PARSE_ERROR"
 };
 
+/*
+ * set of tokens that may start an expression
+ */
 unsigned first_expr[] =
 {
 	TOK_MINUS, TOK_EXCLAM, TOK_TILDE,
-	TOK_LPAR, TOK_DOLLAR, TOK_LBRACE, TOK_IDENT, TOK_NIL,
-	TOK_NUM, TOK_STRING, TOK_LBRACKET, 0
+	TOK_LPAR, TOK_DOLLAR, TOK_LBRACE, TOK_LBRACKET, 
+	TOK_IDENT, TOK_NUM, TOK_STRING, TOK_NIL, 0
 };
 
+/*
+ * set of tokens that may start a pstatement
+ */
 unsigned first_stmt[] =
 {
 	TOK_SEMICOLON, TOK_ENDLINE,
 	TOK_IF, TOK_FOR, TOK_IDENT, TOK_LET, TOK_RETURN, TOK_EXIT, 0
 };
 
-unsigned
-parse_endl(struct parse *o, struct node **n)
+void
+lex_init(struct parse *l, char *filename,
+    void (*tokcb)(void *, unsigned, unsigned long), void *tokarg)
 {
-	if (!parse_getsym(o)) {
-		return 0;
+	l->lstate = LEX_ANY;
+	l->tokcb = tokcb;
+	l->tokarg = tokarg;
+	l->filename = filename;
+	l->line = 1;
+}	
+
+void
+lex_done(struct parse *l)
+{
+	if (l->lstate != LEX_ANY)
+		log_puts("lex_done: unterminated token\n");
+}
+
+void
+lex_toklog(unsigned id, unsigned long val)
+{
+	unsigned i;
+
+	if (id == TOK_ENDLINE) {
+		log_puts("\\n");
+		return;
 	}
-	if (o->lex.id != TOK_SEMICOLON && o->lex.id != TOK_ENDLINE) {
-		parse_recover(o, "';' or new line expected");
-		return 0;
+	for (i = 0; i < LEX_NKW; i++) {
+		if (lex_kw[i].id == id) {
+			log_puts(lex_kw[i].str);
+			return;
+		}
 	}
+	for (i = 0; i < LEX_NOP; i++) {
+		if (lex_op[i].id == id) {
+			log_puts(lex_op[i].str);
+			return;
+		}
+	}
+	switch (id) {
+	case TOK_EOF:
+		log_puts("EOF");
+		break;
+	case TOK_ERR:
+		log_puts("ERR");
+		break;
+	case TOK_IDENT:
+		log_puts("@");
+		log_puts((char *)val);
+		break;
+	case TOK_NUM:
+		log_putu(val);
+		break;
+	case TOK_STRING:
+		log_puts("\"");
+		log_puts((char *)val);
+		log_puts("\"");
+		break;
+	default:
+		log_puts("UNKNOWN");
+		break;
+	}
+}
+
+void
+lex_err(struct parse *l, char *msg)
+{
+	cons_errsu(l->filename, l->line, msg);
+	l->lstate = LEX_ERROR;
+	l->tokcb(l->tokarg, TOK_ERR, 0);
+}
+
+void
+lex_found(struct parse *l, unsigned id, unsigned long val)
+{
+	l->lstate = LEX_ANY;
+	l->tokcb(l->tokarg, id, val);
+}
+
+/*
+ * convert string to number in the appropriate base
+ */
+int
+lex_atol(struct parse *l)
+{
+	char *p;
+	unsigned digit;
+	unsigned long hi, lo;
+	unsigned long val;
+#define BITS		(8 * sizeof(unsigned long) / 2)
+#define LOWORD(a)	((a) & ((1L << BITS) - 1))
+#define HIWORD(a)	((a) >> BITS)
+	val = 0;
+	for (p = l->buf; *p != '\0'; p++) {
+		if (*p >= 'a' && *p <= 'z') {
+			digit = 10 + *p - 'a';
+		} else if (*p >= 'A' && *p <= 'Z') {
+			digit = 10 + *p - 'A';
+		} else {
+			digit = *p - '0';
+		}
+		if (digit >= l->base) {
+			lex_err(l, "not allowed digit in numeric constant");
+			return 0;
+		}
+		lo = digit + l->base * LOWORD(val);
+		hi = l->base * HIWORD(val);
+		if (HIWORD(hi + HIWORD(lo)) != 0) {
+			lex_err(l, "overflow in numeric constant");
+			return 0;
+		}
+		val = (hi << BITS) + lo;
+	}
+#undef BITS
+#undef LOWORD
+#undef HIWORD
+	lex_found(l, TOK_NUM, val);
 	return 1;
 }
 
-unsigned
-parse_cst(struct parse *o, struct node **n)
+void
+lex_handle(struct parse *l, int c)
 {
-	struct data *data;
+	unsigned i;
 
-	if (!parse_getsym(o)) {
-		return 0;
-	}
-	if (o->lex.id == TOK_LPAR) {
-		if (!parse_getsym(o)) {
-			return 0;
-		}
-		if (!parse_isfirst(o, first_expr)) {
-			parse_recover(o, "expression expected afeter '('");
-			return 0;
-		}
-		parse_ungetsym(o);
-		if (!parse_expr(o, n)) {
-			return 0;
-		}
-		if (!parse_getsym(o)) {
-			return 0;
-		}
-		if (o->lex.id != TOK_RPAR) {
-			parse_recover(o, "missing closing ')'");
-			return 0;
-		}
-		return 1;
-	} else if (o->lex.id == TOK_NUM) {
-		data = data_newlong((long)o->lex.longval);
-		*n = node_new(&node_vmt_cst, data);
-		return 1;
-	} else if (o->lex.id == TOK_STRING) {
-		data = data_newstring(o->lex.strval);
-		*n = node_new(&node_vmt_cst, data);
-		return 1;
-	} else if (o->lex.id == TOK_IDENT) {
-		data = data_newref(o->lex.strval);
-		*n = node_new(&node_vmt_cst, data);
-		return 1;
-	} else if (o->lex.id == TOK_NIL) {
-		data = data_newnil();
-		*n = node_new(&node_vmt_cst, data);
-		return 1;
-	} else if (o->lex.id == TOK_DOLLAR) {
-		if (!parse_getsym(o)) {
-			return 0;
-		}
-		if (o->lex.id != TOK_IDENT) {
-			parse_recover(o, "identifier expected after '$'");
-			return 0;
-		}
-		*n = node_new(&node_vmt_var, data_newstring(o->lex.strval));
-		return 1;
-	} else if (o->lex.id == TOK_LBRACKET) {
-		if (!parse_getsym(o)) {
-			return 0;
-		}
-		if (!parse_isfirst(o, first_call)) {
-			parse_recover(o, "proc call expected after '['");
-			return 0;
-		}
-		parse_ungetsym(o);
-		if (!parse_call(o, n)) {
-			return 0;
-		}
-		if (!parse_getsym(o)) {
-			return 0;
-		}
-		if (o->lex.id != TOK_RBRACKET) {
-			parse_recover(o, "']' expected");
-			return 0;
-		}
-		return 1;
-	} else if (o->lex.id == TOK_LBRACE) {
-		*n = node_new(&node_vmt_list, NULL);
-		n = &(*n)->list;
-		for (;;) {
-			if (!parse_getsym(o)) {
-				return 0;
+	if (c == '\n')
+		l->line++;
+	for (;;) {
+		switch (l->lstate) {
+		case LEX_ANY:
+			if (c < 0) {
+				lex_found(l, TOK_EOF, 0);
+				return;
 			}
-			if (parse_isfirst(o, first_expr)) {
-				parse_ungetsym(o);
-				if (!parse_expr(o, n)) {
-					return 0;
+			if (IS_SPACE(c))
+				return;
+			if (c == '#') {
+				l->lstate = LEX_COMMENT;
+				return;
+			}
+			if (c == '\\') {
+				l->lstate = LEX_BREAK;
+				return;
+			}
+			if (IS_DIGIT(c)) {
+				l->used = 0;
+				if (c == '0') {
+					l->lstate = LEX_BASE;
+					return;
 				}
-				n = &(*n)->next;
-			} else if (o->lex.id == TOK_RBRACE) {
-				return 1;
-			} else {
-				parse_recover(o, "expression or '}' expected in list");
-				return 0;
+				l->lstate = LEX_NUM;
+				l->base = 10;
+				break;
 			}
-		}
-	}
-	parse_recover(o, "bad term in expression");
-	return 0;
-}
-
-
-unsigned
-parse_unary(struct parse *o, struct node **n)
-{
-	if (!parse_getsym(o)) {
-		return 0;
-	}
-	if (o->lex.id == TOK_MINUS) {
-		*n = node_new(&node_vmt_neg, NULL);
-		if (!parse_unary(o, &(*n)->list)) {
-			return 0;
-		}
-		return 1;
-	} else if (o->lex.id == TOK_EXCLAM) {
-		*n = node_new(&node_vmt_not, NULL);
-		if (!parse_unary(o, &(*n)->list)) {
-			return 0;
-		}
-		return 1;
-	} else if (o->lex.id == TOK_TILDE) {
-		*n = node_new(&node_vmt_bitnot, NULL);
-		if (!parse_unary(o, &(*n)->list)) {
-			return 0;
-		}
-		return 1;
-	} else {
-		parse_ungetsym(o);
-	}
-	return parse_cst(o, n);
-}
-
-
-unsigned
-parse_muldiv(struct parse *o, struct node **n)
-{
-	if (!parse_unary(o, n)) {
-		return 0;
-	}
-	for (;;) {
-		if (!parse_getsym(o)) {
-			return 0;
-		}
-		if (o->lex.id == TOK_STAR) {
-			node_replace(n, node_new(&node_vmt_mul, NULL));
-			if (!parse_unary(o, &(*n)->list->next)) {
-				return 0;
+			if (IS_IDFIRST(c)) {
+				l->lstate = LEX_IDENT;
+				l->buf[0] = c;
+				l->used = 1;
+				return;
 			}
-		} else if (o->lex.id == TOK_SLASH) {
-			node_replace(n, node_new(&node_vmt_div, NULL));
-			if (!parse_unary(o, &(*n)->list->next)) {
-				return 0;
+			if (IS_QUOTE(c)) {
+				l->lstate = LEX_STRING;
+				l->used = 0;
+				return;
 			}
-		} else if (o->lex.id == TOK_PCT) {
-			node_replace(n, node_new(&node_vmt_mod, NULL));
-			if (!parse_unary(o, &(*n)->list->next)) {
-				return 0;
+			for (i = 0; i < LEX_NOP; i++) {
+				if (lex_op[i].str[0] == c) {
+					if (lex_op[i].str[1] == '\0') {
+						lex_found(l, lex_op[i].id, 0);
+						return;
+					}
+					l->lstate = LEX_OP;
+					l->opindex = i;
+					return;
+				}
 			}
-		} else {
-			parse_ungetsym(o);
+			lex_err(l, "character doesn't start any token");
 			break;
-		}
-	}
-	return 1;
-}
-
-
-unsigned
-parse_addsub(struct parse *o, struct node **n)
-{
-	if (!parse_muldiv(o, n)) {
-		return 0;
-	}
-	for (;;) {
-		if (!parse_getsym(o)) {
-			return 0;
-		}
-		if (o->lex.id == TOK_PLUS) {
-			node_replace(n, node_new(&node_vmt_add, NULL));
-			if (!parse_muldiv(o, &(*n)->list->next)) {
-				return 0;
+		case LEX_ERROR:
+			if (c == '\0' || c == '\n') {
+				l->lstate = LEX_ANY;
+				break;
 			}
-		} else if (o->lex.id == TOK_MINUS) {
-			node_replace(n, node_new(&node_vmt_sub, NULL));
-			if (!parse_muldiv(o, &(*n)->list->next)) {
-				return 0;
+			return;
+		case LEX_COMMENT:
+			if (c == '\0' || c == '\n') {
+				l->lstate = LEX_ANY;
+				break;
 			}
-		} else {
-			parse_ungetsym(o);
+			return;
+		case LEX_BREAK:
+			if (IS_SPACE(c))
+				return;
+			if (c != '\n') {
+				lex_err(l, "newline expected after '\\'");
+				break;
+			}
+			l->lstate = LEX_ANY;
+			return;
+		case LEX_BASE:
+			l->lstate = LEX_NUM;
+			if (c == 'x' || c == 'X') {
+				l->base = 16;
+				return;
+			}
+			l->base = 8;
 			break;
-		}
-	}
-	return 1;
-}
-
-
-unsigned
-parse_shift(struct parse *o, struct node **n)
-{
-	if (!parse_addsub(o, n)) {
-		return 0;
-	}
-	for (;;) {
-		if (!parse_getsym(o)) {
-			return 0;
-		}
-		if (o->lex.id == TOK_LSHIFT) {
-			node_replace(n, node_new(&node_vmt_lshift, NULL));
-			if (!parse_addsub(o, &(*n)->list->next)) {
-				return 0;
+		case LEX_NUM:
+			if (IS_DIGIT(c) || IS_ALPHA(c)) {
+				if (l->used == STRING_MAXSZ - 1) {
+					lex_err(l, "constant too long");
+					break;
+				}
+				l->buf[l->used++] = c;
+				return;
 			}
-		} else if (o->lex.id == TOK_RSHIFT) {
-			node_replace(n, node_new(&node_vmt_rshift, NULL));
-			if (!parse_addsub(o, &(*n)->list->next)) {
-				return 0;
-			}
-		} else {
-			parse_ungetsym(o);
+			l->buf[l->used] = 0;
+			lex_atol(l);
 			break;
-		}
-	}
-	return 1;
-}
-
-
-unsigned
-parse_compare(struct parse *o, struct node **n)
-{
-	if (!parse_shift(o, n)) {
-		return 0;
-	}
-	for (;;) {
-		if (!parse_getsym(o)) {
-			return 0;
-		}
-		if (o->lex.id == TOK_LT) {
-			node_replace(n, node_new(&node_vmt_lt, NULL));
-			if (!parse_shift(o, &(*n)->list->next)) {
-				return 0;
+		case LEX_IDENT:
+			if (IS_IDNEXT(c)) {
+				if (l->used == IDENT_MAXSZ - 1) {
+					lex_err(l, "identifier too long");
+					break;
+				}
+				l->buf[l->used++] = c;
+				return;
 			}
-		} else if (o->lex.id == TOK_LE) {
-			node_replace(n, node_new(&node_vmt_le, NULL));
-			if (!parse_shift(o, &(*n)->list->next)) {
-				return 0;
+			l->buf[l->used] = '\0';
+			for (i = 0;; i++) {
+				if (i == LEX_NKW) {
+					lex_found(l, TOK_IDENT, (unsigned long)l->buf);
+					break;
+				}
+				if (strcmp(lex_kw[i].str, l->buf) == 0) {
+					lex_found(l, lex_kw[i].id, 0);
+					break;
+				}
 			}
-		} else if (o->lex.id == TOK_GT) {
-			node_replace(n, node_new(&node_vmt_gt, NULL));
-			if (!parse_shift(o, &(*n)->list->next)) {
-				return 0;
-			}
-		} else if (o->lex.id == TOK_GE) {
-			node_replace(n, node_new(&node_vmt_ge, NULL));
-			if (!parse_shift(o, &(*n)->list->next)) {
-				return 0;
-			}
-		} else {
-			parse_ungetsym(o);
 			break;
-		}
-	}
-	return 1;
-}
-
-
-unsigned
-parse_equal(struct parse *o, struct node **n)
-{
-	if (!parse_compare(o, n)) {
-		return 0;
-	}
-	for (;;) {
-		if (!parse_getsym(o)) {
-			return 0;
-		}
-		if (o->lex.id == TOK_EQ) {
-			node_replace(n, node_new(&node_vmt_eq, NULL));
-			if (!parse_compare(o, &(*n)->list->next)) {
-				return 0;
+		case LEX_STRING:
+			if (IS_QUOTE(c)) {
+				l->buf[l->used] = '\0';
+				lex_found(l, TOK_STRING, (unsigned long)l->buf);
+				return;
 			}
-		} else if (o->lex.id == TOK_NEQ) {
-			node_replace(n, node_new(&node_vmt_neq, NULL));
-			if (!parse_compare(o, &(*n)->list->next)) {
-				return 0;
+			if (!IS_PRINTABLE(c)) {
+				lex_err(l, "non printable char in string");
+				break;
 			}
-		} else {
-			parse_ungetsym(o);
+			if (l->used == STRING_MAXSZ - 1) {
+				lex_err(l, "string too long");
+				break;
+			}
+			l->buf[l->used++] = c;
+			return;
+		case LEX_OP:
+			for (i = l->opindex;; i++) {
+				if (i == LEX_NOP ||
+				    lex_op[i].str[0] != lex_op[l->opindex].str[0]) {
+					lex_err(l, "bad operator");
+					break;
+				}
+				if (lex_op[i].str[1] == '\0') {
+					lex_found(l, lex_op[i].id, 0);
+					break;
+				}
+				if (lex_op[i].str[1] == c) {
+					lex_found(l, lex_op[i].id, 0);
+					return;
+				}
+			}
 			break;
+		default:
+			log_puts("lex_handle: bad state\n");
+			panic();
 		}
 	}
-	return 1;
 }
 
-
+/*
+ * return true if the given token is in the given set
+ */
 unsigned
-parse_bitand(struct parse *o, struct node **n)
+tok_is(unsigned id, unsigned *set)
 {
-	if (!parse_equal(o, n)) {
-		return 0;
-	}
-	for (;;) {
-		if (!parse_getsym(o)) {
-			return 0;
-		}
-		if (o->lex.id == TOK_BITAND) {
-			node_replace(n, node_new(&node_vmt_bitand, NULL));
-			if (!parse_equal(o, &(*n)->list->next)) {
-				return 0;
-			}
-		} else {
-			parse_ungetsym(o);
-			break;
-		}
-	}
-	return 1;
-}
-
-
-unsigned
-parse_bitxor(struct parse *o, struct node **n)
-{
-	if (!parse_bitand(o, n)) {
-		return 0;
-	}
-	for (;;) {
-		if (!parse_getsym(o)) {
-			return 0;
-		}
-		if (o->lex.id == TOK_BITXOR) {
-			node_replace(n, node_new(&node_vmt_bitxor, NULL));
-			if (!parse_bitand(o, &(*n)->list->next)) {
-				return 0;
-			}
-		} else {
-			parse_ungetsym(o);
-			break;
-		}
-	}
-	return 1;
-}
-
-
-unsigned
-parse_bitor(struct parse *o, struct node **n)
-{
-	if (!parse_bitxor(o, n)) {
-		return 0;
-	}
-	for (;;) {
-		if (!parse_getsym(o)) {
-			return 0;
-		}
-		if (o->lex.id == TOK_BITOR) {
-			node_replace(n, node_new(&node_vmt_bitor, NULL));
-			if (!parse_bitxor(o, &(*n)->list->next)) {
-				return 0;
-			}
-		} else {
-			parse_ungetsym(o);
-			break;
-		}
-	}
-	return 1;
-}
-
-
-unsigned
-parse_and(struct parse *o, struct node **n)
-{
-	if (!parse_bitor(o, n)) {
-		return 0;
-	}
-	for (;;) {
-		if (!parse_getsym(o)) {
-			return 0;
-		}
-		if (o->lex.id == TOK_AND) {
-			node_replace(n, node_new(&node_vmt_and, NULL));
-			if (!parse_bitor(o, &(*n)->list->next)) {
-				return 0;
-			}
-		} else {
-			parse_ungetsym(o);
-			break;
-		}
-	}
-	return 1;
-}
-
-unsigned
-parse_or(struct parse *o, struct node **n)
-{
-	if (!parse_and(o, n)) {
-		return 0;
-	}
-	for (;;) {
-		if (!parse_getsym(o)) {
-			return 0;
-		}
-		if (o->lex.id == TOK_OR) {
-			node_replace(n, node_new(&node_vmt_or, NULL));
-			if (!parse_and(o, &(*n)->list->next)) {
-				return 0;
-			}
-		} else {
-			parse_ungetsym(o);
-			break;
-		}
-	}
-	return 1;
-}
-
-unsigned
-parse_exprange(struct parse *o, struct node **n)
-{
-	if (!parse_or(o, n)) {
-		return 0;
-	}
-	if (!parse_getsym(o)) {
-		return 0;
-	}
-	if (o->lex.id == TOK_RANGE) {
-		node_replace(n, node_new(&node_vmt_range, NULL));
-		if (!parse_or(o, &(*n)->list->next)) {
-			return 0;
-		}
-		if (!parse_getsym(o)) {
-			return 0;
-		}
-		if (o->lex.id == TOK_RANGE) {
-			parse_recover(o, "too many '..' for range");
-			return 0;
-		}
-	}
-	parse_ungetsym(o);
-	return 1;
-}
-
-unsigned
-parse_expr(struct parse *o, struct node **n)
-{
-	return parse_exprange(o, n);
-}
-
-unsigned
-parse_call(struct parse *o, struct node **n)
-{
-	if (!parse_getsym(o)) {
-		return 0;
-	}
-	if (o->lex.id != TOK_IDENT) {
-		return 0;
-	}
-	*n = node_new(&node_vmt_call, data_newref(o->lex.strval));
-	n = &(*n)->list;
-	for (;;) {
-		if (!parse_getsym(o)) {
-			return 0;
-		}
-		if (!parse_isfirst(o, first_expr)) {
-			parse_ungetsym(o);
+	while (*set != 0) {
+		if (id == *set)
 			return 1;
-		}
-		parse_ungetsym(o);
-		if (!parse_expr(o, n)) {
-			return 0;
-		}
-		n = &(*n)->next;
+		set++;
 	}
-	/* not reached */
-}
-
-unsigned
-parse_stmt(struct parse *o, struct node **n)
-{
-	if (!parse_getsym(o)) {
-		return 0;
-	}
-	if (parse_isfirst(o, first_call)) {
-		parse_ungetsym(o);
-		*n = node_new(&node_vmt_ignore, NULL);
-		if (!parse_call(o, &(*n)->list)) {
-			return 0;
-		}
-		if (!parse_endl(o, NULL)) {
-			return 0;
-		}
-		return 1;
-	} else if (o->lex.id == TOK_IF) {
-		*n = node_new(&node_vmt_if, NULL);
-		if (!parse_getsym(o)) {
-			return 0;
-		}
-		if (!parse_isfirst(o, first_expr)) {
-			parse_recover(o, "expression expected after 'if'");
-			return 0;
-		}
-		parse_ungetsym(o);
-		if (!parse_expr(o, &(*n)->list)) {
-			return 0;
-		}
-		if (!parse_slist(o, &(*n)->list->next)) {
-			return 0;
-		}
-		if (!parse_getsym(o)) {
-			return 0;
-		}
-		if (o->lex.id == TOK_ELSE) {
-			if (!parse_slist(o, &(*n)->list->next->next)) {
-				return 0;
-			}
-		} else {
-			parse_ungetsym(o);
-		}
-		if (!parse_endl(o, NULL)) {
-			return 0;
-		}
-		return 1;
-	} else if (o->lex.id == TOK_FOR) {
-		if (!parse_getsym(o)) {
-			return 0;
-		}
-		if (o->lex.id != TOK_IDENT) {
-			parse_recover(o, "identifier expected in 'for' loop");
-			return 0;
-		}
-		*n = node_new(&node_vmt_for, data_newstring(o->lex.strval));
-		if (!parse_getsym(o)) {
-			return 0;
-		}
-		if (o->lex.id != TOK_IN) {
-			parse_recover(o, "'in' expected");
-			return 0;
-		}
-		if (!parse_expr(o, &(*n)->list)) {
-			return 0;
-		}
-		if (!parse_slist(o, &(*n)->list->next)) {
-			return 0;
-		}
-		if (!parse_endl(o, NULL)) {
-			return 0;
-		}
-		return 1;
-	} else if (o->lex.id == TOK_RETURN) {
-		*n = node_new(&node_vmt_return, NULL);
-		if (!parse_expr(o, &(*n)->list)) {
-			return 0;
-		}
-		if (!parse_endl(o, NULL)) {
-			return 0;
-		}
-		return 1;
-	} else if (o->lex.id == TOK_LET) {
-		if (!parse_getsym(o)) {
-			return 0;
-		}
-		if (o->lex.id != TOK_IDENT) {
-			parse_recover(o, "identifier expected in the lhs of '='");
-			return 0;
-		}
-		*n = node_new(&node_vmt_assign, data_newstring(o->lex.strval));
-		if (!parse_getsym(o)) {
-			return 0;
-		}
-		if (o->lex.id != TOK_ASSIGN) {
-			parse_recover(o, "'=' expected");
-			return 0;
-		}
-		if (!parse_getsym(o)) {
-			return 0;
-		}
-		if (!parse_isfirst(o, first_expr)) {
-			parse_recover(o, "expression expected after '='");
-			return 0;
-		}
-		parse_ungetsym(o);
-		if (!parse_expr(o, &(*n)->list)) {
-			return 0;
-		}
-		if (!parse_endl(o, NULL)) {
-			return 0;
-		}
-		return 1;
-	} else if (o->lex.id == TOK_EXIT) {
-		*n = node_new(&node_vmt_exit, NULL);
-		if (!parse_endl(o, NULL)) {
-			return 0;
-		}
-		return 1;
-	} else  if (parse_isfirst(o, first_endl)) {
-		parse_ungetsym(o);
-		*n = node_new(&node_vmt_nop, NULL);
-		if (!parse_endl(o, NULL)) {
-			return 0;
-		}
-		return 1;
-	}
-	parse_recover(o, "bad statement");
 	return 0;
 }
 
-unsigned
-parse_slist(struct parse *o, struct node **n)
+/*
+ * initialize the parser
+ */
+void
+parse_init(struct parse *p, struct exec *e,
+    void (*cb)(struct exec *, struct node *))
 {
-	if (!parse_getsym(o)) {
-		return 0;
-	}
-	if (o->lex.id != TOK_LBRACE) {
-		parse_recover(o, "'{' expected");
-		return 0;
-	}
-	*n = node_new(&node_vmt_slist, NULL);
-	n = &(*n)->list;
-	for (;;) {
-		if (!parse_getsym(o)) {
-			return 0;
-		}
-		if (o->lex.id == TOK_RBRACE) {
-			break;
-		}
-		parse_ungetsym(o);
-		if (!parse_stmt(o, n)) {
-			return 0;
-		}
-		n = &(*n)->next;
-	}
-	return 1;
+	p->root = NULL;
+	p->sp = p->stack;
+	p->sp->pstate = PARSE_PROG;
+	p->sp->pnode = (void *)0xdeadbeef;
+	p->exec = e;
+	p->cb = cb;
 }
 
-unsigned
-parse_proc(struct parse *o, struct node **n)
+void
+parse_done(struct parse *p)
 {
+	if (p->sp->pstate != PARSE_PROG)
+		log_puts("parse_done: unterminated rule\n");
+	if (p->sp - p->stack > 0)
+		log_puts("parse_done: stack not empty\n");
+}
+
+/*
+ * push the current pstate in the stack and
+ * switch to the given pstate
+ */
+void
+parse_begin(struct parse *p, unsigned newpstate, struct node **newpnode)
+{
+	p->sp++;
+	p->sp->pstate = newpstate;
+	p->sp->pnode = newpnode;
+}
+
+/*
+ * pop and restore a pstate
+ */
+void
+parse_end(struct parse *p)
+{
+	p->sp--;
+}
+
+/*
+ * display a syntax error and start recovering
+ */
+void
+parse_err(struct parse *p, char *msg)
+{
+	if (msg)
+		cons_errsu(p->filename, p->line, msg);
+	node_delete(p->root);
+	p->root = NULL;
+	p->sp = p->stack;
+	p->sp->pstate = PARSE_ERROR;
+	p->sp->pnode = (void *)0xdeadbeef;
+	p->cb(p->exec, NULL);
+}
+
+void
+parse_found(struct parse *p)
+{
+	if (parse_debug)
+		node_log(p->root, 0);
+
+	p->cb(p->exec, p->root);
+	node_delete(p->root);
+	p->root = NULL;
+}
+
+/*
+ * process the given token
+ */
+void
+parse_cb(void *arg, unsigned id, unsigned long val)
+{
+	struct parse *p = (struct parse *)arg;
+	struct node_vmt *vmt;
 	struct data *args;
+	struct pst *sp;
 
-	if (!parse_getsym(o)) {
-		return 0;
+	if (parse_debug) {
+		lex_toklog(id, val);
+		log_puts("\n");
 	}
-	if (o->lex.id != TOK_PROC) {
-		parse_recover(o, "'proc' keyword expected");
-		return 0;
-	}
-	if (!parse_getsym(o)) {
-		return 0;
-	}
-	if (o->lex.id != TOK_IDENT) {
-		parse_recover(o, "proc name expected");
-		return 0;
-	}
-	args = data_newlist(NULL);
-	data_listadd(args, data_newstring(o->lex.strval));
-	*n = node_new(&node_vmt_proc, args);
-	for(;;) {
-		if (!parse_getsym(o)) {
-			return 0;
-		}
-		if (o->lex.id == TOK_IDENT) {
-			data_listadd(args, data_newstring(o->lex.strval));
-		} else if (o->lex.id == TOK_LBRACE) {
-			parse_ungetsym(o);
-			break;
-		} else {
-			parse_ungetsym(o);
-			parse_recover(o, "argument name or block expected");
-			return 0;
-		}
-	}
-	if (!parse_slist(o, &(*n)->list)) {
-		return 0;
-	}
-	if (!parse_endl(o, NULL)) {
-		return 0;
-	}
-	return 1;
-}
 
-unsigned
-parse_line(struct parse *o, struct node **n)
-{
-	if (!parse_getsym(o)) {
-		return 0;
-	}
-	if (parse_isfirst(o, first_proc)) {
-		parse_ungetsym(o);
-		if (!parse_proc(o, n)) {
-			return 0;
-		}
-	} else if (parse_isfirst(o, first_stmt)) {
-		parse_ungetsym(o);
-		if (!parse_stmt(o, n)) {
-			return 0;
-		}
-	} else {
-		parse_recover(o, "statement or proc definition expected");
-		return 0;
-	}
-	return 1;
-}
-
-unsigned
-parse_prog(struct parse *o, struct node **n)
-{
-	*n = node_new(&node_vmt_slist, NULL);
-	n = &(*n)->list;
 	for (;;) {
-		if (!parse_getsym(o)) {
-			return 0;
+		if (parse_debug) {
+			for (sp = p->stack; sp != p->sp; sp++)
+				log_puts(".  ");
+			log_puts(parse_pstates[sp->pstate]);
+			log_puts("\n");
 		}
-		if (o->lex.id == TOK_EOF) {
-			return 1;
+		if (id == TOK_ERR) {
+			parse_err(p, NULL);
+			id = 0;
 		}
-		parse_ungetsym(o);
-		if (!parse_line(o, n)) {
-			return 0;
+		sp = p->sp;
+		switch (sp->pstate) {
+		case PARSE_RANGE:
+			sp->pstate = PARSE_RANGE_1;
+			parse_begin(p, PARSE_OR, sp->pnode);
+			break;
+		case PARSE_RANGE_1:
+			if (id == 0)
+				return;
+			if (id == TOK_RANGE) {
+				vmt = &node_vmt_range;
+			} else {
+				parse_end(p);
+				break;
+			}
+			id = 0;
+			node_replace(sp->pnode, node_new(vmt, NULL));
+			parse_begin(p, PARSE_OR, &(*sp->pnode)->list->next);
+			break;
+		case PARSE_OR:
+			sp->pstate = PARSE_OR_1;
+			parse_begin(p, PARSE_AND, sp->pnode);
+			break;
+		case PARSE_OR_1:
+			if (id == 0)
+				return;
+			if (id == TOK_OR) {
+				vmt = &node_vmt_or;
+			} else {
+				parse_end(p);
+				break;
+			}
+			id = 0;
+			node_replace(sp->pnode, node_new(vmt, NULL));
+			parse_begin(p, PARSE_AND, &(*sp->pnode)->list->next);
+			break;
+		case PARSE_AND:
+			sp->pstate = PARSE_AND_1;
+			parse_begin(p, PARSE_BITOR, sp->pnode);
+			break;
+		case PARSE_AND_1:
+			if (id == 0)
+				return;
+			if (id == TOK_AND) {
+				vmt = &node_vmt_and;
+			} else {
+				parse_end(p);
+				break;
+			}
+			id = 0;
+			node_replace(sp->pnode, node_new(vmt, NULL));
+			parse_begin(p, PARSE_BITOR, &(*sp->pnode)->list->next);
+			break;
+		case PARSE_BITOR:
+			sp->pstate = PARSE_BITOR_1;
+			parse_begin(p, PARSE_BITXOR, sp->pnode);
+			break;
+		case PARSE_BITOR_1:
+			if (id == 0)
+				return;
+			if (id == TOK_BITOR) {
+				vmt = &node_vmt_bitor;
+			} else {
+				parse_end(p);
+				break;
+			}
+			id = 0;
+			node_replace(sp->pnode, node_new(vmt, NULL));
+			parse_begin(p, PARSE_BITXOR, &(*sp->pnode)->list->next);
+			break;
+		case PARSE_BITXOR:
+			sp->pstate = PARSE_BITXOR_1;
+			parse_begin(p, PARSE_BITAND, sp->pnode);
+			break;
+		case PARSE_BITXOR_1:
+			if (id == 0)
+				return;
+			if (id == TOK_BITXOR) {
+				vmt = &node_vmt_bitxor;
+			} else {
+				parse_end(p);
+				break;
+			}
+			id = 0;
+			node_replace(sp->pnode, node_new(vmt, NULL));
+			parse_begin(p, PARSE_BITAND, &(*sp->pnode)->list->next);
+			break;
+		case PARSE_BITAND:
+			sp->pstate = PARSE_BITAND_1;
+			parse_begin(p, PARSE_EQ, sp->pnode);
+			break;
+		case PARSE_BITAND_1:
+			if (id == 0)
+				return;
+			if (id == TOK_BITAND) {
+				vmt = &node_vmt_bitand;
+			} else {
+				parse_end(p);
+				break;
+			}
+			id = 0;
+			node_replace(sp->pnode, node_new(vmt, NULL));
+			parse_begin(p, PARSE_EQ, &(*sp->pnode)->list->next);
+			break;
+		case PARSE_EQ:
+			sp->pstate = PARSE_EQ_1;
+			parse_begin(p, PARSE_CMP, sp->pnode);
+			break;
+		case PARSE_EQ_1:
+			if (id == 0)
+				return;
+			if (id == TOK_EQ) {
+				vmt = &node_vmt_eq;
+			} else if (id == TOK_NEQ) {
+				vmt = &node_vmt_neq;
+			} else {
+				parse_end(p);
+				break;
+			}
+			id = 0;
+			node_replace(sp->pnode, node_new(vmt, NULL));
+			parse_begin(p, PARSE_CMP, &(*sp->pnode)->list->next);
+			break;
+		case PARSE_CMP:
+			sp->pstate = PARSE_CMP_1;
+			parse_begin(p, PARSE_SHIFT, sp->pnode);
+			break;
+		case PARSE_CMP_1:
+			if (id == 0)
+				return;
+			if (id == TOK_LT) {
+				vmt = &node_vmt_lt;
+			} else if (id == TOK_LE) {
+				vmt = &node_vmt_le;
+			} else if (id == TOK_GT) {
+				vmt = &node_vmt_gt;
+			} else if (id == TOK_GE) {
+				vmt = &node_vmt_ge;
+			} else {
+				parse_end(p);
+				break;
+			}
+			id = 0;
+			node_replace(sp->pnode, node_new(vmt, NULL));
+			parse_begin(p, PARSE_SHIFT, &(*sp->pnode)->list->next);
+			break;
+		case PARSE_SHIFT:
+			sp->pstate = PARSE_SHIFT_1;
+			parse_begin(p, PARSE_SUB, sp->pnode);
+			break;
+		case PARSE_SHIFT_1:
+			if (id == 0)
+				return;
+			if (id == TOK_LSHIFT) {
+				vmt = &node_vmt_lshift;
+			} else if (id == TOK_RSHIFT) {
+				vmt = &node_vmt_rshift;
+			} else {
+				parse_end(p);
+				break;
+			}
+			id = 0;
+			node_replace(sp->pnode, node_new(vmt, NULL));
+			parse_begin(p, PARSE_SUB, &(*sp->pnode)->list->next);
+			break;
+		case PARSE_SUB:
+			sp->pstate = PARSE_SUB_1;
+			parse_begin(p, PARSE_DIV, sp->pnode);
+			break;
+		case PARSE_SUB_1:
+			if (id == 0)
+				return;
+			if (id == TOK_MINUS) {
+				vmt = &node_vmt_sub;
+			} else if (id == TOK_PLUS) {
+				vmt = &node_vmt_add;
+			} else {
+				parse_end(p);
+				break;
+			}
+			id = 0;
+			node_replace(sp->pnode, node_new(vmt, NULL));
+			parse_begin(p, PARSE_DIV, &(*sp->pnode)->list->next);
+			break;
+		case PARSE_DIV:
+			sp->pstate = PARSE_DIV_1;
+			parse_begin(p, PARSE_UN, sp->pnode);
+			break;
+		case PARSE_DIV_1:
+			if (id == 0)
+				return;
+			if (id == TOK_SLASH) {
+				vmt = &node_vmt_div;
+			} else if (id == TOK_STAR) {
+				vmt = &node_vmt_mul;
+			} else if (id == TOK_PCT) {
+				vmt = &node_vmt_mod;
+			} else {
+				parse_end(p);
+				break;
+			}
+			id = 0;
+			node_replace(sp->pnode, node_new(vmt, NULL));
+			parse_begin(p, PARSE_UN, &(*sp->pnode)->list->next);
+			break;
+		case PARSE_UN:
+			if (id == 0)
+				return;
+			if (id == TOK_MINUS) {
+				vmt = &node_vmt_neg;
+			} else if (id == TOK_EXCLAM) {
+				vmt = &node_vmt_not;
+			} else if (id == TOK_TILDE) {
+				vmt =&node_vmt_bitnot;
+			} else {
+				sp->pstate = PARSE_CST;
+				break;
+			}
+			id = 0;
+			*sp->pnode = node_new(vmt, NULL);
+			sp->pnode = &(*sp->pnode)->list;
+			break;
+		case PARSE_CST:
+			if (id == 0)
+				return;
+			if (id == TOK_NUM) {
+				*sp->pnode = node_new(&node_vmt_cst,
+					data_newlong(val));
+				parse_end(p);
+			} else if (id == TOK_STRING) {
+				*sp->pnode = node_new(&node_vmt_cst,
+					data_newstring((char *)val));
+				parse_end(p);
+			} else if (id == TOK_IDENT) {
+				*sp->pnode = node_new(&node_vmt_cst,
+					data_newref((char *)val));
+				parse_end(p);
+			} else if (id == TOK_NIL) {
+				*sp->pnode = node_new(&node_vmt_cst,
+					data_newnil());
+				parse_end(p);
+			} else if (id == TOK_LPAR) {
+				sp->pstate = PARSE_PAR_1;
+			} else if (id == TOK_DOLLAR) {
+				sp->pstate = PARSE_VAR_1;
+			} else if (id == TOK_LBRACKET) {
+				sp->pstate = PARSE_FUNC_1;
+			} else if (id == TOK_LBRACE) {
+				*sp->pnode = node_new(&node_vmt_list, NULL);
+				sp->pnode = &(*sp->pnode)->list;
+				sp->pstate = PARSE_LIST_1;
+			} else {
+				parse_err(p, "value or ``('' expected");
+				break;
+			}
+			id = 0;
+			break;
+		case PARSE_LIST_1:
+			if (id == 0)
+				return;
+			if (id == TOK_RBRACE) {
+				parse_end(p);
+			} else if (tok_is(id, first_expr)) {
+				sp->pstate = PARSE_LIST_2;
+				parse_begin(p, PARSE_RANGE, sp->pnode);
+				break;
+			} else {
+				parse_err(p, "expr or ``}'' expected");
+				break;
+			}
+			id = 0;
+			break;
+		case PARSE_LIST_2:
+			sp->pnode = &(*sp->pnode)->next;
+			sp->pstate = PARSE_LIST_1;
+			break;
+		case PARSE_PAR_1:
+			sp->pstate = PARSE_PAR_2;
+			parse_begin(p, PARSE_RANGE, sp->pnode);
+			break;
+		case PARSE_PAR_2:
+			if (id == 0)
+				return;
+			if (id != TOK_RPAR) {
+				parse_err(p, "')' expected\n");
+				break;
+			}
+			id = 0;
+			parse_end(p);
+			break;
+		case PARSE_VAR_1:
+			if (id == 0)
+				return;
+			if (id != TOK_IDENT) {
+				parse_err(p, "identifier expected");
+				break;
+			}
+			id = 0;
+			*sp->pnode = node_new(&node_vmt_var,
+				data_newref((char *)val));
+			parse_end(p);
+			break;
+		case PARSE_FUNC_1:
+			sp->pstate = PARSE_FUNC_2;
+			parse_begin(p, PARSE_CALL, sp->pnode);
+			break;
+		case PARSE_FUNC_2:
+			if (id == 0)
+				return;
+			if (id != TOK_RBRACKET) {
+				parse_err(p, "']' expected");
+				break;
+			}
+			id = 0;
+			parse_end(p);
+			break;
+		case PARSE_CALL:
+			if (id == 0)
+				return;
+			if (id != TOK_IDENT) {
+				parse_err(p, "proc identifier expected");
+				break;
+			}
+			id = 0;
+			*sp->pnode = node_new(&node_vmt_call,
+				data_newref((char *)val));
+			sp->pnode = &(*sp->pnode)->list;
+			sp->pstate = PARSE_CALL_1;
+			break;
+		case PARSE_CALL_1:
+			if (id == 0)
+				return;
+			if (!tok_is(id, first_expr)) {
+				parse_end(p);
+				break;
+			}
+			sp->pstate = PARSE_CALL_2;
+			parse_begin(p, PARSE_RANGE, sp->pnode);
+			break;
+		case PARSE_CALL_2:
+			sp->pnode = &(*sp->pnode)->next;
+			sp->pstate = PARSE_CALL_1;
+			break;
+		case PARSE_STMT:
+			if (id == 0)
+				return;
+			if (id == TOK_IDENT) {
+				sp->pstate = PARSE_ENDL;
+				parse_begin(p, PARSE_CALL, sp->pnode);
+				break;
+			} else if (id == TOK_EXIT) {
+				*sp->pnode = node_new(&node_vmt_exit, NULL);
+				sp->pstate = PARSE_ENDL;
+			} else if (id == TOK_IF) {
+				sp->pstate = PARSE_IF_1;
+			} else if (id == TOK_FOR) {
+				sp->pstate = PARSE_FOR_1;
+			} else if (id == TOK_RETURN) {
+				sp->pstate = PARSE_RET_1;
+			} else if (id == TOK_LET) {
+				sp->pstate = PARSE_LET_1;
+			} else if (id == TOK_ENDLINE || id == TOK_SEMICOLON) {
+				*sp->pnode = node_new(&node_vmt_nop, NULL);
+				parse_end(p);
+			} else {
+				parse_err(p, "pstatement expected");
+				break;
+			}
+			id = 0;
+			break;
+		case PARSE_IF_1:
+			if (id == 0)
+				return;
+			if (!tok_is(id, first_expr)) {
+				parse_err(p, "expr expected after ``if''");
+				break;
+			}
+			*sp->pnode = node_new(&node_vmt_if, NULL);
+			sp->pnode = &(*sp->pnode)->list;
+			sp->pstate = PARSE_IF_2;
+			parse_begin(p, PARSE_RANGE, sp->pnode);
+			break;
+		case PARSE_IF_2:
+			sp->pnode = &(*sp->pnode)->next;
+			sp->pstate = PARSE_IF_3;
+			parse_begin(p, PARSE_SLIST, sp->pnode);
+			break;
+		case PARSE_IF_3:
+			if (id == 0)
+				return;
+			if (id != TOK_ELSE) {
+				parse_end(p);
+				break;
+			}
+			id = 0;
+			sp->pnode = &(*sp->pnode)->next;
+			sp->pstate = PARSE_IF_4;
+			parse_begin(p, PARSE_SLIST, sp->pnode);
+			break;
+		case PARSE_IF_4:
+			parse_end(p);
+			break;
+		case PARSE_FOR_1:
+			if (id == 0)
+				return;
+			if (id != TOK_IDENT) {
+				parse_err(p, "ident expected after ``for''");
+				break;
+			}
+			id = 0;
+			*sp->pnode = node_new(&node_vmt_for,
+				data_newref((char *)val));
+			sp->pstate = PARSE_FOR_2;
+			break;
+		case PARSE_FOR_2:
+			if (id == 0)
+				return;
+			if (id != TOK_IN) {
+				parse_err(p, "``in'' expected");
+				break;
+			}
+			id = 0;
+			sp->pnode = &(*sp->pnode)->list;
+			sp->pstate = PARSE_FOR_3;
+			parse_begin(p, PARSE_RANGE, sp->pnode);
+			break;
+		case PARSE_FOR_3:
+			sp->pnode = &(*sp->pnode)->next;
+			sp->pstate = PARSE_FOR_4;
+			parse_begin(p, PARSE_SLIST, sp->pnode);
+			break;
+		case PARSE_FOR_4:
+			parse_end(p);
+			break;
+		case PARSE_RET_1:
+			*sp->pnode = node_new(&node_vmt_return, NULL);
+			sp->pnode = &(*sp->pnode)->list;
+			sp->pstate = PARSE_ENDL;
+			parse_begin(p, PARSE_RANGE, sp->pnode);
+			break;
+		case PARSE_LET_1:
+			if (id == 0)
+				return;
+			if (id != TOK_IDENT) {
+				parse_err(p, "ref expected after ``let''");
+				break;
+			}
+			id = 0;
+			*sp->pnode = node_new(&node_vmt_assign, 
+				data_newref((char *)val));
+			sp->pstate = PARSE_LET_2;
+			break;
+		case PARSE_LET_2:
+			if (id == 0)
+				return;
+			if (id != TOK_ASSIGN) {
+				parse_err(p, "``='' expected");
+				break;
+			}
+			id = 0;
+			sp->pnode = &(*sp->pnode)->list;
+			sp->pstate = PARSE_ENDL;
+			parse_begin(p, PARSE_RANGE, sp->pnode);
+			break;
+		case PARSE_ENDL:
+			if (id == 0)
+				return;
+			if (id == TOK_SEMICOLON || id == TOK_ENDLINE) {
+				id = 0;
+				parse_end(p);
+				break;
+			}
+			parse_err(p, "``;'' or new line expected");
+			break;
+		case PARSE_SLIST:
+			if (id == 0)
+				return;
+			if (id != TOK_LBRACE) {
+				parse_err(p, "``{'' expected");
+				break;
+			}
+			id = 0;
+			*sp->pnode = node_new(&node_vmt_slist, NULL);
+			sp->pnode = &(*sp->pnode)->list;
+			sp->pstate = PARSE_SLIST_1;
+			break;
+		case PARSE_SLIST_1:
+			if (id == 0)
+				return;
+			if (id == TOK_RBRACE) {
+				id = 0;
+				parse_end(p);
+				break;
+			}
+			sp->pstate = PARSE_SLIST_2;
+			parse_begin(p, PARSE_STMT, sp->pnode);
+			break;
+		case PARSE_SLIST_2:
+			sp->pnode = &(*sp->pnode)->next;
+			sp->pstate = PARSE_SLIST_1;
+			break;
+		case PARSE_PROC_1:
+			if (id == 0)
+				return;
+			if (id != TOK_IDENT) {
+				parse_err(p, "ref expected after ``proc''");
+				break;
+			}
+			id = 0;
+			args = data_newlist(NULL);
+			data_listadd(args, 
+				data_newref((char *)val));
+			*sp->pnode = node_new(&node_vmt_proc, args);
+			sp->pstate = PARSE_PROC_2;
+			break;
+		case PARSE_PROC_2:
+			if (id == 0)
+				return;
+			if (id == TOK_IDENT) {
+				id = 0;
+				args = (*sp->pnode)->data;
+				data_listadd(args, data_newref((char *)val));
+				break;
+			}
+			if (id == TOK_LBRACE) {
+				sp->pnode = &(*sp->pnode)->list;
+				sp->pstate = PARSE_SLIST;
+				break;
+			}
+			parse_err(p, "arg name or block expected\n");
+			break;
+		case PARSE_PROG:
+			if (id == 0)
+				return;
+			if (id == TOK_PROC) {
+				id = 0;
+				sp->pstate = PARSE_PROG_1;
+				parse_begin(p, PARSE_PROC_1, &p->root);
+				break;
+			}
+			if (tok_is(id, first_stmt)) {
+				sp->pstate = PARSE_PROG_1;
+				parse_begin(p, PARSE_STMT, &p->root);
+				break;
+			}
+			if (id == TOK_EOF)
+				return;
+			parse_err(p, "stmt or proc def expected");
+			break;
+		case PARSE_PROG_1:
+			parse_found(p);
+			sp->pstate = PARSE_PROG;
+			break;
+		case PARSE_ERROR:
+			if (id == 0)
+				return;
+			if (id == TOK_EOF) {
+				sp->pstate = PARSE_PROG;
+				break;
+			}
+			if (id == TOK_ENDLINE || id == TOK_RBRACE)
+				sp->pstate = PARSE_PROG;
+			id = 0;
+			break;
+		default:
+			log_puts("parse_handle: bad state\n");
+			panic();
 		}
-		n = &(*n)->next;
 	}
-	/* not reached */
 }
-

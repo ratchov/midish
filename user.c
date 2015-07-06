@@ -29,7 +29,6 @@
 #include "cons.h"
 
 #include "textio.h"
-#include "lex.h"
 #include "parse.h"
 
 #include "mux.h"
@@ -46,6 +45,22 @@ struct song *usong;
 unsigned user_flag_batch = 0;
 unsigned user_flag_verb = 0;
 
+void
+exec_cb(struct exec *e, struct node *root)
+{
+	struct data *data;
+
+	if (root == NULL) {
+		log_puts("syntax error\n");
+		return;
+	}
+	if (e->result == RESULT_EXIT) {
+		log_puts("exitting, skiped\n");
+		return;
+	}
+	e->result = node_exec(root, e, &data);
+}
+
 /*
  * execute the script in the given file inside the 'exec' environment.
  * the script has acces to all global variables, but not to the local
@@ -55,28 +70,36 @@ unsigned user_flag_verb = 0;
 unsigned
 exec_runfile(struct exec *exec, char *filename)
 {
-	struct parse *parse;
+	struct parse parse;
+	struct textin *in;
 	struct name **locals;
 	struct node *root;
 	struct data *data;
 	unsigned res;
+	int c;
 
 	res = 0;
 	root = NULL;
 	data = NULL;
-	parse = parse_new(filename);
-	if (!parse) {
+	in = textin_new(filename);
+	if (in == NULL)
 		return 0;
-	}
 	locals = exec->locals;
 	exec->locals = &exec->globals;
-	if (parse_prog(parse, &root)) {
-		res = node_exec(root, exec, &data);
+	parse_init(&parse, exec, exec_cb);
+	lex_init(&parse, filename, parse_cb, &parse);
+	for (;;) {
+		if (!textin_getchar(in, &c))
+			break;
+		lex_handle(&parse, c);
+		if (c < 0)
+			break;
 	}
 	exec->locals = locals;
-	parse_delete(parse);
-	node_delete(root);
-	return res;
+	textin_delete(in);
+	lex_done(&parse);
+	parse_done(&parse);
+	return exec->result == RESULT_OK || exec->result == RESULT_EXIT;
 }
 
 /*
@@ -789,16 +812,16 @@ data_getctl(struct data *d, unsigned *num)
 unsigned
 user_mainloop(void)
 {
-	struct parse *parse;
+	struct parse parse;
 	struct exec *exec;
-	struct node *root;
-	struct data *data;
-	unsigned result, exitcode;
+	unsigned exitcode;
+	int c;
 
 	/*
 	 * create the project (ie the song) and
 	 * the execution environment of the interpreter
 	 */
+	mididev_listinit();
 	usong = song_new();
 	exec = exec_new();
 
@@ -1084,65 +1107,37 @@ user_mainloop(void)
 	/*
 	 * create the parser and start parsing standard input
 	 */
-	parse = parse_new(NULL);
-	if (parse == NULL) {
-		return 0;
-	}
+	parse_init(&parse, exec, exec_cb);
+	lex_init(&parse, "stdin", parse_cb, &parse);
 
 	cons_putpos(usong->curpos, 0, 0);
 
-	root = NULL;
-	data = NULL;
 	for (;;) {
 		/*
 		 * print xmalloc() and xfree() stats, useful to
 		 * track memory leaks
 		 */
-		mem_stats();
-
-		/*
-		 * parse a block
-		 */
-		if (!parse_getsym(parse)) {
-			goto err;
-		}
-		if (parse->lex.id == TOK_EOF) {
+		c = cons_getc();
+		lex_handle(&parse, c);
+		if (c < 0) {
 			/* end-of-file (user quit) */
 			exitcode = 1;
 			break;
 		}
-		parse_ungetsym(parse);
-		if (!parse_line(parse, &root)) {
-			node_delete(root);
-			root = NULL;
-			goto err;
-		}
-
-		/*
-		 * at this stage no parse error, execute the tree
-		 */
-		result = node_exec(root, exec, &data);
-		node_delete(root);
-		root = NULL;
-		if (result == RESULT_OK) {
-			continue;
-		}
-		if (result == RESULT_EXIT) {
-			exitcode = 1;	/* 1 means success */
+		if (exec->result == RESULT_EXIT) {
+			exitcode = 1;
 			break;
 		}
-
-	err:
-		/*
-		 * in batch mode stop on the first error
-		 */
-		if (user_flag_batch) {
-			exitcode = 0;	/* 0 means failure */
+		if (exec->result == RESULT_ERR && user_flag_batch) {
+			exitcode = 0;
 			break;
 		}
+		if (c == '\n')
+			mem_stats();
 	}
 
-	parse_delete(parse);
+	lex_done(&parse);
+	parse_done(&parse);
 	exec_delete(exec);
 	song_delete(usong);
 	usong = NULL;

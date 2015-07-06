@@ -56,7 +56,7 @@ distclean:	clean
 # ---------------------------------------------------------- dependencies ---
 
 MIDISH_OBJS = \
-builtin.o cons.o conv.o data.o ev.o exec.o filt.o frame.o lex.o \
+builtin.o cons.o conv.o data.o ev.o exec.o filt.o frame.o \
 main.o mdep.o mdep_raw.o mdep_alsa.o mdep_sndio.o metro.o mididev.o \
 mixout.o mux.o name.o node.o norm.o parse.o pool.o saveload.o smf.o song.o \
 state.o str.o sysex.o textio.o timo.o track.o tty.o user.o utils.o 
@@ -84,7 +84,6 @@ exec.o:		exec.c utils.h exec.h name.h str.h data.h node.h cons.h
 filt.o:		filt.c utils.h ev.h defs.h filt.h pool.h mux.h cons.h
 frame.o:	frame.c utils.h track.h ev.h defs.h frame.h state.h \
 		pool.h
-lex.o:		lex.c utils.h lex.h str.h textio.h cons.h
 main.o:		main.c utils.h str.h cons.h ev.h defs.h mux.h track.h \
 		frame.h state.h song.h name.h filt.h sysex.h metro.h \
 		timo.h user.h mididev.h textio.h
@@ -106,12 +105,12 @@ node.o:		node.c utils.h str.h data.h node.h exec.h name.h cons.h \
 		user.h textio.h
 norm.o:		norm.c utils.h ev.h defs.h norm.h pool.h mux.h filt.h \
 		mixout.h state.h timo.h
-parse.o:	parse.c utils.h textio.h lex.h data.h parse.h node.h \
+parse.o:	parse.c utils.h textio.h data.h parse.h node.h \
 		cons.h
 pool.o:		pool.c utils.h pool.h
 saveload.o:	saveload.c utils.h name.h str.h song.h track.h ev.h \
 		defs.h frame.h state.h filt.h sysex.h metro.h timo.h \
-		parse.h lex.h textio.h saveload.h conv.h version.h
+		parse.h textio.h saveload.h conv.h version.h
 smf.o:		smf.c utils.h sysex.h track.h ev.h defs.h song.h name.h \
 		str.h frame.h state.h filt.h metro.h timo.h smf.h cons.h \
 		conv.h
@@ -126,7 +125,7 @@ timo.o:		timo.c utils.h timo.h
 track.o:	track.c utils.h pool.h track.h ev.h defs.h
 tty.o:		tty.c tty.h utils.h
 user.o:		user.c utils.h defs.h node.h exec.h name.h str.h data.h \
-		cons.h textio.h lex.h parse.h mux.h mididev.h track.h \
+		cons.h textio.h parse.h mux.h mididev.h track.h \
 		ev.h song.h frame.h state.h filt.h sysex.h metro.h \
 		timo.h user.h builtin.h smf.h saveload.h
 utils.o:	utils.c utils.h tty.h
