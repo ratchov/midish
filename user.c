@@ -73,14 +73,10 @@ exec_runfile(struct exec *exec, char *filename)
 	struct parse parse;
 	struct textin *in;
 	struct name **locals;
-	struct node *root;
-	struct data *data;
 	unsigned res;
 	int c;
 
 	res = 0;
-	root = NULL;
-	data = NULL;
 	in = textin_new(filename);
 	if (in == NULL)
 		return 0;
