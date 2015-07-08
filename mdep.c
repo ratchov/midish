@@ -22,6 +22,9 @@
 #include <sys/time.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#ifdef __APPLE__
+#include <mach/mach_time.h>
+#endif
 #include <fcntl.h>
 #include <unistd.h>
 #include <poll.h>
@@ -62,6 +65,24 @@ struct timespec ts, ts_last;
 char cons_buf[CONS_BUFSIZE];
 unsigned cons_index, cons_len, cons_eof;
 struct pollfd *cons_pfd;
+
+#ifdef __APPLE__
+#define CLOCK_MONOTONIC 0
+
+int
+clock_gettime(int which, struct timespec *ts)
+{
+	static mach_timebase_info_data_t info;
+	unsigned long long ns;
+
+	if (info.denom == 0)
+		mach_timebase_info(&info);
+	ns = mach_absolute_time() * info.numer / info.denom;
+	ts->tv_sec = ns / 1000000000L;
+	ts->tv_nsec = ns % 1000000000L;
+	return 1;
+}
+#endif
 
 /*
  * handler for SIGALRM, invoked periodically

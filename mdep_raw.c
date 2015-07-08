@@ -154,6 +154,7 @@ raw_pollfd(struct mididev *addr, struct pollfd *pfd, int events)
 
 	pfd->fd = dev->fd;
 	pfd->events = events;
+	pfd->revents = 0;
 	return 1;
 }
 

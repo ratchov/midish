@@ -720,6 +720,7 @@ tty_pollfd(struct pollfd *pfds)
 {
 	pfds->fd = tty_in;
 	pfds->events = POLLIN;
+	pfds->revents = 0;
 	return 1;
 }
 
