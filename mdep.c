@@ -310,15 +310,12 @@ cons_mdep_sigint(int s)
 }
 
 void
-cons_cb(void *arg, char *str)
+cons_cb(void *arg, char *str, size_t len)
 {
-	size_t len;
-
 	if (str == NULL) {
 		cons_quit = 1;
 		return;
 	}
-	len = strlen(str);
 	if (len >= CONS_BUFSIZE) {
 		cons_err("line too long");
 		return;

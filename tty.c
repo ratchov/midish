@@ -82,7 +82,7 @@ char tty_obuf[1024];				/* output buffer */
 int tty_oused;					/* bytes used in tty_obuf */
 int tty_initialized;
 
-void (*tty_cb)(void *, char *), *tty_arg;
+void (*tty_cb)(void *, char *, size_t), *tty_arg;
 
 char *tty_hist_data;
 size_t tty_hist_start, tty_hist_end, tty_hist_ptr;
@@ -195,14 +195,14 @@ tty_write(void *buf, size_t len)
 void
 tty_eof(void)
 {
-	tty_cb(tty_arg, NULL);
+	tty_cb(tty_arg, NULL, 0);
 }
 
 void
 tty_enter(void)
 {
 	tty_lbuf[tty_lused] = 0;
-	tty_cb(tty_arg, tty_lbuf);
+	tty_cb(tty_arg, tty_lbuf, tty_lused);
 }
 
 void
@@ -405,7 +405,7 @@ tty_setprompt(char *str)
 }
 
 int
-tty_init(void (*cb)(void *, char *), void *arg)
+tty_init(void (*cb)(void *, char *, size_t), void *arg)
 {	
 	tty_hist_data = xmalloc(TTY_HIST_BUFSZ, "tty_hist_data");
 	if (tty_hist_data == NULL)
@@ -765,9 +765,10 @@ void
 tty_tesc1(int cmd, int par0)
 {
 	char buf[32];
+	int len;
 
-	snprintf(buf, sizeof(buf), "\x1b[%u%c", par0, cmd);
-	tty_toutput(buf, strlen(buf));
+	len = snprintf(buf, sizeof(buf), "\x1b[%u%c", par0, cmd);
+	tty_toutput(buf, len);
 }
 
 void

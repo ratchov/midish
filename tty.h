@@ -6,7 +6,7 @@
 
 struct pollfd;
 
-int tty_init(void (*)(void *, char *), void *);
+int tty_init(void (*)(void *, char *, size_t), void *);
 void tty_gets(void);
 void tty_puts(char *);
 void tty_printf(char *, ...);
