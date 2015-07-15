@@ -53,14 +53,14 @@ void tty_draw(void);
 void tty_onkey(int);
 void tty_onresize(int);
 void tty_tflush(void);
-void tty_toutput(unsigned char *, unsigned int);
+void tty_toutput(char *, unsigned int);
 void tty_tsetcurs(unsigned int);
-void tty_tputs(unsigned int, unsigned int, unsigned char *, unsigned int);
+void tty_tputs(unsigned int, unsigned int, char *, unsigned int);
 void tty_tclear(void);
 void tty_tendl(void);
 
-unsigned char tty_prompt[TTY_PROMPTMAX];	/* current prompt */
-unsigned char tty_lbuf[TTY_LINEMAX];		/* line being editted */
+char tty_prompt[TTY_PROMPTMAX];			/* current prompt */
+char tty_lbuf[TTY_LINEMAX];			/* line being editted */
 int tty_lused = 0;				/* chars used in the buffer */
 int tty_lcurs = 0;				/* char pointed by cursor */
 int tty_loffs = 0;				/* most left char displayed */
@@ -71,15 +71,15 @@ int tty_lstart = 0;				/* tty_read() position */
 int tty_in, tty_out;				/* controlling terminal fd */
 struct termios tty_tattr;			/* backup of attributes */
 unsigned int tty_tstate;			/* one of TTY_TSTATE_xxx */
-unsigned char tty_escbuf[4];			/* escape sequence */
+char tty_escbuf[4];				/* escape sequence */
 unsigned int tty_escpar[TTY_ESC_NPAR];		/* escape seq. parameters */
 unsigned int tty_nescpar;			/* number of params found */
 unsigned int tty_escval;			/* temp var to parse params */
 unsigned int tty_twidth;			/* terminal width */
 unsigned int tty_tcursx;			/* terminal cursor x pos */
 
-unsigned char tty_obuf[1024];			/* output buffer */
-unsigned char tty_oused;			/* bytes used in tty_obuf */
+char tty_obuf[1024];				/* output buffer */
+unsigned int tty_oused;				/* bytes used in tty_obuf */
 int tty_initialized;
 
 void (*tty_cb)(void *, char *), *tty_arg;
@@ -359,7 +359,7 @@ tty_onresize(int w)
 {
 	int end;
 	
-	tty_lpos = strlen((char *)tty_prompt);
+	tty_lpos = strlen(tty_prompt);
 	if (tty_lpos >= w)
 		tty_lpos = 0;
 	tty_lwidth = w - tty_lpos;
@@ -656,10 +656,6 @@ tty_winch(void)
 		log_perror("TIOCGWINSZ");
 		tty_twidth = 80;
 	}
-	tty_oused = 0;
-	tty_toutput("\r\x1b[K", 4);
-	tty_tflush();
-	tty_tcursx = 0;
 	tty_onresize(tty_twidth);
 }
 
@@ -696,7 +692,7 @@ tty_tflush(void)
 }
 
 void
-tty_toutput(unsigned char *buf, unsigned int len)
+tty_toutput(char *buf, unsigned int len)
 {
 	unsigned int n;
 
@@ -727,7 +723,7 @@ tty_pollfd(struct pollfd *pfds)
 int
 tty_revents(struct pollfd *pfds)
 {
-	unsigned char buf[128];
+	char buf[128];
 	ssize_t i, n;
 	int c;
 	
@@ -766,7 +762,7 @@ tty_revents(struct pollfd *pfds)
 void
 tty_tesc0(unsigned int cmd)
 {
-	unsigned char buf[3];
+	char buf[3];
 	
 	buf[0] = 0x1b;
 	buf[1] = '[';
@@ -805,7 +801,7 @@ tty_tsetcurs(unsigned int x)
 }
 
 void
-tty_tputs(unsigned int x, unsigned int w, unsigned char *buf, unsigned int len)
+tty_tputs(unsigned int x, unsigned int w, char *buf, unsigned int len)
 {
 	tty_tsetcurs(x);
 	if (len > 0) {
