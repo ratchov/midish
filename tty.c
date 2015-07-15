@@ -410,7 +410,9 @@ tty_init(void (*cb)(void *, char *), void *arg)
 	tty_hist_data = xmalloc(TTY_HIST_BUFSZ, "tty_hist_data");
 	if (tty_hist_data == NULL)
 		return 0;
+#ifdef DEBUG
 	memset(tty_hist_data, '!', TTY_HIST_BUFSZ);
+#endif	
 	tty_hist_start = tty_hist_end = tty_hist_ptr;
 	
 	tty_cb = cb;
@@ -765,15 +767,6 @@ tty_tesc1(unsigned int cmd, unsigned int par0)
 	char buf[32];
 
 	snprintf(buf, sizeof(buf), "\x1b[%u%c", par0, cmd);
-	tty_toutput(buf, strlen(buf));
-}
-
-void
-tty_tesc2(unsigned int cmd, unsigned int par0, unsigned int par1)
-{
-	char buf[32];
-
-	snprintf(buf, sizeof(buf), "\x1b[%u;%u%c", par0, par1, cmd);
 	tty_toutput(buf, strlen(buf));
 }
 
