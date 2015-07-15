@@ -760,17 +760,6 @@ tty_revents(struct pollfd *pfds)
 }
 
 void
-tty_tesc0(unsigned int cmd)
-{
-	char buf[3];
-	
-	buf[0] = 0x1b;
-	buf[1] = '[';
-	buf[2] = cmd;
-	tty_toutput(buf, 3);
-}
-
-void
 tty_tesc1(unsigned int cmd, unsigned int par0)
 {
 	char buf[32];
