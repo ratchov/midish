@@ -59,6 +59,10 @@ exec_cb(struct exec *e, struct node *root)
 		return;
 	}
 	e->result = node_exec(root, e, &data);
+	if (data != NULL && data->type != DATA_NIL) {
+		data_log(data);
+		log_puts("\n");
+	}
 }
 
 /*
