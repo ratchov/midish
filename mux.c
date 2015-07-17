@@ -94,13 +94,13 @@ struct prof mux_prof;
 
 struct statelist mux_istate, mux_ostate;
 
-void mux_sendstop(void);
 /*
  * the following are defined in mdep.c
  */
 void mux_mdep_open(void);
 void mux_mdep_close(void);
 
+void mux_sendstop(void);
 void mux_logphase(unsigned phase);
 void mux_chgphase(unsigned phase);
 
