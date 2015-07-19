@@ -61,7 +61,8 @@ enum TTY_KEY {
 #define TTY_TSTATE_ESC		1	/* got ESC */
 #define TTY_TSTATE_CSI		2	/* got CSI, parsing it */
 #define TTY_TSTATE_CSI_PAR	3	/* parsing CSI param (number) */
-#define TTY_TSTATE_CSI_ERROR	4	/* found error, skipping */
+#define TTY_TSTATE_ERROR	4	/* found error, skipping */
+#define TTY_TSTATE_INT		5	/* got ESC */
 #define TTY_ESC_NPAR		8	/* max params in CSI */
 
 #define TTY_HIST_BUFSZ		0x1000
@@ -603,23 +604,39 @@ tty_oninput(int c)
 			tty_onkey(key);
 			return;
 		case TTY_TSTATE_ESC:
-			switch (c) {
-			case 'O':
-			case 'N':
-				/*
-				 * SS2 and SS3 are supposed to have no
-				 * modifiers, and to be terminated by
-				 * the next char. As in 2015 certain
-				 * terminals use modifiers, we treat
-				 * these as CSI
-				 */
-			case '[':
-				tty_tstate = TTY_TSTATE_CSI;
-				tty_escbuf[0] = 0x1b;
-				tty_escbuf[1] = c;
-				tty_nescpar = 0;
-				break;
+			if (c >= 0x20 && c <= 0x2f) {
+				/* 2-char esc sequence, we ignore it */
+				tty_tstate = TTY_TSTATE_INT;
+			} else if (c >= 0x30 && c <= 0x3f) {
+				/* 2-char esc sequence, we ignore it */
+				tty_tstate = TTY_TSTATE_ANY;
+				return;
+			} else {
+				switch (c) {
+				case 'O':
+				case 'N':
+					/*
+					 * SS2 and SS3 are supposed to
+					 * have no modifiers, and to
+					 * be terminated by the next
+					 * char. As in 2015 certain
+					 * terminals use modifiers, we
+					 * treat these as CSI
+					 */
+				case '[':
+					tty_tstate = TTY_TSTATE_CSI;
+					tty_escbuf[0] = 0x1b;
+					tty_escbuf[1] = c;
+					tty_nescpar = 0;
+					break;
+				default:
+					tty_tstate = TTY_TSTATE_ERROR;
+				}
 			}
+			return;
+		case TTY_TSTATE_INT:
+			if (c >= 0x30 && c <= 0x7e)
+				tty_tstate = TTY_TSTATE_ANY;
 			return;
 		case TTY_TSTATE_CSI:
 			if (c >= '0' && c <= '9') {
@@ -631,7 +648,7 @@ tty_oninput(int c)
 				tty_tstate = TTY_TSTATE_ANY;
 				tty_onesc();
 			} else {
-				tty_tstate = TTY_TSTATE_CSI_ERROR;
+				tty_tstate = TTY_TSTATE_ERROR;
 				continue;
 			} 
 			return;
@@ -639,13 +656,13 @@ tty_oninput(int c)
 			if (c >= '0' && c <= '9') {
 				tty_escval = tty_escval * 10 + c - '0';
 				if (tty_escval > 255) {
-					tty_tstate = TTY_TSTATE_CSI_ERROR;
+					tty_tstate = TTY_TSTATE_ERROR;
 					continue;
 				}
 				return;
 			} else {
 				if (tty_nescpar == TTY_ESC_NPAR) {
-					tty_tstate = TTY_TSTATE_CSI_ERROR;
+					tty_tstate = TTY_TSTATE_ERROR;
 					continue;
 				}
 				tty_escpar[tty_nescpar++] = tty_escval;
@@ -655,7 +672,9 @@ tty_oninput(int c)
 				continue;
 			}
 			return;
-		case TTY_TSTATE_CSI_ERROR:
+		case TTY_TSTATE_ERROR:
+			if (c >= 0x40 && c <= 0x7e)
+				tty_tstate = TTY_TSTATE_ANY;
 			return;
 		}
 	}
