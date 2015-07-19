@@ -688,6 +688,23 @@ load_scan(struct load *o)
 			return 1;
 		}
 
+		/* check if line continues */
+		if (c == '\\') {
+			do {
+				if (!load_getchar(o, &c))
+					return 0;
+			} while (c == ' ' || c == '\t' || c == '\r');
+			if (c == '\n')
+				continue;
+			if (c == CHAR_EOF) {
+				load_ungetchar(o, c);
+				continue;
+			}
+			load_ungetchar(o, c);
+			load_err(o, "newline exected after '\\'");
+			return 0;
+		}
+
 		/* skip comments */
 		if (c == '#') {
 			do {
