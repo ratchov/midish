@@ -141,62 +141,70 @@ tty_hist_add(char *line, size_t size)
 }
 
 int
-tty_hist_up(void)
+tty_hist_prev(size_t *ptr)
 {
-	size_t i;
-	
-	if (((tty_hist_start - tty_hist_ptr) & TTY_HIST_BUFMASK) == 0)
+	size_t p = *ptr;
+
+	if (((tty_hist_start - p) & TTY_HIST_BUFMASK) == 0)
 		return 0;
 	while (1) {
-		tty_hist_ptr--;
-		if (((tty_hist_start - tty_hist_ptr) & TTY_HIST_BUFMASK) == 0)
-			break;
-		i = (tty_hist_ptr - 1) & TTY_HIST_BUFMASK;
-		if (tty_hist_data[i] == 0)
+		p--;
+		if (((tty_hist_start - p) & TTY_HIST_BUFMASK) == 0 ||
+		    tty_hist_data[(p - 1) & TTY_HIST_BUFMASK] == 0)
 			break;
 	}
+	*ptr = p;
 	return 1;
 }
 
 int
-tty_hist_down(void)
+tty_hist_next(size_t *ptr)
 {
-	if (((tty_hist_end - tty_hist_ptr) & TTY_HIST_BUFMASK) == 0)
+	size_t p = *ptr;
+
+	if (((tty_hist_end - p) & TTY_HIST_BUFMASK) == 0)
 		return 0;
 	while (1) {
-		tty_hist_ptr++;
-		if (((tty_hist_end - tty_hist_ptr) & TTY_HIST_BUFMASK) == 0)
-			break;
-		if (tty_hist_data[(tty_hist_ptr - 1) & TTY_HIST_BUFMASK] == 0)
+		p++;
+		if (((tty_hist_end - p) & TTY_HIST_BUFMASK) == 0)
+			return 0;
+		if (tty_hist_data[(p - 1) & TTY_HIST_BUFMASK] == 0)
 			break;
 	}
+	*ptr = p;
 	return 1;
 }
 
 size_t
-tty_hist_copy(char *line)
+tty_hist_copy(size_t p, char *line)
 {
-	size_t count, ptr;
+	size_t count;
 	int c;
 
-#if 0
-	if (((tty_hist_start + tty_hist_used - tty_hist_ptr) &
-		TTY_HIST_BUFMASK) == 0)
-		return 0;
-#endif	
 	count = 0;
-	ptr = tty_hist_ptr;
 	while (1) {		
-		c = tty_hist_data[ptr & TTY_HIST_BUFMASK];
+		c = tty_hist_data[p & TTY_HIST_BUFMASK];
 		if (c == 0)
 			break;
 		*line++ = c;		
 		count++;
-		ptr++;
+		p++;
 	}
 	return count;
 }
 
+int
+tty_hist_match(char *pat, size_t ptr)
+{
+	int p, q;
+
+	while ((p = *pat++) != 0) {
+		q = tty_hist_data[ptr++ & TTY_HIST_BUFMASK];
+		if (q != p)
+			return 0;
+	}
+	return 1;
+}
 
 void
 tty_write(void *buf, size_t len)
@@ -299,6 +307,7 @@ void
 tty_onkey(int key)
 {
 	int endpos;
+	size_t count, max;
 
 	if (key == (TTY_KEY_CTRL | 'C')) {
 		tty_tclear();
@@ -348,18 +357,30 @@ tty_onkey(int key)
 		tty_lused = tty_lcurs;
 		tty_refresh(tty_lcurs, endpos);
 	} else if (key == TTY_KEY_UP || key == (TTY_KEY_CTRL | 'P')) {
-		if (tty_hist_up()) {
-			tty_setline(tty_hist_data +
-			    (tty_hist_ptr & TTY_HIST_BUFMASK));
+		if (tty_hist_prev(&tty_hist_ptr)) {
+			max = tty_lused;
+			tty_lused = tty_hist_copy(tty_hist_ptr, tty_lbuf);
+			if (max < tty_lused)
+				max = tty_lused;
+			tty_loffs = 0;
+			tty_lcurs = tty_lused;
+			tty_refresh(0, max);
 		}
 	} else if (key == TTY_KEY_DOWN || key == (TTY_KEY_CTRL | 'N')) {
-		if (tty_hist_down()) {
-			if (((tty_hist_end - tty_hist_ptr) &
-				TTY_HIST_BUFMASK) == 0)
-				tty_setline("");
-			else
-				tty_setline(tty_hist_data +
-				    (tty_hist_ptr & TTY_HIST_BUFMASK));
+		if (tty_hist_next(&tty_hist_ptr)) {
+			max = tty_lused;
+			tty_lused = tty_hist_copy(tty_hist_ptr, tty_lbuf);
+			if (max < tty_lused)
+				max = tty_lused;
+			tty_loffs = 0;
+			tty_lcurs = tty_lused;
+			tty_refresh(0, max);
+		} else {
+			tty_hist_ptr = tty_hist_end;
+			max = tty_lused;
+			tty_lbuf[0] = 0;
+			tty_loffs = tty_lcurs = tty_lused = 0;
+			tty_refresh(0, max);
 		}
 	} else if (key == TTY_KEY_ENTER) {
 		tty_tendl();
