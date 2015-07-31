@@ -732,7 +732,7 @@ evctl_init(void)
 	 */
 	evctl_conf(1,   "mod", 0);
 	evctl_conf(7,   "vol", EV_UNDEF);
-	evctl_conf(11,  "expr", 127);
+	evctl_conf(11,  "expr", EV_MAXCOARSE << 7);
 	evctl_conf(64,  "sustain", 0);
 }
 
