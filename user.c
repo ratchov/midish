@@ -77,10 +77,8 @@ exec_runfile(struct exec *exec, char *filename)
 	struct parse parse;
 	struct textin *in;
 	struct name **locals;
-	unsigned res;
 	int c;
 
-	res = 0;
 	in = textin_new(filename);
 	if (in == NULL)
 		return 0;
