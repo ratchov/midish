@@ -695,10 +695,12 @@ tty_onesc(void)
 }
 
 void
-tty_oninput(int c)
+tty_oninput(unsigned int c)
 {
 	int key;
-	
+
+	if (c >= 0x80)
+		return;
 	for (;;) {
 		switch (tty_tstate) {
 		case TTY_TSTATE_ANY:
