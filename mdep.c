@@ -353,7 +353,7 @@ cons_mdep_init(void)
 		log_perror("cons_mdep_init: sigaction(cont) failed");
 		exit(1);
 	}
-	tty_init(cons_cb, NULL);
+	tty_init(cons_cb, NULL, user_flag_batch);
 	tty_setprompt("> ");
 }
 

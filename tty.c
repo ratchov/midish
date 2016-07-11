@@ -543,7 +543,7 @@ tty_setprompt(char *str)
 }
 
 int
-tty_init(void (*cb)(void *, char *, size_t), void *arg)
+tty_init(void (*cb)(void *, char *, size_t), void *arg, int notty)
 {	
 	tty_hist_data = xmalloc(TTY_HIST_BUFSZ, "tty_hist_data");
 	if (tty_hist_data == NULL)
@@ -560,7 +560,7 @@ tty_init(void (*cb)(void *, char *, size_t), void *arg)
 	tty_prompt[0] = '\0';
 	tty_in = STDIN_FILENO;
 	tty_out = STDOUT_FILENO;
-	if (!isatty(STDIN_FILENO) || !isatty(STDOUT_FILENO))
+	if (notty || !isatty(STDIN_FILENO) || !isatty(STDOUT_FILENO))
 		return 0;
 	if (tcgetattr(tty_in, &tty_tattr) < 0) {
 		log_perror("tcgetattr");
