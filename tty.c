@@ -233,7 +233,7 @@ tty_write(void *buf, size_t len)
 	}
 	tty_tclear();
 	tty_tflush();
-	tty_toutput(buf, len);
+	write(tty_out, buf, len);
 	tty_draw();
 }
 
