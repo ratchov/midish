@@ -396,6 +396,7 @@ blt_goto(struct exec *o, struct data **r)
 	if (usong->mode >= SONG_IDLE)
 		song_setmode(usong, SONG_IDLE);
 	song_goto(usong, usong->curpos);
+	mux_flush();
 	return 1;
 }
 
@@ -922,7 +923,7 @@ blt_play(struct exec *o, struct data **r)
 	song_play(usong);
 	if (user_flag_batch) {
 		cons_err("press ^C to stop playback");
-		while (mux_mdep_wait() && !usong->complete)
+		while (!usong->complete && mux_mdep_wait())
 			; /* nothing */
 		cons_err("playback stopped");
 		song_stop(usong);

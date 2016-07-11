@@ -33,6 +33,7 @@ void	      seqptr_pool_init(unsigned);
 void	      seqptr_pool_done(void);
 struct seqptr *seqptr_new(struct track *);
 void	      seqptr_del(struct seqptr *);
+int	      seqptr_eot(struct seqptr *);
 struct state *seqptr_evget(struct seqptr *);
 struct state *seqptr_evdel(struct seqptr *, struct statelist *);
 struct state *seqptr_evput(struct seqptr *, struct ev *);

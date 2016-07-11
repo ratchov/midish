@@ -956,6 +956,7 @@ song_loc(struct song *o, unsigned where, unsigned how)
 		pos += (unsigned long long)delta * usec24;
 		tic += delta;
 	}
+	o->complete = !seqptr_eot(o->metaptr);
 
 	/*
 	 * move all tracks to the current position
@@ -974,6 +975,12 @@ song_loc(struct song *o, unsigned where, unsigned how)
 		t->trackptr = seqptr_new(&t->track);
 		seqptr_skip(t->trackptr, tic);
 		song_confrestore(&t->trackptr->statelist);
+
+		/*
+		 * check if we reached the end-of-track
+		 */
+		if (!seqptr_eot(o->metaptr))
+			o->complete = 0;
 	}
 
 	if (o->mode >= SONG_REC)
@@ -1024,6 +1031,8 @@ song_loc(struct song *o, unsigned where, unsigned how)
 		log_putu(pos);
 		log_puts("\n");
 	}
+	if (o->complete)
+		cons_puttag("complete");
 	return pos;
 }
 
@@ -1140,6 +1149,7 @@ song_goto(struct song *o, unsigned measure)
 		 */
 		mmcpos = song_loc(o, measure, SONG_LOC_MEAS);
 		mux_gotoreq(mmcpos);
+		mux_flush();
 
 		/*
 		 * display initial position
@@ -1172,6 +1182,7 @@ song_play(struct song *o)
 	song_setmode(o, SONG_PLAY);
 	song_goto(o, m);
 	mux_startreq();
+	mux_flush();
 
 	if (song_debug) {
 		log_puts("song_play: waiting for a start event...\n");
@@ -1197,6 +1208,7 @@ song_record(struct song *o)
 	song_setmode(o, SONG_REC);
 	song_goto(o, m);
 	mux_startreq();
+	mux_flush();
 	if (song_debug) {
 		log_puts("song_record: waiting for a start event...\n");
 	}
@@ -1213,6 +1225,7 @@ song_idle(struct song *o)
 	m = (o->mode >= SONG_IDLE) ? o->measure : o->curpos;
 	song_setmode(o, SONG_IDLE);
 	song_goto(o,  m);
+	mux_flush();
 
 	if (song_debug) {
 		log_puts("song_idle: started loop...\n");

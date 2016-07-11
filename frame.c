@@ -196,6 +196,15 @@ seqptr_del(struct seqptr *sp)
 }
 
 /*
+ * return true if the end of the track is reached
+ */
+int
+seqptr_eot(struct seqptr *sp)
+{
+	return sp->delta == sp->pos->delta && sp->pos->ev.cmd == EV_NULL;
+}
+
+/*
  * return the state structure of the next available event or NULL if
  * there is no next event in the current tick.  The state list is
  * updated accordingly.
