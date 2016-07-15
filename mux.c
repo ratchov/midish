@@ -255,7 +255,7 @@ mux_sendstart(void)
 		if (i->sendclk && i != mididev_clksrc) {
 			i->ticdelta = i->ticrate;
 			/*
-			 * send a spirious tick just before the start
+			 * send a spurious tick just before the start
 			 * event in order to notify that we are the
 			 * master
 			 */
