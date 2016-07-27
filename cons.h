@@ -17,15 +17,11 @@
 #ifndef MIDISH_CONS_H
 #define MIDISH_CONS_H
 
-void cons_init(void);
+void cons_init(void (*)(void *, int), void *);
 void cons_done(void);
-void cons_mdep_init(void);
-void cons_mdep_done(void);
-int  cons_mdep_getc(void);
-int  cons_getc(void);
-unsigned cons_break(void);
 void cons_putpos(unsigned, unsigned, unsigned);
 void cons_puttag(char *);
+void cons_ready(void);
 
 void cons_err(char *);
 void cons_errs(char *, char *);

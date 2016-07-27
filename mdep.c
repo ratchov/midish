@@ -56,15 +56,12 @@
 #endif
 
 #define MIDI_BUFSIZE	1024
-#define CONS_BUFSIZE	1024
 #define MAXFDS		(DEFAULT_MAXNDEVS + 1)
 
 volatile sig_atomic_t cons_quit = 0, resize_flag = 0, cont_flag = 0;
 struct timespec ts, ts_last;
 
-char cons_buf[CONS_BUFSIZE];
-unsigned cons_index, cons_len, cons_eof;
-struct pollfd *cons_pfd;
+unsigned cons_eof;
 
 #ifdef __APPLE__
 #define CLOCK_MONOTONIC 0
@@ -176,7 +173,7 @@ mux_mdep_wait(void)
 	long long delta_nsec;
 
 	nfds = 0;
-	if (cons_index == cons_len && !cons_eof) {
+	if (!cons_eof) {
 		tty_pfds = &pfds[nfds];
 		nfds += tty_pollfd(tty_pfds);
 	} else
@@ -193,6 +190,7 @@ mux_mdep_wait(void)
 	if (cons_quit) {
 		fprintf(stderr, "\n--interrupt--\n");
 		cons_quit = 0;
+		tty_int();
 		return 0;
 	}
 	if (resize_flag) {
@@ -310,29 +308,10 @@ cons_mdep_sigint(int s)
 }
 
 void
-cons_cb(void *arg, char *str, size_t len)
-{
-	if (str == NULL) {
-		cons_quit = 1;
-		return;
-	}
-	if (len >= CONS_BUFSIZE) {
-		cons_err("line too long");
-		return;
-	}
-	memcpy(cons_buf, str, len);
-	cons_buf[len] = '\n';
-	cons_len = len + 1;
-	cons_index = 0;
-}
-
-void
-cons_mdep_init(void)
+cons_init(void (*cb)(void *, int), void *arg)
 {
 	struct sigaction sa;
 
-	cons_index = 0;
-	cons_len = 0;
 	cons_eof = 0;
 	cons_quit = 0;
 
@@ -353,12 +332,12 @@ cons_mdep_init(void)
 		log_perror("cons_mdep_init: sigaction(cont) failed");
 		exit(1);
 	}
-	tty_init(cons_cb, NULL, user_flag_batch);
+	tty_init(cb, arg, user_flag_batch);
 	tty_setprompt("> ");
 }
 
 void
-cons_mdep_done(void)
+cons_done(void)
 {
 	struct sigaction sa;
 
@@ -378,20 +357,6 @@ cons_mdep_done(void)
 		log_perror("cons_mdep_done: sigaction(cont)");
 		exit(1);
 	}
-}
-
-int
-cons_mdep_getc(void)
-{
-	int quit = 0;
-
-	while (cons_index == cons_len && !cons_eof) {
-		if (!mux_mdep_wait()) {
-			quit = 1;
-			break;
-		}
-	}
-	return (cons_eof || quit) ? EOF : (cons_buf[cons_index++] & 0xff);
 }
 
 /*

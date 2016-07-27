@@ -58,27 +58,7 @@ main(int argc, char **argv)
 		return 0;
 	}
 
-	cons_init();
-	textio_init();
-	evctl_init();
-	seqev_pool_init(DEFAULT_MAXNSEQEVS);
-	state_pool_init(DEFAULT_MAXNSTATES);
-	chunk_pool_init(DEFAULT_MAXNCHUNKS);
-	sysex_pool_init(DEFAULT_MAXNSYSEXS);
-	seqptr_pool_init(DEFAULT_MAXNSEQPTRS);
-	mididev_listinit();
-
 	exitcode = user_mainloop();
-
-	mididev_listdone();
-	seqptr_pool_done();
-	sysex_pool_done();
-	chunk_pool_done();
-	state_pool_done();
-	seqev_pool_done();
-	evctl_done();
-	textio_done();
-	cons_done();
 
 	mem_stats();
 	return exitcode ? 0 : 1;

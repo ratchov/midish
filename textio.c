@@ -36,7 +36,6 @@
 struct textin
 {
 	FILE *file;
-	unsigned isconsole;
 	unsigned line, col;
 };
 
@@ -55,10 +54,8 @@ textin_new(char *filename)
 
 	o = xmalloc(sizeof(struct textin), "textin");
 	if (filename == NULL) {
-		o->isconsole = 1;
 		o->file = stdin;
 	} else {
-		o->isconsole = 0;
 		o->file = fopen(filename, "r");
 		if (o->file == NULL) {
 			cons_errs(filename, "failed to open input file");
@@ -73,20 +70,14 @@ textin_new(char *filename)
 void
 textin_delete(struct textin *o)
 {
-	if (!o->isconsole) {
-		fclose(o->file);
-	}
+	fclose(o->file);
 	xfree(o);
 }
 
 unsigned
 textin_getchar(struct textin *o, int *c)
 {
-	if (o->isconsole) {
-		*c = cons_getc();	/* because it handles ^C */
-	} else {
-		*c = fgetc(o->file);
-	}
+	*c = fgetc(o->file);
 	if (*c == EOF) {
 		*c = CHAR_EOF;
 		if (ferror(o->file)) {
@@ -204,13 +195,11 @@ textout_putbyte(struct textout *o, unsigned val)
 /* ------------------------------------------------------------------ */
 
 struct textout *tout;
-struct textin *tin;
 
 void
 textio_init(void)
 {
 	tout = textout_new(NULL);
-	tin = textin_new(NULL);
 }
 
 void
@@ -218,6 +207,4 @@ textio_done(void)
 {
 	textout_delete(tout);
 	tout = 0;
-	textin_delete(tin);
-	tin = 0;
 }

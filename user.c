@@ -807,13 +807,47 @@ data_getctl(struct data *d, unsigned *num)
 	return 1;
 }
 
+static struct parse parse;
+static struct exec *exec;
+static unsigned exitcode;
+int done = 0;
+
+void
+char_cb(void *arg, int c)
+{
+	if (done)
+		return;
+	lex_handle(&parse, c);
+	if (c < 0) {
+		/* end-of-file (user quit) */
+		exitcode = 1;
+		done = 1;
+	}
+	if (exec->result == RESULT_EXIT) {
+		exitcode = 1;
+		done = 1;
+	}
+	if (exec->result == RESULT_ERR && user_flag_batch) {
+		exitcode = 0;
+		done = 1;
+	}
+	if (c == '\n') {
+		cons_ready();
+		mem_stats();
+	}
+}
+
 unsigned
 user_mainloop(void)
 {
-	struct parse parse;
-	struct exec *exec;
-	unsigned exitcode;
-	int c;
+	cons_init(char_cb, NULL);
+	textio_init();
+	evctl_init();
+	seqev_pool_init(DEFAULT_MAXNSEQEVS);
+	state_pool_init(DEFAULT_MAXNSTATES);
+	chunk_pool_init(DEFAULT_MAXNCHUNKS);
+	sysex_pool_init(DEFAULT_MAXNSYSEXS);
+	seqptr_pool_init(DEFAULT_MAXNSEQPTRS);
 
 	/*
 	 * create the project (ie the song) and
@@ -1110,29 +1144,9 @@ user_mainloop(void)
 
 	cons_putpos(usong->curpos, 0, 0);
 
-	for (;;) {
-		/*
-		 * print xmalloc() and xfree() stats, useful to
-		 * track memory leaks
-		 */
-		c = cons_getc();
-		lex_handle(&parse, c);
-		if (c < 0) {
-			/* end-of-file (user quit) */
-			exitcode = 1;
-			break;
-		}
-		if (exec->result == RESULT_EXIT) {
-			exitcode = 1;
-			break;
-		}
-		if (exec->result == RESULT_ERR && user_flag_batch) {
-			exitcode = 0;
-			break;
-		}
-		if (c == '\n')
-			mem_stats();
-	}
+	done = 0;
+	while (!done && mux_mdep_wait())
+		; /* nothing */
 
 	lex_done(&parse);
 	parse_done(&parse);
@@ -1140,5 +1154,13 @@ user_mainloop(void)
 	song_delete(usong);
 	usong = NULL;
 	mididev_listdone();
+	seqptr_pool_done();
+	sysex_pool_done();
+	chunk_pool_done();
+	state_pool_done();
+	seqev_pool_done();
+	evctl_done();
+	textio_done();
+	cons_done();
 	return exitcode;
 }

@@ -23,44 +23,6 @@
 #include "tty.h"
 #include "user.h"
 
-unsigned cons_ready;
-
-void
-cons_init(void)
-{
-	cons_ready = 1;
-	cons_mdep_init();
-}
-
-void
-cons_done(void)
-{
-	cons_mdep_done();
-}
-
-/*
- * Same as fgetc(stdin), but if midish is started with the verb flag,
- * print "+ready\n" to stdout and flush it. This is useful to
- * front-ends that open midish in a pair of pipes
- */
-int
-cons_getc(void)
-{
-	int c;
-	if (cons_ready) {
-		if (user_flag_verb) {
-			fprintf(stdout, "+ready\n");
-			fflush(stdout);
-		}
-		cons_ready = 0;
-	}
-	c = cons_mdep_getc();
-	if (c == '\n') {
-		cons_ready = 1;
-	}
-	return c;
-}
-
 /*
  * print song position
  */
@@ -89,6 +51,18 @@ cons_puttag(char *tag)
 {
 	if (user_flag_verb) {
 		fprintf(stdout, "+%s\n", tag);
+		fflush(stdout);
+	}
+}
+
+/*
+ * print "+ready"
+ */
+void
+cons_ready(void)
+{
+	if (user_flag_verb) {
+		fprintf(stdout, "+ready\n");
 		fflush(stdout);
 	}
 }

@@ -104,7 +104,7 @@ char tty_obuf[1024];				/* output buffer */
 int tty_oused;					/* bytes used in tty_obuf */
 int tty_initialized;
 
-void (*tty_cb)(void *, char *, size_t), *tty_arg;
+void (*tty_cb)(void *, int), *tty_arg;
 
 char *tty_hist_data;
 size_t tty_hist_start, tty_hist_end, tty_hist_ptr;
@@ -240,14 +240,20 @@ tty_write(void *buf, size_t len)
 void
 tty_eof(void)
 {
-	tty_cb(tty_arg, NULL, 0);
+	tty_cb(tty_arg, -1);
 }
 
 void
 tty_enter(void)
 {
-	tty_lbuf[tty_lused] = 0;
-	tty_cb(tty_arg, tty_lbuf, tty_lused);
+	char *p = tty_lbuf;
+
+	/* append new line */
+	tty_lbuf[tty_lused++] = '\n';
+
+	/* invoke caller handler */
+	while (tty_lused-- > 0)
+		tty_cb(tty_arg, *p++);
 }
 
 void
@@ -328,10 +334,7 @@ tty_onkey(int key)
 	size_t max, p;
 
 	if (key == (TTY_KEY_CTRL | 'C')) {
-		tty_mode = TTY_MODE_EDIT;
-		tty_tclear();
-		tty_eof();
-		tty_draw();
+		tty_int();
 		return;
 	}
 	if (key < 0x100) {
@@ -543,7 +546,7 @@ tty_setprompt(char *str)
 }
 
 int
-tty_init(void (*cb)(void *, char *, size_t), void *arg, int notty)
+tty_init(void (*cb)(void *, int), void *arg, int notty)
 {	
 	tty_hist_data = xmalloc(TTY_HIST_BUFSZ, "tty_hist_data");
 	if (tty_hist_data == NULL)
@@ -820,6 +823,13 @@ tty_winch(void)
 }
 
 void
+tty_int(void)
+{
+	tty_tclear();
+	tty_draw();
+}
+
+void
 tty_reset(void)
 {
 	struct termios tio;
@@ -883,9 +893,8 @@ tty_pollfd(struct pollfd *pfds)
 int
 tty_revents(struct pollfd *pfds)
 {
-	char buf[128];
+	char buf[1024];
 	ssize_t i, n;
-	int c;
 	
 	if (pfds[0].revents & POLLIN) {
 		n = read(tty_in, buf, sizeof(buf));
@@ -899,17 +908,8 @@ tty_revents(struct pollfd *pfds)
 			return POLLHUP;
 		}
 		if (!tty_initialized) {
-			for (i = 0; i < n; i++) {
-				c = buf[i];
-				if (tty_lused == TTY_LINEMAX) {
-					log_puts("input line too long\n");
-					tty_eof();
-				} else if (c == '\n') {
-					tty_enter();
-					tty_lused = 0;
-				} else
-					tty_lbuf[tty_lused++] = c;
-			}
+			for (i = 0; i < n; i++)
+				tty_cb(tty_arg, buf[i]);
 		} else {
 			for (i = 0; i < n; i++)
 				tty_oninput(buf[i]);
