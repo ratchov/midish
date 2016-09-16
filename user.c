@@ -813,7 +813,7 @@ static unsigned exitcode;
 int done = 0;
 
 void
-char_cb(void *arg, int c)
+user_onchar(void *arg, int c)
 {
 	if (done)
 		return;
@@ -837,10 +837,55 @@ char_cb(void *arg, int c)
 	}
 }
 
+void
+user_oncompl(void *arg, char *text, int curs, int used, int *rstart, int *rend)
+{
+	unsigned int start, end;
+	struct name *n;
+	int c;
+
+	start = curs;
+	while (1) {
+		if (start == 0)
+			break;
+		c = text[start - 1];
+		if ((c < 'A' || c > 'Z') &&
+		    (c < 'a' || c > 'z') &&
+		    (c < '0' || c > '9') &&
+		    (c != '_'))
+			break;
+		start--;
+	}
+
+	end = curs;
+	while (1) {
+		if (end == used)
+			break;
+		c = text[end];
+		if ((c < 'A' || c > 'Z') &&
+		    (c < 'a' || c > 'z') &&
+		    (c < '0' || c > '9') &&
+		    (c != '_'))
+			break;
+		end++;
+	}
+
+	*rstart = start;
+	*rend = end;
+
+	for (n = exec->procs; n != NULL; n = n->next)
+		el_compladd(n->str);
+}
+
+struct el_ops user_el_ops = {
+	user_onchar,
+	user_oncompl
+};
+
 unsigned
 user_mainloop(void)
 {
-	cons_init(char_cb, NULL);
+	cons_init(&user_el_ops, NULL);
 	textio_init();
 	evctl_init();
 	seqev_pool_init(DEFAULT_MAXNSEQEVS);

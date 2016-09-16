@@ -35,11 +35,9 @@ cons_putpos(unsigned measure, unsigned beat, unsigned tic)
 		fprintf(stdout, "+pos %u %u %u\n", measure, beat, tic);
 		fflush(stdout);
 	}
-	if (tic == 0) {
+	if (cons_isatty && tic == 0) {
 		snprintf(buf, sizeof(buf), "[%04u:%02u]> ", measure, beat);
-		//log_puts(buf);
-		//log_puts("\n");
-		tty_setprompt(buf);
+		el_setprompt(buf);
 	}
 }
 

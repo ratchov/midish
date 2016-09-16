@@ -61,7 +61,7 @@
 volatile sig_atomic_t cons_quit = 0, resize_flag = 0, cont_flag = 0;
 struct timespec ts, ts_last;
 
-unsigned cons_eof;
+int cons_eof, cons_isatty;
 
 #ifdef __APPLE__
 #define CLOCK_MONOTONIC 0
@@ -165,7 +165,7 @@ mux_mdep_close(void)
 int
 mux_mdep_wait(void)
 {
-	int res, revents;
+	int i, res, revents;
 	nfds_t nfds;
 	struct pollfd *pfd, *tty_pfds, pfds[MAXFDS];
 	struct mididev *dev;
@@ -174,8 +174,14 @@ mux_mdep_wait(void)
 
 	nfds = 0;
 	if (!cons_eof) {
-		tty_pfds = &pfds[nfds];
-		nfds += tty_pollfd(tty_pfds);
+		tty_pfds = &pfds[nfds];		
+		if (cons_isatty)
+			nfds += tty_pollfd(tty_pfds);
+		else {
+			tty_pfds->fd = STDIN_FILENO;
+			tty_pfds->events = POLLIN;
+			nfds++;
+		}
 	} else
 		tty_pfds = NULL;
 	for (dev = mididev_list; dev != NULL; dev = dev->next) {
@@ -190,16 +196,19 @@ mux_mdep_wait(void)
 	if (cons_quit) {
 		fprintf(stderr, "\n--interrupt--\n");
 		cons_quit = 0;
-		tty_int();
+		if (cons_isatty)
+			tty_int();
 		return 0;
 	}
 	if (resize_flag) {
 		resize_flag = 0;
-		tty_winch();
+		if (cons_isatty)
+			tty_winch();
 	}
 	if (cont_flag) {
 		cont_flag = 0;
-		tty_reset();
+		if (cons_isatty)
+			tty_reset();
 	}
 	res = poll(pfds, nfds, -1);
 	if (res < 0 && errno != EINTR) {
@@ -261,9 +270,25 @@ mux_mdep_wait(void)
 	}
 	log_flush();
 	if (tty_pfds) {
-		revents = tty_revents(tty_pfds);
-		if (revents & POLLHUP)
-			cons_eof = 1;
+		if (cons_isatty) {
+			revents = tty_revents(tty_pfds);
+			if (revents & POLLHUP)
+				cons_eof = 1;
+		} else {
+			if (tty_pfds->revents & POLLHUP)
+				cons_eof = 1;
+			else if (tty_pfds->revents & POLLIN) {
+				res = read(STDIN_FILENO, midibuf, MIDI_BUFSIZE);
+				if (res < 0)
+					log_perror("stdin");
+				else if (res == 0)
+					user_onchar(NULL, -1);
+				else {
+					for (i = 0; i < res; i++)
+						user_onchar(NULL, midibuf[i]);
+				}
+			}
+		}
 	}
 	return 1;
 }
@@ -308,7 +333,7 @@ cons_mdep_sigint(int s)
 }
 
 void
-cons_init(void (*cb)(void *, int), void *arg)
+cons_init(struct el_ops *el_ops, void *el_arg)
 {
 	struct sigaction sa;
 
@@ -332,8 +357,13 @@ cons_init(void (*cb)(void *, int), void *arg)
 		log_perror("cons_mdep_init: sigaction(cont) failed");
 		exit(1);
 	}
-	tty_init(cb, arg, user_flag_batch);
-	tty_setprompt("> ");
+	if (!user_flag_batch && tty_init()) {
+		cons_isatty = 1;
+		el_init(el_ops, el_arg);
+		el_setprompt("> ");
+		tty_reset();
+	} else
+		cons_isatty = 0;
 }
 
 void
@@ -341,7 +371,10 @@ cons_done(void)
 {
 	struct sigaction sa;
 
-	tty_done();
+	if (cons_isatty) {
+		el_done();
+		tty_done();
+	}
 	sigfillset(&sa.sa_mask);
 	sa.sa_flags = SA_RESTART;
 	sa.sa_handler = SIG_DFL;

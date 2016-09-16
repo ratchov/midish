@@ -16,6 +16,23 @@
 /*
  * see http://www.inwap.com/pdp10/ansicode.txt
  */
+/*
+ * TODO
+ *
+ * - we've the following pattern repeated many times, factor it
+ *
+ *	min = el_curs;
+ *	max = el_used;
+ *	...
+ *	if (max < el_used)
+ *		max = el_used;
+ *	el_refresh(min, max);
+ *
+ * - make inserting chars in completion mode search starting
+ *   from the current item
+ *
+ * - ^G during completion must revert to selection
+ */
 #include <sys/types.h>
 #include <sys/ioctl.h>
 #include <errno.h>
@@ -23,6 +40,7 @@
 #include <limits.h>
 #include <poll.h>
 #include <signal.h>
+#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -34,63 +52,28 @@
 #include "tty.h"
 #include "utils.h"
 
-#define TTY_KEY_SHIFT		(1 << 31)
-#define TTY_KEY_CTRL		(1 << 30)
-#define TTY_KEY_ALT		(1 << 29)
+#define EL_MODE_EDIT		0
+#define EL_MODE_SEARCH		1
+#define EL_MODE_COMPL		2
 
-enum TTY_KEY {
-	/*
-	 * we put special "control" keys in the "private" unicode plane,
-	 * allowing to encode any key as a simple int
-	 *
-	 * certain function keys (tab, enter, delete... ) have unicode
-	 * character, but since we don't use them as "characters" we
-	 * put them in the private plane as well, shifted by 0x100000
-	 */
-	TTY_KEY_BS = 0x100008,
-	TTY_KEY_TAB = 0x100009,
-	TTY_KEY_ENTER = 0x10000d,
-	TTY_KEY_ESC = 0x10001b,
-	TTY_KEY_DEL = 0x10007f,
-	TTY_KEY_UP = 0x100100, TTY_KEY_DOWN, TTY_KEY_LEFT, TTY_KEY_RIGHT,
-	TTY_KEY_HOME, TTY_KEY_END, TTY_KEY_PGUP, TTY_KEY_PGDOWN,
-	TTY_KEY_INSERT
+#define EL_LINEMAX	1024
+#define EL_PROMPTMAX	64
+#define EL_HISTMAX	200
+
+struct textline {
+	struct textline *next, *prev;
+	char text[1];
 };
 
-#define TTY_TSTATE_ANY		0	/* expect any char */
-#define TTY_TSTATE_ESC		1	/* got ESC */
-#define TTY_TSTATE_CSI		2	/* got CSI, parsing it */
-#define TTY_TSTATE_CSI_PAR	3	/* parsing CSI param (number) */
-#define TTY_TSTATE_ERROR	4	/* found error, skipping */
-#define TTY_TSTATE_INT		5	/* got ESC */
-#define TTY_ESC_NPAR		8	/* max params in CSI */
+struct textbuf {
+	struct textline *head, *tail;
+	unsigned int count;
+};
 
-#define TTY_MODE_EDIT		0
-#define TTY_MODE_SEARCH		1
+void el_draw(void *);
+void el_resize(void *, int);
+void el_onkey(void *, int);
 
-#define TTY_HIST_BUFSZ		0x1000
-#define TTY_HIST_BUFMASK	(TTY_HIST_BUFSZ - 1)
-
-void tty_draw(void);
-void tty_onkey(int);
-void tty_onresize(int);
-void tty_tflush(void);
-void tty_toutput(char *, int);
-void tty_tsetcurs(int);
-void tty_tputs(int, int, char *, int);
-void tty_tclear(void);
-void tty_tendl(void);
-
-char tty_prompt[TTY_PROMPTMAX];			/* current prompt */
-char tty_lbuf[TTY_LINEMAX];			/* line being editted */
-int tty_lused = 0;				/* chars used in the buffer */
-int tty_lcurs = 0;				/* char pointed by cursor */
-int tty_loffs = 0;				/* most left char displayed */
-int tty_lpos = 5;				/* on screen text position */
-int tty_lwidth = 0;				/* on screen text width */
-int tty_lstart = 0;				/* tty_read() position */
-
-int tty_in, tty_out;				/* controlling terminal fd */
 struct termios tty_tattr;			/* backup of attributes */
 int tty_tstate;					/* one of TTY_TSTATE_xxx */
 char tty_escbuf[4];				/* escape sequence */
@@ -104,490 +87,684 @@ char tty_obuf[1024];				/* output buffer */
 int tty_oused;					/* bytes used in tty_obuf */
 int tty_initialized;
 
-void (*tty_cb)(void *, int), *tty_arg;
+struct tty_ops *tty_ops;
+void *tty_arg;
 
-char *tty_hist_data;
-size_t tty_hist_start, tty_hist_end, tty_hist_ptr;
+char el_prompt[EL_PROMPTMAX];			/* current prompt */
+char el_buf[EL_LINEMAX];			/* line being editted */
+int el_used = 0;				/* chars used in the buffer */
+int el_curs = 0;				/* char pointed by cursor */
+int el_offs = 0;				/* most left char displayed */
+int el_pos = 0;					/* on screen text position */
+int el_width = 0;				/* on screen text width */
+int el_start = 0;				/* tty_read() position */
+int el_mode;					/* one of EL_MODE_xxx */
+struct textline *el_curline;
+int el_selstart, el_selend;
+struct el_ops *el_ops;
+void *el_arg;
+struct textbuf el_hist, el_compl;
 
-char tty_sbuf[TTY_LINEMAX];			/* search pattern */
-int tty_sused = 0;				/* chars used in search pat */
-
-int tty_mode;
+struct tty_ops el_tty_ops = {
+	el_draw,
+	el_resize,
+	el_onkey
+};
 
 void
-tty_hist_add(char *line, size_t size)
+textbuf_rm(struct textbuf *p, struct textline *l)
 {
-	size_t used;
-	int c;
+	if (l->next)
+		l->next->prev = l->prev;
+	if (l->prev)
+		l->prev->next = l->next;
+	if (p->head == l)
+		p->head = l->next;
+	if (p->tail == l)
+		p->tail = l->prev;
+	p->count--;
+	xfree(l);
+}
 
-	/* remove entries until there's enough space */
+void
+textbuf_ins(struct textbuf *p, struct textline *next, char *line, size_t len)
+{
+	struct textline *l;
+
+	l = xmalloc(offsetof(struct textline, text) + len + 1, "textline");
+	memcpy(l->text, line, len);
+	l->text[len] = 0;
+
+	l->next = next;
+	if (next) {
+		l->prev = next->prev;
+		next->prev = l;
+	} else {
+		l->prev = p->tail;
+		p->tail = l;
+	}
+	if (l->prev)
+		l->prev->next = l;
+	else
+		p->head = l;
+	p->count++;
+}
+
+int
+textbuf_search(struct textbuf *p,
+	char *pat, size_t patlen,
+	struct textline **rline, unsigned int *rpos)
+{
+	struct textline *l;
+	unsigned int pos, i;
+
+	if (patlen == 0)
+		return 0;
+	l = *rline;
 	while (1) {
-		used = tty_hist_end - tty_hist_start;
-		if (used + size <= TTY_HIST_BUFSZ - 1)
+		if (l == NULL)
+			l = p->tail;
+		else
+			l = l->prev;
+		if (l == NULL)
 			break;
+		pos = 0;
 		while (1) {
-			c = tty_hist_data[tty_hist_start & TTY_HIST_BUFMASK];
-			tty_hist_start++;
-			if (c == 0)
+			if (rpos == NULL || l->text[pos] == 0)
 				break;
+			i = 0;
+			while (1) {
+				if (i == patlen) {
+					if (rpos)
+						*rpos = pos + i;
+					*rline = l;
+					return 1;
+				}
+				if (pat[i] != l->text[pos + i])
+					break;
+				i++;
+			}
+			pos++;
 		}
 	}
+	return 0;
+}
 
-	/* store the new entry */
-	while (size > 0) {
-		tty_hist_data[tty_hist_end & TTY_HIST_BUFMASK] = *line++;
-		tty_hist_end++;
-		size--;
-	}
+void
+textbuf_init(struct textbuf *p)
+{
+	p->head = p->tail = NULL;
+	p->count = 0;
+}
 
-	/* add separator */
-	tty_hist_data[tty_hist_end & TTY_HIST_BUFMASK] = 0;
-	tty_hist_end++;
+void
+textbuf_done(struct textbuf *p)
+{
+	while (p->head)
+		textbuf_rm(p, p->head);
+}
+
+void
+textbuf_copy(struct textbuf *p, char *buf, size_t size, struct textline *l)
+{
+	if (l == NULL)
+		buf[0] = 0;
+	else
+		strlcpy(buf, l->text, size);
 }
 
 int
-tty_hist_prev(size_t *ptr)
+textbuf_findline(struct textbuf *p,
+	char *pat, size_t patlen,
+	struct textline **rline)
 {
-	size_t p = *ptr;
+	struct textline *l;
+	unsigned int i;
 
-	if (((tty_hist_start - p) & TTY_HIST_BUFMASK) == 0)
-		return 0;
+	l = *rline;
 	while (1) {
-		p--;
-		if (((tty_hist_start - p) & TTY_HIST_BUFMASK) == 0 ||
-		    tty_hist_data[(p - 1) & TTY_HIST_BUFMASK] == 0)
-			break;
-	}
-	*ptr = p;
-	return 1;
-}
-
-int
-tty_hist_next(size_t *ptr)
-{
-	size_t p = *ptr;
-
-	if (((tty_hist_end - p) & TTY_HIST_BUFMASK) == 0)
-		return 0;
-	while (1) {
-		p++;
-		if (((tty_hist_end - p) & TTY_HIST_BUFMASK) == 0)
+		if (l == NULL)
 			return 0;
-		if (tty_hist_data[(p - 1) & TTY_HIST_BUFMASK] == 0)
-			break;
+		i = 0;
+		while (1) {
+			if (i == patlen) {
+				*rline = l;
+				return 1;
+			}
+			if (pat[i] != l->text[i])
+				break;
+			i++;
+		}
+		l = l->next;
 	}
-	*ptr = p;
-	return 1;
-}
-
-size_t
-tty_hist_copy(size_t p, char *line)
-{
-	size_t count;
-	int c;
-
-	count = 0;
-	while (1) {		
-		c = tty_hist_data[p & TTY_HIST_BUFMASK];
-		if (c == 0)
-			break;
-		*line++ = c;		
-		count++;
-		p++;
-	}
-	return count;
-}
-
-int
-tty_hist_match(size_t p, char *pat, size_t pat_size)
-{
-	while (pat_size > 0) {
-		if (*pat++ != tty_hist_data[p++ & TTY_HIST_BUFMASK])
-			return 0;
-		pat_size--;
-	}
-	return 1;
-}
-
-int
-tty_hist_search(size_t *ptr, char *pat, size_t pat_size)
-{
-	size_t p = *ptr;
-
-	for (;;) {
-		if (!tty_hist_prev(&p))
-			return 0;
-		if (tty_hist_match(p, pat, pat_size))
-			break;
-	}
-	*ptr = p;
-	return 1;
 }
 
 void
-tty_write(void *buf, size_t len)
+el_enter(void)
 {
-	if (!tty_initialized) {
-		write(STDERR_FILENO, buf, len);
-		return;
-	}
-	tty_tclear();
-	tty_tflush();
-	write(tty_out, buf, len);
-	tty_draw();
-}
-
-void
-tty_eof(void)
-{
-	tty_cb(tty_arg, -1);
-}
-
-void
-tty_enter(void)
-{
-	char *p = tty_lbuf;
+	char *p = el_buf;
 
 	/* append new line */
-	tty_lbuf[tty_lused++] = '\n';
+	el_buf[el_used++] = '\n';
 
 	/* invoke caller handler */
-	while (tty_lused-- > 0)
-		tty_cb(tty_arg, *p++);
+	while (el_used-- > 0)
+		el_ops->onchar(el_arg, *p++);
 }
 
 void
-tty_ins(int offs, int c)
+el_replace(size_t start, size_t end, char *text, size_t textsize)
 {
-	int i;
-	
-	for (i = tty_lused; i != offs; i--)
-		tty_lbuf[i] = tty_lbuf[i - 1];
-	tty_lbuf[tty_lcurs] = c;
-	tty_lused++;
+	int i, len, off;
+
+	if (el_used - (end - start) + textsize > EL_LINEMAX) {
+		log_puts("text to paste too long (ignored)\n");
+		return;
+	}
+
+	/*
+	 * move text after selection
+	 */
+	len = el_used - end;
+	off = end - start - textsize;
+	if (off > 0) {
+		i = end;
+		while (i < el_used) {
+			el_buf[i - off] = el_buf[i];
+			i++;
+		}
+	} else if (off < 0) {
+		i = el_used;
+		while (i > end) {
+			i--;
+			el_buf[i - off] = el_buf[i];
+		}
+	}
+	el_used -= off;
+
+	/*
+	 * copy text into hole
+	 */
+	for (i = 0; i < textsize; i++)
+		el_buf[start + i] = text[i];
+
+	end = start + textsize;
 }
 
 void
-tty_del(int offs)
-{
-	int i;
-	
-	tty_lused--;
-	for (i = offs; i != tty_lused; i++)
-		tty_lbuf[i] = tty_lbuf[i + 1];
-}
-
-void
-tty_refresh(int start, int end)
+el_refresh(int start, int end)
 {
 	int x, w, todo;
 
-	if (tty_lcurs < tty_loffs) {
+	if (el_curs < el_offs) {
 		/*
 		 * need to scroll left
 		 */
-		tty_loffs = tty_lcurs;
-		start = tty_loffs;
-		end = tty_loffs + tty_lwidth;
-	} else if (tty_lcurs > tty_loffs + tty_lwidth - 1) {
+		el_offs = el_curs;
+		start = el_offs;
+		end = el_offs + el_width;
+	} else if (el_curs > el_offs + el_width - 1) {
 		/*
 		 * need to scroll right
 		 */
-		tty_loffs = tty_lcurs - tty_lwidth + 1;
-		start = tty_loffs;
-		end = tty_loffs + tty_lwidth;
+		el_offs = el_curs - el_width + 1;
+		start = el_offs;
+		end = el_offs + el_width;
 	} else {
 		/*
 		 * no need to scroll, clip to our width
 		 */
-		if (start < tty_loffs)
-			start = tty_loffs;
-		if (end > tty_loffs + tty_lwidth)
-			end = tty_loffs + tty_lwidth;
+		if (start < el_offs)
+			start = el_offs;
+		if (end > el_offs + el_width)
+			end = el_offs + el_width;
 	}
 	if (end > start) {
-		x = start - tty_loffs;
+		x = start - el_offs;
 		w = end - start;
-		if (end > tty_lused)
-			todo = tty_lused - start;
+		if (end > el_used)
+			todo = el_used - start;
 		else
 			todo = end - start;
-		tty_tputs(tty_lpos + x, w, tty_lbuf + start, todo);
+		tty_tputs(el_pos + x, w, el_buf + start, todo);
 	}
-	tty_tsetcurs(tty_lpos + tty_lcurs - tty_loffs);
+	tty_tsetcurs(el_pos + el_curs - el_offs);
+}
+
+char *
+el_getprompt(void)
+{
+#if 1
+	char *prompt;
+
+	switch (el_mode) {
+	case EL_MODE_EDIT:
+		prompt = el_prompt;
+		break;
+	case EL_MODE_SEARCH:
+		prompt = "search: ";
+		break;
+	case EL_MODE_COMPL:
+		prompt = "complete: ";
+		break;
+	default:
+		prompt = "unknown: ";
+	}
+	return prompt;
+#else
+	return el_prompt;
+#endif
 }
 
 void
-tty_draw(void)
+el_compladd(char *s)
+{
+	struct textline *l;
+	int cmp;
+
+	for (l = el_compl.head; l != NULL; l = l->next) {
+		cmp = strcmp(l->text, s);
+		if (cmp == 0) {
+			log_puts(s);
+			log_puts(": duplicate completion item\n");
+			panic();
+		}
+		if (cmp > 0)
+			break;
+	}
+	textbuf_ins(&el_compl, l, s, strlen(s));
+}
+
+void
+compl_end(void)
+{
+	while (el_compl.head)
+		textbuf_rm(&el_compl, el_compl.head);
+}
+
+void
+compl_next(void)
+{
+	unsigned int max;
+
+	if (textbuf_findline(&el_compl,
+		el_buf + el_selstart, el_curs - el_selstart,
+		&el_curline)) {
+		max = el_used;
+		el_replace(el_selstart, el_selend,
+		    el_curline->text, strlen(el_curline->text));
+		el_selend = el_selstart + strlen(el_curline->text);
+		if (max < el_used)
+			max = el_used;
+		el_refresh(el_curs, max);
+	} else
+		el_curline = NULL;
+}
+
+void
+compl_start(void)
+{
+	unsigned int min, max, off, i;
+	struct textline *n;
+
+	el_ops->oncompl(el_arg, el_buf, el_curs, el_used, &el_selstart, &el_selend);
+	el_curline = el_compl.head;
+
+	if (textbuf_findline(&el_compl,
+		el_buf + el_selstart, el_curs - el_selstart,
+		&el_curline)) {
+		min = el_curs;
+		max = el_used;
+		el_replace(el_selstart, el_selend,
+		    el_curline->text, strlen(el_curline->text));
+		el_selend = el_selstart + strlen(el_curline->text);
+
+		/*
+		 * complete ensuring uniqueness
+		 */
+		off = el_selend - el_selstart;
+		n = el_curline;
+		while (1) {
+		next_line:
+			n = n->next;
+			if (n == NULL)
+				break;
+			i = 0;
+			while (1) {
+				if (i == off)
+					goto next_line;
+				if (n->text[i] != el_buf[el_selstart + i])
+					break;
+				i++;
+			}
+			if (el_selstart + i < el_curs)
+				break;
+			off = i;
+		}
+		el_curs = el_selstart + off;
+
+		if (max < el_used)
+			max = el_used;
+		el_refresh(min, max);
+	} else
+		el_curline = NULL;
+}
+
+void
+el_setmode(int mode)
+{
+	if (el_mode != mode) {
+		if (el_mode == EL_MODE_COMPL)
+			compl_end();
+		el_mode = mode;
+		el_resize(NULL, tty_twidth);
+	}
+}
+
+void
+el_draw(void *arg)
 {
 	tty_tclear();
-	if (tty_lpos > 0)
-		tty_tputs(0, tty_lpos, tty_prompt, tty_lpos);
-	tty_refresh(tty_loffs, tty_loffs + tty_lwidth);
+	if (el_pos > 0)
+		tty_tputs(0, el_pos, el_getprompt(), el_pos);
+	el_refresh(el_offs, el_offs + el_width);
 	tty_tflush();
 }
 
 void
-tty_onkey(int key)
+el_search(void)
 {
-	int endpos;
-	size_t max, p;
+	unsigned int cpos;
 
+	if (textbuf_search(&el_hist,
+		el_buf + el_selstart,
+		el_curs - el_selstart,
+		&el_curline, &cpos)) {
+		textbuf_copy(&el_hist, el_buf, EL_LINEMAX, el_curline);
+		el_used = strlen(el_buf);
+		el_curs = cpos;
+		el_selstart = cpos - (el_selend - el_selstart); 
+		el_selend = cpos;
+	} else {
+		el_replace(el_selend, el_used, NULL, 0);
+		el_replace(0, el_selstart, NULL, 0);
+		el_curs = el_used;
+		el_selstart = 0;
+		el_selend = el_used;
+		el_offs = 0;
+		el_curline = NULL;
+	}
+}
+
+void
+el_onkey(void *arg, int key)
+{
+	char text[4];
+	int endpos;
+	size_t max;
+
+	if (key == 0) {
+		el_ops->onchar(el_arg, -1);
+		return;
+	}
 	if (key == (TTY_KEY_CTRL | 'C')) {
 		tty_int();
 		return;
 	}
 	if (key < 0x100) {
-		if (tty_mode == TTY_MODE_SEARCH) {
-			if (tty_sused == TTY_LINEMAX - 1)
+		text[0] = key;
+		if (el_mode == EL_MODE_COMPL) {
+			el_selstart = el_curs;
+			el_replace(el_selstart, el_selend, NULL, 0);
+			el_selend = el_selstart;
+			el_setmode(EL_MODE_EDIT);
+		}
+		if (el_mode == EL_MODE_EDIT) {
+			if (el_used == EL_LINEMAX - 1)
 				return;
-			tty_sbuf[tty_sused++] = key;
-			max = tty_lused;
-			if (tty_hist_match(tty_hist_ptr,
-				tty_sbuf, tty_sused) ||
-			    tty_hist_search(&tty_hist_ptr,
-				tty_sbuf, tty_sused)) {
-				tty_lused = tty_hist_copy(tty_hist_ptr,
-				    tty_lbuf);
-				if (max < tty_lused)
-					max = tty_lused;
-				tty_lcurs = tty_sused;
-			} else {
-				tty_hist_ptr = tty_hist_end;
-				tty_mode = TTY_MODE_EDIT;
-				memcpy(tty_lbuf, tty_sbuf, tty_sused);
-				tty_lused = tty_lcurs = tty_sused;;
-				if (max < tty_lused)
-					max = tty_lused;
-			}
-			tty_refresh(0, max);
-		} else {
-			if (tty_lused == TTY_LINEMAX - 1)
+			el_replace(el_curs, el_curs, text, 1);
+			el_curs++;
+			el_refresh(el_curs - 1, el_used);
+		} else if (el_mode == EL_MODE_SEARCH) {
+			if (el_used == EL_LINEMAX - 1)
 				return;
-			tty_ins(tty_lcurs, key);
-			tty_lcurs++;
-			tty_refresh(tty_lcurs - 1, tty_lused);
+			el_replace(el_curs, el_curs, text, 1);
+			el_curs++;
+			el_selend++;
+			max = el_used;
+			el_curline = NULL;
+			el_search();
+			if (max < el_used)
+				max = el_used;
+			el_refresh(0, max);
 		}
 	} else if (key == TTY_KEY_DEL || key == (TTY_KEY_CTRL | 'D')) {
-		tty_mode = TTY_MODE_EDIT;
-		if (tty_lcurs == tty_lused)
+		el_setmode(EL_MODE_EDIT);
+		if (el_curs == el_used)
 			return;
-		tty_del(tty_lcurs);
-		tty_refresh(tty_lcurs, tty_lused + 1);
+		el_replace(el_curs, el_curs + 1, NULL, 0);
 	} else if (key == TTY_KEY_BS || key == (TTY_KEY_CTRL | 'H')) {
-		if (tty_mode == TTY_MODE_SEARCH) {
-			max = tty_lused;
-			if (tty_sused > 0) {
-				tty_sused--;
-				tty_lcurs--;
-			}
-			if (tty_sused == 0) {
-				tty_mode = TTY_MODE_EDIT;
-				tty_lused = tty_lcurs = 0;
-			} else {
-				p = tty_hist_end;
-				if (tty_hist_search(&p, tty_sbuf, tty_sused) &&
-				    tty_hist_ptr != p) {
-					tty_hist_ptr = p;
-					tty_lused = tty_hist_copy(p, tty_lbuf);
-					if (max < tty_lused)
-						max = tty_lused;
-					tty_lcurs = tty_sused;
-				}
-			}
-			tty_refresh(0, max);
-		} else {
-			if (tty_lcurs == 0)
+		if (el_mode == EL_MODE_COMPL) {
+			el_selstart = el_curs;
+			el_replace(el_selstart, el_selend, NULL, 0);
+			el_selend = el_selstart;
+			el_setmode(EL_MODE_EDIT);
+		}
+		if (el_mode == EL_MODE_EDIT) {
+			if (el_curs == 0)
 				return;
-			tty_lcurs--;
-				tty_del(tty_lcurs);
-			tty_refresh(tty_lcurs, tty_lused + 1);
+			el_curs--;
+			el_replace(el_curs, el_curs + 1, NULL, 0);
+			el_refresh(el_curs, el_used + 1);
+		} else if (el_mode == EL_MODE_SEARCH) {
+			max = el_used;
+			if (el_curs == 0) {
+				el_setmode(EL_MODE_EDIT);
+				el_used = el_curs = 0;
+			} else {
+				el_selend--;
+				el_curs--;
+				el_replace(el_curs, el_curs + 1, NULL, 0);
+				el_curline = NULL;
+				el_search();
+			}
+			if (max < el_used)
+				max = el_used;
+			el_refresh(0, max);
 		}
 	} else if (key == TTY_KEY_LEFT || key == (TTY_KEY_CTRL | 'B')) {
-		tty_mode = TTY_MODE_EDIT;
-		if (tty_lcurs == 0)
+		el_setmode(EL_MODE_EDIT);
+		if (el_curs == 0)
 			return;
-		tty_lcurs--;
-		tty_refresh(tty_lcurs, tty_lcurs);
+		el_curs--;
+		el_refresh(el_curs, el_curs);
 	} else if (key == TTY_KEY_RIGHT || key == (TTY_KEY_CTRL | 'F')) {
-		tty_mode = TTY_MODE_EDIT;
-		if (tty_lcurs == tty_lused)
+		el_setmode(EL_MODE_EDIT);
+		if (el_curs == el_used)
 			return;
-		tty_lcurs++;
-		tty_refresh(tty_lcurs, tty_lcurs);
+		el_curs++;
+		el_refresh(el_curs, el_curs);
 	} else if (key == TTY_KEY_HOME || key == (TTY_KEY_CTRL | 'A')) {
-		tty_mode = TTY_MODE_EDIT;
-		if (tty_lcurs == 0)
+		el_setmode(EL_MODE_EDIT);
+		if (el_curs == 0)
 			return;
-		tty_lcurs = 0;
-		tty_refresh(tty_lcurs, tty_lcurs);
+		el_curs = 0;
+		el_refresh(el_curs, el_curs);
 	} else if (key == TTY_KEY_END || key == (TTY_KEY_CTRL | 'E')) {
-		tty_mode = TTY_MODE_EDIT;
-		if (tty_lcurs == tty_lused)
+		el_setmode(EL_MODE_EDIT);
+		if (el_curs == el_used)
 			return;
-		tty_lcurs = tty_lused;
-		tty_refresh(tty_lcurs, tty_lcurs);
+		el_curs = el_used;
+		el_refresh(el_curs, el_curs);
 	} else if (key == (TTY_KEY_CTRL | 'K')) {
-		tty_mode = TTY_MODE_EDIT;
-		endpos = tty_lused;
-		tty_lused = tty_lcurs;
-		tty_refresh(tty_lcurs, endpos);
+		el_setmode(EL_MODE_EDIT);
+		endpos = el_used;
+		el_used = el_curs;
+		el_refresh(el_curs, endpos);
 	} else if (key == TTY_KEY_UP || key == (TTY_KEY_CTRL | 'P')) {
-		tty_mode = TTY_MODE_EDIT;
-		if (tty_hist_prev(&tty_hist_ptr)) {
-			max = tty_lused;
-			tty_lused = tty_hist_copy(tty_hist_ptr, tty_lbuf);
-			if (max < tty_lused)
-				max = tty_lused;
-			tty_loffs = 0;
-			tty_lcurs = tty_lused;
-			tty_refresh(0, max);
+		el_setmode(EL_MODE_EDIT);
+		if (el_curline != el_hist.head) {
+			max = el_used;
+			if (el_curline == NULL)
+				el_curline = el_hist.tail;
+			else
+				el_curline = el_curline->prev;
+			textbuf_copy(&el_hist, el_buf, EL_LINEMAX, el_curline);
+			el_used = strlen(el_buf);
+			el_offs = 0;
+			el_curs = el_used;
+			if (max < el_used)
+				max = el_used;
+			el_refresh(0, max);
 		}
 	} else if (key == TTY_KEY_DOWN || key == (TTY_KEY_CTRL | 'N')) {
-		tty_mode = TTY_MODE_EDIT;
-		if (tty_hist_next(&tty_hist_ptr)) {
-			max = tty_lused;
-			tty_lused = tty_hist_copy(tty_hist_ptr, tty_lbuf);
-			if (max < tty_lused)
-				max = tty_lused;
-			tty_loffs = 0;
-			tty_lcurs = tty_lused;
-			tty_refresh(0, max);
-		} else {
-			tty_hist_ptr = tty_hist_end;
-			max = tty_lused;
-			tty_lbuf[0] = 0;
-			tty_loffs = tty_lcurs = tty_lused = 0;
-			tty_refresh(0, max);
+		el_setmode(EL_MODE_EDIT);
+		if (el_curline != NULL) {
+			max = el_used;
+			el_curline = el_curline->next;
+			textbuf_copy(&el_hist, el_buf, EL_LINEMAX, el_curline);
+			el_used = strlen(el_buf);
+			el_offs = 0;
+			el_curs = el_used;
+			if (max < el_used)
+				max = el_used;
+			el_refresh(0, max);
 		}
 	} else if (key == TTY_KEY_ENTER) {
-		tty_tendl();
-		if (tty_lused > 0) {
-			tty_hist_add(tty_lbuf, tty_lused);
-			tty_hist_ptr = tty_hist_end;
+		if (el_mode == EL_MODE_COMPL)
+			el_setmode(EL_MODE_EDIT);
+		if (el_mode == EL_MODE_EDIT) {
+			tty_tendl();
+			if (el_used > 0) {
+				if (el_hist.count == EL_HISTMAX)
+					textbuf_rm(&el_hist, el_hist.head);
+				textbuf_ins(&el_hist, NULL, el_buf, el_used);
+				el_curline = NULL;
+			}
+			el_enter();
+			el_curs = el_offs = el_used = 0;
+			el_draw(arg);
+		} else if (el_mode == EL_MODE_SEARCH) {
+			el_setmode(EL_MODE_EDIT);
 		}
-		tty_enter();
-		tty_lcurs = tty_loffs = tty_lused = 0;
-		tty_draw();
-		tty_mode = TTY_MODE_EDIT;
 	} else if (key == (TTY_KEY_CTRL | 'L')) {
-		tty_refresh(tty_loffs, tty_loffs + tty_lwidth);
+		el_resize(NULL, tty_twidth);
+	} else if (key == (TTY_KEY_CTRL | 'G')) {
+		if (el_mode != EL_MODE_EDIT)
+			el_setmode(EL_MODE_EDIT);
 	} else if (key == (TTY_KEY_CTRL | 'R')) {
-		max = tty_lused;
-		if (tty_mode != TTY_MODE_SEARCH) {
-			tty_mode = TTY_MODE_SEARCH;
-			tty_sused = tty_lused;
-			memcpy(tty_sbuf, tty_lbuf, tty_lused);
-			tty_lcurs = tty_sused;
+		max = el_used;
+		if (el_mode != EL_MODE_SEARCH) {
+			el_setmode(EL_MODE_SEARCH);
+			el_curs = el_used = el_selstart = el_selend = 0;
+			el_curline = NULL;
 		}
-		if (tty_hist_search(&tty_hist_ptr, tty_sbuf, tty_sused)) {
-			tty_lused = tty_hist_copy(tty_hist_ptr,
-			    tty_lbuf);
-			if (max < tty_lused)
-				max = tty_lused;
-		} else {
-			tty_hist_ptr = tty_hist_end;
-			tty_mode = TTY_MODE_EDIT;
-			memcpy(tty_lbuf, tty_sbuf, tty_sused);
-			tty_lused = tty_lcurs = tty_sused;
+		el_search();
+		if (max < el_used)
+			max = el_used;
+		el_refresh(0, max);
+	} else if (key == TTY_KEY_TAB || key == (TTY_KEY_CTRL | 'I')) {
+		if (el_mode == EL_MODE_EDIT) {
+			compl_start();
+			if (el_curline && el_curs < el_selend)
+				el_setmode(EL_MODE_COMPL);
+			else
+				compl_end();
+		} else if (el_mode == EL_MODE_COMPL) {
+			el_curline = el_curline->next;
+			compl_next();
+			if (el_curline == NULL && el_compl.head) {
+				el_curline = el_compl.head;
+				compl_next();
+			}
 		}
-		tty_refresh(0, max);
 	}
 }
 
 void
-tty_onresize(int w)
+el_resize(void *arg, int w)
 {
 	int end;
-	
-	tty_lpos = strlen(tty_prompt);
-	if (tty_lpos >= w)
-		tty_lpos = 0;
-	tty_lwidth = w - tty_lpos;
+
+	el_pos = strlen(el_getprompt());
+	if (el_pos >= w)
+		el_pos = 0;
+	el_width = w - el_pos;
 	if (w == 0)
 		return;
-	end = tty_loffs + tty_lwidth - 1;
-	if (tty_lcurs > end)
-		tty_lcurs = end;
-	tty_draw();
+	end = el_offs + el_width - 1;
+	if (el_curs > end)
+		el_curs = end;
+	el_draw(arg);
 }
 
 void
-tty_setline(char *str)
-{
-	size_t len;
-	
-	len = strlen(str);
-	if (len > TTY_LINEMAX - 1)
-		len = TTY_LINEMAX - 1;
-	memcpy(tty_lbuf, str, len);
-	tty_lused = len;
-	tty_lcurs = len;
-	tty_loffs = len + 1 - tty_lwidth;
-	if (tty_loffs < 0)
-		tty_loffs = 0;
-	tty_draw();
-}
-
-void
-tty_setprompt(char *str)
+el_setprompt(char *str)
 {
 	size_t len, dif;
-	
+
 	len = strlen(str);
-	if (len > TTY_PROMPTMAX - 1) {
-		dif = len - (TTY_PROMPTMAX - 1);
+	if (len > EL_PROMPTMAX - 1) {
+		dif = len - (EL_PROMPTMAX - 1);
 		len -= dif;
 		str += dif;
 	}
-	memcpy(tty_prompt, str, len);
-	tty_prompt[len] = 0;
-	tty_onresize(tty_twidth);
+	memcpy(el_prompt, str, len);
+	el_prompt[len] = 0;
+	el_resize(NULL, tty_twidth);
+}
+
+void
+el_init(struct el_ops *ops, void *arg)
+{
+	el_ops = ops;
+	el_arg = arg;
+	el_width = el_curs = el_used = el_offs = el_pos = 0;
+	el_prompt[0] = '\0';
+#ifdef DEBUG
+	memset(el_buf, '.', sizeof(el_buf));
+#endif
+	textbuf_init(&el_hist);
+	textbuf_init(&el_compl);
+	el_curline = NULL;
+	el_mode = EL_MODE_EDIT;
+
+	tty_ops = &el_tty_ops;
+	tty_arg = NULL;
+}
+
+void
+el_done(void)
+{
+	textbuf_done(&el_compl);
+	textbuf_done(&el_hist);
 }
 
 int
-tty_init(void (*cb)(void *, int), void *arg, int notty)
-{	
-	tty_hist_data = xmalloc(TTY_HIST_BUFSZ, "tty_hist_data");
-	if (tty_hist_data == NULL)
+tty_init(void)
+{
+	if (!isatty(STDIN_FILENO) || !isatty(STDOUT_FILENO))
 		return 0;
-#ifdef DEBUG
-	memset(tty_hist_data, '!', TTY_HIST_BUFSZ);
-#endif	
-	tty_hist_start = tty_hist_end = tty_hist_ptr;
-	
-	tty_cb = cb;
-	tty_arg = arg;
-	tty_oused = 0;
-	tty_lwidth = tty_lcurs = tty_lused = tty_loffs = tty_lpos = 0;
-	tty_prompt[0] = '\0';
-	tty_in = STDIN_FILENO;
-	tty_out = STDOUT_FILENO;
-	if (notty || !isatty(STDIN_FILENO) || !isatty(STDOUT_FILENO))
-		return 0;
-	if (tcgetattr(tty_in, &tty_tattr) < 0) {
-		log_perror("tcgetattr");
+	if (tcgetattr(STDIN_FILENO, &tty_tattr) < 0) {
+		log_perror("can't get tty attributes: tcgetattr");
 		return 0;
 	}
-#ifdef DEBUG
-	memset(tty_lbuf, '.', sizeof(tty_lbuf));
-#endif	
+	tty_ops = NULL;
+	tty_arg = NULL;
 	tty_initialized = 1;
-	tty_reset();
 	return 1;
 }
 
 void
 tty_done(void)
 {
-	if (!tty_initialized)
-		return;
-	tty_tclear();
-	tty_tflush();
-	if (tcsetattr(tty_in, TCSAFLUSH, &tty_tattr) < 0)
-		log_perror("tcsetattr");
-	tty_initialized = 0;
-	xfree(tty_hist_data);
+	if (tty_initialized) {
+		tty_tclear();
+		tty_tflush();
+		if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &tty_tattr) < 0)
+			log_perror("can't flush tty: tcsetattr");
+		tty_initialized = 0;
+	}
 }
 
 /*
@@ -597,7 +774,7 @@ void
 tty_onesc(void)
 {
 	int c, key;
-	
+
 	switch (tty_escbuf[1]) {
 	case '[':
 		switch (tty_escbuf[2]) {
@@ -694,7 +871,7 @@ tty_onesc(void)
 	default:
 		return;
 	}
-	tty_onkey(key);
+	tty_ops->onkey(tty_arg, key);
 }
 
 void
@@ -725,7 +902,7 @@ tty_oninput(unsigned int c)
 				key = c <= 0x1f ?
 				    ('@' + c) | TTY_KEY_CTRL : c;
 			}
-			tty_onkey(key);
+			tty_ops->onkey(tty_arg, key);
 			return;
 		case TTY_TSTATE_ESC:
 			if (c >= 0x20 && c <= 0x2f) {
@@ -774,7 +951,7 @@ tty_oninput(unsigned int c)
 			} else {
 				tty_tstate = TTY_TSTATE_ERROR;
 				continue;
-			} 
+			}
 			return;
 		case TTY_TSTATE_CSI_PAR:
 			if (c >= '0' && c <= '9') {
@@ -811,7 +988,7 @@ tty_winch(void)
 
 	if (!tty_initialized)
 		return;
-	if (ioctl(tty_out, TIOCGWINSZ, &ws) != -1) {
+	if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &ws) != -1) {
 		tty_twidth = ws.ws_col;
 		if (tty_twidth <= 0)
 			tty_twidth = 80;
@@ -819,14 +996,14 @@ tty_winch(void)
 		log_perror("TIOCGWINSZ");
 		tty_twidth = 80;
 	}
-	tty_onresize(tty_twidth);
+	tty_ops->resize(tty_arg, tty_twidth);
 }
 
 void
 tty_int(void)
 {
 	tty_tclear();
-	tty_draw();
+	tty_ops->draw(tty_arg);
 }
 
 void
@@ -841,7 +1018,7 @@ tty_reset(void)
 	tio.c_lflag &= ~ECHO;
 	tio.c_cc[VMIN] = 1;
 	tio.c_cc[VTIME] = 0;
-	if (tcsetattr(tty_in, TCSAFLUSH, &tio) < 0)
+	if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &tio) < 0)
 		log_perror("tcsetattr");
 	tty_winch();
 }
@@ -850,9 +1027,9 @@ void
 tty_tflush(void)
 {
 	ssize_t n;
-	
+
 	if (tty_oused > 0) {
-		n = write(tty_out, tty_obuf, tty_oused);
+		n = write(STDOUT_FILENO, tty_obuf, tty_oused);
 		if (n < 0) {
 			log_perror("stdout");
 			return;
@@ -881,43 +1058,6 @@ tty_toutput(char *buf, int len)
 	}
 }
 
-int
-tty_pollfd(struct pollfd *pfds)
-{
-	pfds->fd = tty_in;
-	pfds->events = POLLIN;
-	pfds->revents = 0;
-	return 1;
-}
-
-int
-tty_revents(struct pollfd *pfds)
-{
-	char buf[1024];
-	ssize_t i, n;
-	
-	if (pfds[0].revents & POLLIN) {
-		n = read(tty_in, buf, sizeof(buf));
-		if (n < 0) {
-			log_perror("stdin");
-			tty_eof();
-			return POLLHUP;
-		}
-		if (n == 0) {
-			tty_eof();
-			return POLLHUP;
-		}
-		if (!tty_initialized) {
-			for (i = 0; i < n; i++)
-				tty_cb(tty_arg, buf[i]);
-		} else {
-			for (i = 0; i < n; i++)
-				tty_oninput(buf[i]);
-			tty_tflush();
-		}
-	}
-	return 0;
-}
 
 void
 tty_tesc1(int cmd, int par0)
@@ -967,4 +1107,51 @@ tty_tclear(void)
 {
 	tty_toutput("\r\x1b[K", 4);
 	tty_tcursx = 0;
+}
+
+int
+tty_pollfd(struct pollfd *pfds)
+{
+	pfds->fd = STDIN_FILENO;
+	pfds->events = POLLIN;
+	pfds->revents = 0;
+	return 1;
+}
+
+int
+tty_revents(struct pollfd *pfds)
+{
+	char buf[1024];
+	ssize_t i, n;
+
+	if (pfds[0].revents & POLLIN) {
+		n = read(STDIN_FILENO, buf, sizeof(buf));
+		if (n < 0) {
+			log_perror("stdin");
+			tty_ops->onkey(tty_arg, 0);
+			return POLLHUP;
+		}
+		if (n == 0) {
+			/* XXX use tty_ops->onkey() */
+			tty_ops->onkey(tty_arg, 0);
+			return POLLHUP;
+		}
+		for (i = 0; i < n; i++)
+			tty_oninput(buf[i]);
+		tty_tflush();
+	}
+	return 0;
+}
+
+void
+tty_write(void *buf, size_t len)
+{
+	if (!tty_initialized) {
+		write(STDERR_FILENO, buf, len);
+		return;
+	}
+	tty_tclear();
+	tty_tflush();
+	write(STDOUT_FILENO, buf, len);
+	tty_ops->draw(tty_arg);
 }

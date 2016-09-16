@@ -17,7 +17,9 @@
 #ifndef MIDISH_CONS_H
 #define MIDISH_CONS_H
 
-void cons_init(void (*)(void *, int), void *);
+#include "tty.h"
+
+void cons_init(struct el_ops *, void *);
 void cons_done(void);
 void cons_putpos(unsigned, unsigned, unsigned);
 void cons_puttag(char *);
@@ -29,5 +31,7 @@ void cons_erru(unsigned long, char *);
 void cons_errss(char *, char *, char *);
 void cons_errsu(char *, unsigned long, char *);
 void cons_erruu(unsigned long, unsigned long, char *);
+
+extern int cons_isatty;
 
 #endif /* MIDISH_CONS_H */
