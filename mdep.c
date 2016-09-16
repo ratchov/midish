@@ -357,7 +357,7 @@ cons_init(struct el_ops *el_ops, void *el_arg)
 		log_perror("cons_mdep_init: sigaction(cont) failed");
 		exit(1);
 	}
-	if (!user_flag_batch && tty_init()) {
+	if (!user_flag_batch && !user_flag_verb && tty_init()) {
 		cons_isatty = 1;
 		el_init(el_ops, el_arg);
 		el_setprompt("> ");
