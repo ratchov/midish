@@ -134,7 +134,7 @@ blt_debug(struct exec *o, struct data **r)
 {
 	extern unsigned filt_debug, mididev_debug, mux_debug, mixout_debug,
 	    norm_debug, pool_debug, song_debug,
-	    timo_debug, mem_debug;
+	    timo_debug;
 	char *flag;
 	long value;
 
@@ -158,8 +158,6 @@ blt_debug(struct exec *o, struct data **r)
 		song_debug = value;
 	} else if (str_eq(flag, "timo")) {
 		timo_debug = value;
-	} else if (str_eq(flag, "mem")) {
-		mem_debug = value;
 	} else {
 		cons_errs(o->procname, "unknuwn debug-flag");
 		return 0;

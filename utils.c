@@ -115,7 +115,7 @@ log_putx(unsigned long num)
 			c += (c < 10) ? '0' : 'a' - 10;
 			LOG_PUTC(c);
 		}
-	} else 
+	} else
 		LOG_PUTC('0');
 }
 
@@ -191,22 +191,10 @@ panic(void)
 }
 
 /*
- * header of a memory block
- */
-struct mem_hdr {
-	char *owner;		/* who allocaed the block ? */
-	unsigned words;		/* data chunk size expressed in sizeof(int) */
-#define MAGIC_FREE 0xa55f9811	/* a (hopefully) ``rare'' number */
-	unsigned magic;		/* random number, but not MAGIC_FREE */
-};
-
-unsigned mem_nalloc = 0, mem_nfree = 0, mem_debug = 0;
-
-/*
- * return a random number, will be used to randomize memory bocks
+ * return a pseudo-random number
  */
 unsigned
-memrnd(void)
+rnd(void)
 {
 	static unsigned seed = 1989123;
 
@@ -214,113 +202,60 @@ memrnd(void)
 	return seed;
 }
 
+void
+memrnd(void *addr, size_t size)
+{
+	unsigned char *p = addr;
+
+	while (size-- > 0)
+		*(p++) = rnd() >> 24;
+}
+
 /*
- * allocate 'n' bytes of memory (with n > 0). This functions never
+ * allocate 'size' bytes of memory (with size > 0). This functions never
  * fails (and never returns NULL), if there isn't enough memory then
- * we abord the program.  The memory block is randomized to break code
- * that doesn't initialize the block.  We also add a footer and a
- * trailer to detect writes outside the block boundaries.
+ * we abort the program.
  */
 void *
-xmalloc(unsigned bytes, char *owner)
+xmalloc(size_t size, char *tag)
 {
-	unsigned words, i, *p;
-	struct mem_hdr *hdr;
+	void *p;
 
-	if (bytes == 0) {
-		log_puts("xmalloc: nbytes = 0\n");
-		panic();
-	}
-
-	/*
-	 * calculates the number of ints corresponding to ``bytes''
-	 */
-	words = (bytes + sizeof(int) - 1) / sizeof(int);
-
-	/*
-	 * allocate the header, the data chunk and the trailer
-	 */
-	hdr = malloc(sizeof(struct mem_hdr) + (words + 1) * sizeof(int));
-	if (hdr == NULL) {
+	p = malloc(size);
+	if (p == NULL) {
 		log_puts("xmalloc: failed to allocate ");
-		log_putx(words);
-		log_puts(" words\n");
+		log_putx(size);
+		log_puts(" bytes\n");
 		panic();
 	}
-
-	/*
-	 * find a random magic, but not MAGIC_FREE
-	 */
-	do {
-		hdr->magic = memrnd();
-	} while (hdr->magic == MAGIC_FREE);
-
-	/*
-	 * randomize data chunk
-	 */
-	p = (unsigned *)(hdr + 1);
-	for (i = words; i > 0; i--)
-		*p++ = memrnd();
-
-	/*
-	 * trailer is equal to the magic
-	 */
-	*p = hdr->magic;
-
-	hdr->owner = owner;
-	hdr->words = words;
-	mem_nalloc++;
-	return hdr + 1;
+	return p;
 }
 
 /*
  * free a memory block. Also check that the header and the trailer
- * werent changed and randomise the block, so that the block is not
+ * weren't changed and randomise the block, so that the block is not
  * usable once freed
  */
 void
-xfree(void *mem)
+xfree(void *p)
 {
-	struct mem_hdr *hdr;
-	unsigned i, *p;
-
-	hdr = (struct mem_hdr *)mem - 1;
-	p = (unsigned *)mem;
-
-	if (hdr->magic == MAGIC_FREE) {
-		log_puts("xfree: block seems already freed\n");
-		panic();
-	}
-	if (hdr->magic != p[hdr->words]) {
-		log_puts("xfree: block corrupted\n");
-		panic();
-	}
-
-	/*
-	 * randomize block, so it's not usable
-	 */
-	for (i = hdr->words; i > 0; i--)
-		*p++ = memrnd();
-
-	hdr->magic = MAGIC_FREE;
-	mem_nfree++;
-	free(hdr);
+	free(p);
 }
 
-void
-mem_stats(void)
+char *
+xstrdup(char *s, char *tag)
 {
-	if (mem_debug) {
-		log_puts("mem_stats: used=");
-		log_putu(mem_nalloc - mem_nfree);
-		log_puts(", alloc=");
-		log_putu(mem_nalloc);
-		log_puts("\n");
-	}
+	size_t size;
+	void *p;
+
+	size = strlen(s) + 1;
+	p = xmalloc(size, tag);
+	memcpy(p, s, size);
+	return p;
 }
 
 unsigned
-prof_sqrt(unsigned op)
+isqrt(unsigned op)
 {
 	unsigned t, res = 0;
 	unsigned one = 1 << (8 * sizeof(unsigned) / 2);
@@ -406,7 +341,7 @@ prof_log(struct prof *p)
 		log_puts(", mean=");
 		log_pct(mean);
 
-		delta = prof_sqrt(p->sumsqr / p->n - mean * mean);
+		delta = isqrt(p->sumsqr / p->n - mean * mean);
 		log_puts(", delta=");
 		log_pct(delta);
 	}

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2010 Alexandre Ratchov <alex@caoua.org>
+ * Copyright (c) 2003-2012 Alexandre Ratchov <alex@caoua.org>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -14,24 +14,10 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#ifndef MIDISH_DBG_H
-#define MIDISH_DBG_H
+#ifndef UTILS_H
+#define UTILS_H
 
-#ifndef NULL
-#define NULL 0
-#endif
-
-void	 log_puts(char *);
-void	 log_putx(unsigned long);
-void	 log_putu(unsigned long);
-void	 log_puti(long);
-void	 log_perror(char *);
-void	 panic(void);
-void	 log_flush(void);
-void	*xmalloc(unsigned, char *);
-void	 xfree(void *);
-void	 mem_stats(void);
-unsigned memrnd(void);
+#include <stddef.h>
 
 struct prof {
 	char *name;
@@ -43,11 +29,31 @@ struct prof {
 	unsigned err;
 };
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+void log_puts(char *);
+void log_putx(unsigned long);
+void log_putu(unsigned long);
+void log_puti(long);
+void log_perror(char *);
+void log_putp(void *);
+void panic(void);
+void log_flush(void);
+
+void *xmalloc(size_t, char *);
+char *xstrdup(char *, char *);
+void xfree(void *);
+
 void prof_reset(struct prof *, char *);
 void prof_val(struct prof *, unsigned);
 void prof_log(struct prof *);
 
-extern unsigned mem_debug;
+#ifdef __cplusplus
+}
+#endif
+
 extern unsigned log_sync;
 
-#endif /* MIDISH_DBG_H */
+#endif /* UTILS_H */

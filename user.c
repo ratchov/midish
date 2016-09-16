@@ -834,10 +834,8 @@ user_onchar(void *arg, int c)
 		exitcode = 0;
 		done = 1;
 	}
-	if (c == '\n') {
+	if (c == '\n')
 		cons_ready();
-		mem_stats();
-	}
 }
 
 void

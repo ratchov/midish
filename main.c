@@ -60,6 +60,5 @@ main(int argc, char **argv)
 
 	exitcode = user_mainloop();
 
-	mem_stats();
 	return exitcode ? 0 : 1;
 }
