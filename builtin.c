@@ -843,6 +843,7 @@ blt_save(struct exec *o, struct data **r)
 unsigned
 blt_load(struct exec *o, struct data **r)
 {
+	struct song *newsong;
 	char *filename;
 	unsigned res;
 
@@ -850,11 +851,14 @@ blt_load(struct exec *o, struct data **r)
 		return 0;
 	}
 	song_stop(usong);
-	song_done(usong);
-	evpat_reset();
-	song_init(usong);
-	res = song_load(usong, filename);
-	cons_putpos(usong->curpos, 0, 0);
+	newsong = song_new();
+	res = song_load(newsong, filename);
+	if (res) {
+		song_delete(usong);
+		usong = newsong;
+		cons_putpos(usong->curpos, 0, 0);
+	} else
+		song_delete(newsong);
 	return res;
 }
 
@@ -890,11 +894,11 @@ blt_import(struct exec *o, struct data **r)
 	if (!exec_lookupstring(o, "filename", &filename)) {
 		return 0;
 	}
+	song_stop(usong);
 	sng = song_importsmf(filename);
 	if (sng == NULL) {
 		return 0;
 	}
-	song_stop(usong);
 	song_delete(usong);
 	usong = sng;
 	cons_putpos(usong->curpos, 0, 0);
