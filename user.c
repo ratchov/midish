@@ -1187,6 +1187,7 @@ user_mainloop(void)
 	parse_init(&parse, exec, exec_cb);
 	lex_init(&parse, "stdin", parse_cb, &parse);
 
+	cons_ready();
 	cons_putpos(usong->curpos, 0, 0);
 
 	done = 0;
