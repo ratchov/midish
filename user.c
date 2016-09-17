@@ -843,7 +843,22 @@ user_oncompl(void *arg, char *text, int curs, int used, int *rstart, int *rend)
 {
 	unsigned int start, end;
 	struct name *n;
-	int c;
+	int c, quote;
+
+	quote = 0;
+	start = curs;
+	while (1) {
+		if (start == 0)
+			break;
+		c = text[start - 1];
+		if (c == '"')
+			quote ^= 1;
+		start--;
+	}
+
+	/* no completion for filenames yet */
+	if (quote)
+		return;
 
 	start = curs;
 	while (1) {
@@ -853,8 +868,11 @@ user_oncompl(void *arg, char *text, int curs, int used, int *rstart, int *rend)
 		if ((c < 'A' || c > 'Z') &&
 		    (c < 'a' || c > 'z') &&
 		    (c < '0' || c > '9') &&
-		    (c != '_'))
-			break;
+		    (c != '_')) {
+			if (c != '[')
+				break;
+			return;
+		}
 		start--;
 	}
 
