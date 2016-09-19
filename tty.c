@@ -542,7 +542,9 @@ el_onkey(void *arg, int key)
 		el_setmode(EL_MODE_EDIT);
 		if (el_curs == el_used)
 			return;
+		max = el_used;
 		el_replace(el_curs, el_curs + 1, NULL, 0);
+		el_refresh(el_curs, max);
 	} else if (key == TTY_KEY_BS || key == (TTY_KEY_CTRL | 'H')) {
 		if (el_mode == EL_MODE_COMPL) {
 			el_selstart = el_curs;
@@ -553,9 +555,10 @@ el_onkey(void *arg, int key)
 		if (el_mode == EL_MODE_EDIT) {
 			if (el_curs == 0)
 				return;
+			max = el_used;
 			el_curs--;
 			el_replace(el_curs, el_curs + 1, NULL, 0);
-			el_refresh(el_curs, el_used + 1);
+			el_refresh(el_curs, max);
 		} else if (el_mode == EL_MODE_SEARCH) {
 			max = el_used;
 			if (el_curs == 0) {
