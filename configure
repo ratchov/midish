@@ -6,7 +6,7 @@
 prefix=/usr/local		# where to install midish
 alsa=no				# do we want alsa support ?
 sndio=no			# do we want sndio support ?
-rmidish=yes			# do we want to build rmidish ?
+rmidish=no			# do we want to build rmidish ?
 progs=midish			# programs to build
 vars=				# variables definitions passed as-is
 bindir=				# path where to install binaries
