@@ -275,9 +275,7 @@ mux_mdep_wait(void)
 			if (revents & POLLHUP)
 				cons_eof = 1;
 		} else {
-			if (tty_pfds->revents & POLLHUP)
-				cons_eof = 1;
-			else if (tty_pfds->revents & POLLIN) {
+			if (tty_pfds->revents & POLLIN) {
 				res = read(STDIN_FILENO, midibuf, MIDI_BUFSIZE);
 				if (res < 0)
 					log_perror("stdin");
