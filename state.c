@@ -636,6 +636,11 @@ statelist_outdate(struct statelist *o)
 		 * states have both FIRST and LAST bits set
 		 */
 		if (i->phase == EV_PHASE_LAST) {
+#ifdef STATE_DEBUG
+			log_puts("statelist_outdate: ");
+			state_log(i);
+			log_puts(": removed\n");
+#endif
 			statelist_rm(o, i);
 			state_del(i);
 		} else {
