@@ -437,10 +437,8 @@ user_oncompl_path(char *text, int *rstart, int *rend)
 		if (text[start - 1] == '/') {
 			dir_end = start;
 			len = dir_end - dir_start;
-			if (len >= PATH_MAX) {
-				log_puts("completion path too long\n");
+			if (len >= PATH_MAX)
 				return;
-			}
 			memcpy(str, text + dir_start, len);
 			str[len] = 0;
 			break;
