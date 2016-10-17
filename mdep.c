@@ -416,14 +416,39 @@ exec_runrcfile(struct exec *o)
 }
 
 void
-user_oncompl_filelist(char *dir)
+user_oncompl_path(char *text, int *rstart, int *rend)
 {
+#define COMPL_MAXSTR	1024
+	char str[COMPL_MAXSTR];
 	struct dirent *dent;
 	DIR *dirp;
 	size_t len;
-	char str[MAXNAMLEN + 2];
+	int dir_start, dir_end, start, end;
 
-	dirp = opendir(dir);
+	dir_start = *rstart;
+	start = end = *rend;
+	while (1) {
+		if (start == dir_start) {
+			dir_end = start;
+			str[0] = '.';
+			str[1] = 0;
+			break;
+		}
+		if (text[start - 1] == '/') {
+			dir_end = start;
+			len = dir_end - dir_start;
+			if (len >= COMPL_MAXSTR) {
+				log_puts("completion path too long\n");
+				return;
+			}
+			memcpy(str, text + dir_start, len);
+			str[len] = 0;
+			break;
+		}
+		start--;
+	}
+
+	dirp = opendir(str);
 	if (dirp == NULL)
 		return;
 	while (1) {

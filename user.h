@@ -42,7 +42,7 @@ unsigned user_getopts(int *, char ***);
 
 void user_onchar(void *, int);
 void user_oncompl(void *, char *, int, int, int *, int *);
-void user_oncompl_filelist(char *);
+void user_oncompl_path(char *, int *, int *);
 
 /* useful conversion functions */
 

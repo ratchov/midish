@@ -20,7 +20,7 @@
  *
  * each function is described in the manual.html file
  */
-#include <string.h>
+
 #include "utils.h"
 #include "defs.h"
 #include "node.h"
@@ -841,13 +841,9 @@ user_onchar(void *arg, int c)
 void
 user_oncompl(void *arg, char *text, int curs, int used, int *rstart, int *rend)
 {
-#define COMPL_MAXSTR	1024
-	char str[COMPL_MAXSTR];
 	struct name *n;
 	int start, end;
 	int c, quote;
-	int dir_start, dir_end;
-	size_t len;
 
 	quote = 0;
 	start = curs;
@@ -872,35 +868,14 @@ user_oncompl(void *arg, char *text, int curs, int used, int *rstart, int *rend)
 			end++;
 		}
 
-		dir_start = curs;
+		start = curs;
 		while (1) {
-			if (text[dir_start - 1] == '"')
+			if (text[start - 1] == '"')
 				break;
-			dir_start--;
-		}
-
-		start = end;
-		while (1) {
-			if (start == dir_start) {
-				dir_end = start;
-				str[0] = '.';
-				str[1] = 0;
-				break;
-			}
-			if (text[start - 1] == '/') {
-				dir_end = start;
-				len = dir_end - dir_start;
-				if (len >= COMPL_MAXSTR) {
-					log_puts("completion path too long\n");
-					return;
-				}
-				memcpy(str, text + dir_start, len);
-				str[len] = 0;
-				break;
-			}
 			start--;
 		}
-		user_oncompl_filelist(str);
+
+		user_oncompl_path(text, &start, &end);
 	} else {
 
 		/*
