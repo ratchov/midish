@@ -265,7 +265,7 @@ el_enter(void)
 void
 el_replace(size_t start, size_t end, char *text, size_t textsize)
 {
-	int i, len, off;
+	int i, off;
 
 	if (el_used - (end - start) + textsize > EL_LINEMAX) {
 		log_puts("text to paste too long (ignored)\n");
@@ -275,7 +275,6 @@ el_replace(size_t start, size_t end, char *text, size_t textsize)
 	/*
 	 * move text after selection
 	 */
-	len = el_used - end;
 	off = end - start - textsize;
 	if (off > 0) {
 		i = end;
