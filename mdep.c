@@ -418,8 +418,7 @@ exec_runrcfile(struct exec *o)
 void
 user_oncompl_path(char *text, int *rstart, int *rend)
 {
-#define COMPL_MAXSTR	1024
-	char str[COMPL_MAXSTR];
+	char str[PATH_MAX + 1];
 	struct dirent *dent;
 	DIR *dirp;
 	size_t len;
@@ -432,12 +431,13 @@ user_oncompl_path(char *text, int *rstart, int *rend)
 			dir_end = start;
 			str[0] = '.';
 			str[1] = 0;
+			len = 1;
 			break;
 		}
 		if (text[start - 1] == '/') {
 			dir_end = start;
 			len = dir_end - dir_start;
-			if (len >= COMPL_MAXSTR) {
+			if (len >= PATH_MAX) {
 				log_puts("completion path too long\n");
 				return;
 			}
@@ -458,7 +458,7 @@ user_oncompl_path(char *text, int *rstart, int *rend)
 		if (dent->d_name[0] == '.')
 			continue;
 		len = strlen(dent->d_name);
-		if (len + 2 >= sizeof(str))
+		if (dir_end - dir_start + len >= PATH_MAX)
 			continue;
 		memcpy(str, dent->d_name, len);
 		switch (dent->d_type) {
