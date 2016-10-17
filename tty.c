@@ -207,10 +207,20 @@ textbuf_done(struct textbuf *p)
 void
 textbuf_copy(struct textbuf *p, char *buf, size_t size, struct textline *l)
 {
+	char *s;
+
 	if (l == NULL)
 		buf[0] = 0;
-	else
-		strlcpy(buf, l->text, size);
+	else {
+		s = l->text;
+		while (1) {
+			*buf = *s;
+			if (*s == 0)
+				break;
+			buf++;
+			s++;
+		}
+	}
 }
 
 int
