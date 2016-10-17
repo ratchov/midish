@@ -20,7 +20,7 @@
  *
  * each function is described in the manual.html file
  */
-
+#include <string.h>
 #include "utils.h"
 #include "defs.h"
 #include "node.h"
@@ -841,59 +841,98 @@ user_onchar(void *arg, int c)
 void
 user_oncompl(void *arg, char *text, int curs, int used, int *rstart, int *rend)
 {
-	unsigned int start, end;
+#define COMPL_MAXSTR	1024
+	char str[COMPL_MAXSTR];
 	struct name *n;
+	int start, end;
 	int c, quote;
+	int dir_start, dir_end;
+	size_t len;
 
 	quote = 0;
 	start = curs;
 	while (1) {
-		if (start == 0)
+		if (start-- == 0)
 			break;
-		c = text[start - 1];
-		if (c == '"')
+		if (text[start] == '"')
 			quote ^= 1;
-		start--;
 	}
 
-	/* no completion for filenames yet */
-	if (quote)
-		return;
+	if (quote) {
 
-	start = curs;
-	while (1) {
-		if (start == 0)
-			break;
-		c = text[start - 1];
-		if ((c < 'A' || c > 'Z') &&
-		    (c < 'a' || c > 'z') &&
-		    (c < '0' || c > '9') &&
-		    (c != '_')) {
-			if (c != '[')
+		/*
+		 * quoted test is file-name, find directory components
+		 * and scan directory
+		 */
+
+		end = curs;
+		while (1) {
+			if (end == used || text[end] == '"')
 				break;
-			return;
+			end++;
 		}
-		start--;
-	}
 
-	end = curs;
-	while (1) {
-		if (end == used)
-			break;
-		c = text[end];
-		if ((c < 'A' || c > 'Z') &&
-		    (c < 'a' || c > 'z') &&
-		    (c < '0' || c > '9') &&
-		    (c != '_'))
-			break;
-		end++;
+		dir_start = curs;
+		while (1) {
+			if (text[dir_start - 1] == '"')
+				break;
+			dir_start--;
+		}
+
+		start = end;
+		while (1) {
+			if (start == dir_start) {
+				dir_end = start;
+				str[0] = '.';
+				str[1] = 0;
+				break;
+			}
+			if (text[start - 1] == '/') {
+				dir_end = start;
+				len = dir_end - dir_start;
+				if (len >= COMPL_MAXSTR) {
+					log_puts("completion path too long\n");
+					return;
+				}
+				memcpy(str, text + dir_start, len);
+				str[len] = 0;
+				break;
+			}
+			start--;
+		}
+		user_oncompl_filelist(str);
+	} else {
+
+		/*
+		 * unquoted text is a proc name; complete
+		 * if it's either at the beginning or after '['
+		 */
+
+		start = curs;
+		while (1) {
+			if (start == 0)
+				break;
+			c = text[start - 1];
+			if (!IS_IDNEXT(c)) {
+				if (c == '[')
+					break;
+				return;
+			}
+			start--;
+		}
+		end = curs;
+		while (1) {
+			if (end == used || !IS_IDNEXT(text[end]))
+				break;
+			end++;
+		}
+
+		for (n = exec->procs; n != NULL; n = n->next)
+			el_compladd(n->str);
 	}
 
 	*rstart = start;
 	*rend = end;
-
-	for (n = exec->procs; n != NULL; n = n->next)
-		el_compladd(n->str);
 }
 
 struct el_ops user_el_ops = {

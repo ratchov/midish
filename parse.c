@@ -95,14 +95,6 @@
 #include "exec.h"
 #include "cons.h"
 
-#define IS_SPACE(c)	((c) == ' ' || (c) == '\r' || (c) == '\t')
-#define IS_PRINTABLE(c)	((c) >= ' ' && (c) != 0x7f)
-#define IS_DIGIT(c)	((c) >= '0' && (c) <= '9')
-#define IS_ALPHA(c)	(((c) >= 'A' && (c) <= 'Z') || ((c) >= 'a' && (c) <= 'z'))
-#define IS_IDFIRST(c)	(IS_ALPHA(c) || (c) == '_')
-#define IS_IDNEXT(c)	(IS_IDFIRST(c) || IS_DIGIT(c))
-#define IS_QUOTE(c)	((c) == '"')
-
 /*
  * tokinizer states
  */

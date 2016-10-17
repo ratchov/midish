@@ -22,6 +22,7 @@
 #include <sys/time.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <dirent.h>
 #ifdef __APPLE__
 #include <mach/mach_time.h>
 #endif
@@ -412,4 +413,42 @@ exec_runrcfile(struct exec *o)
 		return exec_runfile(o, RC_DIR "/" RC_NAME);
 	}
 	return 1;
+}
+
+void
+user_oncompl_filelist(char *dir)
+{
+	struct dirent *dent;
+	DIR *dirp;
+	size_t len;
+	char str[MAXNAMLEN + 2];
+
+	dirp = opendir(dir);
+	if (dirp == NULL)
+		return;
+	while (1) {
+		dent = readdir(dirp);
+		if (dent == NULL)
+			break;
+		if (dent->d_name[0] == '.')
+			continue;
+		len = strlen(dent->d_name);
+		if (len + 2 >= sizeof(str))
+			continue;
+		memcpy(str, dent->d_name, len);
+		switch (dent->d_type) {
+		case DT_REG:
+			str[len] = '"';
+			break;
+		case DT_DIR:
+			str[len] = '/';
+			break;
+		default:
+			continue;
+		}
+		len++;
+		str[len] = 0;
+		el_compladd(str);
+	}
+	closedir(dirp);
 }
