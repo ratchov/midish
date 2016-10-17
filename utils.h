@@ -33,6 +33,7 @@ struct prof {
 extern "C" {
 #endif
 
+void log_putc(char *, size_t);
 void log_puts(char *);
 void log_putx(unsigned long);
 void log_putu(unsigned long);
