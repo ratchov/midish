@@ -27,7 +27,7 @@ Midish is a MIDI sequencer/filter implemented as an interactive
 command-line interpreter.
 It supports:
 .Pp
-.Bl -bullet -compact
+.Bl -bullet -offset indent -compact
 .It
 Multiple MIDI devices handling
 .It
@@ -45,7 +45,7 @@ System exclusive messages handling
 .El
 .Pp
 The options are as follows:
-.Bl -tag -width "-b "
+.Bl -tag -width Ds
 .It Fl b
 Do not process
 .Pa "$HOME/.midishrc"
@@ -79,9 +79,6 @@ startup script
 startup script (if
 .Pa "$HOME/.midishrc"
 doesn't exist)
-.Xr midi 4
-devices used by
-.Nm
 .El
 .Sh SEE ALSO
 .Xr midiplay 1 ,
