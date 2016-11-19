@@ -453,7 +453,8 @@ user_oncompl_path(char *text, int *rstart, int *rend)
 		dent = readdir(dirp);
 		if (dent == NULL)
 			break;
-		if (dent->d_name[0] == '.')
+		if (strcmp(dent->d_name, ".") == 0 ||
+		    strcmp(dent->d_name, "..") == 0)
 			continue;
 		len = strlen(dent->d_name);
 		if (dir_end - dir_start + len >= PATH_MAX)
