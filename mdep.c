@@ -474,4 +474,7 @@ user_oncompl_path(char *text, int *rstart, int *rend)
 		el_compladd(str);
 	}
 	closedir(dirp);
+
+	*rstart = start;
+	*rend = end;
 }
