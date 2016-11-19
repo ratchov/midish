@@ -389,6 +389,7 @@ compl_end(void)
 {
 	while (el_compl.head)
 		textbuf_rm(&el_compl, el_compl.head);
+	el_curline = NULL;
 }
 
 void
