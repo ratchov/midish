@@ -301,25 +301,37 @@ mux_mdep_wait(void)
 void
 mux_sleep(unsigned millisecs)
 {
-	int res;
-	struct timespec ts, remain;
+	int res, delta_msec;
+	struct timespec ts;
 
-	ts.tv_sec = millisecs / 1000;
-	ts.tv_nsec = (millisecs % 1000) * 1000000;
+	if (clock_gettime(CLOCK_MONOTONIC, &ts_last) < 0) {
+		log_perror("mux_sleep: clock_gettime");
+		exit(1);
+	}
 
-	while (ts.tv_sec > 0 || ts.tv_nsec > 0) {
-		res = nanosleep(&ts, &remain);
+	ts.tv_sec = ts_last.tv_sec + millisecs / 1000;
+	ts.tv_nsec = ts_last.tv_nsec + (millisecs % 1000) * 1000000;
+	if (ts.tv_nsec >= 1000000000) {
+		ts.tv_sec++;
+		ts.tv_nsec -= 1000000000;
+	}
+
+	while (1) {
+		delta_msec = (ts.tv_sec - ts_last.tv_sec) * 1000 +
+		    (ts.tv_nsec - ts_last.tv_nsec) / 1000000;
+		if (delta_msec <= 0)
+			break;
+		res = poll(NULL, 0, delta_msec);
 		if (res >= 0)
 			break;
 		if (errno != EINTR) {
 			log_perror("mux_sleep: poll");
 			exit(1);
 		}
-		ts = remain;
-	}
-	if (clock_gettime(CLOCK_MONOTONIC, &ts_last) < 0) {
-		log_perror("mux_sleep: clock_gettime");
-		exit(1);
+		if (clock_gettime(CLOCK_MONOTONIC, &ts_last) < 0) {
+			log_perror("mux_sleep: clock_gettime");
+			exit(1);
+		}
 	}
 }
 
