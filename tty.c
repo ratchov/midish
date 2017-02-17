@@ -897,28 +897,39 @@ tty_oninput(unsigned int c)
 	for (;;) {
 		switch (tty_tstate) {
 		case TTY_TSTATE_ANY:
-			switch (c) {
-			case 0x09:
-				key = TTY_KEY_TAB;
-				break;
-			case 0x0a:
-				key = TTY_KEY_ENTER;
-				break;
-			case 0x08:
-			case 0x7f:
-				key = TTY_KEY_BS;
-				break;
-			case 0x1b:
-				tty_tstate = TTY_TSTATE_ESC;
-				return;
-			default:
-				key = c <= 0x1f ?
-				    ('@' + c) | TTY_KEY_CTRL : c;
+			if (c <= 0x1f) {
+				switch (c) {
+				case 0x09:
+					key = TTY_KEY_TAB;
+					break;
+				case 0x0a:
+					key = TTY_KEY_ENTER;
+					break;
+				case 0x08:
+					key = TTY_KEY_BS;
+					break;
+				case 0x1b:
+					tty_tstate = TTY_TSTATE_ESC;
+					return;
+				default:
+					key = ('@' + c) | TTY_KEY_CTRL;
+				}
+			} else {
+				switch (c) {
+				case 0x7f:
+					key = TTY_KEY_BS;
+					break;
+				default:
+					key = c;
+				}
 			}
 			tty_ops->onkey(tty_arg, key);
 			return;
 		case TTY_TSTATE_ESC:
-			if (c >= 0x20 && c <= 0x2f) {
+			if (c <= 0x1f) {
+				tty_tstate = TTY_TSTATE_ANY;
+				continue;
+			} else if (c >= 0x20 && c <= 0x2f) {
 				/* 2-char esc sequence, we ignore it */
 				tty_tstate = TTY_TSTATE_INT;
 			} else if (c >= 0x30 && c <= 0x3f) {
