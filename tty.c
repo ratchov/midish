@@ -351,10 +351,10 @@ el_getprompt(void)
 		prompt = el_prompt;
 		break;
 	case EL_MODE_SEARCH:
-		prompt = "search: ";
+		prompt = "(r-search) ";
 		break;
 	case EL_MODE_COMPL:
-		prompt = "complete: ";
+		prompt = "(complete) ";
 		break;
 	default:
 		prompt = "unknown: ";
