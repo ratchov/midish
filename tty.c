@@ -1156,7 +1156,6 @@ tty_revents(struct pollfd *pfds)
 			return POLLHUP;
 		}
 		if (n == 0) {
-			/* XXX use tty_ops->onkey() */
 			tty_ops->onkey(tty_arg, 0);
 			return POLLHUP;
 		}
