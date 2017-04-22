@@ -1224,7 +1224,7 @@ user_mainloop(void)
 	cons_putpos(usong->curpos, 0, 0);
 
 	done = 0;
-	while (!done && mux_mdep_wait())
+	while (!done && mux_mdep_wait(1))
 		; /* nothing */
 
 	lex_done(&parse);

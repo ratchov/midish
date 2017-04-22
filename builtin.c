@@ -911,7 +911,7 @@ blt_idle(struct exec *o, struct data **r)
 	song_idle(usong);
 	if (user_flag_batch) {
 		cons_err("press ^C to stop idling");
-		while (mux_mdep_wait())
+		while (mux_mdep_wait(0))
 			; /* nothing */
 		cons_err("idling stopped");
 		song_stop(usong);
@@ -925,7 +925,7 @@ blt_play(struct exec *o, struct data **r)
 	song_play(usong);
 	if (user_flag_batch) {
 		cons_err("press ^C to stop playback");
-		while (!usong->complete && mux_mdep_wait())
+		while (!usong->complete && mux_mdep_wait(0))
 			; /* nothing */
 		cons_err("playback stopped");
 		song_stop(usong);
@@ -939,7 +939,7 @@ blt_rec(struct exec *o, struct data **r)
 	song_record(usong);
 	if (user_flag_batch) {
 		cons_err("press ^C to stop recording");
-		while (mux_mdep_wait())
+		while (mux_mdep_wait(0))
 			; /* nothing */
 		cons_err("recording stopped");
 		song_stop(usong);

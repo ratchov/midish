@@ -75,7 +75,7 @@ void mux_chgticrate(unsigned);
 void mux_startreq(void);
 void mux_stopreq(void);
 void mux_gotoreq(unsigned);
-int mux_mdep_wait(void); /* XXX: hide this prototype */
+int mux_mdep_wait(int); /* XXX: hide this prototype */
 
 /*
  * call-backs called by midi device drivers

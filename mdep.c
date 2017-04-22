@@ -164,17 +164,17 @@ mux_mdep_close(void)
  * Return 0 if interrupted by a signal
  */
 int
-mux_mdep_wait(void)
+mux_mdep_wait(int docons)
 {
 	int i, res, revents;
 	nfds_t nfds;
 	struct pollfd *pfd, *tty_pfds, pfds[MAXFDS];
 	struct mididev *dev;
-	static unsigned char midibuf[MIDI_BUFSIZE];
+	unsigned char midibuf[MIDI_BUFSIZE];
 	long long delta_nsec;
 
 	nfds = 0;
-	if (!cons_eof) {
+	if (docons && !cons_eof) {
 		tty_pfds = &pfds[nfds];		
 		if (cons_isatty)
 			nfds += tty_pollfd(tty_pfds);
@@ -278,11 +278,13 @@ mux_mdep_wait(void)
 		} else {
 			if (tty_pfds->revents & POLLIN) {
 				res = read(STDIN_FILENO, midibuf, MIDI_BUFSIZE);
-				if (res < 0)
+				if (res < 0) {
+					cons_eof = 1;
 					log_perror("stdin");
-				else if (res == 0)
+				} else if (res == 0) {
+					cons_eof = 1;
 					user_onchar(NULL, -1);
-				else {
+				} else {
 					for (i = 0; i < res; i++)
 						user_onchar(NULL, midibuf[i]);
 				}
