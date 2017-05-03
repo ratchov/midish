@@ -21,49 +21,54 @@
 .Nd play a standard MIDI file
 .Sh SYNOPSIS
 .Nm smfplay
-.Op -mxy
-.Op -g Ar measure
-.Op -d Ar devname
-.Op -i Ar devname
+.Op Fl mxy
+.Op Fl g Ar measure
+.Op Fl d Ar devname
+.Op Fl i Ar devname
 midifile
 .Sh DESCRIPTION
 The
 .Nm
-utility plays a MIDI file. While playing, it can route events from one
+utility plays a MIDI file.
+While playing, it can route events from one
 .Xr midi 4
-device to another. To stop performance, send an interrupt signal to
+device to another.
+To stop performance, send an interrupt signal to
 .Nm
 (for instance by pressing control ^C on the terminal).
 The options are as follows:
 .Bl -tag -width "-i devname "
 .It Fl m
-Use metronome. The metronome will follow tempo changes and time signature
+Use metronome.
+The metronome will follow tempo changes and time signature
 changes in the midi file.
 .It Fl x
 Synchronise to an external
 .Xr midi 4
-device. If the
+device.
+If the
 .Fl i
 flag is used then playback will be synchronised to the input device
 else it will be synchronised to the default device.
 .It Fl y
-Send midi timing information to the default device. Useful if the
-output device is a slave MIDI sequencer.
+Send midi timing information to the default device.
+Useful if the output device is a slave MIDI sequencer.
 .It Fl g Ar measure
 Start playback at the given measure number.
 .It Fl d Ar filename
 Default
 .Xr midi 4
-device on which to play the midi file. If not specified,
-the content of the
-.Pa MIDIDEV
+device on which to play the midi file.
+If not specified, the content of the
+.Ev MIDIDEV
 environment variable will be used instead.
 .It Fl i Ar filename
 Alternate input
 .Xr midi 4
-device. Voice events (notes, controllers, etc) received on the input device
-will be sent as-is to the default device. Without this flag, the default
-device will be used for input.
+device.
+Voice events (notes, controllers, etc) received on the input device
+will be sent as-is to the default device.
+Without this flag, the default device will be used for input.
 .El
 .Pp
 The
@@ -81,7 +86,7 @@ and will use metronome.
 .Pp
 .Dl $ smfplay -m -d /dev/rmidi4 mysong.mid
 .Sh SEE ALSO
-.Xr smfrec 1 ,
-.Xr midish 1 ,
 .Xr midiplay 1 ,
+.Xr midish 1 ,
+.Xr smfrec 1 ,
 .Xr midi 4
