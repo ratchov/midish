@@ -435,7 +435,8 @@ user_oncompl_path(char *text, int *rstart, int *rend)
 	char str[PATH_MAX + 1];
 	struct dirent *dent;
 	DIR *dirp;
-	size_t len;
+	struct stat sb;
+	size_t len, path_len;
 	int dir_start, dir_end, start, end;
 
 	dir_start = *rstart;
@@ -445,7 +446,6 @@ user_oncompl_path(char *text, int *rstart, int *rend)
 			dir_end = start;
 			str[0] = '.';
 			str[1] = 0;
-			len = 1;
 			break;
 		}
 		if (text[start - 1] == '/') {
@@ -463,6 +463,8 @@ user_oncompl_path(char *text, int *rstart, int *rend)
 	dirp = opendir(str);
 	if (dirp == NULL)
 		return;
+	path_len = strlen(str);
+	str[path_len++] = '/';
 	while (1) {
 		dent = readdir(dirp);
 		if (dent == NULL)
@@ -471,22 +473,19 @@ user_oncompl_path(char *text, int *rstart, int *rend)
 		    strcmp(dent->d_name, "..") == 0)
 			continue;
 		len = strlen(dent->d_name);
-		if (dir_end - dir_start + len >= PATH_MAX)
+		if (path_len + len >= PATH_MAX)
 			continue;
-		memcpy(str, dent->d_name, len);
-		switch (dent->d_type) {
-		case DT_REG:
-			str[len] = '"';
-			break;
-		case DT_DIR:
-			str[len] = '/';
-			break;
-		default:
+		memcpy(str + path_len, dent->d_name, len + 1);
+		if (stat(str, &sb) == -1)
 			continue;
-		}
-		len++;
-		str[len] = 0;
-		el_compladd(str);
+		if (S_ISREG(sb.st_mode))
+			str[path_len + len++] = '"';
+		else if (S_ISDIR(sb.st_mode))
+			str[path_len + len++] = '/';
+		else
+			continue;
+		str[path_len + len] = 0;
+		el_compladd(str + path_len);
 	}
 	closedir(dirp);
 
