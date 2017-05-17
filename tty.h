@@ -62,7 +62,21 @@ extern struct tty_ops *tty_ops;
 extern void *tty_arg;
 
 struct el_ops {
+	/*
+	 * Called for every character when a new line is entered,
+	 * including for \n and EOF.
+	 */
 	void (*onchar)(void *, int);
+
+	/*
+	 * Called when a completion list must be built (when the TAB
+	 * key is hit the first time).  The function gets a pointer to
+	 * the text, its size and the current cursor position.  It
+	 * must parse the text, build the appropriate completion list
+	 * (by calling el_compladd() for each item) and return in the
+	 * extents of the sub-string being completed (for instance the
+	 * last component of the path).
+	 */
 	void (*oncompl)(void *, char *, int, int, int *, int *);
 };
 
