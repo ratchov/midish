@@ -258,7 +258,7 @@ unsigned
 isqrt(unsigned op)
 {
 	unsigned t, res = 0;
-	unsigned one = 1 << (8 * sizeof(unsigned) / 2);
+	unsigned one = 1 << (8 * sizeof(unsigned) - 2);
 
 	while (one > op)
 		one >>= 2;
