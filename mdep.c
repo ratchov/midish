@@ -64,7 +64,7 @@ struct timespec ts, ts_last;
 
 int cons_eof, cons_isatty;
 
-#ifdef __APPLE__
+#if defined(__APPLE__) && !defined(CLOCK_MONOTONIC)
 #define CLOCK_MONOTONIC 0
 
 int
