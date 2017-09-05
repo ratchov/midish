@@ -69,7 +69,7 @@
 /*
  * maximum number of events
  */
-#define DEFAULT_MAXNSEQEVS	100000
+#define DEFAULT_MAXNSEQEVS	400000
 
 /*
  * maximum number of tracks
