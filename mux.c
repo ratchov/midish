@@ -537,6 +537,8 @@ mux_ticcb(void)
 		if (mux_phase == MUX_FIRST) {
 			mux_chgphase(MUX_NEXT);
 		} else if (mux_phase == MUX_START) {
+			mux_curpos = 0;
+			mux_nextpos = mux_ticlength;
 			mux_chgphase(MUX_FIRST);
 		}
 		if (mux_phase == MUX_NEXT) {

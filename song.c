@@ -977,6 +977,15 @@ song_loc(struct song *o, unsigned where, unsigned how)
 		pos += (unsigned long long)delta * usec24;
 		tic += delta;
 	}
+
+	/*
+	 * process all meta events of the current tick,
+	 * so we get the time signature and the tempo of
+	 * the next tick
+	 */
+	while (seqptr_evget(o->metaptr))
+		; /* nothing */
+
 	o->complete = !seqptr_eot(o->metaptr);
 
 	/*
