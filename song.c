@@ -407,13 +407,13 @@ song_setcurfilt(struct song *o, struct songfilt *f)
 {
 	if (o->curfilt == f)
 		return;
-
+	if (mux_isopen)
+		norm_shut();
 	o->curfilt = f;
 	if (f != NULL)
 		song_setcurchan(o, f->link, 0);
-	if (mux_isopen) {
-		norm_setfilt(f != NULL ? &f->filt : NULL);
-	}
+	if (mux_isopen)
+		mux_flush();
 }
 
 void
@@ -848,10 +848,30 @@ song_movecb(struct song *o)
 void
 song_evcb(struct song *o, struct ev *ev)
 {
-	mixout_putev(ev, 0);
-	if (o->mode >= SONG_REC) {
-		if (mux_getphase() >= MUX_START)
-			(void)seqptr_evput(o->recptr, ev);
+	struct ev filtout[FILT_MAXNRULES];
+	unsigned i, nev;
+
+	/*
+	 * apply filter, if any
+	 */
+	if (o->curfilt) {
+		nev = filt_do(&o->curfilt->filt, ev, filtout);
+	} else {
+		filtout[0] = *ev;
+		nev = 1;
+	}
+
+	/*
+	 * output and/or record resulting events
+	 */
+	ev = filtout;
+	for (i = 0; i < nev; i++) {
+		mixout_putev(ev, 0);
+		if (o->mode >= SONG_REC) {
+			if (mux_getphase() >= MUX_START)
+				(void)seqptr_evput(o->recptr, ev);
+		}
+		ev++;
 	}
 }
 
@@ -1089,7 +1109,7 @@ song_setmode(struct song *o, unsigned newmode)
 		}
 		seqptr_del(o->recptr);
 		seqptr_del(o->metaptr);
-		norm_setfilt(NULL);
+		norm_shut();
 		mux_flush();
 		mux_close();
 	}
@@ -1111,12 +1131,6 @@ song_setmode(struct song *o, unsigned newmode)
 		o->recptr = seqptr_new(&o->rec);
 
 		mux_open();
-
-		/*
-		 * check for the current filter
-		 */
-		song_getcurfilt(o, &f);
-		norm_setfilt(f != NULL ? &f->filt : NULL);
 
 		/*
 		 * send sysex messages and channel config messages
