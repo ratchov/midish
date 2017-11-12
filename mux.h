@@ -42,6 +42,7 @@ struct sysex;
 struct song;
 extern struct song *usong;
 extern unsigned mux_isopen;
+extern unsigned long mux_wallclock;
 
 void song_startcb(struct song *);
 void song_stopcb(struct song *);

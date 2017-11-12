@@ -86,7 +86,7 @@ unsigned long mux_ticlength, mux_curpos, mux_nextpos;
 unsigned mux_curtic;
 unsigned mux_phase, mux_reqphase;
 void *mux_addr;
-
+unsigned long mux_wallclock;
 
 #ifdef MUX_PROF
 struct prof mux_prof;
@@ -145,6 +145,7 @@ mux_open(void)
 	mux_nextpos = 0;
 	mux_reqphase = MUX_STOP;
 	mux_phase = MUX_STOP;
+	mux_wallclock = 0;
 #ifdef MUX_PROF
 	prof_reset(&mux_prof, "mux/ms");
 #endif
@@ -448,6 +449,11 @@ void
 mux_timercb(unsigned long delta)
 {
 	struct mididev *dev;
+
+	/*
+	 * update wall clock
+	 */
+	mux_wallclock += delta;
 
 #ifdef MUX_PROF
 	prof_val(&mux_prof, delta / (24 * 10));
