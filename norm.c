@@ -79,8 +79,6 @@ norm_putev(struct ev *ev)
 		nev = 1;
 	}
 	for (i = 0; i < nev; i++)
-		mixout_putev(&filtout[i], 0);
-	for (i = 0; i < nev; i++)
 		song_evcb(usong, &filtout[i]);
 	mux_flush();
 }

@@ -848,6 +848,7 @@ song_movecb(struct song *o)
 void
 song_evcb(struct song *o, struct ev *ev)
 {
+	mixout_putev(ev, 0);
 	if (o->mode >= SONG_REC) {
 		if (mux_getphase() >= MUX_START)
 			(void)seqptr_evput(o->recptr, ev);
