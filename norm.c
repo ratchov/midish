@@ -54,9 +54,6 @@ void norm_timocb(void *);
 void
 norm_putev(struct ev *ev)
 {
-	struct ev filtout[FILT_MAXNRULES];
-	unsigned i, nev;
-
 	if (!EV_ISVOICE(ev) && !EV_ISSX(ev))
 		return;
 	song_evcb(usong, ev);
