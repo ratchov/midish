@@ -1085,7 +1085,6 @@ song_gotocb(struct song *o, unsigned mtcpos)
 void
 song_setmode(struct song *o, unsigned newmode)
 {
-	struct songfilt *f;
 	struct songtrk *t;
 	unsigned oldmode;
 
