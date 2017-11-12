@@ -43,22 +43,10 @@ struct song;
 unsigned norm_debug = 0;
 struct statelist norm_slist;		/* state of the normilizer */
 struct timo norm_timo;			/* for throtteling */
-struct filt *norm_filt = NULL;
 
 /* --------------------------------------------------------------------- */
 
 void norm_timocb(void *);
-
-/*
- * set the filter to send events to
- */
-void
-norm_setfilt(struct filt *f)
-{
-	norm_shut();
-	mux_flush();
-	norm_filt = f;
-}
 
 /*
  * inject an event
@@ -69,17 +57,9 @@ norm_putev(struct ev *ev)
 	struct ev filtout[FILT_MAXNRULES];
 	unsigned i, nev;
 
-	if (!EV_ISVOICE(ev) && !EV_ISSX(ev)) {
+	if (!EV_ISVOICE(ev) && !EV_ISSX(ev))
 		return;
-	}
-	if (norm_filt) {
-		nev = filt_do(norm_filt, ev, filtout);
-	} else {
-		filtout[0] = *ev;
-		nev = 1;
-	}
-	for (i = 0; i < nev; i++)
-		song_evcb(usong, &filtout[i]);
+	song_evcb(usong, ev);
 	mux_flush();
 }
 

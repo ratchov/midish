@@ -25,7 +25,6 @@ struct ev;
 void norm_start(void);
 void norm_shut(void);
 void norm_stop(void);
-void norm_setfilt(struct filt *);
 void norm_putev(struct ev *);
 
 void norm_evcb(struct ev *);
