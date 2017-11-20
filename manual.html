@@ -2929,6 +2929,21 @@ This value isn't used in real-time,
 however it is used as default value for
 the track editing functions
 
+<tr>
+
+<td>tap start mode
+
+<td>
+one of ``off'', ``start'' or ``tempo''.
+See ``<a href="#func_tap">tap</a>'' command.
+
+<tr>
+
+<td>tap start events
+
+<td>
+Events used to trigger start and/or measure tempo.
+
 </table>
 
 <h2><a name="language">17 Language reference</a></h2>
@@ -4362,6 +4377,34 @@ are available:
 <dd>
 select the notes that the metronome plays. The
 pair of events must be note-ons
+
+<dt><a name="func_tap">tap mode</a>
+
+<dd>
+Set the way start is triggered by events. The following modes
+are available:
+
+<ul>
+
+<li>
+``off'' - no events trigger start
+
+<li>
+``start'' - a single event triggers start
+
+<li>
+``tempo'' - two events trigger start; the time between them
+	corresponds to one beat and is used to determine the
+	initial tempo.
+
+</ul>
+
+<dt><a name="func_tapev">tapev evspec</a>
+
+<dd>
+Events set used to trigger start when tap mode
+is ``start'' or ``tempo''.
+
 
 <dt><a name="func_info">info</a>
 

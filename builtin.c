@@ -824,6 +824,12 @@ blt_ls(struct exec *o, struct data **r)
 	textout_putstr(tout, "curlen ");
 	textout_putlong(tout, usong->curlen);
 	textout_putstr(tout, "\n");
+	textout_putstr(tout, "tap ");
+	textout_putstr(tout, song_tap_modestr[usong->tap_mode]);
+	textout_putstr(tout, "\n");
+	textout_putstr(tout, "tapev ");
+	evspec_output(&usong->tap_evspec, tout);
+	textout_putstr(tout, "\n");
 	return 1;
 }
 
@@ -1491,6 +1497,42 @@ blt_metrocf(struct exec *o, struct data **r)
 	metro_shut(&usong->metro);
 	usong->metro.hi = evhi;
 	usong->metro.lo = evlo;
+	return 1;
+}
+
+unsigned
+blt_tap(struct exec *o, struct data **r)
+{
+	char *mstr;
+	int mode;
+
+	if (!exec_lookupname(o, "mode", &mstr)) {
+		return 0;
+	}
+	if (str_eq(mstr, "off")) {
+		mode = 0;
+	} else if (str_eq(mstr, "start")) {
+		mode = SONG_TAP_START;
+	} else if (str_eq(mstr, "tempo")) {
+		mode = SONG_TAP_TEMPO;
+	} else {
+		cons_errs(o->procname,
+		    "mode must be 'off', 'start' or 'tempo'");
+		return 0;
+	}
+	usong->tap_mode = mode;
+	return 1;
+}
+
+unsigned
+blt_tapev(struct exec *o, struct data **r)
+{
+	struct evspec es;
+
+	if (!exec_lookupevspec(o, "evspec", &es, 0)) {
+		return 0;
+	}
+	usong->tap_evspec = es;
 	return 1;
 }
 

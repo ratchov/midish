@@ -613,6 +613,16 @@ song_output(struct song *o, struct textout *f)
 	metro_output(&o->metro, f);
 	textout_putstr(f, "\n");
 
+	textout_indent(f);
+	textout_putstr(f, "tap ");
+	textout_putstr(f, song_tap_modestr[o->tap_mode]);
+	textout_putstr(f, "\n");
+
+	textout_indent(f);
+	textout_putstr(f, "tapev ");
+	evspec_output(&o->tap_evspec, f);
+	textout_putstr(f, "\n");
+
 	textout_shiftleft(f);
 	textout_indent(f);
 	textout_putstr(f, "}");
@@ -2208,6 +2218,31 @@ load_song(struct load *o, struct song *s)
 					return 0;
 				if (!load_nl(o))
 					return 0;
+			} else if (str_eq(o->strval, "tap")) {
+				if (!load_getsym(o))
+					return 0;
+				if (o->id != TOK_WORD) {
+					load_err(o, "expected tap mode\n");
+					goto unknown;
+				}
+				if (str_eq(o->strval, "off"))
+					s->tap_mode = SONG_TAP_OFF;
+				else if (str_eq(o->strval, "start"))
+					s->tap_mode = SONG_TAP_START;
+				else if (str_eq(o->strval, "tempo"))
+					s->tap_mode = SONG_TAP_TEMPO;
+				else {
+					load_err(o, "unknown tap mode\n");
+					goto unknown;
+				}
+				if (!load_nl(o))
+					return 0;
+			} else if (str_eq(o->strval, "tapev")) {
+				if (!load_evspec(o, &es))
+					return 0;
+				if (!load_nl(o))
+					return 0;
+				s->tap_evspec = es;
 			} else
 				goto unknown;
 		} else {

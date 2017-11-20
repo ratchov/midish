@@ -85,6 +85,7 @@ unsigned mux_ticrate;
 unsigned long mux_ticlength, mux_curpos, mux_nextpos;
 unsigned mux_curtic;
 unsigned mux_phase, mux_reqphase;
+unsigned mux_manualstart = 1;
 void *mux_addr;
 unsigned long mux_wallclock;
 
@@ -414,9 +415,16 @@ mux_mtctick(unsigned delta)
 	while (mux_curpos >= mux_nextpos) {
 		mux_curpos -= mux_nextpos;
 		mux_nextpos = mux_ticlength;
-		mux_sendtic();
-		mux_ticcb();
-		mux_flush();
+
+		/*
+		 * if in manual mode, dont trigger the 0-th tick (ie
+		 * the start signal).
+		 */
+		if (!mux_manualstart || mux_phase != MUX_START) {
+			mux_sendtic();
+			mux_ticcb();
+			mux_flush();
+		}
 	}
 }
 
@@ -503,8 +511,10 @@ mux_timercb(unsigned long delta)
 	if (!mididev_mtcsrc && !mididev_clksrc) {
 		switch (mux_phase) {
 		case MUX_STARTWAIT:
-			log_puts("mux_timercb: startwait: bad state\n");
-			panic();
+			if (!mux_manualstart) {
+				log_puts("mux_timercb: startwait: bad state\n");
+				panic();
+			}
 			break;
 		case MUX_START:
 			mux_curpos += delta;
@@ -756,11 +766,12 @@ mux_chgticrate(unsigned tpu)
  * we're the clock master).
  */
 void
-mux_startreq(void)
+mux_startreq(int manualstart)
 {
 	struct mididev *dev;
 	static unsigned char mmc_start[] = { 0xf0, 0x7f, 0x7f, 0x06, 0x02, 0xf7 };
 
+	mux_manualstart = manualstart;
 	mux_reqphase = MUX_STARTWAIT;
 	if (mux_phase != MUX_STOP) {
 		log_puts("bad state to call mux_startreq()\n");

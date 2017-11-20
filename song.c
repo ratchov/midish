@@ -28,6 +28,7 @@
 #include "norm.h"
 
 unsigned song_debug = 0;
+char *song_tap_modestr[3] = {"off", "start", "tempo"};
 
 /*
  * allocate and initialize a song structure
@@ -99,6 +100,9 @@ song_init(struct song *o)
 	o->curlen = 0;
 	o->curquant = 0;
 	evspec_reset(&o->curev);
+	evspec_reset(&o->tap_evspec);
+	o->tap_evspec.cmd = EVSPEC_EMPTY;
+	o->tap_mode = 0;
 
 	/*
 	 * add default timesig/tempo so that setunit() works
@@ -799,6 +803,7 @@ song_startcb(struct song *o)
 		song_ticplay(o);
 		mux_flush();
 	}
+	o->started = 1;
 }
 
 /*
@@ -850,6 +855,41 @@ song_evcb(struct song *o, struct ev *ev)
 {
 	struct ev filtout[FILT_MAXNRULES];
 	unsigned i, nev;
+	unsigned usec24;
+
+	if (o->tap_mode != SONG_TAP_OFF &&
+	    evspec_matchev(&o->tap_evspec, ev)) {
+		if (!(ev_phase(ev) & EV_PHASE_FIRST))
+			return;
+		if (o->started)
+			return;
+		if (o->tap_cnt == 0) {
+			if (o->tap_mode == SONG_TAP_START) {
+				log_puts("start triggered\n");
+				o->tap_cnt = -1;
+				mux_ticcb();
+			} else {
+				log_puts("measuring tempo...\n");
+				o->tap_time = mux_wallclock;
+			}
+		} else if (o->tap_mode == SONG_TAP_TEMPO && o->tap_cnt == 1) {
+			usec24 = (long)(mux_wallclock - o->tap_time) / o->tpb;
+			log_puts("start triggered, tempo = ");
+			log_putu(60 * 24000000 / o->tpb / usec24);
+			log_puts("\n");
+			if (usec24 < TEMPO_MIN || usec24 > TEMPO_MAX) {
+				log_puts("tempo out of range, aborted\n");
+				o->tap_cnt = 0;
+				return;
+			}
+			o->tempo = usec24;
+			mux_chgtempo(o->tempo);
+			mux_ticcb();
+			o->tap_cnt = -1;
+		}
+		o->tap_cnt++;
+		return;
+	}
 
 	/*
 	 * apply filter, if any
@@ -925,7 +965,8 @@ song_loc(struct song *o, unsigned where, unsigned how)
 
 	switch (how) {
 	case SONG_LOC_MEAS:
-		offs = (o->mode >= SONG_PLAY) ? o->curquant / 2 : 0;
+		offs = (!mux_manualstart && o->mode >= SONG_PLAY) ?
+		    o->curquant / 2 : 0;
 		break;
 	case SONG_LOC_MTC:
 		endpos = (unsigned long long)where * (24000000 / MTC_SEC);
@@ -1122,6 +1163,7 @@ song_setmode(struct song *o, unsigned newmode)
 		mux_close();
 	}
 	if (oldmode < SONG_PLAY && newmode >= SONG_PLAY) {
+		o->tap_cnt = 0;
 		o->complete = 0;
 	}
 	if (oldmode < SONG_IDLE && newmode >= SONG_IDLE) {
@@ -1166,6 +1208,7 @@ song_goto(struct song *o, unsigned measure)
 		 */
 		if (o->mode >= SONG_REC && measure > 0)
 			measure--;
+		o->started = 0;
 
 		/*
 		 * move all tracks to given measure
@@ -1204,7 +1247,7 @@ song_play(struct song *o)
 	m = (o->mode >= SONG_IDLE) ? o->measure : o->curpos;
 	song_setmode(o, SONG_PLAY);
 	song_goto(o, m);
-	mux_startreq();
+	mux_startreq(o->tap_mode != SONG_TAP_OFF);
 	mux_flush();
 
 	if (song_debug) {
@@ -1230,7 +1273,7 @@ song_record(struct song *o)
 	m = (o->mode >= SONG_IDLE) ? o->measure : o->curpos;
 	song_setmode(o, SONG_REC);
 	song_goto(o, m);
-	mux_startreq();
+	mux_startreq(o->tap_mode != SONG_TAP_OFF);
 	mux_flush();
 	if (song_debug) {
 		log_puts("song_record: waiting for a start event...\n");

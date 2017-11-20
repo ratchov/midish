@@ -42,6 +42,7 @@ struct sysex;
 struct song;
 extern struct song *usong;
 extern unsigned mux_isopen;
+extern unsigned mux_manualstart;
 extern unsigned long mux_wallclock;
 
 void song_startcb(struct song *);
@@ -73,7 +74,7 @@ unsigned mux_getphase(void);
 struct sysex *mux_getsysex(void);
 void mux_chgtempo(unsigned long);
 void mux_chgticrate(unsigned);
-void mux_startreq(void);
+void mux_startreq(int);
 void mux_stopreq(void);
 void mux_gotoreq(unsigned);
 int mux_mdep_wait(int); /* XXX: hide this prototype */

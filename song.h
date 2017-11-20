@@ -81,6 +81,13 @@ struct song {
 	unsigned curquant;		/* default quantization step */
 	struct evspec curev;		/* evspec for track editing */
 	struct metro metro;		/* metonome conf. */
+	struct evspec tap_evspec;	/* event to trigger start manually */
+	unsigned long tap_time;		/* timestamp of first tap */
+#define SONG_TAP_OFF	0
+#define SONG_TAP_START	1
+#define SONG_TAP_TEMPO	2
+	int tap_mode;			/* one of above */
+	int tap_cnt;			/* number of taps, -1 means done */
 
 	/*
 	 * clipboard
@@ -101,9 +108,12 @@ struct song {
 #define SONG_PLAY	2		/* above + playback */
 #define SONG_REC	3		/* above + recording */
 	unsigned mode;			/* real-time "mode" */
+	unsigned started;		/* playback started */
 	unsigned complete;		/* playback completed */
 	unsigned metro_mask;		/* if enable = (mask | mode) */
 };
+
+extern char *song_tap_modestr[3];
 
 #define SONG_FOREACH_TRK(s, i)				\
 	for (i = (struct songtrk *)(s)->trklist;	\

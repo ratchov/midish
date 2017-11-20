@@ -1037,6 +1037,10 @@ user_mainloop(void)
 	exec_newbuiltin(exec, "metrocf", blt_metrocf,
 			name_newarg("eventhi",
 			name_newarg("eventlo", NULL)));
+	exec_newbuiltin(exec, "tap", blt_tap,
+			name_newarg("mode", NULL));
+	exec_newbuiltin(exec, "tapev", blt_tapev,
+			name_newarg("evspec", NULL));
 	exec_newbuiltin(exec, "tlist", blt_tlist, NULL);
 	exec_newbuiltin(exec, "tnew", blt_tnew,
 			name_newarg("trackname", NULL));

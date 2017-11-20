@@ -83,6 +83,8 @@ unsigned blt_evpat(struct exec *, struct data **);
 unsigned blt_evinfo(struct exec *, struct data **);
 unsigned blt_metro(struct exec *, struct data **);
 unsigned blt_metrocf(struct exec *, struct data **);
+unsigned blt_tap(struct exec *, struct data **);
+unsigned blt_tapev(struct exec *, struct data **);
 
 unsigned blt_tlist(struct exec *, struct data **);
 unsigned blt_tnew(struct exec *, struct data **);
