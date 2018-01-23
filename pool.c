@@ -110,6 +110,10 @@ pool_done(struct pool *o)
 void *
 pool_new(struct pool *o)
 {
+#ifdef POOL_DEBUG
+	unsigned i;
+	unsigned char *buf;
+#endif
 
 	struct poolent *e;
 
@@ -131,6 +135,14 @@ pool_new(struct pool *o)
 	o->used++;
 	if (o->used > o->maxused)
 		o->maxused = o->used;
+
+	/*
+	 * overwrite the entry with garbage so any attempt to use
+	 * uninitialized memory will probably segfault
+	 */
+	buf = (unsigned char *)e;
+	for (i = o->itemsize; i > 0; i--)
+		*(buf++) = 0xd0;
 #endif
 	return e;
 }
@@ -143,8 +155,8 @@ pool_del(struct pool *o, void *p)
 {
 	struct poolent *e = (struct poolent *)p;
 #ifdef POOL_DEBUG
-	unsigned i, n;
-	unsigned *buf;
+	unsigned i;
+	unsigned char *buf;
 
 	/*
 	 * check if we aren't trying to free more
@@ -162,10 +174,9 @@ pool_del(struct pool *o, void *p)
 	 * overwrite the entry with garbage so any attempt to use a
 	 * free entry will probably segfault
 	 */
-	buf = (unsigned *)e;
-	n = o->itemsize / sizeof(unsigned);
-	for (i = 0; i < n; i++)
-		*(buf++) = memrnd();
+	buf = (unsigned char *)e;
+	for (i = o->itemsize; i > 0; i--)
+		*(buf++) = 0xdf;
 #endif
 	/*
 	 * link on the free list
