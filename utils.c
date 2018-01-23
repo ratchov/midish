@@ -191,27 +191,6 @@ panic(void)
 }
 
 /*
- * return a pseudo-random number
- */
-unsigned
-rnd(void)
-{
-	static unsigned seed = 1989123;
-
-	seed = (seed * 1664525) + 1013904223;
-	return seed;
-}
-
-void
-memrnd(void *addr, size_t size)
-{
-	unsigned char *p = addr;
-
-	while (size-- > 0)
-		*(p++) = rnd() >> 24;
-}
-
-/*
  * allocate 'size' bytes of memory (with size > 0). This functions never
  * fails (and never returns NULL), if there isn't enough memory then
  * we abort the program.
