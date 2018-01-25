@@ -1929,7 +1929,8 @@ blt_tquant(struct exec *o, struct data **r)
 		if (tic + len > qstep)
 			len -= qstep;
 	}
-	track_quantize(&t->track, tic, len, offset, 2 * qstep, rate);
+	track_quantize(&t->track, &usong->curev,
+	    tic, len, offset, 2 * qstep, rate);
 	return 1;
 }
 

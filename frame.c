@@ -893,7 +893,8 @@ track_move(struct track *src, unsigned start, unsigned len,
  * quantize the given track
  */
 void
-track_quantize(struct track *src, unsigned start, unsigned len,
+track_quantize(struct track *src, struct evspec *es,
+    unsigned start, unsigned len,
     unsigned offset, unsigned quant, unsigned rate) {
 	unsigned tic, qtic;
 	struct track qt;
@@ -955,13 +956,14 @@ track_quantize(struct track *src, unsigned start, unsigned len,
 		qtic += delta;
 
 		if (st->phase & EV_PHASE_FIRST) {
-			if (EV_ISNOTE(&st->ev)) {
+			if (evspec_matchev(es, &st->ev)) {
 				st->tag = 1;
-				fluct += (ofs < 0) ? -ofs : ofs;
-				notes++;
-			} else {
+				if (EV_ISNOTE(&st->ev)) {
+					fluct += (ofs < 0) ? -ofs : ofs;
+					notes++;
+				}
+			} else
 				st->tag = 0;
-			}
 		}
 		if (st->tag) {
 			seqptr_evput(qp, &st->ev);
