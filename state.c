@@ -602,7 +602,7 @@ statelist_update(struct statelist *statelist, struct ev *ev)
 		 * this frame is not yet terminated, the incoming
 		 * event belongs to it
 		 */
-		phase &=  ~EV_PHASE_FIRST;
+		phase &= ~EV_PHASE_FIRST;
 	}
 	state_copyev(st, ev, phase);
 	statelist->changed = 1;
