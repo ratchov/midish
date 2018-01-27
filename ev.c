@@ -231,6 +231,65 @@ ev_phase(struct ev *ev)
 }
 
 /*
+ * check if the given event matches the given frame (if so, this means
+ * that, iether the event is part of the frame, either there is a
+ * conflict between the frame and the event)
+ */
+unsigned
+ev_match(struct ev *st, struct ev *ev)
+{
+	switch (st->cmd) {
+	case EV_NON:
+	case EV_NOFF:
+	case EV_KAT:
+		if (!EV_ISNOTE(ev) ||
+		    st->note_num != ev->note_num ||
+		    st->ch != ev->ch ||
+		    st->dev != ev->dev) {
+			return 0;
+		}
+		break;
+	case EV_XCTL:
+	case EV_NRPN:
+	case EV_RPN:
+		if (st->cmd != ev->cmd ||
+		    st->dev != ev->dev ||
+		    st->ch != ev->ch ||
+		    st->v0 != ev->v0) {
+			return 0;
+		}
+		break;
+	case EV_BEND:
+	case EV_CAT:
+	case EV_XPC:
+		if (st->cmd != ev->cmd ||
+		    st->dev != ev->dev ||
+		    st->ch != ev->ch) {
+			return 0;
+		}
+		break;
+	case EV_TEMPO:
+	case EV_TIMESIG:
+		if (st->cmd != ev->cmd) {
+			return 0;
+		}
+		break;
+	default:
+		if (EV_ISSX(st)) {
+			if (ev->cmd != st->cmd)
+				return 0;
+			break;
+		}
+		log_puts("ev_match: ");
+		ev_log(st);
+		log_puts(": bad event type\n");
+		panic();
+		break;
+	}
+	return 1;
+}
+
+/*
  * dump the event structure on stderr, for debug purposes
  */
 void

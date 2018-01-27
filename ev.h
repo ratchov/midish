@@ -155,9 +155,9 @@ struct evinfo {
 extern struct evinfo evinfo[EV_NUMCMD];
 
 void	 ev_log(struct ev *);
-unsigned ev_prio(struct ev *);
 unsigned ev_str2cmd(struct ev *, char *);
 unsigned ev_phase(struct ev *);
+unsigned ev_match(struct ev *, struct ev *);
 void	 ev_map(struct ev *, struct evspec *, struct evspec *, struct ev *);
 
 unsigned evspec_str2cmd(struct evspec *, char *);

@@ -112,60 +112,17 @@ state_copyev(struct state *st, struct ev *ev, unsigned ph)
 unsigned
 state_match(struct state *st, struct ev *ev)
 {
-	switch (st->ev.cmd) {
-	case EV_NON:
-	case EV_NOFF:
-	case EV_KAT:
-		if (!EV_ISNOTE(ev) ||
-		    st->ev.note_num != ev->note_num ||
-		    st->ev.ch != ev->ch ||
-		    st->ev.dev != ev->dev) {
-			return 0;
-		}
-		break;
-	case EV_XCTL:
-	case EV_NRPN:
-	case EV_RPN:
-		if (st->ev.cmd != ev->cmd ||
-		    st->ev.dev != ev->dev ||
-		    st->ev.ch != ev->ch ||
-		    st->ev.v0 != ev->v0) {
-			return 0;
-		}
-		break;
-	case EV_BEND:
-	case EV_CAT:
-	case EV_XPC:
-		if (st->ev.cmd != ev->cmd ||
-		    st->ev.dev != ev->dev ||
-		    st->ev.ch != ev->ch) {
-			return 0;
-		}
-		break;
-	case EV_TEMPO:
-	case EV_TIMESIG:
-		if (st->ev.cmd != ev->cmd) {
-			return 0;
-		}
-		break;
-	default:
-		if (EV_ISSX(&st->ev)) {
-			if (ev->cmd != st->ev.cmd)
-				return 0;
-			break;
-		}
-		log_puts("state_match: ");
-		state_log(st);
-		log_puts(": bad event type\n");
-		panic();
-		break;
-	}
+	unsigned res;
+
+	res = ev_match(&st->ev, ev);
 #ifdef STATE_DEBUG
-	log_puts("state_match: ");
-	ev_log(&st->ev);
-	log_puts(": ok\n");
+	if (res) {
+		log_puts("state_match: ");
+		ev_log(&st->ev);
+		log_puts(": ok\n");
+	}
 #endif
-	return 1;
+	return res;
 }
 
 /*
