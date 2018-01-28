@@ -45,6 +45,7 @@ void	      track_clear(struct track *);
 unsigned      track_isempty(struct track *);
 void	      track_chomp(struct track *);
 void	      track_shift(struct track *, unsigned);
+void	      track_swap(struct track *, struct track *);
 
 unsigned      seqev_avail(struct seqev *);
 void	      seqev_ins(struct seqev *, struct seqev *);

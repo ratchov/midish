@@ -147,6 +147,31 @@ track_shift(struct track *o, unsigned ntics)
 }
 
 /*
+ * swap contents of two tracks
+ */
+void
+track_swap(struct track *t1, struct track *t2)
+{
+	struct seqev *se, eot;
+
+	/* swap list of events */
+	se = t1->first;
+	t1->first = t2->first;
+	t2->first = se;
+	t1->first->prev = &t1->first;
+	t2->first->prev = &t2->first;
+
+	/* swap eot events (as they are part of the track) */
+	eot = t1->eot;
+	t1->eot = t2->eot;
+	t2->eot = eot;
+
+	/* fix references to eot events */
+	*t1->eot.prev = &t1->eot;
+	*t2->eot.prev = &t2->eot;
+}
+
+/*
  * return true if an event is available on the track
  */
 unsigned
