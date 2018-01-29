@@ -170,6 +170,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 <li><a href="#changes_04">15.3 Changes from release 0.3 to release 0.4</a>
 <li><a href="#section_15_4">15.4 Changes from release 0.4 to release 1.0</a>
 <li><a href="#section_15_5">15.5 Changes from release 1.0 to release 1.1</a>
+<li><a href="#section_15_6">15.6 Changes from release 1.1 to release 1.2</a>
 </ul>
 <li><a href="#attributes">16 Project attributes</a>
 <ul>
@@ -1759,21 +1760,42 @@ mdup 0
 <h3><a name="section_8_5">8.5 Track quantization</a></h3>
 
 <p>
-A track can be quantized by rounding note-positions
+A track can be quantized by rounding event positions
 to the nearest exact position. The following
 will quantize the current selection of the current track
-by rounding notes to the nearest quarter note.
+by rounding event positions to the nearest quarter note.
 
 <pre>
 setq 4          # quarter note = 1/4-th of a whole
-tquant 75
+tquanta 75
 </pre>
 
 <p>
 The last arguments gives the percent of quantization.
 100% means full quantization and 0% leans no
 quantization at all. This is useful because full quantization
-often sounds to regular especially on acoustic patches.
+often sounds too regular especially on acoustic patches.
+
+<p>
+There are two quantization algorithms:
+
+<ul>
+
+<li>
+<a href="#func_tquanta">tquanta</a> - quantizes all
+selected events (including note-off events).
+This always preserves event order.
+
+<li>
+<a href="#func_tquantf">tquantf</a> - quantizes only
+frame positions.
+In this case, note positions are
+modified without changing their lengths which, for instance,
+is recommended for staccato playing.
+As event order can't be preserved, in some highly pathologic
+cases, notes would be dropped to avoid overlapping notes.
+
+</ul>
 
 <h3><a name="section_8_6">8.6 Checking a track</a></h3>
 
@@ -2598,6 +2620,23 @@ and <a href="#func_xexport">xexport</a> to export and import .syx files.
 add support for user-defined events and the corresponding
 <a href="#func_evpat">evpat</a> and
 <a href="#func_evinfo">evinfo</a> functions.
+
+</ul>
+
+<h3><a name="section_15_6">15.6 Changes from release 1.1 to release 1.2</a></h3>
+
+<ul>
+
+<li>
+add support for tap tempo with
+<a href="#func_tap">tap</a> and
+<a href="#func_tapev">tapev</a>.
+
+<li>
+add new <a href="#func_tquantf">tquantf</a> quantization algorithm.
+The old
+<a href="#func_tquanta">tquant</a> function was renamed to
+<a href="#func_tquanta">tquanta</a>.
 
 </ul>
 
@@ -3446,14 +3485,24 @@ the current event selection
 are copied
 
 
-<dt><a name="func_tquant">tquant rate</a>
+<dt><a name="func_tquanta">tquanta rate</a>
 
 <dd>
-quantize the current selection of the current track using
-the current quantization step
-(see <a href="#func_ev">setq</a> function).
-Note positions
+Round event positions to the nearest exact position,
+as defined by the see <a href="#func_ev">setq</a> function.
+This affects events of the current selection of the current track.
+Event positions
 are rounded to the nearest tick multiple of the quantization step;
+Rate must be between 0 and 100: 0 means no
+quantization and 100 means full quantization.
+
+<dt><a name="func_tquantf">tquantf rate</a>
+
+<dd>
+Round <b>frame</b> positions (eg. note positions)
+to the nearest exact position,
+as defined by the see <a href="#func_ev">setq</a> function.
+Frame length (eg. note lengths) is preserved.
 Rate must be between 0 and 100: 0 means no
 quantization and 100 means full quantization.
 
@@ -3905,9 +3954,10 @@ value, as follow:
 </ul>
 
 <p>
-The quantization step will be used by <a href="#func_tquant">tquant</a>
-function and also by all editing functions to optimize event
-selection. If the special ``nil'' value is specified as quantization
+The quantization step will be used by <a href="#func_tquanta">tquanta</a>
+and <a href="#func_tquantf">tquantf</a> functions and also by all editing
+functions to optimize event selection.
+If the special ``nil'' value is specified as quantization
 step, then quatization is disabled.
 
 <dt><a name="func_getq">getq</a>
@@ -4745,7 +4795,7 @@ send EOF character (control-D) to quit
 [0003:03]&gt; s                                 # stop
 [0000:00]&gt; setq 16                           # set quantization step
 [0000:00]&gt; sel 32                            # select 32 measures
-[0000:00]&gt; tquant 75                         # quantize to 75%
+[0000:00]&gt; tquanta 75                        # quantize to 75%
 [0000:00]&gt; p                                 # play
 [0001:02]&gt; s                                 # stop playing
 [0000:00]&gt; save "myrythm"                    # save to a file

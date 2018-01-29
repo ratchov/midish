@@ -1,8 +1,8 @@
-load "quant.sng"
+load "quant_ovr.sng"
 g 0
 ct t
 sel 16
-setq 24
+setq 1
 tquanta 100
 sel 0
 setq nil

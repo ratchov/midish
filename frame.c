@@ -371,6 +371,164 @@ seqptr_seek(struct seqptr *sp, unsigned ntics)
 
 
 /*
+ * move the next frame of the current tick to the given track. Must
+ * not be called on a non-frame-starting event.
+ */
+void
+seqptr_framerm(struct seqptr *sp, struct track *f)
+{
+	struct seqev **save_pos, *se, *spos, *fpos;
+	unsigned save_delta, sdelta, phase;
+
+	if (sp->delta != sp->pos->delta) {
+		log_puts("seqptr_framerm: not called at event position\n");
+		panic();
+	}
+	if (sp->pos->ev.cmd == EV_NULL) {
+		log_puts("seqptr_framerm: no event to remove\n");
+		panic();
+	}
+
+	track_clear(f);
+	fpos = f->first;
+
+	/*
+	 * Save current postition.
+	 */
+	save_pos = sp->pos->prev;
+	save_delta = sp->delta;
+
+	/*
+	 * Move all events that belong to the frame.
+	 */
+
+	spos = sp->pos;
+	sdelta = sp->delta;
+
+	phase = ev_phase(&spos->ev);
+
+	/* move event to frame track */
+	se = spos;
+	spos = se->next;
+	seqev_rm(se);
+	seqev_ins(fpos, se);
+
+	for (;;) {
+		if (phase & EV_PHASE_LAST)
+			break;
+		if (spos->ev.cmd == EV_NULL) {
+			/*
+			 * XXX: this can't happen, call panic() here ?
+			 */
+			log_puts("seqptr_framerm: unterminated frame\n");
+			track_clear(f);
+			return;
+		}
+
+		/* move to next event */
+		fpos->delta += spos->delta - sdelta;
+		sdelta = spos->delta;
+
+		/* process next event */
+		if (ev_match(&f->first->ev, &spos->ev)) {
+			phase = ev_phase(&spos->ev);
+
+			/* move event to frame track */
+			se = spos;
+			spos = se->next;
+			seqev_rm(se);
+			seqev_ins(fpos, se);
+		} else {
+			/* skip event */
+			spos = spos->next;
+			sdelta = 0;
+		}
+	}
+
+	/*
+	 * restore position.
+	 */
+	sp->pos = *save_pos;
+	sp->delta = save_delta;
+}
+
+/*
+ * insert the given frame at the end of the current tick. As the first
+ * event of the frame is not seen yet, the state list is not
+ * affected. As this is a stateless operation, it's the caller
+ * responsability to avoid conflicts.
+ */
+void
+seqptr_frameadd(struct seqptr *sp, struct track *f)
+{
+	struct seqev *se, *spos, **save_pos;
+	unsigned ntics, offs, sdelta, save_delta;
+
+	/*
+	 * Save current postition.
+	 */
+	save_pos = sp->pos->prev;
+	save_delta = sp->delta;
+
+	spos = sp->pos;
+	sdelta = sp->delta;
+	for (;;) {
+		if (f->first->ev.cmd == EV_NULL)
+			break;
+		se = f->first;
+		offs = se->delta;
+		se->delta = 0;
+		seqev_rm(se);
+
+		/*
+		 * move forward offs ticks, possibly inserting
+		 * empty space
+		 */
+		while (1) {
+			ntics = spos->delta - sdelta;
+			if (ntics > offs)
+				ntics = offs;
+			sdelta += ntics;
+			offs -= ntics;
+			if (offs == 0)
+				break;
+
+			/* if reached the end, append space */
+			if (spos->ev.cmd == EV_NULL) {
+				spos->delta += offs;
+				sdelta += offs;
+				offs = 0;
+				break;
+			}
+
+			spos = spos->next;
+			sdelta = 0;
+		}
+
+		/* make the event the last of the tick */
+		while (sdelta == spos->delta && spos->ev.cmd != EV_NULL) {
+			sdelta = 0;
+			spos = spos->next;
+		}
+
+		se->delta = sdelta;
+		spos->delta -= sdelta;
+		sdelta = 0;
+		/* link to the list */
+		se->next = spos;
+		se->prev = spos->prev;
+		*se->prev = se;
+		spos->prev = &se->next;
+	}
+
+	/*
+	 * Restore current position.
+	 */
+	sp->pos = *save_pos;
+	sp->delta = save_delta;
+}
+
+/*
  * generate an event that will suspend the frame of the given state;
  * the state is unchanged and may belong to any statelist.  Return 1
  * if an event was generated.
@@ -996,11 +1154,122 @@ track_quantize(struct track *src, struct evspec *es,
 	seqptr_del(qp);
 	track_done(&qt);
 	if (notes > 0) {
-		log_puts("track_quantize: fluct = ");
-		log_putu(fluct);
-		log_puts(", notes = ");
+		log_puts("quantize: ");
 		log_putu(notes);
-		log_puts(", avg = ");
+		log_puts(" notes, fluctuation = ");
+		log_putu(100 * fluct / notes);
+		log_puts("% of a tick\n");
+	}
+}
+
+/*
+ * quantize the given track by moving frames
+ */
+void
+track_quantize_frame(struct track *src, struct evspec *es,
+    unsigned start, unsigned len,
+    unsigned offset, unsigned quant, unsigned rate) {
+	unsigned tic, qtic;
+	struct track qt, frame;
+	struct seqptr *sp, *qp;
+	struct state *st;
+	unsigned remaind;
+	unsigned fluct, notes;
+	int ofs, delta;
+
+	sp = seqptr_new(src);
+
+	/*
+	 * go to start position
+	 */
+	if (seqptr_skip(sp, start) > 0) {
+		seqptr_del(sp);
+		return;
+	}
+
+	track_init(&qt);
+	qp = seqptr_new(&qt);
+	seqptr_seek(qp, start);
+
+	track_init(&frame);
+	tic = qtic = start;
+	ofs = 0;
+
+	/*
+	 * go ahead and copy all events to quantize during 'len' tics,
+	 * while stretching the time scale in the destination track
+	 */
+	fluct = 0;
+	notes = 0;
+	for (;;) {
+		delta = seqptr_ticskip(sp, ~0U);
+		tic += delta;
+		if (tic >= start + len)
+			break;
+
+		remaind = quant != 0 ? (tic - start + offset) % quant : 0;
+		if (remaind < quant / 2) {
+			ofs = - ((remaind * rate + 99) / 100);
+		} else {
+			ofs = ((quant - remaind) * rate + 99) / 100;
+		}
+
+		delta = tic + ofs - qtic;
+#ifdef FRAME_DEBUG
+		if (delta < 0) {
+			log_puts("track_quantize_frame: delta < 0\n");
+			panic();
+		}
+#endif
+		seqptr_seek(qp, delta);
+		qtic += delta;
+
+		if (seqptr_eot(sp))
+			break;
+
+		st = statelist_lookup(&qp->statelist, &sp->pos->ev);
+		if (st != NULL && !(st->phase & EV_PHASE_LAST)) {
+			/*
+			 * There's as state for this event, which is
+			 * part of a conflicting frame. Just skip it.
+			 */
+			st = seqptr_evget(sp);
+#ifdef FRAME_DEBUG
+			if (sp->pos->ev.cmd != EV_NULL) {
+				ev_log(&sp->pos->ev);
+				log_puts(": skipped (conflict)\n");
+			}
+#endif
+		} else if (!evspec_matchev(es, &sp->pos->ev)) {
+			/*
+			 * Doesn't match selection, Skip this event.
+			 */
+			st = seqptr_evget(sp);
+		} else {
+			seqptr_framerm(sp, &frame);
+			if (EV_ISNOTE(&frame.first->ev)) {
+				fluct += (ofs < 0) ? -ofs : ofs;
+				notes++;
+			}
+			seqptr_frameadd(qp, &frame);
+			while (seqptr_evget(qp))
+				;
+		}
+	}
+
+	statelist_empty(&sp->statelist);
+	statelist_empty(&qp->statelist);
+	seqptr_del(sp);
+	seqptr_del(qp);
+	track_done(&frame);
+
+	track_merge(src, &qt);
+	track_done(&qt);
+
+	if (notes > 0) {
+		log_puts("quantize: ");
+		log_putu(notes);
+		log_puts(" notes, fluctuation = ");
 		log_putu(100 * fluct / notes);
 		log_puts("% of a tick\n");
 	}
@@ -1136,6 +1405,50 @@ track_transpose(struct track *src, unsigned start, unsigned len,
 	seqptr_del(sp);
 	seqptr_del(qp);
 	track_done(&qt);
+}
+
+/*
+ * rewrite the track frame-by-frame
+ */
+void
+track_rewrite(struct track *src)
+{
+	struct statelist slist;
+	struct track dst, frame;
+	struct seqptr *sp, *dp;
+	unsigned delta;
+
+	track_check(src);
+
+	track_init(&frame);
+
+	sp = seqptr_new(src);
+	statelist_init(&slist);
+
+	track_init(&dst);
+	dp = seqptr_new(&dst);
+
+	/*
+	 * reconstruct frame-by-frame
+	 */
+	for (;;) {
+		delta = seqptr_ticdel(sp, ~0U, &slist);
+		seqptr_seek(dp, delta);
+
+		if (seqptr_eot(sp))
+			break;
+
+		seqptr_framerm(sp, &frame);
+		seqptr_frameadd(dp, &frame);
+	}
+
+	statelist_empty(&dp->statelist);
+	seqptr_del(dp);
+	statelist_done(&slist);
+	seqptr_del(sp);
+
+	track_swap(src, &dst);
+	track_done(&dst);
 }
 
 /*

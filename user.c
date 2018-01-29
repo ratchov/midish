@@ -1058,6 +1058,7 @@ user_mainloop(void)
 			name_newarg("filtname", NULL));
 	exec_newbuiltin(exec, "tgetf", blt_tgetf, NULL);
 	exec_newbuiltin(exec, "tcheck", blt_tcheck, NULL);
+	exec_newbuiltin(exec, "trewrite", blt_trewrite, NULL);
 	exec_newbuiltin(exec, "tcut", blt_tcut, NULL);
 	exec_newbuiltin(exec, "tclr", blt_tclr, NULL);
 	exec_newbuiltin(exec, "tpaste", blt_tpaste, NULL);
@@ -1066,7 +1067,9 @@ user_mainloop(void)
 			name_newarg("amount", NULL));
 	exec_newbuiltin(exec, "tmerge", blt_tmerge,
 			name_newarg("source", NULL));
-	exec_newbuiltin(exec, "tquant", blt_tquant,
+	exec_newbuiltin(exec, "tquanta", blt_tquanta,
+			name_newarg("rate", NULL));
+	exec_newbuiltin(exec, "tquantf", blt_tquantf,
 			name_newarg("rate", NULL));
 	exec_newbuiltin(exec, "ttransp", blt_ttransp,
 			name_newarg("halftones", NULL));

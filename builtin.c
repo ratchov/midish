@@ -1735,6 +1735,23 @@ blt_tcheck(struct exec *o, struct data **r)
 }
 
 unsigned
+blt_trewrite(struct exec *o, struct data **r)
+{
+	struct songtrk *t;
+
+	song_getcurtrk(usong, &t);
+	if (t == NULL) {
+		cons_errs(o->procname, "no current track");
+		return 0;
+	}
+	if (!song_try_trk(usong, t)) {
+		return 0;
+	}
+	track_rewrite(&t->track);
+	return 1;
+}
+
+unsigned
 blt_tcut(struct exec *o, struct data **r)
 {
 	unsigned tic, len, qstep;
@@ -1897,7 +1914,7 @@ blt_tmerge(struct exec *o, struct data **r)
 }
 
 unsigned
-blt_tquant(struct exec *o, struct data **r)
+blt_tquant_common(struct exec *o, struct data **r, int all)
 {
 	struct songtrk *t;
 	unsigned tic, len, qstep, offset;
@@ -1929,9 +1946,33 @@ blt_tquant(struct exec *o, struct data **r)
 		if (tic + len > qstep)
 			len -= qstep;
 	}
-	track_quantize(&t->track, &usong->curev,
-	    tic, len, offset, 2 * qstep, rate);
+	if (all) {
+		track_quantize(&t->track, &usong->curev,
+		    tic, len, offset, 2 * qstep, rate);
+	} else {
+		track_quantize_frame(&t->track, &usong->curev,
+		    tic, len, offset, 2 * qstep, rate);
+	}
 	return 1;
+}
+
+unsigned
+blt_tquant(struct exec *o, struct data **r)
+{
+	cons_err("warning, tquant is deprecated, use tquanta instead");
+	return blt_tquant_common(o, r, 1);
+}
+
+unsigned
+blt_tquanta(struct exec *o, struct data **r)
+{
+	return blt_tquant_common(o, r, 1);
+}
+
+unsigned
+blt_tquantf(struct exec *o, struct data **r)
+{
+	return blt_tquant_common(o, r, 0);
 }
 
 unsigned
