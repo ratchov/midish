@@ -733,11 +733,6 @@ evspec_in(struct evspec *es1, struct evspec *es2)
 int
 evspec_isamap(struct evspec *from, struct evspec *to)
 {
-	log_puts("isamap: ");
-	evspec_log(from);
-	log_puts(" -> ");
-	evspec_log(to);
-	log_puts("\n");
 	if ((from->cmd == EVSPEC_NOTE && to->cmd != EVSPEC_NOTE) ||
 	    (from->cmd != EVSPEC_NOTE && to->cmd == EVSPEC_NOTE)) {
 		cons_err("note may only be used in both map args");
