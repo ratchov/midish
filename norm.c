@@ -179,10 +179,6 @@ norm_evcb(struct ev *ev)
 		log_puts("\n");
 	}
 #ifdef NORM_DEBUG
-	if (o->cb == NULL) {
-		log_puts("norm_evcb: cb = NULL, bad initialisation\n");
-		panic();
-	}
 	if (!EV_ISVOICE(ev) && !EV_ISSX(ev)) {
 		log_puts("norm_evcb: only voice events allowed\n");
 		panic();
