@@ -370,6 +370,10 @@ exec_lookupevspec(struct exec *o, char *name, struct evspec *e, int input)
 		cons_err("bad status in event spec");
 		return 0;
 	}
+	if (!(evinfo[e->cmd].flags & EV_HAS_DEV))
+		e->dev_max = e->dev_min;
+	if (!(evinfo[e->cmd].flags & EV_HAS_CH))
+		e->ch_max = e->ch_min;
 	e->v0_min = evinfo[e->cmd].v0_min;
 	e->v0_max = evinfo[e->cmd].v0_max;
 	e->v1_min = evinfo[e->cmd].v1_min;
@@ -422,7 +426,8 @@ exec_lookupevspec(struct exec *o, char *name, struct evspec *e, int input)
 		}
 		e->dev_min = e->dev_max = d->val.num;
 		e->ch_min = 0;
-		e->ch_max = EV_MAXCH;
+		e->ch_max = (evinfo[e->cmd].flags & EV_HAS_CH) ?
+			EV_MAXCH : e->ch_min;
 	} else {
 		cons_err("list or ref expected as channel range spec");
 		return 0;

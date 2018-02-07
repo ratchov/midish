@@ -367,24 +367,97 @@ ev_log(struct ev *ev)
 void
 ev_map(struct ev *in, struct evspec *from, struct evspec *to, struct ev *out)
 {
-	*out = *in;
-	if (to->cmd != EVSPEC_ANY && to->cmd != EVSPEC_NOTE)
+	if (from->cmd == EVSPEC_ANY) {
+		out->cmd = in->cmd;
+		out->dev = in->dev - from->dev_min + to->dev_min;
+		out->ch = in->ch - from->ch_min + to->ch_min;
+		out->v0 = in->v0;
+		out->v1 = in->v1;
+		return;
+	}
+	if (from->cmd == EVSPEC_NOTE)
+		out->cmd = in->cmd;
+	else
 		out->cmd = to->cmd;
-	if ((evinfo[from->cmd].flags & EV_HAS_DEV) &&
-	    (evinfo[in->cmd].flags & EV_HAS_DEV)) {
-		out->dev += to->dev_min - from->dev_min;
+	if (evinfo[out->cmd].flags & EV_HAS_DEV) {
+		out->dev = to->dev_min;
+		if (evinfo[from->cmd].flags & EV_HAS_DEV)
+			out->dev += in->dev - from->dev_min;
 	}
-	if ((evinfo[from->cmd].flags & EV_HAS_CH) &&
-	    (evinfo[in->cmd].flags & EV_HAS_CH)) {
-		out->ch += to->ch_min - from->ch_min;
+	if (evinfo[out->cmd].flags & EV_HAS_CH) {
+		out->ch = to->ch_min;
+		if (evinfo[from->cmd].flags & EV_HAS_CH)
+			out->ch += in->ch - from->ch_min;
 	}
-	if (evinfo[from->cmd].nranges > 0 &&
-	    evinfo[in->cmd].nranges > 0) {
-		out->v0 += to->v0_min - from->v0_min;
+	switch (evinfo[in->cmd].nparams) {
+	case 0:
+		break;
+	case 1:
+		switch (evinfo[out->cmd].nparams) {
+		case 0:
+			break;
+		case 1:
+			out->v0 = in->v0;
+			break;
+		case 2:
+			out->v1 = in->v1;
+			break;
+		}
+		break;
+	case 2:
+		switch (evinfo[out->cmd].nparams) {
+		case 0:
+			break;
+		case 1:
+			out->v0 = in->v1;
+			break;
+		case 2:
+			out->v0 = in->v0;
+			out->v1 = in->v1;
+			break;
+		}
+		break;
 	}
-	if (evinfo[from->cmd].nranges > 1 &&
-	    evinfo[in->cmd].nranges > 1) {
-		out->v1 += to->v1_min - from->v1_min;
+	switch (evinfo[from->cmd].nranges) {
+	case 0:
+		switch (evinfo[to->cmd].nranges) {
+		case 0:
+			break;
+		case 1:
+			out->v0 = to->v0_min;
+			break;
+		case 2:
+			out->v0 = to->v0_min;
+			out->v1 = to->v1_min;
+			break;
+		}
+		break;
+	case 1:
+		switch (evinfo[to->cmd].nranges) {
+		case 0:
+			break;
+		case 1:
+			out->v0 = in->v0 - from->v0_min + to->v0_min;
+			break;
+		case 2:
+			out->v0 = to->v0_min;
+			out->v1 = in->v0 - from->v0_min + to->v1_min;
+			break;
+		}
+		break;
+	case 2:
+		switch (evinfo[to->cmd].nranges) {
+		case 0:
+			break;
+		case 1:
+			out->v0 = in->v1 - from->v1_min + to->v0_min;
+			break;
+		case 2:
+			out->v0 = in->v0 - from->v0_min + to->v0_min;
+			out->v1 = in->v1 - from->v1_min + to->v1_min;
+			break;
+		}
+		break;
 	}
 }
 
@@ -418,9 +491,9 @@ evspec_reset(struct evspec *o)
 	o->ch_min  = 0;
 	o->ch_max  = EV_MAXCH;
 	o->v0_min  = 0xdeadbeef;
-	o->v0_max  = 0xdeadbeef;
+	o->v0_max  = 0xbeefdead;
 	o->v1_min  = 0xdeadbeef;
-	o->v1_max  = 0xdeadbeef;
+	o->v1_max  = 0xbeefdead;
 }
 
 /*
@@ -662,8 +735,19 @@ evspec_in(struct evspec *es1, struct evspec *es2)
 int
 evspec_isamap(struct evspec *from, struct evspec *to)
 {
-	if (from->cmd != to->cmd) {
-		cons_err("use the same cmd for 'from' and 'to' args");
+	log_puts("isamap: ");
+	evspec_log(from);
+	log_puts(" -> ");
+	evspec_log(to);
+	log_puts("\n");
+	if ((from->cmd == EVSPEC_NOTE && to->cmd != EVSPEC_NOTE) ||
+	    (from->cmd != EVSPEC_NOTE && to->cmd == EVSPEC_NOTE)) {
+		cons_err("note may only be used in both map args");
+		return 0;
+	}
+	if ((from->cmd == EVSPEC_ANY && to->cmd != EVSPEC_ANY) ||
+	    (from->cmd != EVSPEC_ANY && to->cmd == EVSPEC_ANY)) {
+		cons_err("note may only be used in both map args");
 		return 0;
 	}
 	if (evinfo[from->cmd].flags & EV_HAS_DEV &&
@@ -676,15 +760,85 @@ evspec_isamap(struct evspec *from, struct evspec *to)
 		cons_err("chan ranges must have the same size");
 		return 0;
 	}
-	if (evinfo[from->cmd].nranges >= 1 &&
-	    from->v0_max - from->v0_min != to->v0_max - to->v0_min) {
-		cons_err("v0 ranges must have the same size");
-		return 0;
-	}
-	if (evinfo[from->cmd].nranges >= 2 &&
-	    from->v1_max - from->v1_min != to->v1_max - to->v1_min) {
-		cons_err("v1 ranges must have the same size");
-		return 0;
+	switch (evinfo[from->cmd].nranges) {
+	case 0:
+		switch (evinfo[to->cmd].nranges) {
+		case 0:
+			break;
+		case 1:
+			if (to->v0_max != to->v0_min) {
+				cons_err("v0 ranges not empty");
+				return 0;
+			}
+			break;
+		case 2:
+			if (to->v0_max != to->v0_min ||
+			    to->v1_max != to->v1_min) {
+				cons_err("v0/v1 ranges not empty");
+				return 0;
+			}
+			break;
+		}
+		break;
+	case 1:
+		switch (evinfo[to->cmd].nranges) {
+		case 0:
+			if (from->v0_max != from->v0_min) {
+				cons_err("v0 ranges not empty");
+				return 0;
+			}
+			break;
+		case 1:
+			if (from->v0_max - from->v0_min !=
+				to->v0_max - to->v0_min) {
+				cons_err("v0 ranges not of the same sizes");
+				return 0;
+			}
+			break;
+		case 2:
+			if (to->v0_max != to->v0_min) {
+				cons_err("v0 range not empty");
+				return 0;
+			}
+			if (from->v0_max - from->v0_min !=
+				to->v1_max - to->v1_min) {
+				cons_err("v0/v1 ranges not of the same sizes");
+				return 0;
+			}
+			break;
+		}
+		break;
+	case 2:
+		switch (evinfo[to->cmd].nranges) {
+		case 0:
+			if (from->v0_max != from->v0_min ||
+			    from->v1_max != from->v1_min) {
+				cons_err("v0/v1 ranges not empty");
+				return 0;
+			}
+			break;
+		case 1:
+			if (from->v0_max != from->v0_min) {
+				cons_err("v0 range not empty");
+				return 0;
+			}
+			if (from->v1_max - from->v1_min !=
+				to->v0_max - to->v0_min) {
+				cons_err("v1/v0 ranges not of the same sizes");
+				return 0;
+			}
+			break;
+		case 2:
+			if (from->v0_max - from->v0_min !=
+				to->v0_max - to->v0_min ||
+			    from->v1_max - from->v1_min !=
+				to->v1_max - to->v1_min) {
+				cons_err("x0/v1 ranges not of the same sizes");
+				return 0;
+			}
+			break;
+		}
+		break;
 	}
 	return 1;
 }
@@ -699,30 +853,107 @@ void
 evspec_map(struct evspec *in,
     struct evspec *from, struct evspec *to, struct evspec *out)
 {
-	*out = *in;
-	if (to->cmd != EVSPEC_ANY && to->cmd != EVSPEC_NOTE)
+	int offs;
+
+	/*
+	 * any -> any is special
+	 */
+	if (from->cmd == EVSPEC_ANY) {
+		out->cmd = in->cmd;
+		offs = to->dev_min - from->dev_min;
+		out->dev_min = in->dev_min + offs;
+		out->dev_max = in->dev_max + offs;
+		offs = to->ch_min - from->ch_min;
+		out->ch_min = in->ch_min + offs;
+		out->ch_max = in->ch_max + offs;
+		out->v0_min = in->v0_min;
+		out->v0_max = in->v0_max;
+		out->v1_min = in->v1_min;
+		out->v1_max = in->v1_max;
+		return;
+	}
+
+	/*
+	 * note are always mapped to notes
+	 */
+	if (from->cmd == EVSPEC_NOTE)
+		out->cmd = in->cmd;
+	else
 		out->cmd = to->cmd;
-	if ((evinfo[from->cmd].flags & EV_HAS_DEV) &&
-	    (evinfo[in->cmd].flags & EV_HAS_DEV)) {
-		out->dev_min += to->dev_min - from->dev_min;
-		out->dev_max += to->dev_min - from->dev_min;
+
+	if (evinfo[out->cmd].flags & EV_HAS_DEV) {
+		out->dev_min = to->dev_min;
+		out->dev_max = to->dev_max;
+		if (evinfo[from->cmd].flags & EV_HAS_DEV) {
+			out->dev_min += in->dev_min - from->dev_min;
+			out->dev_max += in->dev_max - from->dev_min;
+		}
 	}
-	if ((evinfo[from->cmd].flags & EV_HAS_CH) &&
-	    (evinfo[in->cmd].flags & EV_HAS_CH)) {
-		out->ch_min += to->ch_min - from->ch_min;
-		out->ch_max += to->ch_min - from->ch_min;
+	if (evinfo[out->cmd].flags & EV_HAS_CH) {
+		out->ch_min = to->ch_min;
+		out->ch_max = to->ch_max;
+		if (evinfo[from->cmd].flags & EV_HAS_CH) {
+			out->ch_min += in->ch_min - from->ch_min;
+			out->ch_max += in->ch_max - from->ch_min;
+		}
 	}
-	if (evinfo[from->cmd].nranges > 0 &&
-	    evinfo[in->cmd].nranges > 0) {
-		out->v0_min += to->v0_min - from->v0_min;
-		out->v0_max += to->v0_min - from->v0_min;
-	}
-	if (evinfo[from->cmd].nranges > 1 &&
-	    evinfo[in->cmd].nranges > 1) {
-		out->v1_min += to->v1_min - from->v1_min;
-		out->v1_max += to->v1_min - from->v1_min;
+	switch (evinfo[from->cmd].nparams) {
+	case 0:
+		switch (evinfo[to->cmd].nparams) {
+		case 0:
+			break;
+		case 1:
+			out->v0_min = to->v0_min;
+			out->v0_max = to->v0_max;
+			break;
+		case 2:
+			out->v0_min = to->v0_min;
+			out->v0_max = to->v0_max;
+			out->v1_min = to->v1_min;
+			out->v1_max = to->v1_max;
+			break;
+		}
+		break;
+	case 1:
+		switch (evinfo[to->cmd].nparams) {
+		case 0:
+			break;
+		case 1:
+			offs = to->v0_min - from->v0_min;
+			out->v0_min = in->v0_min + offs;
+			out->v0_max = in->v0_max + offs;
+			break;
+		case 2:
+			out->v0_min = to->v0_min;
+			out->v0_max = to->v0_max;
+			offs = to->v1_min - from->v0_min;
+			out->v1_min = in->v0_min + offs;
+			out->v1_max = in->v0_max + offs;
+			break;
+		}
+		break;
+	case 2:
+		switch (evinfo[to->cmd].nparams) {
+		case 0:
+			break;
+		case 1:
+			offs = to->v0_min - from->v1_min;
+			out->v0_min = in->v1_min + offs;
+			out->v0_max = in->v1_max + offs;
+			break;
+		case 2:
+			offs = to->v0_min - from->v0_min;
+			out->v0_min = in->v0_min + offs;
+			out->v0_max = in->v0_max + offs;
+			offs = to->v1_min - from->v1_min;
+			out->v1_min = in->v1_min - offs;
+			out->v1_max = in->v1_max - offs;
+			break;
+		}
+		break;
 	}
 }
+
 /*
  * configure a controller (set the name and default value)
  */
@@ -906,10 +1137,6 @@ evpat_set(unsigned cmd, char *name, unsigned char *pattern, unsigned size)
 		cons_err("duplicate atom in sysex pattern");
 		return 0;
 	}
-	if (!has_v0_hi) {
-		cons_err("v0 atom required in sysex pattern");
-		return 0;
-	}
 	if (has_v0_lo && !has_v0_hi) {
 		cons_err("v0_lo but no v0_hi in sysex pattern");
 		return 0;
@@ -922,10 +1149,11 @@ evpat_set(unsigned cmd, char *name, unsigned char *pattern, unsigned size)
 	evinfo[cmd].ev = evinfo[cmd].spec = name;
 	evinfo[cmd].flags = EV_HAS_DEV;
 	evinfo[cmd].nparams = has_v0_hi + has_v1_hi;
+	evinfo[cmd].nranges = evinfo[cmd].nparams;
 	evinfo[cmd].v0_min = 0;
-	evinfo[cmd].v0_max = EV_MAXFINE;
+	evinfo[cmd].v0_max = has_v0_lo ? EV_MAXFINE : EV_MAXCOARSE;
 	evinfo[cmd].v1_min = 0;
-	evinfo[cmd].v1_max = EV_MAXFINE;
+	evinfo[cmd].v1_max = has_v1_lo ? EV_MAXFINE : EV_MAXCOARSE;
 #if 0
 	log_puts("evpat: nparams = ");
 	log_putu(evinfo[cmd].nparams);
@@ -935,6 +1163,5 @@ evpat_set(unsigned cmd, char *name, unsigned char *pattern, unsigned size)
 	log_putu(evinfo[cmd].v1_max);
 	log_puts("\n");
 #endif
-	evinfo[cmd].nranges = 0;
 	return 1;
 }
