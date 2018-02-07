@@ -68,7 +68,17 @@ ev_output(struct ev *e, struct textout *f)
 			break;
 		case EV_XPC:
 			textout_putstr(f, "xpc");
-			goto two;
+			textout_putstr(f, " ");
+			chan_output(e->dev, e->ch, f);
+			textout_putstr(f, " ");
+			textout_putlong(f, e->pc_prog);
+			textout_putstr(f, " ");
+			if (e->pc_bank != EV_UNDEF) {
+				textout_putlong(f, e->pc_bank);
+			} else {
+				textout_putstr(f, "nil");
+			}
+			return;
 		case EV_RPN:
 			textout_putstr(f, "rpn");
 			goto two;
@@ -127,11 +137,7 @@ two:
 	textout_putstr(f, " ");
 	textout_putlong(f, e->v0);
 	textout_putstr(f, " ");
-	if (e->v1 != EV_UNDEF) {
-		textout_putlong(f, e->v1);
-	} else {
-		textout_putstr(f, "nil");
-	}
+	textout_putlong(f, e->v1);
 	return;
 one:
 	textout_putstr(f, " ");
@@ -165,7 +171,11 @@ evspec_output(struct evspec *o, struct textout *f)
 	}
 	if (evinfo[o->cmd].nranges >= 1) {
 		textout_putstr(f, " ");
-		range_output(o->v0_min, o->v0_max, f);
+		if (o->v0_min == EV_UNDEF) {
+			/* XPC is allowed to have v0 = UNDEF */
+			textout_putstr(f, "nil");
+		} else
+			range_output(o->v0_min, o->v0_max, f);
 	}
 	if (evinfo[o->cmd].nranges >= 2) {
 		textout_putstr(f, " ");
@@ -1152,6 +1162,13 @@ load_ev(struct load *o, struct ev *ev)
 		ev->v1 = val;
 		break;
 	case EV_PC:
+		if (!load_long(o, 0, EV_MAXCOARSE, &val)) {
+			return 0;
+		}
+		ev->cmd = EV_XPC;
+		ev->v0 = EV_UNDEF;
+		ev->v1 = val;
+		break;
 	case EV_CAT:
 		if (!load_long(o, 0, EV_MAXCOARSE, &val)) {
 			return 0;
@@ -1303,8 +1320,15 @@ load_evspec(struct load *o, struct evspec *es)
 	}
 	if (info->nranges == 0)
 		return 1;
-	if (!load_range(o, 0, info->v0_max, &es->v0_min, &es->v0_max))
+	if (!load_getsym(o))
 		return 0;
+	if (o->id == TOK_NIL) {
+		es->v0_min = es->v0_max = EV_UNDEF;
+	} else {
+		load_ungetsym(o);
+		if (!load_range(o, 0, info->v0_max, &es->v0_min, &es->v0_max))
+			return 0;
+	}
 	if (info->nranges == 1)
 		return 1;
 	if (!load_range(o, 0, info->v1_max, &es->v1_min, &es->v1_max))

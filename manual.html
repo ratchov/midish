@@ -925,7 +925,7 @@ note-on event on device 2, channel 9, note 64 with velocity 100:
 program change device 1, channel 3, patch 34, bank 1234
 
 <pre>
-{xpc {1 3} 34 1234}
+{xpc {1 3} 1234 34}
 </pre>
 
 <p>
@@ -1006,7 +1006,7 @@ Examples:
 { ctl bass 7 }          # match controller 7 on channel "bass"
 { bend {} }             # match bender
 { xctl {} 19 }          # match 14-bit controller number 19
-{ xpc  {} 21 1234 }     # match patch 21 on bank 1234
+{ xpc  {} 1234 21 }     # match patch 21 on bank 1234
 { nrpn {} 21 }          # match NRPN 21 change
 </pre>
 

@@ -70,7 +70,7 @@ struct evinfo evinfo[EV_NUMCMD] =
 	{ "xpc", "xpc",
 	  EV_HAS_DEV | EV_HAS_CH,
 	  2, 2,
-	  0, EV_MAXCOARSE, 0, EV_MAXFINE,
+	  0, EV_MAXFINE, 0, EV_MAXCOARSE,
 	  NULL
 	},
 	{ "noff", NULL,
@@ -582,15 +582,13 @@ evspec_matchev(struct evspec *es, struct ev *ev)
 			return 0;
 	}
 	if (evinfo[es->cmd].nranges > 0 &&
-	    evinfo[ev->cmd].nranges > 0 &&
-	    ev->v0 != EV_UNDEF) {
+	    evinfo[ev->cmd].nranges > 0) {
 		if (ev->v0 < es->v0_min ||
 		    ev->v0 > es->v0_max)
 			return 0;
 	}
 	if (evinfo[es->cmd].nranges > 1 &&
-	    evinfo[ev->cmd].nranges > 1 &&
-	    ev->v1 != EV_UNDEF) {
+	    evinfo[ev->cmd].nranges > 1) {
 		if (ev->v1 < es->v1_min ||
 		    ev->v1 > es->v1_max)
 			return 0;

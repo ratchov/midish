@@ -292,14 +292,16 @@ exec_lookupev(struct exec *o, char *name, struct ev *ev, int input)
 		}
 		ev->ctl_num = num;
 	} else {
-		if (d == NULL ||
+		if (ev->cmd == EV_XPC && d != NULL && d->type == DATA_NIL) {
+			ev->v0 = EV_UNDEF;
+		} else if (d == NULL ||
 		    d->type != DATA_LONG ||
 		    d->val.num < 0 ||
 		    d->val.num > evinfo[ev->cmd].v0_max) {
 			cons_err("bad v0 in event spec");
 			return 0;
-		}
-		ev->v0 = d->val.num;
+		} else
+			ev->v0 = d->val.num;
 	}
 	d = d->next;
 	if (evinfo[ev->cmd].nparams < 2) {
@@ -449,6 +451,8 @@ exec_lookupevspec(struct exec *o, char *name, struct evspec *e, int input)
 			return 0;
 		}
 		e->v0_min = e->v0_max = hi;
+	} else if (e->cmd == EV_XPC && d->type == DATA_NIL) {
+		e->v0_min = e->v0_max = EV_UNDEF;
 	} else {
 		if (!data_getrange(d, e->v0_min, e->v0_max, &min, &max)) {
 			return 0;
@@ -483,8 +487,9 @@ exec_lookupevspec(struct exec *o, char *name, struct evspec *e, int input)
 	 */
 	if (e->cmd == EVSPEC_PC) {
 		e->cmd = EVSPEC_XPC;
-		e->v1_min = evinfo[e->cmd].v1_min;
-		e->v1_max = evinfo[e->cmd].v1_max;
+		e->v1_min = e->v0_min;
+		e->v1_max = e->v0_max;
+		e->v0_min = e->v0_max = EV_UNDEF;
 	} else if (e->cmd == EVSPEC_CTL) {
 		e->cmd = EVSPEC_XCTL;
 		e->v1_min =  (e->v1_min << 7) & 0x3fff;

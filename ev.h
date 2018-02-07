@@ -73,8 +73,8 @@ struct ev {
 #define note_kat	v1
 #define ctl_num		v0
 #define ctl_val		v1
-#define pc_prog		v0
-#define pc_bank		v1
+#define pc_prog		v1
+#define pc_bank		v0
 #define cat_val		v0
 #define bend_val	v0
 #define rpn_num		v0

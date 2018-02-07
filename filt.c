@@ -229,6 +229,11 @@ filt_do(struct filt *o, struct ev *in, struct ev *out)
 	for (s = o->map;; s = s->next) {
 		if (s == NULL)
 			break;
+		if (filt_debug) {
+			log_puts("filt_do: in = ");
+			ev_log(in);
+			log_puts("\n");
+		}
 		if (evspec_matchev(&s->es, in)) {
 			for (d = s->dstlist; d != NULL; d = d->next) {
 				if (d->es.cmd == EVSPEC_EMPTY)

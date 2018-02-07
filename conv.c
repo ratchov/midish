@@ -139,7 +139,7 @@ conv_packev(struct statelist *l, unsigned xctlset, unsigned flags,
 		rev->cmd = EV_XPC;
 		rev->dev = ev->dev;
 		rev->ch = ev->ch;
-		rev->pc_prog = ev->pc_prog;
+		rev->pc_prog = ev->v0;
 		rev->pc_bank = (flags & CONV_XPC) ?
 		    conv_getctx(l, ev, BANK_HI, BANK_LO) : 0;
 		return 1;
