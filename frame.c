@@ -1227,34 +1227,55 @@ track_quantize_frame(struct track *src, struct evspec *es,
 		if (seqptr_eot(sp))
 			break;
 
+		st = statelist_lookup(&sp->statelist, &sp->pos->ev);
+		if (st != NULL && !(st->phase & EV_PHASE_LAST)) {
+			/*
+			 * There's a state for this event in the
+			 * source track, which means the frame
+			 * is not being quantized
+			 */
+#ifdef FRAME_DEBUG
+			if (sp->pos->ev.cmd != EV_NULL) {
+				ev_log(&sp->pos->ev);
+				log_puts(": skipped (not ours)\n");
+			}
+#endif
+			seqptr_evget(sp);
+			continue;
+		}
+
 		st = statelist_lookup(&qp->statelist, &sp->pos->ev);
 		if (st != NULL && !(st->phase & EV_PHASE_LAST)) {
 			/*
 			 * There's as state for this event, which is
 			 * part of a conflicting frame. Just skip it.
 			 */
-			st = seqptr_evget(sp);
 #ifdef FRAME_DEBUG
 			if (sp->pos->ev.cmd != EV_NULL) {
 				ev_log(&sp->pos->ev);
 				log_puts(": skipped (conflict)\n");
 			}
 #endif
-		} else if (!evspec_matchev(es, &sp->pos->ev)) {
+			seqptr_evget(sp);
+			continue;
+		}
+
+		if (!evspec_matchev(es, &sp->pos->ev)) {
 			/*
 			 * Doesn't match selection, Skip this event.
 			 */
-			st = seqptr_evget(sp);
-		} else {
-			seqptr_framerm(sp, &frame);
-			if (EV_ISNOTE(&frame.first->ev)) {
-				fluct += (ofs < 0) ? -ofs : ofs;
-				notes++;
-			}
-			seqptr_frameadd(qp, &frame);
-			while (seqptr_evget(qp))
-				;
+			seqptr_evget(sp);
+			continue;
 		}
+
+		seqptr_framerm(sp, &frame);
+		if (EV_ISNOTE(&frame.first->ev)) {
+			fluct += (ofs < 0) ? -ofs : ofs;
+			notes++;
+		}
+		seqptr_frameadd(qp, &frame);
+		while (seqptr_evget(qp))
+			;
 	}
 
 	statelist_empty(&sp->statelist);
