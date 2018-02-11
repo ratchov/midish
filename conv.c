@@ -328,7 +328,7 @@ conv_unpackev(struct statelist *slist, unsigned xctlset, unsigned flags,
 		rev->cmd = EV_PC;
 		rev->dev = ev->dev;
 		rev->ch = ev->ch;
-		rev->pc_prog = ev->pc_prog;
+		rev->v0 = ev->pc_prog;
 		rev++;
 		nev++;
 		return nev;
