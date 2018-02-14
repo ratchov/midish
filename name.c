@@ -37,6 +37,7 @@ struct name *
 name_new(char *name)
 {
 	struct name *o;
+
 	o = xmalloc(sizeof(struct name), "name");
 	name_init(o, name);
 	return o;
@@ -80,6 +81,7 @@ void
 name_add(struct name **first, struct name *v)
 {
 	struct name **i;
+
 	i = first;
 	while (*i != NULL) {
 		i = &(*i)->next;
@@ -92,6 +94,7 @@ void
 name_remove(struct name **first, struct name *v)
 {
 	struct name **i;
+
 	i = first;
 	while (*i != NULL) {
 		if (*i == v) {
@@ -109,6 +112,7 @@ void
 name_empty(struct name **first)
 {
 	struct name *i, *inext;
+
 	for (i = *first; i != NULL; i = inext) {
 		inext = i->next;
 		name_delete(i);
