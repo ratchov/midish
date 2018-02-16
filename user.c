@@ -1051,6 +1051,8 @@ user_mainloop(void)
 			name_newarg("mode", NULL));
 	exec_newbuiltin(exec, "tapev", blt_tapev,
 			name_newarg("evspec", NULL));
+	exec_newbuiltin(exec, "u", blt_undo, NULL);
+	exec_newbuiltin(exec, "ul", blt_undolist, NULL);
 	exec_newbuiltin(exec, "tlist", blt_tlist, NULL);
 	exec_newbuiltin(exec, "tnew", blt_tnew,
 			name_newarg("trackname", NULL));

@@ -59,6 +59,32 @@ struct songsx {
 	struct sysexlist sx;		/* list of sysex messages */
 };
 
+struct songundo {
+	struct songundo *next;
+#define SONGUNDO_TRKDATA	1
+#define SONGUNDO_TRKNAME	2
+#define SONGUNDO_TRKDEL		3
+#define SONGUNDO_TRKNEW		4
+#define SONGUNDO_CHANDATA	5
+	int type;
+	char *func;
+	unsigned size;
+	union {
+		struct songundo_trkdata {
+			struct songtrk *trk;
+			struct track_undo data;
+		} trkdata;
+		struct songundo_trkname {
+			struct songtrk *trk;
+			char *name;
+		} trkname;
+		struct songundo_chan {
+			struct songchan *chan;
+			struct track_undo data;
+		} chandata;
+	} u;
+};
+
 struct song {
 	/*
 	 * music-related fields that should be saved
@@ -69,6 +95,8 @@ struct song {
 	struct name *inlist;		/* list of input channels */
 	struct name *filtlist;		/* list of fiters */
 	struct name *sxlist;		/* list of system exclive banks */
+	struct songundo *undo;		/* list of operation to undo */
+	unsigned undo_size;		/* size of all undo buffers */
 	unsigned tics_per_unit;		/* number of tics in an unit note */
 	unsigned tempo_factor;		/* tempo := tempo * factor / 256 */
 	struct songtrk *curtrk;		/* default track */
@@ -213,6 +241,15 @@ unsigned song_try_filt(struct song *, struct songfilt *);
 unsigned song_try_sx(struct song *, struct songsx *);
 unsigned song_try_meta(struct song *);
 unsigned song_try_ev(struct song *, unsigned);
+
+void song_undosave(struct song *, char *, int, void *);
+void song_undorestore(struct song *);
+
+void song_tdata_undo(struct song *, struct songtrk *, char *);
+void song_cdata_undo(struct song *, struct songchan *, char *);
+void song_tren_undo(struct song *, struct songtrk *, char *, char *);
+void song_tdel_undo(struct song *, struct songtrk *, char *);
+struct songtrk *song_tnew_undo(struct song *, char *, char *);
 
 extern unsigned song_debug;
 

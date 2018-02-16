@@ -1537,6 +1537,50 @@ blt_tapev(struct exec *o, struct data **r)
 }
 
 unsigned
+blt_undo(struct exec *o, struct data **r)
+{
+	song_undorestore(usong);
+	return 1;
+}
+
+unsigned
+blt_undolist(struct exec *o, struct data **r)
+{
+	struct songundo *u;
+
+	for (u = usong->undo; u != NULL; u = u->next) {
+		textout_putstr(tout, u->func);
+		switch (u->type) {
+		case SONGUNDO_TRKDATA:
+			textout_putstr(tout, " ");
+			textout_putstr(tout, u->u.trkdata.trk->name.str);
+			break;
+		case SONGUNDO_TRKDEL:
+			textout_putstr(tout, " ");
+			textout_putstr(tout, u->u.trkdata.trk->name.str);
+			break;
+		case SONGUNDO_TRKNEW:
+			textout_putstr(tout, " ");
+			textout_putstr(tout, u->u.trkdata.trk->name.str);
+			break;
+		case SONGUNDO_TRKNAME:
+			textout_putstr(tout, " ");
+			textout_putstr(tout, u->u.trkname.trk->name.str);
+			break;
+		case SONGUNDO_CHANDATA:
+			textout_putstr(tout, " ");
+			textout_putstr(tout, u->u.chandata.chan->name.str);
+			break;
+		default:
+			break;
+		}
+		textout_putstr(tout, "\n");
+	}
+	return 1;
+}
+
+
+unsigned
 blt_tlist(struct exec *o, struct data **r)
 {
 	struct data *d, *n;
@@ -1568,7 +1612,7 @@ blt_tnew(struct exec *o, struct data **r)
 		cons_errs(o->procname, "track already exists");
 		return 0;
 	}
-	t = song_trknew(usong, trkname);
+	t = song_tnew_undo(usong, trkname, "tnew");
 	return 1;
 }
 
@@ -1585,7 +1629,7 @@ blt_tdel(struct exec *o, struct data **r)
 	if (!song_try_trk(usong, t)) {
 		return 0;
 	}
-	song_trkdel(usong, t);
+	song_tdel_undo(usong, t, "tdel");
 	return 1;
 }
 
@@ -1608,8 +1652,7 @@ blt_tren(struct exec *o, struct data **r)
 		    "name already used by another track");
 		return 0;
 	}
-	str_delete(t->name.str);
-	t->name.str = str_new(name);
+	song_tren_undo(usong, t, name, "tren");
 	return 1;
 }
 
@@ -1657,6 +1700,7 @@ blt_taddev(struct exec *o, struct data **r)
 		cons_errs(o->procname, "beat/tick must fit in the measure");
 		return 0;
 	}
+	song_tdata_undo(usong, t, "taddev");
 	pos += beat * tpb + tic;
 	tp = seqptr_new(&t->track);
 	seqptr_seek(tp, pos);
@@ -1730,6 +1774,7 @@ blt_tcheck(struct exec *o, struct data **r)
 	if (!song_try_trk(usong, t)) {
 		return 0;
 	}
+	song_tdata_undo(usong, t, "tcheck");
 	track_check(&t->track);
 	return 1;
 }
@@ -1747,6 +1792,7 @@ blt_trewrite(struct exec *o, struct data **r)
 	if (!song_try_trk(usong, t)) {
 		return 0;
 	}
+	song_tdata_undo(usong, t, "trewrite");
 	track_rewrite(&t->track);
 	return 1;
 }
@@ -1771,6 +1817,7 @@ blt_tcut(struct exec *o, struct data **r)
 	if (tic > qstep) {
 		tic -= qstep;
 	}
+	song_tdata_undo(usong, t, "tcut");
 	track_cut(&t->track, tic, len);
 	usong->curlen = 0;
 	return 1;
@@ -1800,6 +1847,7 @@ blt_tins(struct exec *o, struct data **r)
 	if (tic > qstep) {
 		tic -= qstep;
 	}
+	song_tdata_undo(usong, t, "tins");
 	track_ins(&t->track, tic, len);
 	usong->curlen += amount;
 	return 1;
@@ -1827,6 +1875,7 @@ blt_tclr(struct exec *o, struct data **r)
 	} else if (tic + len > qstep) {
 		len -= qstep;
 	}
+	song_tdata_undo(usong, t, "tclr");
 	track_move(&t->track, tic, len, &usong->curev, NULL, 0, 1);
 	return 1;
 }
@@ -1857,6 +1906,7 @@ blt_tpaste(struct exec *o, struct data **r)
 	track_move(&usong->clip, tic, ~0U, &usong->curev, &copy, 1, 0);
 	if (!track_isempty(&copy)) {
 		copy.first->delta += tic2;
+		song_tdata_undo(usong, t, "tpaste");
 		track_merge(&t->track, &copy);
 	}
 	track_done(&copy);
@@ -1887,6 +1937,7 @@ blt_tcopy(struct exec *o, struct data **r)
 	} else if (tic + len > qstep) {
 		len -= qstep;
 	}
+	song_tdata_undo(usong, t, "tcopy");
 	track_clear(&usong->clip);
 	track_move(&t->track, tic, len, &usong->curev, &usong->clip, 1, 0);
 	track_shift(&usong->clip, tic2);
@@ -1909,6 +1960,7 @@ blt_tmerge(struct exec *o, struct data **r)
 	if (!song_try_trk(usong, dst)) {
 		return 0;
 	}
+	song_tdata_undo(usong, dst, "tmerge");
 	track_merge(&src->track, &dst->track);
 	return 1;
 }
@@ -1946,6 +1998,7 @@ blt_tquant_common(struct exec *o, struct data **r, int all)
 		if (tic + len > qstep)
 			len -= qstep;
 	}
+	song_tdata_undo(usong, t, "tquant");
 	if (all) {
 		track_quantize(&t->track, &usong->curev,
 		    tic, len, offset, 2 * qstep, rate);
@@ -2005,6 +2058,7 @@ blt_ttransp(struct exec *o, struct data **r)
 	} else if (tic + len > qstep) {
 		len -= qstep;
 	}
+	song_tdata_undo(usong, t, "ttransp");
 	track_transpose(&t->track, tic, len, &usong->curev, halftones);
 	return 1;
 }
@@ -2036,6 +2090,7 @@ blt_tevmap(struct exec *o, struct data **r)
 	} else if (tic + len > qstep) {
 		len -= qstep;
 	}
+	song_tdata_undo(usong, t, "tevmap");
 	track_evmap(&t->track, tic, len, &usong->curev, &from, &to);
 	return 1;
 }
@@ -2469,6 +2524,7 @@ blt_caddev(struct exec *o, struct data **r, int input)
 		cons_errs(o->procname, "event must be stateless");
 		return 0;
 	}
+	song_cdata_undo(usong, c, input ? "iaddev" : "oaddev");
 	song_confev(usong, c, input, &ev);
 	return 1;
 }
@@ -2502,6 +2558,7 @@ blt_crmev(struct exec *o, struct data **r, int input)
 	if (!exec_lookupevspec(o, "evspec", &es, input)) {
 		return 0;
 	}
+	song_cdata_undo(usong, c, input ? "irmev" : "ormev");
 	song_unconfev(usong, c, input, &es);
 	return 1;
 }

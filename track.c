@@ -226,8 +226,8 @@ track_numev(struct track *o)
 	struct seqev *i;
 
 	n = 0;
-	for(i = o->first; i != &o->eot; i = i->next) n++;
-
+	for (i = o->first; i != NULL; i = i->next)
+		n++;
 	return n;
 }
 
@@ -240,6 +240,7 @@ track_numtic(struct track *o)
 {
 	unsigned ntics;
 	struct seqev *i;
+
 	ntics = 0;
 	for(i = o->first; i != NULL; i = i->next)
 		ntics += i->delta;
@@ -321,4 +322,59 @@ track_evcnt(struct track *o, unsigned cmd)
 			cnt++;
 	}
 	return cnt;
+}
+
+unsigned
+track_undosave(struct track *t, struct track_undo *u)
+{
+	struct seqev *i;
+	struct track_undoev *e;
+	unsigned size;
+
+	u->nev = track_numev(t);
+#if 0
+	log_puts("track_undosave:\n");
+	track_dump(t);
+#endif
+	size = sizeof(struct track_undoev) * u->nev;
+	u->evs = xmalloc(size, "track_undo");
+
+#if 0
+	log_puts("saving ");
+	log_putu(u->nev);
+	log_puts(" events\n");
+#endif
+	e = u->evs;
+	for (i = t->first; i != NULL; i = i->next) {
+		e->delta = i->delta;
+		e->ev = i->ev;
+		e++;
+	}
+	return size;
+}
+
+void
+track_undorestore(struct track *t, struct track_undo *u)
+{
+	unsigned n;
+	struct seqev *i;
+	struct track_undoev *e;
+
+	track_clear(t);
+
+	e = u->evs;
+	for (n = u->nev; n > 1; n--) {
+		i = seqev_new();
+		i->delta = 0;
+		i->ev = e->ev;
+		t->eot.delta = e->delta;
+		seqev_ins(&t->eot, i);
+		e++;
+	}
+	t->eot.delta = e->delta;
+	xfree(u->evs);
+#if 0
+	log_puts("track_undorestore:\n");
+	track_dump(t);
+#endif
 }
