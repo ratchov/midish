@@ -133,7 +133,7 @@ song_undonew(struct song *s, int type, char *func)
 }
 
 void
-song_undorestore(struct song *s)
+song_undopop(struct song *s)
 {
 	struct songundo *u;
 
@@ -238,7 +238,7 @@ song_undopush(struct song *s, struct songundo *u)
 		if (u == NULL)
 			return;
 		size += u->size;
-		if (size > SONGUNDO_MAXSIZE)
+		if (size > UNDO_MAXSIZE)
 			break;
 		pu = &u->next;
 	}

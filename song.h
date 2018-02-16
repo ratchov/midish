@@ -243,7 +243,7 @@ unsigned song_try_meta(struct song *);
 unsigned song_try_ev(struct song *, unsigned);
 
 void song_undosave(struct song *, char *, int, void *);
-void song_undorestore(struct song *);
+void song_undopop(struct song *);
 
 void song_tdata_undo(struct song *, struct songtrk *, char *);
 void song_cdata_undo(struct song *, struct songchan *, char *);
