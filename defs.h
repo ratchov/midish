@@ -147,4 +147,9 @@
 #define DEFAULT_METRO_LO_NOTE	68
 #define DEFAULT_METRO_LO_VEL	90
 
+/*
+ * max memory usage allowed for undo
+ */
+#define UNDO_MAXSIZE		(4 * 1024 * 1024)
+
 #endif /* MIDISH_DEFAULT_H */

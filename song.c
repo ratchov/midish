@@ -133,18 +133,117 @@ song_undonew(struct song *s, int type, char *func)
 }
 
 void
-song_undopush(struct song *s, struct songundo *u)
+song_undorestore(struct song *s)
 {
-	u->next = s->undo;
-	s->undo = u;
-	s->undo_size += u->size;
-#if 0
+	struct songundo *u;
+
+	u = s->undo;
+	if (u == NULL)
+		return;
+	s->undo = u->next;
 	log_puts("undo: ");
 	log_puts(u->func);
-	log_puts(", size = ");
+	log_puts("\n");
+	switch (u->type) {
+	case SONGUNDO_TRKDATA:
+		track_undorestore(&u->u.trkdata.trk->track, &u->u.trkdata.data);
+		break;
+	case SONGUNDO_TRKNAME:
+		str_delete(u->u.trkname.trk->name.str);
+		u->u.trkname.trk->name.str = u->u.trkname.name;
+		break;
+	case SONGUNDO_TRKDEL:
+		track_undorestore(&u->u.trkdata.trk->track, &u->u.trkdata.data);
+		name_add(&s->trklist, &u->u.trkdata.trk->name);
+		break;
+	case SONGUNDO_TRKNEW:
+		song_trkdel(s, u->u.trkdata.trk);
+		break;
+	case SONGUNDO_CHANDATA:
+		track_undorestore(&u->u.chandata.chan->conf, &u->u.chandata.data);
+		break;
+	default:
+		log_puts("song_undopop: bad type\n");
+		panic();
+	}
+	s->undo_size -= u->size;
+#ifdef SONG_DEBUG
+	log_puts("undo: size -> ");
 	log_puti(s->undo_size);
 	log_puts("\n");
 #endif
+	xfree(u);
+}
+
+void
+song_undoclear(struct song *s, struct songundo **pos)
+{
+	struct songundo *u;
+
+	while ((u = *pos) != NULL) {
+		*pos = u->next;
+		switch (u->type) {
+		case SONGUNDO_TRKDATA:
+			xfree(u->u.trkdata.data.evs);
+			break;
+		case SONGUNDO_TRKNAME:
+			str_delete(u->u.trkname.name);
+			break;
+		case SONGUNDO_TRKDEL:
+			xfree(u->u.trkdata.data.evs);
+			break;
+		case SONGUNDO_TRKNEW:
+			break;
+		case SONGUNDO_CHANDATA:
+			xfree(u->u.chandata.data.evs);
+			break;
+		default:
+			log_puts("song_undoclear: bad type\n");
+			panic();
+		}
+		s->undo_size -= u->size;
+#ifdef SONG_DEBUG
+		log_puts("undo: freed ");
+		log_puts(u->func);
+		log_puts("\n");
+#endif
+		xfree(u);
+	}
+}
+
+void
+song_undopush(struct song *s, struct songundo *u)
+{
+	struct songundo **pu;
+	size_t size;
+
+	u->next = s->undo;
+	s->undo = u;
+	s->undo_size += u->size;
+#ifdef SONG_DEBUG
+	log_puts("undo: ");
+	log_puts(u->func);
+	log_puts(", size -> ");
+	log_puti(s->undo_size);
+	log_puts("\n");
+#endif
+
+	/*
+	 * free old entries exceeding memory usage limit
+	 */
+	size = 0;
+	pu = &s->undo;
+	while (1) {
+		u = *pu;
+		if (u == NULL)
+			return;
+		size += u->size;
+		if (size > SONGUNDO_MAXSIZE)
+			break;
+		pu = &u->next;
+	}
+
+	song_undoclear(s, pu);
 }
 
 void
@@ -208,89 +307,13 @@ song_cdata_undo(struct song *s, struct songchan *c, char *func)
 	song_undopush(s, u);
 }
 
-void
-song_undorestore(struct song *s)
-{
-	struct songundo *u;
-
-	u = s->undo;
-	if (u == NULL)
-		return;
-	s->undo = u->next;
-	log_puts("undo: ");
-	log_puts(u->func);
-	log_puts("\n");
-	switch (u->type) {
-	case SONGUNDO_TRKDATA:
-		track_undorestore(&u->u.trkdata.trk->track, &u->u.trkdata.data);
-		break;
-	case SONGUNDO_TRKNAME:
-		str_delete(u->u.trkname.trk->name.str);
-		u->u.trkname.trk->name.str = u->u.trkname.name;
-		break;
-	case SONGUNDO_TRKDEL:
-		track_undorestore(&u->u.trkdata.trk->track, &u->u.trkdata.data);
-		name_add(&s->trklist, &u->u.trkdata.trk->name);
-		break;
-	case SONGUNDO_TRKNEW:
-		song_trkdel(s, u->u.trkdata.trk);
-		break;
-	case SONGUNDO_CHANDATA:
-		track_undorestore(&u->u.chandata.chan->conf, &u->u.chandata.data);
-		break;
-	default:
-		log_puts("song_undopop: bad type\n");
-		panic();
-	}
-	s->undo_size -= u->size;
-#if 0
-	log_puts("undo_size = ");
-	log_puti(s->undo_size);
-	log_puts("\n");
-#endif
-	xfree(u);
-}
-
-void
-song_undoclear(struct song *s)
-{
-	struct songundo *u;
-
-	u = s->undo;
-	if (u == NULL)
-		return;
-	s->undo = u->next;
-	switch (u->type) {
-	case SONGUNDO_TRKDATA:
-		xfree(u->u.trkdata.data.evs);
-		break;
-	case SONGUNDO_TRKNAME:
-		str_delete(u->u.trkname.name);
-		break;
-	case SONGUNDO_TRKDEL:
-		xfree(u->u.trkdata.data.evs);
-		break;
-	case SONGUNDO_TRKNEW:
-		break;
-	case SONGUNDO_CHANDATA:
-		xfree(u->u.chandata.data.evs);
-		break;
-	default:
-		log_puts("song_undoclear: bad type\n");
-		panic();
-	}
-	s->undo_size -= u->size;
-	xfree(u);
-}
-
 /*
  * delete a song without freeing it
  */
 void
 song_done(struct song *o)
 {
-	while (o->undo)
-		song_undoclear(o);
+	song_undoclear(o, &o->undo);
 	if (mux_isopen) {
 		song_stop(o);
 	}
