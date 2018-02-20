@@ -1706,6 +1706,7 @@ blt_taddev(struct exec *o, struct data **r)
 	seqptr_seek(tp, pos);
 	seqptr_evput(tp, &ev);
 	seqptr_del(tp);
+	song_tdata_diff(usong);
 	return 1;
 }
 
@@ -1776,6 +1777,7 @@ blt_tcheck(struct exec *o, struct data **r)
 	}
 	song_tdata_undo(usong, t, "tcheck");
 	track_check(&t->track);
+	song_tdata_diff(usong);
 	return 1;
 }
 
@@ -1794,6 +1796,7 @@ blt_trewrite(struct exec *o, struct data **r)
 	}
 	song_tdata_undo(usong, t, "trewrite");
 	track_rewrite(&t->track);
+	song_tdata_diff(usong);
 	return 1;
 }
 
@@ -1820,6 +1823,7 @@ blt_tcut(struct exec *o, struct data **r)
 	song_tdata_undo(usong, t, "tcut");
 	track_cut(&t->track, tic, len);
 	usong->curlen = 0;
+	song_tdata_diff(usong);
 	return 1;
 }
 
@@ -1850,6 +1854,7 @@ blt_tins(struct exec *o, struct data **r)
 	song_tdata_undo(usong, t, "tins");
 	track_ins(&t->track, tic, len);
 	usong->curlen += amount;
+	song_tdata_diff(usong);
 	return 1;
 }
 
@@ -1877,6 +1882,7 @@ blt_tclr(struct exec *o, struct data **r)
 	}
 	song_tdata_undo(usong, t, "tclr");
 	track_move(&t->track, tic, len, &usong->curev, NULL, 0, 1);
+	song_tdata_diff(usong);
 	return 1;
 }
 
@@ -1908,6 +1914,7 @@ blt_tpaste(struct exec *o, struct data **r)
 		copy.first->delta += tic2;
 		song_tdata_undo(usong, t, "tpaste");
 		track_merge(&t->track, &copy);
+		song_tdata_diff(usong);
 	}
 	track_done(&copy);
 	return 1;
@@ -1941,6 +1948,7 @@ blt_tcopy(struct exec *o, struct data **r)
 	track_clear(&usong->clip);
 	track_move(&t->track, tic, len, &usong->curev, &usong->clip, 1, 0);
 	track_shift(&usong->clip, tic2);
+	song_tdata_diff(usong);
 	return 1;
 }
 
@@ -1962,6 +1970,7 @@ blt_tmerge(struct exec *o, struct data **r)
 	}
 	song_tdata_undo(usong, dst, "tmerge");
 	track_merge(&src->track, &dst->track);
+	song_tdata_diff(usong);
 	return 1;
 }
 
@@ -2006,6 +2015,7 @@ blt_tquant_common(struct exec *o, struct data **r, int all)
 		track_quantize_frame(&t->track, &usong->curev,
 		    tic, len, offset, 2 * qstep, rate);
 	}
+	song_tdata_diff(usong);
 	return 1;
 }
 
@@ -2060,6 +2070,7 @@ blt_ttransp(struct exec *o, struct data **r)
 	}
 	song_tdata_undo(usong, t, "ttransp");
 	track_transpose(&t->track, tic, len, &usong->curev, halftones);
+	song_tdata_diff(usong);
 	return 1;
 }
 
@@ -2092,6 +2103,7 @@ blt_tevmap(struct exec *o, struct data **r)
 	}
 	song_tdata_undo(usong, t, "tevmap");
 	track_evmap(&t->track, tic, len, &usong->curev, &from, &to);
+	song_tdata_diff(usong);
 	return 1;
 }
 

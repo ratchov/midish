@@ -331,50 +331,127 @@ track_undosave(struct track *t, struct track_undo *u)
 	struct track_undoev *e;
 	unsigned size;
 
-	u->nev = track_numev(t);
-#if 0
-	log_puts("track_undosave:\n");
-	track_dump(t);
-#endif
-	size = sizeof(struct track_undoev) * u->nev;
+	u->nins = track_numev(t);
+	size = sizeof(struct track_undoev) * u->nins;
 	u->evs = xmalloc(size, "track_undo");
-
-#if 0
-	log_puts("saving ");
-	log_putu(u->nev);
-	log_puts(" events\n");
-#endif
 	e = u->evs;
 	for (i = t->first; i != NULL; i = i->next) {
 		e->delta = i->delta;
 		e->ev = i->ev;
 		e++;
 	}
+	u->pos = 0;
+	u->nrm = u->nins;
 	return size;
+}
+
+void
+track_diff(struct track_undo *u1, struct track_undo *u2,
+	unsigned *pos, unsigned *nrm, unsigned *nins)
+{
+	unsigned start, end1, end2;
+
+	start = 0;
+	while (1) {
+		if (start == u1->nins || start == u2->nins)
+			break;
+		if (u1->evs[start].delta != u2->evs[start].delta)
+			break;
+		if (!ev_eq(&u1->evs[start].ev, &u2->evs[start].ev))
+			break;
+		start++;
+	}
+
+	end1 = u1->nins;
+	end2 = u2->nins;
+	while (1) {
+		if (end1 == start || end2 == start)
+			break;
+		if (u1->evs[end1 - 1].delta != u2->evs[end2 - 1].delta)
+			break;
+		if (!ev_eq(&u1->evs[end1 - 1].ev, &u2->evs[end2 - 1].ev))
+			break;
+		end1--;
+		end2--;
+	}
+	*pos = start;
+	*nrm = end1 - start;
+	*nins = end2 - start;
+}
+
+void
+track_undodiff(struct track *t, struct track_undo *orig)
+{
+	struct track_undo mod;
+	unsigned int i, pos, nrm, nins;
+	struct track_undoev *evs;
+
+	track_undosave(t, &mod);
+	track_diff(orig, &mod, &pos, &nrm, &nins);
+
+	evs = xmalloc(sizeof(struct track_undoev) * nrm, "track_diff");
+	for (i = 0; i < nrm; i++)
+		evs[i] = orig->evs[pos + i];
+	xfree(mod.evs);
+	xfree(orig->evs);
+	orig->evs = evs;
+	orig->nins = nins;
+	orig->nrm = nrm;
+	orig->pos = pos;
 }
 
 void
 track_undorestore(struct track *t, struct track_undo *u)
 {
 	unsigned n;
-	struct seqev *i;
+	struct seqev *pos, *se;
 	struct track_undoev *e;
 
-	track_clear(t);
+	/* go to pos */
+	pos = t->first;
+	for (n = u->pos; n > 0; n--)
+		pos = pos->next;
 
-	e = u->evs;
-	for (n = u->nev; n > 1; n--) {
-		i = seqev_new();
-		i->delta = 0;
-		i->ev = e->ev;
-		t->eot.delta = e->delta;
-		seqev_ins(&t->eot, i);
-		e++;
+	/* remove events that were inserted */
+	for (n = u->nins; n > 0; n--) {
+		if (pos->ev.cmd == EV_NULL) {
+			if (n != 1) {
+				log_puts("can't remove eot event\n");
+				panic();
+			}
+			pos->delta = 0;
+			break;
+		}
+		se = pos;
+		pos = se->next;
+
+		/* remove seqev */
+		*se->prev = pos;
+		pos->prev = se->prev;
+		seqev_del(se);
 	}
-	t->eot.delta = e->delta;
+
+	/* insert events that were removed */
+	e = u->evs;
+	for (n = u->nrm; n > 0; n--) {
+		if (e->ev.cmd == EV_NULL) {
+			if (n != 1) {
+				log_puts("can't insert eot event\n");
+				panic();
+			}
+			t->eot.delta = e->delta;
+			break;
+		}
+		se = seqev_new();
+		se->ev = e->ev;
+		se->delta = e->delta;
+		e++;
+
+		/* insert seqev */
+		se->next = pos;
+		se->prev = pos->prev;
+		*(se->prev) = se;
+		pos->prev = &se->next;
+	}
 	xfree(u->evs);
-#if 0
-	log_puts("track_undorestore:\n");
-	track_dump(t);
-#endif
 }

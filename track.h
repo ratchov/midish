@@ -35,7 +35,7 @@ struct track_undo {
 		unsigned delta;
 		struct ev ev;
 	} *evs;
-	unsigned int nev;
+	unsigned int pos, nrm, nins;
 };
 
 void	      seqev_pool_init(unsigned);
@@ -65,5 +65,6 @@ unsigned      track_evcnt(struct track *, unsigned);
 
 unsigned track_undosave(struct track *, struct track_undo *);
 void track_undorestore(struct track *, struct track_undo *);
+void track_undodiff(struct track *, struct track_undo *);
 
 #endif /* MIDISH_TRACK_H */

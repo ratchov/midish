@@ -246,6 +246,7 @@ void song_undosave(struct song *, char *, int, void *);
 void song_undopop(struct song *);
 
 void song_tdata_undo(struct song *, struct songtrk *, char *);
+void song_tdata_diff(struct song *);
 void song_cdata_undo(struct song *, struct songchan *, char *);
 void song_tren_undo(struct song *, struct songtrk *, char *, char *);
 void song_tdel_undo(struct song *, struct songtrk *, char *);

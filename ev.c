@@ -236,6 +236,31 @@ ev_phase(struct ev *ev)
  * conflict between the frame and the event)
  */
 unsigned
+ev_eq(struct ev *e1, struct ev *e2)
+{
+	unsigned nranges;
+
+	if (e1->cmd != e2->cmd)
+		return 0;
+
+	nranges = evinfo[e1->cmd].nranges;
+	if (nranges > 0) {
+		if (e1->v0 != e2->v0)
+			return 0;
+		if (nranges > 1) {
+			if (e1->v1 != e2->v1)
+				return 0;
+		}
+	}
+	return 1;
+}
+
+/*
+ * check if the given event matches the given frame (if so, this means
+ * that, iether the event is part of the frame, either there is a
+ * conflict between the frame and the event)
+ */
+unsigned
 ev_match(struct ev *st, struct ev *ev)
 {
 	switch (st->cmd) {
