@@ -379,7 +379,7 @@ track_diff(struct track_undo *u1, struct track_undo *u2,
 	*nins = end2 - start;
 }
 
-void
+unsigned
 track_undodiff(struct track *t, struct track_undo *orig)
 {
 	struct track_undo mod;
@@ -398,6 +398,7 @@ track_undodiff(struct track *t, struct track_undo *orig)
 	orig->nins = nins;
 	orig->nrm = nrm;
 	orig->pos = pos;
+	return sizeof(struct track_undoev) * nrm;
 }
 
 void

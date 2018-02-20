@@ -261,12 +261,15 @@ void
 song_tdata_diff(struct song *s)
 {
 	struct songundo *u = s->undo;
+	unsigned size;
 
 	if (u == NULL || u->type != SONGUNDO_TRKDATA) {
 		log_puts("song_tdata_diff: no data to diff\n");
 		return;
 	}
-	track_undodiff(&u->u.trkdata.trk->track, &u->u.trkdata.data);
+	size = track_undodiff(&u->u.trkdata.trk->track, &u->u.trkdata.data);
+	s->undo_size += size - u->size;
+	u->size = size;
 }
 
 void

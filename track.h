@@ -64,7 +64,7 @@ void	      track_chanmap(struct track *, char *);
 unsigned      track_evcnt(struct track *, unsigned);
 
 unsigned track_undosave(struct track *, struct track_undo *);
+unsigned track_undodiff(struct track *, struct track_undo *);
 void track_undorestore(struct track *, struct track_undo *);
-void track_undodiff(struct track *, struct track_undo *);
 
 #endif /* MIDISH_TRACK_H */
