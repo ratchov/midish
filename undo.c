@@ -46,49 +46,53 @@ void
 undo_pop(struct song *s)
 {
 	struct undo *u;
+	int done = 0;
 
-	u = s->undo;
-	if (u == NULL)
-		return;
-	s->undo = u->next;
-	log_puts("undo:");
-	if (u->func) {
-		log_puts(" ");
-		log_puts(u->func);
-	}
-	if (u->name) {
-		log_puts(" ");
-		log_puts(u->name);
-	}
-	log_puts("\n");
-	switch (u->type) {
-	case UNDO_TRACK:
-		track_undorestore(u->u.track.track, &u->u.track.data);
-		break;
-	case UNDO_TREN:
-		str_delete(u->u.tren.trk->name.str);
-		u->u.tren.trk->name.str = u->u.tren.name;
-		break;
-	case UNDO_TDEL:
-		track_undorestore(&u->u.tdel.trk->track, &u->u.tdel.data);
-		name_add(&s->trklist, &u->u.tdel.trk->name);
-		if (s->curtrk == NULL)
-			s->curtrk = u->u.tdel.trk;
-		break;
-	case UNDO_TNEW:
-		song_trkdel(s, u->u.tdel.trk);
-		break;
-	default:
-		log_puts("undo_pop: bad type\n");
-		panic();
-	}
-	s->undo_size -= u->size;
+	while (!done) {
+		u = s->undo;
+		if (u == NULL)
+			return;
+		s->undo = u->next;
+		if (u->func) {
+			log_puts("undo:");
+			log_puts(" ");
+			log_puts(u->func);
+			if (u->name) {
+				log_puts(" ");
+				log_puts(u->name);
+			}
+			log_puts("\n");
+			done = 1;
+		}
+		switch (u->type) {
+		case UNDO_TRACK:
+			track_undorestore(u->u.track.track, &u->u.track.data);
+			break;
+		case UNDO_TREN:
+			str_delete(u->u.tren.trk->name.str);
+			u->u.tren.trk->name.str = u->u.tren.name;
+			break;
+		case UNDO_TDEL:
+			track_undorestore(&u->u.tdel.trk->track, &u->u.tdel.data);
+			name_add(&s->trklist, &u->u.tdel.trk->name);
+			if (s->curtrk == NULL)
+				s->curtrk = u->u.tdel.trk;
+			break;
+		case UNDO_TNEW:
+			song_trkdel(s, u->u.tdel.trk);
+			break;
+		default:
+			log_puts("undo_pop: bad type\n");
+			panic();
+		}
+		s->undo_size -= u->size;
 #ifdef SONG_DEBUG
-	log_puts("undo: size -> ");
-	log_puti(s->undo_size);
-	log_puts("\n");
+		log_puts("undo: size -> ");
+		log_puti(s->undo_size);
+		log_puts("\n");
 #endif
-	xfree(u);
+		xfree(u);
+	}
 }
 
 void
