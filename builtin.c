@@ -1595,7 +1595,7 @@ blt_tnew(struct exec *o, struct data **r)
 		cons_errs(o->procname, "track already exists");
 		return 0;
 	}
-	t = undo_tnew_do(usong, tren, "tnew");
+	t = undo_tnew_do(usong, "tnew", tren);
 	return 1;
 }
 
@@ -1683,13 +1683,13 @@ blt_taddev(struct exec *o, struct data **r)
 		cons_errs(o->procname, "beat/tick must fit in the measure");
 		return 0;
 	}
-	undo_tdata_save(usong, t, "taddev");
+	undo_track_save(usong, &t->track, "taddev", t->name.str);
 	pos += beat * tpb + tic;
 	tp = seqptr_new(&t->track);
 	seqptr_seek(tp, pos);
 	seqptr_evput(tp, &ev);
 	seqptr_del(tp);
-	undo_tdata_diff(usong);
+	undo_track_diff(usong);
 	return 1;
 }
 
@@ -1758,9 +1758,9 @@ blt_tcheck(struct exec *o, struct data **r)
 	if (!song_try_trk(usong, t)) {
 		return 0;
 	}
-	undo_tdata_save(usong, t, "tcheck");
+	undo_track_save(usong, &t->track, "tcheck", t->name.str);
 	track_check(&t->track);
-	undo_tdata_diff(usong);
+	undo_track_diff(usong);
 	return 1;
 }
 
@@ -1777,9 +1777,9 @@ blt_trewrite(struct exec *o, struct data **r)
 	if (!song_try_trk(usong, t)) {
 		return 0;
 	}
-	undo_tdata_save(usong, t, "trewrite");
+	undo_track_save(usong, &t->track, "trewrite", t->name.str);
 	track_rewrite(&t->track);
-	undo_tdata_diff(usong);
+	undo_track_diff(usong);
 	return 1;
 }
 
@@ -1803,10 +1803,10 @@ blt_tcut(struct exec *o, struct data **r)
 	if (tic > qstep) {
 		tic -= qstep;
 	}
-	undo_tdata_save(usong, t, "tcut");
+	undo_track_save(usong, &t->track, "tcut", t->name.str);
 	track_cut(&t->track, tic, len);
 	usong->curlen = 0;
-	undo_tdata_diff(usong);
+	undo_track_diff(usong);
 	return 1;
 }
 
@@ -1834,10 +1834,10 @@ blt_tins(struct exec *o, struct data **r)
 	if (tic > qstep) {
 		tic -= qstep;
 	}
-	undo_tdata_save(usong, t, "tins");
+	undo_track_save(usong, &t->track, "tins", t->name.str);
 	track_ins(&t->track, tic, len);
 	usong->curlen += amount;
-	undo_tdata_diff(usong);
+	undo_track_diff(usong);
 	return 1;
 }
 
@@ -1863,9 +1863,9 @@ blt_tclr(struct exec *o, struct data **r)
 	} else if (tic + len > qstep) {
 		len -= qstep;
 	}
-	undo_tdata_save(usong, t, "tclr");
+	undo_track_save(usong, &t->track, "tclr", t->name.str);
 	track_move(&t->track, tic, len, &usong->curev, NULL, 0, 1);
-	undo_tdata_diff(usong);
+	undo_track_diff(usong);
 	return 1;
 }
 
@@ -1895,9 +1895,9 @@ blt_tpaste(struct exec *o, struct data **r)
 	track_move(&usong->clip, tic, ~0U, &usong->curev, &copy, 1, 0);
 	if (!track_isempty(&copy)) {
 		copy.first->delta += tic2;
-		undo_tdata_save(usong, t, "tpaste");
+		undo_track_save(usong, &t->track, "tpaste", t->name.str);
 		track_merge(&t->track, &copy);
-		undo_tdata_diff(usong);
+		undo_track_diff(usong);
 	}
 	track_done(&copy);
 	return 1;
@@ -1927,11 +1927,9 @@ blt_tcopy(struct exec *o, struct data **r)
 	} else if (tic + len > qstep) {
 		len -= qstep;
 	}
-	undo_tdata_save(usong, t, "tcopy");
 	track_clear(&usong->clip);
 	track_move(&t->track, tic, len, &usong->curev, &usong->clip, 1, 0);
 	track_shift(&usong->clip, tic2);
-	undo_tdata_diff(usong);
 	return 1;
 }
 
@@ -1951,9 +1949,9 @@ blt_tmerge(struct exec *o, struct data **r)
 	if (!song_try_trk(usong, dst)) {
 		return 0;
 	}
-	undo_tdata_save(usong, dst, "tmerge");
+	undo_track_save(usong, &dst->track, "tmerge", dst->name.str);
 	track_merge(&src->track, &dst->track);
-	undo_tdata_diff(usong);
+	undo_track_diff(usong);
 	return 1;
 }
 
@@ -1990,7 +1988,7 @@ blt_tquant_common(struct exec *o, struct data **r, int all)
 		if (tic + len > qstep)
 			len -= qstep;
 	}
-	undo_tdata_save(usong, t, "tquant");
+	undo_track_save(usong, &t->track, "tquant", t->name.str);
 	if (all) {
 		track_quantize(&t->track, &usong->curev,
 		    tic, len, offset, 2 * qstep, rate);
@@ -1998,7 +1996,7 @@ blt_tquant_common(struct exec *o, struct data **r, int all)
 		track_quantize_frame(&t->track, &usong->curev,
 		    tic, len, offset, 2 * qstep, rate);
 	}
-	undo_tdata_diff(usong);
+	undo_track_diff(usong);
 	return 1;
 }
 
@@ -2051,9 +2049,9 @@ blt_ttransp(struct exec *o, struct data **r)
 	} else if (tic + len > qstep) {
 		len -= qstep;
 	}
-	undo_tdata_save(usong, t, "ttransp");
+	undo_track_save(usong, &t->track, "ttransp", t->name.str);
 	track_transpose(&t->track, tic, len, &usong->curev, halftones);
-	undo_tdata_diff(usong);
+	undo_track_diff(usong);
 	return 1;
 }
 
@@ -2084,9 +2082,9 @@ blt_tevmap(struct exec *o, struct data **r)
 	} else if (tic + len > qstep) {
 		len -= qstep;
 	}
-	undo_tdata_save(usong, t, "tevmap");
+	undo_track_save(usong, &t->track, "tevmap", t->name.str);
 	track_evmap(&t->track, tic, len, &usong->curev, &from, &to);
-	undo_tdata_diff(usong);
+	undo_track_diff(usong);
 	return 1;
 }
 
@@ -2519,8 +2517,10 @@ blt_caddev(struct exec *o, struct data **r, int input)
 		cons_errs(o->procname, "event must be stateless");
 		return 0;
 	}
-	undo_cdata_save(usong, c, input ? "iaddev" : "oaddev");
+	undo_track_save(usong, &c->conf,
+	    input ? "iaddev" : "oaddev", c->name.str);
 	song_confev(usong, c, input, &ev);
+	undo_track_diff(usong);
 	return 1;
 }
 
@@ -2553,8 +2553,10 @@ blt_crmev(struct exec *o, struct data **r, int input)
 	if (!exec_lookupevspec(o, "evspec", &es, input)) {
 		return 0;
 	}
-	undo_cdata_save(usong, c, input ? "irmev" : "ormev");
+	undo_track_save(usong, &c->conf,
+	    input ? "irmev" : "ormev", c->name.str);
 	song_unconfev(usong, c, input, &es);
+	undo_track_diff(usong);
 	return 1;
 }
 

@@ -26,37 +26,36 @@ struct songsx;
 
 struct undo {
 	struct undo *next;
-#define UNDO_TDATA	1
+#define UNDO_TRACK	1
 #define UNDO_TREN	2
 #define UNDO_TDEL	3
 #define UNDO_TNEW	4
-#define UNDO_CDATA	5
 	int type;
 	char *func;
 	char *name;
 	unsigned size;
 	union {
-		struct undo_tdata {
+		struct undo_track {
+			struct track *track;
+			struct track_data data;
+		} track;
+		struct undo_tdel {
+			struct song *song;
 			struct songtrk *trk;
 			struct track_data data;
-		} tdata;
+		} tdel;
 		struct undo_tren {
 			struct songtrk *trk;
 			char *name;
 		} tren;
-		struct undo_chan {
-			struct songchan *chan;
-			struct track_data data;
-		} cdata;
 	} u;
 };
 
 void undo_pop(struct song *);
 void undo_push(struct song *, struct undo *);
 void undo_clear(struct song *, struct undo **);
-void undo_tdata_save(struct song *, struct songtrk *, char *);
-void undo_tdata_diff(struct song *);
-void undo_cdata_save(struct song *, struct songchan *, char *);
+void undo_track_save(struct song *, struct track *, char *, char *);
+void undo_track_diff(struct song *);
 void undo_tren_do(struct song *, struct songtrk *, char *, char *);
 void undo_tdel_do(struct song *, struct songtrk *, char *);
 struct songtrk *undo_tnew_do(struct song *, char *, char *);

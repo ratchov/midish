@@ -240,9 +240,9 @@ song_chandel(struct song *o, struct songchan *c, int input)
 
 	pu = &o->undo;
 	while ((u = *pu) != NULL) {
-		if (u->type == UNDO_CDATA && u->u.cdata.chan == c) {
+		if (u->type == UNDO_TRACK && u->u.track.track == &c->conf) {
 			*pu = u->next;
-			track_undorestore(&c->conf, &u->u.cdata.data);
+			xfree(u->u.track.data.evs);
 		} else
 			pu = &u->next;
 	}
@@ -802,8 +802,9 @@ song_mergerec(struct song *o)
 	}
 	song_getcurtrk(o, &t);
 	if (t) {
-		undo_tdata_save(o, t, "record");
+		undo_track_save(o, &t->track, "record", t->name.str);
 		track_merge(&o->curtrk->track, &o->rec);
+		undo_track_diff(o);
 	}
 	track_clear(&o->rec);
 }

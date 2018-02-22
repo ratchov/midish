@@ -62,22 +62,21 @@ undo_pop(struct song *s)
 	}
 	log_puts("\n");
 	switch (u->type) {
-	case UNDO_TDATA:
-		track_undorestore(&u->u.tdata.trk->track, &u->u.tdata.data);
+	case UNDO_TRACK:
+		track_undorestore(u->u.track.track, &u->u.track.data);
 		break;
 	case UNDO_TREN:
 		str_delete(u->u.tren.trk->name.str);
 		u->u.tren.trk->name.str = u->u.tren.name;
 		break;
 	case UNDO_TDEL:
-		track_undorestore(&u->u.tdata.trk->track, &u->u.tdata.data);
-		name_add(&s->trklist, &u->u.tdata.trk->name);
+		track_undorestore(&u->u.tdel.trk->track, &u->u.tdel.data);
+		name_add(&s->trklist, &u->u.tdel.trk->name);
+		if (s->curtrk == NULL)
+			s->curtrk = u->u.tdel.trk;
 		break;
 	case UNDO_TNEW:
-		song_trkdel(s, u->u.tdata.trk);
-		break;
-	case UNDO_CDATA:
-		track_undorestore(&u->u.cdata.chan->conf, &u->u.cdata.data);
+		song_trkdel(s, u->u.tdel.trk);
 		break;
 	default:
 		log_puts("undo_pop: bad type\n");
@@ -100,19 +99,16 @@ undo_clear(struct song *s, struct undo **pos)
 	while ((u = *pos) != NULL) {
 		*pos = u->next;
 		switch (u->type) {
-		case UNDO_TDATA:
-			xfree(u->u.tdata.data.evs);
+		case UNDO_TRACK:
+			xfree(u->u.track.data.evs);
 			break;
 		case UNDO_TREN:
 			str_delete(u->u.tren.name);
 			break;
 		case UNDO_TDEL:
-			xfree(u->u.tdata.data.evs);
+			xfree(u->u.tdel.data.evs);
 			break;
 		case UNDO_TNEW:
-			break;
-		case UNDO_CDATA:
-			xfree(u->u.cdata.data.evs);
 			break;
 		default:
 			log_puts("undo_clear: bad type\n");
@@ -180,7 +176,7 @@ track_undosave(struct track *t, struct track_data *u)
 		e++;
 	}
 	u->pos = 0;
-	u->nrm = u->nins;
+	u->nrm = 0;
 	return size;
 }
 
@@ -297,27 +293,27 @@ track_undorestore(struct track *t, struct track_data *u)
 }
 
 void
-undo_tdata_save(struct song *s, struct songtrk *t, char *func)
+undo_track_save(struct song *s, struct track *t, char *func, char *name)
 {
 	struct undo *u;
 
-	u = undo_new(s, UNDO_TDATA, func, t->name.str);
-	u->u.tdata.trk = t;
-	u->size = track_undosave(&t->track, &u->u.tdata.data);
+	u = undo_new(s, UNDO_TRACK, func, name);
+	u->u.track.track = t;
+	u->size = track_undosave(t, &u->u.track.data);
 	undo_push(s, u);
 }
 
 void
-undo_tdata_diff(struct song *s)
+undo_track_diff(struct song *s)
 {
 	struct undo *u = s->undo;
 	unsigned size;
 
-	if (u == NULL || u->type != UNDO_TDATA) {
-		log_puts("undo_tdata_diff: no data to diff\n");
+	if (u == NULL || u->type != UNDO_TRACK) {
+		log_puts("undo_track_diff: no data to diff\n");
 		return;
 	}
-	size = track_undodiff(&u->u.tdata.trk->track, &u->u.tdata.data);
+	size = track_undodiff(u->u.track.track, &u->u.track.data);
 	s->undo_size += size - u->size;
 	u->size = size;
 }
@@ -342,32 +338,23 @@ undo_tdel_do(struct song *s, struct songtrk *t, char *func)
 	if (s->curtrk == t)
 		s->curtrk = NULL;
 	u = undo_new(s, UNDO_TDEL, func, t->name.str);
-	u->u.tdata.trk = t;
-	u->size = track_undosave(&t->track, &u->u.tdata.data);
+	u->u.tdel.song = s;
+	u->u.tdel.trk = t;
+	u->size = track_undosave(&t->track, &u->u.tdel.data);
 	name_remove(&s->trklist, &t->name);
 	undo_push(s, u);
 }
 
 struct songtrk *
-undo_tnew_do(struct song *s, char *name, char *func)
+undo_tnew_do(struct song *s, char *func, char *name)
 {
 	struct undo *u;
 	struct songtrk *t;
 
 	t = song_trknew(s, name);
 	u = undo_new(s, UNDO_TNEW, func, t->name.str);
-	u->u.tdata.trk = t;
+	u->u.tdel.song = s;
+	u->u.tdel.trk = t;
 	undo_push(s, u);
 	return t;
-}
-
-void
-undo_cdata_save(struct song *s, struct songchan *c, char *func)
-{
-	struct undo *u;
-
-	u = undo_new(s, UNDO_CDATA, func, c->name.str);
-	u->u.cdata.chan = c;
-	u->size = track_undosave(&c->conf, &u->u.cdata.data);
-	undo_push(s, u);
 }
