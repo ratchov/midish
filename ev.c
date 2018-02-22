@@ -238,16 +238,16 @@ ev_phase(struct ev *ev)
 unsigned
 ev_eq(struct ev *e1, struct ev *e2)
 {
-	unsigned nranges;
+	unsigned nparams;
 
 	if (e1->cmd != e2->cmd)
 		return 0;
 
-	nranges = evinfo[e1->cmd].nranges;
-	if (nranges > 0) {
+	nparams = evinfo[e1->cmd].nparams;
+	if (nparams > 0) {
 		if (e1->v0 != e2->v0)
 			return 0;
-		if (nranges > 1) {
+		if (nparams > 1) {
 			if (e1->v1 != e2->v1)
 				return 0;
 		}
