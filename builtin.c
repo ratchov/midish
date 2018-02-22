@@ -977,7 +977,9 @@ blt_tempo(struct exec *o, struct data **r)
 	if (!song_try_meta(usong)) {
 		return 0;
 	}
+	undo_track_save(usong, &usong->meta, "tempo", NULL);
 	track_settempo(&usong->meta, usong->curpos, tempo);
+	undo_track_diff(usong);
 	return 1;
 }
 
@@ -1043,8 +1045,10 @@ blt_mins(struct exec *o, struct data **r)
 	seqptr_evput(sp, &ev);
 	seqptr_del(sp);
 
+	undo_track_save(usong, &usong->meta, "mins", NULL);
 	track_ins(&usong->meta, tic, len);
 	track_merge(&usong->meta, &tn);
+	undo_track_diff(usong);
 	track_done(&tn);
 
 	qstep = usong->curquant / 2;
@@ -1052,7 +1056,9 @@ blt_mins(struct exec *o, struct data **r)
 		tic -= qstep;
 	}
 	SONG_FOREACH_TRK(usong, t) {
+		undo_track_save(usong, &t->track, NULL, NULL);
 		track_ins(&t->track, tic, len);
+		undo_track_diff(usong);
 	}
 	usong->curlen += amount;
 	return 1;
@@ -1127,8 +1133,10 @@ blt_mdup(struct exec *o, struct data **r)
 	/*
 	 * insert space and merge the duplicated portion
 	 */
+	undo_track_save(usong, &usong->meta, "mdup", NULL);
 	track_ins(&usong->meta, wtic, etic - stic);
 	track_merge(&usong->meta, &paste);
+	undo_track_diff(usong);
 	track_done(&paste);
 
 	qstep = usong->curquant / 2;
@@ -1141,8 +1149,10 @@ blt_mdup(struct exec *o, struct data **r)
 		track_init(&paste);
 		track_move(&t->track, stic, etic - stic, NULL, &paste, 1, 0);
 		track_shift(&paste, wtic);
+		undo_track_save(usong, &t->track, NULL, NULL);
 		track_ins(&t->track, wtic, etic - stic);
 		track_merge(&t->track, &paste);
+		undo_track_diff(usong);
 		track_done(&paste);
 	}
 	return 1;
@@ -1184,6 +1194,7 @@ blt_mcut(struct exec *o, struct data **r)
 
 	track_init(&t1);
 	track_init(&t2);
+	undo_track_save(usong, &usong->meta, "mcut", NULL);
 	track_move(&usong->meta, 0,   stic, NULL, &t1, 1, 1);
 	track_move(&usong->meta, etic, ~0U, NULL, &t2, 1, 1);
 	track_shift(&t2, stic);
@@ -1193,6 +1204,7 @@ blt_mcut(struct exec *o, struct data **r)
 	if (!track_isempty(&t2)) {
 		track_merge(&usong->meta, &t2);
 	}
+	undo_track_diff(usong);
 	track_done(&t1);
 	track_done(&t2);
 
@@ -1202,7 +1214,9 @@ blt_mcut(struct exec *o, struct data **r)
 		etic -= qstep;
 	}
 	SONG_FOREACH_TRK(usong, t) {
+		undo_track_save(usong, &t->track, NULL, NULL);
 		track_cut(&t->track, stic, etic - stic);
+		undo_track_diff(usong);
 	}
 	usong->curlen = 0;
 	return 1;
