@@ -33,6 +33,7 @@ struct undo {
 #define UNDO_CDATA	5
 	int type;
 	char *func;
+	char *name;
 	unsigned size;
 	union {
 		struct undo_tdata {

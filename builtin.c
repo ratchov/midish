@@ -1550,30 +1550,12 @@ blt_undolist(struct exec *o, struct data **r)
 	struct undo *u;
 
 	for (u = usong->undo; u != NULL; u = u->next) {
+		if (u->func == NULL)
+			continue;
 		textout_putstr(tout, u->func);
-		switch (u->type) {
-		case UNDO_TDATA:
+		if (u->name != NULL) {
 			textout_putstr(tout, " ");
-			textout_putstr(tout, u->u.tdata.trk->name.str);
-			break;
-		case UNDO_TDEL:
-			textout_putstr(tout, " ");
-			textout_putstr(tout, u->u.tdata.trk->name.str);
-			break;
-		case UNDO_TNEW:
-			textout_putstr(tout, " ");
-			textout_putstr(tout, u->u.tdata.trk->name.str);
-			break;
-		case UNDO_TREN:
-			textout_putstr(tout, " ");
-			textout_putstr(tout, u->u.tren.trk->name.str);
-			break;
-		case UNDO_CDATA:
-			textout_putstr(tout, " ");
-			textout_putstr(tout, u->u.cdata.chan->name.str);
-			break;
-		default:
-			break;
+			textout_putstr(tout, u->name);
 		}
 		textout_putstr(tout, "\n");
 	}

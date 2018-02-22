@@ -30,13 +30,14 @@
 
 
 struct undo *
-undo_new(struct song *s, int type, char *func)
+undo_new(struct song *s, int type, char *func, char *name)
 {
 	struct undo *u;
 
 	u = xmalloc(sizeof(struct undo), "undo");
 	u->type = type;
 	u->func = func;
+	u->name = name;
 	u->size = 0;
 	return u;
 }
@@ -50,8 +51,15 @@ undo_pop(struct song *s)
 	if (u == NULL)
 		return;
 	s->undo = u->next;
-	log_puts("undo: ");
-	log_puts(u->func);
+	log_puts("undo:");
+	if (u->func) {
+		log_puts(" ");
+		log_puts(u->func);
+	}
+	if (u->name) {
+		log_puts(" ");
+		log_puts(u->name);
+	}
 	log_puts("\n");
 	switch (u->type) {
 	case UNDO_TDATA:
@@ -293,7 +301,7 @@ undo_tdata_save(struct song *s, struct songtrk *t, char *func)
 {
 	struct undo *u;
 
-	u = undo_new(s, UNDO_TDATA, func);
+	u = undo_new(s, UNDO_TDATA, func, t->name.str);
 	u->u.tdata.trk = t;
 	u->size = track_undosave(&t->track, &u->u.tdata.data);
 	undo_push(s, u);
@@ -319,7 +327,7 @@ undo_tren_do(struct song *s, struct songtrk *t, char *name, char *func)
 {
 	struct undo *u;
 
-	u = undo_new(s, UNDO_TREN, func);
+	u = undo_new(s, UNDO_TREN, func, t->name.str);
 	u->u.tren.trk = t;
 	u->u.tren.name = t->name.str;
 	t->name.str = str_new(name);
@@ -333,7 +341,7 @@ undo_tdel_do(struct song *s, struct songtrk *t, char *func)
 
 	if (s->curtrk == t)
 		s->curtrk = NULL;
-	u = undo_new(s, UNDO_TDEL, func);
+	u = undo_new(s, UNDO_TDEL, func, t->name.str);
 	u->u.tdata.trk = t;
 	u->size = track_undosave(&t->track, &u->u.tdata.data);
 	name_remove(&s->trklist, &t->name);
@@ -347,7 +355,7 @@ undo_tnew_do(struct song *s, char *name, char *func)
 	struct songtrk *t;
 
 	t = song_trknew(s, name);
-	u = undo_new(s, UNDO_TNEW, func);
+	u = undo_new(s, UNDO_TNEW, func, t->name.str);
 	u->u.tdata.trk = t;
 	undo_push(s, u);
 	return t;
@@ -358,7 +366,7 @@ undo_cdata_save(struct song *s, struct songchan *c, char *func)
 {
 	struct undo *u;
 
-	u = undo_new(s, UNDO_CDATA, func);
+	u = undo_new(s, UNDO_CDATA, func, c->name.str);
 	u->u.cdata.chan = c;
 	u->size = track_undosave(&c->conf, &u->u.cdata.data);
 	undo_push(s, u);
