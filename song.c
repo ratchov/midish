@@ -26,6 +26,7 @@
 #include "defs.h"
 #include "mixout.h"
 #include "norm.h"
+#include "undo.h"
 
 unsigned song_debug = 0;
 char *song_tap_modestr[3] = {"off", "start", "tempo"};
@@ -120,215 +121,13 @@ song_init(struct song *o)
 	seqev_ins(o->meta.first, se);
 }
 
-struct songundo *
-song_undonew(struct song *s, int type, char *func)
-{
-	struct songundo *u;
-
-	u = xmalloc(sizeof(struct songundo), "songundo");
-	u->type = type;
-	u->func = func;
-	u->size = 0;
-	return u;
-}
-
-void
-song_undopop(struct song *s)
-{
-	struct songundo *u;
-
-	u = s->undo;
-	if (u == NULL)
-		return;
-	s->undo = u->next;
-	log_puts("undo: ");
-	log_puts(u->func);
-	log_puts("\n");
-	switch (u->type) {
-	case SONGUNDO_TRKDATA:
-		track_undorestore(&u->u.trkdata.trk->track, &u->u.trkdata.data);
-		break;
-	case SONGUNDO_TRKNAME:
-		str_delete(u->u.trkname.trk->name.str);
-		u->u.trkname.trk->name.str = u->u.trkname.name;
-		break;
-	case SONGUNDO_TRKDEL:
-		track_undorestore(&u->u.trkdata.trk->track, &u->u.trkdata.data);
-		name_add(&s->trklist, &u->u.trkdata.trk->name);
-		break;
-	case SONGUNDO_TRKNEW:
-		song_trkdel(s, u->u.trkdata.trk);
-		break;
-	case SONGUNDO_CHANDATA:
-		track_undorestore(&u->u.chandata.chan->conf, &u->u.chandata.data);
-		break;
-	default:
-		log_puts("song_undopop: bad type\n");
-		panic();
-	}
-	s->undo_size -= u->size;
-#ifdef SONG_DEBUG
-	log_puts("undo: size -> ");
-	log_puti(s->undo_size);
-	log_puts("\n");
-#endif
-	xfree(u);
-}
-
-void
-song_undoclear(struct song *s, struct songundo **pos)
-{
-	struct songundo *u;
-
-	while ((u = *pos) != NULL) {
-		*pos = u->next;
-		switch (u->type) {
-		case SONGUNDO_TRKDATA:
-			xfree(u->u.trkdata.data.evs);
-			break;
-		case SONGUNDO_TRKNAME:
-			str_delete(u->u.trkname.name);
-			break;
-		case SONGUNDO_TRKDEL:
-			xfree(u->u.trkdata.data.evs);
-			break;
-		case SONGUNDO_TRKNEW:
-			break;
-		case SONGUNDO_CHANDATA:
-			xfree(u->u.chandata.data.evs);
-			break;
-		default:
-			log_puts("song_undoclear: bad type\n");
-			panic();
-		}
-		s->undo_size -= u->size;
-#ifdef SONG_DEBUG
-		log_puts("undo: freed ");
-		log_puts(u->func);
-		log_puts("\n");
-#endif
-		xfree(u);
-	}
-}
-
-void
-song_undopush(struct song *s, struct songundo *u)
-{
-	struct songundo **pu;
-	size_t size;
-
-	u->next = s->undo;
-	s->undo = u;
-	s->undo_size += u->size;
-#ifdef SONG_DEBUG
-	log_puts("undo: ");
-	log_puts(u->func);
-	log_puts(", size -> ");
-	log_puti(s->undo_size);
-	log_puts("\n");
-#endif
-
-	/*
-	 * free old entries exceeding memory usage limit
-	 */
-	size = 0;
-	pu = &s->undo;
-	while (1) {
-		u = *pu;
-		if (u == NULL)
-			return;
-		size += u->size;
-		if (size > UNDO_MAXSIZE)
-			break;
-		pu = &u->next;
-	}
-
-	song_undoclear(s, pu);
-}
-
-void
-song_tdata_undo(struct song *s, struct songtrk *t, char *func)
-{
-	struct songundo *u;
-
-	u = song_undonew(s, SONGUNDO_TRKDATA, func);
-	u->u.trkdata.trk = t;
-	u->size = track_undosave(&t->track, &u->u.trkdata.data);
-	song_undopush(s, u);
-}
-
-void
-song_tdata_diff(struct song *s)
-{
-	struct songundo *u = s->undo;
-	unsigned size;
-
-	if (u == NULL || u->type != SONGUNDO_TRKDATA) {
-		log_puts("song_tdata_diff: no data to diff\n");
-		return;
-	}
-	size = track_undodiff(&u->u.trkdata.trk->track, &u->u.trkdata.data);
-	s->undo_size += size - u->size;
-	u->size = size;
-}
-
-void
-song_tren_undo(struct song *s, struct songtrk *t, char *name, char *func)
-{
-	struct songundo *u;
-
-	u = song_undonew(s, SONGUNDO_TRKNAME, func);
-	u->u.trkname.trk = t;
-	u->u.trkname.name = t->name.str;
-	t->name.str = str_new(name);
-	song_undopush(s, u);
-}
-
-void
-song_tdel_undo(struct song *s, struct songtrk *t, char *func)
-{
-	struct songundo *u;
-
-	if (s->curtrk == t)
-		s->curtrk = NULL;
-	u = song_undonew(s, SONGUNDO_TRKDEL, func);
-	u->u.trkdata.trk = t;
-	u->size = track_undosave(&t->track, &u->u.trkdata.data);
-	name_remove(&s->trklist, &t->name);
-	song_undopush(s, u);
-}
-
-struct songtrk *
-song_tnew_undo(struct song *s, char *name, char *func)
-{
-	struct songundo *u;
-	struct songtrk *t;
-
-	t = song_trknew(s, name);
-	u = song_undonew(s, SONGUNDO_TRKNEW, func);
-	u->u.trkdata.trk = t;
-	song_undopush(s, u);
-	return t;
-}
-
-void
-song_cdata_undo(struct song *s, struct songchan *c, char *func)
-{
-	struct songundo *u;
-
-	u = song_undonew(s, SONGUNDO_CHANDATA, func);
-	u->u.chandata.chan = c;
-	u->size = track_undosave(&c->conf, &u->u.chandata.data);
-	song_undopush(s, u);
-}
-
 /*
  * delete a song without freeing it
  */
 void
 song_done(struct song *o)
 {
-	song_undoclear(o, &o->undo);
+	undo_clear(o, &o->undo);
 	if (mux_isopen) {
 		song_stop(o);
 	}
@@ -437,13 +236,13 @@ song_chandel(struct song *o, struct songchan *c, int input)
 {
 	struct songfilt *f;
 	struct name **list = input ? &o->inlist : &o->outlist;
-	struct songundo *u, **pu;
+	struct undo *u, **pu;
 
 	pu = &o->undo;
 	while ((u = *pu) != NULL) {
-		if (u->type == SONGUNDO_CHANDATA && u->u.chandata.chan == c) {
+		if (u->type == UNDO_CDATA && u->u.cdata.chan == c) {
 			*pu = u->next;
-			track_undorestore(&c->conf, &u->u.chandata.data);
+			track_undorestore(&c->conf, &u->u.cdata.data);
 		} else
 			pu = &u->next;
 	}
@@ -1003,7 +802,7 @@ song_mergerec(struct song *o)
 	}
 	song_getcurtrk(o, &t);
 	if (t) {
-		song_tdata_undo(o, t, "record");
+		undo_tdata_save(o, t, "record");
 		track_merge(&o->curtrk->track, &o->rec);
 	}
 	track_clear(&o->rec);

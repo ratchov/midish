@@ -31,6 +31,7 @@
 #include "norm.h"
 #include "builtin.h"
 #include "version.h"
+#include "undo.h"
 
 unsigned
 blt_info(struct exec *o, struct data **r)
@@ -1539,37 +1540,37 @@ blt_tapev(struct exec *o, struct data **r)
 unsigned
 blt_undo(struct exec *o, struct data **r)
 {
-	song_undopop(usong);
+	undo_pop(usong);
 	return 1;
 }
 
 unsigned
 blt_undolist(struct exec *o, struct data **r)
 {
-	struct songundo *u;
+	struct undo *u;
 
 	for (u = usong->undo; u != NULL; u = u->next) {
 		textout_putstr(tout, u->func);
 		switch (u->type) {
-		case SONGUNDO_TRKDATA:
+		case UNDO_TDATA:
 			textout_putstr(tout, " ");
-			textout_putstr(tout, u->u.trkdata.trk->name.str);
+			textout_putstr(tout, u->u.tdata.trk->name.str);
 			break;
-		case SONGUNDO_TRKDEL:
+		case UNDO_TDEL:
 			textout_putstr(tout, " ");
-			textout_putstr(tout, u->u.trkdata.trk->name.str);
+			textout_putstr(tout, u->u.tdata.trk->name.str);
 			break;
-		case SONGUNDO_TRKNEW:
+		case UNDO_TNEW:
 			textout_putstr(tout, " ");
-			textout_putstr(tout, u->u.trkdata.trk->name.str);
+			textout_putstr(tout, u->u.tdata.trk->name.str);
 			break;
-		case SONGUNDO_TRKNAME:
+		case UNDO_TREN:
 			textout_putstr(tout, " ");
-			textout_putstr(tout, u->u.trkname.trk->name.str);
+			textout_putstr(tout, u->u.tren.trk->name.str);
 			break;
-		case SONGUNDO_CHANDATA:
+		case UNDO_CDATA:
 			textout_putstr(tout, " ");
-			textout_putstr(tout, u->u.chandata.chan->name.str);
+			textout_putstr(tout, u->u.cdata.chan->name.str);
 			break;
 		default:
 			break;
@@ -1598,21 +1599,21 @@ blt_tlist(struct exec *o, struct data **r)
 unsigned
 blt_tnew(struct exec *o, struct data **r)
 {
-	char *trkname;
+	char *tren;
 	struct songtrk *t;
 
 	if (!song_try_mode(usong, 0)) {
 		return 0;
 	}
-	if (!exec_lookupname(o, "trackname", &trkname)) {
+	if (!exec_lookupname(o, "trackname", &tren)) {
 		return 0;
 	}
-	t = song_trklookup(usong, trkname);
+	t = song_trklookup(usong, tren);
 	if (t != NULL) {
 		cons_errs(o->procname, "track already exists");
 		return 0;
 	}
-	t = song_tnew_undo(usong, trkname, "tnew");
+	t = undo_tnew_do(usong, tren, "tnew");
 	return 1;
 }
 
@@ -1629,7 +1630,7 @@ blt_tdel(struct exec *o, struct data **r)
 	if (!song_try_trk(usong, t)) {
 		return 0;
 	}
-	song_tdel_undo(usong, t, "tdel");
+	undo_tdel_do(usong, t, "tdel");
 	return 1;
 }
 
@@ -1652,7 +1653,7 @@ blt_tren(struct exec *o, struct data **r)
 		    "name already used by another track");
 		return 0;
 	}
-	song_tren_undo(usong, t, name, "tren");
+	undo_tren_do(usong, t, name, "tren");
 	return 1;
 }
 
@@ -1700,13 +1701,13 @@ blt_taddev(struct exec *o, struct data **r)
 		cons_errs(o->procname, "beat/tick must fit in the measure");
 		return 0;
 	}
-	song_tdata_undo(usong, t, "taddev");
+	undo_tdata_save(usong, t, "taddev");
 	pos += beat * tpb + tic;
 	tp = seqptr_new(&t->track);
 	seqptr_seek(tp, pos);
 	seqptr_evput(tp, &ev);
 	seqptr_del(tp);
-	song_tdata_diff(usong);
+	undo_tdata_diff(usong);
 	return 1;
 }
 
@@ -1775,9 +1776,9 @@ blt_tcheck(struct exec *o, struct data **r)
 	if (!song_try_trk(usong, t)) {
 		return 0;
 	}
-	song_tdata_undo(usong, t, "tcheck");
+	undo_tdata_save(usong, t, "tcheck");
 	track_check(&t->track);
-	song_tdata_diff(usong);
+	undo_tdata_diff(usong);
 	return 1;
 }
 
@@ -1794,9 +1795,9 @@ blt_trewrite(struct exec *o, struct data **r)
 	if (!song_try_trk(usong, t)) {
 		return 0;
 	}
-	song_tdata_undo(usong, t, "trewrite");
+	undo_tdata_save(usong, t, "trewrite");
 	track_rewrite(&t->track);
-	song_tdata_diff(usong);
+	undo_tdata_diff(usong);
 	return 1;
 }
 
@@ -1820,10 +1821,10 @@ blt_tcut(struct exec *o, struct data **r)
 	if (tic > qstep) {
 		tic -= qstep;
 	}
-	song_tdata_undo(usong, t, "tcut");
+	undo_tdata_save(usong, t, "tcut");
 	track_cut(&t->track, tic, len);
 	usong->curlen = 0;
-	song_tdata_diff(usong);
+	undo_tdata_diff(usong);
 	return 1;
 }
 
@@ -1851,10 +1852,10 @@ blt_tins(struct exec *o, struct data **r)
 	if (tic > qstep) {
 		tic -= qstep;
 	}
-	song_tdata_undo(usong, t, "tins");
+	undo_tdata_save(usong, t, "tins");
 	track_ins(&t->track, tic, len);
 	usong->curlen += amount;
-	song_tdata_diff(usong);
+	undo_tdata_diff(usong);
 	return 1;
 }
 
@@ -1880,9 +1881,9 @@ blt_tclr(struct exec *o, struct data **r)
 	} else if (tic + len > qstep) {
 		len -= qstep;
 	}
-	song_tdata_undo(usong, t, "tclr");
+	undo_tdata_save(usong, t, "tclr");
 	track_move(&t->track, tic, len, &usong->curev, NULL, 0, 1);
-	song_tdata_diff(usong);
+	undo_tdata_diff(usong);
 	return 1;
 }
 
@@ -1912,9 +1913,9 @@ blt_tpaste(struct exec *o, struct data **r)
 	track_move(&usong->clip, tic, ~0U, &usong->curev, &copy, 1, 0);
 	if (!track_isempty(&copy)) {
 		copy.first->delta += tic2;
-		song_tdata_undo(usong, t, "tpaste");
+		undo_tdata_save(usong, t, "tpaste");
 		track_merge(&t->track, &copy);
-		song_tdata_diff(usong);
+		undo_tdata_diff(usong);
 	}
 	track_done(&copy);
 	return 1;
@@ -1944,11 +1945,11 @@ blt_tcopy(struct exec *o, struct data **r)
 	} else if (tic + len > qstep) {
 		len -= qstep;
 	}
-	song_tdata_undo(usong, t, "tcopy");
+	undo_tdata_save(usong, t, "tcopy");
 	track_clear(&usong->clip);
 	track_move(&t->track, tic, len, &usong->curev, &usong->clip, 1, 0);
 	track_shift(&usong->clip, tic2);
-	song_tdata_diff(usong);
+	undo_tdata_diff(usong);
 	return 1;
 }
 
@@ -1968,9 +1969,9 @@ blt_tmerge(struct exec *o, struct data **r)
 	if (!song_try_trk(usong, dst)) {
 		return 0;
 	}
-	song_tdata_undo(usong, dst, "tmerge");
+	undo_tdata_save(usong, dst, "tmerge");
 	track_merge(&src->track, &dst->track);
-	song_tdata_diff(usong);
+	undo_tdata_diff(usong);
 	return 1;
 }
 
@@ -2007,7 +2008,7 @@ blt_tquant_common(struct exec *o, struct data **r, int all)
 		if (tic + len > qstep)
 			len -= qstep;
 	}
-	song_tdata_undo(usong, t, "tquant");
+	undo_tdata_save(usong, t, "tquant");
 	if (all) {
 		track_quantize(&t->track, &usong->curev,
 		    tic, len, offset, 2 * qstep, rate);
@@ -2015,7 +2016,7 @@ blt_tquant_common(struct exec *o, struct data **r, int all)
 		track_quantize_frame(&t->track, &usong->curev,
 		    tic, len, offset, 2 * qstep, rate);
 	}
-	song_tdata_diff(usong);
+	undo_tdata_diff(usong);
 	return 1;
 }
 
@@ -2068,9 +2069,9 @@ blt_ttransp(struct exec *o, struct data **r)
 	} else if (tic + len > qstep) {
 		len -= qstep;
 	}
-	song_tdata_undo(usong, t, "ttransp");
+	undo_tdata_save(usong, t, "ttransp");
 	track_transpose(&t->track, tic, len, &usong->curev, halftones);
-	song_tdata_diff(usong);
+	undo_tdata_diff(usong);
 	return 1;
 }
 
@@ -2101,9 +2102,9 @@ blt_tevmap(struct exec *o, struct data **r)
 	} else if (tic + len > qstep) {
 		len -= qstep;
 	}
-	song_tdata_undo(usong, t, "tevmap");
+	undo_tdata_save(usong, t, "tevmap");
 	track_evmap(&t->track, tic, len, &usong->curev, &from, &to);
-	song_tdata_diff(usong);
+	undo_tdata_diff(usong);
 	return 1;
 }
 
@@ -2536,7 +2537,7 @@ blt_caddev(struct exec *o, struct data **r, int input)
 		cons_errs(o->procname, "event must be stateless");
 		return 0;
 	}
-	song_cdata_undo(usong, c, input ? "iaddev" : "oaddev");
+	undo_cdata_save(usong, c, input ? "iaddev" : "oaddev");
 	song_confev(usong, c, input, &ev);
 	return 1;
 }
@@ -2570,7 +2571,7 @@ blt_crmev(struct exec *o, struct data **r, int input)
 	if (!exec_lookupevspec(o, "evspec", &es, input)) {
 		return 0;
 	}
-	song_cdata_undo(usong, c, input ? "irmev" : "ormev");
+	undo_cdata_save(usong, c, input ? "irmev" : "ormev");
 	song_unconfev(usong, c, input, &es);
 	return 1;
 }

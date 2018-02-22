@@ -30,8 +30,8 @@ struct track {
 	struct seqev *first;		/* head of the event list */
 };
 
-struct track_undo {
-	struct track_undoev {
+struct track_data {
+	struct seqev_data {
 		unsigned delta;
 		struct ev ev;
 	} *evs;
@@ -63,8 +63,8 @@ void	      track_setchan(struct track *, unsigned, unsigned);
 void	      track_chanmap(struct track *, char *);
 unsigned      track_evcnt(struct track *, unsigned);
 
-unsigned track_undosave(struct track *, struct track_undo *);
-unsigned track_undodiff(struct track *, struct track_undo *);
-void track_undorestore(struct track *, struct track_undo *);
+unsigned track_undosave(struct track *, struct track_data *);
+unsigned track_undodiff(struct track *, struct track_data *);
+void track_undorestore(struct track *, struct track_data *);
 
 #endif /* MIDISH_TRACK_H */
