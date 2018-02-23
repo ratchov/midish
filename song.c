@@ -1065,6 +1065,8 @@ song_loc(struct song *o, unsigned where, unsigned how)
 		 */
 		t->trackptr = seqptr_new(&t->track);
 		seqptr_skip(t->trackptr, tic);
+		for (s = t->trackptr->statelist.first; s != NULL; s = s->next)
+			s->tag = 0;
 		song_confrestore(&t->trackptr->statelist, PRIO_TRACK);
 
 		/*
