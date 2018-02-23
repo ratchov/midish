@@ -525,7 +525,7 @@ song_playconfev(struct song *o, struct songchan *c, int input, struct ev *in)
 	ev.dev = c->dev;
 	ev.ch = c->ch;
 	if (!input) {
-		mixout_putev(&ev, 0);
+		mixout_putev(&ev, PRIO_CHAN);
 	} else {
 		norm_putev(&ev);
 	}
@@ -687,7 +687,7 @@ song_ticplay(struct song *o)
 			if (st->phase & EV_PHASE_FIRST)
 				st->tag = i->mute ? 0 : 1;
 			if (st->tag)
-				mixout_putev(&st->ev, id);
+				mixout_putev(&st->ev, PRIO_TRACK);
 		}
 	}
 }
@@ -697,7 +697,7 @@ song_ticplay(struct song *o)
  * that have context, then the rest.
  */
 void
-song_confrestore(struct statelist *slist)
+song_confrestore(struct statelist *slist, unsigned prio)
 {
 	struct state *s;
 	struct ev re;
@@ -712,7 +712,7 @@ song_confrestore(struct statelist *slist)
 					ev_log(&re);
 					log_puts("\n");
 				}
-				mixout_putev(&re, slist->serial);
+				mixout_putev(&re, prio);
 			}
 			s->tag = 1;
 		} else {
@@ -729,7 +729,7 @@ song_confrestore(struct statelist *slist)
  * cancel all frames in the given state list
  */
 void
-song_confcancel(struct statelist *slist)
+song_confcancel(struct statelist *slist, unsigned prio)
 {
 	struct state *s;
 	struct ev ca;
@@ -745,7 +745,7 @@ song_confcancel(struct statelist *slist)
 					ev_log(&ca);
 					log_puts("\n");
 				}
-				mixout_putev(&ca, slist->serial);
+				mixout_putev(&ca, prio);
 			}
 			s->tag = 0;
 		} else {
@@ -765,7 +765,7 @@ void
 song_trkmute(struct song *s, struct songtrk *t)
 {
 	if (s->mode >= SONG_PLAY)
-		song_confcancel(&t->trackptr->statelist);
+		song_confcancel(&t->trackptr->statelist, PRIO_TRACK);
 	t->mute = 1;
 }
 
@@ -776,7 +776,7 @@ void
 song_trkunmute(struct song *s, struct songtrk *t)
 {
 	if (s->mode >= SONG_PLAY)
-		song_confrestore(&t->trackptr->statelist);
+		song_confrestore(&t->trackptr->statelist, PRIO_TRACK);
 	t->mute = 0;
 }
 
@@ -841,7 +841,7 @@ song_stopcb(struct song *o)
 	 * stop all sounding notes
 	 */
 	SONG_FOREACH_TRK(o, t) {
-		song_confcancel(&t->trackptr->statelist);
+		song_confcancel(&t->trackptr->statelist, PRIO_TRACK);
 	}
 }
 
@@ -1056,7 +1056,7 @@ song_loc(struct song *o, unsigned where, unsigned how)
 		/*
 		 * cancel and free old states
 		 */
-		song_confcancel(&t->trackptr->statelist);
+		song_confcancel(&t->trackptr->statelist, PRIO_TRACK);
 		statelist_empty(&t->trackptr->statelist);
 		seqptr_del(t->trackptr);
 
@@ -1065,7 +1065,7 @@ song_loc(struct song *o, unsigned where, unsigned how)
 		 */
 		t->trackptr = seqptr_new(&t->track);
 		seqptr_skip(t->trackptr, tic);
-		song_confrestore(&t->trackptr->statelist);
+		song_confrestore(&t->trackptr->statelist, PRIO_TRACK);
 
 		/*
 		 * check if we reached the end-of-track
@@ -1172,7 +1172,7 @@ song_setmode(struct song *o, unsigned newmode)
 		 * cancel and free states
 		 */
 		SONG_FOREACH_TRK(o, t) {
-			song_confcancel(&t->trackptr->statelist);
+			song_confcancel(&t->trackptr->statelist, PRIO_TRACK);
 			statelist_empty(&t->trackptr->statelist);
 			seqptr_del(t->trackptr);
 		}

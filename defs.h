@@ -152,4 +152,11 @@
  */
 #define UNDO_MAXSIZE		(4 * 1024 * 1024)
 
+/*
+ * output source prioriries
+ */
+#define PRIO_INPUT		0
+#define PRIO_TRACK		1
+#define PRIO_CHAN		2
+
 #endif /* MIDISH_DEFAULT_H */
