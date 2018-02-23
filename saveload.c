@@ -138,6 +138,10 @@ two:
 	textout_putlong(f, e->v0);
 	textout_putstr(f, " ");
 	textout_putlong(f, e->v1);
+	if (e->cmd == EV_XCTL) {
+		textout_putstr(f, " # ");
+		textout_putlong(f, e->v1 >> 7);
+	}
 	return;
 one:
 	textout_putstr(f, " ");
