@@ -1337,7 +1337,7 @@ blt_ctlconf_any(struct exec *o, struct data **r, int isfine)
 		evctl_unconf(old);
 	}
 	evctl_unconf(num);
-	if (!isfine)
+	if (!isfine && val != EV_UNDEF)
 		val <<= 7;
 	evctl_conf(num, name, val);
 	return 1;
