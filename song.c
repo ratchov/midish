@@ -1070,7 +1070,7 @@ song_loc(struct song *o, unsigned where, unsigned how)
 		/*
 		 * check if we reached the end-of-track
 		 */
-		if (!seqptr_eot(o->metaptr))
+		if (!seqptr_eot(t->trackptr))
 			o->complete = 0;
 	}
 
