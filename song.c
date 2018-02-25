@@ -697,31 +697,41 @@ song_ticplay(struct song *o)
  * that have context, then the rest.
  */
 void
-song_confrestore(struct statelist *slist, unsigned prio)
+song_confrestore(struct statelist *slist, int all, unsigned prio)
 {
 	struct state *s;
 	struct ev re;
 
 	for (s = slist->first; s != NULL; s = s->next) {
-		if (!s->tag && !EV_ISNOTE(&s->ev)) {
-			if (state_restore(s, &re)) {
-				if (song_debug) {
-					log_puts("song_strestore: ");
-					ev_log(&s->ev);
-					log_puts(": restored -> ");
-					ev_log(&re);
-					log_puts("\n");
-				}
-				mixout_putev(&re, prio);
-			}
-			s->tag = 1;
-		} else {
+		if (EV_ISNOTE(&s->ev))
+			continue;
+		if (s->tag) {
 			if (song_debug) {
 				log_puts("song_strestore: ");
 				ev_log(&s->ev);
-				log_puts(": not restored (not tagged)\n");
+				log_puts(": not restored (tagged)\n");
 			}
+			continue;
 		}
+		if (!(s->phase & EV_PHASE_LAST) && !all) {
+			if (song_debug) {
+				log_puts("song_strestore: ");
+				ev_log(&s->ev);
+				log_puts(": not restored (unterminated)\n");
+			}
+			continue;
+		}
+		if (state_restore(s, &re)) {
+			if (song_debug) {
+				log_puts("song_strestore: ");
+				ev_log(&s->ev);
+				log_puts(": restored -> ");
+				ev_log(&re);
+				log_puts("\n");
+			}
+			mixout_putev(&re, prio);
+		}
+		s->tag = 1;
 	}
 }
 
@@ -776,7 +786,7 @@ void
 song_trkunmute(struct song *s, struct songtrk *t)
 {
 	if (s->mode >= SONG_PLAY)
-		song_confrestore(&t->trackptr->statelist, PRIO_TRACK);
+		song_confrestore(&t->trackptr->statelist, 1, PRIO_TRACK);
 	t->mute = 0;
 }
 
@@ -1067,7 +1077,8 @@ song_loc(struct song *o, unsigned where, unsigned how)
 		seqptr_skip(t->trackptr, tic);
 		for (s = t->trackptr->statelist.first; s != NULL; s = s->next)
 			s->tag = 0;
-		song_confrestore(&t->trackptr->statelist, PRIO_TRACK);
+		song_confrestore(&t->trackptr->statelist,
+		    o->mode >= SONG_PLAY, PRIO_TRACK);
 
 		/*
 		 * check if we reached the end-of-track
