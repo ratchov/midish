@@ -329,6 +329,7 @@ exec_lookupev(struct exec *o, char *name, struct ev *ev, int input)
 	}
 	if (ev->cmd == EV_PC) {
 		ev->cmd = EV_XPC;
+		ev->pc_prog = ev->v0;
 		ev->pc_bank = EV_UNDEF;
 	}
 	return 1;
