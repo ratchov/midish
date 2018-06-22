@@ -26,7 +26,7 @@
 #include "version.h"
 #include "cons.h"
 
-#define FORMAT_VERSION	0
+#define FORMAT_VERSION	1
 
 void
 chan_output(unsigned dev, unsigned ch, struct textout *f)
@@ -73,13 +73,13 @@ ev_output(struct ev *e, struct textout *f)
 			textout_putstr(f, " ");
 			chan_output(e->dev, e->ch, f);
 			textout_putstr(f, " ");
-			textout_putlong(f, e->pc_prog);
-			textout_putstr(f, " ");
 			if (e->pc_bank != EV_UNDEF) {
 				textout_putlong(f, e->pc_bank);
 			} else {
 				textout_putstr(f, "nil");
 			}
+			textout_putstr(f, " ");
+			textout_putlong(f, e->pc_prog);
 			return;
 		case EV_RPN:
 			textout_putstr(f, "rpn");
@@ -1051,6 +1051,21 @@ load_chan(struct load *o, unsigned long *dev, unsigned long *ch)
 }
 
 unsigned
+load_bank(struct load *o, unsigned long *rbank)
+{
+	if (!load_getsym(o))
+		return 0;
+	if (o->id == TOK_NIL) {
+		*rbank = EV_UNDEF;
+	} else {
+		load_ungetsym(o);
+		if (!load_long(o, 0, EV_MAXFINE, rbank))
+			return 0;
+	}
+	return 1;
+}
+
+unsigned
 load_ev(struct load *o, struct ev *ev)
 {
 	unsigned long val, val2;
@@ -1118,21 +1133,26 @@ load_ev(struct load *o, struct ev *ev)
 		ev->ctl_val = val;
 		break;
 	case EV_XPC:
-		if (!load_long(o, 0, EV_MAXCOARSE, &val)) {
-			return 0;
+		/* on older versions prog and bank are swapped */
+		if (o->format <= 0) {
+			if (!load_long(o, 0, EV_MAXCOARSE, &val)) {
+				return 0;
+			}
+			ev->pc_prog = val;
+			if (!load_bank(o, &val)) {
+				return 0;
+			}
+			ev->pc_bank = val;
+		} else {
+			if (!load_bank(o, &val)) {
+				return 0;
+			}
+			ev->pc_bank = val;
+			if (!load_long(o, 0, EV_MAXCOARSE, &val)) {
+				return 0;
+			}
+			ev->pc_prog = val;
 		}
-		ev->pc_prog = val;
-		if (!load_getsym(o))
-			return 0;
-		if (o->id == TOK_NIL) {
-			ev->pc_bank = EV_UNDEF;
-			break;
-		}
-		load_ungetsym(o);
-		if (!load_long(o, 0, EV_MAXFINE, &val)) {
-			return 0;
-		}
-		ev->pc_bank = val;
 		break;
 	case EV_NON:
 	case EV_NOFF:
