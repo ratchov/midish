@@ -26,6 +26,8 @@
 #include "version.h"
 #include "cons.h"
 
+#define FORMAT_VERSION	0
+
 void
 chan_output(unsigned dev, unsigned ch, struct textout *f)
 {
@@ -515,6 +517,11 @@ song_output(struct song *o, struct textout *f)
 	textout_shiftright(f);
 
 	textout_indent(f);
+	textout_putstr(f, "format ");
+	textout_putlong(f, FORMAT_VERSION);
+	textout_putstr(f, "\n");
+
+	textout_indent(f);
 	textout_putstr(f, "tics_per_unit ");
 	textout_putlong(f, o->tics_per_unit);
 	textout_putstr(f, "\n");
@@ -658,6 +665,7 @@ struct load {
 	int lookchar;			/* used by ungetchar */
 	unsigned line, col;		/* for error reporting */
 	unsigned lookavail;
+	int format;
 };
 
 unsigned      load_getsym(struct load *);
@@ -862,6 +870,7 @@ load_init(struct load *o, char *filename)
 	if (!o->in)
 		return 0;
 	o->lookavail = 0;
+	o->format = 0;
 	return 1;
 }
 
@@ -2015,7 +2024,21 @@ load_song(struct load *o, struct song *s)
 		} else if (o->id == TOK_RBRACE) {
 			break;
 		} else if (o->id == TOK_WORD) {
-			if (str_eq(o->strval, "evpat")) {
+			if (str_eq(o->strval, "format")) {
+				if (!load_getsym(o))
+					return 0;
+				if (o->id != TOK_NUM) {
+					load_err(o, "version number expected");
+					return 0;
+				}
+				if (o->longval > FORMAT_VERSION) {
+					cons_err("Warning: midish version "
+					    "too old to read this file.");
+				}
+				o->format = o->longval;
+				if (!load_nl(o))
+					return 0;
+			} else if (str_eq(o->strval, "evpat")) {
 				if (!load_getsym(o))
 					return 0;
 				if (o->id != TOK_WORD) {
