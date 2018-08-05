@@ -2295,7 +2295,7 @@ blt_cnew(struct exec *o, struct data **r, int input)
 		return 0;
 	}
 	c = song_channew(usong, name, dev, ch, input);
-	if (c->link) {
+	if (c->filt) {
 		evspec_reset(&src);
 		evspec_reset(&dst);
 		dst.dev_min = dst.dev_max = c->dev;
@@ -2303,7 +2303,7 @@ blt_cnew(struct exec *o, struct data **r, int input)
 		SONG_FOREACH_IN(usong, i) {
 			src.dev_min = src.dev_max = i->dev;
 			src.ch_min = src.ch_max = i->ch;
-			filt_mapnew(&c->link->filt, &src, &dst);
+			filt_mapnew(&c->filt->filt, &src, &dst);
 		}
 	}
 	return 1;
@@ -2368,15 +2368,15 @@ blt_cren(struct exec *o, struct data **r, int input)
 		cons_errss(o->procname, name, "channel name already in use");
 		return 0;
 	}
-	if (c->link && song_filtlookup(usong, name)) {
+	if (c->filt && song_filtlookup(usong, name)) {
 		cons_errss(o->procname, name, "filt name already in use");
 		return 0;
 	}
 	str_delete(c->name.str);
 	c->name.str = str_new(name);
-	if (c->link) {
-		str_delete(c->link->name.str);
-		c->link->name.str = str_new(name);
+	if (c->filt) {
+		str_delete(c->filt->name.str);
+		c->filt->name.str = str_new(name);
 	}
 	return 1;
 }
@@ -2664,6 +2664,7 @@ unsigned
 blt_fren(struct exec *o, struct data **r)
 {
 	struct songfilt *f;
+	struct songchan *c;
 	char *name;
 
 	song_getcurfilt(usong, &f);
@@ -2678,16 +2679,15 @@ blt_fren(struct exec *o, struct data **r)
 		cons_errss(o->procname, name, "filt name already in use");
 		return 0;
 	}
-	if (f->link && song_chanlookup(usong, name, 0)) {
-		cons_errss(o->procname, name, "chan name already in use");
-		return 0;
+	SONG_FOREACH_OUT(usong, c) {
+		if (c->filt == f) {
+			cons_errss(o->procname, name,
+			    "rename channel to rename this filter");
+			return 0;
+		}
 	}
 	str_delete(f->name.str);
 	f->name.str = str_new(name);
-	if (f->link) {
-		str_delete(f->link->name.str);
-		f->link->name.str = str_new(name);
-	}
 	return 1;
 }
 

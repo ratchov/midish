@@ -46,13 +46,12 @@ struct songchan {
 	struct name name;		/* identifier + list entry */
 	struct track conf;		/* data to send on initialization */
 	unsigned dev, ch;		/* dev/chan of the chan */
-	struct songfilt *link;		/* default filter (output only) */
+	struct songfilt *filt;		/* default filter (output only) */
 };
 
 struct songfilt {
 	struct name name;		/* identifier + list entry */
 	struct filt filt;		/* filter rules */
-	struct songchan *link;		/* default output channel */
 };
 
 struct songsx {

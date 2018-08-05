@@ -213,16 +213,16 @@ song_channew(struct song *o, char *name, unsigned dev, unsigned ch, int input)
 	c = xmalloc(sizeof(struct songchan), "songchan");
 	name_init(&c->name, name);
 	track_init(&c->conf);
-	c->link = NULL;
 	c->dev = dev;
 	c->ch = ch;
 	name_add(list, (struct name *)c);
-	if (!input) {
+	if (input)
+		c->filt = NULL;
+	else {
 		f = song_filtlookup(o, name);
 		if (f == NULL)
 			f = song_filtnew(o, name);
-		f->link = c;
-		c->link = f;
+		c->filt = f;
 	}
 	song_setcurchan(o, c, input);
 	return c;
@@ -234,7 +234,6 @@ song_channew(struct song *o, char *name, unsigned dev, unsigned ch, int input)
 void
 song_chandel(struct song *o, struct songchan *c, int input)
 {
-	struct songfilt *f;
 	struct name **list = input ? &o->inlist : &o->outlist;
 	struct undo *u, **pu;
 
@@ -257,12 +256,8 @@ song_chandel(struct song *o, struct songchan *c, int input)
 	name_remove(list, (struct name *)c);
 	track_done(&c->conf);
 	name_done(&c->name);
-	f = c->link;
-	if (f != NULL) {
-		f->link = NULL;
-		c->link = NULL;
-		song_filtdel(o, f);
-	}
+	if (c->filt != NULL)
+		song_filtdel(o, c->filt);
 	xfree(c);
 }
 
@@ -305,7 +300,6 @@ song_filtnew(struct song *o, char *name)
 	f = xmalloc(sizeof(struct songfilt), "songfilt");
 	name_init(&f->name, name);
 	filt_init(&f->filt);
-	f->link = NULL;
 	name_add(&o->filtlist, (struct name *)f);
 	song_setcurfilt(o, f);
 	return f;
@@ -317,7 +311,6 @@ song_filtnew(struct song *o, char *name)
 void
 song_filtdel(struct song *o, struct songfilt *f)
 {
-	struct songchan *c;
 	struct songtrk *t;
 
 	if (o->curfilt == f) {
@@ -331,12 +324,6 @@ song_filtdel(struct song *o, struct songfilt *f)
 	name_remove(&o->filtlist, (struct name *)f);
 	filt_done(&f->filt);
 	name_done(&f->name);
-	c = f->link;
-	if (c != NULL) {
-		c->link = NULL;
-		f->link = NULL;
-		song_chandel(o, c, 0);
-	}
 	xfree(f);
 }
 
@@ -432,8 +419,7 @@ song_setcurfilt(struct song *o, struct songfilt *f)
 	if (mux_isopen)
 		norm_shut();
 	o->curfilt = f;
-	if (f != NULL)
-		song_setcurchan(o, f->link, 0);
+	song_setcurchan(o, NULL, 0);
 	if (mux_isopen)
 		mux_flush();
 }
@@ -453,7 +439,7 @@ song_setcurchan(struct song *o, struct songchan *c, int input)
 		return;
 	*pc = c;
 	if (c != NULL && !input)
-		song_setcurfilt(o, c->link);
+		song_setcurfilt(o, c->filt);
 }
 
 void
