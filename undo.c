@@ -103,6 +103,10 @@ undo_pop(struct song *s)
 		case UNDO_FNEW:
 			song_filtdel(s, u->u.fdel.filt);
 			break;
+		case UNDO_CREN:
+			str_delete(u->u.cren.chan->name.str);
+			u->u.cren.chan->name.str = u->u.cren.name;
+			break;
 		default:
 			log_puts("undo_pop: bad type\n");
 			panic();
@@ -156,6 +160,9 @@ undo_clear(struct song *s, struct undo **pos)
 			xfree(u->u.fdel.filt);
 			break;
 		case UNDO_FNEW:
+			break;
+		case UNDO_CREN:
+			str_delete(u->u.cren.name);
 			break;
 		default:
 			log_puts("undo_clear: bad type\n");
@@ -519,3 +526,19 @@ undo_fnew_do(struct song *s, char *func, char *name)
 	undo_push(s, u);
 	return t;
 }
+
+void
+undo_cren_do(struct song *s, struct songchan *c, char *name, char *func)
+{
+	struct undo *u;
+
+	u = undo_new(s, UNDO_CREN, func, c->name.str);
+	u->u.cren.chan = c;
+	u->u.cren.name = c->name.str;
+	c->name.str = str_new(name);
+	undo_push(s, u);
+
+	if (c->filt)
+		undo_fren_do(s, c->filt, c->name.str, NULL);
+}
+

@@ -2366,12 +2366,7 @@ blt_cren(struct exec *o, struct data **r, int input)
 		cons_errss(o->procname, name, "filt name already in use");
 		return 0;
 	}
-	str_delete(c->name.str);
-	c->name.str = str_new(name);
-	if (c->filt) {
-		str_delete(c->filt->name.str);
-		c->filt->name.str = str_new(name);
-	}
+	undo_cren_do(usong, c, name, o->procname);
 	return 1;
 }
 
