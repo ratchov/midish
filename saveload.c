@@ -538,17 +538,9 @@ song_output(struct song *o, struct textout *f)
 
 	evpat_output(f);
 
-	SONG_FOREACH_IN(o, i) {
+	SONG_FOREACH_CHAN(o, i) {
 		textout_indent(f);
-		textout_putstr(f, "songin ");
-		textout_putstr(f, i->name.str);
-		textout_putstr(f, " ");
-		songchan_output(i, f);
-		textout_putstr(f, "\n");
-	}
-	SONG_FOREACH_OUT(o, i) {
-		textout_indent(f);
-		textout_putstr(f, "songout ");
+		textout_putstr(f, i->isinput ? "songin " : "songout ");
 		textout_putstr(f, i->name.str);
 		textout_putstr(f, " ");
 		songchan_output(i, f);

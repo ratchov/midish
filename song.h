@@ -46,6 +46,7 @@ struct songchan {
 	struct name name;		/* identifier + list entry */
 	struct track conf;		/* data to send on initialization */
 	unsigned dev, ch;		/* dev/chan of the chan */
+	int isinput;
 	struct songfilt *filt;		/* default filter (output only) */
 };
 
@@ -65,8 +66,7 @@ struct song {
 	 */
 	struct track meta;		/* tempo track */
 	struct name *trklist;		/* list of tracks */
-	struct name *outlist;		/* list of output channels */
-	struct name *inlist;		/* list of input channels */
+	struct name *chanlist;		/* list of channels */
 	struct name *filtlist;		/* list of fiters */
 	struct name *sxlist;		/* list of system exclive banks */
 	struct undo *undo;		/* list of operation to undo */
@@ -122,18 +122,8 @@ extern char *song_tap_modestr[3];
 	     i != NULL;					\
 	     i = (struct songtrk *)i->name.next)
 
-#define SONG_FOREACH_OUT(s, i)				\
-	for (i = (struct songchan *)(s)->outlist;	\
-	     i != NULL;					\
-	     i = (struct songchan *)i->name.next)
-
-#define SONG_FOREACH_IN(s, i)				\
-	for (i = (struct songchan *)(s)->inlist;	\
-	     i != NULL;					\
-	     i = (struct songchan *)i->name.next)
-
-#define SONG_FOREACH_CHAN(s, i, list)			\
-	for (i = (struct songchan *)(list);		\
+#define SONG_FOREACH_CHAN(s, i)				\
+	for (i = (struct songchan *)(s)->chanlist;	\
 	     i != NULL;					\
 	     i = (struct songchan *)i->name.next)
 
@@ -168,8 +158,8 @@ void song_trkunmute(struct song *, struct songtrk *);
 struct songchan *song_channew(struct song *, char *, unsigned, unsigned, int);
 struct songchan *song_chanlookup(struct song *, char *, int);
 struct songchan *song_chanlookup_bynum(struct song *, unsigned, unsigned, int);
-void song_confev(struct song *, struct songchan *, int, struct ev *);
-void song_unconfev(struct song *, struct songchan *, int, struct evspec *);
+void song_confev(struct song *, struct songchan *, struct ev *);
+void song_unconfev(struct song *, struct songchan *, struct evspec *);
 void song_chandel(struct song *, struct songchan *, int);
 
 struct songfilt *song_filtnew(struct song *, char *);

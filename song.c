@@ -66,8 +66,7 @@ song_init(struct song *o)
 	 */
 	o->mode = 0;
 	o->trklist = NULL;
-	o->outlist = NULL;
-	o->inlist = NULL;
+	o->chanlist = NULL;
 	o->filtlist = NULL;
 	o->sxlist = NULL;
 	o->undo = NULL;
@@ -134,11 +133,8 @@ song_done(struct song *o)
 	while (o->trklist) {
 		song_trkdel(o, (struct songtrk *)o->trklist);
 	}
-	while (o->outlist) {
-		song_chandel(o, (struct songchan *)o->outlist, 0);
-	}
-	while (o->inlist) {
-		song_chandel(o, (struct songchan *)o->inlist, 1);
+	while (o->chanlist) {
+		song_chandel(o, (struct songchan *)o->chanlist, 0);
 	}
 	while (o->filtlist) {
 		song_filtdel(o, (struct songfilt *)o->filtlist);
@@ -208,14 +204,14 @@ song_channew(struct song *o, char *name, unsigned dev, unsigned ch, int input)
 {
 	struct songfilt *f;
 	struct songchan *c;
-	struct name **list = input ? &o->inlist : &o->outlist;
 
 	c = xmalloc(sizeof(struct songchan), "songchan");
 	name_init(&c->name, name);
 	track_init(&c->conf);
 	c->dev = dev;
 	c->ch = ch;
-	name_add(list, (struct name *)c);
+	c->isinput = input;
+	name_add(&o->chanlist, (struct name *)c);
 	if (input)
 		c->filt = NULL;
 	else {
@@ -234,7 +230,6 @@ song_channew(struct song *o, char *name, unsigned dev, unsigned ch, int input)
 void
 song_chandel(struct song *o, struct songchan *c, int input)
 {
-	struct name **list = input ? &o->inlist : &o->outlist;
 	struct undo *u, **pu;
 
 	pu = &o->undo;
@@ -253,7 +248,7 @@ song_chandel(struct song *o, struct songchan *c, int input)
 		if (o->curout == c)
 			o->curout = NULL;
 	}
-	name_remove(list, (struct name *)c);
+	name_remove(&o->chanlist, (struct name *)c);
 	track_done(&c->conf);
 	name_done(&c->name);
 	if (c->filt != NULL)
@@ -267,9 +262,14 @@ song_chandel(struct song *o, struct songchan *c, int input)
 struct songchan *
 song_chanlookup(struct song *o, char *name, int input)
 {
-	struct name **list = input ? &o->inlist : &o->outlist;
+	struct songchan *c;
 
-	return (struct songchan *)name_lookup(list, name);
+	SONG_FOREACH_CHAN(o, c) {
+		if (c->isinput == input && str_eq(c->name.str, name))
+			break;
+	}
+
+	return c;
 }
 
 /*
@@ -278,15 +278,14 @@ song_chanlookup(struct song *o, char *name, int input)
 struct songchan *
 song_chanlookup_bynum(struct song *o, unsigned dev, unsigned ch, int input)
 {
-	struct songchan *i;
-	struct name *list = input ? o->inlist : o->outlist;
+	struct songchan *c;
 
-	SONG_FOREACH_CHAN(o, i, list) {
-		if (i->dev == dev && i->ch == ch) {
-			return i;
-		}
+	SONG_FOREACH_CHAN(o, c) {
+		if (!!c->isinput == !!input && c->dev == dev && c->ch == ch)
+			break;
 	}
-	return 0;
+
+	return c;
 }
 
 /*
@@ -496,7 +495,7 @@ song_endpos(struct song *o)
 }
 
 void
-song_playconfev(struct song *o, struct songchan *c, int input, struct ev *in)
+song_playconfev(struct song *o, struct songchan *c, struct ev *in)
 {
 	struct ev ev = *in;
 
@@ -511,7 +510,7 @@ song_playconfev(struct song *o, struct songchan *c, int input, struct ev *in)
 	}
 	ev.dev = c->dev;
 	ev.ch = c->ch;
-	if (!input) {
+	if (!c->isinput) {
 		mixout_putev(&ev, PRIO_CHAN);
 	} else {
 		norm_putev(&ev);
@@ -528,23 +527,13 @@ song_playconf(struct song *o)
 	struct seqptr *cp;
 	struct state *st;
 
-	SONG_FOREACH_IN(o, i) {
+	SONG_FOREACH_CHAN(o, i) {
 		cp = seqptr_new(&i->conf);
 		for (;;) {
 			st = seqptr_evget(cp);
 			if (st == NULL)
 				break;
-			song_playconfev(o, i, 1, &st->ev);
-		}
-		seqptr_del(cp);
-	}
-	SONG_FOREACH_OUT(o, i) {
-		cp = seqptr_new(&i->conf);
-		for (;;) {
-			st = seqptr_evget(cp);
-			if (st == NULL)
-				break;
-			song_playconfev(o, i, 0, &st->ev);
+			song_playconfev(o, i, &st->ev);
 		}
 		seqptr_del(cp);
 	}
@@ -1441,15 +1430,9 @@ song_try_ev(struct song *o, unsigned cmd)
 			return 0;
 		}
 	}
-	SONG_FOREACH_CHAN(o, c, o->inlist) {
+	SONG_FOREACH_CHAN(o, c) {
 		if (track_evcnt(&c->conf, cmd)) {
 			cons_errs(c->name.str, "event in use by input");
-			return 0;
-		}
-	}
-	SONG_FOREACH_CHAN(o, c, o->outlist) {
-		if (track_evcnt(&c->conf, cmd)) {
-			cons_errs(c->name.str, "event in use by output");
 			return 0;
 		}
 	}
@@ -1463,17 +1446,17 @@ song_try_ev(struct song *o, unsigned cmd)
 }
 
 void
-song_confev(struct song *o, struct songchan *c, int input, struct ev *ev)
+song_confev(struct song *o, struct songchan *c, struct ev *ev)
 {
 	track_confev(&c->conf, ev);
 	if (mux_isopen) {
-		song_playconfev(o, c, input, ev);
+		song_playconfev(o, c, ev);
 		mux_flush();
 	}
 }
 
 void
-song_unconfev(struct song *o, struct songchan *c, int input, struct evspec *es)
+song_unconfev(struct song *o, struct songchan *c, struct evspec *es)
 {
 	track_unconfev(&c->conf, es);
 }

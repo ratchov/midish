@@ -639,7 +639,9 @@ blt_ls(struct exec *o, struct data **r)
 	textout_shiftright(tout);
 	textout_indent(tout);
 	textout_putstr(tout, "# chan_name,  {devicenum, midichan}\n");
-	SONG_FOREACH_OUT(usong, c) {
+	SONG_FOREACH_CHAN(usong, c) {
+		if (c->isinput)
+			continue;
 		textout_indent(tout);
 		textout_putstr(tout, c->name.str);
 		textout_putstr(tout, "\t");
@@ -658,7 +660,9 @@ blt_ls(struct exec *o, struct data **r)
 	textout_shiftright(tout);
 	textout_indent(tout);
 	textout_putstr(tout, "# chan_name,  {devicenum, midichan}\n");
-	SONG_FOREACH_IN(usong, c) {
+	SONG_FOREACH_CHAN(usong, c) {
+		if (!c->isinput)
+			continue;
 		textout_indent(tout);
 		textout_putstr(tout, c->name.str);
 		textout_putstr(tout, "\t");
@@ -2219,7 +2223,9 @@ blt_clist(struct exec *o, struct data **r, int input)
 	struct songchan *i;
 
 	d = data_newlist(NULL);
-	SONG_FOREACH_CHAN(usong, i, input ? usong->inlist : usong->outlist) {
+	SONG_FOREACH_CHAN(usong, i) {
+		if (!!i->isinput != !!input)
+			continue;
 		n = data_newref(i->name.str);
 		data_listadd(d, n);
 	}
@@ -2300,7 +2306,9 @@ blt_cnew(struct exec *o, struct data **r, int input)
 		evspec_reset(&dst);
 		dst.dev_min = dst.dev_max = c->dev;
 		dst.ch_min = dst.ch_max = c->ch;
-		SONG_FOREACH_IN(usong, i) {
+		SONG_FOREACH_CHAN(usong, i) {
+			if (!i->isinput)
+				continue;
 			src.dev_min = src.dev_max = i->dev;
 			src.ch_min = src.ch_max = i->ch;
 			filt_mapnew(&c->filt->filt, &src, &dst);
@@ -2533,7 +2541,7 @@ blt_caddev(struct exec *o, struct data **r, int input)
 	}
 	undo_track_save(usong, &c->conf,
 	    input ? "iaddev" : "oaddev", c->name.str);
-	song_confev(usong, c, input, &ev);
+	song_confev(usong, c, &ev);
 	undo_track_diff(usong);
 	return 1;
 }
@@ -2569,7 +2577,7 @@ blt_crmev(struct exec *o, struct data **r, int input)
 	}
 	undo_track_save(usong, &c->conf,
 	    input ? "irmev" : "ormev", c->name.str);
-	song_unconfev(usong, c, input, &es);
+	song_unconfev(usong, c, &es);
 	undo_track_diff(usong);
 	return 1;
 }
@@ -2679,7 +2687,7 @@ blt_fren(struct exec *o, struct data **r)
 		cons_errss(o->procname, name, "filt name already in use");
 		return 0;
 	}
-	SONG_FOREACH_OUT(usong, c) {
+	SONG_FOREACH_CHAN(usong, c) {
 		if (c->filt == f) {
 			cons_errss(o->procname, name,
 			    "rename channel to rename this filter");

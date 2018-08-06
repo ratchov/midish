@@ -499,7 +499,9 @@ song_exportsmf(struct song *o, char *filename)
 		ntrks++;
 	}
 	nchan = 0;
-	SONG_FOREACH_OUT(o, i) {
+	SONG_FOREACH_CHAN(o, i) {
+		if (i->isinput)
+			continue;
 		nchan++;
 	}
 	nsx = 0;
@@ -536,7 +538,9 @@ song_exportsmf(struct song *o, char *filename)
 	/*
 	 * write each chan
 	 */
-	SONG_FOREACH_OUT(o, i) {
+	SONG_FOREACH_CHAN(o, i) {
+		if (i->isinput)
+			continue;
 		used = 0;
 		smf_puttrack(&f, &used, o, &i->conf);
 		smf_putheader(&f, smftype_track, used);
