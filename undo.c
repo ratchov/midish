@@ -133,6 +133,9 @@ undo_clear(struct song *s, struct undo **pos)
 			break;
 		case UNDO_TDEL:
 			xfree(u->u.tdel.data.evs);
+			track_done(&u->u.tdel.trk->track);
+			name_done(&u->u.tdel.trk->name);
+			xfree(u->u.tdel.trk);
 			break;
 		case UNDO_TNEW:
 			break;
