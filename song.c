@@ -419,7 +419,8 @@ song_setcurfilt(struct song *o, struct songfilt *f)
 	if (mux_isopen)
 		norm_shut();
 	o->curfilt = f;
-	song_setcurchan(o, NULL, 0);
+	if (o->curout && o->curout->filt != f)
+		o->curout = NULL;
 	if (mux_isopen)
 		mux_flush();
 }
