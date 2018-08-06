@@ -203,7 +203,8 @@ struct songchan *
 song_channew(struct song *o, char *name, unsigned dev, unsigned ch, int input)
 {
 	struct songfilt *f;
-	struct songchan *c;
+	struct songchan *c, *i;
+	struct evspec src, dst;
 
 	c = xmalloc(sizeof(struct songchan), "songchan");
 	name_init(&c->name, name);
@@ -219,6 +220,17 @@ song_channew(struct song *o, char *name, unsigned dev, unsigned ch, int input)
 		if (f == NULL)
 			f = song_filtnew(o, name);
 		c->filt = f;
+		evspec_reset(&src);
+		evspec_reset(&dst);
+		dst.dev_min = dst.dev_max = c->dev;
+		dst.ch_min = dst.ch_max = c->ch;
+		SONG_FOREACH_CHAN(o, i) {
+			if (!i->isinput)
+				continue;
+			src.dev_min = src.dev_max = i->dev;
+			src.ch_min = src.ch_max = i->ch;
+			filt_mapnew(&c->filt->filt, &src, &dst);
+		}
 	}
 	song_setcurchan(o, c, input);
 	return c;
