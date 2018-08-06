@@ -121,6 +121,7 @@ void
 undo_clear(struct song *s, struct undo **pos)
 {
 	struct undo *u;
+	struct undo_fdel_trk *p;
 
 	while ((u = *pos) != NULL) {
 		*pos = u->next;
@@ -141,6 +142,20 @@ undo_clear(struct song *s, struct undo **pos)
 			break;
 		case UNDO_FILT:
 			filt_reset(&u->u.filt.data);
+			break;
+		case UNDO_FREN:
+			str_delete(u->u.fren.name);
+			break;
+		case UNDO_FDEL:
+			filt_reset(&u->u.fdel.filt->filt);
+			name_done(&u->u.fdel.filt->name);
+			while ((p = u->u.fdel.trks) != NULL) {
+				u->u.fdel.trks = p->next;
+				xfree(p);
+			}
+			xfree(u->u.fdel.filt);
+			break;
+		case UNDO_FNEW:
 			break;
 		default:
 			log_puts("undo_clear: bad type\n");
