@@ -45,6 +45,7 @@ undo_new(struct song *s, int type, char *func, char *name)
 void
 undo_pop(struct song *s)
 {
+	struct undo_fdel_trk *p;
 	struct undo *u;
 	int done = 0;
 
@@ -81,6 +82,27 @@ undo_pop(struct song *s)
 		case UNDO_TNEW:
 			song_trkdel(s, u->u.tdel.trk);
 			break;
+		case UNDO_FILT:
+			filt_reset(u->u.filt.filt);
+			*u->u.filt.filt = u->u.filt.data;
+			break;
+		case UNDO_FREN:
+			str_delete(u->u.fren.filt->name.str);
+			u->u.fren.filt->name.str = u->u.fren.name;
+			break;
+		case UNDO_FDEL:
+			name_add(&s->filtlist, &u->u.fdel.filt->name);
+			if (s->curfilt == NULL)
+				s->curfilt = u->u.fdel.filt;
+			while ((p = u->u.fdel.trks) != NULL) {
+				p->trk->curfilt = u->u.fdel.filt;
+				u->u.fdel.trks = p->next;
+				xfree(p);
+			}
+			break;
+		case UNDO_FNEW:
+			song_filtdel(s, u->u.fdel.filt);
+			break;
 		default:
 			log_puts("undo_pop: bad type\n");
 			panic();
@@ -113,6 +135,9 @@ undo_clear(struct song *s, struct undo **pos)
 			xfree(u->u.tdel.data.evs);
 			break;
 		case UNDO_TNEW:
+			break;
+		case UNDO_FILT:
+			filt_reset(&u->u.filt.data);
 			break;
 		default:
 			log_puts("undo_clear: bad type\n");
@@ -359,6 +384,120 @@ undo_tnew_do(struct song *s, char *func, char *name)
 	u = undo_new(s, UNDO_TNEW, func, t->name.str);
 	u->u.tdel.song = s;
 	u->u.tdel.trk = t;
+	undo_push(s, u);
+	return t;
+}
+
+int
+filtnode_size(struct filtnode **sloc)
+{
+	struct filtnode *s;
+	int size = 0;
+
+	for (s = *sloc; s != NULL; s = s->next)
+		size += sizeof(struct filtnode) +
+		    filtnode_size(&s->dstlist);
+	return size;
+}
+
+void
+filtnode_dup(struct filtnode **dloc, struct filtnode **sloc)
+{
+	struct filtnode *s, *d;
+
+	s = *sloc;
+	while (s != NULL) {
+		d = filtnode_new(&s->es, dloc);
+		filtnode_dup(&d->dstlist, &s->dstlist);
+		dloc = &d->next;
+		s = s->next;
+	}
+}
+
+int
+filt_size(struct filt *f)
+{
+	return filtnode_size(&f->map) +
+	    filtnode_size(&f->vcurve) +
+	    filtnode_size(&f->transp);
+
+}
+
+void
+filt_undosave(struct filt *f, struct filt *data)
+{
+	filt_init(data);
+	filtnode_dup(&data->map, &f->map);
+	filtnode_dup(&data->vcurve, &f->vcurve);
+	filtnode_dup(&data->transp, &f->transp);
+}
+
+void
+undo_filt_save(struct song *s, struct filt *f, char *func, char *name)
+{
+	struct undo *u;
+
+	u = undo_new(s, UNDO_FILT, func, name);
+	u->u.filt.filt = f;
+	filt_undosave(f, &u->u.filt.data);
+	u->size += filt_size(&u->u.filt.data);
+	undo_push(s, u);
+}
+
+void
+undo_fren_do(struct song *s, struct songfilt *t, char *name, char *func)
+{
+	struct undo *u;
+
+	u = undo_new(s, UNDO_FREN, func, t->name.str);
+	u->u.fren.filt = t;
+	u->u.fren.name = t->name.str;
+	t->name.str = str_new(name);
+	undo_push(s, u);
+}
+
+void
+undo_fdel_do(struct song *s, struct songfilt *f, char *func)
+{
+	struct undo *u;
+	struct songtrk *t;
+	struct undo_fdel_trk *p;
+
+	u = undo_new(s, UNDO_FDEL, func, f->name.str);
+	u->u.fdel.song = s;
+	u->u.fdel.filt = f;
+	u->u.fdel.trks = NULL;
+
+	SONG_FOREACH_TRK(s, t) {
+		if (t->curfilt != f)
+			continue;
+		p = xmalloc(sizeof(struct undo_fdel_trk), "fdel_trk");
+		u->size += sizeof(struct undo_fdel_trk);
+		p->trk = t;
+		p->next = u->u.fdel.trks;
+		u->u.fdel.trks = p;
+		t->curfilt = NULL;
+	}
+
+	if (s->curfilt == f)
+		song_setcurfilt(s, NULL);
+
+	name_remove(&s->filtlist, &f->name);
+
+	undo_push(s, u);
+}
+
+struct songfilt *
+undo_fnew_do(struct song *s, char *func, char *name)
+{
+	struct undo *u;
+	struct songfilt *t;
+
+	t = song_filtnew(s, name);
+	u = undo_new(s, UNDO_FNEW, func, t->name.str);
+	u->u.fdel.song = s;
+	u->u.fdel.filt = t;
+	u->u.fdel.trks = NULL;
 	undo_push(s, u);
 	return t;
 }

@@ -56,6 +56,9 @@ void filt_transp(struct filt *, struct evspec *, int);
 void filt_vcurve(struct filt *, struct evspec *, int);
 unsigned filt_evcnt(struct filt *, unsigned);
 
+struct filtnode *filtnode_new(struct evspec *, struct filtnode **);
+void filtnode_del(struct filtnode **);
+
 extern unsigned filt_debug;
 
 #endif /* MIDISH_FILT_H */

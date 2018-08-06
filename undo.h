@@ -30,6 +30,10 @@ struct undo {
 #define UNDO_TREN	2
 #define UNDO_TDEL	3
 #define UNDO_TNEW	4
+#define UNDO_FILT	5
+#define UNDO_FREN	6
+#define UNDO_FDEL	7
+#define UNDO_FNEW	8
 	int type;
 	char *func;
 	char *name;
@@ -48,6 +52,22 @@ struct undo {
 			struct songtrk *trk;
 			char *name;
 		} tren;
+		struct undo_filt {
+			struct filt *filt;
+			struct filt data;
+		} filt;
+		struct undo_fdel {
+			struct song *song;
+			struct songfilt *filt;
+			struct undo_fdel_trk {
+				struct undo_fdel_trk *next;
+				struct songtrk *trk;
+			} *trks;
+		} fdel;
+		struct undo_fren {
+			struct songfilt *filt;
+			char *name;
+		} fren;
 	} u;
 };
 
@@ -59,5 +79,10 @@ void undo_track_diff(struct song *);
 void undo_tren_do(struct song *, struct songtrk *, char *, char *);
 void undo_tdel_do(struct song *, struct songtrk *, char *);
 struct songtrk *undo_tnew_do(struct song *, char *, char *);
+void undo_filt_save(struct song *, struct filt *, char *, char *);
+
+void undo_fren_do(struct song *s, struct songfilt *, char *, char *);
+void undo_fdel_do(struct song *, struct songfilt *, char *);
+struct songfilt *undo_fnew_do(struct song *, char *, char *);
 
 #endif /* MIDISH_UNDO_H */

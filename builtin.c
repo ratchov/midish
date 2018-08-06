@@ -2642,7 +2642,7 @@ blt_fnew(struct exec *o, struct data **r)
 		cons_errs(o->procname, "filt already exists");
 		return 0;
 	}
-	i = song_filtnew(usong, name);
+	undo_fnew_do(usong, "fnew", name);
 	return 1;
 }
 
@@ -2656,7 +2656,7 @@ blt_fdel(struct exec *o, struct data **r)
 		cons_errs(o->procname, "no current filt");
 		return 0;
 	}
-	song_filtdel(usong, f);
+	undo_fdel_do(usong, f, "fdel");
 	return 1;
 }
 
@@ -2686,8 +2686,7 @@ blt_fren(struct exec *o, struct data **r)
 			return 0;
 		}
 	}
-	str_delete(f->name.str);
-	f->name.str = str_new(name);
+	undo_fren_do(usong, f, name, "fren");
 	return 1;
 }
 
@@ -2732,6 +2731,7 @@ blt_freset(struct exec *o, struct data **r)
 	}
 	if (mux_isopen)
 		norm_shut();
+	undo_filt_save(usong, &f->filt, o->procname, f->name.str);
 	filt_reset(&f->filt);
 	return 1;
 }
@@ -2753,6 +2753,7 @@ blt_fmap(struct exec *o, struct data **r)
 	}
 	if (mux_isopen)
 		norm_shut();
+	undo_filt_save(usong, &f->filt, o->procname, f->name.str);
 	filt_mapnew(&f->filt, &from, &to);
 	return 1;
 }
@@ -2774,6 +2775,7 @@ blt_funmap(struct exec *o, struct data **r)
 	}
 	if (mux_isopen)
 		norm_shut();
+	undo_filt_save(usong, &f->filt, o->procname, f->name.str);
 	filt_mapdel(&f->filt, &from, &to);
 	return 1;
 }
@@ -2806,6 +2808,7 @@ blt_ftransp(struct exec *o, struct data **r)
 	}
 	if (mux_isopen)
 		norm_shut();
+	undo_filt_save(usong, &f->filt, o->procname, f->name.str);
 	filt_transp(&f->filt, &es, plus);
 	return 1;
 }
@@ -2836,6 +2839,7 @@ blt_fvcurve(struct exec *o, struct data **r)
 	}
 	if (mux_isopen)
 		norm_shut();
+	undo_filt_save(usong, &f->filt, o->procname, f->name.str);
 	filt_vcurve(&f->filt, &es, weight);
 	return 1;
 }
@@ -2861,6 +2865,7 @@ blt_fchgxxx(struct exec *o, struct data **r, int input, int swap)
 	}
 	if (mux_isopen)
 		norm_shut();
+	undo_filt_save(usong, &f->filt, o->procname, f->name.str);
 	if (input)
 		filt_chgin(&f->filt, &from, &to, swap);
 	else
