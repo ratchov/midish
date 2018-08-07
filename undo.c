@@ -107,6 +107,20 @@ undo_pop(struct song *s)
 			str_delete(u->u.cren.chan->name.str);
 			u->u.cren.chan->name.str = u->u.cren.name;
 			break;
+		case UNDO_CDEL:
+			track_undorestore(&u->u.cdel.chan->conf, &u->u.cdel.data);
+			name_add(&s->chanlist, &u->u.cdel.chan->name);
+			if (u->u.cdel.chan->isinput) {
+				if (s->curin == NULL)
+					s->curin = u->u.cdel.chan;
+			} else {
+				if (s->curout == NULL)
+					s->curout = u->u.cdel.chan;
+			}
+			break;
+		case UNDO_CNEW:
+			song_chandel(s, u->u.cdel.chan, u->u.cdel.chan->isinput);
+			break;
 		default:
 			log_puts("undo_pop: bad type\n");
 			panic();
@@ -163,6 +177,14 @@ undo_clear(struct song *s, struct undo **pos)
 			break;
 		case UNDO_CREN:
 			str_delete(u->u.cren.name);
+			break;
+		case UNDO_CDEL:
+			xfree(u->u.cdel.data.evs);
+			track_done(&u->u.cdel.chan->conf);
+			name_done(&u->u.cdel.chan->name);
+			xfree(u->u.cdel.chan);
+			break;
+		case UNDO_CNEW:
 			break;
 		default:
 			log_puts("undo_clear: bad type\n");
@@ -542,3 +564,40 @@ undo_cren_do(struct song *s, struct songchan *c, char *name, char *func)
 		undo_fren_do(s, c->filt, c->name.str, NULL);
 }
 
+struct songchan *
+undo_cnew_do(struct song *s, unsigned int dev, unsigned int ch, int input,
+	char *func, char *name)
+{
+	struct undo *u;
+	struct songchan *c;
+
+	c = song_channew(s, name, dev, ch, input);
+	u = undo_new(s, UNDO_CNEW, func, c->name.str);
+	u->u.cdel.song = s;
+	u->u.cdel.chan = c;
+	undo_push(s, u);
+	return c;
+}
+
+void
+undo_cdel_do(struct song *s, struct songchan *c, char *func)
+{
+	struct undo *u;
+
+	if (c->isinput) {
+		if (s->curin == c)
+			s->curin = NULL;
+	} else {
+		if (s->curout == c)
+			s->curout = NULL;
+	}
+
+	u = undo_new(s, UNDO_CDEL, func, c->name.str);
+	u->u.cdel.song = s;
+	u->u.cdel.chan = c;
+	u->size = track_undosave(&c->conf, &u->u.cdel.data);
+	name_remove(&s->chanlist, &c->name);
+	undo_push(s, u);
+	if (c->filt)
+		undo_fdel_do(s, c->filt, "cdel_filt");
+}

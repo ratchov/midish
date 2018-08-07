@@ -74,6 +74,7 @@ struct undo {
 		struct undo_cdel {
 			struct song *song;
 			struct songchan *chan;
+			struct track_data data;
 		} cdel;
 		struct undo_cren {
 			struct songchan *chan;
@@ -97,5 +98,8 @@ void undo_fdel_do(struct song *, struct songfilt *, char *);
 struct songfilt *undo_fnew_do(struct song *, char *, char *);
 
 void undo_cren_do(struct song *, struct songchan *, char *, char *);
+struct songchan *undo_cnew_do(struct song *, unsigned int, unsigned int, int,
+	char *, char *);
+void undo_cdel_do(struct song *, struct songchan *, char *);
 
 #endif /* MIDISH_UNDO_H */

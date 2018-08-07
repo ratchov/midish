@@ -2299,7 +2299,7 @@ blt_cnew(struct exec *o, struct data **r, int input)
 	if (!song_try_curchan(usong, input)) {
 		return 0;
 	}
-	song_channew(usong, name, dev, ch, input);
+	undo_cnew_do(usong, dev, ch, input, o->procname, name);
 	return 1;
 }
 
@@ -2328,7 +2328,7 @@ blt_cdel(struct exec *o, struct data **r, int input)
 	if (!song_try_chan(usong, c, input)) {
 		return 0;
 	}
-	song_chandel(usong, c, input);
+	undo_cdel_do(usong, c, o->procname);
 	return 1;
 }
 
