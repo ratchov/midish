@@ -134,7 +134,7 @@ song_done(struct song *o)
 		song_trkdel(o, (struct songtrk *)o->trklist);
 	}
 	while (o->chanlist) {
-		song_chandel(o, (struct songchan *)o->chanlist, 0);
+		song_chandel(o, (struct songchan *)o->chanlist);
 	}
 	while (o->filtlist) {
 		song_filtdel(o, (struct songfilt *)o->filtlist);
@@ -240,20 +240,9 @@ song_channew(struct song *o, char *name, unsigned dev, unsigned ch, int input)
  * delete the given chan from the song
  */
 void
-song_chandel(struct song *o, struct songchan *c, int input)
+song_chandel(struct song *o, struct songchan *c)
 {
-	struct undo *u, **pu;
-
-	pu = &o->undo;
-	while ((u = *pu) != NULL) {
-		if (u->type == UNDO_TRACK && u->u.track.track == &c->conf) {
-			*pu = u->next;
-			xfree(u->u.track.data.evs);
-		} else
-			pu = &u->next;
-	}
-
-	if (input) {
+	if (c->isinput) {
 		if (o->curin == c)
 			o->curin = NULL;
 	} else {
@@ -277,7 +266,7 @@ song_chanlookup(struct song *o, char *name, int input)
 	struct songchan *c;
 
 	SONG_FOREACH_CHAN(o, c) {
-		if (c->isinput == input && str_eq(c->name.str, name))
+		if (!!c->isinput == !!input && str_eq(c->name.str, name))
 			break;
 	}
 

@@ -119,7 +119,7 @@ undo_pop(struct song *s)
 			}
 			break;
 		case UNDO_CNEW:
-			song_chandel(s, u->u.cdel.chan, u->u.cdel.chan->isinput);
+			song_chandel(s, u->u.cdel.chan);
 			break;
 		default:
 			log_puts("undo_pop: bad type\n");

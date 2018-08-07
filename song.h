@@ -160,7 +160,7 @@ struct songchan *song_chanlookup(struct song *, char *, int);
 struct songchan *song_chanlookup_bynum(struct song *, unsigned, unsigned, int);
 void song_confev(struct song *, struct songchan *, struct ev *);
 void song_unconfev(struct song *, struct songchan *, struct evspec *);
-void song_chandel(struct song *, struct songchan *, int);
+void song_chandel(struct song *, struct songchan *);
 
 struct songfilt *song_filtnew(struct song *, char *);
 struct songfilt *song_filtlookup(struct song *, char *);
