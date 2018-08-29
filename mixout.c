@@ -112,7 +112,7 @@ mixout_putev(struct ev *ev, unsigned id)
 				log_putu(os->tag);
 				log_puts(")\n");
 			}
-			os = statelist_update(&mixout_slist, &ca);
+			statelist_update(&mixout_slist, &ca);
 			mux_putev(&ca);
 		}
 		if (mixout_debug) {
