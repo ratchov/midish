@@ -901,6 +901,10 @@ song_importsmf(char *filename)
 	if (!smf_get16(&f, &ntrks)) {
 		goto bad2;
 	}
+	if (ntrks >= 256) {
+		cons_err("too many tracks in midi file");
+		goto bad2;
+	}
 	if (!smf_get16(&f, &timecode)) {
 		goto bad2;
 	}
