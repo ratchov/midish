@@ -50,7 +50,7 @@
 			 (ev)->cmd == EV_KAT)
 
 #define EV_ISSX(ev)	((ev)->cmd >= EV_PAT0 && \
-			 (ev)->cmd <= EV_PAT0 + EV_NPAT)
+			 (ev)->cmd < EV_PAT0 + EV_NPAT)
 
 /*
  * some special values for events
