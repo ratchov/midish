@@ -449,18 +449,21 @@ filt_evcnt(struct filt *f, unsigned cmd)
 	unsigned cnt = 0;
 
 	for (s = f->map; s != NULL; s = s->next) {
+		if (s->es.cmd == cmd)
+			cnt++;
 		for (d = s->dstlist; d != NULL; d = d->next) {
 			if (d->es.cmd == cmd)
 				cnt++;
 		}
 	}
 	for (s = f->vcurve; s != NULL; s = s->next) {
-		if (d->es.cmd == cmd)
+		if (s->es.cmd == cmd)
 			cnt++;
 	}
 	for (s = f->transp; s != NULL; s = s->next) {
-		if (d->es.cmd == cmd)
+		if (s->es.cmd == cmd)
 			cnt++;
 	}
-	return 0;
+
+	return cnt;
 }
