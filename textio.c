@@ -146,7 +146,7 @@ textout_indent(struct textout *o)
 	imax = o->indent;
 	if (imax > INDENT_MAX)
 		imax = INDENT_MAX;
-	for (p = buf, i = 0; i < o->indent; i++) {
+	for (p = buf, i = 0; i < imax; i++) {
 		*p++ = '\t';
 	}
 	*p++ = 0;
