@@ -3084,9 +3084,6 @@ blt_xsetd(struct exec *o, struct data **r)
 		return 0;
 	}
 	for (x = c->sx.first; x != NULL; x = x->next) {
-		if (!x) {
-			break;
-		}
 		if (!data_matchsysex(d, x, &match)) {
 			return 0;
 		}
