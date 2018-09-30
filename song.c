@@ -75,6 +75,7 @@ song_init(struct song *o)
 	track_init(&o->meta);
 	track_init(&o->clip);
 	track_init(&o->rec);
+	sysexlist_init(&o->recsx);
 
 	/*
 	 * runtime play record parameters
@@ -145,6 +146,7 @@ song_done(struct song *o)
 	track_done(&o->meta);
 	track_done(&o->clip);
 	track_done(&o->rec);
+	sysexlist_done(&o->recsx);
 	metro_done(&o->metro);
 	if (o->undo != NULL) {
 		log_puts("undo data not freed\n");
@@ -774,6 +776,8 @@ void
 song_mergerec(struct song *o)
 {
 	struct songtrk *t;
+	struct songsx *x;
+	struct sysex *e;
 	struct state *s;
 	struct ev ev;
 
@@ -794,6 +798,17 @@ song_mergerec(struct song *o)
 		undo_track_diff(o);
 	}
 	track_clear(&o->rec);
+
+	song_getcursx(o, &x);
+	if (x) {
+		for (;;) {
+			e = sysexlist_get(&o->recsx);
+			if (e == NULL)
+				break;
+			sysexlist_put(&x->sx, e);
+		}
+	}
+	sysexlist_clear(&o->recsx);
 }
 
 /*
@@ -934,10 +949,8 @@ song_sysexcb(struct song *o, struct sysex *sx)
 		log_puts("got null sx\n");
 		return;
 	}
-	if (o->mode >= SONG_REC && o->cursx)
-		sysexlist_put(&o->cursx->sx, sx);
-	else
-		sysex_del(sx);
+	if (o->mode >= SONG_REC)
+		sysexlist_put(&o->recsx, sx);
 }
 
 /*
