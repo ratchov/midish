@@ -44,6 +44,7 @@ struct undo {
 #define UNDO_XNEW	15
 #define UNDO_XREN	16
 #define UNDO_XSETD	17
+#define UNDO_CSET	18
 	int type;
 	char *func;
 	char *name;
@@ -87,6 +88,10 @@ struct undo {
 			struct songchan *chan;
 			char *name;
 		} cren;
+		struct undo_cset {
+			struct songchan *chan;
+			unsigned int dev, ch;
+		} cset;
 		struct undo_sysex {
 			struct sysexlist *list;
 			struct sysex_data data;
@@ -120,6 +125,8 @@ void undo_cren_do(struct song *, struct songchan *, char *, char *);
 struct songchan *undo_cnew_do(struct song *, unsigned int, unsigned int, int,
 	char *, char *);
 void undo_cdel_do(struct song *, struct songchan *, char *);
+void undo_cset_do(struct song *, struct songchan *, char *,
+	unsigned int, unsigned int);
 
 void undo_xadd_do(struct song *, char *, struct songsx *, struct sysex *);
 void undo_xrm_do(struct song *, char *, struct songsx *, unsigned int);

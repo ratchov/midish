@@ -122,6 +122,10 @@ undo_pop(struct song *s)
 		case UNDO_CNEW:
 			song_chandel(s, u->u.cdel.chan);
 			break;
+		case UNDO_CSET:
+			u->u.cset.chan->dev = u->u.cset.dev;
+			u->u.cset.chan->ch = u->u.cset.ch;
+			break;
 		case UNDO_XADD:
 			x = sysexlist_rm(u->u.sysex.list,
 			    u->u.sysex.data.pos);
@@ -230,6 +234,8 @@ undo_clear(struct song *s, struct undo **pos)
 			str_delete(u->u.xren.name);
 			break;
 		case UNDO_XSETD:
+			break;
+		case UNDO_CSET:
 			break;
 		default:
 			log_puts("undo_clear: bad type\n");
@@ -645,6 +651,21 @@ undo_cdel_do(struct song *s, struct songchan *c, char *func)
 	undo_push(s, u);
 	if (c->filt)
 		undo_fdel_do(s, c->filt, "cdel_filt");
+}
+
+void
+undo_cset_do(struct song *s, struct songchan *c, char *func,
+	unsigned int dev, unsigned int ch)
+{
+	struct undo *u;
+
+	u = undo_new(s, UNDO_CSET, func, c->name.str);
+	u->u.cset.chan = c;
+	u->u.cset.dev = dev;
+	u->u.cset.ch = ch;
+	undo_push(s, u);
+	c->dev = dev;
+	c->ch = ch;
 }
 
 unsigned int

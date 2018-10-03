@@ -2413,18 +2413,20 @@ blt_cset(struct exec *o, struct data **r, int input)
 	evspec_reset(&from);
 	from.dev_min = from.dev_max = c->dev;
 	from.ch_min = from.ch_max = c->ch;
-	c->dev = dev;
-	c->ch = ch;
 	evspec_reset(&to);
-	to.dev_min = to.dev_max = c->dev;
-	to.ch_min = to.ch_max = c->ch;
+	to.dev_min = to.dev_max = dev;
+	to.ch_min = to.ch_max = ch;
+	undo_cset_do(usong, c, o->procname, dev, ch);
 	SONG_FOREACH_FILT(usong, f) {
+		undo_filt_save(usong, &f->filt, NULL, f->name.str);
 		if (input)
 			filt_chgin(&f->filt, &from, &to, 0);
 		else
 			filt_chgout(&f->filt, &from, &to, 0);
 	}
+	undo_track_save(usong, &c->conf, NULL, c->name.str);
 	track_setchan(&c->conf, dev, ch);
+	undo_track_diff(usong);
 	return 1;
 }
 
