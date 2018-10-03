@@ -43,6 +43,7 @@ struct undo {
 #define UNDO_XDEL	14
 #define UNDO_XNEW	15
 #define UNDO_XREN	16
+#define UNDO_XSETD	17
 	int type;
 	char *func;
 	char *name;
@@ -125,5 +126,7 @@ void undo_xrm_do(struct song *, char *, struct songsx *, unsigned int);
 void undo_xdel_do(struct song *, char *, struct songsx *);
 struct songsx *undo_xnew_do(struct song *, char *, char *);
 void undo_xren_do(struct song *, struct songsx *, char *, char *);
+void undo_xsetd_do(struct song *, char *, struct songsx *, 
+	unsigned int, unsigned int);
 
 #endif /* MIDISH_UNDO_H */

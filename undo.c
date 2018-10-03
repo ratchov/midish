@@ -48,7 +48,7 @@ undo_pop(struct song *s)
 	struct undo_fdel_trk *p;
 	struct sysex *x;
 	struct undo *u;
-	int done = 0;
+	int i, done = 0;
 
 	while (!done) {
 		u = s->undo;
@@ -144,6 +144,12 @@ undo_pop(struct song *s)
 			str_delete(u->u.xren.sx->name.str);
 			u->u.xren.sx->name.str = u->u.xren.name;
 			break;
+		case UNDO_XSETD:
+			x = u->u.sysex.list->first;
+			for (i = 0; i < u->u.sysex.data.pos; i++)
+				x = x->next;
+			x->unit = u->u.sysex.data.unit;
+			break;
 		default:
 			log_puts("undo_pop: bad type\n");
 			panic();
@@ -222,6 +228,8 @@ undo_clear(struct song *s, struct undo **pos)
 			break;
 		case UNDO_XREN:
 			str_delete(u->u.xren.name);
+			break;
+		case UNDO_XSETD:
 			break;
 		default:
 			log_puts("undo_clear: bad type\n");
@@ -755,4 +763,26 @@ undo_xren_do(struct song *s, struct songsx *sx, char *name, char *func)
 	u->u.xren.name = sx->name.str;
 	sx->name.str = str_new(name);
 	undo_push(s, u);
+}
+
+void
+undo_xsetd_do(struct song *s, char *func, struct songsx *sx,
+	unsigned int unit, unsigned int pos)
+{
+	struct undo *u;
+	struct sysex *x;
+	unsigned int i;
+
+	x = sx->sx.first;
+	for (i = 0; i < pos; i++)
+		x = x->next;
+
+	u = undo_new(s, UNDO_XSETD, func, sx->name.str);
+	u->u.sysex.list = &sx->sx;
+	u->u.sysex.data.pos = pos;	
+	u->u.sysex.data.unit = x->unit;
+	u->u.sysex.data.data = NULL;
+	undo_push(s, u);
+
+	x->unit = unit;
 }

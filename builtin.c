@@ -3056,7 +3056,7 @@ blt_xsetd(struct exec *o, struct data **r)
 	struct songsx *c;
 	struct sysex *x;
 	struct data *d;
-	unsigned match;
+	unsigned int match, pos, more;
 	long unit;
 
 	song_getcursx(usong, &c);
@@ -3075,13 +3075,19 @@ blt_xsetd(struct exec *o, struct data **r)
 	if (!song_try_sx(usong, c)) {
 		return 0;
 	}
+
+	more = 0;
+	pos = 0;
 	for (x = c->sx.first; x != NULL; x = x->next) {
 		if (!data_matchsysex(d, x, &match)) {
 			return 0;
 		}
 		if (match) {
-			x->unit = unit;
+			undo_xsetd_do(usong,
+			    more ? NULL : o->procname, c, unit, pos);
+			more = 1;
 		}
+		pos++;
 	}
 	return 1;
 }
