@@ -2949,7 +2949,7 @@ blt_xdel(struct exec *o, struct data **r)
 	if (!song_try_sx(usong, c)) {
 		return 0;
 	}
-	song_sxdel(usong, c);
+	undo_xdel_do(usong, o->procname, c);
 	return 1;
 }
 

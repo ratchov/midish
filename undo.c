@@ -132,6 +132,11 @@ undo_pop(struct song *s)
 			sysexlist_add(u->u.sysex.list,
 			    u->u.sysex.data.pos, x);
 			break;
+		case UNDO_XDEL:
+			name_add(&s->sxlist, &u->u.xdel.sx->name);
+			if (s->cursx == NULL)
+				s->cursx = u->u.xdel.sx;
+			break;
 		default:
 			log_puts("undo_pop: bad type\n");
 			panic();
@@ -201,6 +206,10 @@ undo_clear(struct song *s, struct undo **pos)
 			break;
 		case UNDO_XRM:
 			xfree(u->u.sysex.data.data);
+			break;
+		case UNDO_XDEL:
+			name_done(&u->u.xdel.sx->name);
+			xfree(u->u.xdel.sx);
 			break;
 		default:
 			log_puts("undo_clear: bad type\n");
@@ -692,4 +701,20 @@ undo_xrm_do(struct song *s, char *func, struct songsx *sx, unsigned int pos)
 	undo_push(s, u);
 
 	sysex_del(x);
+}
+
+void
+undo_xdel_do(struct song *s, char *func, struct songsx *sx)
+{
+	struct undo *u;
+
+	if (s->cursx == sx)
+		s->cursx = NULL;
+	u = undo_new(s, UNDO_XDEL, func, sx->name.str);
+	u->u.xdel.song = s;
+	u->u.xdel.sx = sx;
+	undo_push(s, u);
+	while (sx->sx.first)
+		undo_xrm_do(s, NULL, sx, 0);
+	name_remove(&s->sxlist, &sx->name);
 }
