@@ -18,6 +18,7 @@
 #define MIDISH_UNDO_H
 
 #include "track.h"
+#include "sysex.h"
 
 struct songtrk;
 struct songchan;
@@ -37,6 +38,8 @@ struct undo {
 #define UNDO_CREN	9
 #define UNDO_CDEL	10
 #define UNDO_CNEW	11
+#define UNDO_XADD	12
+#define UNDO_XRM	13
 	int type;
 	char *func;
 	char *name;
@@ -80,6 +83,10 @@ struct undo {
 			struct songchan *chan;
 			char *name;
 		} cren;
+		struct undo_sysex {
+			struct sysexlist *list;
+			struct sysex_data data;
+		} sysex;
 	} u;
 };
 
@@ -101,5 +108,8 @@ void undo_cren_do(struct song *, struct songchan *, char *, char *);
 struct songchan *undo_cnew_do(struct song *, unsigned int, unsigned int, int,
 	char *, char *);
 void undo_cdel_do(struct song *, struct songchan *, char *);
+
+void undo_xadd_do(struct song *, char *, struct songsx *, struct sysex *);
+void undo_xrm_do(struct song *, char *, struct songsx *, unsigned int);
 
 #endif /* MIDISH_UNDO_H */

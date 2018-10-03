@@ -255,6 +255,47 @@ sysexlist_get(struct sysexlist *o)
 }
 
 /*
+ * put a sysex message at the given position
+ */
+void
+sysexlist_add(struct sysexlist *l, unsigned int pos, struct sysex *e)
+{
+	struct sysex **pe;
+
+	pe = &l->first;
+	while (pos > 0) {
+		pe = &(*pe)->next;
+		pos--;
+	}
+
+	e->next = *pe;
+	*pe = e;
+	if (e->next == NULL)
+		l->lastptr = &e->next;
+}
+
+/*
+ * detach the sysex message at the given position from the list
+ */
+struct sysex *
+sysexlist_rm(struct sysexlist *l, unsigned int pos)
+{
+	struct sysex *e, **pe;
+
+	pe = &l->first;
+	while (pos > 0) {
+		pe = &(*pe)->next;
+		pos--;
+	}
+
+	e = *pe;
+	*pe = e->next;
+	if (*pe == NULL)
+		l->lastptr = pe;
+	return e;
+}
+
+/*
  * dump a sysex list on stderr
  */
 void

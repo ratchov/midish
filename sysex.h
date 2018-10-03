@@ -34,6 +34,13 @@ struct sysexlist {
 	struct sysex *first, **lastptr;
 };
 
+struct sysex_data {
+	unsigned char *data;
+	unsigned int unit;
+	unsigned int size;
+	unsigned int pos;
+};
+
 void 	      chunk_pool_init(unsigned);
 void 	      chunk_pool_done(void);
 struct chunk *chunk_new(void);
@@ -53,5 +60,11 @@ void	      sysexlist_clear(struct sysexlist *);
 void	      sysexlist_put(struct sysexlist *, struct sysex *);
 struct sysex *sysexlist_get(struct sysexlist *);
 void	      sysexlist_log(struct sysexlist *);
+
+void	      sysexlist_add(struct sysexlist *, unsigned int, struct sysex *);
+struct sysex *sysexlist_rm(struct sysexlist *, unsigned int);
+
+struct sysex *sysex_undorestore(struct sysex_data *);
+unsigned int  sysex_undosave(struct sysex *, struct sysex_data *);
 
 #endif /* MIDISH_SYSEX_H */

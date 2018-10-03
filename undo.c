@@ -46,6 +46,7 @@ void
 undo_pop(struct song *s)
 {
 	struct undo_fdel_trk *p;
+	struct sysex *x;
 	struct undo *u;
 	int done = 0;
 
@@ -121,6 +122,16 @@ undo_pop(struct song *s)
 		case UNDO_CNEW:
 			song_chandel(s, u->u.cdel.chan);
 			break;
+		case UNDO_XADD:
+			x = sysexlist_rm(u->u.sysex.list,
+			    u->u.sysex.data.pos);
+			sysex_del(x);
+			break;
+		case UNDO_XRM:
+			x = sysex_undorestore(&u->u.sysex.data);
+			sysexlist_add(u->u.sysex.list,
+			    u->u.sysex.data.pos, x);
+			break;
 		default:
 			log_puts("undo_pop: bad type\n");
 			panic();
@@ -185,6 +196,11 @@ undo_clear(struct song *s, struct undo **pos)
 			xfree(u->u.cdel.chan);
 			break;
 		case UNDO_CNEW:
+			break;
+		case UNDO_XADD:
+			break;
+		case UNDO_XRM:
+			xfree(u->u.sysex.data.data);
 			break;
 		default:
 			log_puts("undo_clear: bad type\n");
@@ -600,4 +616,80 @@ undo_cdel_do(struct song *s, struct songchan *c, char *func)
 	undo_push(s, u);
 	if (c->filt)
 		undo_fdel_do(s, c->filt, "cdel_filt");
+}
+
+unsigned int
+sysex_undosave(struct sysex *x, struct sysex_data *data)
+{
+	struct chunk *ck;
+	unsigned char *p;
+	unsigned int i;
+
+	data->unit = x->unit;
+
+	data->size = 0;
+	for (ck = x->first; ck != NULL; ck = ck->next)
+		data->size += ck->used;
+
+	data->data = xmalloc(data->size, "undo_sysex");
+
+	p = data->data;
+	for (ck = x->first; ck != NULL; ck = ck->next) {
+		for (i = 0; i < ck->used; i++)
+			*p++ = ck->data[i];
+	}
+
+	return data->size;
+}
+
+struct sysex *
+sysex_undorestore(struct sysex_data *data)
+{
+	struct sysex *x;
+	unsigned int i;
+
+	x = sysex_new(data->unit);
+	for (i = 0; i < data->size; i++)
+		sysex_add(x, data->data[i]);
+	xfree(data->data);
+	return x;
+}
+
+void
+undo_xadd_do(struct song *s, char *func, struct songsx *sx, struct sysex *x)
+{
+	struct undo *u;
+	struct sysex *xi;
+	unsigned int pos;
+
+	pos = 0;
+	for (xi = sx->sx.first; xi != NULL; xi = xi->next)
+		pos++;
+
+	u = undo_new(s, UNDO_XADD, func, sx->name.str);
+	u->u.sysex.list = &sx->sx;
+	u->u.sysex.data.unit = 0;
+	u->u.sysex.data.data = NULL;
+	u->u.sysex.data.pos = pos;
+	u->size = 0;
+	undo_push(s, u);
+
+	sysexlist_put(&sx->sx, x);
+}
+
+void
+undo_xrm_do(struct song *s, char *func, struct songsx *sx, unsigned int pos)
+{
+	struct undo *u;
+	struct sysex *x;
+
+	x = sysexlist_rm(&sx->sx, pos);
+
+	u = undo_new(s, UNDO_XRM, func, sx->name.str);
+	u->u.sysex.list = &sx->sx;
+	u->u.sysex.data.pos = pos;
+	u->size = sysex_undosave(x, &u->u.sysex.data);
+	undo_push(s, u);
+
+	sysex_del(x);
 }

@@ -3021,9 +3021,9 @@ unsigned
 blt_xrm(struct exec *o, struct data **r)
 {
 	struct songsx *c;
-	struct sysex *x, **px;
+	struct sysex *x, *xnext;
 	struct data *d;
-	unsigned match;
+	unsigned int pos, match, more;
 
 	song_getcursx(usong, &c);
 	if (c == NULL) {
@@ -3036,24 +3036,17 @@ blt_xrm(struct exec *o, struct data **r)
 	if (!song_try_sx(usong, c)) {
 		return 0;
 	}
-	px = &c->sx.first;
-	for (;;) {
-		if (!*px) {
-			break;
-		}
-		if (!data_matchsysex(d, *px, &match)) {
+	pos = 0;
+	more = 0;
+	for (x = c->sx.first; x != NULL; x = xnext) {
+		xnext = x->next;
+		if (!data_matchsysex(d, x, &match))
 			return 0;
-		}
 		if (match) {
-			x = *px;
-			*px = x->next;
-			if (*px == NULL) {
-				c->sx.lastptr = px;
-			}
-			sysex_del(x);
-		} else {
-			px = &(*px)->next;
-		}
+			undo_xrm_do(usong, more ? NULL : o->procname, c, pos);
+			more = 1;
+		} else
+			pos++;
 	}
 	return 1;
 }
@@ -3147,7 +3140,7 @@ blt_xadd(struct exec *o, struct data **r)
 		return 0;
 	}
 	if (x->first) {
-		sysexlist_put(&c->sx, x);
+		undo_xadd_do(usong, o->procname, c, x);
 	} else {
 		sysex_del(x);
 	}
