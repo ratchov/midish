@@ -137,6 +137,9 @@ undo_pop(struct song *s)
 			if (s->cursx == NULL)
 				s->cursx = u->u.xdel.sx;
 			break;
+		case UNDO_XNEW:
+			song_sxdel(s, u->u.xdel.sx);
+			break;
 		default:
 			log_puts("undo_pop: bad type\n");
 			panic();
@@ -210,6 +213,8 @@ undo_clear(struct song *s, struct undo **pos)
 		case UNDO_XDEL:
 			name_done(&u->u.xdel.sx->name);
 			xfree(u->u.xdel.sx);
+			break;
+		case UNDO_XNEW:
 			break;
 		default:
 			log_puts("undo_clear: bad type\n");
@@ -717,4 +722,18 @@ undo_xdel_do(struct song *s, char *func, struct songsx *sx)
 	while (sx->sx.first)
 		undo_xrm_do(s, NULL, sx, 0);
 	name_remove(&s->sxlist, &sx->name);
+}
+
+struct songsx *
+undo_xnew_do(struct song *s, char *func, char *name)
+{
+	struct undo *u;
+	struct songsx *sx;
+
+	sx = song_sxnew(s, name);
+	u = undo_new(s, UNDO_XNEW, func, sx->name.str);
+	u->u.xdel.song = s;
+	u->u.xdel.sx = sx;
+	undo_push(s, u);
+	return sx;
 }

@@ -2932,7 +2932,7 @@ blt_xnew(struct exec *o, struct data **r)
 	if (!song_try_cursx(usong)) {
 		return 0;
 	}
-	c = song_sxnew(usong, name);
+	c = undo_xnew_do(usong, o->procname, name);
 	return 1;
 }
 
