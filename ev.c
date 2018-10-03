@@ -243,6 +243,12 @@ ev_eq(struct ev *e1, struct ev *e2)
 	if (e1->cmd != e2->cmd)
 		return 0;
 
+	if ((evinfo[e1->cmd].flags & EV_HAS_DEV) && e1->dev != e2->dev)
+		return 0;
+
+	if ((evinfo[e1->cmd].flags & EV_HAS_CH) && e1->ch != e2->ch)
+		return 0;
+
 	nparams = evinfo[e1->cmd].nparams;
 	if (nparams > 0) {
 		if (e1->v0 != e2->v0)
