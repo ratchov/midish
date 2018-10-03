@@ -2974,8 +2974,7 @@ blt_xren(struct exec *o, struct data **r)
 	if (!song_try_sx(usong, c)) {
 		return 0;
 	}
-	str_delete(c->name.str);
-	c->name.str = str_new(name);
+	undo_xren_do(usong, c, name, o->procname);
 	return 1;
 }
 
