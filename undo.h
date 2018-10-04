@@ -60,7 +60,6 @@ struct undo {
 			struct track_data data;
 		} track;
 		struct undo_tdel {
-			struct song *song;
 			struct songtrk *trk;
 			struct track_data data;
 		} tdel;
@@ -69,7 +68,6 @@ struct undo {
 			struct filt data;
 		} filt;
 		struct undo_fdel {
-			struct song *song;
 			struct songfilt *filt;
 			struct undo_fdel_trk {
 				struct undo_fdel_trk *next;
@@ -77,7 +75,6 @@ struct undo {
 			} *trks;
 		} fdel;
 		struct undo_cdel {
-			struct song *song;
 			struct songchan *chan;
 			struct track_data data;
 		} cdel;
@@ -86,7 +83,6 @@ struct undo {
 			struct sysex_data data;
 		} sysex;
 		struct undo_xdel {
-			struct song *song;
 			struct songsx *sx;
 		} xdel;
 	} u;
