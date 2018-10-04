@@ -25,26 +25,29 @@ struct songchan;
 struct songfilt;
 struct songsx;
 
+enum {
+	UNDO_TRACK,
+	UNDO_TREN,
+	UNDO_TDEL,
+	UNDO_TNEW,
+	UNDO_FILT,
+	UNDO_FREN,
+	UNDO_FDEL,
+	UNDO_FNEW,
+	UNDO_CREN,
+	UNDO_CDEL,
+	UNDO_CNEW,
+	UNDO_XADD,
+	UNDO_XRM,
+	UNDO_XDEL,
+	UNDO_XNEW,
+	UNDO_XREN,
+	UNDO_XSETD,
+	UNDO_CSET
+};
+
 struct undo {
 	struct undo *next;
-#define UNDO_TRACK	1
-#define UNDO_TREN	2
-#define UNDO_TDEL	3
-#define UNDO_TNEW	4
-#define UNDO_FILT	5
-#define UNDO_FREN	6
-#define UNDO_FDEL	7
-#define UNDO_FNEW	8
-#define UNDO_CREN	9
-#define UNDO_CDEL	10
-#define UNDO_CNEW	11
-#define UNDO_XADD	12
-#define UNDO_XRM	13
-#define UNDO_XDEL	14
-#define UNDO_XNEW	15
-#define UNDO_XREN	16
-#define UNDO_XSETD	17
-#define UNDO_CSET	18
 	int type;
 	char *func;
 	char *name;
