@@ -1558,6 +1558,8 @@ blt_tapev(struct exec *o, struct data **r)
 unsigned
 blt_undo(struct exec *o, struct data **r)
 {
+	if (!song_try_mode(usong, 0))
+		return 0;
 	undo_pop(usong);
 	return 1;
 }
