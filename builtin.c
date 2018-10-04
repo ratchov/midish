@@ -1653,7 +1653,7 @@ blt_tren(struct exec *o, struct data **r)
 		    "name already used by another track");
 		return 0;
 	}
-	undo_tren_do(usong, t, name, "tren");
+	undo_setstr(usong, o->procname, &t->name.str, name);
 	return 1;
 }
 
@@ -2366,7 +2366,9 @@ blt_cren(struct exec *o, struct data **r, int input)
 		cons_errss(o->procname, name, "filt name already in use");
 		return 0;
 	}
-	undo_cren_do(usong, c, name, o->procname);
+	undo_setstr(usong, o->procname, &c->name.str, name);
+	if (c->filt)
+		undo_setstr(usong, NULL, &c->filt->name.str, name);
 	return 1;
 }
 
@@ -2416,7 +2418,10 @@ blt_cset(struct exec *o, struct data **r, int input)
 	evspec_reset(&to);
 	to.dev_min = to.dev_max = dev;
 	to.ch_min = to.ch_max = ch;
-	undo_cset_do(usong, c, o->procname, dev, ch);
+
+	undo_setuint(usong, o->procname, c->name.str, &c->dev, dev);
+	undo_setuint(usong, NULL, c->name.str, &c->ch, ch);
+
 	SONG_FOREACH_FILT(usong, f) {
 		undo_filt_save(usong, &f->filt, NULL, f->name.str);
 		if (input)
@@ -2677,7 +2682,7 @@ blt_fren(struct exec *o, struct data **r)
 			return 0;
 		}
 	}
-	undo_fren_do(usong, f, name, "fren");
+	undo_setstr(usong, o->procname, &f->name.str, name);
 	return 1;
 }
 
@@ -2976,7 +2981,7 @@ blt_xren(struct exec *o, struct data **r)
 	if (!song_try_sx(usong, c)) {
 		return 0;
 	}
-	undo_xren_do(usong, c, name, o->procname);
+	undo_setstr(usong, o->procname, &c->name.str, name);
 	return 1;
 }
 
@@ -3058,7 +3063,7 @@ blt_xsetd(struct exec *o, struct data **r)
 	struct songsx *c;
 	struct sysex *x;
 	struct data *d;
-	unsigned int match, pos, more;
+	unsigned int match, more;
 	long unit;
 
 	song_getcursx(usong, &c);
@@ -3079,17 +3084,16 @@ blt_xsetd(struct exec *o, struct data **r)
 	}
 
 	more = 0;
-	pos = 0;
 	for (x = c->sx.first; x != NULL; x = x->next) {
 		if (!data_matchsysex(d, x, &match)) {
 			return 0;
 		}
 		if (match) {
-			undo_xsetd_do(usong,
-			    more ? NULL : o->procname, c, unit, pos);
+			undo_setuint(usong,
+			    more ? NULL : o->procname, c->name.str,
+			    &x->unit, unit);
 			more = 1;
 		}
-		pos++;
 	}
 	return 1;
 }

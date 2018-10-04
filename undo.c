@@ -48,7 +48,7 @@ undo_pop(struct song *s)
 	struct undo_fdel_trk *p;
 	struct sysex *x;
 	struct undo *u;
-	int i, done = 0;
+	int done = 0;
 
 	while (!done) {
 		u = s->undo;
@@ -67,12 +67,15 @@ undo_pop(struct song *s)
 			done = 1;
 		}
 		switch (u->type) {
+		case UNDO_STR:
+			str_delete(*u->u.ren.ptr);
+			*u->u.ren.ptr = u->u.ren.val;
+			break;
+		case UNDO_UINT:
+			*u->u.uint.ptr = u->u.uint.val;
+			break;
 		case UNDO_TRACK:
 			track_undorestore(u->u.track.track, &u->u.track.data);
-			break;
-		case UNDO_TREN:
-			str_delete(u->u.tren.trk->name.str);
-			u->u.tren.trk->name.str = u->u.tren.name;
 			break;
 		case UNDO_TDEL:
 			track_undorestore(&u->u.tdel.trk->track, &u->u.tdel.data);
@@ -87,10 +90,6 @@ undo_pop(struct song *s)
 			filt_reset(u->u.filt.filt);
 			*u->u.filt.filt = u->u.filt.data;
 			break;
-		case UNDO_FREN:
-			str_delete(u->u.fren.filt->name.str);
-			u->u.fren.filt->name.str = u->u.fren.name;
-			break;
 		case UNDO_FDEL:
 			name_add(&s->filtlist, &u->u.fdel.filt->name);
 			if (s->curfilt == NULL)
@@ -103,10 +102,6 @@ undo_pop(struct song *s)
 			break;
 		case UNDO_FNEW:
 			song_filtdel(s, u->u.fdel.filt);
-			break;
-		case UNDO_CREN:
-			str_delete(u->u.cren.chan->name.str);
-			u->u.cren.chan->name.str = u->u.cren.name;
 			break;
 		case UNDO_CDEL:
 			track_undorestore(&u->u.cdel.chan->conf, &u->u.cdel.data);
@@ -121,10 +116,6 @@ undo_pop(struct song *s)
 			break;
 		case UNDO_CNEW:
 			song_chandel(s, u->u.cdel.chan);
-			break;
-		case UNDO_CSET:
-			u->u.cset.chan->dev = u->u.cset.dev;
-			u->u.cset.chan->ch = u->u.cset.ch;
 			break;
 		case UNDO_XADD:
 			x = sysexlist_rm(u->u.sysex.list,
@@ -143,16 +134,6 @@ undo_pop(struct song *s)
 			break;
 		case UNDO_XNEW:
 			song_sxdel(s, u->u.xdel.sx);
-			break;
-		case UNDO_XREN:
-			str_delete(u->u.xren.sx->name.str);
-			u->u.xren.sx->name.str = u->u.xren.name;
-			break;
-		case UNDO_XSETD:
-			x = u->u.sysex.list->first;
-			for (i = 0; i < u->u.sysex.data.pos; i++)
-				x = x->next;
-			x->unit = u->u.sysex.data.unit;
 			break;
 		default:
 			log_puts("undo_pop: bad type\n");
@@ -177,11 +158,13 @@ undo_clear(struct song *s, struct undo **pos)
 	while ((u = *pos) != NULL) {
 		*pos = u->next;
 		switch (u->type) {
+		case UNDO_STR:
+			str_delete(u->u.ren.val);
+			break;
+		case UNDO_UINT:
+			break;
 		case UNDO_TRACK:
 			xfree(u->u.track.data.evs);
-			break;
-		case UNDO_TREN:
-			str_delete(u->u.tren.name);
 			break;
 		case UNDO_TDEL:
 			xfree(u->u.tdel.data.evs);
@@ -194,9 +177,6 @@ undo_clear(struct song *s, struct undo **pos)
 		case UNDO_FILT:
 			filt_reset(&u->u.filt.data);
 			break;
-		case UNDO_FREN:
-			str_delete(u->u.fren.name);
-			break;
 		case UNDO_FDEL:
 			filt_reset(&u->u.fdel.filt->filt);
 			name_done(&u->u.fdel.filt->name);
@@ -207,9 +187,6 @@ undo_clear(struct song *s, struct undo **pos)
 			xfree(u->u.fdel.filt);
 			break;
 		case UNDO_FNEW:
-			break;
-		case UNDO_CREN:
-			str_delete(u->u.cren.name);
 			break;
 		case UNDO_CDEL:
 			xfree(u->u.cdel.data.evs);
@@ -229,13 +206,6 @@ undo_clear(struct song *s, struct undo **pos)
 			xfree(u->u.xdel.sx);
 			break;
 		case UNDO_XNEW:
-			break;
-		case UNDO_XREN:
-			str_delete(u->u.xren.name);
-			break;
-		case UNDO_XSETD:
-			break;
-		case UNDO_CSET:
 			break;
 		default:
 			log_puts("undo_clear: bad type\n");
@@ -284,6 +254,31 @@ undo_push(struct song *s, struct undo *u)
 	}
 
 	undo_clear(s, pu);
+}
+
+void
+undo_setstr(struct song *s, char *func, char **ptr, char *val)
+{
+	struct undo *u;
+
+	u = undo_new(s, UNDO_STR, func, *ptr);
+	u->u.ren.ptr = ptr;
+	u->u.ren.val = *ptr;
+	*ptr = str_new(val);
+	undo_push(s, u);
+}
+
+void
+undo_setuint(struct song *s, char *func, char *tag,
+	unsigned int *ptr, unsigned int val)
+{
+	struct undo *u;
+
+	u = undo_new(s, UNDO_UINT, func, tag);
+	u->u.uint.ptr = ptr;
+	u->u.uint.val = *ptr;
+	*ptr = val;
+	undo_push(s, u);
 }
 
 unsigned
@@ -446,18 +441,6 @@ undo_track_diff(struct song *s)
 }
 
 void
-undo_tren_do(struct song *s, struct songtrk *t, char *name, char *func)
-{
-	struct undo *u;
-
-	u = undo_new(s, UNDO_TREN, func, t->name.str);
-	u->u.tren.trk = t;
-	u->u.tren.name = t->name.str;
-	t->name.str = str_new(name);
-	undo_push(s, u);
-}
-
-void
 undo_tdel_do(struct song *s, struct songtrk *t, char *func)
 {
 	struct undo *u;
@@ -543,18 +526,6 @@ undo_filt_save(struct song *s, struct filt *f, char *func, char *name)
 }
 
 void
-undo_fren_do(struct song *s, struct songfilt *t, char *name, char *func)
-{
-	struct undo *u;
-
-	u = undo_new(s, UNDO_FREN, func, t->name.str);
-	u->u.fren.filt = t;
-	u->u.fren.name = t->name.str;
-	t->name.str = str_new(name);
-	undo_push(s, u);
-}
-
-void
 undo_fdel_do(struct song *s, struct songfilt *f, char *func)
 {
 	struct undo *u;
@@ -600,21 +571,6 @@ undo_fnew_do(struct song *s, char *func, char *name)
 	return t;
 }
 
-void
-undo_cren_do(struct song *s, struct songchan *c, char *name, char *func)
-{
-	struct undo *u;
-
-	u = undo_new(s, UNDO_CREN, func, c->name.str);
-	u->u.cren.chan = c;
-	u->u.cren.name = c->name.str;
-	c->name.str = str_new(name);
-	undo_push(s, u);
-
-	if (c->filt)
-		undo_fren_do(s, c->filt, c->name.str, NULL);
-}
-
 struct songchan *
 undo_cnew_do(struct song *s, unsigned int dev, unsigned int ch, int input,
 	char *func, char *name)
@@ -651,21 +607,6 @@ undo_cdel_do(struct song *s, struct songchan *c, char *func)
 	undo_push(s, u);
 	if (c->filt)
 		undo_fdel_do(s, c->filt, "cdel_filt");
-}
-
-void
-undo_cset_do(struct song *s, struct songchan *c, char *func,
-	unsigned int dev, unsigned int ch)
-{
-	struct undo *u;
-
-	u = undo_new(s, UNDO_CSET, func, c->name.str);
-	u->u.cset.chan = c;
-	u->u.cset.dev = dev;
-	u->u.cset.ch = ch;
-	undo_push(s, u);
-	c->dev = dev;
-	c->ch = ch;
 }
 
 unsigned int
@@ -772,38 +713,4 @@ undo_xnew_do(struct song *s, char *func, char *name)
 	u->u.xdel.sx = sx;
 	undo_push(s, u);
 	return sx;
-}
-
-void
-undo_xren_do(struct song *s, struct songsx *sx, char *name, char *func)
-{
-	struct undo *u;
-
-	u = undo_new(s, UNDO_XREN, func, sx->name.str);
-	u->u.xren.sx = sx;
-	u->u.xren.name = sx->name.str;
-	sx->name.str = str_new(name);
-	undo_push(s, u);
-}
-
-void
-undo_xsetd_do(struct song *s, char *func, struct songsx *sx,
-	unsigned int unit, unsigned int pos)
-{
-	struct undo *u;
-	struct sysex *x;
-	unsigned int i;
-
-	x = sx->sx.first;
-	for (i = 0; i < pos; i++)
-		x = x->next;
-
-	u = undo_new(s, UNDO_XSETD, func, sx->name.str);
-	u->u.sysex.list = &sx->sx;
-	u->u.sysex.data.pos = pos;	
-	u->u.sysex.data.unit = x->unit;
-	u->u.sysex.data.data = NULL;
-	undo_push(s, u);
-
-	x->unit = unit;
 }

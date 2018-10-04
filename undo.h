@@ -26,24 +26,20 @@ struct songfilt;
 struct songsx;
 
 enum {
+	UNDO_STR,
+	UNDO_UINT,
 	UNDO_TRACK,
-	UNDO_TREN,
 	UNDO_TDEL,
 	UNDO_TNEW,
 	UNDO_FILT,
-	UNDO_FREN,
 	UNDO_FDEL,
 	UNDO_FNEW,
-	UNDO_CREN,
 	UNDO_CDEL,
 	UNDO_CNEW,
 	UNDO_XADD,
 	UNDO_XRM,
 	UNDO_XDEL,
 	UNDO_XNEW,
-	UNDO_XREN,
-	UNDO_XSETD,
-	UNDO_CSET
 };
 
 struct undo {
@@ -53,6 +49,12 @@ struct undo {
 	char *name;
 	unsigned size;
 	union {
+		struct undo_setstr {
+			char **ptr, *val;
+		} ren;
+		struct undo_setuint {
+			unsigned int *ptr, val;
+		} uint;
 		struct undo_track {
 			struct track *track;
 			struct track_data data;
@@ -62,10 +64,6 @@ struct undo {
 			struct songtrk *trk;
 			struct track_data data;
 		} tdel;
-		struct undo_tren {
-			struct songtrk *trk;
-			char *name;
-		} tren;
 		struct undo_filt {
 			struct filt *filt;
 			struct filt data;
@@ -78,23 +76,11 @@ struct undo {
 				struct songtrk *trk;
 			} *trks;
 		} fdel;
-		struct undo_fren {
-			struct songfilt *filt;
-			char *name;
-		} fren;
 		struct undo_cdel {
 			struct song *song;
 			struct songchan *chan;
 			struct track_data data;
 		} cdel;
-		struct undo_cren {
-			struct songchan *chan;
-			char *name;
-		} cren;
-		struct undo_cset {
-			struct songchan *chan;
-			unsigned int dev, ch;
-		} cset;
 		struct undo_sysex {
 			struct sysexlist *list;
 			struct sysex_data data;
@@ -103,40 +89,31 @@ struct undo {
 			struct song *song;
 			struct songsx *sx;
 		} xdel;
-		struct undo_xren {
-			struct songsx *sx;
-			char *name;
-		} xren;
 	} u;
 };
 
 void undo_pop(struct song *);
 void undo_push(struct song *, struct undo *);
 void undo_clear(struct song *, struct undo **);
+void undo_setstr(struct song *, char *, char **, char *);
+void undo_setuint(struct song *, char *, char *, unsigned int *, unsigned int);
+
 void undo_track_save(struct song *, struct track *, char *, char *);
 void undo_track_diff(struct song *);
-void undo_tren_do(struct song *, struct songtrk *, char *, char *);
 void undo_tdel_do(struct song *, struct songtrk *, char *);
 struct songtrk *undo_tnew_do(struct song *, char *, char *);
 void undo_filt_save(struct song *, struct filt *, char *, char *);
 
-void undo_fren_do(struct song *s, struct songfilt *, char *, char *);
 void undo_fdel_do(struct song *, struct songfilt *, char *);
 struct songfilt *undo_fnew_do(struct song *, char *, char *);
 
-void undo_cren_do(struct song *, struct songchan *, char *, char *);
 struct songchan *undo_cnew_do(struct song *, unsigned int, unsigned int, int,
 	char *, char *);
 void undo_cdel_do(struct song *, struct songchan *, char *);
-void undo_cset_do(struct song *, struct songchan *, char *,
-	unsigned int, unsigned int);
 
 void undo_xadd_do(struct song *, char *, struct songsx *, struct sysex *);
 void undo_xrm_do(struct song *, char *, struct songsx *, unsigned int);
 void undo_xdel_do(struct song *, char *, struct songsx *);
 struct songsx *undo_xnew_do(struct song *, char *, char *);
-void undo_xren_do(struct song *, struct songsx *, char *, char *);
-void undo_xsetd_do(struct song *, char *, struct songsx *, 
-	unsigned int, unsigned int);
 
 #endif /* MIDISH_UNDO_H */
