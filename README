@@ -13,6 +13,7 @@ Important features:
 	- import and export of standard MIDI files
 	- tempo and time-signature changes
 	- system exclusive messages handling
+	- unlimited undo
 
 Contents:
 	- midish - the sequencer/filter
