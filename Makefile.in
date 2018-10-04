@@ -65,10 +65,6 @@ midish:		${MIDISH_OBJS}
 		${CC} ${LDFLAGS} ${LIB} -o midish ${MIDISH_OBJS} \
 		${RT_LDADD} ${ALSA_LDADD} ${SNDIO_LDADD}
 
-rmidish:	rmidish.c
-		${CC} ${CFLAGS} ${INCLUDE} ${DEFS} \
-		${LDFLAGS} ${LIB} -o rmidish rmidish.c ${READLINE_LDADD}
-
 .c.o:
 		${CC} ${CFLAGS} ${INCLUDE} ${DEFS} -c $<
 
@@ -111,7 +107,6 @@ norm.o:		norm.c utils.h ev.h defs.h norm.h pool.h mux.h filt.h \
 parse.o:	parse.c data.h parse.h node.h utils.h exec.h name.h \
 		str.h cons.h tty.h
 pool.o:		pool.c utils.h pool.h
-rmidish.o:	rmidish.c
 saveload.o:	saveload.c utils.h name.h str.h song.h track.h ev.h \
 		defs.h frame.h state.h filt.h sysex.h metro.h timo.h \
 		textio.h saveload.h conv.h version.h cons.h tty.h

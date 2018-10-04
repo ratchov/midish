@@ -6,7 +6,6 @@
 prefix=/usr/local		# where to install midish
 alsa=no				# do we want alsa support ?
 sndio=no			# do we want sndio support ?
-rmidish=no			# do we want to build rmidish ?
 progs=midish			# programs to build
 vars=				# variables definitions passed as-is
 bindir=				# path where to install binaries
@@ -48,8 +47,6 @@ Usage: configure [options]
 --disable-alsa			disable alsa sequencer backend
 --enable-sndio			enable libsndio backend [$sndio]
 --disable-sndio			disable libsndio backend
---enable-rmidish		build rmidish binary [$rmidish]
---disable-rmidish		don't build rmidish
 END
 }
 
@@ -86,12 +83,6 @@ for i; do
 	--disable-sndio)
 		sndio=no
 		shift;;
-	--enable-rmidish)
-		rmidish=yes
-		shift;;
-	--disable-rmidish)
-		rmidish=no
-		shift;;
 	CC=*|CFLAGS=*|LDFLAGS=*)
 		vars="$vars$i$nl"
 		shift;;
@@ -120,13 +111,6 @@ else
 	defs="$defs -DUSE_RAW"
 fi
 
-#
-# add rmidish front-end if selected
-#
-if [ $rmidish = yes ]; then
-	progs="$progs rmidish"
-fi
-
 echo "configure: creating Makefile"
 sed \
 -e "s:@bindir@:$bindir:" \
@@ -153,7 +137,6 @@ echo "datadir.................. $datadir"
 echo "mandir................... $mandir"
 echo "alsa..................... $alsa"
 echo "sndio.................... $sndio"
-echo "rmidish.................. $rmidish"
 echo
 echo "Do \"make && make install\" to compile and install midish"
 echo
