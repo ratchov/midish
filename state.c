@@ -316,9 +316,6 @@ statelist_init(struct statelist *o)
 	o->first = NULL;
 	o->changed = 0;
 	o->serial = state_serial++;
-#ifdef STATE_PROF
-	prof_reset(&o->prof, "statlist/iter");
-#endif
 }
 
 /*
@@ -349,9 +346,6 @@ statelist_done(struct statelist *o)
 		state_del(i);
 	}
 
-#ifdef STATE_PROF
-	prof_log(&o->prof);
-#endif
 }
 
 void
@@ -432,20 +426,11 @@ struct state *
 statelist_lookup(struct statelist *o, struct ev *ev)
 {
 	struct state *i;
-#ifdef STATE_PROF
-	unsigned time = 0;
-#endif
 	for (i = o->first; i != NULL; i = i->next) {
-#ifdef STATE_PROF
-		time++;
-#endif
 		if (state_match(i, ev)) {
 			break;
 		}
 	}
-#ifdef STATE_PROF
-	prof_val(&o->prof, time * 100);
-#endif
 	return i;
 }
 
@@ -462,9 +447,6 @@ statelist_update(struct statelist *statelist, struct ev *ev)
 {
 	struct state *st, *stnext;
 	unsigned phase;
-#ifdef STATE_PROF
-	unsigned time = 0;
-#endif
 	/*
 	 * we scan for a matching state, if it exists but is
 	 * terminated (phase = EV_PHASE_LAST) we purge it in order to
@@ -475,9 +457,6 @@ statelist_update(struct statelist *statelist, struct ev *ev)
 	 */
 	st = statelist->first;
 	for (;;) {
-#ifdef STATE_PROF
-		time++;
-#endif
 		if (st == NULL) {
 			st = state_new();
 			statelist_add(statelist, st);
@@ -510,9 +489,6 @@ statelist_update(struct statelist *statelist, struct ev *ev)
 		}
 		st = stnext;
 	}
-#ifdef STATE_PROF
-	prof_val(&statelist->prof, time * 100);
-#endif
 
 	/*
 	 * if one of the following are true

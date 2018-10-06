@@ -89,9 +89,6 @@ unsigned mux_manualstart = 1;
 void *mux_addr;
 unsigned long mux_wallclock;
 
-#ifdef MUX_PROF
-struct prof mux_prof;
-#endif
 
 struct statelist mux_istate, mux_ostate;
 
@@ -147,9 +144,6 @@ mux_open(void)
 	mux_reqphase = MUX_STOP;
 	mux_phase = MUX_STOP;
 	mux_wallclock = 0;
-#ifdef MUX_PROF
-	prof_reset(&mux_prof, "mux/ms");
-#endif
 	log_sync = 1;
 }
 
@@ -162,9 +156,6 @@ mux_close(void)
 	struct mididev *i;
 
 	log_sync = 1;
-#ifdef MUX_PROF
-	prof_log(&mux_prof);
-#endif
 	norm_stop();
 	mixout_stop();
 	mux_flush();
@@ -463,9 +454,6 @@ mux_timercb(unsigned long delta)
 	 */
 	mux_wallclock += delta;
 
-#ifdef MUX_PROF
-	prof_val(&mux_prof, delta / (24 * 10));
-#endif
 
 	/*
 	 * run expired timeouts

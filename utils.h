@@ -19,16 +19,6 @@
 
 #include <stddef.h>
 
-struct prof {
-	char *name;
-	unsigned n;
-	unsigned min;
-	unsigned max;
-	unsigned sum;
-	unsigned sumsqr;
-	unsigned err;
-};
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -46,10 +36,6 @@ void log_flush(void);
 void *xmalloc(size_t, char *);
 char *xstrdup(char *, char *);
 void xfree(void *);
-
-void prof_reset(struct prof *, char *);
-void prof_val(struct prof *, unsigned);
-void prof_log(struct prof *);
 
 #ifdef __cplusplus
 }

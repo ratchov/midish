@@ -18,12 +18,6 @@
  * This allows traces to be collected during time sensitive operations without
  * disturbing them. The buffer can be flushed on standard error later, when
  * slow syscalls are no longer disruptive, e.g. at the end of the poll() loop.
- *
- * prof_xxx() routines record (small) integers and provide simple statistical
- * properties like: minimum, maximum, average and variance.
- *
- * mem_xxx() routines are simple wrappers around malloc() overwriting memory
- * blocks with random data upon allocation and release.
  */
 #include <errno.h>
 #include <signal.h>
@@ -252,77 +246,4 @@ isqrt(unsigned op)
 		one >>= 2;
 	}
         return res;
-}
-
-void
-prof_reset(struct prof *p, char *name)
-{
-	p->n = 0;
-	p->min = ~0U;
-	p->max = 0;
-	p->sum = 0;
-	p->sumsqr = 0;
-	p->name = name;
-	p->err = 0;
-}
-
-void
-prof_val(struct prof *p, unsigned val)
-{
-#define MAXVAL ((1 << sizeof(unsigned) * 4) - 1)
-	unsigned sumsqr;
-
-	if (p->err) {
-		p->err++;
-		return;
-	}
-	if (val > MAXVAL) {
-		log_puts("prof_val: ");
-		log_putu(val);
-		log_puts(": too large\n");
-		p->err++;
-		return;
-	}
-	sumsqr = p->sumsqr + val * val;
-	if (sumsqr < p->sumsqr) {
-		log_puts("prof_val: overflow\n");
-		p->err++;
-		return;
-	}
-	if (p->max < val)
-		p->max = val;
-	if (p->min > val)
-		p->min = val;
-	p->sumsqr = sumsqr;
-	p->sum += val;
-	p->n++;
-#undef MAXVAL
-}
-
-void
-prof_log(struct prof *p)
-{
-	unsigned mean, delta;
-
-	log_puts(p->name);
-	log_puts(": err=");
-	log_putu(p->err);
-	log_puts(", n=");
-	log_putu(p->n);
-	if (p->n != 0) {
-		log_puts(", min=");
-		log_pct(p->min);
-
-		log_puts(", max=");
-		log_pct(p->max);
-
-		mean = p->sum / p->n;
-		log_puts(", mean=");
-		log_pct(mean);
-
-		delta = isqrt(p->sumsqr / p->n - mean * mean);
-		log_puts(", delta=");
-		log_pct(delta);
-	}
-	log_puts("\n");
 }
