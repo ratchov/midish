@@ -199,20 +199,17 @@ track_output(struct track *t, struct textout *f)
 
 	for (i = t->first; i != NULL; i = i->next) {
 		if (i->delta != 0) {
-			textout_indent(f);
 			textout_putlong(f, i->delta);
 			textout_putstr(f, "\n");
 		}
 		if (i->ev.cmd == EV_NULL) {
 			break;
 		}
-		textout_indent(f);
 		ev_output(&i->ev, f);
 		textout_putstr(f, "\n");
 	}
 
 	textout_shiftleft(f);
-	textout_indent(f);
 	textout_putstr(f, "}");
 }
 
@@ -232,7 +229,6 @@ filt_output(struct filt *o, struct textout *f)
 			/* nothing */
 		}
 		for (d = s->dstlist; d != NULL; d = d->next) {
-			textout_indent(f);
 			textout_putstr(f, "evmap ");
 			evspec_output(&s->es, f);
 			textout_putstr(f, " > ");
@@ -242,7 +238,6 @@ filt_output(struct filt *o, struct textout *f)
 		snext = s;
 	}
 	for (d = o->transp; d != NULL; d = d->next) {
-		textout_indent(f);
 		textout_putstr(f, "transp ");
 		evspec_output(&d->es, f);
 		textout_putstr(f, " ");
@@ -250,7 +245,6 @@ filt_output(struct filt *o, struct textout *f)
 		textout_putstr(f, "\n");
 	}
 	for (d = o->vcurve; d != NULL; d = d->next) {
-		textout_indent(f);
 		textout_putstr(f, "vcurve ");
 		evspec_output(&d->es, f);
 		textout_putstr(f, " ");
@@ -258,7 +252,6 @@ filt_output(struct filt *o, struct textout *f)
 		textout_putstr(f, "\n");
 	}
 	textout_shiftleft(f);
-	textout_indent(f);
 	textout_putstr(f, "}");
 }
 
@@ -270,12 +263,10 @@ sysex_output(struct sysex *o, struct textout *f)
 	textout_putstr(f, "{\n");
 	textout_shiftright(f);
 
-	textout_indent(f);
 	textout_putstr(f, "unit ");
 	textout_putlong(f, o->unit);
 	textout_putstr(f, "\n");
 
-	textout_indent(f);
 	textout_putstr(f, "data\t");
 	textout_shiftright(f);
 	col = 0;
@@ -287,7 +278,6 @@ sysex_output(struct sysex *o, struct textout *f)
 				if (col >= 8) {
 					col = 0;
 					textout_putstr(f, " \\\n");
-					textout_indent(f);
 				} else {
 					textout_putstr(f, " ");
 				}
@@ -299,7 +289,6 @@ sysex_output(struct sysex *o, struct textout *f)
 
 
 	textout_shiftleft(f);
-	textout_indent(f);
 	textout_putstr(f, "}");
 }
 
@@ -311,14 +300,12 @@ songsx_output(struct songsx *o, struct textout *f)
 	textout_shiftright(f);
 
 	for (i = o->sx.first; i != NULL; i = i->next) {
-		textout_indent(f);
 		textout_putstr(f, "sysex ");
 		sysex_output(i, f);
 		textout_putstr(f, "\n");
 	}
 
 	textout_shiftleft(f);
-	textout_indent(f);
 	textout_putstr(f, "}");
 }
 
@@ -330,23 +317,19 @@ songtrk_output(struct songtrk *o, struct textout *f)
 	textout_shiftright(f);
 
 	if (o->curfilt) {
-		textout_indent(f);
 		textout_putstr(f, "curfilt ");
 		textout_putstr(f, o->curfilt->name.str);
 		textout_putstr(f, "\n");
 	}
-	textout_indent(f);
 	textout_putstr(f, "mute ");
 	textout_putlong(f, o->mute);
 	textout_putstr(f, "\n");
 
-	textout_indent(f);
 	textout_putstr(f, "track ");
 	track_output(&o->track, f);
 	textout_putstr(f, "\n");
 
 	textout_shiftleft(f);
-	textout_indent(f);
 	textout_putstr(f, "}");
 }
 
@@ -356,18 +339,15 @@ songchan_output(struct songchan *o, struct textout *f)
 	textout_putstr(f, "{\n");
 	textout_shiftright(f);
 
-	textout_indent(f);
 	textout_putstr(f, "chan ");
 	chan_output(o->dev, o->ch, f);
 	textout_putstr(f, "\n");
 
-	textout_indent(f);
 	textout_putstr(f, "conf ");
 	track_output(&o->conf, f);
 	textout_putstr(f, "\n");
 
 	textout_shiftleft(f);
-	textout_indent(f);
 	textout_putstr(f, "}");
 }
 
@@ -377,13 +357,11 @@ songfilt_output(struct songfilt *o, struct textout *f)
 	textout_putstr(f, "{\n");
 	textout_shiftright(f);
 
-	textout_indent(f);
 	textout_putstr(f, "filt ");
 	filt_output(&o->filt, f);
 	textout_putstr(f, "\n");
 
 	textout_shiftleft(f);
-	textout_indent(f);
 	textout_putstr(f, "}");
 }
 
@@ -403,23 +381,19 @@ metro_output(struct metro *o, struct textout *f)
 	textout_putstr(f, "{\n");
 	textout_shiftright(f);
 
-	textout_indent(f);
 	textout_putstr(f, "mask\t");
 	textout_putstr(f, mstr);
 	textout_putstr(f, "\n");
 
-	textout_indent(f);
 	textout_putstr(f, "lo\t");
 	ev_output(&o->lo, f);
 	textout_putstr(f, "\n");
 
-	textout_indent(f);
 	textout_putstr(f, "hi\t");
 	ev_output(&o->hi, f);
 	textout_putstr(f, "\n");
 
 	textout_shiftleft(f);
-	textout_indent(f);
 	textout_putstr(f, "}");
 }
 
@@ -431,16 +405,12 @@ evctltab_output(struct evctl *tab, struct textout *f)
 
 	textout_putstr(f, "ctltab {\n");
 	textout_shiftright(f);
-	textout_indent(f);
 	textout_putstr(f, "#\n");
-	textout_indent(f);
 	textout_putstr(f, "# name\tnumber\tdefval\n");
-	textout_indent(f);
 	textout_putstr(f, "#\n");
 	for (i = 0; i < EV_MAXCOARSE + 1; i++) {
 		ctl = &tab[i];
 		if (ctl->name) {
-			textout_indent(f);
 			textout_putstr(f, ctl->name);
 			textout_putstr(f, "\t");
 			textout_putlong(f, i);
@@ -467,12 +437,10 @@ evpat_output(struct textout *f)
 	for (i = 0; i < EV_NPAT; i++) {
 		if (evinfo[EV_PAT0 + i].ev == NULL)
 			continue;
-		textout_indent(f);
 		textout_putstr(f, "evpat ");
 		textout_putstr(f, evinfo[EV_PAT0 + i].ev);
 		textout_putstr(f, " {\n");
 		textout_shiftright(f);
-		textout_indent(f);
 		textout_putstr(f, "pattern");
 		p = evinfo[EV_PAT0 + i].pattern;
 		for (;;) {
@@ -500,7 +468,6 @@ evpat_output(struct textout *f)
 	end:
 		textout_putstr(f, "\n");
 		textout_shiftleft(f);
-		textout_indent(f);
 		textout_putstr(f, "}\n");
 	}
 }
@@ -516,22 +483,18 @@ song_output(struct song *o, struct textout *f)
 	textout_putstr(f, "{\n");
 	textout_shiftright(f);
 
-	textout_indent(f);
 	textout_putstr(f, "format ");
 	textout_putlong(f, FORMAT_VERSION);
 	textout_putstr(f, "\n");
 
-	textout_indent(f);
 	textout_putstr(f, "tics_per_unit ");
 	textout_putlong(f, o->tics_per_unit);
 	textout_putstr(f, "\n");
 
-	textout_indent(f);
 	textout_putstr(f, "tempo_factor ");
 	textout_putlong(f, o->tempo_factor);
 	textout_putstr(f, "\n");
 
-	textout_indent(f);
 	textout_putstr(f, "meta ");
 	track_output(&o->meta, f);
 	textout_putstr(f, "\n");
@@ -539,7 +502,6 @@ song_output(struct song *o, struct textout *f)
 	evpat_output(f);
 
 	SONG_FOREACH_CHAN(o, i) {
-		textout_indent(f);
 		textout_putstr(f, i->isinput ? "songin " : "songout ");
 		textout_putstr(f, i->name.str);
 		textout_putstr(f, " ");
@@ -547,7 +509,6 @@ song_output(struct song *o, struct textout *f)
 		textout_putstr(f, "\n");
 	}
 	SONG_FOREACH_FILT(o, g) {
-		textout_indent(f);
 		textout_putstr(f, "songfilt ");
 		textout_putstr(f, g->name.str);
 		textout_putstr(f, " ");
@@ -555,7 +516,6 @@ song_output(struct song *o, struct textout *f)
 		textout_putstr(f, "\n");
 	}
 	SONG_FOREACH_TRK(o, t) {
-		textout_indent(f);
 		textout_putstr(f, "songtrk ");
 		textout_putstr(f, t->name.str);
 		textout_putstr(f, " ");
@@ -563,7 +523,6 @@ song_output(struct song *o, struct textout *f)
 		textout_putstr(f, "\n");
 	}
 	SONG_FOREACH_SX(o, s) {
-		textout_indent(f);
 		textout_putstr(f, "songsx ");
 		textout_putstr(f, s->name.str);
 		textout_putstr(f, " ");
@@ -572,72 +531,59 @@ song_output(struct song *o, struct textout *f)
 	}
 
 	if (o->curtrk) {
-		textout_indent(f);
 		textout_putstr(f, "curtrk ");
 		textout_putstr(f, o->curtrk->name.str);
 		textout_putstr(f, "\n");
 	}
 	if (o->curfilt) {
-		textout_indent(f);
 		textout_putstr(f, "curfilt ");
 		textout_putstr(f, o->curfilt->name.str);
 		textout_putstr(f, "\n");
 	}
 	if (o->cursx) {
-		textout_indent(f);
 		textout_putstr(f, "cursx ");
 		textout_putstr(f, o->cursx->name.str);
 		textout_putstr(f, "\n");
 	}
 	if (o->curin) {
-		textout_indent(f);
 		textout_putstr(f, "curin ");
 		textout_putstr(f, o->curin->name.str);
 		textout_putstr(f, "\n");
 	}
 	if (o->curout) {
-		textout_indent(f);
 		textout_putstr(f, "curout ");
 		textout_putstr(f, o->curout->name.str);
 		textout_putstr(f, "\n");
 	}
-	textout_indent(f);
 	textout_putstr(f, "curpos ");
 	textout_putlong(f, o->curpos);
 	textout_putstr(f, "\n");
 
-	textout_indent(f);
 	textout_putstr(f, "curlen ");
 	textout_putlong(f, o->curlen);
 	textout_putstr(f, "\n");
 
-	textout_indent(f);
 	textout_putstr(f, "curquant ");
 	textout_putlong(f, o->curquant);
 	textout_putstr(f, "\n");
 
-	textout_indent(f);
 	textout_putstr(f, "curev ");
 	evspec_output(&o->curev, f);
 	textout_putstr(f, "\n");
 
-	textout_indent(f);
 	textout_putstr(f, "metro ");
 	metro_output(&o->metro, f);
 	textout_putstr(f, "\n");
 
-	textout_indent(f);
 	textout_putstr(f, "tap ");
 	textout_putstr(f, song_tap_modestr[o->tap_mode]);
 	textout_putstr(f, "\n");
 
-	textout_indent(f);
 	textout_putstr(f, "tapev ");
 	evspec_output(&o->tap_evspec, f);
 	textout_putstr(f, "\n");
 
 	textout_shiftleft(f);
-	textout_indent(f);
 	textout_putstr(f, "}");
 }
 

@@ -637,12 +637,10 @@ blt_ls(struct exec *o, struct data **r)
 	 */
 	textout_putstr(tout, "outlist {\n");
 	textout_shiftright(tout);
-	textout_indent(tout);
 	textout_putstr(tout, "# chan_name,  {devicenum, midichan}\n");
 	SONG_FOREACH_CHAN(usong, c) {
 		if (c->isinput)
 			continue;
-		textout_indent(tout);
 		textout_putstr(tout, c->name.str);
 		textout_putstr(tout, "\t");
 		textout_putstr(tout, "{");
@@ -658,12 +656,10 @@ blt_ls(struct exec *o, struct data **r)
 
 	textout_putstr(tout, "inlist {\n");
 	textout_shiftright(tout);
-	textout_indent(tout);
 	textout_putstr(tout, "# chan_name,  {devicenum, midichan}\n");
 	SONG_FOREACH_CHAN(usong, c) {
 		if (!c->isinput)
 			continue;
-		textout_indent(tout);
 		textout_putstr(tout, c->name.str);
 		textout_putstr(tout, "\t");
 		textout_putstr(tout, "{");
@@ -682,10 +678,8 @@ blt_ls(struct exec *o, struct data **r)
 	 */
 	textout_putstr(tout, "filtlist {\n");
 	textout_shiftright(tout);
-	textout_indent(tout);
 	textout_putstr(tout, "# filter_name\n");
 	SONG_FOREACH_FILT(usong, f) {
-		textout_indent(tout);
 		textout_putstr(tout, f->name.str);
 		textout_putstr(tout, "\n");
 		/*
@@ -700,10 +694,8 @@ blt_ls(struct exec *o, struct data **r)
 	 */
 	textout_putstr(tout, "tracklist {\n");
 	textout_shiftright(tout);
-	textout_indent(tout);
 	textout_putstr(tout, "# track_name,  default_filter,  used_channels,  flags\n");
 	SONG_FOREACH_TRK(usong, t) {
-		textout_indent(tout);
 		textout_putstr(tout, t->name.str);
 		textout_putstr(tout, "\t");
 		if (t->curfilt != NULL) {
@@ -748,10 +740,8 @@ blt_ls(struct exec *o, struct data **r)
 	 */
 	textout_putstr(tout, "sysexlist {\n");
 	textout_shiftright(tout);
-	textout_indent(tout);
 	textout_putstr(tout, "# sysex_name,  number_messages\n");
 	SONG_FOREACH_SX(usong, s) {
-		textout_indent(tout);
 		textout_putstr(tout, s->name.str);
 		textout_putstr(tout, "\t");
 		i = 0;
@@ -1236,7 +1226,6 @@ blt_minfo(struct exec *o, struct data **r)
 
 	textout_putstr(tout, "{\n");
 	textout_shiftright(tout);
-	textout_indent(tout);
 	textout_putstr(tout, "# meas\tsig\ttempo\n");
 
 	otpb = 0;
@@ -1265,7 +1254,6 @@ blt_minfo(struct exec *o, struct data **r)
 			otempo1 = tempo1;
 			otempo2 = tempo2;
 
-			textout_indent(tout);
 			textout_putlong(tout, meas);
 			textout_putstr(tout, "\t{");
 			textout_putlong(tout, bpm);
@@ -1286,7 +1274,6 @@ blt_minfo(struct exec *o, struct data **r)
 	seqptr_del(mp);
 
 	textout_shiftleft(tout);
-	textout_indent(tout);
 	textout_putstr(tout, "}\n");
 	return 1;
 }
@@ -2155,7 +2142,6 @@ blt_tinfo(struct exec *o, struct data **r)
 	}
 	textout_putstr(tout, "{\n");
 	textout_shiftright(tout);
-	textout_indent(tout);
 
 	m = 0;
 	count_next = 0;
@@ -2213,7 +2199,6 @@ blt_tinfo(struct exec *o, struct data **r)
 
 	textout_putstr(tout, "\n");
 	textout_shiftleft(tout);
-	textout_indent(tout);
 	textout_putstr(tout, "}\n");
 	return 1;
 }
@@ -3003,7 +2988,6 @@ blt_xinfo(struct exec *o, struct data **r)
 	textout_shiftright(tout);
 
 	for (e = c->sx.first; e != NULL; e = e->next) {
-		textout_indent(tout);
 		textout_putlong(tout, e->unit);
 		textout_putstr(tout, " { ");
 		if (e->first) {
@@ -3019,7 +3003,6 @@ blt_xinfo(struct exec *o, struct data **r)
 		textout_putstr(tout, "}\n");
 	}
 	textout_shiftleft(tout);
-	textout_indent(tout);
 	textout_putstr(tout, "}\n");
 	return 1;
 }
@@ -3463,28 +3446,22 @@ blt_dinfo(struct exec *o, struct data **r)
 	textout_putstr(tout, "{\n");
 	textout_shiftright(tout);
 
-	textout_indent(tout);
 	textout_putstr(tout, "devnum ");
 	textout_putlong(tout, unit);
 	textout_putstr(tout, "\n");
 
 	if (mididev_mtcsrc == dev) {
-		textout_indent(tout);
 		textout_putstr(tout, "mtcrx\t\t\t# master MTC source\n");
 	}
 	if (dev->sendmmc) {
-		textout_indent(tout);
 		textout_putstr(tout, "mmctx\t\t\t# sends MMC messages\n");
 	}
 	if (mididev_clksrc == dev) {
-		textout_indent(tout);
 		textout_putstr(tout, "clkrx\t\t\t# master clock source\n");
 	}
 	if (dev->sendclk) {
-		textout_indent(tout);
 		textout_putstr(tout, "clktx\t\t\t# sends clock ticks\n");
 	}
-	textout_indent(tout);
 	textout_putstr(tout, "ixctl {");
 	for (i = 0, more = 0; i < 32; i++) {
 		if (dev->ixctlset & (1 << i)) {
@@ -3496,7 +3473,6 @@ blt_dinfo(struct exec *o, struct data **r)
 	}
 	textout_putstr(tout, "}\n");
 
-	textout_indent(tout);
 	textout_putstr(tout, "oxctl {");
 	for (i = 0, more = 0; i < 32; i++) {
 		if (dev->oxctlset & (1 << i)) {
@@ -3508,7 +3484,6 @@ blt_dinfo(struct exec *o, struct data **r)
 	}
 	textout_putstr(tout, "}\n");
 
-	textout_indent(tout);
 	textout_putstr(tout, "iev {");
 	for (i = 0, more = 0; i < EV_NUMCMD; i++) {
 		if (dev->ievset & (1 << i)) {
@@ -3520,7 +3495,6 @@ blt_dinfo(struct exec *o, struct data **r)
 	}
 	textout_putstr(tout, "}\n");
 
-	textout_indent(tout);
 	textout_putstr(tout, "oev {");
 	for (i = 0, more = 0; i < EV_NUMCMD; i++) {
 		if (dev->oevset & (1 << i)) {
@@ -3532,7 +3506,6 @@ blt_dinfo(struct exec *o, struct data **r)
 	}
 	textout_putstr(tout, "}\n");
 
-	textout_indent(tout);
 	textout_putstr(tout, "clkrate ");
 	textout_putlong(tout, mididev_byunit[unit]->ticrate);
 	textout_putstr(tout, "\n");

@@ -31,8 +31,6 @@
 #include "textio.h"
 #include "cons.h"
 
-#define INDENT_MAX	8
-
 struct textin
 {
 	FILE *file;
@@ -42,7 +40,7 @@ struct textin
 struct textout
 {
 	FILE *file;
-	unsigned indent, isconsole;
+	unsigned indent, isconsole, col;
 };
 
 /* -------------------------------------------------------- input --- */
@@ -125,6 +123,7 @@ textout_new(char *filename)
 		o->isconsole = 1;
 	}
 	o->indent = 0;
+	o->col = 0;
 	return o;
 }
 
@@ -135,22 +134,6 @@ textout_delete(struct textout *o)
 		fclose(o->file);
 	}
 	xfree(o);
-}
-
-void
-textout_indent(struct textout *o)
-{
-	char buf[INDENT_MAX + 1], *p;
-	unsigned i, imax;
-
-	imax = o->indent;
-	if (imax > INDENT_MAX)
-		imax = INDENT_MAX;
-	for (p = buf, i = 0; i < imax; i++) {
-		*p++ = '\t';
-	}
-	*p++ = 0;
-	textout_putstr(o, buf);
 }
 
 void
@@ -168,10 +151,39 @@ textout_shiftright(struct textout *o)
 void
 textout_putstr(struct textout *o, char *str)
 {
-	if (o->isconsole)
-		log_puts(str);
-	else
-		fwrite(str, strlen(str), 1, o->file);
+	static char buf[1] = {'\t'};
+	char *p;
+	unsigned int i;
+
+	while (1) {
+		if (str[0] == 0)
+			break;
+
+		if (o->col == 0) {
+			for (i = 0; i < o->indent; i++) {
+				if (o->isconsole)
+					log_putc(buf, sizeof(buf));
+				else
+					fwrite(buf, sizeof(buf), 1, o->file);
+				o->col += 8;
+			}
+		}
+
+		for (p = str; *p; p++) {
+			if (*p == '\n') {
+				p++;
+				o->col = 0;
+				break;
+			}
+			o->col++;
+		}
+
+		if (o->isconsole)
+			log_putc(str, p - str);
+		else
+			fwrite(str, p - str, 1, o->file);
+		str = p;
+	}
 }
 
 void
