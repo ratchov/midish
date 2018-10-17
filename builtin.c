@@ -981,7 +981,7 @@ blt_tempo(struct exec *o, struct data **r)
 	if (!song_try_meta(usong)) {
 		return 0;
 	}
-	undo_track_save(usong, &usong->meta, "tempo", NULL);
+	undo_track_save(usong, &usong->meta, o->procname, NULL);
 	track_settempo(&usong->meta, usong->curpos, tempo);
 	undo_track_diff(usong);
 	return 1;
@@ -1049,7 +1049,7 @@ blt_mins(struct exec *o, struct data **r)
 	seqptr_evput(sp, &ev);
 	seqptr_del(sp);
 
-	undo_track_save(usong, &usong->meta, "mins", NULL);
+	undo_track_save(usong, &usong->meta, o->procname, NULL);
 	track_ins(&usong->meta, tic, len);
 	track_merge(&usong->meta, &tn);
 	undo_track_diff(usong);
@@ -1137,7 +1137,7 @@ blt_mdup(struct exec *o, struct data **r)
 	/*
 	 * insert space and merge the duplicated portion
 	 */
-	undo_track_save(usong, &usong->meta, "mdup", NULL);
+	undo_track_save(usong, &usong->meta, o->procname, NULL);
 	track_ins(&usong->meta, wtic, etic - stic);
 	track_merge(&usong->meta, &paste);
 	undo_track_diff(usong);
@@ -1198,7 +1198,7 @@ blt_mcut(struct exec *o, struct data **r)
 
 	track_init(&t1);
 	track_init(&t2);
-	undo_track_save(usong, &usong->meta, "mcut", NULL);
+	undo_track_save(usong, &usong->meta, o->procname, NULL);
 	track_move(&usong->meta, 0,   stic, NULL, &t1, 1, 1);
 	track_move(&usong->meta, etic, ~0U, NULL, &t2, 1, 1);
 	track_shift(&t2, stic);
@@ -1618,7 +1618,7 @@ blt_tnew(struct exec *o, struct data **r)
 		cons_errs(o->procname, "track already exists");
 		return 0;
 	}
-	t = undo_tnew_do(usong, "tnew", tren);
+	t = undo_tnew_do(usong, o->procname, tren);
 	return 1;
 }
 
@@ -1635,7 +1635,7 @@ blt_tdel(struct exec *o, struct data **r)
 	if (!song_try_trk(usong, t)) {
 		return 0;
 	}
-	undo_tdel_do(usong, t, "tdel");
+	undo_tdel_do(usong, t, o->procname);
 	return 1;
 }
 
@@ -1706,7 +1706,7 @@ blt_taddev(struct exec *o, struct data **r)
 		cons_errs(o->procname, "beat/tick must fit in the measure");
 		return 0;
 	}
-	undo_track_save(usong, &t->track, "taddev", t->name.str);
+	undo_track_save(usong, &t->track, o->procname, t->name.str);
 	pos += beat * tpb + tic;
 	tp = seqptr_new(&t->track);
 	seqptr_seek(tp, pos);
@@ -1781,7 +1781,7 @@ blt_tcheck(struct exec *o, struct data **r)
 	if (!song_try_trk(usong, t)) {
 		return 0;
 	}
-	undo_track_save(usong, &t->track, "tcheck", t->name.str);
+	undo_track_save(usong, &t->track, o->procname, t->name.str);
 	track_check(&t->track);
 	undo_track_diff(usong);
 	return 1;
@@ -1800,7 +1800,7 @@ blt_trewrite(struct exec *o, struct data **r)
 	if (!song_try_trk(usong, t)) {
 		return 0;
 	}
-	undo_track_save(usong, &t->track, "trewrite", t->name.str);
+	undo_track_save(usong, &t->track, o->procname, t->name.str);
 	track_rewrite(&t->track);
 	undo_track_diff(usong);
 	return 1;
@@ -1826,7 +1826,7 @@ blt_tcut(struct exec *o, struct data **r)
 	if (tic > qstep) {
 		tic -= qstep;
 	}
-	undo_track_save(usong, &t->track, "tcut", t->name.str);
+	undo_track_save(usong, &t->track, o->procname, t->name.str);
 	track_cut(&t->track, tic, len);
 	usong->curlen = 0;
 	undo_track_diff(usong);
@@ -1857,7 +1857,7 @@ blt_tins(struct exec *o, struct data **r)
 	if (tic > qstep) {
 		tic -= qstep;
 	}
-	undo_track_save(usong, &t->track, "tins", t->name.str);
+	undo_track_save(usong, &t->track, o->procname, t->name.str);
 	track_ins(&t->track, tic, len);
 	usong->curlen += amount;
 	undo_track_diff(usong);
@@ -1886,7 +1886,7 @@ blt_tclr(struct exec *o, struct data **r)
 	} else if (tic + len > qstep) {
 		len -= qstep;
 	}
-	undo_track_save(usong, &t->track, "tclr", t->name.str);
+	undo_track_save(usong, &t->track, o->procname, t->name.str);
 	track_move(&t->track, tic, len, &usong->curev, NULL, 0, 1);
 	undo_track_diff(usong);
 	return 1;
@@ -1918,7 +1918,7 @@ blt_tpaste(struct exec *o, struct data **r)
 	track_move(&usong->clip, tic, ~0U, &usong->curev, &copy, 1, 0);
 	if (!track_isempty(&copy)) {
 		copy.first->delta += tic2;
-		undo_track_save(usong, &t->track, "tpaste", t->name.str);
+		undo_track_save(usong, &t->track, o->procname, t->name.str);
 		track_merge(&t->track, &copy);
 		undo_track_diff(usong);
 	}
@@ -1972,7 +1972,7 @@ blt_tmerge(struct exec *o, struct data **r)
 	if (!song_try_trk(usong, dst)) {
 		return 0;
 	}
-	undo_track_save(usong, &dst->track, "tmerge", dst->name.str);
+	undo_track_save(usong, &dst->track, o->procname, dst->name.str);
 	track_merge(&src->track, &dst->track);
 	undo_track_diff(usong);
 	return 1;
@@ -2011,7 +2011,7 @@ blt_tquant_common(struct exec *o, struct data **r, int all)
 		if (tic + len > qstep)
 			len -= qstep;
 	}
-	undo_track_save(usong, &t->track, "tquant", t->name.str);
+	undo_track_save(usong, &t->track, o->procname, t->name.str);
 	if (all) {
 		track_quantize(&t->track, &usong->curev,
 		    tic, len, offset, 2 * qstep, rate);
@@ -2072,7 +2072,7 @@ blt_ttransp(struct exec *o, struct data **r)
 	} else if (tic + len > qstep) {
 		len -= qstep;
 	}
-	undo_track_save(usong, &t->track, "ttransp", t->name.str);
+	undo_track_save(usong, &t->track, o->procname, t->name.str);
 	track_transpose(&t->track, tic, len, &usong->curev, halftones);
 	undo_track_diff(usong);
 	return 1;
@@ -2105,7 +2105,7 @@ blt_tevmap(struct exec *o, struct data **r)
 	} else if (tic + len > qstep) {
 		len -= qstep;
 	}
-	undo_track_save(usong, &t->track, "tevmap", t->name.str);
+	undo_track_save(usong, &t->track, o->procname, t->name.str);
 	track_evmap(&t->track, tic, len, &usong->curev, &from, &to);
 	undo_track_diff(usong);
 	return 1;
@@ -2532,8 +2532,7 @@ blt_caddev(struct exec *o, struct data **r, int input)
 		cons_errs(o->procname, "event must be stateless");
 		return 0;
 	}
-	undo_track_save(usong, &c->conf,
-	    input ? "iaddev" : "oaddev", c->name.str);
+	undo_track_save(usong, &c->conf, o->procname, c->name.str);
 	song_confev(usong, c, &ev);
 	undo_track_diff(usong);
 	return 1;
@@ -2568,8 +2567,7 @@ blt_crmev(struct exec *o, struct data **r, int input)
 	if (!exec_lookupevspec(o, "evspec", &es, input)) {
 		return 0;
 	}
-	undo_track_save(usong, &c->conf,
-	    input ? "irmev" : "ormev", c->name.str);
+	undo_track_save(usong, &c->conf, o->procname, c->name.str);
 	song_unconfev(usong, c, &es);
 	undo_track_diff(usong);
 	return 1;
@@ -2643,7 +2641,7 @@ blt_fnew(struct exec *o, struct data **r)
 		cons_errs(o->procname, "filt already exists");
 		return 0;
 	}
-	undo_fnew_do(usong, "fnew", name);
+	undo_fnew_do(usong, o->procname, name);
 	return 1;
 }
 
@@ -2657,7 +2655,7 @@ blt_fdel(struct exec *o, struct data **r)
 		cons_errs(o->procname, "no current filt");
 		return 0;
 	}
-	undo_fdel_do(usong, f, "fdel");
+	undo_fdel_do(usong, f, o->procname);
 	return 1;
 }
 
