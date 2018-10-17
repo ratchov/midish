@@ -67,6 +67,8 @@ undo_pop(struct song *s)
 			done = 1;
 		}
 		switch (u->type) {
+		case UNDO_EMPTY:
+			break;
 		case UNDO_STR:
 			str_delete(*u->u.ren.ptr);
 			*u->u.ren.ptr = u->u.ren.val;
@@ -158,6 +160,8 @@ undo_clear(struct song *s, struct undo **pos)
 	while ((u = *pos) != NULL) {
 		*pos = u->next;
 		switch (u->type) {
+		case UNDO_EMPTY:
+			break;
 		case UNDO_STR:
 			str_delete(u->u.ren.val);
 			break;
@@ -254,6 +258,15 @@ undo_push(struct song *s, struct undo *u)
 	}
 
 	undo_clear(s, pu);
+}
+
+void
+undo_start(struct song *s, char *func, char *tag)
+{
+	struct undo *u;
+
+	u = undo_new(s, UNDO_EMPTY, func, tag);
+	undo_push(s, u);
 }
 
 void

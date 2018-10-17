@@ -1576,6 +1576,9 @@ blt_undolist(struct exec *o, struct data **r)
 		if (u->name != NULL) {
 			textout_putstr(tout, " ");
 			textout_putstr(tout, u->name);
+			if (u->type == UNDO_EMPTY && (u->next == NULL ||
+				u->next->name != NULL))
+				textout_putstr(tout, " (no-op)");
 		}
 		textout_putstr(tout, "\n");
 	}
@@ -3031,7 +3034,7 @@ blt_xrm(struct exec *o, struct data **r)
 	struct songsx *c;
 	struct sysex *x, *xnext;
 	struct data *d;
-	unsigned int pos, match, more;
+	unsigned int pos, match;
 
 	song_getcursx(usong, &c);
 	if (c == NULL) {
@@ -3045,15 +3048,14 @@ blt_xrm(struct exec *o, struct data **r)
 		return 0;
 	}
 	pos = 0;
-	more = 0;
+	undo_start(usong, o->procname, c->name.str);
 	for (x = c->sx.first; x != NULL; x = xnext) {
 		xnext = x->next;
 		if (!data_matchsysex(d, x, &match))
 			return 0;
-		if (match) {
-			undo_xrm_do(usong, more ? NULL : o->procname, c, pos);
-			more = 1;
-		} else
+		if (match)
+			undo_xrm_do(usong, NULL, c, pos);
+		else
 			pos++;
 	}
 	return 1;
@@ -3065,7 +3067,7 @@ blt_xsetd(struct exec *o, struct data **r)
 	struct songsx *c;
 	struct sysex *x;
 	struct data *d;
-	unsigned int match, more;
+	unsigned int match;
 	long unit;
 
 	song_getcursx(usong, &c);
@@ -3085,16 +3087,14 @@ blt_xsetd(struct exec *o, struct data **r)
 		return 0;
 	}
 
-	more = 0;
+	undo_start(usong, o->procname, c->name.str);
 	for (x = c->sx.first; x != NULL; x = x->next) {
 		if (!data_matchsysex(d, x, &match)) {
 			return 0;
 		}
 		if (match) {
 			undo_setuint(usong,
-			    more ? NULL : o->procname, c->name.str,
-			    &x->unit, unit);
-			more = 1;
+			    o->procname, c->name.str, &x->unit, unit);
 		}
 	}
 	return 1;
