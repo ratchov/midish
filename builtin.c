@@ -21,6 +21,7 @@
 #include "data.h"
 #include "cons.h"
 #include "frame.h"
+#include "help.h"
 #include "song.h"
 #include "user.h"
 #include "smf.h"
@@ -209,23 +210,25 @@ unsigned
 blt_h(struct exec *o, struct data **r)
 {
 	char *name;
-	struct proc *proc;
 	struct name *arg;
+	struct help *h;
 
-	if (!exec_lookupname(o, "function", &name)) {
+	if (!exec_lookupname(o, "key", &name)) {
 		return 0;
 	}
-	proc = exec_proclookup(o, name);
-	if (proc == NULL) {
-		cons_errss(o->procname, name, "no such proc");
-		return 0;
+
+	h = help_list;
+	while (1) {
+		if (h->key == NULL) {
+			cons_errss(o->procname, name, "no help available");
+			return 0;
+		}
+		if (str_eq(h->key, name))
+			break;
+		h++;
 	}
-	textout_putstr(tout, name);
-	for (arg = proc->args; arg != NULL; arg = arg->next) {
-		textout_putstr(tout, " ");
-		textout_putstr(tout, arg->str);
-	}
-	textout_putstr(tout, "\n");
+
+	textout_putstr(tout, h->text);
 	return 1;
 }
 

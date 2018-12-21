@@ -56,7 +56,7 @@ distclean:	clean
 # ---------------------------------------------------------- dependencies ---
 
 MIDISH_OBJS = \
-builtin.o cons.o conv.o data.o ev.o exec.o filt.o frame.o \
+builtin.o cons.o conv.o data.o ev.o exec.o filt.o frame.o help.o \
 main.o mdep.o mdep_raw.o mdep_alsa.o mdep_sndio.o metro.o mididev.o \
 mixout.o mux.o name.o node.o norm.o parse.o pool.o saveload.o smf.o song.o \
 state.o str.o sysex.o textio.o timo.o track.o tty.o undo.o user.o utils.o
@@ -69,10 +69,10 @@ midish:		${MIDISH_OBJS}
 		${CC} ${CFLAGS} ${INCLUDE} ${DEFS} -c $<
 
 builtin.o:	builtin.c utils.h defs.h node.h exec.h name.h str.h \
-		data.h cons.h tty.h frame.h state.h ev.h song.h track.h \
-		filt.h sysex.h metro.h timo.h user.h smf.h saveload.h \
-		textio.h mux.h mididev.h norm.h builtin.h version.h \
-		undo.h
+		data.h cons.h tty.h frame.h state.h ev.h help.h song.h \
+		track.h filt.h sysex.h metro.h timo.h user.h smf.h \
+		saveload.h textio.h mux.h mididev.h norm.h builtin.h \
+		version.h undo.h
 cons.o:		cons.c utils.h textio.h cons.h tty.h user.h
 conv.o:		conv.c utils.h state.h ev.h defs.h conv.h
 data.o:		data.c utils.h str.h cons.h tty.h data.h
@@ -83,6 +83,7 @@ filt.o:		filt.c utils.h ev.h defs.h filt.h pool.h mux.h cons.h \
 		tty.h
 frame.o:	frame.c utils.h track.h ev.h defs.h frame.h state.h \
 		pool.h
+help.o:		help.c help.h
 main.o:		main.c utils.h str.h cons.h tty.h ev.h defs.h mux.h \
 		track.h frame.h state.h song.h name.h filt.h sysex.h \
 		metro.h timo.h user.h mididev.h textio.h
