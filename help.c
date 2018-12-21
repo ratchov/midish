@@ -4,12 +4,12 @@
 char help_tlist[] =
 	"tlist\n"
 	"\n"
-	"Return the list of tracks\n";
+	"Return the list of tracks.\n";
 
 char help_tnew[] =
-	"tnew trackname\n"
+	"tnew name\n"
 	"\n"
-	"Create an empty track with the given name\n";
+	"Create a track with the given name\n";
 
 char help_tdel[] =
 	"tdel\n"
@@ -17,44 +17,42 @@ char help_tdel[] =
 	"Delete the current track.\n";
 
 char help_tren[] =
-	"tren newname\n"
+	"tren name\n"
 	"\n"
-	"Rename of the current track to the given name.\n";
+	"Rename the current track to the given name.\n";
 
 char help_texists[] =
-	"texists trackname\n"
+	"texists name\n"
 	"\n"
-	"Return 1 if the given track exists, 0 otherwise.\n";
+	"Return 1 a track with the give name exists, 0 otherwise.\n";
 
 char help_taddev[] =
 	"taddev measure beat tic event\n"
 	"\n"
-	"Put the given event on the current track at the position. The\n"
-	"position is in the ``{measure beat tick}'' format.\n";
-
+	"Put the given event at the give position of the current track\n";
+  
 char help_tsetf[] =
 	"tsetf filtname\n"
 	"\n"
 	"Set the default filter of the current track to the given filter.\n"
-	"It will be used in performace mode if there is no current filter.\n";
 
 char help_tgetf[] =
 	"tgetf\n"
 	"\n"
-	"Return the default filter of the current track, returns ``nil''\n"
+	"Return the default filter of the current track, returns nil\n"
 	"if none.\n";
 
 char help_tcheck[] =
 	"tcheck\n"
 	"\n"
 	"Check the current track for orphaned notes, nested notes, and\n"
-	"other anomalies; also removes multiple controllers in the same\n"
+	"other anomalies. Remove multiple controllers in the same clock\n"
 	"tick\n";
 
 char help_trewrite[] =
 	"trewrite\n"
 	"\n"
-	"Rewrite the current track.\n";
+	"Rewrite the current track note-by-note.\n";
 
 char help_tcut[] =
 	"tcut\n"
@@ -65,7 +63,7 @@ char help_tclr[] =
 	"tclr\n"
 	"\n"
 	"Clear the current selection of the current track. Only events\n"
-	"matching the current event selection (see ``ev'' function). are\n"
+	"matching the current event selection (see the ``ev'' function) are\n"
 	"removed.\n";
 
 char help_tins[] =
@@ -118,22 +116,22 @@ char help_ttransp[] =
 	"event selection (see ``ev'') are transposed.\n";
 
 char help_tevmap[] =
-	"tevmap from to\n"
+	"tevmap source dest\n"
 	"\n"
-	"Convert events matching evspec1 (source) into events matching\n"
-	"evspec2 (destination) in the current selection of the current track.\n"
-	"Both evspec1 and evspec2 must have the same number of devices,\n"
+	"Convert events matching the given source event set to the given destination\n"
+	"event set. Changes apply to in the current selection of the current track.\n"
+	"Both event sets must have the same number of devices,\n"
 	"channels, notes, controllers etc..\n";
 
 char help_mute[] =
 	"mute trackname\n"
 	"\n"
-	"Mute the given track\n";
+	"Mute the given track.\n";
 
 char help_unmute[] =
 	"unmute trackname\n"
 	"\n"
-	"Unmute the given track\n";
+	"Unmute the given track.\n";
 
 char help_getmute[] =
 	"getmute trackname\n"
@@ -184,7 +182,7 @@ char help_ilist[] =
 char help_iexists[] =
 	"iexists channame\n"
 	"\n"
-	"Return 1 if an input channel with the name exists, 0 otherwise\n";
+	"Return 1 an input with the give name exists, 0 otherwise.\n";
 
 char help_igetc[] =
 	"igetc\n"
@@ -241,7 +239,7 @@ char help_oren[] =
 char help_oexists[] =
 	"oexists channame\n"
 	"\n"
-	"Return 1 if an output with the given name exists, 0 otherwise.\n";
+	"Return 1 an output with the give name exists, 0 otherwise.\n";
 
 char help_ogetc[] =
 	"ogetc\n"
@@ -293,7 +291,7 @@ char help_fren[] =
 char help_fexists[] =
 	"fexists filtname\n"
 	"\n"
-	"Return 1 if a filter with the given name exists, 0 otherwise\n";
+	"Return 1 if a filter with the given name exists, 0 otherwise.\n";
 
 char help_freset[] =
 	"freset\n"
@@ -385,7 +383,7 @@ char help_xren[] =
 char help_xexists[] =
 	"xexists sysexname\n"
 	"\n"
-	"Return 1 if there's a sysex bank with the given name, 0 otherwise.\n";
+	"Return 1 if a sysex bank with the given name exists, 0 otherwise.\n";
 
 char help_xrm[] =
 	"xrm data\n"
