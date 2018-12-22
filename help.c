@@ -24,7 +24,7 @@ char help_tren[] =
 char help_texists[] =
 	"texists name\n"
 	"\n"
-	"Return 1 a track with the give name exists, 0 otherwise.\n";
+	"Return 1 if a track with the give name exists, 0 otherwise.\n";
 
 char help_taddev[] =
 	"taddev measure beat tic event\n"
@@ -34,7 +34,7 @@ char help_taddev[] =
 char help_tsetf[] =
 	"tsetf filtname\n"
 	"\n"
-	"Set the default filter of the current track to the given filter.\n"
+	"Set the default filter of the current track to the given filter.\n";
 
 char help_tgetf[] =
 	"tgetf\n"
@@ -152,27 +152,27 @@ char help_tinfo[] =
 	"event selection\n";
 
 char help_inew[] =
-	"inew channame channum\n"
+	"inew name channel\n"
 	"\n"
-	"Create an new input channel with the given name\n"
-	"and assigned the given device and MIDI channel.\n";
+	"Create an new input with the given name associated\n"
+	"to the given device and MIDI channel pair.\n";
 
 char help_iset[] =
-	"iset channum\n"
+	"iset channel\n"
 	"\n"
-	"Set the device and channel pair of the current input channel.\n"
-	"All filters are updated to use the new channel setting as if the\n"
-	"appropriate ``fchin'' function was called for each filter.\n";
+	"Set the device and channel number of the current input. All\n"
+	"filters are updated to use the new channel setting as if the\n"
+	"appropriate fchin function was called for each filter.\n";
 
 char help_idel[] =
 	"idel\n"
 	"\n"
-	"Delete current input channel.\n";
+	"Delete the current input.\n";
 
 char help_iren[] =
 	"iren newname\n"
 	"\n"
-	"Rename the current channel to the given name\n";
+	"Rename the current input to the given name\n";
 
 char help_ilist[] =
 	"ilist\n"
@@ -182,17 +182,17 @@ char help_ilist[] =
 char help_iexists[] =
 	"iexists channame\n"
 	"\n"
-	"Return 1 an input with the give name exists, 0 otherwise.\n";
+	"Return 1 if an input with the give name exists, 0 otherwise.\n";
 
 char help_igetc[] =
 	"igetc\n"
 	"\n"
-	"Return the MIDI channel number of the current input channel\n";
+	"Return the MIDI channel number of the current input\n";
 
 char help_igetd[] =
 	"igetd\n"
 	"\n"
-	"Return the device number of the current channel\n";
+	"Return the device number of the current input\n";
 
 char help_iaddev[] =
 	"iaddev event\n"
@@ -209,15 +209,15 @@ char help_irmev[] =
 char help_iinfo[] =
 	"iinfo\n"
 	"\n"
-	"Print all events on the config of the current input channel.\n";
+	"Print all config events of the current input.\n";
 
 char help_onew[] =
-	"onew channame channum\n"
+	"onew name channel\n"
 	"\n"
 	"Create an new output with the given name and the given device\n"
-	"and MIDI channel. Output channels contain a built-in filter\n"
-	"having the same name; by defaut it maps all inputs to the\n"
-	"newly created output channel.\n";
+	"and MIDI channel. Outputs contain a built-in filter with the\n"
+	"same name; by defaut it maps all inputs to the newly created\n"
+	"output.\n";
 
 char help_odel[] =
 	"odel\n"
@@ -225,11 +225,11 @@ char help_odel[] =
 	"Delete current output.\n";
 
 char help_oset[] =
-	"oset channum\n"
+	"oset channel\n"
 	"\n"
-	"Set the device and MIDI channel numbers of the current channel.\n"
-	"All filters are updated to use the new channel setting as if the\n"
-	"appropriate ``fchout'' function was called for each filter.\n";
+	"Set the device and MIDI channel numbers of the current output.\n"
+	"All filters are updated to use the new setting as if the\n"
+	"appropriate fchout function was called for each filter.\n";
 
 char help_oren[] =
 	"oren newname\n"
@@ -239,7 +239,7 @@ char help_oren[] =
 char help_oexists[] =
 	"oexists channame\n"
 	"\n"
-	"Return 1 an output with the give name exists, 0 otherwise.\n";
+	"Return 1 if an output with the give name exists, 0 otherwise.\n";
 
 char help_ogetc[] =
 	"ogetc\n"
@@ -254,19 +254,18 @@ char help_ogetd[] =
 char help_oaddev[] =
 	"oaddev event\n"
 	"\n"
-	"Add the given event to the configuration of the current channel,\n"
-	"it's not used yet.\n";
+	"Add the given event to the configuration of the current output.\n";
 
 char help_ormev[] =
 	"ormev evspec\n"
 	"\n"
-	"Remove all events matching the given evspec from the configuration\n"
+	"Remove all events matching the given set from the configuration\n"
 	"of the current output.\n";
 
 char help_oinfo[] =
 	"oinfo\n"
 	"\n"
-	"Print all events of the config of the current output.\n";
+	"Print all config events of the current output.\n";
 
 char help_olist[] =
 	"olist\n"
@@ -276,7 +275,7 @@ char help_olist[] =
 char help_fnew[] =
 	"fnew filtname\n"
 	"\n"
-	"Create an new with the given name\n";
+	"Create an new filter with the given name\n";
 
 char help_fdel[] =
 	"fdel\n"
@@ -301,25 +300,25 @@ char help_freset[] =
 char help_finfo[] =
 	"finfo\n"
 	"\n"
-	"List all fitering rules of the current filter\n";
+	"List all rules of the current filter\n";
 
 char help_flist[] =
 	"flist\n"
 	"\n"
-	"Return list of existing filters\n";
+	"Return the list of existing filters\n";
 
 char help_fchgin[] =
-	"fchgin from to\n"
+	"fchgin old_evspec new_evspec\n"
 	"\n"
-	"Rewrite all current filter rules to consume ``new_evspec'' events\n"
-	"instead of ``old_evspec'' events. This means that each rule that\n"
-	"would consume ``old_evspec'' on the input will start\n"
-	"consuming ``new_evspec'' instead.\n";
+	"Rewrite current filter rules to consume ``new_evspec'' events\n"
+	"instead of ``old_evspec'' events. This means that each rule previously\n"
+	"matching ``old_evspec'' on the input will start\n"
+	"matching ``new_evspec'' instead.\n";
 
 char help_fswapin[] =
 	"fswapin from to\n"
 	"\n"
-	"Similar to ``fchgin'' but swap ``evspec1'' and ``evspec2'' in\n"
+	"Similar to ``fchgin'' but swap ``new_evspec'' and ``old_evspec'' in\n"
 	"the source events set of each rule.\n";
 
 char help_fchgout[] =
@@ -327,40 +326,40 @@ char help_fchgout[] =
 	"\n"
 	"Rewrite all filtering rules of the current filter to produce\n"
 	"``new_evspec'' events instead of ``old_evspec'' events. This means\n"
-	"that each rule that would produce ``old_evspec'' on the output will\n"
+	"that each rule previously producing ``old_evspec'' will\n"
 	"start producing ``new_evspec'' instead.\n";
 
 char help_fswapout[] =
 	"fswapout from to\n"
 	"\n"
-	"Similar to ``fchgou'' but swap ``evspec1'' and ``evspec2'' in the\n"
-	"destination events set of each rule.\n";
+	"Similar to ``fchgou'' but swap ``old_evspec'' and ``new_evspec'' in\n"
+	"the destination events set of each rule.\n";
 
 char help_fmap[] =
-	"fmap from to\n"
+	"fmap source dest\n"
 	"\n"
-	"Add a new rule to the current filter, to make it convert events\n"
-	"matching evspec1 (source) into events matching evspec2 (destination).\n"
-	"Both evspec1 and evspec2 must have the same number of devices,\n"
+	"Add a new mapping rule to the current filter. The events matching\n"
+	"the source event set will be converted to the destination event set.\n"
+	"Source and destination sets must have the same number of devices,\n"
 	"channels, notes, controllers etc..\n";
 
 char help_funmap[] =
-	"funmap from to\n"
+	"funmap source dest\n"
 	"\n"
-	"Remove event maps from the current filter. Any\n"
-	"mapping with source included in evspec1 and destination\n"
-	"inluded in evspec2 is deleted.\n";
+	"Remove the given event mapping rules from the current filter. Any\n"
+	"mapping rule with source included in the given source and destination\n"
+	"inluded in the given destination is deleted.\n";
 
 char help_ftransp[] =
-	"ftransp evspec plus\n"
+	"ftransp evspec half_tones\n"
 	"\n"
-	"Transpose events generated by the filter and matching ``evspec''\n"
-	"by the give number of halftones\n";
+	"Transpose events matching the given event set by the given number\n"
+	"of halftones\n";
 
 char help_fvcurve[] =
 	"fvcurve evspec weight\n"
 	"\n"
-	"Adjust velocity of note events produced by the filter, using\n"
+	"Adjust velocity of the given note events, using\n"
 	"the given ``weight'' in the -63..63 range.  If ``weight'' is\n"
 	"negative then sensitivity is decreased. If it's positive then\n"
 	"sensitivity is increased. If it's zero the velocity is unchanged\n";
@@ -393,32 +392,32 @@ char help_xrm[] =
 	"pattern matches any sysex message.\n";
 
 char help_xsetd[] =
-	"xsetd devnum data\n"
+	"xsetd device pattern\n"
 	"\n"
-	"Set device number to ``newdev'' on all sysex messages starting\n"
-	"with ``pattern'' in the current sysex bank. The given pattern\n"
+	"Set device number of all sysex messages starting\n"
+	"with the given pattern in the current sysex bank. The given pattern\n"
 	"is a list of bytes; an empty pattern matches any sysex message.\n";
 
 char help_xadd[] =
-	"xadd devnum data\n"
+	"xadd device message\n"
 	"\n"
-	"Add to the current sysex bank a new sysex message. ``data'' is a list\n"
-	"containing the MIDI system exclusive message and ``devname'' is the\n"
-	"device number to which the message will be sent when performance mode\n"
+	"Add the given sysex message to the current sysex bank. The message is a\n"
+	"list containing the system exclusive message bytes. The given device number\n"
+	"specifies the device to which the message will be sent when performance mode\n"
 	"is entered\n";
 
 char help_xinfo[] =
 	"xinfo\n"
 	"\n"
 	"Print all sysex messages of the current sysex bank. Messages that are\n"
-	"too long to be desplayed on a single line are truncated and the\n"
-	"``...'' string is displayed.\n";
+	"too long to be desplayed on a single line are truncated and dots\n"
+	"are displayed.\n";
 
 char help_ximport[] =
-	"ximport devnum path\n"
+	"ximport device path\n"
 	"\n"
 	"Replace contents of the current sysex bank by contents of the given\n"
-	".syx file; messages are assigned to ``devnum'' device number.\n";
+	".syx file; messages are assigned to the given device number.\n";
 
 char help_xexport[] =
 	"xexport path\n"
@@ -428,12 +427,12 @@ char help_xexport[] =
 char help_xlist[] =
 	"xlist\n"
 	"\n"
-	"Return list of sysex banks.\n";
+	"Return the list of sysex banks.\n";
 
 char help_i[] =
 	"i\n"
 	"\n"
-	"Enter ``idle'' performance mode. Start processing MIDI input and\n"
+	"Enter performance mode. Start processing MIDI input and\n"
 	"generating MIDI output. Data passes through the current filter\n"
 	"(if any) or through the current track's filter (if any).\n";
 
@@ -449,14 +448,14 @@ char help_r[] =
 	"\n"
 	"Play the song and record the input. Input passes through the current\n"
 	"filter (if any) or through the current track's filter (if any).\n"
-	"On startup,this function play one measure of countdown before the data\n"
+	"On startup, this function plays one measure of countdown before the data\n"
 	"start being recorded.\n";
 
 char help_s[] =
 	"s\n"
 	"\n"
 	"Stop performance and release MIDI devices. I.e. stop the effect ``i'',\n"
-	"``p'', and ``r''.\n";
+	"``p'', and ``r'' functions.\n";
 
 char help_ev[] =
 	"ev evspec\n"
@@ -468,11 +467,11 @@ char help_setq[] =
 	"setq step\n"
 	"\n"
 	"Set the current quantization step to the given note value, as follows:\n"
-	"   4 -> quarter note\n"
-	"   6 -> quarter note triplet\n"
-	"   8 -> eighth note\n"
-	"  12 -> eighth note triplet\n"
-	"  etc...\n"
+	"\t4 -> quarter note\n"
+	"\t6 -> quarter note triplet\n"
+	"\t8 -> eighth note\n"
+	"\t12 -> eighth note triplet\n"
+	"\tetc...\n"
 	"The quantization step will be used by tquanta and tquantf funnctions\n"
 	"to optimize event selection. If the special ``nil'' value is specified\n"
 	"as quantization step, then quatization is disabled.\n";
