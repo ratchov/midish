@@ -1086,6 +1086,8 @@ user_mainloop(void)
 			name_newarg("rate", NULL));
 	exec_newbuiltin(exec, "ttransp", blt_ttransp,
 			name_newarg("halftones", NULL));
+	exec_newbuiltin(exec, "tvcurve", blt_tvcurve,
+			name_newarg("weight", NULL));
 	exec_newbuiltin(exec, "tevmap", blt_tevmap,
 			name_newarg("from",
 			name_newarg("to", NULL)));

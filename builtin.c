@@ -2082,6 +2082,41 @@ blt_ttransp(struct exec *o, struct data **r)
 }
 
 unsigned
+blt_tvcurve(struct exec *o, struct data **r)
+{
+	struct songtrk *t;
+	unsigned tic, len, qstep;
+	long weight;
+
+	song_getcurtrk(usong, &t);
+	if (t == NULL) {
+		cons_errs(o->procname, "no current track");
+		return 0;
+	}
+	if (!exec_lookuplong(o, "weight", &weight))
+		return 0;
+	if (weight < -63 || weight > 63) {
+		cons_errs(o->procname, "weight must be in the -63..63 range");
+		return 0;
+	}
+	if (!song_try_trk(usong, t)) {
+		return 0;
+	}
+	tic = track_findmeasure(&usong->meta, usong->curpos);
+	len = track_findmeasure(&usong->meta, usong->curpos + usong->curlen) - tic;
+	qstep = usong->curquant / 2;
+	if (tic > qstep) {
+		tic -= qstep;
+	} else if (tic + len > qstep) {
+		len -= qstep;
+	}
+	undo_track_save(usong, &t->track, o->procname, t->name.str);
+	track_vcurve(&t->track, tic, len, &usong->curev, weight);
+	undo_track_diff(usong);
+	return 1;
+}
+
+unsigned
 blt_tevmap(struct exec *o, struct data **r)
 {
 	struct songtrk *t;

@@ -81,9 +81,10 @@ exec.o:		exec.c utils.h exec.h name.h str.h data.h node.h cons.h \
 		tty.h
 filt.o:		filt.c utils.h ev.h defs.h filt.h pool.h mux.h cons.h \
 		tty.h
-frame.o:	frame.c utils.h track.h ev.h defs.h frame.h state.h \
-		pool.h
+frame.o:	frame.c utils.h track.h ev.h defs.h filt.h frame.h \
+		state.h pool.h
 help.o:		help.c help.h
+help_text.o:	help_text.c
 main.o:		main.c utils.h str.h cons.h tty.h ev.h defs.h mux.h \
 		track.h frame.h state.h song.h name.h filt.h sysex.h \
 		metro.h timo.h user.h mididev.h textio.h

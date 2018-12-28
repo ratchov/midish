@@ -151,6 +151,7 @@
 #include "utils.h"
 #include "track.h"
 #include "defs.h"
+#include "filt.h"
 #include "frame.h"
 #include "pool.h"
 
@@ -1426,6 +1427,51 @@ track_transpose(struct track *src, unsigned start, unsigned len,
 	seqptr_del(sp);
 	seqptr_del(qp);
 	track_done(&qt);
+}
+
+/*
+ * apply velocity curve to given track
+ */
+void
+track_vcurve(struct track *src, unsigned start, unsigned len,
+    struct evspec *es, int weight)
+{
+	unsigned delta, tic;
+	struct seqptr *sp;
+	struct state *st;
+	struct statelist slist;
+	struct ev ev;
+
+	/* put weight from -63:63 to 1:127 range */
+	weight = (64 - weight) & 0x7f;
+
+	sp = seqptr_new(src);
+	statelist_dup(&slist, &sp->statelist);
+	tic = 0;
+
+	/*
+	 * rewrite all events, modifying selected ones
+	 */
+	for (;;) {
+		delta = seqptr_ticdel(sp, ~0U, &slist);
+		seqptr_ticput(sp, delta);
+		st = seqptr_evdel(sp, &slist);
+		if (st == NULL)
+			break;
+		tic += delta;
+		if ((st->phase & EV_PHASE_FIRST) &&
+		    tic >= start && tic < start + len &&
+		    EV_ISNOTE(&st->ev) && state_inspec(st, es)) {
+			ev = st->ev;
+			ev.note_vel = vcurve(weight, ev.note_vel);
+			seqptr_evput(sp, &ev);
+		} else {
+			seqptr_evput(sp, &st->ev);
+		}
+	}
+
+	statelist_done(&slist);
+	seqptr_del(sp);
 }
 
 /*

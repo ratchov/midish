@@ -115,6 +115,13 @@ char help_ttransp[] =
 	"by the given number of half-tones. Only events matching the current\n"
 	"event selection (see ``ev'') are transposed.\n";
 
+char help_tvcurve[] =
+	"tvcurve weight\n"
+	"\n"
+	"Adjust velocity of note events, using the given weight in\n"
+	"the -63..63 range. Applies only to note events of current\n"
+	"selection of the current track (see ``ev'').\n";
+
 char help_tevmap[] =
 	"tevmap source dest\n"
 	"\n"
@@ -955,6 +962,7 @@ struct help help_list[] = {
 	{"tquanta", help_tquanta},
 	{"tquantf", help_tquantf},
 	{"ttransp", help_ttransp},
+	{"tvcurve", help_tvcurve},
 	{"tevmap", help_tevmap},
 	{"tmerge", help_tmerge},
 	{"mute", help_mute},

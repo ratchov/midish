@@ -108,6 +108,7 @@ unsigned blt_tquant(struct exec *, struct data **);
 unsigned blt_tquanta(struct exec *, struct data **);
 unsigned blt_tquantf(struct exec *, struct data **);
 unsigned blt_ttransp(struct exec *, struct data **);
+unsigned blt_tvcurve(struct exec *, struct data **);
 unsigned blt_tevmap(struct exec *, struct data **);
 unsigned blt_tclist(struct exec *, struct data **);
 unsigned blt_tinfo(struct exec *, struct data **);

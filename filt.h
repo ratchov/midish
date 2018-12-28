@@ -44,6 +44,8 @@ struct filt {
 	struct filtnode *transp;	/* root of transp rules */
 };
 
+unsigned vcurve(unsigned, unsigned);
+
 void filt_init(struct filt *);
 void filt_done(struct filt *);
 void filt_reset(struct filt *);
