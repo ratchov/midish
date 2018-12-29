@@ -849,15 +849,15 @@ char help_m[] =
 	"m onoff\n"
 	"\n"
 	"Set the mode of the metronome. The following modes are available:\n"
-	"    on - turned on for both playback and record\n"
-	"    rec - turned on for record only\n"
+	"    on - turned on for both playback and recording\n"
+	"    rec - turned on for recording only\n"
 	"    off - turned off\n";
 
 char help_metrocf[] =
 	"metrocf eventhi eventlo\n"
 	"\n"
 	"Select the notes that the metronome plays. The pair of events must\n"
-	"be note-ons\n";
+	"be note-on events\n";
 
 char help_tap[] =
 	"tap mode\n"
@@ -873,8 +873,8 @@ char help_tap[] =
 char help_tapev[] =
 	"tapev evspec\n"
 	"\n"
-	"Events set used to trigger start when tap mode is ``start'' or\n"
-	"``tempo''.\n";
+	"Set events set used to trigger start when tap mode is ``start''\n"
+	"or ``tempo''.\n";
 
 char help_info[] =
 	"info\n"
@@ -885,24 +885,24 @@ char help_info[] =
 char help_print[] =
 	"print value\n"
 	"\n"
-	"Display the value of the expression \n";
+	"Display the given value.\n";
 
 char help_err[] =
 	"err message\n"
 	"\n"
-	"Display the given string and abort the statement being executed.\n";
+	"Display the given string and abort the current statement.\n";
 
 char help_h[] =
 	"h function\n"
 	"\n"
-	"Display list of arguments function ``funcname''.\n";
+	"Describe the given function.\n";
 
 char help_exec[] =
 	"exec filename\n"
 	"\n"
-	"Read and executes the script from a file, ``filename'' is a quoted\n"
-	"string. The execution of the script is aborted on error. If the script\n"
-	"executes an exit statement, only the script is terminated.\n";
+	"Read and execute the give script (the file name is a quoted\n"
+	"string). The execution of the script is aborted on error. If the\n"
+	"script executes an exit statement, only the script is terminated.\n";
 
 char help_debug[] =
 	"debug flag value\n"
@@ -926,7 +926,7 @@ char help_version[] =
 char help_panic[] =
 	"panic\n"
 	"\n"
-	"Cause the sequencer to core-dump, useful to developpers.\n";
+	"Abort (and core-dump).\n";
 
 char help_shut[] =
 	"shut\n"
@@ -936,12 +936,12 @@ char help_shut[] =
 char help_proclist[] =
 	"proclist\n"
 	"\n"
-	"Return the list of all user defined procs.\n";
+	"Return the list of user-defined procs.\n";
 
 char help_builtinlist[] =
 	"builtinlist\n"
 	"\n"
-	"Return a list of all builtin commands.\n";
+	"Return the list of builtin commands.\n";
 
 struct help help_list[] = {
 	{"tlist", help_tlist},
