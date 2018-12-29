@@ -411,18 +411,19 @@ lex_handle(struct parse *l, int c)
 				l->used = 0;
 				return;
 			}
-			for (i = 0; i < LEX_NOP; i++) {
+
+			for (i = 0; ; i++) {
+				if (i == LEX_NOP) {
+					lex_err(l, "character doesn't start any token");
+					break;
+				}
 				if (lex_op[i].str[0] == c) {
-					if (lex_op[i].str[1] == '\0') {
-						lex_found(l, lex_op[i].id, 0);
-						return;
-					}
 					l->lstate = LEX_OP;
 					l->opindex = i;
-					return;
+					l->used = 0;
+					break;
 				}
 			}
-			lex_err(l, "character doesn't start any token");
 			break;
 		case LEX_ERROR:
 			if (c == '\0' || c == '\n') {
@@ -503,20 +504,25 @@ lex_handle(struct parse *l, int c)
 			l->buf[l->used++] = c;
 			return;
 		case LEX_OP:
-			for (i = l->opindex;; i++) {
-				if (i == LEX_NOP ||
-				    lex_op[i].str[0] != lex_op[l->opindex].str[0]) {
-					lex_err(l, "bad operator");
-					break;
-				}
-				if (lex_op[i].str[1] == '\0') {
-					lex_found(l, lex_op[i].id, 0);
-					break;
-				}
-				if (lex_op[i].str[1] == c) {
-					lex_found(l, lex_op[i].id, 0);
-					return;
-				}
+			if (lex_op[l->opindex].str[l->used] == c) {
+				l->used++;
+				if (lex_op[l->opindex].str[l->used] == '\0')
+					lex_found(l, lex_op[l->opindex].id, 0);
+				return;
+			} else if (lex_op[l->opindex].str[l->used] == '\0') {
+				lex_found(l, lex_op[l->opindex].id, 0);
+				break;
+			}
+
+			l->opindex++;
+			if (l->opindex == LEX_NOP) {
+			bad_op:
+				lex_err(l, "bad operator");
+				break;
+			}
+			for (i = 0; i < l->used; i++) {
+				if (lex_op[i].str[i] != lex_op[i].str[i])
+					goto bad_op;
 			}
 			break;
 		default:

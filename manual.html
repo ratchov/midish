@@ -2683,6 +2683,10 @@ allow the effects of certain functions to be undone using the
 add the <a href="#func_ul">ul</a> command to list of previous
 command calls that may be undone.
 
+<li>
+add the <a href="#func_tvcurve">tvcurve</a> command modify velocity of
+notes in tracks.
+
 </ul>
 
 <h2><a name="attributes">17 Project attributes</a></h2>
@@ -3559,6 +3563,14 @@ by ``halftones'' half tones.
 Only events matching the current event selection
 (see <a href="#func_ev">ev</a> function)
 are transposed.
+
+<dt><a name="func_tvcurve">tvcurve weight</a>
+
+<dd>
+Adjust velocity of note events, using the given ``weight'' in
+the -63..63 range.
+Applies only to note events of current selection of the current track,
+(see <a href="#func_ev">ev</a> function).
 
 <dt><a name="func_tevmap">tevmap evspec1 evspec2</a>
 

@@ -26,6 +26,7 @@ struct songfilt;
 struct songsx;
 
 enum {
+	UNDO_EMPTY,
 	UNDO_STR,
 	UNDO_UINT,
 	UNDO_TRACK,
@@ -91,6 +92,7 @@ struct undo {
 void undo_pop(struct song *);
 void undo_push(struct song *, struct undo *);
 void undo_clear(struct song *, struct undo **);
+void undo_start(struct song *, char *, char *);
 void undo_setstr(struct song *, char *, char **, char *);
 void undo_setuint(struct song *, char *, char *, unsigned int *, unsigned int);
 

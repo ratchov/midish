@@ -954,7 +954,7 @@ user_mainloop(void)
 	exec_newbuiltin(exec, "err", blt_err,
 			name_newarg("message", NULL));
 	exec_newbuiltin(exec, "h", blt_h,
-			name_newarg("function", NULL));
+			name_newarg("key", NULL));
 	exec_newbuiltin(exec, "exec", blt_exec,
 			name_newarg("filename", NULL));
 	exec_newbuiltin(exec, "debug", blt_debug,
@@ -1086,6 +1086,8 @@ user_mainloop(void)
 			name_newarg("rate", NULL));
 	exec_newbuiltin(exec, "ttransp", blt_ttransp,
 			name_newarg("halftones", NULL));
+	exec_newbuiltin(exec, "tvcurve", blt_tvcurve,
+			name_newarg("weight", NULL));
 	exec_newbuiltin(exec, "tevmap", blt_tevmap,
 			name_newarg("from",
 			name_newarg("to", NULL)));
