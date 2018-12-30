@@ -655,14 +655,14 @@ char help_ls[] =
 char help_save[] =
 	"save filename\n"
 	"\n"
-	"Save the song into the given file. The ``filename'' is a\n"
+	"Save the song into the given file. The file name is a\n"
 	"quoted string.\n";
 
 char help_load[] =
 	"load filename\n"
 	"\n"
-	"Load the song from a file named ``filename''. the current song is\n"
-	"destroyed, even if the load command fails.\n";
+	"Load the song from the given file. The file name is a\n"
+	"quoted string. The current song will be overwritten.\n";
 
 char help_reset[] =
 	"reset\n"
@@ -673,14 +673,15 @@ char help_reset[] =
 char help_export[] =
 	"export filename\n"
 	"\n"
-	"Save the song into a standard MIDI file, ``filename'' is a quoted\n"
-	"string.\n";
+	"Save the song into the given standard MIDI file. The file name\n"
+	"is a quoted string.\n";
 
 char help_import[] =
 	"import filename\n"
 	"\n"
-	"Load the song from a standard MIDI file, ``filename'' is a quoted\n"
-	"string. Only MIDI file ``type 1'' and ``type 0'' are supported.\n";
+	"Load the song from the given standard MIDI file. The file name\n"
+	"is a quoted string. The current song will be overwritten.\n"
+	"Only MIDI file formats 0 and 1 are supported.\n";
 
 char help_u[] =
 	"u\n"
