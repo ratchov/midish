@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Alexandre Ratchov <alex@caoua.org>
+ * Copyright (c) 2018 Alexandre Ratchov <alex@caoua.org>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
