@@ -8,7 +8,8 @@
 
 
 #
-# some filter rules
+# function to make the current filter drop controller number ``ictl''
+# on the current input
 #
 proc ctldrop ctlno {
 	for i in [ilist] {
@@ -16,6 +17,11 @@ proc ctldrop ctlno {
 	}
 }
 
+
+#
+# function to make the current filter route controller number ``ictl''
+# on the current input to controller ``octl'' on the current output
+#
 proc ctlmap ic oc {
 	for i in [ilist] {
 		fmap {ctl $i $ic} {ctl [getc] $oc}
@@ -42,7 +48,7 @@ proc solo {
 }
 
 #
-# turn on general midi (send sysex)
+# function to add a sysex that turns on general midi
 #
 proc gmon devnum {
 	xnew gmon
@@ -50,10 +56,53 @@ proc gmon devnum {
 }
 
 #
-# configure an instrument for a given general midi patch
+# function to set program number of the current output to th given
+# general midi program number
 #
 proc gmp patch {
 	oaddev { pc [geto] ($patch - 1) }
+}
+
+#
+# set volume (controller number 7) of the current output
+#
+proc vol val {
+	oaddev {ctl [geto] 7  $val}
+}
+
+#
+# set pan (controller number 10) of the current output
+#
+proc pan val {
+	oaddev {ctl [geto] 10 $val}
+}
+
+#
+# set reverb (controller number 91) of the current output
+#
+proc reverb val {
+	oaddev {ctl [geto] 91 $val};
+}
+
+#
+# set chorus (controller number 93) of the current output
+#
+proc chorus val {
+	oaddev {ctl [geto] 93 $val};
+}
+
+#
+# set RPN to the given value for the current output
+#
+proc rpn addr val {
+	oaddev {rpn [geto] $addr $val}
+}
+
+#
+# set NRPN to the given value for the current output
+#
+proc nrpn addr val {
+	oaddev {nrpn [geto] $addr $val}
 }
 
 #
@@ -81,21 +130,3 @@ proc xvparam a0 a1 a2 a3 val {
 		0xf7 }
 }
 
-#
-# controllers config
-#
-proc vol    val { oaddev {ctl [geto] 7  $val}; }
-proc bal    val { oaddev {ctl [geto] 8  $val}; }
-proc pan    val { oaddev {ctl [geto] 10 $val}; }
-proc reverb val { oaddev {ctl [geto] 91 $val}; }
-proc chorus val { oaddev {ctl [geto] 93 $val}; }
-
-#
-# set RPN/NRPN to the given value for the current chan
-#
-proc rpn  addr val {
-	oaddev {rpn [geto] $addr $val}
-}
-proc nrpn addr val { 
-	oaddev {nrpn [geto] $addr $val}
-}
