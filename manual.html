@@ -109,103 +109,101 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 <li><a href="#dev">2 Devices setup</a>
 <li><a href="#inputs">3 Inputs</a>
 <li><a href="#chan">4 Outputs</a>
+<li><a href="#section_5">5 Output and input configuration events</a>
+<li><a href="#ev">6 Events and event sets specification</a>
 <ul>
-<li><a href="#section_4_1">4.1 Output and input configuration</a>
+<li><a href="#ev_ev">6.1 Event specification</a>
+<li><a href="#ev_evspec">6.2 Event set specification</a>
+<li><a href="#ev_evpat">6.3 User-defined events</a>
 </ul>
-<li><a href="#ev">5 Events and event sets specification</a>
+<li><a href="#filt">7 Filtering/routing</a>
 <ul>
-<li><a href="#ev_ev">5.1 Event specification</a>
-<li><a href="#ev_evspec">5.2 Event set specification</a>
-<li><a href="#ev_evpat">5.3 User-defined events</a>
-</ul>
-<li><a href="#filt">6 Filtering/routing</a>
+<li><a href="#section_7_1">7.1 Filter rules</a>
+<li><a href="#section_7_2">7.2 Rules hierarchy</a>
+<li><a href="#section_7_3">7.3 Examples</a>
 <ul>
-<li><a href="#section_6_1">6.1 Filter rules</a>
-<li><a href="#section_6_2">6.2 Rules hierarchy</a>
-<li><a href="#section_6_3">6.3 Examples</a>
-<ul>
-<li><a href="#section_6_3_1">6.3.1 Device redirections</a>
-<li><a href="#section_6_3_2">6.3.2 Input to output mappings</a>
-<li><a href="#section_6_3_3">6.3.3 Controller mappings</a>
-<li><a href="#section_6_3_4">6.3.4 Transpose</a>
-<li><a href="#section_6_3_5">6.3.5 Keyboard splits</a>
+<li><a href="#section_7_3_1">7.3.1 Device redirections</a>
+<li><a href="#section_7_3_2">7.3.2 Input to output mappings</a>
+<li><a href="#section_7_3_3">7.3.3 Controller mappings</a>
+<li><a href="#section_7_3_4">7.3.4 Transpose</a>
+<li><a href="#section_7_3_5">7.3.5 Keyboard splits</a>
 </ul>
 </ul>
-<li><a href="#time">7 Time structure</a>
+<li><a href="#time">8 Time structure</a>
 <ul>
-<li><a href="#section_7_1">7.1 Moving within the song</a>
-<li><a href="#section_7_2">7.2 Metronome</a>
-<li><a href="#section_7_3">7.3 Time signature changes</a>
-<li><a href="#section_7_4">7.4 Tempo changes</a>
+<li><a href="#section_8_1">8.1 Moving within the song</a>
+<li><a href="#section_8_2">8.2 Metronome</a>
+<li><a href="#section_8_3">8.3 Time signature changes</a>
+<li><a href="#section_8_4">8.4 Tempo changes</a>
 </ul>
-<li><a href="#track">8 Tracks</a>
+<li><a href="#track">9 Tracks</a>
 <ul>
-<li><a href="#section_8_1">8.1 Recording a track without a filter</a>
-<li><a href="#section_8_2">8.2 Recording a track with a filter</a>
-<li><a href="#section_8_3">8.3 Basics about editing tracks</a>
-<li><a href="#section_8_4">8.4 Copy, cut, insert</a>
-<li><a href="#section_8_5">8.5 Track quantization</a>
-<li><a href="#section_8_6">8.6 Checking a track</a>
+<li><a href="#section_9_1">9.1 Recording a track without a filter</a>
+<li><a href="#section_9_2">9.2 Recording a track with a filter</a>
+<li><a href="#section_9_3">9.3 Basics about editing tracks</a>
+<li><a href="#section_9_4">9.4 Copy, cut, insert</a>
+<li><a href="#section_9_5">9.5 Track quantization</a>
+<li><a href="#section_9_6">9.6 Checking a track</a>
 </ul>
-<li><a href="#frames">9 Frames, more about filtering and editing</a>
+<li><a href="#frames">10 Frames, more about filtering and editing</a>
 <ul>
-<li><a href="#section_9_1">9.1 Note frames</a>
-<li><a href="#section_9_2">9.2 Pitch bend frames</a>
-<li><a href="#ctl_frames">9.3 Controller frames</a>
-<li><a href="#section_9_4">9.4 Other frames</a>
+<li><a href="#section_10_1">10.1 Note frames</a>
+<li><a href="#section_10_2">10.2 Pitch bend frames</a>
+<li><a href="#ctl_frames">10.3 Controller frames</a>
+<li><a href="#section_10_4">10.4 Other frames</a>
 </ul>
-<li><a href="#sysex">10 System exclusive messages</a>
-<li><a href="#info">11 Obtaining information</a>
-<li><a href="#save">12 Saving and loading songs</a>
-<li><a href="#export">13 Import/export standard MIDI files</a>
-<li><a href="#undo">14 Undo</a>
-<li><a href="#interpreter">15 The interpreter's language</a>
+<li><a href="#sysex">11 System exclusive messages</a>
+<li><a href="#info">12 Obtaining information</a>
+<li><a href="#save">13 Saving and loading songs</a>
+<li><a href="#export">14 Import/export standard MIDI files</a>
+<li><a href="#undo">15 Undo</a>
+<li><a href="#interpreter">16 The interpreter's language</a>
 <ul>
-<li><a href="#section_15_1">15.1 Global variables</a>
-<li><a href="#section_15_2">15.2 Defining simple procedures</a>
+<li><a href="#section_16_1">16.1 Global variables</a>
+<li><a href="#section_16_2">16.2 Defining simple procedures</a>
 </ul>
-<li><a href="#changes">16 Changes since last release</a>
-<li><a href="#attributes">17 Project attributes</a>
+<li><a href="#changes">17 Changes since last release</a>
+<li><a href="#attributes">18 Project attributes</a>
 <ul>
-<li><a href="#section_17_1">17.1 Device attributes</a>
-<li><a href="#section_17_2">17.2 Input and output attributes</a>
-<li><a href="#section_17_3">17.3 Filter attributes</a>
-<li><a href="#section_17_4">17.4 Track attributes</a>
-<li><a href="#section_17_5">17.5 Sysex attributes</a>
-<li><a href="#section_17_6">17.6 Song attributes</a>
+<li><a href="#section_18_1">18.1 Device attributes</a>
+<li><a href="#section_18_2">18.2 Input and output attributes</a>
+<li><a href="#section_18_3">18.3 Filter attributes</a>
+<li><a href="#section_18_4">18.4 Track attributes</a>
+<li><a href="#section_18_5">18.5 Sysex attributes</a>
+<li><a href="#section_18_6">18.6 Song attributes</a>
 </ul>
-<li><a href="#language">18 Language reference</a>
+<li><a href="#language">19 Language reference</a>
 <ul>
-<li><a href="#section_18_1">18.1 Lexical structure</a>
-<li><a href="#section_18_2">18.2 Statements</a>
-<li><a href="#section_18_3">18.3 Expressions</a>
-<li><a href="#section_18_4">18.4 Procedure definition</a>
+<li><a href="#section_19_1">19.1 Lexical structure</a>
+<li><a href="#section_19_2">19.2 Statements</a>
+<li><a href="#section_19_3">19.3 Expressions</a>
+<li><a href="#section_19_4">19.4 Procedure definition</a>
 </ul>
-<li><a href="#functs">19 Function reference</a>
+<li><a href="#functs">20 Function reference</a>
 <ul>
-<li><a href="#func_track">19.1 Track functions</a>
-<li><a href="#func_input">19.2 Input functions</a>
-<li><a href="#func_output">19.3 Output functions</a>
-<li><a href="#func_filt">19.4 Filter functions</a>
-<li><a href="#func_sysex">19.5 System exclusive messages functions</a>
-<li><a href="#func_rt">19.6 Real-time functions</a>
-<li><a href="#func_song">19.7 Song functions</a>
-<li><a href="#func_dev">19.8 Device functions</a>
-<li><a href="#func_ev">19.9 Event functions</a>
-<li><a href="#func_misc">19.10 Misc. functions</a>
+<li><a href="#func_track">20.1 Track functions</a>
+<li><a href="#func_input">20.2 Input functions</a>
+<li><a href="#func_output">20.3 Output functions</a>
+<li><a href="#func_filt">20.4 Filter functions</a>
+<li><a href="#func_sysex">20.5 System exclusive messages functions</a>
+<li><a href="#func_rt">20.6 Real-time functions</a>
+<li><a href="#func_song">20.7 Song functions</a>
+<li><a href="#func_dev">20.8 Device functions</a>
+<li><a href="#func_ev">20.9 Event functions</a>
+<li><a href="#func_misc">20.10 Misc. functions</a>
 </ul>
-<li><a href="#section_20">20 Using midish in other programs</a>
+<li><a href="#section_21">21 Using midish in other programs</a>
 <ul>
-<li><a href="#section_20_1">20.1 Creating scripts: batch mode</a>
-<li><a href="#section_20_2">20.2 Creating front-ends: verbose mode</a>
+<li><a href="#section_21_1">21.1 Creating scripts: batch mode</a>
+<li><a href="#section_21_2">21.2 Creating front-ends: verbose mode</a>
 </ul>
-<li><a href="#example">21 Example sessions</a>
+<li><a href="#example">22 Examples</a>
 <ul>
-<li><a href="#section_21_1">21.1 Example - MIDI filtering</a>
-<li><a href="#section_21_2">21.2 Example - recording a track</a>
+<li><a href="#section_22_1">22.1 Example - MIDI filtering</a>
+<li><a href="#section_22_2">22.2 Example - recording a track</a>
 </ul>
-<li><a href="#copyright">22 Copyright</a>
-<li><a href="#section_23">23 Thanks</a>
+<li><a href="#copyright">23 Copyright</a>
+<li><a href="#section_24">24 Thanks</a>
 </ul>
 <!-- toc_end -->
 
@@ -794,12 +792,11 @@ the given output.
 
 See filter section for further details.
 
-<h3><a name="section_4_1">4.1 Output and input configuration</a></h3>
+<h2><a name="section_5">5 Output and input configuration events</a></h2>
 
 <p>
-An output represents one musical instrument; midish allows
-configuration events (like program changes and
-controllers) to be attached to the output definition.
+Inputs and outputs may hold configuration events (like program changes
+and controllers) to be attached.
 
 Such events are sent when performance mode is entered,
 for instance just before playback is started.
@@ -841,9 +838,19 @@ will change the volume to 125 by replacing the above event:
 oaddev {ctl mybass 7 125}
 </pre>
 
-<h2><a name="ev">5 Events and event sets specification</a></h2>
+Events attached to inputs work the same way.
 
-<h3><a name="ev_ev">5.1 Event specification</a></h3>
+When performance mode is entered, they are sent as if they come from
+the input.
+
+Consequently they pass through the current filter and will be recorded
+on the current track in record mode.
+
+This makes them useful only in very specific cases.
+
+<h2><a name="ev">6 Events and event sets specification</a></h2>
+
+<h3><a name="ev_ev">6.1 Event specification</a></h3>
 
 <p>
 An event is specified as a list containing:
@@ -922,7 +929,7 @@ on the ``drums'' output:
 {ctl drums 7 99}
 </pre>
 
-<h3><a name="ev_evspec">5.2 Event set specification</a></h3>
+<h3><a name="ev_evspec">6.2 Event set specification</a></h3>
 
 <p>
 Filter and track editing functions use <i>event sets</i> to select the
@@ -997,7 +1004,7 @@ Examples:
 { nrpn {} 21 }          # match NRPN 21 change
 </pre>
 
-<h3><a name="ev_evpat">5.3 User-defined events</a></h3>
+<h3><a name="ev_evpat">6.3 User-defined events</a></h3>
 
 <p>
 Short system-exclusive patterns can be handled as events.
@@ -1005,7 +1012,7 @@ Short system-exclusive patterns can be handled as events.
 Such events are defined with the <a href="#func_evpat">evpat</a>
 function.
 
-<h2><a name="filt">6 Filtering/routing</a></h2>
+<h2><a name="filt">7 Filtering/routing</a></h2>
 
 <p>
 A <i>filter</i> transforms incoming MIDI events and send them to the
@@ -1070,7 +1077,7 @@ All rules may be removed with the
 See <a href="#func_filt">filtering functions</a>
 section for details.
 
-<h3><a name="section_6_1">6.1 Filter rules</a></h3>
+<h3><a name="section_7_1">7.1 Filter rules</a></h3>
 
 <p>
 The filter is configured through a list of filtering rules provided
@@ -1167,7 +1174,7 @@ send EOF character (control-D) to quit
 }
 </pre>
 
-<h3><a name="section_6_2">6.2 Rules hierarchy</a></h3>
+<h3><a name="section_7_2">7.2 Rules hierarchy</a></h3>
 
 <p>
 Filters may contain multiple rules.
@@ -1214,9 +1221,9 @@ The user doesn't need to care about this constraint since
 <a href="#func_fmap">fmap</a> and <a href="#func_funmap">funmap</a>
 functions will do the right thing in all cases.
 
-<h3><a name="section_6_3">6.3 Examples</a></h3>
+<h3><a name="section_7_3">7.3 Examples</a></h3>
 
-<h4><a name="section_6_3_1">6.3.1 Device redirections</a></h4>
+<h4><a name="section_7_3_1">7.3.1 Device redirections</a></h4>
 
 <p>
 The following example defines a filter that routes events from
@@ -1234,7 +1241,7 @@ To test the filter, start performance mode using the
 then type
 ``<a href="#func_s">s</a>'' to stop performance mode
 
-<h4><a name="section_6_3_2">6.3.2 Input to output mappings</a></h4>
+<h4><a name="section_7_3_2">7.3.2 Input to output mappings</a></h4>
 
 <p>
 The following example defines a filter that routes events from device
@@ -1256,7 +1263,7 @@ sound-module.
 To stop performance mode, use
 ``<a href="#func_s">s</a>'' command.
 
-<h4><a name="section_6_3_3">6.3.3 Controller mappings</a></h4>
+<h4><a name="section_7_3_3">7.3.3 Controller mappings</a></h4>
 
 <p>
 The following example adds a new rule to the above filter that maps the
@@ -1280,7 +1287,7 @@ function. It displays them as follows:
 }
 </pre>
 
-<h4><a name="section_6_3_4">6.3.4 Transpose</a></h4>
+<h4><a name="section_7_3_4">7.3.4 Transpose</a></h4>
 
 <p>
 The following will transpose notes on ``{0 2}'' by 12 halftones:
@@ -1302,7 +1309,7 @@ Note that the order of the rules is not important, the
 ``<a href="#func_ftransp">ftransp</a>''
 rule always applies to outgoing events.
 
-<h4><a name="section_6_3_5">6.3.5 Keyboard splits</a></h4>
+<h4><a name="section_7_3_5">7.3.5 Keyboard splits</a></h4>
 
 <p>
 In the same way it is possible to create a keyboard-split with two
@@ -1322,7 +1329,7 @@ fmap {note {1 0} 0..63}   {note {0 2} 0..63}
 fmap {note {1 0} 64..127} {note {0 3} 64..127}
 </pre>
 
-<h2><a name="time">7 Time structure</a></h2>
+<h2><a name="time">8 Time structure</a></h2>
 
 <p>
 In midish, time is split in <i>measures</i>. Each measure
@@ -1353,7 +1360,7 @@ a whole note corresponds to 96 ticks, thus by default
 one beat corresponds to one quarter note, i.e.
 the time signature is 4/4.
 
-<h3><a name="section_7_1">7.1 Moving within the song</a></h3>
+<h3><a name="section_8_1">8.1 Moving within the song</a></h3>
 
 <p>
 The following selects the current position in the song to
@@ -1374,7 +1381,7 @@ number 0.
 Furthermore all track editing function will process
 the track starting at this position.
 
-<h3><a name="section_7_2">7.2 Metronome</a></h3>
+<h3><a name="section_8_2">8.2 Metronome</a></h3>
 
 <p>
 The metronome has the following states:
@@ -1426,7 +1433,7 @@ this configures the high-click with note 48, velocity 127 on
 device 0, channel 9 and the low-click with note 64, velocity 100
 on device 0, channel 9.
 
-<h3><a name="section_7_3">7.3 Time signature changes</a></h3>
+<h3><a name="section_8_3">8.3 Time signature changes</a></h3>
 
 <p>
 Time signature changes are achieved by inserting or
@@ -1487,7 +1494,7 @@ The parameter to <a href="#func_mdup">mdup</a> is the number
 of measures to leave between the the original and the point
 where the replica is inserted.
 
-<h3><a name="section_7_4">7.4 Tempo changes</a></h3>
+<h3><a name="section_8_4">8.4 Tempo changes</a></h3>
 
 <p>
 Tempo changes are achieved simply by moving within
@@ -1521,7 +1528,7 @@ print [msig]            # print what mtempo returned
 </pre>
 
 
-<h2><a name="track">8 Tracks</a></h2>
+<h2><a name="track">9 Tracks</a></h2>
 
 <p>
 A track is a piece of music, namely an ordered in time list
@@ -1543,7 +1550,7 @@ used instead.
 If there is neither track current filter nor song current filter, then
 MIDI events from all devices are recorded as-is.
 
-<h3><a name="section_8_1">8.1 Recording a track without a filter</a></h3>
+<h3><a name="section_9_1">9.1 Recording a track without a filter</a></h3>
 
 <p>
 The following defines a track and record events
@@ -1570,7 +1577,7 @@ keyboard (device number 1) will be recorded as-is and then
 sent back to the device number 1 instead of being sent
 to the sound module (device number 0).
 
-<h3><a name="section_8_2">8.2 Recording a track with a filter</a></h3>
+<h3><a name="section_9_2">9.2 Recording a track with a filter</a></h3>
 
 <p>
 The following creates a filter and uses it to
@@ -1591,7 +1598,7 @@ The correct approach for multitracking is to create a filter for each
 musical instrument, and then to use this filter to record one or more
 tracks per instrument.
 
-<h3><a name="section_8_3">8.3 Basics about editing tracks</a></h3>
+<h3><a name="section_9_3">9.3 Basics about editing tracks</a></h3>
 
 <p>
 Most track editing functions use the project context, i.e.
@@ -1637,7 +1644,7 @@ select for processing events that would be outside the selection.
 So editing tracks consists in modifying above parameters and issuing
 commands to process the current selection.
 
-<h3><a name="section_8_4">8.4 Copy, cut, insert</a></h3>
+<h3><a name="section_9_4">9.4 Copy, cut, insert</a></h3>
 
 <p>
 To clear the current selection of the current track:
@@ -1734,7 +1741,7 @@ mdup 0
 mdup 0
 </pre>
 
-<h3><a name="section_8_5">8.5 Track quantization</a></h3>
+<h3><a name="section_9_5">9.5 Track quantization</a></h3>
 
 <p>
 A track can be quantized by rounding event positions
@@ -1774,7 +1781,7 @@ cases, notes would be dropped to avoid overlapping notes.
 
 </ul>
 
-<h3><a name="section_8_6">8.6 Checking a track</a></h3>
+<h3><a name="section_9_6">9.6 Checking a track</a></h3>
 
 <p>
 It is possible that a MIDI device transmits
@@ -1792,7 +1799,7 @@ This function can be useful to remove
 nested notes when a track is recorded twice (or more)
 without being erased.
 
-<h2><a name="frames">9 Frames, more about filtering and editing</a></h2>
+<h2><a name="frames">10 Frames, more about filtering and editing</a></h2>
 
 <p>
 In midish, MIDI events are packed into <i>frames</i>. For
@@ -1804,7 +1811,7 @@ instance, deleting a note-on event will also delete related
 note-off and key-aftertouch events. This ensures full
 consistency of tracks and MIDI I/O streams.
 
-<h3><a name="section_9_1">9.1 Note frames</a></h3>
+<h3><a name="section_10_1">10.1 Note frames</a></h3>
 
 <p>
 Note frames are made of a starting "non" event any optional
@@ -1822,7 +1829,7 @@ are never merged. An attempt to copy a note frame on
 the top of a second one will erase the second one. This avoids
 having nested notes.
 
-<h3><a name="section_9_2">9.2 Pitch bend frames</a></h3>
+<h3><a name="section_10_2">10.2 Pitch bend frames</a></h3>
 
 <p>
 A pitch bend frame is made of "bend" events. It starts with
@@ -1842,7 +1849,7 @@ regions of the second one and "glue" the rest; this will
 result in a single frame, containing chunks of both original
 frames.
 
-<h3><a name="ctl_frames">9.3 Controller frames</a></h3>
+<h3><a name="ctl_frames">10.3 Controller frames</a></h3>
 
 <p>
 The way controller events are packed in a frame depend
@@ -1903,7 +1910,7 @@ ctltab {
 }
 </pre>
 
-<h3><a name="section_9_4">9.4 Other frames</a></h3>
+<h3><a name="section_10_4">10.4 Other frames</a></h3>
 
 <p>
 Channel aftertouch events are packed in channel aftertouch
@@ -1914,7 +1921,7 @@ that the default value is zero.
 Program/bank change, NRPN and RPN events are not packed
 together, they are single event frames.
 
-<h2><a name="sysex">10 System exclusive messages</a></h2>
+<h2><a name="sysex">11 System exclusive messages</a></h2>
 
 <p>
 Midish can send system exclusive messages
@@ -2006,7 +2013,7 @@ starting with 0xF0 0x7E 0x7F:
 xsetd 1 {0xF0 0x7E 0x7F}
 </pre>
 
-<h2><a name="info">11 Obtaining information</a></h2>
+<h2><a name="info">12 Obtaining information</a></h2>
 
 <p>
 The following functions gives some information
@@ -2072,7 +2079,7 @@ print [xexists mysx]
 this will print 1 if the corresponding object exists
 and 0 otherwise.
 
-<h2><a name="save">12 Saving and loading songs</a></h2>
+<h2><a name="save">13 Saving and loading songs</a></h2>
 
 <p>
 A song can be saved into a file as follows:
@@ -2095,7 +2102,7 @@ of the current track, current filter are saved and restored.  However,
 note that the local settings (like device configuration, metronome
 settings) are not saved.
 
-<h2><a name="export">13 Import/export standard MIDI files</a></h2>
+<h2><a name="export">14 Import/export standard MIDI files</a></h2>
 
 <p>
 Standard MIDI files type 0 or 1 can be imported. Each
@@ -2138,7 +2145,7 @@ Example:
 export "mysong.mid"
 </pre>
 
-<h2><a name="undo">14 Undo</a></h2>
+<h2><a name="undo">15 Undo</a></h2>
 
 <p>
 Certain operations may be undone with
@@ -2157,7 +2164,7 @@ lists the previous command calls that may be undone.
 Only certain operations may be undone.
 Theres no way to redo operations that are undone.
 
-<h2><a name="interpreter">15 The interpreter's language</a></h2>
+<h2><a name="interpreter">16 The interpreter's language</a></h2>
 
 <p>
 Even to achieve some simple tasks with midish, it's
@@ -2165,7 +2172,7 @@ sometimes necessary to write several long statements.  To
 make midish more usable, it suggested to use variables
 and/or to define procedures, as follows.
 
-<h3><a name="section_15_1">15.1 Global variables</a></h3>
+<h3><a name="section_16_1">16.1 Global variables</a></h3>
 
 <p>
 Variables can be used to store numbers, strings and
@@ -2181,7 +2188,7 @@ The ``let'' keyword is used to assign values to
 variables and the dollar sign (``$'') is used
 to obtain variable values.
 
-<h3><a name="section_15_2">15.2 Defining simple procedures</a></h3>
+<h3><a name="section_16_2">16.2 Defining simple procedures</a></h3>
 
 <p>
 For instance, let
@@ -2229,7 +2236,7 @@ stored in the ``~/.midishrc'' file (or ``/etc/midishrc'').
 It will be automatically executed the next time you run midish.
 
 
-<h2><a name="changes">16 Changes since last release</a></h2>
+<h2><a name="changes">17 Changes since last release</a></h2>
 
 <ul>
 
@@ -2262,9 +2269,9 @@ notes in tracks.
 
 </ul>
 
-<h2><a name="attributes">17 Project attributes</a></h2>
+<h2><a name="attributes">18 Project attributes</a></h2>
 
-<h3><a name="section_17_1">17.1 Device attributes</a></h3>
+<h3><a name="section_18_1">18.1 Device attributes</a></h3>
 
 <p>
 The following table summarizes the device attributes:
@@ -2331,7 +2338,7 @@ it's a subset of ``xpc'', ``nrpn'', ``rpn''.
 
 </table>
 
-<h3><a name="section_17_2">17.2 Input and output attributes</a></h3>
+<h3><a name="section_18_2">18.2 Input and output attributes</a></h3>
 
 <p>
 The following table summarizes the input or output attributes:
@@ -2367,7 +2374,7 @@ received to
 
 </table>
 
-<h3><a name="section_17_3">17.3 Filter attributes</a></h3>
+<h3><a name="section_18_3">18.3 Filter attributes</a></h3>
 
 <p>
 The following table summarizes the filter attributes:
@@ -2397,7 +2404,7 @@ The following table summarizes the filter attributes:
 </table>
 
 
-<h3><a name="section_17_4">17.4 Track attributes</a></h3>
+<h3><a name="section_18_4">18.4 Track attributes</a></h3>
 
 <p>
 The following table summarizes the track attributes:
@@ -2434,7 +2441,7 @@ current filter, then is is recorded with the song's default filter.
 
 </table>
 
-<h3><a name="section_17_5">17.5 Sysex attributes</a></h3>
+<h3><a name="section_18_5">18.5 Sysex attributes</a></h3>
 
 <p>
 The following table summarizes the sysex back attributes:
@@ -2465,7 +2472,7 @@ number to which the message has to be sent.
 
 </table>
 
-<h3><a name="section_17_6">17.6 Song attributes</a></h3>
+<h3><a name="section_18_6">18.6 Song attributes</a></h3>
 
 <p>
 The following table summarizes the song attributes:
@@ -2607,9 +2614,9 @@ Events used to trigger start and/or measure tempo.
 
 </table>
 
-<h2><a name="language">18 Language reference</a></h2>
+<h2><a name="language">19 Language reference</a></h2>
 
-<h3><a name="section_18_1">18.1 Lexical structure</a></h3>
+<h3><a name="section_19_1">19.1 Lexical structure</a></h3>
 
 <p>
 The input line is split into tokens:
@@ -2686,7 +2693,7 @@ Multiple lines ending with ``\'' are parsed as a
 single line. Anything else generates a ``bad token'' error.
 
 
-<h3><a name="section_18_2">18.2 Statements</a></h3>
+<h3><a name="section_19_2">19.2 Statements</a></h3>
 
 <p>
 Any input line can be ether a function definition or a
@@ -2790,7 +2797,7 @@ exit
 
 </ul>
 
-<h3><a name="section_18_3">18.3 Expressions</a></h3>
+<h3><a name="section_19_3">19.3 Expressions</a></h3>
 
 <p>
 An expression can be an arithmetic expression of constants,
@@ -2976,7 +2983,7 @@ braces, a more complicated example is:
 {"hello" 1+2*3 mytrack $i [myproc] {a b c}}
 </pre>
 
-<h3><a name="section_18_4">18.4 Procedure definition</a></h3>
+<h3><a name="section_19_4">19.4 Procedure definition</a></h3>
 
 <p>
 A procedure is defined with the keyword
@@ -3004,9 +3011,9 @@ proc square x {
 }
 </pre>
 
-<h2><a name="functs">19 Function reference</a></h2>
+<h2><a name="functs">20 Function reference</a></h2>
 
-<h3><a name="func_track">19.1 Track functions</a></h3>
+<h3><a name="func_track">20.1 Track functions</a></h3>
 
 <dl>
 
@@ -3192,7 +3199,7 @@ event selection
 
 </dl>
 
-<h3><a name="func_input">19.2 Input functions</a></h3>
+<h3><a name="func_input">20.2 Input functions</a></h3>
 
 <dl>
 
@@ -3256,7 +3263,7 @@ of the current input.
 
 </dl>
 
-<h3><a name="func_output">19.3 Output functions</a></h3>
+<h3><a name="func_output">20.3 Output functions</a></h3>
 
 <dl>
 
@@ -3322,7 +3329,7 @@ print all events of the config of the current output.
 
 </dl>
 
-<h3><a name="func_filt">19.4 Filter functions</a></h3>
+<h3><a name="func_filt">20.4 Filter functions</a></h3>
 
 <dl>
 
@@ -3430,7 +3437,7 @@ is:
 
 </dl>
 
-<h3><a name="func_sysex">19.5 System exclusive messages functions</a></h3>
+<h3><a name="func_sysex">20.5 System exclusive messages functions</a></h3>
 
 <dl>
 
@@ -3502,7 +3509,7 @@ given .syx file
 
 </dl>
 
-<h3><a name="func_rt">19.6 Real-time functions</a></h3>
+<h3><a name="func_rt">20.6 Real-time functions</a></h3>
 
 <dl>
 
@@ -3547,7 +3554,7 @@ for debugging purposes only.
 
 </dl>
 
-<h3><a name="func_song">19.7 Song functions</a></h3>
+<h3><a name="func_song">20.7 Song functions</a></h3>
 
 <dl>
 
@@ -3821,7 +3828,7 @@ list operations saved for undo.
 
 </dl>
 
-<h3><a name="func_dev">19.8 Device functions</a></h3>
+<h3><a name="func_dev">20.8 Device functions</a></h3>
 
 <dl>
 
@@ -3974,7 +3981,7 @@ messages.
 
 </dl>
 
-<h3><a name="func_ev">19.9 Event functions</a></h3>
+<h3><a name="func_ev">20.9 Event functions</a></h3>
 
 <dl>
 
@@ -4038,7 +4045,7 @@ Print the list of event patterns.
 
 </dl>
 
-<h3><a name="func_misc">19.10 Misc. functions</a></h3>
+<h3><a name="func_misc">20.10 Misc. functions</a></h3>
 
 <dl>
 
@@ -4184,9 +4191,9 @@ Return a list of all builtin commands.
 
 </dl>
 
-<h2><a name="section_20">20 Using midish in other programs</a></h2>
+<h2><a name="section_21">21 Using midish in other programs</a></h2>
 
-<h3><a name="section_20_1">20.1 Creating scripts: batch mode</a></h3>
+<h3><a name="section_21_1">21.1 Creating scripts: batch mode</a></h3>
 
 <p>
 Midish could be used from general purpose scripting languages to do
@@ -4228,7 +4235,7 @@ done
 The ``smfplay'' and ``smfrec'' files shipped in the source tar-balls
 are examples of such scripts.
 
-<h3><a name="section_20_2">20.2 Creating front-ends: verbose mode</a></h3>
+<h3><a name="section_21_2">21.2 Creating front-ends: verbose mode</a></h3>
 
 <p>
 A program that wants to use a midish feature, may start midish
@@ -4286,9 +4293,9 @@ while (!eof) {
 The ``rmidish'' program shipped in the source tar-ball is
 and example of such front-end.
 
-<h2><a name="example">21 Example sessions</a></h2>
+<h2><a name="example">22 Examples</a></h2>
 
-<h3><a name="section_21_1">21.1 Example - MIDI filtering</a></h3>
+<h3><a name="section_22_1">22.1 Example - MIDI filtering</a></h3>
 
 <p>
 The following session show how to
@@ -4328,7 +4335,7 @@ to the respective channels. After this, we define a new filter
 keyboard-split on note number 62 (note D3), the bass is
 transposed by -12 half-tones (one octave).
 
-<h3><a name="section_21_2">21.2 Example - recording a track</a></h3>
+<h3><a name="section_22_2">22.2 Example - recording a track</a></h3>
 
 <p>
 The following session show how to
@@ -4363,7 +4370,7 @@ Then, we set the quantization step to 16 (sixteenth note), we select
 the first 32 measures of the track and we quantize them. Finally, we
 start playback and we save the song into a file.
 
-<h2><a name="copyright">22 Copyright</a></h2>
+<h2><a name="copyright">23 Copyright</a></h2>
 
 <blockquote>
 
@@ -4387,7 +4394,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 </blockquote>
 
-<h2><a name="section_23">23 Thanks</a></h2>
+<h2><a name="section_24">24 Thanks</a></h2>
 
 <p>
 Many thanks to all who contributed (new features, bug fixes, bug
