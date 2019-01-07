@@ -454,13 +454,13 @@ they are sent.
 <li>
 <b>Inputs:</b><br>
 
-they represent ``{device&nbsp;midi-channel}'' pair on which MIDI events
+they represent ``{device&nbsp;channel}'' pair on which MIDI events
 arrive, like a MIDI keyboard, a MIDI control surface etc...
 
 <li>
 <b>Output:</b><br>
 
-they represent ``{device&nbsp;midi-channel}'' pair on which MIDI events
+they represent ``{device&nbsp;channel}'' pair on which MIDI events
 are sent, like synths. <i>Outputs</i> hold
 properties like patch number, volume, reverb depth or other
 controllers.
@@ -731,7 +731,7 @@ automatically executed the next time midish is run.
 
 <p>
 <i>Inputs</i> are named
-``{device&nbsp;MIDI-channel}'' pairs on which MIDI events
+``{device&nbsp;channel}'' pairs on which MIDI events
 arrive.
 
 Inputs are handled by two-item lists, like this:
@@ -755,7 +755,7 @@ be used instead of the ``{1 0}'' pair.
 
 <p>
 <b>Note:</b>
-Unlike simple ``{device&nbsp;MIDI-channel}'' pairs, inputs
+Unlike simple ``{device&nbsp;channel}'' pairs, inputs
 are used internally by certain functions.
 
 For instance, inputs are used to create default
@@ -764,7 +764,7 @@ filter rules.
 <h2><a name="chan">4 Outputs</a></h2>
 
 <p>
-<i>Outputs</i> are named ``{device&nbsp;MIDI-channel}'' pairs
+<i>Outputs</i> are named ``{device&nbsp;channel}'' pairs
 where go outgoing MIDI events.
 
 They are handled by two-item lists, like this:
@@ -949,7 +949,7 @@ an optional input or output.
 
 If a name is given, its interpreted as an input or output created with
 <a href="#func_inew">inew</a> or <a href="#func_onew">onew</a>,
-else a ``{device&nbsp;MIDI-channel}'' pair may be used.
+else a ``{device&nbsp;channel}'' pair may be used.
 
 If a single number is given, it matches all MIDI channels of the
 given device number.
@@ -1100,8 +1100,8 @@ note {1 3} -&gt; note {2 8}
 </pre>
 
 <p>
-note events arriving on device 1 MIDI-channel 3 are sent
-to device 2, MIDI-channel 8.
+note events arriving on device 1 channel 3 are sent
+to device 2, channel 8.
 
 <p>
 The source and destination event sets must be of the same type
@@ -1530,8 +1530,8 @@ all defined tracks, in record-mode it plays all defined tracks
 and records the current track.
 
 <p>
-Tracks aren't assigned to any particular ``{device&nbsp;MIDI-channel}'' pair.
-A track may contain MIDI data from any device and MIDI-channel.
+Tracks aren't assigned to any particular ``{device&nbsp;channel}'' pair.
+A track may contain MIDI data from any device and channel.
 
 A track can have its
 <i>current filter</i>; in this case, MIDI events
@@ -3204,7 +3204,7 @@ and assigned the given device and MIDI channel.
 <dt><a name="func_iset">iset {dev chan}</a>
 
 <dd>
-set the ``{device&nbsp;MIDI-channel}'' pair of the current input.
+set the ``{device&nbsp;channel}'' pair of the current input.
 All filters are updated to use the new setting
 as if the appropriate <a href="#func_fchin">fchin</a>
 function was invoked for each filter.
@@ -3271,7 +3271,7 @@ maps all inputs to the newly created output.
 <dt><a name="func_oset">oset {dev chan}</a>
 
 <dd>
-set the ``{device&nbsp;MIDI-channel}'' pair of the current output.
+set the ``{device&nbsp;channel}'' pair of the current output.
 All filters are updated to use the new setting
 as if the appropriate <a href="#func_fchout">fchout</a>
 function was invoked for each filter.
