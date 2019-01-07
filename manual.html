@@ -462,16 +462,16 @@ external sequencers...) from which events are received and/or to which
 they are sent.
 
 <li>
-<b>Input channels:</b><br>
+<b>Inputs:</b><br>
 
 they represent ``{device&nbsp;midi-channel}'' pair on which MIDI events
 arrive, like a MIDI keyboard, a MIDI control surface etc...
 
 <li>
-<b>Output channels:</b><br>
+<b>Output:</b><br>
 
 they represent ``{device&nbsp;midi-channel}'' pair on which MIDI events
-can be sent, like synths. <i>Output channel</i> objects hold
+are sent, like synths. <i>Outputs</i> hold
 properties like patch number, volume, reverb depth or other
 controllers.
 
@@ -488,7 +488,7 @@ other anomalies.
 
 tracks represent pieces of music: they hold MIDI voice events
 (notes, controllers ...). Tracks aren't bound to a particular
-channel and can contain events from any channel.
+device or channel and can contain events from any device and channel.
 
 <li>
 <b>Sysex banks:</b><br>
@@ -517,7 +517,7 @@ in prompt mode by issuing interactively commands.
 <p>
 Performance mode is used to play/record the project. When performance
 mode is entered, MIDI devices are opened, and all sysex messages and
-channel configuration events are sent. There are three
+output configuration events are sent. There are three
 performance modes:
 
 <ul>
@@ -666,8 +666,8 @@ dnew 1 "rmidi/4" ro             # attach the keyboard as dev number 1
 <p>
 The following session shows how to record a simple
 track.  First, we define a filter named ``piano'' that routes any
-event from device 1, channel 0 (input channel of the keyboard) to
-device 0, channel 5 (output channel of the sound module). Then we
+event from device 1, channel 0 (the keyboard input) to
+device 0, channel 5 (the sound module output). Then we
 create a new track ``pi1'', we start recording and we save the
 song into a file.
 
@@ -737,25 +737,21 @@ When devices are set up, put the corresponding dnew
 commands in the user's ``$HOME/.midishrc''. It will be
 automatically executed the next time midish is run.
 
-<h2><a name="inputs">3 Input channels</a></h2>
+<h2><a name="inputs">3 Inputs</a></h2>
 
 <p>
-Since midish handles multiple input sources, instead of
-using MIDI channels, it uses device / MIDI channel pairs
-to represent inputs.
+<i>Inputs</i> are named
+``{device&nbsp;MIDI-channel}'' pairs on which MIDI events
+arrive.
 
-So in this document <i>input channel</i> refers the 
-``{device&nbsp;MIDI-channel}'' pair on which MIDI events
-are incoming.
-
-Channels are handled by two-item lists, like this:
+Inputs are handled by two-item lists, like this:
 
 <pre>
 {1 0}                   # device 1, MIDI channel 0
 </pre>
 
 <p>
-Channels can also be named using the 
+Inputs are named using the
 ``<a href="#func_inew">inew</a>'' command,
 as follows:
 
@@ -764,36 +760,31 @@ inew keyboard {1 0}
 </pre>
 
 <p>
-this defines a named input channel ``keyboard'' that can
+this defines the ``keyboard'' symbol that may
 be used instead of the ``{1 0}'' pair.
 
 <p>
 <b>Note:</b>
-input channels are used as default values by certain functions,
-so it's better to register inputs using the
-``<a href="#func_inew">inew</a>'' command.
+Unlike simple ``{device&nbsp;MIDI-channel}'' pairs, inputs
+are used internally by certain functions.
 
-The easier is to add a ``inew'' statement in your ``$HOME/.midishrc''
-file, to avoid typing it every time midish is started.
+For instance, inputs are used to create default
+filter rules.
 
-<h2><a name="chan">4 Output channels</a></h2>
+<h2><a name="chan">4 Outputs</a></h2>
 
 <p>
-As for input channels, midish uses device / MIDI channel pairs
-to represent outputs.
+<i>Outputs</i> are named ``{device&nbsp;MIDI-channel}'' pairs
+where go outgoing MIDI events.
 
-So in this document <i>output channel</i> refers the
-``{device&nbsp;MIDI-channel}'' pair to which MIDI events will
-be sent.
-
-Output channels are handled by two-item lists, like this:
+They are handled by two-item lists, like this:
 
 <pre>
 {0 4}                   # device 0, MIDI channel 4
 </pre>
 
 <p>
-they can also be named using the 
+Outputs are named using the
 ``<a href="#func_onew">onew</a>'' command, as follows:
 
 <pre>
@@ -801,59 +792,63 @@ onew mybass {0 4}
 </pre>
 
 <p>
-this defines a named channel ``mybass'' that can
+this defines an output named ``mybass'' that may
 be used instead of the ``{0 4}'' pair.
 
 <p>
-Output channels expose a built-in filter with the same name; it
-defines how input events are routed to the output channel.
+Outputs have a filter with the same name; it
+defines how input events are routed to the output.
 
-The filter comes with a default rule that routes all input channels to
-the given output channel.
+The filter comes with a default rule that routes all named inputs to
+the given output.
 
 See filter section for further details.
 
-<h3><a name="section_4_1">4.1 Channel configuration</a></h3>
+<h3><a name="section_4_1">4.1 Output and input configuration</a></h3>
 
 <p>
-An output channel represents one musical instrument; midish allows
-basic channel configuration events (like program changes and
-controllers) to be attached to the channel definition.
+An output represents one musical instrument; midish allows
+configuration events (like program changes and
+controllers) to be attached to the output definition.
 
-Such events are sent to the output when performance mode is entered,
+Such events are sent when performance mode is entered,
 for instance just before playback is started.
-
-This approach avoids flooding MIDI devices with slow events (like
-program changes).
 
 <p>
 For instance,
-to select patch 34 on channel ``mybass'', attach
-a ``program change'' event:
+to set program number 34 on output ``mybass'', attach
+a ``program change'' event as follows.
+First make ``mybass'' the current output:
 
 <pre>
-oaddev mybass {pc mybass 32}
+co mybass
+</pre>
+
+then, set its program number:
+
+<pre>
+oaddev {pc mybass 34}
 </pre>
 
 <p>
-the list argument gives the event to attach to the channel.
+the list argument gives the event to attach to the output.
 See the <a href="#ev_ev">event</a> section for
 more details about events.
 
 <p>
-To set the volume (controller 7) of this channel to 120:
+To set its volume (controller 7) to 120:
 
 <pre>
-oaddev mybass {ctl mybass 7 120}
+oaddev {ctl mybass 7 120}
 </pre>
 
 <p>
-If several events of the same type are attached
-then just the last one is kept. So, the following
+If a setting is set multiple times, the last one is kept.
+For instance, the following
 will change the volume to 125 by replacing the above event:
 
 <pre>
-oaddev mybass {ctl mybass 7 125}
+oaddev {ctl mybass 7 125}
 </pre>
 
 <h2><a name="ev">5 Events and event sets specification</a></h2>
@@ -871,7 +866,7 @@ kat, xctl, xpc, cat, bend
 rpn, nrpn.
 
 <li>
-a channel
+an input or output
 
 <li>
 a number
@@ -931,7 +926,7 @@ program change device 1, channel 3, patch 34, bank 1234
 
 <p>
 set controller number 7 to 99
-on device/channel drums:
+on the ``drums'' output:
 
 <pre>
 {ctl drums 7 99}
@@ -960,16 +955,17 @@ cat, bend, rpn, nrpn
 xpc, xctl, none
 
 <li>
-an optional channel set.
+an optional input or output.
 
 If a name is given, its interpreted as an input or output created with
-<a href="#func_inew">inew</a> or <a href="#func_onew">onew</a>.
+<a href="#func_inew">inew</a> or <a href="#func_onew">onew</a>,
+else a ``{device&nbsp;MIDI-channel}'' pair may be used.
 
-If a number is given, it matches all MIDI channels of the
+If a single number is given, it matches all MIDI channels of the
 given device number.
 
 Alternatively, a list containing a device number range and a MIDI channel
-number range can be used (see examples below).
+number range may be used (see examples below).
 
 <li>
 an optional number range, specified as a list of two number separated
@@ -997,14 +993,14 @@ Examples:
 { any }                 # match everything
 { none }                # match nothing
 { any 1 }		# match anything on device 1
-{ any bass }            # match anything on channel "bass"
+{ any bass }            # match anything on "bass" output
 { any {1 4} }           # match anything on device 1, channel 4
 { note }                # match note events
 { note {1 9} }          # match notes on dev 1, channel 9
 { note {0 3..5} }       # match notes on device 0, channel 3, 4, 5
 { note {} 0..64 }       # match notes between 0 an 64
-{ ctl bass }            # match controllers on channel "bass"
-{ ctl bass 7 }          # match controller 7 on channel "bass"
+{ ctl bass }            # match controllers on "bass" output
+{ ctl bass 7 }          # match controller 7 on "bass" output
 { bend {} }             # match bender
 { xctl {} 19 }          # match 14-bit controller number 19
 { xpc  {} 1234 21 }     # match patch 21 on bank 1234
@@ -1033,7 +1029,7 @@ Filters are in general used to:
 <ul>
 
 <li>
-route events from a device/channel to another
+route events from inputs to outputs
 
 <li>
 map a controller to another
@@ -1050,7 +1046,7 @@ etc...
 </ul>
 
 <p>
-Multiple filters can be defined, however only the
+Multiple filters may be defined, however only the
 <i>current filter</i> will run in performance
 mode.
 
@@ -1073,12 +1069,12 @@ fnew myfilt                     # create filter "myfilt"
 initially the filter is empty and will send input to output
 as-is.
 
-Once the filter is created, filtering rules can be added, modified and
+Once the filter is created, filtering rules may be added, modified and
 removed.
 
-The filtering rules can be listed with the
+The filtering rules may be listed with the
 <a href="#func_finfo">finfo</a> function.
-All rules can be removed with the
+All rules may be removed with the
 <a href="#func_freset">freset</a> function.
 
 See <a href="#func_filt">filtering functions</a>
@@ -1114,8 +1110,8 @@ note {1 3} -&gt; note {2 8}
 </pre>
 
 <p>
-note events arriving on device 1 midi-channel 3 are sent
-to device 2, midi-channel 8.
+note events arriving on device 1 MIDI-channel 3 are sent
+to device 2, MIDI-channel 8.
 
 <p>
 The source and destination event sets must be of the same type
@@ -1132,7 +1128,7 @@ note {0 0} 40..49 -&gt; note {0 0} 60..69
 </pre>
 
 <p>
-will map notes on channel ``{0 0}'' by rewriting:
+will map notes on input ``{0 0}'' by rewriting:
 
 <ul>
 
@@ -1151,7 +1147,7 @@ will map notes on channel ``{0 0}'' by rewriting:
 <p>
 In order to discard a set of input events, it's possible to create
 rules with the empty set as destination set. For instance to
-discard the volume controller (number 7) on channel 
+discard the volume controller (number 7) on input
 ``{0 0}'' the following rule might be used:
 
 <pre>
@@ -1160,7 +1156,7 @@ ctl {0 0} 7 -&gt; none
 
 <p>
 Rules
-are created and delete with the
+are created and deleted with the
 <a href="#func_fmap">fmap</a> and 
 <a href="#func_funmap">funmap</a> functions respectively.
 
@@ -1184,7 +1180,7 @@ send EOF character (control-D) to quit
 <h3><a name="section_6_2">6.2 Rules hierarchy</a></h3>
 
 <p>
-In real life, the filter will probably have to contain multiple rules.
+Filters may contain multiple rules.
 
 If the input event matches the source set of two rules, then the most
 specific rule wins, i.e. the event is run only through the rule with the
@@ -1194,7 +1190,7 @@ If both rules have the same source set, then the event is duplicated
 and run through both rules.
 
 <p>
-This mechanism is very useful because it allows to define a default
+This mechanism is useful to define a default
 rule with a large source set and then to refine it by defining
 exceptions to it.
 
@@ -1207,19 +1203,19 @@ fmap {ctl kbd 1} {ctl piano 11}
 </pre>
 
 <p>
-the first rule will map all events coming from channel ``kbd'' (the
-input) to channel ``piano'' (the output); the second rule maps
+the first rule will map all events coming from the ``kbd'' input
+to the ``piano'' output; the second rule maps
 controller 1 (modulation) to controller 11 (expression).
 
 Controller 1 events match source sets of both rules, but they will be
 run through the second rule only, because it has the smaller set.
 
-The order in which rules are created is not important because 
+The order in which rules are created is not important because the
 <a href="#func_fmap">fmap</a> and <a href="#func_funmap">funmap</a>
-functions will always sort them.
+functions sort them.
 
 <p>
-That last point to retain is that in order to avoid inconsistencies
+In order to avoid inconsistencies
 there's a constraint on the source sets of rules of the same filter:
 if two source sets overlap, then one of them must contain the other
 one.
@@ -1248,7 +1244,7 @@ To test the filter, start performance mode using the
 then type
 ``<a href="#func_s">s</a>'' to stop performance mode
 
-<h4><a name="section_6_3_2">6.3.2 Channel maps</a></h4>
+<h4><a name="section_6_3_2">6.3.2 Input to output mappings</a></h4>
 
 <p>
 The following example defines a filter that routes events from device
@@ -1270,23 +1266,22 @@ sound-module.
 To stop performance mode, use
 ``<a href="#func_s">s</a>'' command.
 
-<h4><a name="section_6_3_3">6.3.3 Controller maps</a></h4>
+<h4><a name="section_6_3_3">6.3.3 Controller mappings</a></h4>
 
 <p>
-The following example add a new rule to the above filter that maps the
-modulation wheel (controller 1) of the source channel (i.e. device 1,
+The following example adds a new rule to the above filter that maps the
+modulation wheel (controller 1) of the input (i.e. device 1,
 midi channel 0) to the expression controller (number 11) of the
-destination channel (device 0, midi channel 9).
+output (device 0, midi channel 9).
 
 <pre>
 fmap {ctl {1 0} 1} {ctl {0 9} 11}
 </pre>
 
 <p>
-Rules of the filter can be listed with the 
+Rules of the filter may be listed with the
 <a href="#func_finfo">finfo</a>
-functions, which should display the list
-of rules as follows:
+function. It displays them as follows:
 
 <pre>
 {
@@ -1308,21 +1303,20 @@ ftransp {any {0 2}} 12                          # transpose by 12 halftones
 
 <p>
 First we create the filter, and we add a ``default'' rule to map
-anything coming from ``{1 0}'' (i.e. the MIDI keyboard) to ``{0 2}''
-(the second channel of the synth).
+anything coming from ``{1 0}'' (i.e. the MIDI keyboard) to ``{0 2}''.
 
 The second rule transposes anything the filter generated
-on channel ``{0 2}''.
+on output ``{0 2}''.
 
 Note that the order of the rules is not important, the
 ``<a href="#func_ftransp">ftransp</a>''
-rule always applies to events outgoing from the filter.
+rule always applies to outgoing events.
 
 <h4><a name="section_6_3_5">6.3.5 Keyboard splits</a></h4>
 
 <p>
 In the same way it is possible to create a keyboard-split with two
-key-rules and two channel-rules.
+rules.
 The following example splits the
 keyboard in two parts (left and right) on note 64 (note E3, the
 middle of the keyboard).
@@ -1337,12 +1331,6 @@ fmap {any {1 0}} {any {0 3}}
 fmap {note {1 0} 0..63}   {note {0 2} 0..63}
 fmap {note {1 0} 64..127} {note {0 3} 64..127}
 </pre>
-
-<p>
-Defining filters seems quite tedious, however it's possible
-to define procedures that do the same in a very simpler way.
-See the <a href="#interpreter">interpreter language</a>
-for more details.
 
 <h2><a name="time">7 Time structure</a></h2>
 
@@ -1399,9 +1387,7 @@ the track starting at this position.
 <h3><a name="section_7_2">7.2 Metronome</a></h3>
 
 <p>
-In order to "hear" time, a metronome can be used.
-
-It has three modes:
+The metronome has the following states:
 
 <ul>
 
@@ -1416,8 +1402,7 @@ It has three modes:
 <p>
 The
 ``<a href="#func_m">m</a>''
-command can be used to 
-change the mode of the metronome:
+command changes the mode of the metronome, example:
 
 <pre>
 m on            # switch the metronome on
@@ -1426,7 +1411,7 @@ s               # stop
 </pre>
 
 <p>
-The metronome has two kind of click-sound:
+The metronome has two kind of click-sounds:
 
 <ul>
 
@@ -1555,8 +1540,8 @@ all defined tracks, in record-mode it plays all defined tracks
 and records the current track.
 
 <p>
-Tracks aren't assigned to any particular device/channel; a track
-can contain MIDI data from any device/channel.
+Tracks aren't assigned to any particular ``{device&nbsp;MIDI-channel}'' pair.
+A track may contain MIDI data from any device and MIDI-channel.
 
 A track can have its
 <i>current filter</i>; in this case, MIDI events
@@ -2040,8 +2025,8 @@ about midish objects:
 <pre>
 ls              # summary
 minfo           # list tempo and signature  changes
-iinfo           # list config events of current input channel
-oinfo           # list config events of current output channel
+iinfo           # list config events of current input
+oinfo           # list config events of current output
 finfo           # list rules of current filter
 tinfo           # list events distribution of current track
 dinfo 0         # list device 0 properties
@@ -2051,11 +2036,11 @@ dinfo 0         # list device 0 properties
 Objects can be listed as follows:
 
 <pre>
-print [tlist]   # print track list
-print [ilist]   # print named input channel list
-print [olist]   # print named output channel list
-print [flist]   # print filter list
-print [xlist]   # print sysex back list
+print [tlist]   # print tracks list
+print [ilist]   # print inputs list
+print [olist]   # print outputs list
+print [flist]   # print filters list
+print [xlist]   # print sysex banks list
 </pre>
 
 <p>
@@ -2072,8 +2057,8 @@ print [tgetf]           # default filter of current track
 </pre>
 
 <p>
-The device and the MIDI channel of a channel definition
-can be obtained as follows:
+The device and the MIDI channel of a input or output may
+be obtained as follows:
 
 <pre>
 print [igetc]           # print midi chan number of current input
@@ -2115,7 +2100,7 @@ load "myfile"
 </pre>
 
 <p>
-All channel definitions, filters, tracks, their properties, and values
+All inputs, outputs, filters, tracks, their properties, and values
 of the current track, current filter are saved and restored.  However,
 note that the local settings (like device configuration, metronome
 settings) are not saved.
@@ -2152,8 +2137,8 @@ import "mysong.mid"
 Midish songs can be exported into standard MIDI files.
 Tempo changes and time signature changes are exported
 to a meta-track (first track of the MIDI file). Each
-channel definition is exported as a track containing
-the channel configuration events. Voice tracks
+output is exported as a track containing its
+configuration events. Voice tracks
 are exported as is in separate tracks. Note that device
 numbers of MIDI events are not stored in the MIDI file
 because the file format does not allow this.
@@ -2194,7 +2179,7 @@ and/or to define procedures, as follows.
 
 <p>
 Variables can be used to store numbers, strings and
-references to tracks, channels and filters, like:
+references to tracks, inputs, outputs and filters, like:
 
 <pre>
 let x = 53              # store 53 into "x"
@@ -2568,8 +2553,8 @@ add <a href="#func_mdup">mdup</a> function to copy portions of
 the project preserving its time structure.
 
 <li>
-added built-in filter to output channels, so there's no more need
-to create filter for every channel.
+added built-in filter to outputs, so there's no more need
+to create filter for every output.
 
 </ul>
 
@@ -2758,10 +2743,10 @@ it's a subset of ``xpc'', ``nrpn'', ``rpn''.
 
 </table>
 
-<h3><a name="section_17_2">17.2 Channel attributes</a></h3>
+<h3><a name="section_17_2">17.2 Input and output attributes</a></h3>
 
 <p>
-The following table summarizes the channel attributes:
+The following table summarizes the input or output attributes:
 
 <p>
 
@@ -2777,7 +2762,7 @@ The following table summarizes the channel attributes:
 
 <td>name
 
-<td>identifier used to reference the channel
+<td>identifier used to reference the input or output
 
 <tr>
 
@@ -2970,7 +2955,7 @@ it hasn't its default filter.
 <td>current input
 
 <td>
-default input channel. This value isn't used in real-time, however it can be
+default input. This value isn't used in real-time, however it can be
 used as default value when adding new rules to the filter.
 
 <tr>
@@ -2978,7 +2963,7 @@ used as default value when adding new rules to the filter.
 <td>current output
 
 <td>
-default output channel. This value isn't used in real-time, however it can be
+default output. This value isn't used in real-time, however it can be
 used as default value when adding new rules to the filter.
 
 <tr>
@@ -3607,7 +3592,7 @@ Return 1 if the given track is muted and 0 otherwise.
 <dt><a name="func_tclist">tclist</a>
 
 <dd>
-Return the list of channels used by events stored in the
+Return the list of outputs used by events stored in the
 current track.
 
 <dt><a name="func_tinfo">tinfo</a>
@@ -3623,63 +3608,63 @@ event selection
 
 <dl>
 
-<dt><a name="func_inew">inew channelname {dev midichan}</a>
+<dt><a name="func_inew">inew name {dev midichan}</a>
 
-<dd>create an new channel named ``channelname''
+<dd>create an new input with th given name
 and assigned the given device and MIDI channel.
 
 <dt><a name="func_iset">iset {dev midichan}</a>
 
 <dd>
-set the device/channel pair of the current channel.
-All filters are updated to use the new channel setting
+set the ``{device&nbsp;MIDI-channel}'' pair of the current input.
+All filters are updated to use the new setting
 as if the appropriate <a href="#func_fchin">fchin</a>
 function was invoked for each filter.
 
 <dt><a name="func_idel">idel</a>
 
 <dd>
-delete current channel.
+delete current input.
 
 <dt><a name="func_iren">iren newname</a>
 
 <dd>
-rename the current channel to ``newname''
+rename the current input to ``newname''
 
-<dt><a name="func_iexists">iexists channelname</a>
+<dt><a name="func_iexists">iexists name</a>
 
 <dd>
-return 1 if ``channelname'' is a channel, 0 otherwise
+return 1 if ``name'' is an input, 0 otherwise
 
 <dt><a name="func_igetc">igetc</a>
 
 <dd>
-return the MIDI channel number of the current channel
+return the MIDI channel number of the current input
 
 
-<dt><a name="func_igetd">igetd channelname</a>
+<dt><a name="func_igetd">igetd name</a>
 
 <dd>
-return the device number of the current channel
+return the device number of the current input
 
 <dt><a name="func_iaddev">iaddev event</a>
 
 <dd>
 add the event to the configuration of the current
-channel, it's not used yet.
+input, it's not used yet.
 
 <dt><a name="func_irmev">irmev evspec</a>
 
 <dd>
 remove all events matching ``evspec''
 (see event <a href="#ev_evspec">ranges</a>)
-from the configuration of the current channel
+from the configuration of the current input
 
 <dt><a name="func_iinfo">iinfo</a>
 
 <dd>
 print all events on the config
-of the current channel.
+of the current input.
 
 </dl>
 
@@ -3687,66 +3672,65 @@ of the current channel.
 
 <dl>
 
-<dt><a name="func_onew">onew channelname {dev midichan}</a>
+<dt><a name="func_onew">onew name {dev midichan}</a>
 
-<dd>create an new channel named ``channelname''
-and assigned the given device and MIDI channel.
+<dd>create an new output with the given name
+and assigned the given device and MIDI channel numbers.
 
-Output channels contain a built-in filter having the same name; by
-defaut it maps all inputs to the newly created output channel.
+Outputs have a filter with the same name; initially it
+maps all inputs to the newly created output.
 
 <dt><a name="func_oset">oset {dev midichan}</a>
 
 <dd>
-set the device/channel pair of the current channel.
-All filters are updated to use the new channel setting
+set the ``{device&nbsp;MIDI-channel}'' pair of the current output.
+All filters are updated to use the new setting
 as if the appropriate <a href="#func_fchout">fchout</a>
 function was invoked for each filter.
 
 <dt><a name="func_odel">odel</a>
 
 <dd>
-delete current channel.
+delete current output.
 
 <dt><a name="func_oren">oren newname</a>
 
 <dd>
-rename the current channel to ``newname''
+rename the current output to ``newname''
 
-<dt><a name="func_oexists">iexists channelname</a>
+<dt><a name="func_oexists">iexists name</a>
 
 <dd>
-return 1 if ``channelname'' is a channel, 0 otherwise
+return 1 if ``name'' is an output, 0 otherwise
 
 <dt><a name="func_ogetc">ogetc</a>
 
 <dd>
-return the MIDI channel number of the current channel
+return the MIDI channel number of the current output
 
 
-<dt><a name="func_ogetd">ogetd channelname</a>
+<dt><a name="func_ogetd">ogetd name</a>
 
 <dd>
-return the device number of the current channel
+return the device number of the output.
 
 <dt><a name="func_oaddev">oaddev event</a>
 
 <dd>
-add the event to the configuration of the current
-channel, it's not used yet.
+add given event to the configuration of the current
+output.
 
 <dt><a name="func_ormev">ormev evspec</a>
 
 <dd>
 remove all events matching ``evspec''
 (see event <a href="#ev_evspec">ranges</a>)
-from the configuration of the current channel
+from the configuration of the current output.
 
 <dt><a name="func_oinfo">oinfo</a>
 
 <dd>
-print all events on the config
-of the current channel.
+print all events of the config of the current output.
 
 </dl>
 
@@ -4092,28 +4076,28 @@ editing functions.
 return the current sysex bank
 or ``nil'' if none
 
-<dt><a name="func_ci">ci channame</a>
+<dt><a name="func_ci">ci name</a>
 
 <dd>
-set the current (named) input channel. All input channel
+set the current (named) input. All input
 editing functions will act on it. 
 
 <dt><a name="func_geti">geti</a>
 
 <dd>
-return the name of the current input channel
+return the name of the current input
 or ``nil'' if none
 
 <dt><a name="func_co">co channame</a>
 
 <dd>
-set the current (named) output channel. All output channel
+set the current (named) output. All output
 editing functions will act on it. 
 
 <dt><a name="func_geto">geto</a>
 
 <dd>
-return the name of the current output channel
+return the name of the current output
 or ``nil'' if none
 
 <dt><a name="func_setunit">setunit ticks_per_unit</a>
@@ -4201,7 +4185,7 @@ Return the ending measure of the song (i.e. its size in measures).
 <dt><a name="func_ls">ls</a>
 
 <dd>
-list all tracks, channels, filters and
+list all tracks, inputs, outputs, filters and
 various default values
 
 <dt><a name="func_save">save filename</a>
@@ -4734,7 +4718,7 @@ on the current input
 <dd>
 make the current filter route controller number
 ``ictl'' on the current input
-to controller ``octl'' on the current channel
+to controller ``octl'' on the current output
         
 <dt>solo
 
@@ -4760,38 +4744,38 @@ to the current sysex bank.
 <dt>gmp patch
 
 <dd>
-configures the current channel
+configures the current output
 to use general MIDI patch number ``patch''.
 (this will send program change event when
 performance mode is entered).
-        
+
 
 <dt>vol value
 
 <dd>
 set volume (controller number 7) of
-the current channel
+the current output
         
 
 <dt>reverb value
 
 <dd>
 set reverb (controller number 91) of
-the current channel
+the current output
         
 
 <dt>chorus value
 
 <dd>
 set chorus (controller number 93) of
-the current channel
+the current output
         
 
 <dt>rpn addr val
 
 <dd>
 set registered parameter number (RPN) ``addr''
-for the current channel to ``val''. Both ``addr''
+for the current output to ``val''. Both ``addr''
 and ``val'' are integers in the range 0..16383.
         
 
@@ -4799,7 +4783,7 @@ and ``val'' are integers in the range 0..16383.
 
 <dd>
 set not registered parameter number (NRPN) ``addr''
-for the current channel to ``val''. Both ``addr''
+for the current output to ``val''. Both ``addr''
 and ``val'' are integers in the range 0..16383.
         
 </dl>
@@ -4854,8 +4838,8 @@ record a track.
 
 <pre>
 send EOF character (control-D) to quit
-[0000:00]&gt; inew kbd {1 0}                    # select default input channel
-[0000:00]&gt; onew drums {0 9}                  # create drum channel
+[0000:00]&gt; inew kbd {1 0}                    # select default input
+[0000:00]&gt; onew drums {0 9}                  # create drum output
 [0000:00]&gt; tnew dr1                          # create track ``dr1''
 [0000:00]&gt; t 90                              # tempo to 90 bpm
 [0000:00]&gt; r                                 # start recording
@@ -4870,10 +4854,9 @@ send EOF character (control-D) to quit
 </pre>
 
 <p>
-first, we set the default input channel to ``{1 0}'' (default channel
-of the keyboard).
+first, we set the default input to ``{1 0}'' (the keyboard).
 
-Then, we define the ``drum'' channel on device 0, channel 9, this
+Then, we define the ``drum'' output as device 0, channel 9, this
 creates a default filter that maps ``kbd'' to ``drums''.
 
 Then we define a new track named ``dr1'' an we start recording.
