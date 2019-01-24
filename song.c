@@ -951,6 +951,8 @@ song_sysexcb(struct song *o, struct sysex *sx)
 	}
 	if (o->mode >= SONG_REC)
 		sysexlist_put(&o->recsx, sx);
+	else
+		sysex_del(sx);
 }
 
 /*
