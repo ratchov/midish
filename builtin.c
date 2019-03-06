@@ -210,7 +210,6 @@ unsigned
 blt_h(struct exec *o, struct data **r)
 {
 	char *name;
-	struct name *arg;
 	struct help *h;
 
 	if (!exec_lookupname(o, "key", &name)) {
