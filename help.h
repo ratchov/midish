@@ -24,4 +24,6 @@ struct help {
 
 extern struct help help_list[];
 
+void help_fmt(char *);
+
 #endif /* MIDISH_HELP_H */

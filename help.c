@@ -14,476 +14,477 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 #include <stddef.h>
+#include "textio.h"
 #include "help.h"
 
 char help_tlist[] =
 	"tlist\n"
 	"\n"
-	"Return the list of tracks.\n";
+	"Return the list of tracks.";
 
 char help_tnew[] =
 	"tnew name\n"
 	"\n"
-	"Create a track with the given name\n";
+	"Create a track with the given name";
 
 char help_tdel[] =
 	"tdel\n"
 	"\n"
-	"Delete the current track.\n";
+	"Delete the current track.";
 
 char help_tren[] =
 	"tren name\n"
 	"\n"
-	"Rename the current track to the given name.\n";
+	"Rename the current track to the given name.";
 
 char help_texists[] =
 	"texists name\n"
 	"\n"
-	"Return 1 if a track with the give name exists, 0 otherwise.\n";
+	"Return 1 if a track with the give name exists, 0 otherwise.";
 
 char help_taddev[] =
 	"taddev measure beat tic event\n"
 	"\n"
-	"Put the given event at the give position of the current track\n";
+	"Put the given event at the give position of the current track";
   
 char help_tsetf[] =
 	"tsetf filtname\n"
 	"\n"
-	"Set the default filter of the current track to the given filter.\n";
+	"Set the default filter of the current track to the given filter.";
 
 char help_tgetf[] =
 	"tgetf\n"
 	"\n"
 	"Return the default filter of the current track, returns nil\n"
-	"if none.\n";
+	"if none.";
 
 char help_tcheck[] =
 	"tcheck\n"
 	"\n"
-	"Check the current track for orphaned notes, nested notes, and\n"
-	"other anomalies. Remove multiple controllers in the same clock\n"
-	"tick\n";
+	"Check the current track for orphaned notes, nested notes, and "
+	"other anomalies. Remove multiple controllers in the same clock "
+	"tick";
 
 char help_trewrite[] =
 	"trewrite\n"
 	"\n"
-	"Rewrite the current track note-by-note.\n";
+	"Rewrite the current track note-by-note.";
 
 char help_tcut[] =
 	"tcut\n"
 	"\n"
-	"Cut the current selection of the current track.\n";
+	"Cut the current selection of the current track.";
 
 char help_tclr[] =
 	"tclr\n"
 	"\n"
-	"Clear the current selection of the current track. Only events\n"
-	"matching the current event selection (see the ``ev'' function) are\n"
-	"removed.\n";
+	"Clear the current selection of the current track. Only events "
+	"matching the current event selection (see the ``ev'' function) are "
+	"removed.";
 
 char help_tins[] =
 	"tins amount\n"
 	"\n"
-	"Insert the given amount of empty measures at the current position\n"
-	"in the current track.\n";
+	"Insert the given amount of empty measures at the current position "
+	"in the current track.";
 
 char help_tpaste[] =
 	"tpaste\n"
 	"\n"
-	"Paste track portion (copied with ``tcopy'') at the current position\n"
-	"of the current track.\n";
+	"Paste track portion (copied with ``tcopy'') at the current position "
+	"of the current track.";
 
 char help_tcopy[] =
 	"tcopy\n"
 	"\n"
-	"Copy the current selection of the current track so that it could\n"
-	"be pasted with ``tpaste''. Only events matching the current event\n"
-	"selection (see ``ev'') are copied.\n";
+	"Copy the current selection of the current track so that it could "
+	"be pasted with ``tpaste''. Only events matching the current event "
+	"selection (see ``ev'') are copied.";
 
 char help_tmerge[] =
 	"tmerge source\n"
 	"\n"
-	"Merge the given track into the current track\n";
+	"Merge the given track into the current track";
 
 char help_tquanta[] =
 	"tquanta rate\n"
 	"\n"
-	"Round event positions to the nearest exact position, as defined\n"
-	"by the see ``setq'' function. This affects events of the current\n"
-	"selection of the current track. Event positions are rounded to\n"
-	"the nearest tick multiple of the quantization step; Rate must be\n"
-	"between 0 and 100: 0 means no quantization and 100 means full\n"
-	"quantization.\n";
+	"Round event positions to the nearest exact position, as defined "
+	"by the see ``setq'' function. This affects events of the current "
+	"selection of the current track. Event positions are rounded to "
+	"the nearest tick multiple of the quantization step; Rate must be "
+	"between 0 and 100: 0 means no quantization and 100 means full "
+	"quantization.";
 
 char help_tquantf[] =
 	"tquantf rate\n"
 	"\n"
-	"Round frame positions (eg. note positions) to the nearest exact\n"
-	"position, as defined by the ``setq'' function. Frame length (eg.\n"
-	"note lengths) is preserved. Rate must be between 0 and 100:\n"
-	"0 means no quantization and 100 means full quantization.\n";
+	"Round frame positions (eg. note positions) to the nearest exact "
+	"position, as defined by the ``setq'' function. Frame length (eg. "
+	"note lengths) is preserved. Rate must be between 0 and 100: "
+	"0 means no quantization and 100 means full quantization.";
 
 char help_ttransp[] =
 	"ttransp halftones\n"
 	"\n"
-	"Transpose note events of current selection of the current track,\n"
-	"by the given number of half-tones. Only events matching the current\n"
-	"event selection (see ``ev'') are transposed.\n";
+	"Transpose note events of current selection of the current track, "
+	"by the given number of half-tones. Only events matching the current "
+	"event selection (see ``ev'') are transposed.";
 
 char help_tvcurve[] =
 	"tvcurve weight\n"
 	"\n"
-	"Adjust velocity of note events, using the given weight in\n"
-	"the -63..63 range. Applies only to note events of current\n"
-	"selection of the current track (see ``ev'').\n";
+	"Adjust velocity of note events, using the given weight in "
+	"the -63..63 range. Applies only to note events of current "
+	"selection of the current track (see ``ev'').";
 
 char help_tevmap[] =
 	"tevmap source dest\n"
 	"\n"
-	"Convert events matching the given source event set to the given destination\n"
-	"event set. Changes apply to in the current selection of the current track.\n"
-	"Both event sets must have the same number of devices,\n"
-	"channels, notes, controllers etc..\n";
+	"Convert events matching the given source event set to the given destination "
+	"event set. Changes apply to in the current selection of the current track. "
+	"Both event sets must have the same number of devices, "
+	"channels, notes, controllers etc..";
 
 char help_mute[] =
 	"mute trackname\n"
 	"\n"
-	"Mute the given track.\n";
+	"Mute the given track.";
 
 char help_unmute[] =
 	"unmute trackname\n"
 	"\n"
-	"Unmute the given track.\n";
+	"Unmute the given track.";
 
 char help_getmute[] =
 	"getmute trackname\n"
 	"\n"
-	"Return 1 if the given track is muted and 0 otherwise.\n";
+	"Return 1 if the given track is muted and 0 otherwise.";
 
 char help_tclist[] =
 	"tclist\n"
 	"\n"
-	"Return the list of channels used by events stored in the\n"
-	"current track.\n";
+	"Return the list of channels used by events stored in the "
+	"current track.";
 
 char help_tinfo[] =
 	"tinfo\n"
 	"\n"
-	"Scan the current selection of the current track, an for each\n"
-	"measure display the number of events that match the current\n"
-	"event selection\n";
+	"Scan the current selection of the current track, an for each "
+	"measure display the number of events that match the current "
+	"event selection";
 
 char help_inew[] =
 	"inew name channel\n"
 	"\n"
-	"Create an new input with the given name associated\n"
-	"to the given device and MIDI channel pair.\n";
+	"Create an new input with the given name associated "
+	"to the given device and MIDI channel pair.";
 
 char help_iset[] =
 	"iset channel\n"
 	"\n"
-	"Set the device and channel number of the current input. All\n"
-	"filters are updated to use the new channel setting as if the\n"
-	"appropriate fchin function was called for each filter.\n";
+	"Set the device and channel number of the current input. All "
+	"filters are updated to use the new channel setting as if the "
+	"appropriate fchin function was called for each filter.";
 
 char help_idel[] =
 	"idel\n"
 	"\n"
-	"Delete the current input.\n";
+	"Delete the current input.";
 
 char help_iren[] =
 	"iren newname\n"
 	"\n"
-	"Rename the current input to the given name\n";
+	"Rename the current input to the given name";
 
 char help_ilist[] =
 	"ilist\n"
 	"\n"
-	"Return list of inputs\n";
+	"Return list of inputs";
 
 char help_iexists[] =
 	"iexists channame\n"
 	"\n"
-	"Return 1 if an input with the give name exists, 0 otherwise.\n";
+	"Return 1 if an input with the give name exists, 0 otherwise.";
 
 char help_igetc[] =
 	"igetc\n"
 	"\n"
-	"Return the MIDI channel number of the current input\n";
+	"Return the MIDI channel number of the current input";
 
 char help_igetd[] =
 	"igetd\n"
 	"\n"
-	"Return the device number of the current input\n";
+	"Return the device number of the current input";
 
 char help_iaddev[] =
 	"iaddev event\n"
 	"\n"
-	"Add the given event to the configuration of the\n"
-	"current channel, it's not used yet.\n";
+	"Add the given event to the configuration of the "
+	"current channel, it's not used yet.";
 
 char help_irmev[] =
 	"irmev evspec\n"
 	"\n"
-	"Remove all events matching the given evspec from the configuration\n"
-	"of the current channel.\n";
+	"Remove all events matching the given evspec from the configuration "
+	"of the current channel.";
 
 char help_iinfo[] =
 	"iinfo\n"
 	"\n"
-	"Print all config events of the current input.\n";
+	"Print all config events of the current input.";
 
 char help_onew[] =
 	"onew name channel\n"
 	"\n"
-	"Create an new output with the given name and the given device\n"
-	"and MIDI channel. Outputs contain a built-in filter with the\n"
-	"same name; by defaut it maps all inputs to the newly created\n"
-	"output.\n";
+	"Create an new output with the given name and the given device "
+	"and MIDI channel. Outputs contain a built-in filter with the "
+	"same name; by defaut it maps all inputs to the newly created "
+	"output.";
 
 char help_odel[] =
 	"odel\n"
 	"\n"
-	"Delete current output.\n";
+	"Delete current output.";
 
 char help_oset[] =
 	"oset channel\n"
 	"\n"
-	"Set the device and MIDI channel numbers of the current output.\n"
-	"All filters are updated to use the new setting as if the\n"
-	"appropriate fchout function was called for each filter.\n";
+	"Set the device and MIDI channel numbers of the current output. "
+	"All filters are updated to use the new setting as if the "
+	"appropriate fchout function was called for each filter.";
 
 char help_oren[] =
 	"oren newname\n"
 	"\n"
-	"Rename the current output to the given name.\n";
+	"Rename the current output to the given name.";
 
 char help_oexists[] =
 	"oexists channame\n"
 	"\n"
-	"Return 1 if an output with the give name exists, 0 otherwise.\n";
+	"Return 1 if an output with the give name exists, 0 otherwise.";
 
 char help_ogetc[] =
 	"ogetc\n"
 	"\n"
-	"Return the MIDI channel number of the current output.\n";
+	"Return the MIDI channel number of the current output.";
 
 char help_ogetd[] =
 	"ogetd\n"
 	"\n"
-	"Return the device number of the current output.\n";
+	"Return the device number of the current output.";
 
 char help_oaddev[] =
 	"oaddev event\n"
 	"\n"
-	"Add the given event to the configuration of the current output.\n";
+	"Add the given event to the configuration of the current output.";
 
 char help_ormev[] =
 	"ormev evspec\n"
 	"\n"
-	"Remove all events matching the given set from the configuration\n"
-	"of the current output.\n";
+	"Remove all events matching the given set from the configuration "
+	"of the current output.";
 
 char help_oinfo[] =
 	"oinfo\n"
 	"\n"
-	"Print all config events of the current output.\n";
+	"Print all config events of the current output.";
 
 char help_olist[] =
 	"olist\n"
 	"\n"
-	"Return list of outputs\n";
+	"Return list of outputs";
 
 char help_fnew[] =
 	"fnew filtname\n"
 	"\n"
-	"Create an new filter with the given name\n";
+	"Create an new filter with the given name";
 
 char help_fdel[] =
 	"fdel\n"
 	"\n"
-	"Delete the current filter.\n";
+	"Delete the current filter.";
 
 char help_fren[] =
 	"fren newname\n"
 	"\n"
-	"Rename the current filter to the given name\n";
+	"Rename the current filter to the given name";
 
 char help_fexists[] =
 	"fexists filtname\n"
 	"\n"
-	"Return 1 if a filter with the given name exists, 0 otherwise.\n";
+	"Return 1 if a filter with the given name exists, 0 otherwise.";
 
 char help_freset[] =
 	"freset\n"
 	"\n"
-	"Remove all rules from the current filter.\n";
+	"Remove all rules from the current filter.";
 
 char help_finfo[] =
 	"finfo\n"
 	"\n"
-	"List all rules of the current filter\n";
+	"List all rules of the current filter";
 
 char help_flist[] =
 	"flist\n"
 	"\n"
-	"Return the list of existing filters\n";
+	"Return the list of existing filters";
 
 char help_fchgin[] =
 	"fchgin old_evspec new_evspec\n"
 	"\n"
-	"Rewrite current filter rules to consume ``new_evspec'' events\n"
-	"instead of ``old_evspec'' events. This means that each rule previously\n"
-	"matching ``old_evspec'' on the input will start\n"
-	"matching ``new_evspec'' instead.\n";
+	"Rewrite current filter rules to consume ``new_evspec'' events "
+	"instead of ``old_evspec'' events. This means that each rule previously "
+	"matching ``old_evspec'' on the input will start "
+	"matching ``new_evspec'' instead.";
 
 char help_fswapin[] =
 	"fswapin from to\n"
 	"\n"
-	"Similar to ``fchgin'' but swap ``new_evspec'' and ``old_evspec'' in\n"
-	"the source events set of each rule.\n";
+	"Similar to ``fchgin'' but swap ``new_evspec'' and ``old_evspec'' in "
+	"the source events set of each rule.";
 
 char help_fchgout[] =
 	"fchgout from to\n"
 	"\n"
-	"Rewrite all filtering rules of the current filter to produce\n"
-	"``new_evspec'' events instead of ``old_evspec'' events. This means\n"
-	"that each rule previously producing ``old_evspec'' will\n"
-	"start producing ``new_evspec'' instead.\n";
+	"Rewrite all filtering rules of the current filter to produce "
+	"``new_evspec'' events instead of ``old_evspec'' events. This means "
+	"that each rule previously producing ``old_evspec'' will "
+	"start producing ``new_evspec'' instead.";
 
 char help_fswapout[] =
 	"fswapout from to\n"
 	"\n"
-	"Similar to ``fchgou'' but swap ``old_evspec'' and ``new_evspec'' in\n"
-	"the destination events set of each rule.\n";
+	"Similar to ``fchgou'' but swap ``old_evspec'' and ``new_evspec'' in "
+	"the destination events set of each rule.";
 
 char help_fmap[] =
 	"fmap source dest\n"
 	"\n"
-	"Add a new mapping rule to the current filter. The events matching\n"
-	"the source event set will be converted to the destination event set.\n"
-	"Source and destination sets must have the same number of devices,\n"
-	"channels, notes, controllers etc..\n";
+	"Add a new mapping rule to the current filter. The events matching "
+	"the source event set will be converted to the destination event set. "
+	"Source and destination sets must have the same number of devices, "
+	"channels, notes, controllers etc..";
 
 char help_funmap[] =
 	"funmap source dest\n"
 	"\n"
-	"Remove the given event mapping rules from the current filter. Any\n"
-	"mapping rule with source included in the given source and destination\n"
-	"inluded in the given destination is deleted.\n";
+	"Remove the given event mapping rules from the current filter. Any "
+	"mapping rule with source included in the given source and destination "
+	"inluded in the given destination is deleted.";
 
 char help_ftransp[] =
 	"ftransp evspec half_tones\n"
 	"\n"
-	"Transpose events matching the given event set by the given number\n"
-	"of halftones\n";
+	"Transpose events matching the given event set by the given number "
+	"of halftones";
 
 char help_fvcurve[] =
 	"fvcurve evspec weight\n"
 	"\n"
-	"Adjust velocity of the given note events, using\n"
-	"the given ``weight'' in the -63..63 range.  If ``weight'' is\n"
-	"negative then sensitivity is decreased. If it's positive then\n"
-	"sensitivity is increased. If it's zero the velocity is unchanged\n";
+	"Adjust velocity of the given note events, using "
+	"the given ``weight'' in the -63..63 range.  If ``weight'' is "
+	"negative then sensitivity is decreased. If it's positive then "
+	"sensitivity is increased. If it's zero the velocity is unchanged";
 
 char help_xnew[] =
 	"xnew sysexname\n"
 	"\n"
-	"Create a new bank of sysex messages with the given name\n";
+	"Create a new bank of sysex messages with the given name";
 
 char help_xdel[] =
 	"xdel\n"
 	"\n"
-	"Delete the current bank of sysex messages.\n";
+	"Delete the current bank of sysex messages.";
 
 char help_xren[] =
 	"xren newname\n"
 	"\n"
-	"Rename the current sysex bank to the given name\n";
+	"Rename the current sysex bank to the given name";
 
 char help_xexists[] =
 	"xexists sysexname\n"
 	"\n"
-	"Return 1 if a sysex bank with the given name exists, 0 otherwise.\n";
+	"Return 1 if a sysex bank with the given name exists, 0 otherwise.";
 
 char help_xrm[] =
 	"xrm data\n"
 	"\n"
-	"Remove all sysex messages starting with the given pattern from the\n"
-	"current sysex bank. The given pattern is a list of bytes; an empty\n"
-	"pattern matches any sysex message.\n";
+	"Remove all sysex messages starting with the given pattern from the "
+	"current sysex bank. The given pattern is a list of bytes; an empty "
+	"pattern matches any sysex message.";
 
 char help_xsetd[] =
 	"xsetd device pattern\n"
 	"\n"
-	"Set device number of all sysex messages starting\n"
-	"with the given pattern in the current sysex bank. The given pattern\n"
-	"is a list of bytes; an empty pattern matches any sysex message.\n";
+	"Set device number of all sysex messages starting "
+	"with the given pattern in the current sysex bank. The given pattern "
+	"is a list of bytes; an empty pattern matches any sysex message.";
 
 char help_xadd[] =
 	"xadd device message\n"
 	"\n"
-	"Add the given sysex message to the current sysex bank. The message is a\n"
-	"list containing the system exclusive message bytes. The given device number\n"
-	"specifies the device to which the message will be sent when performance mode\n"
-	"is entered\n";
+	"Add the given sysex message to the current sysex bank. The message is a "
+	"list containing the system exclusive message bytes. The given device number "
+	"specifies the device to which the message will be sent when performance mode "
+	"is entered";
 
 char help_xinfo[] =
 	"xinfo\n"
 	"\n"
-	"Print all sysex messages of the current sysex bank. Messages that are\n"
-	"too long to be desplayed on a single line are truncated and dots\n"
-	"are displayed.\n";
+	"Print all sysex messages of the current sysex bank. Messages that are "
+	"too long to be desplayed on a single line are truncated and dots "
+	"are displayed.";
 
 char help_ximport[] =
 	"ximport device path\n"
 	"\n"
-	"Replace contents of the current sysex bank by contents of the given\n"
-	".syx file; messages are assigned to the given device number.\n";
+	"Replace contents of the current sysex bank by contents of the given "
+	".syx file; messages are assigned to the given device number.";
 
 char help_xexport[] =
 	"xexport path\n"
 	"\n"
-	"Store contents of the current sysex bank in the given .syx file\n";
+	"Store contents of the current sysex bank in the given .syx file";
 
 char help_xlist[] =
 	"xlist\n"
 	"\n"
-	"Return the list of sysex banks.\n";
+	"Return the list of sysex banks.";
 
 char help_i[] =
 	"i\n"
 	"\n"
-	"Enter performance mode. Start processing MIDI input and\n"
-	"generating MIDI output. Data passes through the current filter\n"
-	"(if any) or through the current track's filter (if any).\n";
+	"Enter performance mode. Start processing MIDI input and "
+	"generating MIDI output. Data passes through the current filter "
+	"(if any) or through the current track's filter (if any).";
 
 char help_p[] =
 	"p\n"
 	"\n"
-	"Play the song from the current position. Input passes through the\n"
-	"current filter (if any) or through the current track's filter\n"
-	"(if any).\n";
+	"Play the song from the current position. Input passes through the "
+	"current filter (if any) or through the current track's filter "
+	"(if any).";
 
 char help_r[] =
 	"r\n"
 	"\n"
-	"Play the song and record the input. Input passes through the current\n"
-	"filter (if any) or through the current track's filter (if any).\n"
-	"On startup, this function plays one measure of countdown before the data\n"
-	"start being recorded.\n";
+	"Play the song and record the input. Input passes through the current "
+	"filter (if any) or through the current track's filter (if any). "
+	"On startup, this function plays one measure of countdown before the data "
+	"start being recorded.";
 
 char help_s[] =
 	"s\n"
 	"\n"
-	"Stop performance and release MIDI devices. I.e. stop the effect ``i'',\n"
-	"``p'', and ``r'' functions.\n";
+	"Stop performance and release MIDI devices. I.e. stop the effect ``i'', "
+	"``p'', and ``r'' functions.";
 
 char help_ev[] =
 	"ev evspec\n"
 	"\n"
-	"Set the current event selection. Most track editing functions will\n"
-	"act only on events matching evspec ignoring all other events.\n";
+	"Set the current event selection. Most track editing functions will "
+	"act only on events matching evspec ignoring all other events.";
 
 char help_setq[] =
 	"setq step\n"
@@ -494,372 +495,372 @@ char help_setq[] =
 	"\t8 -> eighth note\n"
 	"\t12 -> eighth note triplet\n"
 	"\tetc...\n"
-	"The quantization step will be used by tquanta and tquantf funnctions\n"
-	"to optimize event selection. If the special ``nil'' value is specified\n"
-	"as quantization step, then quatization is disabled.\n";
+	"The quantization step will be used by tquanta and tquantf funnctions "
+	"to optimize event selection. If the special ``nil'' value is specified "
+	"as quantization step, then quatization is disabled.";
 
 char help_getq[] =
 	"getq\n"
 	"\n"
-	"Return the current quatization step\n";
+	"Return the current quatization step";
 
 char help_g[] =
 	"g measure\n"
 	"\n"
-	"Set the current song position pointer to the given measure number.\n"
-	"Record and playback will start a that position. This also defines\n"
-	"the beginning of the current selection used by most track editing\n"
-	"functions.\n";
+	"Set the current song position pointer to the given measure number. "
+	"Record and playback will start a that position. This also defines "
+	"the beginning of the current selection used by most track editing "
+	"functions.";
 
 char help_getpos[] =
 	"getpos\n"
 	"\n"
-	"Return the current song position pointer which is also the start\n"
-	"position of the current selection.\n";
+	"Return the current song position pointer which is also the start "
+	"position of the current selection.";
 
 char help_sel[] =
 	"sel length\n"
 	"\n"
-	"Set the length of the current selection to ``length'' measures. The\n"
-	"current selection start at the current position set with the ``g''\n"
-	"function\n";
+	"Set the length of the current selection to ``length'' measures. The "
+	"current selection start at the current position set with the ``g'' "
+	"function";
 
 char help_getlen[] =
 	"getlen\n"
 	"\n"
-	"Return the length (in measures) of the current selection.\n";
+	"Return the length (in measures) of the current selection.";
 
 char help_ct[] =
 	"ct trackname\n"
 	"\n"
-	"Set the current track. The current track\n"
-	"is the one that will be recorded. Most track editing\n"
-	"functions act on it.\n";
+	"Set the current track. The current track "
+	"is the one that will be recorded. Most track editing "
+	"functions act on it.";
 
 char help_gett[] =
 	"gett\n"
 	"\n"
-	"Return the current track (if any) or ``nil''\n";
+	"Return the current track (if any) or ``nil''";
 
 char help_cf[] =
 	"cf filtname\n"
 	"\n"
-	"Set the current filter to ``filtname''. The current filter\n"
-	"is the one used to process input MIDI events in performance mode.\n"
-	"It's also the one affected by all filter editing functions.\n";
+	"Set the current filter to ``filtname''. The current filter "
+	"is the one used to process input MIDI events in performance mode. "
+	"It's also the one affected by all filter editing functions.";
 
 char help_getf[] =
 	"getf\n"
 	"\n"
-	"Return the current filter or ``nil'' if none.\n";
+	"Return the current filter or ``nil'' if none.";
 
 char help_cx[] =
 	"cx sysexname\n"
 	"\n"
-	"Set the current sysex bank, i.e. the one that will be recorded.\n"
-	"The current sysex back is the one affected by all sysex editing\n"
-	"functions.\n";
+	"Set the current sysex bank, i.e. the one that will be recorded. "
+	"The current sysex back is the one affected by all sysex editing "
+	"functions.";
 
 char help_getx[] =
 	"getx\n"
 	"\n"
-	"Return the current sysex bank or ``nil'' if none\n";
+	"Return the current sysex bank or ``nil'' if none";
 
 char help_ci[] =
 	"ci channame\n"
 	"\n"
-	"Set the current (named) input channel. All input channel\n"
-	"editing functions will act on it.\n";
+	"Set the current (named) input channel. All input channel "
+	"editing functions will act on it.";
 
 char help_geti[] =
 	"geti\n"
 	"\n"
-	"Return the name of the current input channel or ``nil'' if none\n";
+	"Return the name of the current input channel or ``nil'' if none";
 
 char help_co[] =
 	"co channame\n"
 	"\n"
-	"Set the current (named) output channel. All output channel\n"
-	"editing functions will act on it.\n";
+	"Set the current (named) output channel. All output channel "
+	"editing functions will act on it.";
 
 char help_geto[] =
 	"geto\n"
 	"\n"
-	"Return the name of the current output channel or ``nil'' if none\n";
+	"Return the name of the current output channel or ``nil'' if none";
 
 char help_setunit[] =
 	"setunit tics_per_unit\n"
 	"\n"
-	"Set the time resolution of the sequencer to ``tpu'' ticks in a\n"
-	"whole note (1 unit note = 4 quarter notes). The default is 96 ticks,\n"
-	"which is the default of the MIDI standard.\n";
+	"Set the time resolution of the sequencer to ``tpu'' ticks in a "
+	"whole note (1 unit note = 4 quarter notes). The default is 96 ticks, "
+	"which is the default of the MIDI standard.";
 
 char help_getunit[] =
 	"getunit\n"
 	"\n"
-	"Return the number of ticks in a whole note\n";
+	"Return the number of ticks in a whole note";
 
 char help_fac[] =
 	"fac tempo_factor\n"
 	"\n"
-	"Set the tempo factor for play and record to the given integer\n"
-	"value. The tempo factor must be between 50 (play half of the\n"
-	"real tempo) and 200 (play at twice the real tempo).\n";
+	"Set the tempo factor for play and record to the given integer "
+	"value. The tempo factor must be between 50 (play half of the "
+	"real tempo) and 200 (play at twice the real tempo).";
 
 char help_getfac[] =
 	"getfac\n"
 	"\n"
-	"Return the current tempo factor.\n";
+	"Return the current tempo factor.";
 
 char help_t[] =
 	"t beats_per_minute\n"
 	"\n"
-	"Set the tempo at the current song position.\n";
+	"Set the tempo at the current song position.";
 
 char help_mins[] =
 	"mins amount sig\n"
 	"\n"
-	"Insert ``amount'' blank measures at the current song position.\n"
-	"The time signature used is num/denom. If the time signature is\n"
-	"an empty list (i.e. ``{}'') then the time signature at the\n"
-	"current position is used.\n";
+	"Insert ``amount'' blank measures at the current song position. "
+	"The time signature used is num/denom. If the time signature is "
+	"an empty list (i.e. ``{}'') then the time signature at the "
+	"current position is used.";
 
 char help_mcut[] =
 	"mcut\n"
 	"\n"
-	"Cut the current selection of all tracks, including the\n"
-	"time structure.\n";
+	"Cut the current selection of all tracks, including the "
+	"time structure.";
 
 char help_mdup[] =
 	"mdup where\n"
 	"\n"
-	"Duplicate the current selection inserting a copy of it at\n"
-	"the position given by the ``where'' parameter. The target\n"
-	"position is a measure number relative to the current selection\n"
-	"to be copied. If ``where'' is positive it's relative to the end\n"
-	"of the current selection; if it's negative it's relative to\n"
-	"the beginning of the current selection.\n";
+	"Duplicate the current selection inserting a copy of it at "
+	"the position given by the ``where'' parameter. The target "
+	"position is a measure number relative to the current selection "
+	"to be copied. If ``where'' is positive it's relative to the end "
+	"of the current selection; if it's negative it's relative to "
+	"the beginning of the current selection.";
 
 char help_minfo[] =
 	"minfo\n"
 	"\n"
-	"Print the meta-track (tempo changes, time signature changes.\n";
+	"Print the meta-track (tempo changes, time signature changes.";
 
 char help_mtempo[] =
 	"mtempo\n"
 	"\n"
-	"Return the tempo at the current song position. The unit is beats\n"
-	"per minute.\n";
+	"Return the tempo at the current song position. The unit is beats "
+	"per minute.";
 
 char help_msig[] =
 	"msig\n"
 	"\n"
-	"Return the time signature at the current song position. The result\n"
-	"is a two number list: numerator and denominator.\n";
+	"Return the time signature at the current song position. The result "
+	"is a two number list: numerator and denominator.";
 
 char help_mend[] =
 	"mend\n"
 	"\n"
-	"Return the ending measure of the song (i.e. its size in measures).\n";
+	"Return the ending measure of the song (i.e. its size in measures).";
 
 char help_ls[] =
 	"ls\n"
 	"\n"
-	"List all tracks, channels, filters and various default values\n";
+	"List all tracks, channels, filters and various default values";
 
 char help_save[] =
 	"save filename\n"
 	"\n"
-	"Save the song into the given file. The file name is a\n"
-	"quoted string.\n";
+	"Save the song into the given file. The file name is a "
+	"quoted string.";
 
 char help_load[] =
 	"load filename\n"
 	"\n"
-	"Load the song from the given file. The file name is a\n"
-	"quoted string. The current song will be overwritten.\n";
+	"Load the song from the given file. The file name is a "
+	"quoted string. The current song will be overwritten.";
 
 char help_reset[] =
 	"reset\n"
 	"\n"
-	"Destroy completely the song, useful to start a new song without\n"
-	"restarting the program\n";
+	"Destroy completely the song, useful to start a new song without "
+	"restarting the program";
 
 char help_export[] =
 	"export filename\n"
 	"\n"
-	"Save the song into the given standard MIDI file. The file name\n"
-	"is a quoted string.\n";
+	"Save the song into the given standard MIDI file. The file name "
+	"is a quoted string.";
 
 char help_import[] =
 	"import filename\n"
 	"\n"
-	"Load the song from the given standard MIDI file. The file name\n"
-	"is a quoted string. The current song will be overwritten.\n"
-	"Only MIDI file formats 0 and 1 are supported.\n";
+	"Load the song from the given standard MIDI file. The file name "
+	"is a quoted string. The current song will be overwritten. "
+	"Only MIDI file formats 0 and 1 are supported.";
 
 char help_u[] =
 	"u\n"
 	"\n"
-	"Undo last operation saved for undo.\n";
+	"Undo last operation saved for undo.";
 
 char help_ul[] =
 	"ul\n"
 	"\n"
-	"List operations saved for undo.\n";
+	"List operations saved for undo.";
 
 char help_dlist[] =
 	"dlist\n"
 	"\n"
-	"Return the list of attached devices (list of numbers)\n";
+	"Return the list of attached devices (list of numbers)";
 
 char help_dnew[] =
 	"dnew devnum path mode\n"
 	"\n"
-	"Attach MIDI device ``filename'' as device number ``devnum'';\n"
-	"``filename'' is a quoted string. The ``mode'' argument is the\n"
+	"Attach MIDI device ``filename'' as device number ``devnum''; "
+	"``filename'' is a quoted string. The ``mode'' argument is the "
 	"name of the mode, it can be on if the following:\n"
 	"    ro - read-only, for input only devices\n"
 	"    wo - write-only, for output only devices\n"
 	"    rw - read and write.\n"
-	"If midish is configured to use ALSA (default on Linux systems)\n"
-	"then ``filename'' should contain the ALSA sequencer port, as\n"
-	"listed by ``aseqdump -l'', (eg. ``28:0'', ``FLUID Synth (qsynth)'').\n"
-	"If ``nil'' is given instead of the path, then the port is not\n"
-	"connected to any existing port; this allows other ALSA sequencer\n"
-	"clients to subscribe to it and to provide events to midish or to\n"
-	"consume events midish sends to it.\n";
+	"If midish is configured to use ALSA (default on Linux systems) "
+	"then ``filename'' should contain the ALSA sequencer port, as "
+	"listed by ``aseqdump -l'', (eg. ``28:0'', ``FLUID Synth (qsynth)''). "
+	"If ``nil'' is given instead of the path, then the port is not "
+	"connected to any existing port; this allows other ALSA sequencer "
+	"clients to subscribe to it and to provide events to midish or to "
+	"consume events midish sends to it.";
 
 char help_ddel[] =
 	"ddel devnum\n"
 	"\n"
-	"Detach device number ``devnum''\n";
+	"Detach device number ``devnum''";
 
 char help_dmtcrx[] =
 	"dmtcrx devnum\n"
 	"\n"
-	"Use device number ``devnum'' as MTC source.\n"
-	"In this case, midish will relocate, start and stop according to\n"
-	"incoming MTC messages. Midish will generate its clock ticks from\n"
-	"MTC, meaning that it will run at the same speed as the MTC device.\n"
-	"This is useful to synchronize midish to an audio multi-tracker or any\n"
-	"MTC capable audio application. If ``devnum'' is ``nil'', then MTC\n"
-	"messages are ignored and the internal timer will be used instead.\n";
+	"Use device number ``devnum'' as MTC source. "
+	"In this case, midish will relocate, start and stop according to "
+	"incoming MTC messages. Midish will generate its clock ticks from "
+	"MTC, meaning that it will run at the same speed as the MTC device. "
+	"This is useful to synchronize midish to an audio multi-tracker or any "
+	"MTC capable audio application. If ``devnum'' is ``nil'', then MTC "
+	"messages are ignored and the internal timer will be used instead.";
 
 char help_dmmctx[] =
 	"dmmctx devlist\n"
 	"\n"
-	"Configure the given devices to transmit MMC start, stop\n"
-	"and relocate messages. Useful to control MMC-capable audio\n"
-	"applications from midish. By default, devices transmit MMC.\n";
+	"Configure the given devices to transmit MMC start, stop "
+	"and relocate messages. Useful to control MMC-capable audio "
+	"applications from midish. By default, devices transmit MMC.";
 
 char help_dclktx[] =
 	"dclktx devlist\n"
 	"\n"
-	"Configure the given devices to transmit MIDI clock information\n"
-	"(MIDI ticks, MIDI start and MIDI stop events). Useful to\n"
-	"synchronize an external sequencer to midish.\n";
+	"Configure the given devices to transmit MIDI clock information "
+	"(MIDI ticks, MIDI start and MIDI stop events). Useful to "
+	"synchronize an external sequencer to midish.";
 
 char help_dclkrx[] =
 	"dclkrx devnum\n"
 	"\n"
-	"Set device number ``devnum'' to be the master MIDI clock source.\n"
-	"It will give midish MIDI ticks, MIDI start and MIDI stop events. This\n"
-	"useful to synchronize midish to an external sequencer. If ``devnum'' is\n"
-	"``nil'', then the internal clock will be used and midish will act as\n"
-	"master device.\n";
+	"Set device number ``devnum'' to be the master MIDI clock source. "
+	"It will give midish MIDI ticks, MIDI start and MIDI stop events. This "
+	"useful to synchronize midish to an external sequencer. If ``devnum'' is "
+	"``nil'', then the internal clock will be used and midish will act as "
+	"master device.";
 
 char help_dclkrate[] =
 	"dclkrate devnum tics_per_unit\n"
 	"\n"
-	"Set the number of ticks in a whole note that are transmitted to the\n"
-	"MIDI device. Default value is 96 ticks. This is the standard MIDI\n"
-	"value and its not recommended to change it.\n";
+	"Set the number of ticks in a whole note that are transmitted to the "
+	"MIDI device. Default value is 96 ticks. This is the standard MIDI "
+	"value and its not recommended to change it.";
 
 char help_dinfo[] =
 	"dinfo devnum\n"
 	"\n"
-	"Print some information about the MIDI device.\n";
+	"Print some information about the MIDI device.";
 
 char help_dixctl[] =
 	"dixctl devnum ctlset\n"
 	"\n"
-	"Setup the list of controllers that are expected to be received\n"
-	"as 14-bit numbers (i.e. both coarse and fine MIDI controller messages\n"
-	"will be expected). By default only coarse values are used, if unsure\n"
-	"let this list empty.\n";
+	"Setup the list of controllers that are expected to be received "
+	"as 14-bit numbers (i.e. both coarse and fine MIDI controller messages "
+	"will be expected). By default only coarse values are used, if unsure "
+	"let this list empty.";
 
 char help_doxctl[] =
 	"doxctl devnum ctlset\n"
 	"\n"
-	"Setup the list of controllers that will be transmitted\n"
-	"as 14-bit numbers (both coarse and fine MIDI controller messages).\n";
+	"Setup the list of controllers that will be transmitted "
+	"as 14-bit numbers (both coarse and fine MIDI controller messages).";
 
 char help_diev[] =
 	"diev devnum flags\n"
 	"\n"
-	"Configure the device to process as a single event the following\n"
+	"Configure the device to process as a single event the following "
 	"patterns of input MIDI messages.\n"
 	"    xpc: group bank select controllers (0 and 32) with program\n"
 	"         changes into a signle ``xpc'' event.\n"
 	"   nrpn: group NRPN controllers (98 and 99) with data entry\n"
 	"         controllers (6 and 38) into a single ``nrpn'' event.\n"
 	"    rpn: same as ``nrpn'', but for RPN controllers (100 and 101).\n"
-	"By default all of the above are enabled, which allows banks, NRPNs\n"
-	"and RPNs to be handled by midish the standard way.\n"
-	"It makes sense to disable grouping of above messages on rare hardware\n"
-	"that maps above-mentioned controller numbers (0, 6, 32, 38, 98, 99,\n"
-	"100, 101) to other parameters than bank number and NRPN/RPN.\n";
+	"By default all of the above are enabled, which allows banks, NRPNs "
+	"and RPNs to be handled by midish the standard way. "
+	"It makes sense to disable grouping of above messages on rare hardware "
+	"that maps above-mentioned controller numbers (0, 6, 32, 38, 98, 99, "
+	"100, 101) to other parameters than bank number and NRPN/RPN.";
 
 char help_doev[] =
 	"doev devnum flags\n"
 	"\n"
-	"Same as ``diev'', but for output messages\n";
+	"Same as ``diev'', but for output messages";
 
 char help_ctlconf[] =
 	"ctlconf name ctl defval\n"
 	"\n"
-	"Configure controller number ``ctlnumber'' with name ``ctlname'',\n"
-	"and default value ``defval''. If defval is ``nil'' then there is\n"
-	"no default value and corresponding controller events are not grouped\n"
-	"into frames.\n";
+	"Configure controller number ``ctlnumber'' with name ``ctlname'', "
+	"and default value ``defval''. If defval is ``nil'' then there is "
+	"no default value and corresponding controller events are not grouped "
+	"into frames.";
 
 char help_ctlconfx[] =
 	"ctlconfx name ctl defval\n"
 	"\n"
-	"Same as ctlconf, but for 14-bit controllers. Thus defval is in the\n"
-	"range 0..16383.\n";
+	"Same as ctlconf, but for 14-bit controllers. Thus defval is in the "
+	"range 0..16383.";
 
 char help_ctlunconf[] =
 	"ctlunconf name\n"
 	"\n"
-	"Unconfigure the given controller. ``ctlname'' is the identifier that\n"
-	"was used with ctlconf or ctlconfx\n";
+	"Unconfigure the given controller. ``ctlname'' is the identifier that "
+	"was used with ctlconf or ctlconfx";
 
 char help_ctlinfo[] =
 	"ctlinfo\n"
 	"\n"
-	"Print the list of configured controllers\n";
+	"Print the list of configured controllers";
 
 char help_evpat[] =
 	"evpat name pattern\n"
 	"\n"
-	"Define a new event type corresponding to the given system exclusive\n"
-	"message pattern. The pattern is a list of bytes or event parameter\n"
-	"identifiers (aka atoms).  The following atoms are supported: v0, v0_lo,\n"
-	"v0_hi, v1, v1_lo, v1_hi. They correspond to the full 7-bit value (coarse\n"
-	"parameter), the low 7-bit nibble and the high 7-bit nibble (fine grained\n"
+	"Define a new event type corresponding to the given system exclusive "
+	"message pattern. The pattern is a list of bytes or event parameter "
+	"identifiers (aka atoms).  The following atoms are supported: v0, v0_lo, "
+	"v0_hi, v1, v1_lo, v1_hi. They correspond to the full 7-bit value (coarse "
+	"parameter), the low 7-bit nibble and the high 7-bit nibble (fine grained "
 	"parameters) of the first and second parameters respectively. Example:\n"
 	"\n"
 	"\tevpat master {0xf0 0x7f 0x7f 0x04 0x01 v0_lo v0_hi 0xf7}\n"
 	"\n"
-	"defines a new event type for the standard master volume system exclusive\n"
-	"message.\n";
+	"defines a new event type for the standard master volume system exclusive "
+	"message.";
 
 char help_evinfo[] =
 	"evinfo\n"
 	"\n"
-	"Print the list of event patterns.\n";
+	"Print the list of event patterns.";
 
 char help_m[] =
 	"m onoff\n"
@@ -867,63 +868,63 @@ char help_m[] =
 	"Set the mode of the metronome. The following modes are available:\n"
 	"    on - turned on for both playback and recording\n"
 	"    rec - turned on for recording only\n"
-	"    off - turned off\n";
+	"    off - turned off";
 
 char help_metrocf[] =
 	"metrocf eventhi eventlo\n"
 	"\n"
-	"Select the notes that the metronome plays. The pair of events must\n"
-	"be note-on events\n";
+	"Select the notes that the metronome plays. The pair of events must "
+	"be note-on events";
 
 char help_tap[] =
 	"tap mode\n"
 	"\n"
-	"Set the way start is triggered by events. The following modes are\n"
+	"Set the way start is triggered by events. The following modes are "
 	"available:\n"
 	"    off - no events trigger start\n"
 	"    start - a single event triggers start\n"
 	"    tempo - two events trigger start; the time between them\n"
 	"        corresponds to one beat and is used to determine the\n"
-	"        initial tempo.\n";
+	"        initial tempo.";
 
 char help_tapev[] =
 	"tapev evspec\n"
 	"\n"
-	"Set events set used to trigger start when tap mode is ``start''\n"
-	"or ``tempo''.\n";
+	"Set events set used to trigger start when tap mode is ``start'' "
+	"or ``tempo''.";
 
 char help_info[] =
 	"info\n"
 	"\n"
-	"Display the list of built-in and user-defined procedures and global\n"
-	"variables\n";
+	"Display the list of built-in and user-defined procedures and global "
+	"variables";
 
 char help_print[] =
 	"print value\n"
 	"\n"
-	"Display the given value.\n";
+	"Display the given value.";
 
 char help_err[] =
 	"err message\n"
 	"\n"
-	"Display the given string and abort the current statement.\n";
+	"Display the given string and abort the current statement.";
 
 char help_h[] =
 	"h function\n"
 	"\n"
-	"Describe the given function.\n";
+	"Describe the given function.";
 
 char help_exec[] =
 	"exec filename\n"
 	"\n"
-	"Read and execute the give script (the file name is a quoted\n"
-	"string). The execution of the script is aborted on error. If the\n"
-	"script executes an exit statement, only the script is terminated.\n";
+	"Read and execute the give script (the file name is a quoted "
+	"string). The execution of the script is aborted on error. If the "
+	"script executes an exit statement, only the script is terminated.";
 
 char help_debug[] =
 	"debug flag value\n"
 	"\n"
-	"Set debug-flag ``flag'' to (integer) value ``val''. It's a developer knob.\n"
+	"Set debug-flag ``flag'' to (integer) value ``val''. It's a developer knob. "
 	"If ``val=0'' the corresponding debug-info are turned off. ``flag'' can be:\n"
 	"    filt - show events passing through the current filter\n"
 	"    mididev - show raw MIDI traffic\n"
@@ -932,32 +933,32 @@ char help_debug[] =
 	"    pool - show pool usage on exit\n"
 	"    song - show start/stop events\n"
 	"    timo - show timer internal errors\n"
-	"    mem - show memory usage\n";
+	"    mem - show memory usage";
 
 char help_version[] =
 	"version\n"
 	"\n"
-	"Display midish version.\n";
+	"Display midish version.";
 
 char help_panic[] =
 	"panic\n"
 	"\n"
-	"Abort (and core-dump).\n";
+	"Abort (and core-dump).";
 
 char help_shut[] =
 	"shut\n"
 	"\n"
-	"Stop all sounds\n";
+	"Stop all sounds";
 
 char help_proclist[] =
 	"proclist\n"
 	"\n"
-	"Return the list of user-defined procs.\n";
+	"Return the list of user-defined procs.";
 
 char help_builtinlist[] =
 	"builtinlist\n"
 	"\n"
-	"Return the list of builtin commands.\n";
+	"Return the list of builtin commands.";
 
 struct help help_list[] = {
 	{"tlist", help_tlist},
@@ -1111,3 +1112,64 @@ struct help help_list[] = {
 	{"builtinlist", help_builtinlist},
 	{NULL, NULL}
 };
+
+#define IS_SEP(c) ((c) == ' ' || (c) == '\n' || (c) == 0)
+
+void
+help_fmt(char *text)
+{
+#define LINE_LEN	68
+	char out[LINE_LEN + 1 + 1], *endl;
+	size_t out_len, word_len;
+	int c, t;
+
+	endl = text;
+	out_len = word_len = 0;
+	for (;;) {
+		c = endl[word_len];
+
+		/* if not an end-of-word, continue */
+		if (!IS_SEP(c)) {
+			word_len++;
+			continue;
+		}
+
+		/* finished a word, check if flush is needed */
+		if (out_len + word_len > LINE_LEN) {
+			/* flush */
+			out[out_len++] = '\n';
+			out[out_len++] = 0;
+			textout_putstr(tout, out);
+			out_len = 0;
+			/* discard space separator */
+			endl++;
+			word_len--;
+		}
+
+		/* copy word */
+		while (word_len > 0) {
+			t = *endl++;
+			if (t == '~')
+				t = ' ';
+			out[out_len++] = t;
+			word_len--;
+		}
+
+		/* finished a word, check if flush is needed */
+		if (c == '\n' || c == 0) {
+			/* flush */
+			out[out_len++] = '\n';
+			out[out_len++] = 0;
+			textout_putstr(tout, out);
+			out_len = 0;
+			/* discard space separator */
+			endl++;
+			word_len--;
+		}
+
+		if (c == 0)
+			break;
+
+		word_len++;
+	}
+}

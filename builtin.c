@@ -227,7 +227,7 @@ blt_h(struct exec *o, struct data **r)
 		h++;
 	}
 
-	textout_putstr(tout, h->text);
+	help_fmt(h->text);
 	return 1;
 }
 
