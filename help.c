@@ -79,7 +79,7 @@ char help_tclr[] =
 	"tclr\n"
 	"\n"
 	"Clear the current selection of the current track. Only events "
-	"matching the current event selection (see the ``ev'' function) are "
+	"matching the current event selection (see the ev function) are "
 	"removed.";
 
 char help_tins[] =
@@ -91,15 +91,16 @@ char help_tins[] =
 char help_tpaste[] =
 	"tpaste\n"
 	"\n"
-	"Paste track portion (copied with ``tcopy'') at the current position "
+	"Paste track portion (copied with tcopy) at the current position "
 	"of the current track.";
 
 char help_tcopy[] =
 	"tcopy\n"
 	"\n"
 	"Copy the current selection of the current track so that it could "
-	"be pasted with ``tpaste''. Only events matching the current event "
-	"selection (see ``ev'') are copied.";
+	"be pasted with the tpaste function. "
+	"Only events matching the current event selection "
+	"are copied (see ev function).";
 
 char help_tmerge[] =
 	"tmerge source\n"
@@ -110,7 +111,7 @@ char help_tquanta[] =
 	"tquanta rate\n"
 	"\n"
 	"Round event positions to the nearest exact position, as defined "
-	"by the see ``setq'' function. This affects events of the current "
+	"by the setq function. This affects events of the current "
 	"selection of the current track. Event positions are rounded to "
 	"the nearest tick multiple of the quantization step; Rate must be "
 	"between 0 and 100: 0 means no quantization and 100 means full "
@@ -120,7 +121,7 @@ char help_tquantf[] =
 	"tquantf rate\n"
 	"\n"
 	"Round frame positions (eg. note positions) to the nearest exact "
-	"position, as defined by the ``setq'' function. Frame length (eg. "
+	"position, as defined by the setq function. Frame length (eg. "
 	"note lengths) is preserved. Rate must be between 0 and 100: "
 	"0 means no quantization and 100 means full quantization.";
 
@@ -129,14 +130,14 @@ char help_ttransp[] =
 	"\n"
 	"Transpose note events of current selection of the current track, "
 	"by the given number of half-tones. Only events matching the current "
-	"event selection (see ``ev'') are transposed.";
+	"event selection are transposed (see ev function).";
 
 char help_tvcurve[] =
 	"tvcurve weight\n"
 	"\n"
 	"Adjust velocity of note events, using the given weight in "
 	"the -63..63 range. Applies only to note events of current "
-	"selection of the current track (see ``ev'').";
+	"selection of the current track (see ev function).";
 
 char help_tevmap[] =
 	"tevmap source dest\n"
@@ -333,29 +334,29 @@ char help_flist[] =
 char help_fchgin[] =
 	"fchgin old_evspec new_evspec\n"
 	"\n"
-	"Rewrite current filter rules to consume ``new_evspec'' events "
-	"instead of ``old_evspec'' events. This means that each rule previously "
-	"matching ``old_evspec'' on the input will start "
-	"matching ``new_evspec'' instead.";
+	"Rewrite current filter rules to consume  new event set in place "
+	"of the old event set. This means that each rule previously "
+	"matching old set on the input will start "
+	"matching new set instead.";
 
 char help_fswapin[] =
-	"fswapin from to\n"
+	"fswapin evspec1 evspec2\n"
 	"\n"
-	"Similar to ``fchgin'' but swap ``new_evspec'' and ``old_evspec'' in "
+	"Similar to the fchgin function but swap the two event sets in "
 	"the source events set of each rule.";
 
 char help_fchgout[] =
 	"fchgout from to\n"
 	"\n"
 	"Rewrite all filtering rules of the current filter to produce "
-	"``new_evspec'' events instead of ``old_evspec'' events. This means "
-	"that each rule previously producing ``old_evspec'' will "
-	"start producing ``new_evspec'' instead.";
+	"the new event set instead of the old event set. This means "
+	"that each rule previously producing the old set will "
+	"start producing new set instead.";
 
 char help_fswapout[] =
 	"fswapout from to\n"
 	"\n"
-	"Similar to ``fchgou'' but swap ``old_evspec'' and ``new_evspec'' in "
+	"Similar to the fchgout function, but swap the two event sets in "
 	"the destination events set of each rule.";
 
 char help_fmap[] =
@@ -383,7 +384,7 @@ char help_fvcurve[] =
 	"fvcurve evspec weight\n"
 	"\n"
 	"Adjust velocity of the given note events, using "
-	"the given ``weight'' in the -63..63 range.  If ``weight'' is "
+	"the given weight in the -63..63 range.  If the weight is "
 	"negative then sensitivity is decreased. If it's positive then "
 	"sensitivity is increased. If it's zero the velocity is unchanged";
 
@@ -477,8 +478,7 @@ char help_r[] =
 char help_s[] =
 	"s\n"
 	"\n"
-	"Stop performance and release MIDI devices. I.e. stop the effect ``i'', "
-	"``p'', and ``r'' functions.";
+	"Stop performance and release MIDI devices.";
 
 char help_ev[] =
 	"ev evspec\n"
@@ -496,7 +496,7 @@ char help_setq[] =
 	"\t12 -> eighth note triplet\n"
 	"\tetc...\n"
 	"The quantization step will be used by tquanta and tquantf funnctions "
-	"to optimize event selection. If the special ``nil'' value is specified "
+	"to optimize event selection. If the special nil value is specified "
 	"as quantization step, then quatization is disabled.";
 
 char help_getq[] =
@@ -521,9 +521,10 @@ char help_getpos[] =
 char help_sel[] =
 	"sel length\n"
 	"\n"
-	"Set the length of the current selection to ``length'' measures. The "
-	"current selection start at the current position set with the ``g'' "
-	"function";
+	"Set the length of the current selection to "
+	"the given number of  measures. "
+	"The current selection start at the current position "
+	"set with the g function";
 
 char help_getlen[] =
 	"getlen\n"
@@ -540,19 +541,19 @@ char help_ct[] =
 char help_gett[] =
 	"gett\n"
 	"\n"
-	"Return the current track (if any) or ``nil''";
+	"Return the current track (if any) or nil.";
 
 char help_cf[] =
 	"cf filtname\n"
 	"\n"
-	"Set the current filter to ``filtname''. The current filter "
+	"Set the current filter to the given filter. The current filter "
 	"is the one used to process input MIDI events in performance mode. "
 	"It's also the one affected by all filter editing functions.";
 
 char help_getf[] =
 	"getf\n"
 	"\n"
-	"Return the current filter or ``nil'' if none.";
+	"Return the current filter or nil if none.";
 
 char help_cx[] =
 	"cx sysexname\n"
@@ -564,7 +565,7 @@ char help_cx[] =
 char help_getx[] =
 	"getx\n"
 	"\n"
-	"Return the current sysex bank or ``nil'' if none";
+	"Return the current sysex bank or nil if none.";
 
 char help_ci[] =
 	"ci channame\n"
@@ -575,7 +576,7 @@ char help_ci[] =
 char help_geti[] =
 	"geti\n"
 	"\n"
-	"Return the name of the current input channel or ``nil'' if none";
+	"Return the name of the current input channel or nil if none.";
 
 char help_co[] =
 	"co channame\n"
@@ -586,19 +587,19 @@ char help_co[] =
 char help_geto[] =
 	"geto\n"
 	"\n"
-	"Return the name of the current output channel or ``nil'' if none";
+	"Return the name of the current output channel or nil if none.";
 
 char help_setunit[] =
 	"setunit tics_per_unit\n"
 	"\n"
-	"Set the time resolution of the sequencer to ``tpu'' ticks in a "
-	"whole note (1 unit note = 4 quarter notes). The default is 96 ticks, "
-	"which is the default of the MIDI standard.";
+	"Set the time resolution of the sequencer to given number of "
+	"ticks per whole note (1 unit note = 4 quarter notes). "
+	"The default is 96 ticks, which is the default of the MIDI standard.";
 
 char help_getunit[] =
 	"getunit\n"
 	"\n"
-	"Return the number of ticks in a whole note";
+	"Return the number of ticks in a whole note.";
 
 char help_fac[] =
 	"fac tempo_factor\n"
@@ -620,9 +621,11 @@ char help_t[] =
 char help_mins[] =
 	"mins amount sig\n"
 	"\n"
-	"Insert ``amount'' blank measures at the current song position. "
-	"The time signature used is num/denom. If the time signature is "
-	"an empty list (i.e. ``{}'') then the time signature at the "
+	"Insert the given amount of blank measures at the "
+	"current song position. "
+	"The time signature used is in the {num,~denom} format. "
+	"If the time signature is "
+	"an empty list (i.e. {}) then the time signature at the "
 	"current position is used.";
 
 char help_mcut[] =
@@ -635,9 +638,8 @@ char help_mdup[] =
 	"mdup where\n"
 	"\n"
 	"Duplicate the current selection inserting a copy of it at "
-	"the position given by the ``where'' parameter. The target "
-	"position is a measure number relative to the current selection "
-	"to be copied. If ``where'' is positive it's relative to the end "
+	"the given position in measures. "
+	"If the given position is positive it's relative to the end "
 	"of the current selection; if it's negative it's relative to "
 	"the beginning of the current selection.";
 
@@ -717,34 +719,33 @@ char help_dlist[] =
 char help_dnew[] =
 	"dnew devnum path mode\n"
 	"\n"
-	"Attach MIDI device ``filename'' as device number ``devnum''; "
-	"``filename'' is a quoted string. The ``mode'' argument is the "
-	"name of the mode, it can be on if the following:\n"
+	"Add the given MIDI device number, with the given path and mode. "
+	"The mode may be on if the following:\n"
 	"    ro - read-only, for input only devices\n"
 	"    wo - write-only, for output only devices\n"
 	"    rw - read and write.\n"
 	"If midish is configured to use ALSA (default on Linux systems) "
-	"then ``filename'' should contain the ALSA sequencer port, as "
-	"listed by ``aseqdump -l'', (eg. ``28:0'', ``FLUID Synth (qsynth)''). "
-	"If ``nil'' is given instead of the path, then the port is not "
+	"then the device path is the ALSA sequencer port, as "
+	"listed by the aseqdump linux command (ex. 28:0). "
+	"If nil is given instead of the path, then the port is not "
 	"connected to any existing port; this allows other ALSA sequencer "
 	"clients to subscribe to it and to provide events to midish or to "
-	"consume events midish sends to it.";
+	"consume events midish sends to the port.";
 
 char help_ddel[] =
 	"ddel devnum\n"
 	"\n"
-	"Detach device number ``devnum''";
+	"Remove the given device number.";
 
 char help_dmtcrx[] =
 	"dmtcrx devnum\n"
 	"\n"
-	"Use device number ``devnum'' as MTC source. "
+	"Use given device number as MTC source. "
 	"In this case, midish will relocate, start and stop according to "
 	"incoming MTC messages. Midish will generate its clock ticks from "
 	"MTC, meaning that it will run at the same speed as the MTC device. "
 	"This is useful to synchronize midish to an audio multi-tracker or any "
-	"MTC capable audio application. If ``devnum'' is ``nil'', then MTC "
+	"MTC capable audio application. If the device number is nil, then MTC "
 	"messages are ignored and the internal timer will be used instead.";
 
 char help_dmmctx[] =
@@ -764,11 +765,11 @@ char help_dclktx[] =
 char help_dclkrx[] =
 	"dclkrx devnum\n"
 	"\n"
-	"Set device number ``devnum'' to be the master MIDI clock source. "
+	"Set the given device number to be the master MIDI clock source. "
 	"It will give midish MIDI ticks, MIDI start and MIDI stop events. This "
-	"useful to synchronize midish to an external sequencer. If ``devnum'' is "
-	"``nil'', then the internal clock will be used and midish will act as "
-	"master device.";
+	"useful to synchronize midish to an external sequencer. "
+	"If the device number is nil, then the internal clock will be "
+	"used and midish will act as master clock.";
 
 char help_dclkrate[] =
 	"dclkrate devnum tics_per_unit\n"
@@ -800,12 +801,12 @@ char help_diev[] =
 	"diev devnum flags\n"
 	"\n"
 	"Configure the device to process as a single event the following "
-	"patterns of input MIDI messages.\n"
-	"    xpc: group bank select controllers (0 and 32) with program\n"
-	"         changes into a signle ``xpc'' event.\n"
-	"   nrpn: group NRPN controllers (98 and 99) with data entry\n"
-	"         controllers (6 and 38) into a single ``nrpn'' event.\n"
-	"    rpn: same as ``nrpn'', but for RPN controllers (100 and 101).\n"
+	"patterns of input MIDI messages.\n\n"
+	" * xpc -  group bank select controllers (0 and 32) with program\n"
+	"   changes into a signle xpc event.\n\n"
+	" * nrpn - group NRPN controllers (98 and 99) with data entry\n"
+	"   controllers (6 and 38) into a single nrpn event.\n\n"
+	" * rpn - similart to nrpn, but for RPN controllers (100 and 101).\n\n"
 	"By default all of the above are enabled, which allows banks, NRPNs "
 	"and RPNs to be handled by midish the standard way. "
 	"It makes sense to disable grouping of above messages on rare hardware "
@@ -815,15 +816,14 @@ char help_diev[] =
 char help_doev[] =
 	"doev devnum flags\n"
 	"\n"
-	"Same as ``diev'', but for output messages";
+	"Same as the diev functino, but for output messages";
 
 char help_ctlconf[] =
-	"ctlconf name ctl defval\n"
+	"ctlconf name number defval\n"
 	"\n"
-	"Configure controller number ``ctlnumber'' with name ``ctlname'', "
-	"and default value ``defval''. If defval is ``nil'' then there is "
-	"no default value and corresponding controller events are not grouped "
-	"into frames.";
+	"Configure the given controller number with the given name, "
+	"and default value. If the default value is nil then the "
+	"corresponding controller events are not grouped into frames.";
 
 char help_ctlconfx[] =
 	"ctlconfx name ctl defval\n"
@@ -834,8 +834,7 @@ char help_ctlconfx[] =
 char help_ctlunconf[] =
 	"ctlunconf name\n"
 	"\n"
-	"Unconfigure the given controller. ``ctlname'' is the identifier that "
-	"was used with ctlconf or ctlconfx";
+	"Unconfigure the given controller.";
 
 char help_ctlinfo[] =
 	"ctlinfo\n"
@@ -890,8 +889,8 @@ char help_tap[] =
 char help_tapev[] =
 	"tapev evspec\n"
 	"\n"
-	"Set events set used to trigger start when tap mode is ``start'' "
-	"or ``tempo''.";
+	"Set events set used to trigger start when tap mode is set to "
+	"start or tempo.";
 
 char help_info[] =
 	"info\n"
@@ -924,8 +923,9 @@ char help_exec[] =
 char help_debug[] =
 	"debug flag value\n"
 	"\n"
-	"Set debug-flag ``flag'' to (integer) value ``val''. It's a developer knob. "
-	"If ``val=0'' the corresponding debug-info are turned off. ``flag'' can be:\n"
+	"Set given debug-flag to given the (integer) value. "
+	"If the value is 0, the corresponding debug-info is turned off. "
+	"The flag may be:\n"
 	"    filt - show events passing through the current filter\n"
 	"    mididev - show raw MIDI traffic\n"
 	"    mixout - show conflicts in the output MIDI merger\n"
