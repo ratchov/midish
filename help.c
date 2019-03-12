@@ -25,7 +25,7 @@ char help_tlist[] =
 char help_tnew[] =
 	"tnew name\n"
 	"\n"
-	"Create a track with the given name";
+	"Create a track with the given name.";
 
 char help_tdel[] =
 	"tdel\n"
@@ -45,7 +45,7 @@ char help_texists[] =
 char help_taddev[] =
 	"taddev measure beat tic event\n"
 	"\n"
-	"Put the given event at the give position of the current track";
+	"Put the given event at the give position of the current track.";
   
 char help_tsetf[] =
 	"tsetf filtname\n"
@@ -63,7 +63,7 @@ char help_tcheck[] =
 	"\n"
 	"Check the current track for orphaned notes, nested notes, and "
 	"other anomalies. Remove multiple controllers in the same clock "
-	"tick";
+	"tick.";
 
 char help_trewrite[] =
 	"trewrite\n"
@@ -105,7 +105,7 @@ char help_tcopy[] =
 char help_tmerge[] =
 	"tmerge source\n"
 	"\n"
-	"Merge the given track into the current track";
+	"Merge the given track into the current track.";
 
 char help_tquanta[] =
 	"tquanta rate\n"
@@ -173,7 +173,7 @@ char help_tinfo[] =
 	"\n"
 	"Scan the current selection of the current track, an for each "
 	"measure display the number of events that match the current "
-	"event selection";
+	"event selection.";
 
 char help_inew[] =
 	"inew name channel\n"
@@ -196,12 +196,12 @@ char help_idel[] =
 char help_iren[] =
 	"iren newname\n"
 	"\n"
-	"Rename the current input to the given name";
+	"Rename the current input to the given name.";
 
 char help_ilist[] =
 	"ilist\n"
 	"\n"
-	"Return list of inputs";
+	"Return the list of inputs.";
 
 char help_iexists[] =
 	"iexists channame\n"
@@ -211,12 +211,12 @@ char help_iexists[] =
 char help_igetc[] =
 	"igetc\n"
 	"\n"
-	"Return the MIDI channel number of the current input";
+	"Return the MIDI channel number of the current input.";
 
 char help_igetd[] =
 	"igetd\n"
 	"\n"
-	"Return the device number of the current input";
+	"Return the device number of the current input.";
 
 char help_iaddev[] =
 	"iaddev event\n"
@@ -294,12 +294,12 @@ char help_oinfo[] =
 char help_olist[] =
 	"olist\n"
 	"\n"
-	"Return list of outputs";
+	"Return list of outputs.";
 
 char help_fnew[] =
 	"fnew filtname\n"
 	"\n"
-	"Create an new filter with the given name";
+	"Create an new filter with the given name.";
 
 char help_fdel[] =
 	"fdel\n"
@@ -309,7 +309,7 @@ char help_fdel[] =
 char help_fren[] =
 	"fren newname\n"
 	"\n"
-	"Rename the current filter to the given name";
+	"Rename the current filter to the given name.";
 
 char help_fexists[] =
 	"fexists filtname\n"
@@ -324,12 +324,12 @@ char help_freset[] =
 char help_finfo[] =
 	"finfo\n"
 	"\n"
-	"List all rules of the current filter";
+	"List all rules of the current filter.";
 
 char help_flist[] =
 	"flist\n"
 	"\n"
-	"Return the list of existing filters";
+	"Return the list of existing filters.";
 
 char help_fchgin[] =
 	"fchgin old_evspec new_evspec\n"
@@ -378,7 +378,7 @@ char help_ftransp[] =
 	"ftransp evspec half_tones\n"
 	"\n"
 	"Transpose events matching the given event set by the given number "
-	"of halftones";
+	"of halftones.";
 
 char help_fvcurve[] =
 	"fvcurve evspec weight\n"
@@ -386,12 +386,12 @@ char help_fvcurve[] =
 	"Adjust velocity of the given note events, using "
 	"the given weight in the -63..63 range.  If the weight is "
 	"negative then sensitivity is decreased. If it's positive then "
-	"sensitivity is increased. If it's zero the velocity is unchanged";
+	"sensitivity is increased. If it's zero the velocity is unchanged.";
 
 char help_xnew[] =
 	"xnew sysexname\n"
 	"\n"
-	"Create a new bank of sysex messages with the given name";
+	"Create a new bank of sysex messages with the given name.";
 
 char help_xdel[] =
 	"xdel\n"
@@ -401,7 +401,7 @@ char help_xdel[] =
 char help_xren[] =
 	"xren newname\n"
 	"\n"
-	"Rename the current sysex bank to the given name";
+	"Rename the current sysex bank to the given name.";
 
 char help_xexists[] =
 	"xexists sysexname\n"
@@ -428,7 +428,7 @@ char help_xadd[] =
 	"Add the given sysex message to the current sysex bank. The message is a "
 	"list containing the system exclusive message bytes. The given device number "
 	"specifies the device to which the message will be sent when performance mode "
-	"is entered";
+	"is entered.";
 
 char help_xinfo[] =
 	"xinfo\n"
@@ -446,7 +446,7 @@ char help_ximport[] =
 char help_xexport[] =
 	"xexport path\n"
 	"\n"
-	"Store contents of the current sysex bank in the given .syx file";
+	"Store contents of the current sysex bank in the given .syx file.";
 
 char help_xlist[] =
 	"xlist\n"
@@ -502,7 +502,7 @@ char help_setq[] =
 char help_getq[] =
 	"getq\n"
 	"\n"
-	"Return the current quatization step";
+	"Return the current quatization step.";
 
 char help_g[] =
 	"g measure\n"
@@ -524,7 +524,7 @@ char help_sel[] =
 	"Set the length of the current selection to "
 	"the given number of  measures. "
 	"The current selection start at the current position "
-	"set with the g function";
+	"set with the g function.";
 
 char help_getlen[] =
 	"getlen\n"
@@ -668,7 +668,7 @@ char help_mend[] =
 char help_ls[] =
 	"ls\n"
 	"\n"
-	"List all tracks, channels, filters and various default values";
+	"List all tracks, channels, filters and various default values.";
 
 char help_save[] =
 	"save filename\n"
@@ -686,7 +686,7 @@ char help_reset[] =
 	"reset\n"
 	"\n"
 	"Destroy completely the song, useful to start a new song without "
-	"restarting the program";
+	"restarting the program.";
 
 char help_export[] =
 	"export filename\n"
@@ -714,7 +714,7 @@ char help_ul[] =
 char help_dlist[] =
 	"dlist\n"
 	"\n"
-	"Return the list of attached devices (list of numbers)";
+	"Return the list of attached devices (list of numbers).";
 
 char help_dnew[] =
 	"dnew devnum path mode\n"
@@ -816,7 +816,7 @@ char help_diev[] =
 char help_doev[] =
 	"doev devnum flags\n"
 	"\n"
-	"Same as the diev functino, but for output messages";
+	"Same as the diev functino, but for output messages.";
 
 char help_ctlconf[] =
 	"ctlconf name number defval\n"
@@ -839,7 +839,7 @@ char help_ctlunconf[] =
 char help_ctlinfo[] =
 	"ctlinfo\n"
 	"\n"
-	"Print the list of configured controllers";
+	"Print the list of configured controllers.";
 
 char help_evpat[] =
 	"evpat name pattern\n"
@@ -873,7 +873,7 @@ char help_metrocf[] =
 	"metrocf eventhi eventlo\n"
 	"\n"
 	"Select the notes that the metronome plays. The pair of events must "
-	"be note-on events";
+	"be note-on events.";
 
 char help_tap[] =
 	"tap mode\n"
@@ -896,7 +896,7 @@ char help_info[] =
 	"info\n"
 	"\n"
 	"Display the list of built-in and user-defined procedures and global "
-	"variables";
+	"variables.";
 
 char help_print[] =
 	"print value\n"
@@ -948,7 +948,7 @@ char help_panic[] =
 char help_shut[] =
 	"shut\n"
 	"\n"
-	"Stop all sounds";
+	"Stop all sounds.";
 
 char help_proclist[] =
 	"proclist\n"
