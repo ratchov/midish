@@ -2041,6 +2041,8 @@ load_song(struct load *o, struct song *s)
 					i = song_channew(s, o->strval,
 					    0, 0, input);
 					song_setcurchan(s, NULL, input);
+					if (i->filt)
+						filt_reset(&i->filt->filt);
 				}
 				if (!load_songchan(o, s, i))
 					return 0;
