@@ -976,6 +976,8 @@ user_mainloop(void)
 	exec_newbuiltin(exec, "getlen", blt_getlen, NULL);
 	exec_newbuiltin(exec, "sel", blt_sel,
 			name_newarg("length", NULL));
+	exec_newbuiltin(exec, "loop", blt_loop, NULL);
+	exec_newbuiltin(exec, "noloop", blt_loop, NULL);
 	exec_newbuiltin(exec, "getq", blt_getq, NULL);
 	exec_newbuiltin(exec, "setq", blt_setq,
 			name_newarg("step", NULL));

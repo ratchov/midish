@@ -102,6 +102,9 @@ song_init(struct song *o)
 	o->curpos = 0;
 	o->curlen = 0;
 	o->curquant = 0;
+	o->loop = 0;
+	o->loop_start = 0;
+	o->loop_end = 0;
 	evspec_reset(&o->curev);
 	evspec_reset(&o->tap_evspec);
 	o->tap_evspec.cmd = EVSPEC_EMPTY;
@@ -596,6 +599,157 @@ song_metaput(struct song *o, struct state *s)
 }
 
 /*
+ * save the state at the given start position, so that we can repeat
+ * playback from there.
+ */
+void
+song_loop_init(struct song *o, unsigned mstart, unsigned mlen)
+{
+	struct state *s, *snext;
+	struct statelist *slist;
+	struct songtrk *t;
+	unsigned tic;
+
+	if (!o->loop) {
+		o->loop_start = o->loop_end = 0;
+		return;
+	}
+
+	o->loop_start = mstart;
+	o->loop_end = mstart + mlen;
+
+	tic = track_findmeasure(&o->meta, mstart);
+
+	o->loop_metaptr = seqptr_new(&o->meta);
+	seqptr_skip(o->loop_metaptr, tic);
+
+	SONG_FOREACH_TRK(o, t) {
+		t->loop_trackptr = seqptr_new(&t->track);
+		seqptr_skip(t->loop_trackptr, tic);
+
+		/*
+		 * Drop notes, as we don't restore them
+		 */
+		slist = &t->loop_trackptr->statelist;
+		for (s = slist->first; s != NULL; s = snext) {
+			snext = s->next;
+			if (EV_ISNOTE(&s->ev)) {
+				statelist_rm(slist, s);
+				state_del(s);
+			}
+		}
+
+		/*
+		 * Drop terminated states
+		 */
+		statelist_outdate(slist);
+	}
+}
+
+/*
+ * free loop state
+ */
+void
+song_loop_done(struct song *o)
+{
+	struct songtrk *t;
+
+	if (!o->loop)
+		return;
+
+	seqptr_del(o->loop_metaptr);
+	SONG_FOREACH_TRK(o, t)
+		seqptr_del(t->loop_trackptr);
+}
+
+/*
+ * restore the given track (or meta-track if NULL) from its loop
+ * state.
+ */
+void
+song_loop_track(struct song *o, struct songtrk *t)
+{
+	struct seqptr *sp, *lp;
+	struct statelist *dlist, *slist;
+	struct state *s, *d, *dnext;
+	struct ev re;
+
+	if (t) {
+		sp = t->trackptr;
+		lp = t->loop_trackptr;
+	} else {
+		sp = o->metaptr;
+		lp = o->loop_metaptr;
+	}
+
+	dlist = &sp->statelist;
+	slist = &lp->statelist;
+
+	/*
+	 * cancel states not present in loop state (this will cancel
+	 * all notes as their state is not saved)
+	 */
+	for (d = dlist->first; d != NULL; d = dnext) {
+		dnext = d->next;
+		s = statelist_lookup(slist, &d->ev);
+		if (s != NULL)
+			continue;
+		if (!state_cancel(d, &re))
+			continue;
+		statelist_update(dlist, &re);
+		if (d->tag) {
+			if (t != NULL)
+				mixout_putev(&d->ev, PRIO_TRACK);
+			else
+				song_metaput(o, d);
+		}
+	}
+
+	/*
+	 * restore states from loop start
+	 */
+	for (s = slist->first; s != NULL; s = s->next) {
+		d = statelist_lookup(dlist, &s->ev);
+		if (d != NULL && (!d->tag || state_eq(d, &s->ev)))
+			continue;
+		if (!state_restore(s, &re))
+			continue;
+		d = statelist_update(dlist, &re);
+		if (d->phase & EV_PHASE_FIRST) {
+			d->tag = (t != NULL) ?
+			    !t->mute : EV_ISMETA(&d->ev);
+		}
+		if (t != NULL)
+			mixout_putev(&d->ev, PRIO_TRACK);
+		else
+			song_metaput(o, d);
+	}
+
+	sp->pos = lp->pos;
+	sp->delta = lp->delta;
+	sp->tic = lp->tic;
+}
+
+/*
+ * continue playback from the loop start position
+ */
+void
+song_loop_repeat(struct song *o)
+{
+	struct songtrk *t;
+
+	o->tic = 0;
+	o->beat = 0;
+	o->measure = o->loop_start;
+
+	SONG_FOREACH_TRK(o, t) {
+		song_loop_track(o, t);
+	}
+
+	song_loop_track(o, NULL);
+}
+
+/*
  * move all track pointers 1 tick forward. Return true if at least one
  * track moved forward and 0 if no track moved forward (ie end of the
  * song was track reached)
@@ -653,8 +807,14 @@ song_ticplay(struct song *o)
 	struct state *st;
 	unsigned id;
 
+restart:
 	while ((st = seqptr_evget(o->metaptr))) {
 		song_metaput(o, st);
+	}
+	if (o->loop_start != o->loop_end &&
+	    o->tic == 0 && o->beat == 0 && o->measure == o->loop_end) {
+		song_loop_repeat(o);
+		goto restart;
 	}
 	if (o->tic == 0) {
 		cons_putpos(o->measure, o->beat, o->tic);
@@ -1172,6 +1332,8 @@ song_setmode(struct song *o, unsigned newmode)
 		metro_setmode(&o->metro, newmode);
 	if (oldmode >= SONG_REC && newmode < SONG_REC)
 		song_mergerec(o);
+	if (oldmode >= SONG_PLAY && newmode < SONG_PLAY)
+		song_loop_done(o);
 	if (oldmode >= SONG_IDLE && newmode < SONG_IDLE) {
 		/*
 		 * cancel and free states
@@ -1190,6 +1352,7 @@ song_setmode(struct song *o, unsigned newmode)
 	if (oldmode < SONG_PLAY && newmode >= SONG_PLAY) {
 		o->tap_cnt = 0;
 		o->complete = 0;
+		song_loop_init(o, o->curpos, o->curlen);
 	}
 	if (oldmode < SONG_IDLE && newmode >= SONG_IDLE) {
 		o->measure = 0;

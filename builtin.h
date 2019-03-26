@@ -42,6 +42,8 @@ unsigned blt_cx(struct exec *, struct data **);
 unsigned blt_getx(struct exec *, struct data **);
 unsigned blt_setunit(struct exec *, struct data **);
 unsigned blt_getunit(struct exec *, struct data **);
+unsigned blt_loop(struct exec *, struct data **);
+unsigned blt_noloop(struct exec *, struct data **);
 unsigned blt_goto(struct exec *, struct data **);
 unsigned blt_getpos(struct exec *, struct data **);
 unsigned blt_sel(struct exec *, struct data **);

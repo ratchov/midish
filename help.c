@@ -531,6 +531,17 @@ char help_getlen[] =
 	"\n"
 	"Return the length (in measures) of the current selection.";
 
+char help_loop[] =
+	"noloop\n"
+	"\n"
+	"Enable loop mode. When playback is started, the current "
+	"selection is repeated forever.";
+
+char help_noloop[] =
+	"loop\n"
+	"\n"
+	"Disable loop mode.";
+
 char help_ct[] =
 	"ct trackname\n"
 	"\n"
@@ -1046,6 +1057,8 @@ struct help help_list[] = {
 	{"getpos", help_getpos},
 	{"sel", help_sel},
 	{"getlen", help_getlen},
+	{"loop", help_loop},
+	{"noloop", help_noloop},
 	{"ct", help_ct},
 	{"gett", help_gett},
 	{"cf", help_cf},

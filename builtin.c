@@ -435,6 +435,26 @@ blt_getlen(struct exec *o, struct data **r)
 }
 
 unsigned
+blt_loop(struct exec *o, struct data **r)
+{
+	if (!song_try_mode(usong, SONG_IDLE)) {
+		return 0;
+	}
+	usong->loop = 1;
+	return 1;
+}
+
+unsigned
+blt_noloop(struct exec *o, struct data **r)
+{
+	if (!song_try_mode(usong, SONG_IDLE)) {
+		return 0;
+	}
+	usong->loop = 0;
+	return 1;
+}
+
+unsigned
 blt_setq(struct exec *o, struct data **r)
 {
 	long step;

@@ -2267,6 +2267,11 @@ command calls that may be undone.
 add the <a href="#func_tvcurve">tvcurve</a> command modify velocity of
 notes in tracks.
 
+<li>
+add minimal loop support with the
+<a href="#func_loop">loop</a> and
+<a href="#func_noloop">noloop</a> commands.
+
 </ul>
 
 <h2><a name="attributes">18 Project attributes</a></h2>
@@ -3628,6 +3633,17 @@ start at the current position set with the
 
 <dd>
 return the length (in measures) of the current selection.
+
+<dt><a name="func_loop">loop</a>
+
+<dd>
+Enable loop mode. When playback is started, the current
+selection is repeated forever.
+
+<dt><a name="func_noloop">noloop</a>
+
+<dd>
+Disable loop mode.
 
 <dt><a name="func_ct">ct trackname</a>
 

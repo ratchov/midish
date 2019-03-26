@@ -187,6 +187,23 @@ seqptr_new(struct track *t)
 }
 
 /*
+ * initialize a seqptr structure at the beginning of
+ * the given track.
+ */
+struct seqptr *
+seqptr_dup(struct seqptr *src)
+{
+	struct seqptr *sp;
+
+	sp = (struct seqptr *)pool_new(&seqptr_pool);
+	statelist_dup(&sp->statelist, &src->statelist);
+	sp->pos = src->pos;
+	sp->delta = src->delta;
+	sp->tic = src->tic;
+	return sp;
+}
+
+/*
  * release the seqptr structure, free statelist etc...
  */
 void

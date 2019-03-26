@@ -38,7 +38,9 @@ struct songtrk {
 	struct name name;		/* identifier + list entry */
 	struct track track;		/* actual data */
 	struct seqptr *trackptr;	/* track pointer for RT */
+	struct seqptr *loopstate;
 	struct songfilt *curfilt;	/* source and dest. channel */
+	struct seqptr *loop_trackptr;	/* backup of trackptr */
 	unsigned mute;
 };
 
@@ -114,6 +116,11 @@ struct song {
 	unsigned started;		/* playback started */
 	unsigned complete;		/* playback completed */
 	unsigned metro_mask;		/* if enable = (mask | mode) */
+
+	unsigned loop;			/* loop-mode enabled */
+	unsigned loop_start;		/* loop start measure */
+	unsigned loop_end;		/* loop end measure */
+	struct seqptr *loop_metaptr;	/* backup of metaptr */
 };
 
 extern char *song_tap_modestr[3];
