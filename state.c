@@ -296,12 +296,13 @@ state_restore(struct state *st, struct ev *rev)
 		log_puts("state_restore: can't restore note events\n");
 		panic();
 	}
-	if ((st->phase & EV_PHASE_LAST) && !(st->phase & EV_PHASE_FIRST)) {
-		log_puts("state_restore: ");
-		state_log(st);
-		log_puts(": called for last event!\n");
+
+	/*
+	 * don't restore last event of terminated frames
+	 */
+	if ((st->phase & EV_PHASE_LAST) && !(st->phase & EV_PHASE_FIRST))
 		return 0;
-	}
+
 	*rev = st->ev;
 	return 1;
 }
