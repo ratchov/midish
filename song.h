@@ -108,6 +108,7 @@ struct song {
 	struct track rec;		/* track being recorded */
 	struct seqptr *recptr;		/* cur position in 'rec' track */
 	struct sysexlist recsx;
+	unsigned abspos;		/* cur postion in ticks */
 	unsigned measure, beat, tic;	/* cur position (for metronome) */
 #define SONG_IDLE	1		/* filter running */
 #define SONG_PLAY	2		/* above + playback */
@@ -118,8 +119,9 @@ struct song {
 	unsigned metro_mask;		/* if enable = (mask | mode) */
 
 	unsigned loop;			/* loop-mode enabled */
-	unsigned loop_start;		/* loop start measure */
-	unsigned loop_end;		/* loop end measure */
+	unsigned loop_measure;		/* loop start measure */
+	unsigned loop_start;		/* loop start tick */
+	unsigned loop_end;		/* loop end tick */
 	struct seqptr *loop_metaptr;	/* backup of metaptr */
 };
 

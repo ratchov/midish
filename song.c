@@ -90,6 +90,7 @@ song_init(struct song *o)
 	 */
 	metro_init(&o->metro);
 	o->tic = o->beat = o->measure = 0;
+	o->abspos = 0;
 
 	/*
 	 * defaults
@@ -608,17 +609,26 @@ song_loop_init(struct song *o, unsigned mstart, unsigned mlen)
 	struct state *s, *snext;
 	struct statelist *slist;
 	struct songtrk *t;
-	unsigned tic;
+	unsigned tic, len, qstep;
 
 	if (!o->loop) {
 		o->loop_start = o->loop_end = 0;
 		return;
 	}
 
-	o->loop_start = mstart;
-	o->loop_end = mstart + mlen;
+	o->loop_measure = mstart;
 
 	tic = track_findmeasure(&o->meta, mstart);
+	len = track_findmeasure(&o->meta, mstart + mlen) - tic;
+
+	qstep = o->curquant / 2;
+	if (qstep > 0 && tic > qstep) {
+		tic -= qstep;
+		o->loop_measure--;
+	}
+
+	o->loop_start = tic;
+	o->loop_end = tic + len;
 
 	o->loop_metaptr = seqptr_new(&o->meta);
 	seqptr_skip(o->loop_metaptr, tic);
@@ -738,9 +748,8 @@ song_loop_repeat(struct song *o)
 {
 	struct songtrk *t;
 
-	o->tic = 0;
-	o->beat = 0;
-	o->measure = o->loop_start;
+	o->abspos = o->loop_start;
+	o->measure = o->loop_measure;
 
 	SONG_FOREACH_TRK(o, t) {
 		song_loop_track(o, t);
@@ -776,6 +785,7 @@ song_ticskip(struct song *o)
 			o->measure++;
 		}
 	}
+	o->abspos++;
 #if 0
 	if (song_debug) {
 		log_puts("song_ticskip: ");
@@ -811,8 +821,7 @@ restart:
 	while ((st = seqptr_evget(o->metaptr))) {
 		song_metaput(o, st);
 	}
-	if (o->loop_start != o->loop_end &&
-	    o->tic == 0 && o->beat == 0 && o->measure == o->loop_end) {
+	if (o->loop_start != o->loop_end && o->abspos == o->loop_end) {
 		song_loop_repeat(o);
 		goto restart;
 	}
@@ -1127,7 +1136,7 @@ song_loc(struct song *o, unsigned where, unsigned how)
 {
 	struct state *s;
 	struct songtrk *t;
-	unsigned maxdelta, delta, tic;
+	unsigned maxdelta, delta;
 	unsigned bpm, tpb, offs;
 	unsigned long long pos, endpos;
 	unsigned long usec24;
@@ -1162,8 +1171,8 @@ song_loc(struct song *o, unsigned where, unsigned how)
 		log_puts("song_loc: bad argument\n");
 		panic();
 	}
-	tic = 0;
 	pos = 0;
+	o->abspos = 0;
 	o->measure = o->beat = o->tic = 0;
 
 	for (;;) {
@@ -1179,7 +1188,7 @@ song_loc(struct song *o, unsigned where, unsigned how)
 			maxdelta = (endpos - pos) / usec24;
 			break;
 		case SONG_LOC_SPP:
-			maxdelta = where - tic;
+			maxdelta = where - o->abspos;
 			break;
 		}
 		if (maxdelta <= offs)
@@ -1197,8 +1206,8 @@ song_loc(struct song *o, unsigned where, unsigned how)
 		o->tic = o->tic % tpb;
 		o->measure += o->beat / bpm;
 		o->beat = o->beat % bpm;
+		o->abspos += delta;
 		pos += (unsigned long long)delta * usec24;
-		tic += delta;
 	}
 
 	/*
@@ -1226,7 +1235,7 @@ song_loc(struct song *o, unsigned where, unsigned how)
 		 * allocate and restore new states
 		 */
 		t->trackptr = seqptr_new(&t->track);
-		seqptr_skip(t->trackptr, tic);
+		seqptr_skip(t->trackptr, o->abspos);
 		for (s = t->trackptr->statelist.first; s != NULL; s = s->next)
 			s->tag = 0;
 		song_confrestore(&t->trackptr->statelist,
@@ -1250,7 +1259,7 @@ song_loc(struct song *o, unsigned where, unsigned how)
 	seqptr_del(o->recptr);
 	o->recptr = seqptr_new(&o->rec);
 	if (o->mode >= SONG_REC) {
-		seqptr_seek(o->recptr, tic);
+		seqptr_seek(o->recptr, o->abspos);
 	}
 
 	for (s = o->metaptr->statelist.first; s != NULL; s = s->next) {
@@ -1282,7 +1291,7 @@ song_loc(struct song *o, unsigned where, unsigned how)
 		log_puts(":");
 		log_putu(o->tic);
 		log_puts("/");
-		log_putu(tic);
+		log_putu(o->abspos);
 		log_puts(", mtc = ");
 		log_putu(pos);
 		log_puts("\n");
@@ -1355,6 +1364,7 @@ song_setmode(struct song *o, unsigned newmode)
 		song_loop_init(o, o->curpos, o->curlen);
 	}
 	if (oldmode < SONG_IDLE && newmode >= SONG_IDLE) {
+		o->abspos = 0;
 		o->measure = 0;
 		o->beat = 0;
 		o->tic = 0;
