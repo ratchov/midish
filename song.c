@@ -665,8 +665,10 @@ song_loop_done(struct song *o)
 		return;
 
 	seqptr_del(o->loop_metaptr);
-	SONG_FOREACH_TRK(o, t)
+	SONG_FOREACH_TRK(o, t) {
+		statelist_empty(&t->loop_trackptr->statelist);
 		seqptr_del(t->loop_trackptr);
+	}
 }
 
 /*
