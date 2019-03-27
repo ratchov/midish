@@ -104,8 +104,6 @@ song_init(struct song *o)
 	o->curlen = 0;
 	o->curquant = 0;
 	o->loop = 0;
-	o->loop_start = 0;
-	o->loop_end = 0;
 	evspec_reset(&o->curev);
 	evspec_reset(&o->tap_evspec);
 	o->tap_evspec.cmd = EVSPEC_EMPTY;
@@ -604,38 +602,37 @@ song_metaput(struct song *o, struct state *s)
  * playback from there.
  */
 void
-song_loop_init(struct song *o, unsigned mstart, unsigned mlen)
+song_loop_init(struct song *o)
 {
 	struct state *s, *snext;
 	struct statelist *slist;
 	struct songtrk *t;
-	unsigned tic, len, qstep;
+	unsigned qstep;
 
-	if (!o->loop) {
-		o->loop_start = o->loop_end = 0;
+	if (o->loop) {
+		o->loop_mstart = o->curpos;
+		o->loop_mend = o->curpos + o->curlen;
+	} else
+		o->loop_mstart = o->loop_mend = 0;
+
+	if (o->loop_mstart == o->loop_mend)
 		return;
-	}
 
-	o->loop_measure = mstart;
-
-	tic = track_findmeasure(&o->meta, mstart);
-	len = track_findmeasure(&o->meta, mstart + mlen) - tic;
+	o->loop_tstart = track_findmeasure(&o->meta, o->loop_mstart);
+	o->loop_tend = track_findmeasure(&o->meta, o->loop_mend);
 
 	qstep = o->curquant / 2;
-	if (qstep > 0 && tic > qstep) {
-		tic -= qstep;
-		o->loop_measure--;
+	if (o->loop_tstart > qstep) {
+		o->loop_tstart -= qstep;
+		o->loop_tend -= qstep;
 	}
 
-	o->loop_start = tic;
-	o->loop_end = tic + len;
-
 	o->loop_metaptr = seqptr_new(&o->meta);
-	seqptr_skip(o->loop_metaptr, tic);
+	seqptr_skip(o->loop_metaptr, o->loop_tstart);
 
 	SONG_FOREACH_TRK(o, t) {
 		t->loop_trackptr = seqptr_new(&t->track);
-		seqptr_skip(t->loop_trackptr, tic);
+		seqptr_skip(t->loop_trackptr, o->loop_tstart);
 
 		/*
 		 * Drop notes, as we don't restore them
@@ -664,7 +661,7 @@ song_loop_done(struct song *o)
 {
 	struct songtrk *t;
 
-	if (!o->loop)
+	if (o->loop_mstart == o->loop_mend)
 		return;
 
 	seqptr_del(o->loop_metaptr);
@@ -743,19 +740,23 @@ song_loop_track(struct song *o, struct songtrk *t)
 /*
  * continue playback from the loop start position
  */
-void
+int
 song_loop_repeat(struct song *o)
 {
 	struct songtrk *t;
 
-	o->abspos = o->loop_start;
-	o->measure = o->loop_measure;
+	if (o->loop_mstart == o->loop_mend || o->abspos != o->loop_tend)
+		return 0;
+
+	o->abspos = o->loop_tstart;
+	o->measure -= o->loop_mend - o->loop_mstart;
 
 	SONG_FOREACH_TRK(o, t) {
 		song_loop_track(o, t);
 	}
 
 	song_loop_track(o, NULL);
+	return 1;
 }
 
 /*
@@ -817,14 +818,13 @@ song_ticplay(struct song *o)
 	struct state *st;
 	unsigned id;
 
-restart:
-	while ((st = seqptr_evget(o->metaptr))) {
-		song_metaput(o, st);
+	while (1) {
+		while ((st = seqptr_evget(o->metaptr)))
+			song_metaput(o, st);
+		if (!song_loop_repeat(o))
+			break;
 	}
-	if (o->loop_start != o->loop_end && o->abspos == o->loop_end) {
-		song_loop_repeat(o);
-		goto restart;
-	}
+
 	if (o->tic == 0) {
 		cons_putpos(o->measure, o->beat, o->tic);
 	}
@@ -1361,7 +1361,7 @@ song_setmode(struct song *o, unsigned newmode)
 	if (oldmode < SONG_PLAY && newmode >= SONG_PLAY) {
 		o->tap_cnt = 0;
 		o->complete = 0;
-		song_loop_init(o, o->curpos, o->curlen);
+		song_loop_init(o);
 	}
 	if (oldmode < SONG_IDLE && newmode >= SONG_IDLE) {
 		o->abspos = 0;

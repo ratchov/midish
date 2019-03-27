@@ -119,9 +119,10 @@ struct song {
 	unsigned metro_mask;		/* if enable = (mask | mode) */
 
 	unsigned loop;			/* loop-mode enabled */
-	unsigned loop_measure;		/* loop start measure */
-	unsigned loop_start;		/* loop start tick */
-	unsigned loop_end;		/* loop end tick */
+	unsigned loop_mstart;		/* loop start measure */
+	unsigned loop_mend;		/* loop end measure */
+	unsigned loop_tstart;		/* loop start tick */
+	unsigned loop_tend;		/* loop end tick */
 	struct seqptr *loop_metaptr;	/* backup of metaptr */
 };
 
