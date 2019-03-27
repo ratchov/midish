@@ -532,13 +532,13 @@ char help_getlen[] =
 	"Return the length (in measures) of the current selection.";
 
 char help_loop[] =
-	"noloop\n"
+	"loop\n"
 	"\n"
 	"Enable loop mode. When playback is started, the current "
 	"selection is repeated forever.";
 
 char help_noloop[] =
-	"loop\n"
+	"noloop\n"
 	"\n"
 	"Disable loop mode.";
 
