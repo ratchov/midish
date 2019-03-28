@@ -426,13 +426,13 @@ lex_handle(struct parse *l, int c)
 			}
 			break;
 		case LEX_ERROR:
-			if (c == '\0' || c == '\n') {
+			if (c < 0 || c == '\n') {
 				l->lstate = LEX_ANY;
 				break;
 			}
 			return;
 		case LEX_COMMENT:
-			if (c == '\0' || c == '\n') {
+			if (c < 0 || c == '\n') {
 				l->lstate = LEX_ANY;
 				break;
 			}
