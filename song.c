@@ -719,7 +719,7 @@ song_loop_track(struct song *o, struct songtrk *t)
 	 */
 	for (s = slist->first; s != NULL; s = s->next) {
 		d = statelist_lookup(dlist, &s->ev);
-		if (d != NULL && (!d->tag || state_eq(d, &s->ev)))
+		if (d != NULL && state_eq(d, &s->ev))
 			continue;
 		if (!state_restore(s, &re))
 			continue;
@@ -728,10 +728,12 @@ song_loop_track(struct song *o, struct songtrk *t)
 			d->tag = (t != NULL) ?
 			    !t->mute : EV_ISMETA(&d->ev);
 		}
-		if (t != NULL)
-			mixout_putev(&d->ev, PRIO_TRACK);
-		else
-			song_metaput(o, d);
+		if (d->tag) {
+			if (t != NULL)
+				mixout_putev(&d->ev, PRIO_TRACK);
+			else
+				song_metaput(o, d);
+		}
 	}
 
 	sp->pos = lp->pos;
