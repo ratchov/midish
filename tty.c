@@ -678,7 +678,7 @@ el_onkey(void *arg, int key)
 	} else if (key == TTY_KEY_TAB || key == (TTY_KEY_CTRL | 'I')) {
 		if (el_mode == EL_MODE_EDIT) {
 			compl_start();
-			if (el_curline && el_curs < el_selend)
+			if (el_curline && el_selstart < el_selend)
 				el_setmode(EL_MODE_COMPL);
 			else
 				compl_end();
