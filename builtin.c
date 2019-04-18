@@ -369,16 +369,22 @@ blt_setunit(struct exec *o, struct data **r)
 		return 0;
 	}
 
+	undo_track_save(usong, &usong->meta, o->procname, NULL);
 	track_prescale(&usong->meta, usong->tics_per_unit, tpu);
-	track_scale(&usong->meta, usong->tics_per_unit, tpu);
+	undo_track_diff(usong);
 
 	SONG_FOREACH_TRK(usong, t) {
+		undo_track_save(usong, &t->track, NULL, NULL);
 		track_prescale(&t->track, usong->tics_per_unit, tpu);
-		track_scale(&t->track, usong->tics_per_unit, tpu);
+		undo_track_diff(usong);
 	}
 
-	usong->curquant = usong->curquant * tpu / usong->tics_per_unit;
-	usong->tics_per_unit = tpu;
+	undo_scale(usong, NULL, NULL, usong->tics_per_unit, tpu);
+
+	undo_setuint(usong, NULL, NULL,
+	    &usong->curquant, usong->curquant * tpu / usong->tics_per_unit);
+	undo_setuint(usong, NULL, NULL,
+	    &usong->tics_per_unit, tpu);
 
 	return 1;
 }

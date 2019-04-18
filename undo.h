@@ -41,6 +41,7 @@ enum {
 	UNDO_XRM,
 	UNDO_XDEL,
 	UNDO_XNEW,
+	UNDO_SCALE
 };
 
 struct undo {
@@ -86,6 +87,9 @@ struct undo {
 		struct undo_xdel {
 			struct songsx *sx;
 		} xdel;
+		struct undo_scale {
+			unsigned int oldunit, newunit;
+		} scale;
 	} u;
 };
 
@@ -95,6 +99,7 @@ void undo_clear(struct song *, struct undo **);
 void undo_start(struct song *, char *, char *);
 void undo_setstr(struct song *, char *, char **, char *);
 void undo_setuint(struct song *, char *, char *, unsigned int *, unsigned int);
+void undo_scale(struct song *, char *, char *, unsigned int, unsigned int);
 
 void undo_track_save(struct song *, struct track *, char *, char *);
 void undo_track_diff(struct song *);

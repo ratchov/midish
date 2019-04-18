@@ -45,6 +45,7 @@ undo_new(struct song *s, int type, char *func, char *name)
 void
 undo_pop(struct song *s)
 {
+	struct songtrk *t;
 	struct undo_fdel_trk *p;
 	struct sysex *x;
 	struct undo *u;
@@ -137,6 +138,14 @@ undo_pop(struct song *s)
 		case UNDO_XNEW:
 			song_sxdel(s, u->u.xdel.sx);
 			break;
+		case UNDO_SCALE:
+			track_scale(&s->meta,
+			    u->u.scale.newunit, u->u.scale.oldunit);
+			SONG_FOREACH_TRK(s, t) {
+				track_scale(&t->track,
+				    u->u.scale.newunit, u->u.scale.oldunit);
+			}
+			break;
 		default:
 			log_puts("undo_pop: bad type\n");
 			panic();
@@ -210,6 +219,8 @@ undo_clear(struct song *s, struct undo **pos)
 			xfree(u->u.xdel.sx);
 			break;
 		case UNDO_XNEW:
+			break;
+		case UNDO_SCALE:
 			break;
 		default:
 			log_puts("undo_clear: bad type\n");
@@ -291,6 +302,25 @@ undo_setuint(struct song *s, char *func, char *tag,
 	u->u.uint.ptr = ptr;
 	u->u.uint.val = *ptr;
 	*ptr = val;
+	undo_push(s, u);
+}
+
+void
+undo_scale(struct song *s, char *func, char *tag,
+	unsigned int oldunit, unsigned int newunit)
+{
+	struct undo *u;
+	struct songtrk *t;
+
+	u = undo_new(s, UNDO_SCALE, func, tag);
+	u->u.scale.oldunit = oldunit;
+	u->u.scale.newunit = newunit;
+
+	track_scale(&s->meta, oldunit, newunit);
+	SONG_FOREACH_TRK(s, t) {
+		track_scale(&t->track, oldunit, newunit);
+	}
+
 	undo_push(s, u);
 }
 
