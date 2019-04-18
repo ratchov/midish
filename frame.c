@@ -1298,25 +1298,30 @@ track_quantize_frame(struct track *src, struct evspec *es,
 }
 
 /*
- * time-scale the given track in such a way that
- * 'oldu' tics will correspond to 'newu'
+ * First step to time-scale of the given track: round event positions
+ * and convert tempo/signature events without scaling the track.
  */
 void
-track_scale(struct track *t, unsigned oldunit, unsigned newunit)
+track_prescale(struct track *t, unsigned oldunit, unsigned newunit)
 {
 	struct seqptr *sp;
 	struct statelist slist;
 	struct state *st;
 	struct ev ev;
-	unsigned delta, err;
+	unsigned delta, round, err;
+
+	round = oldunit / newunit;
+	if (round == 0)
+		round = 1;
 
 	err = 0;
 	sp = seqptr_new(t);
 	statelist_init(&slist);
 	for (;;) {
-		delta = newunit * seqptr_ticdel(sp, ~0U, &slist) + err;
-		seqptr_ticput(sp, delta / oldunit);
-		err = delta % oldunit;
+		delta = seqptr_ticdel(sp, ~0U, &slist) + err;
+		err = delta % round;
+		delta -= err;
+		seqptr_ticput(sp, delta);
 		st = seqptr_evdel(sp, &slist);
 		if (st == NULL) {
 			break;
@@ -1337,6 +1342,32 @@ track_scale(struct track *t, unsigned oldunit, unsigned newunit)
 			seqptr_evput(sp, &st->ev);
 			break;
 		}
+	}
+	statelist_done(&slist);
+	seqptr_del(sp);
+}
+
+/*
+ * Finalize time-scaling the given track in such a way that 'oldunit'
+ * ticks will correspond to 'newunit'.
+ */
+void
+track_scale(struct track *t, unsigned oldunit, unsigned newunit)
+{
+	struct seqptr *sp;
+	struct statelist slist;
+	struct state *st;
+	unsigned delta;
+
+	sp = seqptr_new(t);
+	statelist_init(&slist);
+	for (;;) {
+		delta = newunit * seqptr_ticdel(sp, ~0U, &slist);
+		seqptr_ticput(sp, delta / oldunit);
+		st = seqptr_evdel(sp, &slist);
+		if (st == NULL)
+			break;
+		seqptr_evput(sp, &st->ev);
 	}
 	statelist_done(&slist);
 	seqptr_del(sp);

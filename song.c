@@ -458,8 +458,10 @@ song_setunit(struct song *o, unsigned tpu)
 		mult = 1;
 	tpu = mult * DEFAULT_TPU;
 	SONG_FOREACH_TRK(o, t) {
+		track_prescale(&t->track, o->tics_per_unit, tpu);
 		track_scale(&t->track, o->tics_per_unit, tpu);
 	}
+	track_prescale(&o->meta, o->tics_per_unit, tpu);
 	track_scale(&o->meta, o->tics_per_unit, tpu);
 	o->curquant = o->curquant * tpu / o->tics_per_unit;
 	o->tics_per_unit = tpu;

@@ -61,6 +61,7 @@ void     track_quantize(struct track *, struct evspec *,
 void     track_quantize_frame(struct track *, struct evspec *,
 		unsigned, unsigned,
 		unsigned, unsigned, unsigned);
+void     track_prescale(struct track *, unsigned, unsigned);
 void     track_scale(struct track *, unsigned, unsigned);
 void     track_transpose(struct track *, unsigned, unsigned,
 	 struct evspec *, int);
