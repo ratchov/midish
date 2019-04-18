@@ -352,6 +352,7 @@ unsigned
 blt_setunit(struct exec *o, struct data **r)
 {
 	long tpu;
+	struct songtrk *t;
 
 	if (!exec_lookuplong(o, "tics_per_unit", &tpu)) {
 		return 0;
@@ -367,7 +368,18 @@ blt_setunit(struct exec *o, struct data **r)
 	if (!song_try_mode(usong, 0)) {
 		return 0;
 	}
-	song_setunit(usong, tpu);
+
+	track_prescale(&usong->meta, usong->tics_per_unit, tpu);
+	track_scale(&usong->meta, usong->tics_per_unit, tpu);
+
+	SONG_FOREACH_TRK(usong, t) {
+		track_prescale(&t->track, usong->tics_per_unit, tpu);
+		track_scale(&t->track, usong->tics_per_unit, tpu);
+	}
+
+	usong->curquant = usong->curquant * tpu / usong->tics_per_unit;
+	usong->tics_per_unit = tpu;
+
 	return 1;
 }
 

@@ -914,7 +914,7 @@ song_importsmf(char *filename)
 	}
 
 	o = song_new();
-	song_setunit(o, timecode * 4);   /* timecode = tics per quarter */
+	o->tics_per_unit = timecode * 4;   /* timecode = tics per quarter */
 
 	for (i = 0; i < ntrks; i++) {
 		snprintf(trackname, MAXTRACKNAME, "trk%02u", i);
