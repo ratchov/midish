@@ -684,7 +684,7 @@ seqptr_rmprev(struct seqptr *sp, struct state *st)
  * routine will just skip it. This routine must be called before
  * seqptr_evmerge2() within the same tic.
  */
-void
+struct state *
 seqptr_evmerge1(struct seqptr *pd, struct state *s1, struct state *s2)
 {
 	struct state *sd;
@@ -693,25 +693,21 @@ seqptr_evmerge1(struct seqptr *pd, struct state *s1, struct state *s2)
 	 * ignore bogus events
 	 */
 	if (s1->flags & (STATE_BOGUS | STATE_NESTED))
-		return;
-	if (s2 != NULL && s2->flags & (STATE_BOGUS | STATE_NESTED))
-		s2 = NULL;
+		return NULL;
 
-	if (s1->phase & EV_PHASE_FIRST) {
-		s1->tag = (!s2 || (s2->phase & EV_PHASE_LAST)) ? 1 : 0;
-#ifdef FRAME_DEBUG
-		if (!s1->tag) {
-			log_puts("seqptr_evmerge1: ");
-			ev_log(&s1->ev);
-			log_puts(" started in silent state\n");
-		}
-#endif
-	}
-	if (s1->tag) {
-		sd = statelist_lookup(&pd->statelist, &s1->ev);
-		if (!sd || !state_eq(sd, &s1->ev))
-			(void)seqptr_evput(pd, &s1->ev);
-	}
+	sd = statelist_lookup(&pd->statelist, &s1->ev);
+
+	if (sd != NULL) {
+		if (sd->tag == 0 && !(sd->phase & EV_PHASE_LAST))
+			return NULL;
+	} else if (!(s1->phase & EV_PHASE_FIRST))
+		return NULL;
+
+	if (sd == NULL || !state_eq(sd, &s1->ev))
+		sd = seqptr_evput(pd, &s1->ev);
+	sd->tag = 1;
+
+	return sd;
 }
 
 /*
@@ -721,7 +717,7 @@ seqptr_evmerge1(struct seqptr *pd, struct state *s1, struct state *s2)
  * and put "s2". This routine must not be called before
  * seqptr_evmerge1() within the same tick.
  */
-void
+struct state *
 seqptr_evmerge2(struct seqptr *pd, struct state *s1, struct state *s2)
 {
 	struct state *sd;
@@ -730,52 +726,40 @@ seqptr_evmerge2(struct seqptr *pd, struct state *s1, struct state *s2)
 	 * ignore bogus events
 	 */
 	if (s2->flags & (STATE_BOGUS | STATE_NESTED))
-		return;
+		return NULL;
 	if (s1 != NULL && s1->flags & (STATE_BOGUS | STATE_NESTED))
 		s1 = NULL;
 
-	/*
-	 * tag/untag frames depending of if there are conflicts
-	 */
 	sd = statelist_lookup(&pd->statelist, &s2->ev);
-	if (s2->phase & EV_PHASE_FIRST) {
-		if (s1 && s1->tag) {
-			if (sd == NULL) {
-				log_puts("seqptr_merge2: ");
-				ev_log(&s1->ev);
-				log_puts(": no conflict\n");
-				panic();
-			}
-			if (EV_ISNOTE(&s2->ev)) {
-				if (!(s1->phase & EV_PHASE_LAST))
-					sd = seqptr_rmprev(pd, sd);
-			} else {
-				if (s1->flags & STATE_CHANGED)
-					sd = seqptr_rmlast(pd, sd);
-			}
-			s1->tag = 0;
-		}
-		s2->tag = 1;
-	} else if (s2->phase & EV_PHASE_NEXT) {
-		/*
-		 * nothing to do, conflicts already handled
-		 */
-	} else if (s2->phase & EV_PHASE_LAST) {
-		if (s1 && !EV_ISNOTE(&s1->ev)) {
-			s2->tag = 0;
-			if (sd == NULL || !state_eq(sd, &s1->ev)) {
-				sd = seqptr_evput(pd, &s1->ev);
-			}
-			s1->tag = 1;
-		}
-	}
 
-	/*
-	 * store the event, if the frame is tagged
-	 */
-	if (s2->tag && (sd == NULL || !state_eq(sd, &s2->ev))) {
-		(void)seqptr_evput(pd, &s2->ev);
-	}
+	if (sd != NULL) {
+		if (sd->tag == 0) {
+			if (s2->phase == EV_PHASE_LAST &&
+			    s1 != NULL && s1->phase != EV_PHASE_LAST &&
+			    !EV_ISNOTE(&sd->ev)) {
+				if (!state_eq(s2, &s1->ev))
+					sd = seqptr_evput(pd, &s1->ev);
+				sd->tag = 1;
+				return sd;
+			}
+		} else {
+			if (s2->phase & EV_PHASE_FIRST) {
+				if (EV_ISNOTE(&sd->ev)) {
+					if (sd->phase != EV_PHASE_LAST)
+						sd = seqptr_rmprev(pd, sd);
+				} else if (sd->flags & STATE_CHANGED) {
+					sd = seqptr_rmlast(pd, sd);
+				}
+			}
+		}
+	} else if (!(s2->phase & EV_PHASE_FIRST))
+		return NULL;
+
+	if (sd == NULL || !state_eq(sd, &s2->ev))
+		sd = seqptr_evput(pd, &s2->ev);
+	sd->tag = 0;
+
+	return sd;
 }
 
 /*
