@@ -684,7 +684,7 @@ seqptr_rmprev(struct seqptr *sp, struct state *st)
  * tick.
  */
 struct state *
-seqptr_evmerge1(struct seqptr *pd, struct state *s1, struct state *s2)
+seqptr_evmerge1(struct seqptr *pd, struct state *s1)
 {
 	struct state *sd;
 
@@ -788,8 +788,7 @@ track_merge(struct track *dst, struct track *src)
 			s1 = seqptr_evdel(pd, &orglist);
 			if (s1 == NULL)
 				break;
-			s2 = statelist_lookup(&p2->statelist, &s1->ev);
-			seqptr_evmerge1(pd, s1, s2);
+			seqptr_evmerge1(pd, s1);
 		}
 
 		/*
