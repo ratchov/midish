@@ -1,0 +1,15 @@
+{
+	songtrk t2 {
+		track {
+			96
+			ctl {0 0} 7 50
+		}
+	}
+	songtrk t {
+		track {
+			ctl {0 0} 7 50
+			96
+			ctl {0 0} 7 64
+		}
+	}
+}
