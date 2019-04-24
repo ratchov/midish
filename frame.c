@@ -716,29 +716,28 @@ seqptr_evmerge1(struct seqptr *pd, struct state *s1)
  * within the current tick.
  */
 struct state *
-seqptr_evmerge2(struct seqptr *pd, struct state *s1, struct state *s2)
+seqptr_evmerge2(struct seqptr *pd, struct statelist *slist1, struct state *s2)
 {
-	struct state *sd;
+	struct state *sd, *s1;
 
 	/*
 	 * ignore bogus events
 	 */
 	if (s2->flags & (STATE_BOGUS | STATE_NESTED))
 		return NULL;
-	if (s1 != NULL && s1->flags & (STATE_BOGUS | STATE_NESTED))
-		s1 = NULL;
 
 	sd = statelist_lookup(&pd->statelist, &s2->ev);
 
 	if (sd != NULL) {
 		if (sd->tag == 0) {
-			if (s2->phase == EV_PHASE_LAST &&
-			    s1 != NULL && s1->phase != EV_PHASE_LAST &&
-			    !EV_ISNOTE(&sd->ev)) {
-				if (!state_eq(s2, &s1->ev))
-					sd = seqptr_evput(pd, &s1->ev);
-				sd->tag = 1;
-				return sd;
+			if (s2->phase == EV_PHASE_LAST && !EV_ISNOTE(&sd->ev)) {
+				s1 = statelist_lookup(slist1, &s2->ev);
+				if (s1 != NULL && s1->phase != EV_PHASE_LAST) {
+					if (!state_eq(s2, &s1->ev))
+						sd = seqptr_evput(pd, &s1->ev);
+					sd->tag = 1;
+					return sd;
+				}
 			}
 		} else {
 			if (s2->phase & EV_PHASE_FIRST) {
@@ -767,7 +766,7 @@ seqptr_evmerge2(struct seqptr *pd, struct state *s1, struct state *s2)
 void
 track_merge(struct track *dst, struct track *src)
 {
-	struct state *s1, *s2;
+	struct state *s;
 	struct seqptr *p2, *pd;
 	struct statelist orglist;
 	unsigned delta1, delta2, deltad;
@@ -785,10 +784,10 @@ track_merge(struct track *dst, struct track *src)
 		 * 'dst' track.
 		 */
 		for(;;) {
-			s1 = seqptr_evdel(pd, &orglist);
-			if (s1 == NULL)
+			s = seqptr_evdel(pd, &orglist);
+			if (s == NULL)
 				break;
-			seqptr_evmerge1(pd, s1);
+			seqptr_evmerge1(pd, s);
 		}
 
 		/*
@@ -796,11 +795,10 @@ track_merge(struct track *dst, struct track *src)
 		 * with the original state of 'dst'.
 		 */
 		for (;;) {
-			s2 = seqptr_evget(p2);
-			if (s2 == NULL)
+			s = seqptr_evget(p2);
+			if (s == NULL)
 				break;
-			s1 = statelist_lookup(&orglist, &s2->ev);
-			seqptr_evmerge2(pd, s1, s2);
+			seqptr_evmerge2(pd, &orglist, s);
 		}
 
 		/*
