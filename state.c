@@ -446,98 +446,60 @@ statelist_lookup(struct statelist *o, struct ev *ev)
 struct state *
 statelist_update(struct statelist *statelist, struct ev *ev)
 {
-	struct state *st, *stnext;
+	struct state *st;
 	unsigned phase;
-	/*
-	 * we scan for a matching state, if it exists but is
-	 * terminated (phase = EV_PHASE_LAST) we purge it in order to
-	 * reuse the list entry. We cant just use statelist_lookup(),
-	 * because this will not work with nested frames (eg. if the
-	 * "top" state is purged but not the other one). So here we
-	 * inline a kind of 'lookup_for_write()' routine:
-	 */
-	st = statelist->first;
-	for (;;) {
-		if (st == NULL) {
-			st = state_new();
-			statelist_add(statelist, st);
-			st->flags = STATE_NEW;
-			break;
-		}
-		stnext = st->next;
-		if (state_match(st, ev)) {
-			/*
-			 * found a matching state
-			 */
-			if (st->phase & EV_PHASE_LAST) {
-				/*
-				 * if the event is not tagged as
-				 * nested, we reached the deepest
-				 * state, so stop iterating here
-				 * else continue purging states
-				 */
-				if (!(st->flags & STATE_NESTED)) {
-					st->flags = 0;
-					break;
-				} else {
-					statelist_rm(statelist, st);
-					state_del(st);
-				}
-			} else {
-				st->flags &= ~STATE_NEW;
-				break;
-			}
-		}
-		st = stnext;
-	}
 
-	/*
-	 * if one of the following are true
-	 *	- there is no state because this is the first
-	 *	  event of a new frame, or this is a bogus next event
-	 *        (the beginning is missing)
-	 *	- there is a state, but this is for sure the
-	 *	  first event of a new frame (thus this is
-	 *	  de beginning of a nested frame)
-	 * then create a new state.
-	 */
 	phase = ev_phase(ev);
-	if (st->flags & STATE_NEW || st->phase & EV_PHASE_LAST) {
-		/*
-		 * this is new state or a terminated frame that we are
-		 * reusing
-		 */
-		if (!(phase & EV_PHASE_FIRST)) {
-			phase = EV_PHASE_FIRST | EV_PHASE_LAST;
-			st->flags |= STATE_BOGUS;
+
+	st = statelist_lookup(statelist, ev);
+	if (st == NULL) {
+		st = state_new();
+		st->flags = STATE_NEW;
+		statelist_add(statelist, st);
+	} else if ((st->phase == EV_PHASE_LAST) || (st->flags & STATE_BOGUS)) {
+		/* recycle bugus and terminated states */
+		st->flags = STATE_NEW;
+	} else
+		st->flags &= ~STATE_NEW;
+
+	switch (phase) {
+	case EV_PHASE_FIRST:
+		if (st->flags != STATE_NEW) {
+			st = state_new();
+			st->flags = STATE_NEW | STATE_NESTED;
+			statelist_add(statelist, st);
 #ifdef STATE_DEBUG
 			log_puts("statelist_update: ");
 			ev_log(ev);
-			log_puts(": not first and no state\n");
+			log_puts(": nested events, stacked\n");
 #endif
-		} else {
-			phase &= ~EV_PHASE_NEXT;
 		}
-	} else if (phase == EV_PHASE_FIRST) {
-		/*
-		 * this frame is not yet terminated. the incoming
-		 * event starts a new one that's conflicting
-		 */
+		break;
+	case EV_PHASE_NEXT:
+	case EV_PHASE_LAST:
+		if (st->flags == STATE_NEW) {
+			st->flags |= STATE_BOGUS;
+			phase |= EV_PHASE_FIRST;
+			phase &= ~EV_PHASE_NEXT;
 #ifdef STATE_DEBUG
-		log_puts("statelist_update: ");
-		ev_log(ev);
-		log_puts(": nested events, stacked\n");
+			log_puts("statelist_update: ");
+			ev_log(ev);
+			log_puts(": missing first event\n");
 #endif
-		st = state_new();
-		statelist_add(statelist, st);
-		st->flags = STATE_NESTED | STATE_NEW;
-	} else {
-		/*
-		 * this frame is not yet terminated, the incoming
-		 * event belongs to it
-		 */
-		phase &= ~EV_PHASE_FIRST;
+		}
+		break;
+	case EV_PHASE_FIRST | EV_PHASE_NEXT:
+		phase &= (st->flags == STATE_NEW) ?
+		    ~EV_PHASE_NEXT : ~EV_PHASE_FIRST;
+		break;
+	case EV_PHASE_FIRST | EV_PHASE_LAST:
+		/* nothing */
+		break;
+	default:
+		log_puts("statelist_update: bad phase\n");
+		panic();
 	}
+
 	state_copyev(st, ev, phase);
 	statelist->changed = 1;
 #ifdef STATE_DEBUG

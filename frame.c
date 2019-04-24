@@ -219,7 +219,7 @@ seqptr_evget(struct seqptr *sp)
 		return 0;
 	}
 	st = statelist_update(&sp->statelist, &sp->pos->ev);
-	if (st->phase & EV_PHASE_FIRST) {
+	if (st->flags & STATE_NEW) {
 		st->pos = sp->pos;
 		st->tic = sp->tic;
 	}
