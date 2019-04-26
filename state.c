@@ -446,21 +446,34 @@ statelist_lookup(struct statelist *o, struct ev *ev)
 struct state *
 statelist_update(struct statelist *statelist, struct ev *ev)
 {
-	struct state *st;
+	struct state *st, *stnext;
 	unsigned phase;
 
 	phase = ev_phase(ev);
 
-	st = statelist_lookup(statelist, ev);
-	if (st == NULL) {
-		st = state_new();
-		st->flags = STATE_NEW;
-		statelist_add(statelist, st);
-	} else if ((st->phase == EV_PHASE_LAST) || (st->flags & STATE_BOGUS)) {
-		/* recycle bugus and terminated states */
-		st->flags = STATE_NEW;
-	} else
-		st->flags &= ~STATE_NEW;
+	st = statelist->first;
+	for (;;) {
+		if (st == NULL) {
+			st = state_new();
+			st->flags = STATE_NEW;
+			statelist_add(statelist, st);
+			break;
+		}
+
+		stnext = st->next;
+
+		if (state_match(st, ev)) {
+			if (!(st->phase == EV_PHASE_LAST) &&
+			    !(st->flags & STATE_BOGUS)) {
+				st->flags &= ~STATE_NEW;
+				break;
+			}
+
+			statelist_rm(statelist, st);
+			state_del(st);
+		}
+		st = stnext;
+	}
 
 	switch (phase) {
 	case EV_PHASE_FIRST:
