@@ -787,6 +787,8 @@ song_ticskip(struct song *o)
 	SONG_FOREACH_TRK(o, i) {
 		neot |= seqptr_ticskip(i->trackptr, 1);
 	}
+	if (song_loop_repeat(o))
+		return;
 	if (neot == 0 && !o->complete) {
 		cons_puttag("complete");
 		o->complete = 1;
@@ -804,12 +806,8 @@ song_ticplay(struct song *o)
 	struct state *st;
 	unsigned id;
 
-	while (1) {
-		while ((st = seqptr_evget(o->metaptr)))
-			song_metaput(o, st);
-		if (!song_loop_repeat(o))
-			break;
-	}
+	while ((st = seqptr_evget(o->metaptr)))
+		song_metaput(o, st);
 
 	if (o->tic == 0) {
 		cons_putpos(o->measure, o->beat, o->tic);
