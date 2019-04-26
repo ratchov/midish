@@ -126,6 +126,13 @@ mixout_putev(struct ev *ev, unsigned id)
 	os->tic = 0;
 	if ((os->flags & (STATE_BOGUS | STATE_NESTED)) == 0)
 		mux_putev(ev);
+	else {
+		if (mixout_debug) {
+			log_puts("mixout_putev: ");
+			ev_log(ev);
+			log_puts(" nested or bogus\n");
+		}
+	}
 }
 
 
