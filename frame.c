@@ -344,6 +344,7 @@ unsigned
 seqptr_skip(struct seqptr *sp, unsigned ntics)
 {
 	unsigned delta;
+
 	while (ntics > 0) {
 		while (seqptr_evget(sp))
 			; /* nothing */
