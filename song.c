@@ -1006,13 +1006,8 @@ song_stopcb(struct song *o)
 void
 song_movecb(struct song *o)
 {
-	unsigned delta;
-
 	if (o->mode >= SONG_REC) {
-		while (seqptr_evget(o->recptr))
-			; /* nothing */
-		delta = seqptr_ticskip(o->recptr, 1);
-		if (delta == 0)
+		if (seqptr_ticskip(o->recptr, 1) == 0)
 			seqptr_ticput(o->recptr, 1);
 	}
 	if (o->mode >= SONG_PLAY) {
