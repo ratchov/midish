@@ -787,6 +787,10 @@ song_ticskip(struct song *o)
 	SONG_FOREACH_TRK(o, i) {
 		neot |= seqptr_ticskip(i->trackptr, 1);
 	}
+	if (o->mode >= SONG_REC) {
+		if (seqptr_ticskip(o->recptr, 1) == 0)
+			seqptr_ticput(o->recptr, 1);
+	}
 	if (song_loop_repeat(o))
 		return;
 	if (neot == 0 && !o->complete) {
@@ -1006,10 +1010,6 @@ song_stopcb(struct song *o)
 void
 song_movecb(struct song *o)
 {
-	if (o->mode >= SONG_REC) {
-		if (seqptr_ticskip(o->recptr, 1) == 0)
-			seqptr_ticput(o->recptr, 1);
-	}
 	if (o->mode >= SONG_PLAY) {
 		(void)song_ticskip(o);
 		song_ticplay(o);
