@@ -771,7 +771,7 @@ evspec_isamap(struct evspec *from, struct evspec *to)
 	}
 	if ((from->cmd == EVSPEC_ANY && to->cmd != EVSPEC_ANY) ||
 	    (from->cmd != EVSPEC_ANY && to->cmd == EVSPEC_ANY)) {
-		cons_err("note may only be used in both map args");
+		cons_err("any may only be used in both map args");
 		return 0;
 	}
 	if (evinfo[from->cmd].flags & EV_HAS_DEV &&
