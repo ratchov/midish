@@ -1146,16 +1146,12 @@ evpat_set(unsigned cmd, char *name, unsigned char *pattern, unsigned size)
 	evinfo[cmd].nparams = has_v0_hi + has_v1_hi;
 	evinfo[cmd].nranges = evinfo[cmd].nparams;
 	evinfo[cmd].v0_min = 0;
-	evinfo[cmd].v0_max = has_v0_lo ? EV_MAXFINE : EV_MAXCOARSE;
+	evinfo[cmd].v0_max = EV_MAXFINE;
 	evinfo[cmd].v1_min = 0;
-	evinfo[cmd].v1_max = has_v1_lo ? EV_MAXFINE : EV_MAXCOARSE;
+	evinfo[cmd].v1_max = EV_MAXFINE;
 #if 0
 	log_puts("evpat: nparams = ");
 	log_putu(evinfo[cmd].nparams);
-	log_puts(", v0_max = ");
-	log_putu(evinfo[cmd].v0_max);
-	log_puts(", v1_max = ");
-	log_putu(evinfo[cmd].v1_max);
 	log_puts("\n");
 #endif
 	return 1;
