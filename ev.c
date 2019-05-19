@@ -420,38 +420,9 @@ ev_map(struct ev *in, struct evspec *from, struct evspec *to, struct ev *out)
 		if (evinfo[from->cmd].flags & EV_HAS_CH)
 			out->ch += in->ch - from->ch_min;
 	}
-	switch (evinfo[in->cmd].nparams) {
+	switch (evinfo[from->cmd].nparams) {
 	case 0:
-		break;
-	case 1:
-		switch (evinfo[out->cmd].nparams) {
-		case 0:
-			break;
-		case 1:
-			out->v0 = in->v0;
-			break;
-		case 2:
-			out->v1 = in->v1;
-			break;
-		}
-		break;
-	case 2:
-		switch (evinfo[out->cmd].nparams) {
-		case 0:
-			break;
-		case 1:
-			out->v0 = in->v1;
-			break;
-		case 2:
-			out->v0 = in->v0;
-			out->v1 = in->v1;
-			break;
-		}
-		break;
-	}
-	switch (evinfo[from->cmd].nranges) {
-	case 0:
-		switch (evinfo[to->cmd].nranges) {
+		switch (evinfo[to->cmd].nparams) {
 		case 0:
 			break;
 		case 1:
@@ -464,7 +435,7 @@ ev_map(struct ev *in, struct evspec *from, struct evspec *to, struct ev *out)
 		}
 		break;
 	case 1:
-		switch (evinfo[to->cmd].nranges) {
+		switch (evinfo[to->cmd].nparams) {
 		case 0:
 			break;
 		case 1:
@@ -477,7 +448,7 @@ ev_map(struct ev *in, struct evspec *from, struct evspec *to, struct ev *out)
 		}
 		break;
 	case 2:
-		switch (evinfo[to->cmd].nranges) {
+		switch (evinfo[to->cmd].nparams) {
 		case 0:
 			break;
 		case 1:
@@ -521,10 +492,10 @@ evspec_reset(struct evspec *o)
 	o->dev_max = EV_MAXDEV;
 	o->ch_min  = 0;
 	o->ch_max  = EV_MAXCH;
-	o->v0_min  = 0xdeadbeef;
-	o->v0_max  = 0xbeefdead;
-	o->v1_min  = 0xdeadbeef;
-	o->v1_max  = 0xbeefdead;
+	o->v0_min  = evinfo[o->cmd].v0_min;
+	o->v0_max  = evinfo[o->cmd].v0_max;
+	o->v1_min  = evinfo[o->cmd].v1_min;
+	o->v1_max  = evinfo[o->cmd].v1_max;
 }
 
 /*
@@ -567,13 +538,13 @@ evspec_log(struct evspec *o)
 		log_puts(":");
 		log_putu(o->ch_max);
 	}
-	if (evinfo[o->cmd].nranges >= 1) {
+	if (evinfo[o->cmd].nparams >= 1) {
 		log_puts(" ");
 		log_putu(o->v0_min);
 		log_puts(":");
 		log_putu(o->v0_max);
 	}
-	if (evinfo[o->cmd].nranges >= 2) {
+	if (evinfo[o->cmd].nparams >= 2) {
 		log_puts(" ");
 		log_putu(o->v1_min);
 		log_puts(":");
@@ -612,14 +583,14 @@ evspec_matchev(struct evspec *es, struct ev *ev)
 		    ev->ch > es->ch_max)
 			return 0;
 	}
-	if (evinfo[es->cmd].nranges > 0 &&
-	    evinfo[ev->cmd].nranges > 0) {
+	if (evinfo[es->cmd].nparams > 0 &&
+	    evinfo[ev->cmd].nparams > 0) {
 		if (ev->v0 < es->v0_min ||
 		    ev->v0 > es->v0_max)
 			return 0;
 	}
-	if (evinfo[es->cmd].nranges > 1 &&
-	    evinfo[ev->cmd].nranges > 1) {
+	if (evinfo[es->cmd].nparams > 1 &&
+	    evinfo[ev->cmd].nparams > 1) {
 		if (ev->v1 < es->v1_min ||
 		    ev->v1 > es->v1_max)
 			return 0;
@@ -648,13 +619,13 @@ evspec_eq(struct evspec *es1, struct evspec *es2)
 			return 0;
 		}
 	}
-	if (evinfo[es1->cmd].nranges > 0) {
+	if (evinfo[es1->cmd].nparams > 0) {
 		if (es1->v0_min != es2->v0_min ||
 		    es1->v0_max != es2->v0_max) {
 			return 0;
 		}
 	}
-	if (evinfo[es1->cmd].nranges > 1) {
+	if (evinfo[es1->cmd].nparams > 1) {
 		if (es1->v1_min != es2->v1_min ||
 		    es1->v1_max != es2->v1_max) {
 			return 0;
@@ -691,15 +662,15 @@ evspec_isec(struct evspec *es1, struct evspec *es2)
 			return 0;
 		}
 	}
-	if (evinfo[es1->cmd].nranges > 0 &&
-	    evinfo[es2->cmd].nranges > 0) {
+	if (evinfo[es1->cmd].nparams > 0 &&
+	    evinfo[es2->cmd].nparams > 0) {
 		if (es1->v0_min > es2->v0_max ||
 		    es1->v0_max < es2->v0_min) {
 			return 0;
 		}
 	}
-	if (evinfo[es1->cmd].nranges > 1 &&
-	    evinfo[es2->cmd].nranges > 1) {
+	if (evinfo[es1->cmd].nparams > 1 &&
+	    evinfo[es2->cmd].nparams > 1) {
 		if (es1->v1_min > es2->v1_max ||
 		    es1->v1_max < es2->v1_min) {
 			return 0;
@@ -741,15 +712,15 @@ evspec_in(struct evspec *es1, struct evspec *es2)
 			return 0;
 		}
 	}
-	if (evinfo[es1->cmd].nranges > 0 &&
-	    evinfo[es2->cmd].nranges > 0) {
+	if (evinfo[es1->cmd].nparams > 0 &&
+	    evinfo[es2->cmd].nparams > 0) {
 		if (es1->v0_min < es2->v0_min ||
 		    es1->v0_max > es2->v0_max) {
 			return 0;
 		}
 	}
-	if (evinfo[es1->cmd].nranges > 1 &&
-	    evinfo[es2->cmd].nranges > 1) {
+	if (evinfo[es1->cmd].nparams > 1 &&
+	    evinfo[es2->cmd].nparams > 1) {
 		if (es1->v1_min < es2->v1_min ||
 		    es1->v1_max > es2->v1_max) {
 			return 0;
@@ -784,9 +755,9 @@ evspec_isamap(struct evspec *from, struct evspec *to)
 		cons_err("chan ranges must have the same size");
 		return 0;
 	}
-	switch (evinfo[from->cmd].nranges) {
+	switch (evinfo[from->cmd].nparams) {
 	case 0:
-		switch (evinfo[to->cmd].nranges) {
+		switch (evinfo[to->cmd].nparams) {
 		case 0:
 			break;
 		case 1:
@@ -805,7 +776,7 @@ evspec_isamap(struct evspec *from, struct evspec *to)
 		}
 		break;
 	case 1:
-		switch (evinfo[to->cmd].nranges) {
+		switch (evinfo[to->cmd].nparams) {
 		case 0:
 			if (from->v0_max != from->v0_min) {
 				cons_err("v0 ranges not empty");
@@ -833,7 +804,7 @@ evspec_isamap(struct evspec *from, struct evspec *to)
 		}
 		break;
 	case 2:
-		switch (evinfo[to->cmd].nranges) {
+		switch (evinfo[to->cmd].nparams) {
 		case 0:
 			if (from->v0_max != from->v0_min ||
 			    from->v1_max != from->v1_min) {
