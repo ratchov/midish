@@ -1272,6 +1272,10 @@ load_evspec(struct load *o, struct evspec *es)
 	if (!evspec_str2cmd(es, o->strval))
 		return 0;
 	info = &evinfo[es->cmd];
+	es->v0_min = evinfo[es->cmd].v0_min;
+	es->v0_max = evinfo[es->cmd].v0_max;
+	es->v1_min = evinfo[es->cmd].v1_min;
+	es->v1_max = evinfo[es->cmd].v1_max;
 	if ((info->flags & EV_HAS_DEV) && (info->flags & EV_HAS_CH)) {
 		if (!load_getsym(o))
 			return 0;
