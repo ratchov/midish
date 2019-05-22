@@ -81,7 +81,6 @@ undo_pop(struct song *s)
 			track_undorestore(u->u.track.track, &u->u.track.data);
 			break;
 		case UNDO_TDEL:
-			track_undorestore(&u->u.tdel.trk->track, &u->u.tdel.data);
 			name_add(&s->trklist, &u->u.tdel.trk->name);
 			if (s->curtrk == NULL)
 				s->curtrk = u->u.tdel.trk;
@@ -107,7 +106,6 @@ undo_pop(struct song *s)
 			song_filtdel(s, u->u.fdel.filt);
 			break;
 		case UNDO_CDEL:
-			track_undorestore(&u->u.cdel.chan->conf, &u->u.cdel.data);
 			name_add(&s->chanlist, &u->u.cdel.chan->name);
 			if (u->u.cdel.chan->isinput) {
 				if (s->curin == NULL)
@@ -180,7 +178,6 @@ undo_clear(struct song *s, struct undo **pos)
 			xfree(u->u.track.data.evs);
 			break;
 		case UNDO_TDEL:
-			xfree(u->u.tdel.data.evs);
 			track_done(&u->u.tdel.trk->track);
 			name_done(&u->u.tdel.trk->name);
 			xfree(u->u.tdel.trk);
@@ -202,7 +199,6 @@ undo_clear(struct song *s, struct undo **pos)
 		case UNDO_FNEW:
 			break;
 		case UNDO_CDEL:
-			xfree(u->u.cdel.data.evs);
 			track_done(&u->u.cdel.chan->conf);
 			name_done(&u->u.cdel.chan->name);
 			xfree(u->u.cdel.chan);
@@ -490,9 +486,11 @@ undo_tdel_do(struct song *s, struct songtrk *t, char *func)
 
 	if (s->curtrk == t)
 		s->curtrk = NULL;
-	u = undo_new(s, UNDO_TDEL, func, t->name.str);
+	undo_track_save(s, &t->track, func, t->name.str);
+	track_clear(&t->track);
+	undo_track_diff(s);
+	u = undo_new(s, UNDO_TDEL, NULL, NULL);
 	u->u.tdel.trk = t;
-	u->size = track_undosave(&t->track, &u->u.tdel.data);
 	name_remove(&s->trklist, &t->name);
 	undo_push(s, u);
 }
@@ -637,9 +635,12 @@ undo_cdel_do(struct song *s, struct songchan *c, char *func)
 			s->curout = NULL;
 	}
 
-	u = undo_new(s, UNDO_CDEL, func, c->name.str);
+	undo_track_save(s, &c->conf, func, c->name.str);
+	track_clear(&c->conf);
+	undo_track_diff(s);
+
+	u = undo_new(s, UNDO_CDEL, NULL, NULL);
 	u->u.cdel.chan = c;
-	u->size = track_undosave(&c->conf, &u->u.cdel.data);
 	name_remove(&s->chanlist, &c->name);
 	undo_push(s, u);
 	if (c->filt)
