@@ -193,15 +193,16 @@ norm_evcb(struct ev *ev)
 		if (st->flags & STATE_NEW)
 			st->nevents = 0;
 
-		st->tag = TAG_PASS;
 		if (st->flags & (STATE_BOGUS | STATE_NESTED)) {
+			st->tag = 0;
 			if (norm_debug) {
 				log_puts("norm_evcb: ");
 				ev_log(ev);
 				log_puts(": bogus/nested frame\n");
 			}
 			norm_kill(ev);
-		}
+		} else
+			st->tag = TAG_PASS;
 	}
 
 	/*
