@@ -762,11 +762,13 @@ seqptr_evmerge1(struct seqptr *pd, struct state *s1)
  * called once seqptr_evmerge1() was called for all low prio events
  * within the current tick.
  */
-struct state *
-seqptr_evmerge2(struct seqptr *pd, struct statelist *slist1, struct ev *ev2)
+unsigned
+seqptr_evmerge2(struct seqptr *pd, struct statelist *slist1, struct ev *ev2,
+	struct ev *ca)
 {
 	struct state *sd, *s1;
 	unsigned phase2;
+	unsigned rc = 0;
 
 	phase2 = ev_phase(ev2);
 
@@ -780,7 +782,7 @@ seqptr_evmerge2(struct seqptr *pd, struct statelist *slist1, struct ev *ev2)
 					if (!state_eq(s1, ev2))
 						sd = seqptr_evput(pd, &s1->ev);
 					sd->tag = 1;
-					return sd;
+					return 0;
 				}
 			}
 		} else {
@@ -791,8 +793,10 @@ seqptr_evmerge2(struct seqptr *pd, struct statelist *slist1, struct ev *ev2)
 			 */
 			if (phase2 & EV_PHASE_FIRST) {
 				if (EV_ISNOTE(&sd->ev)) {
-					if (sd->phase != EV_PHASE_LAST)
+					if (sd->phase != EV_PHASE_LAST) {
+						rc = state_cancel(sd, ca);
 						seqptr_rmprev(pd, &sd);
+					}
 				} else if (sd->flags & STATE_CHANGED)
 					seqptr_rmlast(pd, &sd);
 			}
@@ -803,7 +807,9 @@ seqptr_evmerge2(struct seqptr *pd, struct statelist *slist1, struct ev *ev2)
 		 * frame
 		 */
 		if (!(phase2 & EV_PHASE_FIRST)) {
-			log_puts("seqptr_evmerge2: missing state\n");
+			log_puts("seqptr_evmerge2: ");
+			ev_log(ev2);
+			log_puts(": missing state\n");
 			panic();
 		}
 	}
@@ -812,7 +818,7 @@ seqptr_evmerge2(struct seqptr *pd, struct statelist *slist1, struct ev *ev2)
 		sd = seqptr_evput(pd, ev2);
 	sd->tag = 0;
 
-	return sd;
+	return rc;
 }
 
 /*
@@ -826,6 +832,7 @@ track_merge(struct track *dst, struct track *src)
 	struct seqptr *p2, *pd;
 	struct statelist orglist;
 	unsigned delta1, delta2, deltad;
+	struct ev ca;
 
 	pd = seqptr_new(dst);
 	p2 = seqptr_new(src);
@@ -854,7 +861,7 @@ track_merge(struct track *dst, struct track *src)
 			s = seqptr_evget(p2);
 			if (s == NULL)
 				break;
-			seqptr_evmerge2(pd, &orglist, &s->ev);
+			seqptr_evmerge2(pd, &orglist, &s->ev, &ca);
 		}
 
 		/*
