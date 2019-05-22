@@ -133,10 +133,10 @@ song_init(struct song *o)
 void
 song_done(struct song *o)
 {
-	undo_clear(o, &o->undo);
 	if (mux_isopen) {
 		song_stop(o);
 	}
+	undo_clear(o, &o->undo);
 	while (o->trklist) {
 		song_trkdel(o, (struct songtrk *)o->trklist);
 	}
