@@ -644,7 +644,7 @@ undo_cdel_do(struct song *s, struct songchan *c, char *func)
 	name_remove(&s->chanlist, &c->name);
 	undo_push(s, u);
 	if (c->filt)
-		undo_fdel_do(s, c->filt, "cdel_filt");
+		undo_fdel_do(s, c->filt, NULL);
 }
 
 unsigned int
