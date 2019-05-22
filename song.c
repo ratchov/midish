@@ -28,6 +28,10 @@
 #include "norm.h"
 #include "undo.h"
 
+#define TAG_OFF		0
+#define TAG_PLAY	1
+#define TAG_REC		2
+
 unsigned song_debug = 0;
 char *song_tap_modestr[3] = {"off", "start", "tempo"};
 
@@ -723,6 +727,26 @@ song_loop_track(struct song *o, struct songtrk *t)
 	sp->tic = lp->tic;
 }
 
+void
+song_loop_rec(struct song *o)
+{
+	if (o->playptr != NULL)
+		return;
+
+	o->playptr = seqptr_new(&o->rec);
+	seqptr_link(o->playptr, o->recptr);
+
+	if (seqptr_ticdel(o->playptr, o->loop_tstart,
+		&o->rec_replay) != o->loop_tstart) {
+		log_puts("song_loop_rec: events in the way\n");
+		panic();
+	}
+	seqptr_ticput(o->playptr, o->loop_tstart);
+
+	if (song_debug)
+		log_puts("song_loop_rec: starting replay\n");
+}
+
 /*
  * continue playback from the loop start position
  */
@@ -742,6 +766,10 @@ song_loop_repeat(struct song *o)
 	}
 
 	song_loop_track(o, NULL);
+
+	if (o->mode >= SONG_REC)
+		song_loop_rec(o);
+
 	return 1;
 }
 
@@ -756,8 +784,11 @@ song_loop_repeat(struct song *o)
 void
 song_ticskip(struct song *o)
 {
+	struct ev ev;
 	struct songtrk *i;
+	struct state *s;
 	unsigned neot;
+	unsigned period;
 
 	/*
 	 * tempo_track
@@ -773,23 +804,34 @@ song_ticskip(struct song *o)
 		}
 	}
 	o->abspos++;
-#if 0
-	if (song_debug) {
-		log_puts("song_ticskip: ");
-		log_putu(o->measure);
-		log_puts(":");
-		log_putu(o->beat);
-		log_puts(":");
-		log_putu(o->tic);
-		log_puts("\n");
-	}
-#endif
 	SONG_FOREACH_TRK(o, i) {
 		neot |= seqptr_ticskip(i->trackptr, 1);
 	}
 	if (o->mode >= SONG_REC) {
-		if (seqptr_ticskip(o->recptr, 1) == 0)
-			seqptr_ticput(o->recptr, 1);
+		if (o->playptr) {
+			seqptr_ticdel(o->playptr, 1, &o->rec_replay);
+			seqptr_ticput(o->playptr, 1);
+		}
+		seqptr_ticput(o->recptr, 1);
+		statelist_outdate(&o->rec_input);
+
+		/*
+		 * increment length and terminate notes longer than
+		 * the loop period
+		 */
+		period = o->loop_tend - o->loop_tstart;
+		for (s = o->rec_input.first; s != NULL; s = s->next) {
+			if (s->tag != TAG_REC)
+				continue;
+			if (++s->tic != period)
+				continue;
+			if (state_cancel(s, &ev)) {
+				seqptr_evmerge2(o->recptr,
+				    &o->rec_replay, &ev, NULL);
+				mixout_putev(&ev, 0);
+			}
+			s->tag = TAG_OFF;
+		}
 	}
 	if (song_loop_repeat(o))
 		return;
@@ -807,7 +849,7 @@ void
 song_ticplay(struct song *o)
 {
 	struct songtrk *i;
-	struct state *st;
+	struct state *st, *sr;
 	unsigned id;
 
 	while ((st = seqptr_evget(o->metaptr)))
@@ -825,6 +867,27 @@ song_ticplay(struct song *o)
 			if (st->tag)
 				mixout_putev(&st->ev, PRIO_TRACK);
 		}
+	}
+
+	if (o->mode >= SONG_REC) {
+		/*
+		 * remove all events from rec track and put them back
+		 * on it by merging them with the input states. The
+		 * played states table is updated so it always contain
+		 * the exact state of the original track.
+		 */
+		if (o->playptr != NULL) {
+			for(;;) {
+				st = seqptr_evdel(o->playptr, &o->rec_replay);
+				if (st == NULL)
+					break;
+				st->tag = 1;
+				sr = seqptr_evmerge1(o->recptr, st);
+				if (sr != NULL)
+					mixout_putev(&st->ev, 0);
+			}
+		}
+
 	}
 }
 
@@ -880,7 +943,6 @@ song_confcancel(struct statelist *slist, unsigned prio)
 	struct state *s;
 	struct ev ca;
 
-
 	for (s = slist->first; s != NULL; s = s->next) {
 		if (s->tag) {
 			if (state_cancel(s, &ca)) {
@@ -932,22 +994,92 @@ song_trkunmute(struct song *s, struct songtrk *t)
 void
 song_mergerec(struct song *o)
 {
+	struct state *st;
+	struct track loop;
+	struct seqptr *lp;
 	struct songtrk *t;
 	struct songsx *x;
 	struct sysex *e;
 	struct state *s;
 	struct ev ev;
+	unsigned period, offset;
 
 	/*
 	 * if there is no filter for recording there may be
 	 * unterminated frames, so finalize them.
 	 */
-	for (s = o->recptr->statelist.first; s != NULL; s = s->next) {
-		if (!(s->phase & EV_PHASE_LAST) &&
-		     state_cancel(s, &ev)) {
-			seqptr_evput(o->recptr, &ev);
+	for (s = o->rec_input.first; s != NULL; s = s->next) {
+		if (s->tag != TAG_REC && s->tag != TAG_PLAY)
+			continue;
+		if (state_cancel(s, &ev)) {
+			if (s->tag == TAG_REC) {
+				seqptr_evmerge2(o->recptr,
+				    &o->rec_replay, &ev, NULL);
+			}
+			mixout_putev(&ev, 0);
 		}
+		s->tag = TAG_OFF;
 	}
+
+	/*
+	 * cancel any remaining frames (replayed events in loop mode)
+	 */
+	for (s = o->recptr->statelist.first; s != NULL; s = s->next) {
+		if (!state_cancel(s, &ev))
+			continue;
+		mixout_putev(&ev, 0);
+	}
+
+	if (o->playptr != NULL) {
+		period = o->loop_tend - o->loop_tstart;
+		offset = (o->playptr->tic - o->loop_tstart) % period;
+
+		/*
+		 * advance until loop end
+		 */
+		while (offset++ != period) {
+			seqptr_ticdel(o->playptr, 1, &o->rec_replay);
+			seqptr_ticput(o->playptr, 1);
+			seqptr_ticput(o->recptr, 1);
+			for(;;) {
+				st = seqptr_evdel(o->playptr, &o->rec_replay);
+				if (st == NULL)
+					break;
+				st->tag = 1;
+				seqptr_evmerge1(o->recptr, st);
+			}
+		}
+
+		track_init(&loop);
+		lp = seqptr_new(&loop);
+		seqptr_ticput(lp, o->loop_tstart);
+
+		/*
+		 * unroll loop into a new 'loop' track
+		 */
+		while (o->rec.first->ev.cmd != EV_NULL) {
+			seqptr_ticdel(o->playptr, 1, &o->rec_replay);
+			seqptr_ticput(o->playptr, 1);
+			seqptr_ticput(o->recptr, 1);
+			seqptr_ticput(lp, 1);
+			for(;;) {
+				st = seqptr_evdel(o->playptr, &o->rec_replay);
+				if (st == NULL)
+					break;
+				if (st->phase & EV_PHASE_FIRST)
+					st->tag = 0;
+				if (st->tag)
+					seqptr_evmerge1(o->recptr, st);
+				else
+					seqptr_evput(lp, &st->ev);
+			}
+		}
+
+		seqptr_del(lp);
+		track_swap(&o->rec, &loop);
+		track_done(&loop);
+	}
+
 	song_getcurtrk(o, &t);
 	if (t) {
 		undo_track_save(o, &t->track, "record", t->name.str);
@@ -1023,7 +1155,8 @@ song_movecb(struct song *o)
 void
 song_evcb(struct song *o, struct ev *ev)
 {
-	struct ev filtout[FILT_MAXNRULES];
+	struct ev filtout[FILT_MAXNRULES], rev;
+	struct state *s;
 	unsigned i, nev;
 	unsigned usec24;
 
@@ -1076,11 +1209,33 @@ song_evcb(struct song *o, struct ev *ev)
 	 */
 	ev = filtout;
 	for (i = 0; i < nev; i++) {
-		mixout_putev(ev, 0);
 		if (o->mode >= SONG_REC) {
-			if (mux_getphase() >= MUX_START)
-				(void)seqptr_evput(o->recptr, ev);
-		}
+			s = statelist_update(&o->rec_input, ev);
+			if (s->phase & EV_PHASE_FIRST) {
+				s->tic = 0;
+				if (s->flags & (STATE_BOGUS | STATE_NESTED)) {
+					state_log(s);
+					log_puts(": norm filter failed\n");
+					panic();
+				}
+				if ((mux_getphase() >= MUX_START) &&
+				    (o->loop_mstart == o->loop_mend ||
+					o->abspos >= o->loop_tstart))
+					s->tag = TAG_REC;
+				else
+					s->tag = TAG_PLAY;
+			}
+
+			if (s->tag == TAG_REC) {
+				if (seqptr_evmerge2(o->recptr,
+					&o->rec_replay, ev, &rev))
+					mixout_putev(&rev, 0);
+			}
+			if (s->tag == TAG_REC || s->tag == TAG_PLAY)
+				mixout_putev(ev, 0);
+
+		} else
+			mixout_putev(ev, 0);
 		ev++;
 	}
 }
@@ -1235,11 +1390,20 @@ song_loc(struct song *o, unsigned where, unsigned how)
 		panic();
 	}
 #endif
+	/*
+	 * at this point track is cleared, song->rec_xxx lists are
+	 * empty
+	 */
+	if (o->playptr)
+		seqptr_del(o->playptr);
 	seqptr_del(o->recptr);
 	o->recptr = seqptr_new(&o->rec);
+	o->playptr = NULL;
 	if (o->mode >= SONG_REC) {
 		seqptr_seek(o->recptr, o->abspos);
 	}
+	statelist_empty(&o->rec_input);
+	statelist_empty(&o->rec_replay);
 
 	for (s = o->metaptr->statelist.first; s != NULL; s = s->next) {
 		if (EV_ISMETA(&s->ev)) {
@@ -1331,6 +1495,12 @@ song_setmode(struct song *o, unsigned newmode)
 			statelist_empty(&t->trackptr->statelist);
 			seqptr_del(t->trackptr);
 		}
+		if (o->playptr)
+			seqptr_del(o->playptr);
+		statelist_empty(&o->rec_input);
+		statelist_done(&o->rec_input);
+		statelist_empty(&o->rec_replay);
+		statelist_done(&o->rec_replay);
 		seqptr_del(o->recptr);
 		seqptr_del(o->metaptr);
 		norm_shut();
@@ -1356,6 +1526,9 @@ song_setmode(struct song *o, unsigned newmode)
 		}
 		o->metaptr = seqptr_new(&o->meta);
 		o->recptr = seqptr_new(&o->rec);
+		o->playptr = NULL;
+		statelist_init(&o->rec_replay);
+		statelist_init(&o->rec_input);
 
 		mux_open();
 

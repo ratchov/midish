@@ -106,7 +106,10 @@ struct song {
 	unsigned long tempo;		/* cur tempo in 24th of usec per tic */
 	unsigned bpm, tpb;		/* cur time signature */
 	struct track rec;		/* track being recorded */
-	struct seqptr *recptr;		/* cur position in 'rec' track */
+	struct seqptr *recptr;		/* record position in rec track */
+	struct seqptr *playptr;		/* replay position in rec track */
+	struct statelist rec_input;	/* events to be recorded */
+	struct statelist rec_replay;	/* recorded events to be replayed */
 	struct sysexlist recsx;
 	unsigned abspos;		/* cur postion in ticks */
 	unsigned measure, beat, tic;	/* cur position (for metronome) */
