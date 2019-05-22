@@ -180,6 +180,7 @@ seqptr_new(struct track *t)
 
 	sp = (struct seqptr *)pool_new(&seqptr_pool);
 	statelist_init(&sp->statelist);
+	sp->link = NULL;
 	sp->pos = t->first;
 	sp->delta = 0;
 	sp->tic = 0;
@@ -192,6 +193,9 @@ seqptr_new(struct track *t)
 void
 seqptr_del(struct seqptr *sp)
 {
+	if (sp->link != NULL)
+		sp->link->link = NULL;
+
 	statelist_done(&sp->statelist);
 	pool_del(&seqptr_pool, sp);
 }
@@ -203,6 +207,21 @@ int
 seqptr_eot(struct seqptr *sp)
 {
 	return sp->delta == sp->pos->delta && sp->pos->ev.cmd == EV_NULL;
+}
+
+/*
+ * link a reader and a writer so that reader sees consistently
+ * changes by the writer
+ */
+void
+seqptr_link(struct seqptr *sp1, struct seqptr *sp2)
+{
+	if (sp1->link != NULL || sp2->link != NULL) {
+		log_puts("seqptr structures already linked\n");
+		panic();
+	}
+	sp1->link = sp2;
+	sp2->link = sp1;
 }
 
 /*
@@ -264,17 +283,25 @@ seqptr_evdel(struct seqptr *sp, struct statelist *slist)
 struct state *
 seqptr_evput(struct seqptr *sp, struct ev *ev)
 {
+	struct seqptr *link;
 	struct seqev *se;
 
 	se = seqev_new();
 	se->ev = *ev;
 	se->delta = sp->delta;
 	sp->pos->delta -= sp->delta;
+
 	/* link to the list */
 	se->next = sp->pos;
 	se->prev = sp->pos->prev;
 	*se->prev = se;
 	sp->pos->prev = &se->next;
+
+	/* if there's a reader update its pointer */
+	link = sp->link;
+	if (link != NULL && link->pos == sp->pos)
+		link->pos = se;
+
 	/* fix the position pointer and update the state */
 	sp->pos = se;
 	return seqptr_evget(sp);
@@ -309,6 +336,7 @@ seqptr_ticskip(struct seqptr *sp, unsigned max)
 unsigned
 seqptr_ticdel(struct seqptr *sp, unsigned max, struct statelist *slist)
 {
+	struct seqptr *link;
 	unsigned ntics;
 
 	ntics = sp->pos->delta - sp->delta;
@@ -319,6 +347,14 @@ seqptr_ticdel(struct seqptr *sp, unsigned max, struct statelist *slist)
 	if (slist != NULL && max > 0) {
 		statelist_outdate(slist);
 	}
+
+	/* shift writer if affected */
+	link = sp->link;
+	if (link != NULL && link->pos == sp->pos && link->delta >= sp->delta) {
+		sp->link->delta -= ntics;
+		sp->link->tic -= ntics;
+	}
+
 	return ntics;
 }
 
@@ -328,11 +364,21 @@ seqptr_ticdel(struct seqptr *sp, unsigned max, struct statelist *slist)
 void
 seqptr_ticput(struct seqptr *sp, unsigned ntics)
 {
-	if (ntics > 0) {
-		sp->pos->delta += ntics;
-		sp->delta += ntics;
-		sp->tic += ntics;
-		statelist_outdate(&sp->statelist);
+	struct seqptr *link;
+
+	if (ntics == 0)
+		return;
+
+	sp->pos->delta += ntics;
+	sp->delta += ntics;
+	sp->tic += ntics;
+	statelist_outdate(&sp->statelist);
+
+	/* shift writer if affected */
+	link = sp->link;
+	if (link != NULL && link->pos == sp->pos && link->delta >= sp->delta) {
+		sp->link->delta += ntics;
+		sp->link->tic += ntics;
 	}
 }
 

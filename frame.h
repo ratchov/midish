@@ -21,6 +21,7 @@
 
 struct seqptr {
 	struct statelist statelist;
+	struct seqptr *link;		/* opposite direction seqptr */
 	struct seqev *pos;		/* next event (current position) */
 	unsigned delta;			/* tics until the next event */
 	unsigned tic;			/* absolute tic of the current pos */
@@ -33,6 +34,7 @@ void	      seqptr_pool_init(unsigned);
 void	      seqptr_pool_done(void);
 struct seqptr *seqptr_new(struct track *);
 void	      seqptr_del(struct seqptr *);
+void	      seqptr_link(struct seqptr *, struct seqptr *);
 int	      seqptr_eot(struct seqptr *);
 struct state *seqptr_evget(struct seqptr *);
 struct state *seqptr_evdel(struct seqptr *, struct statelist *);
