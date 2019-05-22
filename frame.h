@@ -48,7 +48,7 @@ struct state *seqptr_gettempo(struct seqptr *, unsigned long *);
 unsigned      seqptr_skipmeasure(struct seqptr *, unsigned);
 struct state *seqptr_evmerge1(struct seqptr *, struct state *);
 struct state *seqptr_evmerge2(struct seqptr *,
-    struct statelist *, struct state *);
+    struct statelist *, struct ev *);
 
 void	 track_merge(struct track *, struct track *);
 unsigned track_findmeasure(struct track *, unsigned);

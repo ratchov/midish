@@ -711,50 +711,59 @@ seqptr_evmerge1(struct seqptr *pd, struct state *s1)
 }
 
 /*
- * merge high priority event: if s2 conflicts with low priority events
- * in the track, discard them and store s2. This routine must be
+ * merge high priority event: if ev2 conflicts with low priority events
+ * in the track, discard them and store ev2. This routine must be
  * called once seqptr_evmerge1() was called for all low prio events
  * within the current tick.
  */
 struct state *
-seqptr_evmerge2(struct seqptr *pd, struct statelist *slist1, struct state *s2)
+seqptr_evmerge2(struct seqptr *pd, struct statelist *slist1, struct ev *ev2)
 {
 	struct state *sd, *s1;
+	unsigned phase2;
 
-	/*
-	 * ignore bogus events
-	 */
-	if (s2->flags & (STATE_BOGUS | STATE_NESTED))
-		return NULL;
+	phase2 = ev_phase(ev2);
 
-	sd = statelist_lookup(&pd->statelist, &s2->ev);
-
+	sd = statelist_lookup(&pd->statelist, ev2);
 	if (sd != NULL) {
 		if (sd->tag == 0) {
-			if (s2->phase == EV_PHASE_LAST && !EV_ISNOTE(&sd->ev)) {
-				s1 = statelist_lookup(slist1, &s2->ev);
+			/* EV_PHASE_LAST is never ambigous */
+			if (phase2 == EV_PHASE_LAST && !EV_ISNOTE(&sd->ev)) {
+				s1 = statelist_lookup(slist1, ev2);
 				if (s1 != NULL && s1->phase != EV_PHASE_LAST) {
-					if (!state_eq(s2, &s1->ev))
+					if (!state_eq(s1, ev2))
 						sd = seqptr_evput(pd, &s1->ev);
 					sd->tag = 1;
 					return sd;
 				}
 			}
 		} else {
-			if (s2->phase & EV_PHASE_FIRST) {
+			/*
+			 * phase could be (FIRST | NEXT) instead of
+			 * NEXT only, but in this case we wouldn't be
+			 * here because sd would be NULL.
+			 */
+			if (phase2 & EV_PHASE_FIRST) {
 				if (EV_ISNOTE(&sd->ev)) {
 					if (sd->phase != EV_PHASE_LAST)
 						sd = seqptr_rmprev(pd, sd);
-				} else if (sd->flags & STATE_CHANGED) {
+				} else if (sd->flags & STATE_CHANGED)
 					sd = seqptr_rmlast(pd, sd);
-				}
 			}
 		}
-	} else if (!(s2->phase & EV_PHASE_FIRST))
-		return NULL;
+	} else {
+		/*
+		 * If there's no state, this is necessarily the a new
+		 * frame
+		 */
+		if (!(phase2 & EV_PHASE_FIRST)) {
+			log_puts("seqptr_evmerge2: missing state\n");
+			panic();
+		}
+	}
 
-	if (sd == NULL || !state_eq(sd, &s2->ev))
-		sd = seqptr_evput(pd, &s2->ev);
+	if (sd == NULL || !state_eq(sd, ev2))
+		sd = seqptr_evput(pd, ev2);
 	sd->tag = 0;
 
 	return sd;
@@ -799,7 +808,7 @@ track_merge(struct track *dst, struct track *src)
 			s = seqptr_evget(p2);
 			if (s == NULL)
 				break;
-			seqptr_evmerge2(pd, &orglist, s);
+			seqptr_evmerge2(pd, &orglist, &s->ev);
 		}
 
 		/*
