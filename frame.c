@@ -574,9 +574,10 @@ seqptr_restore(struct seqptr *sp, struct state *st)
  * the event never existed on the track. Returns the new state, or
  * NULL if there is no more state.
  */
-struct state *
-seqptr_rmlast(struct seqptr *sp, struct state *st)
+void
+seqptr_rmlast(struct seqptr *sp, struct state **pst)
 {
+	struct state *st = *pst;
 	struct seqev *i, *prev, *cur, *next;
 
 #ifdef FRAME_DEBUG
@@ -614,6 +615,7 @@ seqptr_rmlast(struct seqptr *sp, struct state *st)
 	next->prev = cur->prev;
 	*(cur->prev) = next;
 	seqev_del(cur);
+
 	/*
 	 * update the state; if we deleted the first event of the
 	 * frame, the state no more exists, so purge it
@@ -621,12 +623,11 @@ seqptr_rmlast(struct seqptr *sp, struct state *st)
 	if (prev == NULL) {
 		statelist_rm(&sp->statelist, st);
 		state_del(st);
-		return NULL;
+		*pst = NULL;
 	} else {
 		st->ev = prev->ev;
 		st->phase = st->pos == prev ? EV_PHASE_FIRST : EV_PHASE_NEXT;
 	}
-	return st;
 }
 
 /*
@@ -634,9 +635,10 @@ seqptr_rmlast(struct seqptr *sp, struct state *st)
  * position. Everything happens as the frame never existed on the
  * track. Returns always NULL, for consistency with seqptr_rmlast().
  */
-struct state *
-seqptr_rmprev(struct seqptr *sp, struct state *st)
+void
+seqptr_rmprev(struct seqptr *sp, struct state **pst)
 {
+	struct state *st = *pst;
 	struct seqev *i, *next;
 
 #ifdef FRAME_DEBUG
@@ -673,10 +675,8 @@ seqptr_rmprev(struct seqptr *sp, struct state *st)
 	}
 	statelist_rm(&sp->statelist, st);
 	state_del(st);
-	return NULL;
+	*pst = NULL;
 }
-
-
 
 /*
  * merge low priority event: if s1 doen't conflict with high priority
@@ -746,9 +746,9 @@ seqptr_evmerge2(struct seqptr *pd, struct statelist *slist1, struct ev *ev2)
 			if (phase2 & EV_PHASE_FIRST) {
 				if (EV_ISNOTE(&sd->ev)) {
 					if (sd->phase != EV_PHASE_LAST)
-						sd = seqptr_rmprev(pd, sd);
+						seqptr_rmprev(pd, &sd);
 				} else if (sd->flags & STATE_CHANGED)
-					sd = seqptr_rmlast(pd, sd);
+					seqptr_rmlast(pd, &sd);
 			}
 		}
 	} else {
@@ -1603,7 +1603,7 @@ track_check(struct track *src)
 			log_puts("track_check: ");
 			ev_log(&st->ev);
 			log_puts(": unterminated\n");
-			(void)seqptr_rmprev(sp, st);
+			seqptr_rmprev(sp, &st);
 		}
 	}
 
