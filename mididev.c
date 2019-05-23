@@ -283,13 +283,8 @@ mididev_open(struct mididev *o)
 void
 mididev_close(struct mididev *o)
 {
+	mididev_flush(o);
 	o->ops->close(o);
-	if (o->oused) {
-		/*
-		 * XXX: should we flush instead of printing error ?
-		 */
-		log_puts("mididev_close: device not flushed\n");
-	}
 	o->eof = 1;
 }
 
