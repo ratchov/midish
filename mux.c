@@ -324,6 +324,7 @@ void
 mux_sendraw(unsigned unit, unsigned char *buf, unsigned len)
 {
 	struct mididev *dev;
+
 	if (unit >= DEFAULT_MAXNDEVS) {
 		return;
 	}
@@ -373,10 +374,12 @@ mux_mtcstart(unsigned mtcpos)
 	 * it's already set (e.g., internally generated MTC start)
 	 */
 	if (mididev_mtcsrc) {
-		mux_nextpos = mux_ticlength;
 		mux_curpos = song_gotocb(usong, mtcpos);
-		if (mux_curpos >= mux_ticlength)
+		mux_nextpos = mux_ticlength;
+		if (mux_curpos >= mux_nextpos) {
 			log_puts("mux_mtcstart: offset larger than 1 tick\n");
+			panic();
+		}
 	}
 
 	/*

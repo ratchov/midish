@@ -1284,7 +1284,7 @@ song_loc(struct song *o, unsigned where, unsigned how)
 	maxdelta = 0xdeadbeef;
 
 	/*
-	 * XXX: when not in LOC_MTC mode, the MTC position
+	 * XXX: when not in LOC_MEAS and LOC_SPP modes, the MTC position
 	 * can overflow. Limit song_loc() to 24 hours
 	 */
 
@@ -1423,24 +1423,53 @@ song_loc(struct song *o, unsigned where, unsigned how)
 			s->tag = 0;
 		}
 	}
-	pos /= 24000000 / MTC_SEC;
-	if (song_debug) {
-		log_puts("song_loc: ");
-		log_putu(where);
-		log_puts(" -> ");
-		log_putu(o->measure);
-		log_puts(":");
-		log_putu(o->beat);
-		log_puts(":");
-		log_putu(o->tic);
-		log_puts("/");
-		log_putu(o->abspos);
-		log_puts(", mtc = ");
-		log_putu(pos);
-		log_puts("\n");
-	}
+
 	if (o->complete)
 		cons_puttag("complete");
+
+	switch (how) {
+	case SONG_LOC_MEAS:
+	case SONG_LOC_SPP:
+		pos /= 24000000 / MTC_SEC;
+		if (song_debug) {
+			log_puts("song_loc: measure/spp ");
+			log_putu(where);
+			log_puts(" -> ");
+			log_putu(o->measure);
+			log_puts(":");
+			log_putu(o->beat);
+			log_puts(":");
+			log_putu(o->tic);
+			log_puts("/");
+			log_putu(o->abspos);
+			log_puts(", mtc = ");
+			log_putu(pos);
+			log_puts("\n");
+		}
+		break;
+	case SONG_LOC_MTC:
+		pos = endpos - pos;
+		if (song_debug) {
+			log_puts("song_loc: mtc ");
+			log_putu(where);
+			log_puts(" -> +");
+			log_putu(pos);
+			log_puts(" / ");
+			log_putu(usec24);
+			log_puts("\n");
+		}
+		break;
+	default:
+		log_puts("song_loc: bad argument\n");
+		panic();
+	}
+
+	/*
+	 * we've to set tempo, as in the LOC_MTC case, the return
+	 * value is a franction of the tick length
+	 */
+	mux_chgtempo(usec24);
+
 	return pos;
 }
 
@@ -1454,16 +1483,12 @@ song_loc(struct song *o, unsigned where, unsigned how)
 unsigned
 song_gotocb(struct song *o, unsigned mtcpos)
 {
-	unsigned newpos;
+	unsigned nextpos;
 
-	newpos = song_loc(o, mtcpos, SONG_LOC_MTC);
+	nextpos = song_loc(o, mtcpos, SONG_LOC_MTC);
 	cons_putpos(o->measure, o->beat, o->tic);
 
-	if (newpos > mtcpos) {
-		log_puts("song_gotocb: negative offset\n");
-		panic();
-	}
-	return (mtcpos - newpos) * (24000000 / MTC_SEC);
+	return nextpos;
 }
 
 /*
