@@ -13,7 +13,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
-
+#include <stdio.h>
 #include "utils.h"
 #include "defs.h"
 #include "node.h"
@@ -1318,7 +1318,6 @@ blt_minfo(struct exec *o, struct data **r)
 	return 1;
 }
 
-
 unsigned
 blt_mtempo(struct exec *o, struct data **r)
 {
@@ -2278,6 +2277,94 @@ blt_tinfo(struct exec *o, struct data **r)
 	textout_putstr(tout, "\n");
 	textout_shiftleft(tout);
 	textout_putstr(tout, "}\n");
+	return 1;
+}
+
+unsigned
+blt_tdump(struct exec *o, struct data **r)
+{
+	struct state *s;
+	struct songtrk *t;
+	struct seqptr *mp, *tp;
+	unsigned meas, beat, tick, tpb, bpm;
+	unsigned mdelta, tdelta;
+	unsigned abspos, start, end, qstep;
+	char posbuf[32];
+
+	song_getcurtrk(usong, &t);
+	if (t == NULL) {
+		cons_errs(o->procname, "no current track");
+		return 0;
+	}
+
+	start = track_findmeasure(&usong->meta, usong->curpos);
+	end = track_findmeasure(&usong->meta, usong->curpos + usong->curlen);
+	qstep = usong->curquant / 2;
+	if (start > qstep)
+		start -= qstep;
+
+	abspos = meas = beat = tick = 0;
+	mp = seqptr_new(&usong->meta);
+	tp = seqptr_new(&t->track);
+
+	textout_putstr(tout, "{\n");
+	textout_shiftright(tout);
+
+	while (1) {
+		/*
+		 * scan for a time signature change
+		 */
+		while (seqptr_evget(mp))
+			; /* nothing */
+
+		while (1) {
+			s = seqptr_evget(tp);
+			if (s == NULL)
+				break;
+			if (s->phase & EV_PHASE_FIRST) {
+				s->tag = state_inspec(s, &usong->curev) &&
+				    abspos >= start && abspos < end;
+			}
+			if (!s->tag)
+				continue;
+			snprintf(posbuf, sizeof(posbuf), "%04u:%02u:%02u",
+			    meas, beat, tick);
+			textout_putstr(tout, posbuf);
+			textout_putstr(tout, "\t");
+			ev_output(&s->ev, tout);
+			textout_putstr(tout, "\n");
+		}
+
+		/*
+		 * move to the next non empty tick: the next tic is the
+		 * smaller position of the next event of each track
+		 */
+		tdelta = tp->pos->delta - tp->delta;
+		if (tdelta == 0)
+			break;
+		mdelta = mp->pos->delta - mp->delta;
+		if (mdelta > 0) {
+			if (mdelta < tdelta)
+				tdelta = mdelta;
+			seqptr_ticskip(mp, tdelta);
+		}
+		seqptr_ticskip(tp, tdelta);
+		abspos += tdelta;
+
+		seqptr_getsign(mp, &bpm, &tpb);
+		tick += tdelta;
+		beat += tick / tpb;
+		tick = tick % tpb;
+		meas += beat / bpm;
+		beat = beat % bpm;
+	}
+
+	textout_shiftleft(tout);
+	textout_putstr(tout, "}\n");
+
+	seqptr_del(tp);
+	seqptr_del(mp);
+
 	return 1;
 }
 

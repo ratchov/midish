@@ -1095,6 +1095,7 @@ user_mainloop(void)
 			name_newarg("to", NULL)));
 	exec_newbuiltin(exec, "tclist", blt_tclist, NULL);
 	exec_newbuiltin(exec, "tinfo", blt_tinfo, NULL);
+	exec_newbuiltin(exec, "tdump", blt_tdump, NULL);
 
 	exec_newbuiltin(exec, "ilist", blt_ilist, NULL);
 	exec_newbuiltin(exec, "iexists", blt_iexists,

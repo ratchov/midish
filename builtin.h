@@ -114,6 +114,7 @@ unsigned blt_tvcurve(struct exec *, struct data **);
 unsigned blt_tevmap(struct exec *, struct data **);
 unsigned blt_tclist(struct exec *, struct data **);
 unsigned blt_tinfo(struct exec *, struct data **);
+unsigned blt_tdump(struct exec *, struct data **);
 
 unsigned blt_ilist(struct exec *, struct data **);
 unsigned blt_iexists(struct exec *, struct data **);

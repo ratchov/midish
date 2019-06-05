@@ -175,6 +175,11 @@ char help_tinfo[] =
 	"measure display the number of events that match the current "
 	"event selection.";
 
+char help_tdump[] =
+	"tdump\n"
+	"\n"
+	"Display selected events of the current track.";
+
 char help_inew[] =
 	"inew name channel\n"
 	"\n"
@@ -998,6 +1003,7 @@ struct help help_list[] = {
 	{"getmute", help_getmute},
 	{"tclist", help_tclist},
 	{"tinfo", help_tinfo},
+	{"tdump", help_tdump},
 	{"inew", help_inew},
 	{"iset", help_iset},
 	{"idel", help_idel},
