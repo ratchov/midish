@@ -2280,6 +2280,44 @@ blt_tinfo(struct exec *o, struct data **r)
 	return 1;
 }
 
+
+void
+blt_tdump_output(struct state *s,
+	unsigned meas, unsigned beat, unsigned tick, struct textout *f)
+{
+	char posbuf[32];
+	struct seqev *se;
+	unsigned phase;
+	unsigned delta;
+	int more = 0;
+
+	se = s->pos;
+	phase = ev_phase(&se->ev);
+
+	delta = 0;
+	for (;;) {
+		if (ev_match(&se->ev, &s->ev)) {
+			if (more) {
+				snprintf(posbuf, sizeof(posbuf), "%10u", delta);
+			} else {
+				snprintf(posbuf, sizeof(posbuf), "%04u:%02u:%02u",
+				    meas, beat, tick);
+				more = 1;
+			}
+			textout_putstr(tout, posbuf);
+			textout_putstr(f, " ");
+			ev_output(&se->ev, f);
+			textout_putstr(f, "\n");
+
+			phase = ev_phase(&se->ev);
+			if (phase & EV_PHASE_LAST)
+				break;
+		}
+		se = se->next;
+		delta += se->delta;
+	}
+}
+
 unsigned
 blt_tdump(struct exec *o, struct data **r)
 {
@@ -2289,7 +2327,6 @@ blt_tdump(struct exec *o, struct data **r)
 	unsigned meas, beat, tick, tpb, bpm;
 	unsigned mdelta, tdelta;
 	unsigned abspos, start, end, qstep;
-	char posbuf[32];
 
 	song_getcurtrk(usong, &t);
 	if (t == NULL) {
@@ -2321,18 +2358,12 @@ blt_tdump(struct exec *o, struct data **r)
 			s = seqptr_evget(tp);
 			if (s == NULL)
 				break;
-			if (s->phase & EV_PHASE_FIRST) {
-				s->tag = state_inspec(s, &usong->curev) &&
-				    abspos >= start && abspos < end;
-			}
-			if (!s->tag)
+			if (!(s->phase & EV_PHASE_FIRST))
 				continue;
-			snprintf(posbuf, sizeof(posbuf), "%04u:%02u:%02u",
-			    meas, beat, tick);
-			textout_putstr(tout, posbuf);
-			textout_putstr(tout, "\t");
-			ev_output(&s->ev, tout);
-			textout_putstr(tout, "\n");
+			if (state_inspec(s, &usong->curev) &&
+			    abspos >= start &&
+			    abspos < end)
+				blt_tdump_output(s, meas, beat, tick, tout);
 		}
 
 		/*
