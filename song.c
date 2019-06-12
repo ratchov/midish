@@ -1465,11 +1465,11 @@ song_loc(struct song *o, unsigned where, unsigned how)
 	}
 
 	/*
-	 * we've to set tempo, as in the LOC_MTC case, the return
-	 * value is a franction of the tick length
+	 * we've the tempo to be set, as in the LOC_MTC case, the
+	 * return value is a franction of the tick length. The tempo
+	 * is set, either by mux_open() or by above song_metaput()
+	 * calls.
 	 */
-	mux_chgtempo(usec24);
-
 	return pos;
 }
 
