@@ -1444,6 +1444,11 @@ song_loc(struct song *o, unsigned how, unsigned where, unsigned offs)
 	statelist_empty(&o->rec_input);
 	statelist_empty(&o->rec_replay);
 
+	/*
+	 * we've the tempo to be set, as in the LOC_MTC case, the return
+	 * value is a franction of the tick length. The tempo is set,
+	 * either by mux_open() or by the song_metaput() calls.
+	 */
 	for (s = o->metaptr->statelist.first; s != NULL; s = s->next) {
 		if (EV_ISMETA(&s->ev)) {
 			if (song_debug) {
@@ -1466,62 +1471,30 @@ song_loc(struct song *o, unsigned how, unsigned where, unsigned offs)
 	if (o->complete)
 		cons_puttag("complete");
 
-	switch (how) {
-	case SONG_LOC_MEAS:
-	case SONG_LOC_SPP:
-		pos /= 24000000 / MTC_SEC;
-		if (song_debug) {
-			log_puts("song_loc: measure/spp ");
-			log_putu(where);
-			log_puts(" -> ");
-			log_putu(o->measure);
-			log_puts(":");
-			log_putu(o->beat);
-			log_puts(":");
-			log_putu(o->tic);
-			log_puts("/");
-			log_putu(o->abspos);
-			log_puts(", mtc = ");
-			log_putu(pos);
-			log_puts("\n");
-		}
-		break;
-	case SONG_LOC_MTC:
-		pos = endpos - pos;
-		if (song_debug) {
-			log_puts("song_loc: mtc ");
-			log_putu(where);
-			log_puts(" -> +");
-			log_putu(o->measure);
-			log_puts(":");
-			log_putu(o->beat);
-			log_puts(":");
-			log_putu(o->tic);
-			log_puts("/");
-			log_putu(o->abspos);
-			log_puts(" +");
-			log_putu(pos);
-			log_puts("/");
-			log_putu(usec24);
-			log_puts("\n");
-		}
-		break;
-	default:
-		log_puts("song_loc: bad argument\n");
-		panic();
-	}
+	pos = endpos - pos;
 
 	/*
 	 * display initial position
 	 */
 	cons_putpos(o->measure, o->beat, o->tic);
 
-	/*
-	 * we've the tempo to be set, as in the LOC_MTC case, the
-	 * return value is a franction of the tick length. The tempo
-	 * is set, either by mux_open() or by above song_metaput()
-	 * calls.
-	 */
+	if (song_debug) {
+		log_puts("song_loc: ");
+		log_putu(where);
+		log_puts(" -> ");
+		log_putu(o->measure);
+		log_puts(":");
+		log_putu(o->beat);
+		log_puts(":");
+		log_putu(o->tic);
+		log_puts("(");
+		log_putu(o->abspos);
+		log_puts(") +");
+		log_putu(pos);
+		log_puts("/");
+		log_putu(usec24);
+		log_puts("\n");
+	}
 	return pos;
 }
 
