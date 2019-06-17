@@ -801,6 +801,9 @@ mux_stopreq(void)
 void
 mux_gotoreq(unsigned mmcpos)
 {
+#if DEFAULT_FPS == 25
+#define FPS_ID	(1 << 5)
+#endif
 	struct mididev *dev;
 	unsigned char mmc_reloc[13];
 
@@ -811,11 +814,11 @@ mux_gotoreq(unsigned mmcpos)
 	mmc_reloc[4] =  0x44;
 	mmc_reloc[5] =  0x06;
 	mmc_reloc[6] =  0x01;
-	mmc_reloc[7] =  (mmcpos / (3600 * MTC_SEC))	% 24;
-	mmc_reloc[8] =  (mmcpos / (60   * MTC_SEC))	% 60;
-	mmc_reloc[9] =  (mmcpos / MTC_SEC)		% 60;
-	mmc_reloc[10] = (mmcpos / (MTC_SEC / 24))	% 24;
-	mmc_reloc[11] = (mmcpos / (MTC_SEC / 24 / 100)) % 100;
+	mmc_reloc[7] =  (mmcpos / (3600 * MTC_SEC)) | FPS_ID;
+	mmc_reloc[8] =  (mmcpos / (60 * MTC_SEC)) % 60;
+	mmc_reloc[9] =  (mmcpos / MTC_SEC) % 60;
+	mmc_reloc[10] = (mmcpos / (MTC_SEC / DEFAULT_FPS)) % DEFAULT_FPS;
+	mmc_reloc[11] = 0;
 	mmc_reloc[12] = 0xf7;
 
 	for (dev = mididev_list; dev != NULL; dev = dev->next) {

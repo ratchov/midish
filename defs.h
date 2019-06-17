@@ -118,6 +118,13 @@
 #define DEFAULT_USEC24		TEMPO_TO_USEC24(DEFAULT_TEMPO, DEFAULT_TPB)
 
 /*
+ * default MTC or MMC frames-per-second, used to transmit initial
+ * postition when starting. The choice is arbitrary, be we use 25fps as
+ * the period is multiple of 1ms.
+ */
+#define DEFAULT_FPS		25
+
+/*
  * number of milliseconds to wait between the instrumet config is sent
  * and the playback is stared
  */
