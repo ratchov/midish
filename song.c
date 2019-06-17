@@ -1453,8 +1453,16 @@ song_loc(struct song *o, unsigned where, unsigned how)
 			log_puts("song_loc: mtc ");
 			log_putu(where);
 			log_puts(" -> +");
+			log_putu(o->measure);
+			log_puts(":");
+			log_putu(o->beat);
+			log_puts(":");
+			log_putu(o->tic);
+			log_puts("/");
+			log_putu(o->abspos);
+			log_puts(" +");
 			log_putu(pos);
-			log_puts(" / ");
+			log_puts("/");
 			log_putu(usec24);
 			log_puts("\n");
 		}
