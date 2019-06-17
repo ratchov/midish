@@ -193,7 +193,6 @@ void song_setcurfilt(struct song *, struct songfilt *);
 void song_getcurchan(struct song *, struct songchan **, int);
 void song_setcurchan(struct song *, struct songchan *, int);
 unsigned song_endpos(struct song *);
-void song_playconf(struct song *);
 
 void song_setmode(struct song *, unsigned);
 void song_goto(struct song *, unsigned);
