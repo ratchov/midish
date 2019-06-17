@@ -1258,6 +1258,49 @@ song_sysexcb(struct song *o, struct sysex *sx)
 		sysex_del(sx);
 }
 
+unsigned
+song_mtcpos(struct song *o, unsigned where)
+{
+	struct seqptr *p;
+	unsigned delta, offs, bpm, tpb, meas, beat, tick;
+	unsigned long long pos;
+	unsigned long usec24;
+
+	p = seqptr_new(&o->meta);
+	offs = (!o->tap_mode && o->mode >= SONG_PLAY) ? o->curquant / 2 : 0;
+	pos = 0;
+	meas = beat = tick = 0;
+
+	for (;;) {
+		seqptr_getsign(p, &bpm, &tpb);
+		seqptr_gettempo(p, &usec24);
+		delta = (where - meas) * bpm * tpb - beat * tpb - tick;
+		if (delta <= offs)
+			break;
+		delta -= offs;
+		if (!seqptr_eot(p)) {
+			delta = seqptr_ticskip(p, delta);
+			while (!seqptr_evget(p))
+				; /* nothing */
+		}
+		tick += delta;
+		beat += tick / tpb;
+		tick = tick % tpb;
+		meas += beat / bpm;
+		beat = beat % bpm;
+		pos += (unsigned long long)delta * usec24;
+	}
+
+	/* round to frame */
+	pos -= pos % (24000000ULL / DEFAULT_FPS);
+
+	/* wrap every 24 hours */
+	pos = pos % (24000000ULL * 36000 * 24);
+
+	seqptr_del(p);
+	return pos / (24000000ULL / MTC_SEC);
+}
+
 /*
  * cancel the current state, and restore the state of
  * the new postition, must be in idle mode
@@ -1596,8 +1639,11 @@ song_goto(struct song *o, unsigned measure)
 		/*
 		 * move all tracks to given measure
 		 */
-		mmcpos = song_loc(o, measure, SONG_LOC_MEAS);
-		mux_gotoreq(mmcpos);
+		if (mididev_mtcsrc != NULL) {
+			mmcpos = song_mtcpos(o, measure);
+			mux_gotoreq(mmcpos);
+		} else
+			song_loc(o, measure, SONG_LOC_MEAS);
 	} else
 		cons_putpos(measure, 0, 0);
 }
