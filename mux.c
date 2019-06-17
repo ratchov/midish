@@ -814,7 +814,7 @@ mux_gotoreq(unsigned mmcpos)
 	mmc_reloc[4] =  0x44;
 	mmc_reloc[5] =  0x06;
 	mmc_reloc[6] =  0x01;
-	mmc_reloc[7] =  (mmcpos / (3600 * MTC_SEC)) | FPS_ID;
+	mmc_reloc[7] =  (mmcpos / (3600 * MTC_SEC)) % 24 | FPS_ID;
 	mmc_reloc[8] =  (mmcpos / (60 * MTC_SEC)) % 60;
 	mmc_reloc[9] =  (mmcpos / MTC_SEC) % 60;
 	mmc_reloc[10] = (mmcpos / (MTC_SEC / DEFAULT_FPS)) % DEFAULT_FPS;
