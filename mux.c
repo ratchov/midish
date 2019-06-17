@@ -345,12 +345,6 @@ void
 mux_mtcstart(unsigned mtcpos)
 {
 	/*
-	 * not using MTC, do nothing
-	 */
-	if (mididev_clksrc)
-		return;
-
-	/*
 	 * if already started, trigger a MTC stop to enter
 	 * a state in which we can start
 	 */
@@ -398,12 +392,6 @@ mux_mtcstart(unsigned mtcpos)
 void
 mux_mtctick(unsigned delta)
 {
-	/*
-	 * if using external clock, ignore MTC
-	 */
-	if (mididev_clksrc)
-		return;
-
 	mux_curpos += delta;
 
 	while (mux_curpos >= mux_nextpos) {
