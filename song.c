@@ -1598,7 +1598,6 @@ song_goto(struct song *o, unsigned measure)
 		 */
 		mmcpos = song_loc(o, measure, SONG_LOC_MEAS);
 		mux_gotoreq(mmcpos);
-		mux_flush();
 	} else
 		cons_putpos(measure, 0, 0);
 }
