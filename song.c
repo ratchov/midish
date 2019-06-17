@@ -1473,6 +1473,11 @@ song_loc(struct song *o, unsigned where, unsigned how)
 	}
 
 	/*
+	 * display initial position
+	 */
+	cons_putpos(o->measure, o->beat, o->tic);
+
+	/*
 	 * we've the tempo to be set, as in the LOC_MTC case, the
 	 * return value is a franction of the tick length. The tempo
 	 * is set, either by mux_open() or by above song_metaput()
@@ -1491,12 +1496,7 @@ song_loc(struct song *o, unsigned where, unsigned how)
 unsigned
 song_gotocb(struct song *o, unsigned mtcpos)
 {
-	unsigned nextpos;
-
-	nextpos = song_loc(o, mtcpos, SONG_LOC_MTC);
-	cons_putpos(o->measure, o->beat, o->tic);
-
-	return nextpos;
+	return song_loc(o, mtcpos, SONG_LOC_MTC);
 }
 
 /*
@@ -1599,11 +1599,6 @@ song_goto(struct song *o, unsigned measure)
 		mmcpos = song_loc(o, measure, SONG_LOC_MEAS);
 		mux_gotoreq(mmcpos);
 		mux_flush();
-
-		/*
-		 * display initial position
-		 */
-		cons_putpos(o->measure, o->beat, o->tic);
 	} else
 		cons_putpos(measure, 0, 0);
 }
