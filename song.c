@@ -1259,15 +1259,14 @@ song_sysexcb(struct song *o, struct sysex *sx)
 }
 
 unsigned
-song_mtcpos(struct song *o, unsigned where)
+song_mtcpos(struct song *o, unsigned where, unsigned offs)
 {
 	struct seqptr *p;
-	unsigned delta, offs, bpm, tpb, meas, beat, tick;
+	unsigned delta, bpm, tpb, meas, beat, tick;
 	unsigned long long pos;
 	unsigned long usec24;
 
 	p = seqptr_new(&o->meta);
-	offs = (!o->tap_mode && o->mode >= SONG_PLAY) ? o->curquant / 2 : 0;
 	pos = 0;
 	meas = beat = tick = 0;
 
@@ -1309,12 +1308,12 @@ song_mtcpos(struct song *o, unsigned where)
  * suitable for a MMC relocate message.
  */
 unsigned
-song_loc(struct song *o, unsigned where, unsigned how)
+song_loc(struct song *o, unsigned how, unsigned where, unsigned offs)
 {
 	struct state *s;
 	struct songtrk *t;
 	unsigned maxdelta, delta;
-	unsigned bpm, tpb, offs;
+	unsigned bpm, tpb;
 	unsigned long long pos, endpos;
 	unsigned long usec24;
 
@@ -1323,7 +1322,6 @@ song_loc(struct song *o, unsigned where, unsigned how)
 
 	/* please gcc */
 	endpos = 0xdeadbeef;
-	offs = 0xdeadbeef;
 	maxdelta = 0xdeadbeef;
 
 	/*
@@ -1333,8 +1331,6 @@ song_loc(struct song *o, unsigned where, unsigned how)
 
 	switch (how) {
 	case SONG_LOC_MEAS:
-		offs = (!mux_manualstart && o->mode >= SONG_PLAY) ?
-		    o->curquant / 2 : 0;
 		break;
 	case SONG_LOC_MTC:
 		endpos = (unsigned long long)where * (24000000 / MTC_SEC);
@@ -1539,7 +1535,7 @@ song_loc(struct song *o, unsigned where, unsigned how)
 unsigned
 song_gotocb(struct song *o, unsigned mtcpos)
 {
-	return song_loc(o, mtcpos, SONG_LOC_MTC);
+	return song_loc(o, SONG_LOC_MTC, mtcpos, 0);
 }
 
 /*
@@ -1626,7 +1622,7 @@ song_setmode(struct song *o, unsigned newmode)
 void
 song_goto(struct song *o, unsigned measure)
 {
-	unsigned mmcpos;
+	unsigned mmcpos, offs;
 
 	if (o->mode >= SONG_IDLE) {
 		/*
@@ -1636,14 +1632,17 @@ song_goto(struct song *o, unsigned measure)
 			measure--;
 		o->started = 0;
 
+		offs = (o->mode >= SONG_PLAY && !o->tap_mode) ?
+		    o->curquant / 2 : 0;
+
 		/*
 		 * move all tracks to given measure
 		 */
 		if (mididev_mtcsrc != NULL) {
-			mmcpos = song_mtcpos(o, measure);
+			mmcpos = song_mtcpos(o, measure, offs);
 			mux_gotoreq(mmcpos);
 		} else
-			song_loc(o, measure, SONG_LOC_MEAS);
+			song_loc(o, SONG_LOC_MEAS, measure, offs);
 	} else
 		cons_putpos(measure, 0, 0);
 }

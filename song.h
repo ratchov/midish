@@ -195,7 +195,6 @@ void song_setcurchan(struct song *, struct songchan *, int);
 unsigned song_endpos(struct song *);
 void song_playconf(struct song *);
 
-unsigned song_loc(struct song *, unsigned, unsigned);
 void song_setmode(struct song *, unsigned);
 void song_goto(struct song *, unsigned);
 void song_record(struct song *);
