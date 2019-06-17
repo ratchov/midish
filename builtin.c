@@ -963,6 +963,11 @@ blt_idle(struct exec *o, struct data **r)
 unsigned
 blt_play(struct exec *o, struct data **r)
 {
+	if (usong->tap_mode && (mididev_clksrc || mididev_mtcsrc)) {
+		cons_errs(o->procname,
+		    "can't start in tap mode with external clock");
+		return 0;
+	}
 	song_play(usong);
 	if (user_flag_batch) {
 		cons_err("press ^C to stop playback");
@@ -977,6 +982,11 @@ blt_play(struct exec *o, struct data **r)
 unsigned
 blt_rec(struct exec *o, struct data **r)
 {
+	if (usong->tap_mode && (mididev_clksrc || mididev_mtcsrc)) {
+		cons_errs(o->procname,
+		    "can't start in tap mode with external clock");
+		return 0;
+	}
 	song_record(usong);
 	if (user_flag_batch) {
 		cons_err("press ^C to stop recording");
