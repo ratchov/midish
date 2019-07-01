@@ -161,19 +161,6 @@ log_perror(char *str)
 }
 
 /*
- * store a percent in the debug buffer
- */
-void
-log_pct(unsigned long n)
-{
-	log_putu(n / 100);
-	LOG_PUTC('.');
-	n %= 100;
-	LOG_PUTC('0' + n / 10);
-	LOG_PUTC('0' + n % 10);
-}
-
-/*
  * abort program execution after a fatal error, we should
  * put code here to backup user data
  */
