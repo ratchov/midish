@@ -1609,9 +1609,13 @@ song_goto(struct song *o, unsigned measure)
 		    o->curquant / 2 : 0;
 
 		/*
-		 * move all tracks to given measure
+		 * Move all tracks to given measure.
+		 *
+		 * If we're starting playback/recording and using MTC,
+		 * then just send the request, song_loc() will be called
+		 * back later, upon the initial MTC full-frame message.
 		 */
-		if (mididev_mtcsrc != NULL) {
+		if (o->mode >= SONG_PLAY && mididev_mtcsrc != NULL) {
 			mmcpos = song_mtcpos(o, measure, offs);
 			mux_gotoreq(mmcpos);
 		} else
