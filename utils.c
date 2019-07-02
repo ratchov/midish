@@ -114,7 +114,7 @@ log_putx(unsigned long num)
 }
 
 /*
- * store a unsigned decimal in the log
+ * store an unsigned decimal in the log
  */
 void
 log_putu(unsigned long num)
@@ -161,8 +161,7 @@ log_perror(char *str)
 }
 
 /*
- * abort program execution after a fatal error, we should
- * put code here to backup user data
+ * abort program execution after a fatal error
  */
 void
 panic(void)
@@ -174,7 +173,7 @@ panic(void)
 /*
  * allocate 'size' bytes of memory (with size > 0). This functions never
  * fails (and never returns NULL), if there isn't enough memory then
- * we abort the program.
+ * abort the program.
  */
 void *
 xmalloc(size_t size, char *tag)
@@ -183,7 +182,7 @@ xmalloc(size_t size, char *tag)
 
 	p = malloc(size);
 	if (p == NULL) {
-		log_puts("xmalloc: failed to allocate ");
+		log_puts("failed to allocate ");
 		log_putx(size);
 		log_puts(" bytes\n");
 		panic();
@@ -192,16 +191,23 @@ xmalloc(size_t size, char *tag)
 }
 
 /*
- * free a memory block. Also check that the header and the trailer
- * weren't changed and randomise the block, so that the block is not
- * usable once freed
+ * free memory allocated with xmalloc()
  */
 void
 xfree(void *p)
 {
+#ifdef DEBUG
+	if (p == NULL) {
+		log_puts("xfree with NULL arg\n");
+		panic();
+	}
+#endif
 	free(p);
 }
 
+/*
+ * xmalloc-style strdup(3)
+ */
 char *
 xstrdup(char *s, char *tag)
 {
