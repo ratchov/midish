@@ -167,7 +167,8 @@ void
 panic(void)
 {
 	log_flush();
-	abort();
+	(void)kill(getpid(), SIGABRT);
+	_exit(1);
 }
 
 /*
