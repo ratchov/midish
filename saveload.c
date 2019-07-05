@@ -1272,8 +1272,10 @@ load_evspec(struct load *o, struct evspec *es)
 		load_err(o, "event spec name expected");
 		return 0;
 	}
-	if (!evspec_str2cmd(es, o->strval))
+	if (!evspec_str2cmd(es, o->strval)) {
+		load_err(o, "event spec name matches no event");
 		return 0;
+	}
 	info = &evinfo[es->cmd];
 	es->v0_min = evinfo[es->cmd].v0_min;
 	es->v0_max = evinfo[es->cmd].v0_max;
