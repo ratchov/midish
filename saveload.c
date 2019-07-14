@@ -174,6 +174,9 @@ evspec_output(struct evspec *o, struct textout *f)
 		textout_putstr(f, " ");
 		range_output(o->ch_min, o->ch_max, f);
 		textout_putstr(f, "}");
+	} else if (evinfo[o->cmd].flags & EV_HAS_DEV) {
+		textout_putstr(f, " ");
+		range_output(o->dev_min, o->dev_max, f);
 	}
 	if (evinfo[o->cmd].nranges >= 1) {
 		textout_putstr(f, " ");
@@ -1269,8 +1272,10 @@ load_evspec(struct load *o, struct evspec *es)
 		load_err(o, "event spec name expected");
 		return 0;
 	}
-	if (!evspec_str2cmd(es, o->strval))
+	if (!evspec_str2cmd(es, o->strval)) {
+		load_err(o, "event spec name matches no event");
 		return 0;
+	}
 	info = &evinfo[es->cmd];
 	es->v0_min = evinfo[es->cmd].v0_min;
 	es->v0_max = evinfo[es->cmd].v0_max;
@@ -1292,6 +1297,10 @@ load_evspec(struct load *o, struct evspec *es)
 			load_err(o, "'}' expected");
 			return 0;
 		}
+	} else if (info->flags & EV_HAS_DEV) {
+		if (!load_range(o, 0, EV_MAXDEV, &es->dev_min, &es->dev_max))
+			return 0;
+		es->ch_min = es->ch_max = 0;
 	}
 	if (info->nranges == 0)
 		return 1;
