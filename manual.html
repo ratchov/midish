@@ -2240,28 +2240,6 @@ It will be automatically executed the next time you run midish.
 <ul>
 
 <li>
-Increase max number of events to copy with extra large MIDI files
-
-<li>
-Add new <a href="#func_tquantf">tquantf</a> quantization algorithm;
-the old
-<a href="#func_tquanta">tquant</a> function was renamed to
-<a href="#func_tquanta">tquanta</a>.
-
-<li>
-Add support for tap tempo with
-<a href="#func_tap">tap</a> and
-<a href="#func_tapev">tapev</a>.
-
-<li>
-Swap parameters of the xpc event: now bank number comes before the
-program number.
-
-<li>
-Allow <a href="#func_fmap">fmap</a> and <a href="#func_tevmap">tevmap</a>
-to change events types, for instance to map pitch-bend to a controller.
-
-<li>
 Add "undo" support, allowing the effects of most functions to be
 undone with the <a href="#func_u">u</a> function.
 
@@ -2270,7 +2248,20 @@ Add the <a href="#func_ul">ul</a> command to list of previous
 command calls that may be undone.
 
 <li>
-Delete the rmidish utility as midish has a built-in line editor.
+Add minimal loop support with the
+<a href="#func_loop">loop</a> and
+<a href="#func_noloop">noloop</a> commands.
+
+<li>
+Add support for tap tempo with
+<a href="#func_tap">tap</a> and
+<a href="#func_tapev">tapev</a>.
+
+<li>
+Add new <a href="#func_tquantf">tquantf</a> quantization algorithm;
+the old
+<a href="#func_tquanta">tquant</a> function was renamed to
+<a href="#func_tquanta">tquanta</a>.
 
 <li>
 Add inline help: how the <a href="#func_h">h</a> displays function
@@ -2281,13 +2272,22 @@ Add the <a href="#func_tvcurve">tvcurve</a> command modify velocity of
 notes in tracks.
 
 <li>
-Add minimal loop support with the
-<a href="#func_loop">loop</a> and
-<a href="#func_noloop">noloop</a> commands.
-
-<li>
 Add the <a href="#func_tdump">tdump</a> to display track contents.
 </ul>
+
+<li>
+Allow <a href="#func_fmap">fmap</a> and <a href="#func_tevmap">tevmap</a>
+to change events types, for instance to map pitch-bend to a controller.
+
+<li>
+Increase max number of events to copy with extra large MIDI files
+
+<li>
+Swap parameters of the xpc event: now bank number comes before the
+program number.
+
+<li>
+Delete the rmidish utility as midish has a built-in line editor.
 
 <h2><a name="attributes">18 Project attributes</a></h2>
 
