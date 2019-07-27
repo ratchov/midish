@@ -2240,9 +2240,7 @@ It will be automatically executed the next time you run midish.
 <ul>
 
 <li>
-add support for tap tempo with
-<a href="#func_tap">tap</a> and
-<a href="#func_tapev">tapev</a>.
+increase max number of events to copy with extra large MIDI files
 
 <li>
 add new <a href="#func_tquantf">tquantf</a> quantization algorithm;
@@ -2251,16 +2249,32 @@ the old
 <a href="#func_tquanta">tquanta</a>.
 
 <li>
-allow <a href="#func_fmap">fmap</a> and <a href="#func_tevmap">tevmap</a>
-to change events types.
+add support for tap tempo with
+<a href="#func_tap">tap</a> and
+<a href="#func_tapev">tapev</a>.
 
 <li>
-allow the effects of certain functions to be undone using the
-<a href="#func_u">u</a> function.
+swap parameters of the xpc event: now bank number comes before the
+program number.
+
+<li>
+allow <a href="#func_fmap">fmap</a> and <a href="#func_tevmap">tevmap</a>
+to change events types, for instance to map pitch-bend to a controller.
+
+<li>
+add "undo" support, allowing the effects of most functions to be
+undone with the <a href="#func_u">u</a> function.
 
 <li>
 add the <a href="#func_ul">ul</a> command to list of previous
 command calls that may be undone.
+
+<li>
+delete the rmidish utility as midish has a built-in line editor.
+
+<li>
+add inline help: how the <a href="#func_h">h</a> displays function
+description.
 
 <li>
 add the <a href="#func_tvcurve">tvcurve</a> command modify velocity of
