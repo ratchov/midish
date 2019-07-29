@@ -954,7 +954,7 @@ user_mainloop(void)
 	exec_newbuiltin(exec, "err", blt_err,
 			name_newarg("message", NULL));
 	exec_newbuiltin(exec, "h", blt_h,
-			name_newarg("key", NULL));
+			name_newarg("...", NULL));
 	exec_newbuiltin(exec, "exec", blt_exec,
 			name_newarg("filename", NULL));
 	exec_newbuiltin(exec, "debug", blt_debug,

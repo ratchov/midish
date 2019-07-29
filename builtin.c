@@ -213,9 +213,27 @@ unsigned
 blt_h(struct exec *o, struct data **r)
 {
 	char *name;
+	struct data *d;
 	struct help *h;
+	struct var *arg;
 
-	if (!exec_lookupname(o, "key", &name)) {
+	arg = exec_varlookup(o, "...");
+	if (!arg) {
+		log_puts("blt_h: no variable argument list\n");
+		return 0;
+	}
+
+	d = arg->data->val.list;
+	if (d == NULL) {
+		name = "intro";
+	} else if (d->next == NULL) {
+		if (d->type != DATA_REF) {
+			cons_errs(o->procname, "keyword expected");
+			return 0;
+		}
+		name = d->val.str;
+	} else {
+		cons_errs(o->procname, "only one keyword expected");
 		return 0;
 	}
 
