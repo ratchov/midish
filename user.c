@@ -950,7 +950,7 @@ user_mainloop(void)
 	 * register built-in functions
 	 */
 	exec_newbuiltin(exec, "print", blt_print,
-			name_newarg("value", NULL));
+			name_newarg("...", NULL));
 	exec_newbuiltin(exec, "err", blt_err,
 			name_newarg("message", NULL));
 	exec_newbuiltin(exec, "h", blt_h,

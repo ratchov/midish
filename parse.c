@@ -132,7 +132,7 @@ enum {
 	PARSE_LET_1, PARSE_LET_2,
 	PARSE_ENDL,
 	PARSE_SLIST, PARSE_SLIST_1, PARSE_SLIST_2,
-	PARSE_PROC, PARSE_PROC_1, PARSE_PROC_2,
+	PARSE_PROC, PARSE_PROC_1, PARSE_PROC_2, PARSE_PROC_3,
 	PARSE_PROG, PARSE_PROG_1,
 	PARSE_ERROR
 };
@@ -153,6 +153,7 @@ struct tokname {
 	{ TOK_EXIT,		"exit"		},
 	{ TOK_NIL,		"nil"		}
 }, lex_op[] = {
+	{ TOK_ELLIPSIS,		"..."		},
 	{ TOK_RANGE,		".."		},
 	{ TOK_DOT,		"."		},
 	{ TOK_EQ, 		"=="		},
@@ -222,7 +223,7 @@ char *parse_pstates[] = {
 	"PARSE_LET_1", "PARSE_LET_2",
 	"PARSE_ENDL",
 	"PARSE_SLIST", "PARSE_SLIST_1", "PARSE_SLIST_2",
-	"PARSE_PROC", "PARSE_PROC_1", "PARSE_PROC_2",
+	"PARSE_PROC", "PARSE_PROC_1", "PARSE_PROC_2", "PARSE_PROC_3",
 	"PARSE_PROG", "PARSE_PROG_1",
 	"PARSE_ERROR"
 };
@@ -234,7 +235,7 @@ unsigned first_expr[] =
 {
 	TOK_MINUS, TOK_EXCLAM, TOK_TILDE,
 	TOK_LPAR, TOK_DOLLAR, TOK_LBRACE, TOK_LBRACKET, 
-	TOK_IDENT, TOK_NUM, TOK_STRING, TOK_NIL, 0
+	TOK_IDENT, TOK_NUM, TOK_STRING, TOK_NIL, TOK_ELLIPSIS, 0
 };
 
 /*
@@ -882,6 +883,10 @@ parse_cb(void *arg, unsigned id, unsigned long val)
 				*sp->pnode = node_new(&node_vmt_cst,
 					data_newref((char *)val));
 				parse_end(p);
+			} else if (id == TOK_ELLIPSIS) {
+				*sp->pnode = node_new(&node_vmt_var,
+					data_newref((char *)"..."));
+				parse_end(p);
 			} else if (id == TOK_NIL) {
 				*sp->pnode = node_new(&node_vmt_cst,
 					data_newnil());
@@ -1169,12 +1174,28 @@ parse_cb(void *arg, unsigned id, unsigned long val)
 				data_listadd(args, data_newref((char *)val));
 				break;
 			}
+			if (id == TOK_ELLIPSIS) {
+				id = 0;
+				args = (*sp->pnode)->data;
+				data_listadd(args, data_newref("..."));
+				sp->pstate = PARSE_PROC_3;
+				break;
+			}
 			if (id == TOK_LBRACE) {
-				sp->pnode = &(*sp->pnode)->list;
-				sp->pstate = PARSE_SLIST;
+				sp->pstate = PARSE_PROC_3;
 				break;
 			}
 			parse_err(p, "arg name or block expected\n");
+			break;
+		case PARSE_PROC_3:
+			if (id == 0)
+				return;
+			if (id != TOK_LBRACE) {
+				parse_err(p, "'{' expected\n");
+				break;
+			}
+			sp->pnode = &(*sp->pnode)->list;
+			sp->pstate = PARSE_SLIST;
 			break;
 		case PARSE_PROG:
 			if (id == 0)

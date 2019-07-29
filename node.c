@@ -309,6 +309,7 @@ node_exec_call(struct node *o, struct exec *x, struct data **r)
 	struct name **oldlocals, *newlocals;
 	struct name *argn;
 	struct node *argv;
+	struct var *valist;
 	char *procname_save;
 	unsigned result;
 
@@ -320,8 +321,13 @@ node_exec_call(struct node *o, struct exec *x, struct data **r)
 		cons_errs(o->data->val.ref, "no such proc");
 		goto finish;
 	}
+	valist = NULL;
 	argv = o->list;
 	for (argn = p->args; argn != NULL; argn = argn->next) {
+		if (str_eq(argn->str, "...")) {
+			valist = var_new(&newlocals, "...", data_newlist(NULL));
+			break;
+		}
 		if (argv == NULL) {
 			cons_errs(o->data->val.ref, "to few arguments");
 			goto finish;
@@ -333,9 +339,16 @@ node_exec_call(struct node *o, struct exec *x, struct data **r)
 		argv = argv->next;
 		*r = NULL;
 	}
-	if (argv != NULL) {
+	if (valist == NULL && argv != NULL) {
 		cons_errs(o->data->val.ref, "to many arguments");
 		goto finish;
+	}
+	while (argv != NULL) {
+		if (node_exec(argv, x, r) == RESULT_ERR)
+			goto finish;
+		data_listadd(valist->data, *r);
+		argv = argv->next;
+		*r = NULL;
 	}
 	oldlocals = x->locals;
 	x->locals = &newlocals;

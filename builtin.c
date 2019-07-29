@@ -182,13 +182,16 @@ unsigned
 blt_print(struct exec *o, struct data **r)
 {
 	struct var *arg;
+	struct data *d;
 
-	arg = exec_varlookup(o, "value");
+	arg = exec_varlookup(o, "...");
 	if (!arg) {
-		log_puts("blt_print: 'value': no such param\n");
+		log_puts("blt_print: no variable argument list\n");
 		return 0;
 	}
-	data_print(arg->data);
+
+	for (d = arg->data->val.list; d != NULL; d = d->next)
+		data_print(d);
 	textout_putstr(tout, "\n");
 	*r = data_newnil();
 	return 1;

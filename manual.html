@@ -2225,6 +2225,23 @@ is obtained by preceding the variable name by the dollar
 sign ("$"). 
 
 <p>
+If the last argument name is the "..." string,
+then a variable argument list could be used.
+In this case, in the code block between braces,
+the "..." token will is replaced by the variable
+list of arguments.
+For instance:
+
+<pre>
+proc gmon ... {
+        xnew gmon
+	for devnum in ... {
+	        xadd $devnum { 0xF0 0x7E 0x7F 0x09 0x01 0xF7 }
+	}
+}
+</pre>
+
+<p>
 A lot of similar procedures are defined in the
 sample ``midishrc'' file, shipped in the source
 tar-ball.
