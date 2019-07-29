@@ -977,6 +977,27 @@ struct help help_list[] = {
 	"\n"
 	"Return the list of builtin commands."},
 
+	{"intro",
+	"Midish is a MIDI sequencer with shell-like interface. To "
+	"obtain help about any midish command, type:\n"
+	"\n"
+	"    h <key_word>\n"
+	"\n"
+	"Once MIDI devices are setup (see dnew command), "
+	"performance mode can be started or stopped with "
+	"the following commants:\n"
+	"    i - idle, prcess input and send it to the outputs\n"
+	"    p - same as previous but also play all tracks\n"
+	"    r - same as previous but also record current track\n"
+	"    s - stop, exit performance mode (releases devices)\n"
+	"\n"
+	"In performance mode, input is filtered (if a fiter is defined) "
+	"and the result stored in the current "
+	"track (if recording). "
+	"Then, it is mixed with played "
+	"tracks (if any) and the mix is sent to the MIDI outputs."
+	},
+
 	{NULL, NULL}
 };
 
