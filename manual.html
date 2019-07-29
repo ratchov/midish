@@ -2257,40 +2257,52 @@ It will be automatically executed the next time you run midish.
 <ul>
 
 <li>
-add support for tap tempo with
+Add "undo" support, allowing the effects of most functions to be
+undone with the <a href="#func_u">u</a> function.
+The <a href="#func_ul">ul</a> command lists changes that can be
+undone.
+
+<li>
+Add minimal loop support with the
+<a href="#func_loop">loop</a> and
+<a href="#func_noloop">noloop</a> commands.
+
+<li>
+Add support for tap tempo with
 <a href="#func_tap">tap</a> and
 <a href="#func_tapev">tapev</a>.
 
 <li>
-add new <a href="#func_tquantf">tquantf</a> quantization algorithm;
+Add new <a href="#func_tquantf">tquantf</a> quantization algorithm;
 the old
 <a href="#func_tquanta">tquant</a> function was renamed to
 <a href="#func_tquanta">tquanta</a>.
 
 <li>
-allow <a href="#func_fmap">fmap</a> and <a href="#func_tevmap">tevmap</a>
-to change events types.
+Add inline help: how the <a href="#func_h">h</a> displays function
+description.
 
 <li>
-allow the effects of certain functions to be undone using the
-<a href="#func_u">u</a> function.
-
-<li>
-add the <a href="#func_ul">ul</a> command to list of previous
-command calls that may be undone.
-
-<li>
-add the <a href="#func_tvcurve">tvcurve</a> command modify velocity of
+Add the <a href="#func_tvcurve">tvcurve</a> command modify velocity of
 notes in tracks.
 
 <li>
-add minimal loop support with the
-<a href="#func_loop">loop</a> and
-<a href="#func_noloop">noloop</a> commands.
+Add the <a href="#func_tdump">tdump</a> to display track contents.
+</ul>
 
 <li>
-add the <a href="#func_tdump">tdump</a> to display track contents.
-</ul>
+Allow <a href="#func_fmap">fmap</a> and <a href="#func_tevmap">tevmap</a>
+to change events types, for instance to map pitch-bend to a controller.
+
+<li>
+Increase max number of events to handle very large MIDI files.
+
+<li>
+Swap parameters of the xpc event: now bank number comes before the
+program number.
+
+<li>
+Delete the rmidish utility as midish has a built-in line editor.
 
 <h2><a name="attributes">18 Project attributes</a></h2>
 
