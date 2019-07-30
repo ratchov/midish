@@ -987,8 +987,7 @@ struct help help_list[] = {
 	"Midish is a MIDI sequencer with shell-like interface. To "
 	"obtain help about any midish command, type:\n"
 	"\n"
-	"    h <key_word>\n"
-	},
+	"    h <key_word>"},
 
 	{NULL, NULL}
 };
