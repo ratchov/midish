@@ -504,7 +504,7 @@ song_playconfev(struct song *o, struct songchan *c, struct ev *in)
 	if (!c->isinput) {
 		mixout_putev(&ev, PRIO_CHAN);
 	} else {
-		norm_putev(&ev);
+		norm_evcb(&ev);
 	}
 }
 
