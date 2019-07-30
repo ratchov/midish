@@ -112,10 +112,11 @@ norm_stop(void)
 void
 norm_shut(void)
 {
-	struct state *s;
+	struct state *s, *snext;
 	struct ev ca;
 
 	for (s = norm_slist.first; s != NULL; s = s->next) {
+		snext = s->next;
 		if (!(s->tag & TAG_PASS))
 			continue;
 		if (state_cancel(s, &ca)) {
@@ -126,7 +127,8 @@ norm_shut(void)
 				ev_log(&ca);
 				log_puts("\n");
 			}
-			norm_putev(&ca);
+			s = statelist_update(&norm_slist, &ca);
+			norm_putev(&s->ev);
 		}
 		s->tag &= ~TAG_PASS;
 	}
