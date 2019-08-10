@@ -80,7 +80,7 @@ struct help help_list[] = {
 	"tclr\n"
 	"\n"
 	"Clear the current selection of the current track. Only events "
-	"matching the current event selection (see the ev function) are "
+	"matching the current event selection (see the ev command) are "
 	"removed."},
 
 	{"tins",
@@ -99,9 +99,9 @@ struct help help_list[] = {
 	"tcopy\n"
 	"\n"
 	"Copy the current selection of the current track so that it could "
-	"be pasted with the tpaste function. "
+	"be pasted with the tpaste command. "
 	"Only events matching the current event selection "
-	"are copied (see ev function)."},
+	"are copied (see ev command)."},
 
 	{"tmerge",
 	"tmerge source\n"
@@ -112,7 +112,7 @@ struct help help_list[] = {
 	"tquanta rate\n"
 	"\n"
 	"Round event positions to the nearest exact position, as defined "
-	"by the setq function. This affects events of the current "
+	"by the setq command. This affects events of the current "
 	"selection of the current track. Event positions are rounded to "
 	"the nearest tick multiple of the quantization step}, Rate must be "
 	"between 0 and 100: 0 means no quantization and 100 means full "
@@ -122,7 +122,7 @@ struct help help_list[] = {
 	"tquantf rate\n"
 	"\n"
 	"Round frame positions (eg. note positions) to the nearest exact "
-	"position, as defined by the setq function. Frame length (eg. "
+	"position, as defined by the setq command. Frame length (eg. "
 	"note lengths) is preserved. Rate must be between 0 and 100: "
 	"0 means no quantization and 100 means full quantization."},
 
@@ -131,14 +131,14 @@ struct help help_list[] = {
 	"\n"
 	"Transpose note events of current selection of the current track, "
 	"by the given number of half-tones. Only events matching the current "
-	"event selection are transposed (see ev function)."},
+	"event selection are transposed (see ev command)."},
 
 	{"tvcurve",
 	"tvcurve weight\n"
 	"\n"
 	"Adjust velocity of note events, using the given weight in "
 	"the -63..63 range. Applies only to note events of current "
-	"selection of the current track (see ev function)."},
+	"selection of the current track (see ev command)."},
 
 	{"tevmap",
 	"tevmap source dest\n"
@@ -192,7 +192,7 @@ struct help help_list[] = {
 	"\n"
 	"Set the device and channel number of the current input. All "
 	"filters are updated to use the new channel setting as if the "
-	"appropriate fchin function was called for each filter."},
+	"appropriate fchin command was called for each filter."},
 
 	{"idel",
 	"idel\n"
@@ -259,7 +259,7 @@ struct help help_list[] = {
 	"\n"
 	"Set the device and MIDI channel numbers of the current output. "
 	"All filters are updated to use the new setting as if the "
-	"appropriate fchout function was called for each filter."},
+	"appropriate fchout command was called for each filter."},
 
 	{"oren",
 	"oren newname\n"
@@ -348,7 +348,7 @@ struct help help_list[] = {
 	{"fswapin",
 	"fswapin evspec1 evspec2\n"
 	"\n"
-	"Similar to the fchgin function but swap the two event sets in "
+	"Similar to the fchgin command but swap the two event sets in "
 	"the source events set of each rule."},
 
 	{"fchgout",
@@ -362,7 +362,7 @@ struct help help_list[] = {
 	{"fswapout",
 	"fswapout from to\n"
 	"\n"
-	"Similar to the fchgout function, but swap the two event sets in "
+	"Similar to the fchgout command, but swap the two event sets in "
 	"the destination events set of each rule."},
 
 	{"fmap",
@@ -478,7 +478,7 @@ struct help help_list[] = {
 	"\n"
 	"Play the song and record the input. Input passes through the current "
 	"filter (if any) or through the current track's filter (if any). "
-	"On startup, this function plays one measure of countdown before the data "
+	"On startup, this command plays one measure of countdown before the data "
 	"start being recorded."},
 
 	{"s",
@@ -489,7 +489,7 @@ struct help help_list[] = {
 	{"ev",
 	"ev evspec\n"
 	"\n"
-	"Set the current event selection. Most track editing functions will "
+	"Set the current event selection. Most track editing commands will "
 	"act only on events matching evspec ignoring all other events."},
 
 	{"setq",
@@ -517,7 +517,7 @@ struct help help_list[] = {
 	"Set the current song position pointer to the given measure number. "
 	"Record and playback will start a that position. This also defines "
 	"the beginning of the current selection used by most track editing "
-	"functions."},
+	"commands."},
 
 	{"getpos",
 	"getpos\n"
@@ -531,7 +531,7 @@ struct help help_list[] = {
 	"Set the length of the current selection to "
 	"the given number of  measures. "
 	"The current selection start at the current position "
-	"set with the g function."},
+	"set with the g command."},
 
 	{"getlen",
 	"getlen\n"
@@ -554,7 +554,7 @@ struct help help_list[] = {
 	"\n"
 	"Set the current track. The current track "
 	"is the one that will be recorded. Most track editing "
-	"functions act on it."},
+	"commands act on it."},
 
 	{"gett",
 	"gett\n"
@@ -566,7 +566,7 @@ struct help help_list[] = {
 	"\n"
 	"Set the current filter to the given filter. The current filter "
 	"is the one used to process input MIDI events in performance mode. "
-	"It's also the one affected by all filter editing functions."},
+	"It's also the one affected by all filter editing commands."},
 
 	{"getf",
 	"getf\n"
@@ -578,7 +578,7 @@ struct help help_list[] = {
 	"\n"
 	"Set the current sysex bank, i.e. the one that will be recorded. "
 	"The current sysex back is the one affected by all sysex editing "
-	"functions."},
+	"commands."},
 
 	{"getx",
 	"getx\n"
@@ -589,7 +589,7 @@ struct help help_list[] = {
 	"ci channame\n"
 	"\n"
 	"Set the current (named) input channel. All input channel "
-	"editing functions will act on it."},
+	"editing commands will act on it."},
 
 	{"geti",
 	"geti\n"
@@ -600,7 +600,7 @@ struct help help_list[] = {
 	"co channame\n"
 	"\n"
 	"Set the current (named) output channel. All output channel "
-	"editing functions will act on it."},
+	"editing commands will act on it."},
 
 	{"geto",
 	"geto\n"
@@ -932,9 +932,9 @@ struct help help_list[] = {
 	"Display the given string and abort the current statement."},
 
 	{"h",
-	"h function\n"
+	"h command\n"
 	"\n"
-	"Describe the given function."},
+	"Describe the given command."},
 
 	{"exec",
 	"exec filename\n"
