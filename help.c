@@ -984,10 +984,9 @@ struct help help_list[] = {
 	"Return the list of builtin commands."},
 
 	{"intro",
-	"Midish is a MIDI sequencer with shell-like interface. To "
-	"obtain help about any midish command, type:\n"
+	"To obtain help about any midish command, type:\n"
 	"\n"
-	"    h <key_word>"},
+	"    h <command>\n"},
 
 	{NULL, NULL}
 };
