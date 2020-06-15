@@ -44,7 +44,7 @@ uninstall:
 		cd ${DESTDIR}${EXAMPLES_DIR} && rm -f midishrc sample.sng 
 
 check:		midish
-		cd regress && ./run-test *.cmd
+		@cd regress && ./run-test *.cmd
 
 clean:
 		rm -f -- ${PROGS} *.o

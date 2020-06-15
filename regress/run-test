@@ -18,16 +18,16 @@
 
 #set -x
 
-if [ -n "$*" ]; then
-	list=$*
-else		
-	list=*.cmd
+if [ -z "$*" ]; then
+	set -- *.cmd
 fi
+
+echo 1..$#
 
 #
 # loop over all tests
 #
-for i in $list; do
+for i; do
 	i=${i%.cmd}
 	(echo	load \"$i.res\"\;				\
 		save \"$i.tmp1\"\;				\
@@ -38,10 +38,10 @@ for i in $list; do
 	&&							\
 	diff -u $i.tmp1 $i.tmp2 >$i.diff 2>>$i.log
 	if [ "$?" -eq 0 ]; then
-		echo $i: passed
+		echo ok $i
 		rm -- $i.tmp1 $i.tmp2 $i.diff $i.log
 	else
-		echo $i: FAILED
+		echo not ok $i
 		failed="$failed $i"
 	fi
 done
