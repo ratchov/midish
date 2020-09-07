@@ -151,13 +151,6 @@ extern char *song_tap_modestr[3];
 	     i != NULL;					\
 	     i = (struct songsx *)i->name.next)
 
-/*
- * how to relocate, used by song_loc() & friends
- */
-#define LOC_MEAS 	0	/* measure number */
-#define LOC_MTC 	1	/* MTC/MMC absolute time */
-#define LOC_SPP 	2	/* MIDI song position pointer */
-
 struct song *song_new(void);
 void song_delete(struct song *);
 void song_init(struct song *);
