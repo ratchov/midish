@@ -154,9 +154,9 @@ extern char *song_tap_modestr[3];
 /*
  * how to relocate, used by song_loc() & friends
  */
-#define SONG_LOC_MEAS 	0	/* measure number */
-#define SONG_LOC_MTC 	1	/* MTC/MMC absolute time */
-#define SONG_LOC_SPP 	2	/* MIDI song position pointer */
+#define LOC_MEAS 	0	/* measure number */
+#define LOC_MTC 	1	/* MTC/MMC absolute time */
+#define LOC_SPP 	2	/* MIDI song position pointer */
 
 struct song *song_new(void);
 void song_delete(struct song *);

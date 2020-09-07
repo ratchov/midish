@@ -1327,13 +1327,13 @@ song_loc(struct song *o, unsigned how, unsigned where, unsigned offs)
 	 */
 
 	switch (how) {
-	case SONG_LOC_MEAS:
+	case LOC_MEAS:
 		break;
-	case SONG_LOC_MTC:
+	case LOC_MTC:
 		endpos = (unsigned long long)where * (24000000 / MTC_SEC);
 		offs = 0;
 		break;
-	case SONG_LOC_SPP:
+	case LOC_SPP:
 		where *= o->tics_per_unit / 16;
 		offs = 0;
 		break;
@@ -1349,15 +1349,15 @@ song_loc(struct song *o, unsigned how, unsigned where, unsigned offs)
 		seqptr_getsign(o->metaptr, &bpm, &tpb);
 		seqptr_gettempo(o->metaptr, &usec24);
 		switch (how) {
-		case SONG_LOC_MEAS:
+		case LOC_MEAS:
 			maxdelta = (where - o->measure) * bpm * tpb
 			    - o->beat * tpb
 			    - o->tic;
 			break;
-		case SONG_LOC_MTC:
+		case LOC_MTC:
 			maxdelta = (endpos - pos) / usec24;
 			break;
-		case SONG_LOC_SPP:
+		case LOC_SPP:
 			maxdelta = where - o->abspos;
 			break;
 		}
@@ -1505,7 +1505,7 @@ song_loc(struct song *o, unsigned how, unsigned where, unsigned offs)
 unsigned
 song_gotocb(struct song *o, unsigned mtcpos)
 {
-	return song_loc(o, SONG_LOC_MTC, mtcpos, 0);
+	return song_loc(o, LOC_MTC, mtcpos, 0);
 }
 
 /*
@@ -1616,7 +1616,7 @@ song_goto(struct song *o, unsigned measure)
 			mmcpos = song_mtcpos(o, measure, offs);
 			mux_gotoreq(mmcpos);
 		} else
-			song_loc(o, SONG_LOC_MEAS, measure, offs);
+			song_loc(o, LOC_MEAS, measure, offs);
 	} else
 		cons_putpos(measure, 0, 0);
 }
