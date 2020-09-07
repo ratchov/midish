@@ -1214,15 +1214,12 @@ song_evcb(struct song *o, struct ev *ev)
 			if (s->phase & EV_PHASE_FIRST) {
 				s->tic = 0;
 				if (s->flags & (STATE_BOGUS | STATE_NESTED)) {
-					state_log(s);
-					log_puts(": norm filter failed\n");
-					panic();
-				}
-				if ((mux_getphase() >= MUX_START) &&
+					s->tag = TAG_OFF;
+				} else if ((mux_getphase() >= MUX_START) &&
 				    (o->loop_mstart == o->loop_mend ||
-					o->abspos >= o->loop_tstart))
+					o->abspos >= o->loop_tstart)) {
 					s->tag = TAG_REC;
-				else
+				} else
 					s->tag = TAG_PLAY;
 			}
 
