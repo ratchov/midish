@@ -368,7 +368,7 @@ mux_mtcstart(unsigned mtcpos)
 	 * it's already set (e.g., internally generated MTC start)
 	 */
 	if (mididev_mtcsrc) {
-		mux_curpos = song_gotocb(usong, mtcpos);
+		mux_curpos = song_gotocb(usong, LOC_MTC, mtcpos);
 		mux_nextpos = mux_ticlength;
 		if (mux_curpos >= mux_nextpos) {
 			log_puts("mux_mtcstart: offset larger than 1 tick\n");
@@ -563,7 +563,7 @@ mux_startcb(void)
 	if (mididev_clksrc) {
 		mux_curpos = 0;
 		mux_nextpos = mux_ticlength;
-		song_gotocb(usong, 0);
+		song_gotocb(usong, LOC_MTC, 0);
 	}
 	mux_chgphase(MUX_START);
 }

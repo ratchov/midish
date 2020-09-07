@@ -50,7 +50,7 @@ void song_stopcb(struct song *);
 void song_movecb(struct song *);
 void song_evcb(struct song *, struct ev *);
 void song_sysexcb(struct song *, struct sysex *);
-unsigned song_gotocb(struct song *, unsigned);
+unsigned song_gotocb(struct song *, int, unsigned);
 
 struct norm;
 void norm_evcb(struct ev *);

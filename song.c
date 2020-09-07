@@ -1503,9 +1503,9 @@ song_loc(struct song *o, unsigned how, unsigned where, unsigned offs)
  * this duration to ensure we're perfectly in sync.
  */
 unsigned
-song_gotocb(struct song *o, unsigned mtcpos)
+song_gotocb(struct song *o, int how, unsigned where)
 {
-	return song_loc(o, LOC_MTC, mtcpos, 0);
+	return song_loc(o, how, where, 0);
 }
 
 /*
