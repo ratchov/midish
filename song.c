@@ -1573,6 +1573,7 @@ song_setmode(struct song *o, unsigned newmode)
 		statelist_init(&o->rec_input);
 
 		mux_open();
+		mux_chgticrate(o->tics_per_unit);
 
 		/*
 		 * send sysex messages and channel config messages
