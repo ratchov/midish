@@ -47,7 +47,7 @@ struct help help_list[] = {
 	"taddev measure beat tic event\n"
 	"\n"
 	"Put the given event at the give position of the current track."},
-  
+
 	{"tsetf",
 	"tsetf filtname\n"
 	"\n"
@@ -340,7 +340,7 @@ struct help help_list[] = {
 	{"fchgin",
 	"fchgin old_evspec new_evspec\n"
 	"\n"
-	"Rewrite current filter rules to consume  new event set in place "
+	"Rewrite current filter rules to consume new event set in place "
 	"of the old event set. This means that each rule previously "
 	"matching old set on the input will start "
 	"matching new set instead."},
@@ -390,7 +390,7 @@ struct help help_list[] = {
 	"fvcurve evspec weight\n"
 	"\n"
 	"Adjust velocity of the given note events, using "
-	"the given weight in the -63..63 range.  If the weight is "
+	"the given weight in the -63..63 range. If the weight is "
 	"negative then sensitivity is decreased. If it's positive then "
 	"sensitivity is increased. If it's zero the velocity is unchanged."},
 
@@ -529,7 +529,7 @@ struct help help_list[] = {
 	"sel length\n"
 	"\n"
 	"Set the length of the current selection to "
-	"the given number of  measures. "
+	"the given number of measures. "
 	"The current selection start at the current position "
 	"set with the g command."},
 
@@ -869,7 +869,7 @@ struct help help_list[] = {
 	"\n"
 	"Define a new event type corresponding to the given system exclusive "
 	"message pattern. The pattern is a list of bytes or event parameter "
-	"identifiers (aka atoms).  The following atoms are supported: v0, v0_lo, "
+	"identifiers (aka atoms). The following atoms are supported: v0, v0_lo, "
 	"v0_hi, v1, v1_lo, v1_hi. They correspond to the full 7-bit value (coarse "
 	"parameter), the low 7-bit nibble and the high 7-bit nibble (fine grained "
 	"parameters) of the first and second parameters respectively. Example:\n"
