@@ -42,8 +42,8 @@ struct data {
 		char *ref;		/* if a reference (name) */
 		void *user;		/* user defined */
 		struct {		/* a range */
-			unsigned min;
-			unsigned max;
+			long min;
+			long max;
 		} range;
 	} val;
 	struct data *next;
@@ -55,7 +55,7 @@ struct data *data_newstring(char *);
 struct data *data_newref(char *);
 struct data *data_newlist(struct data *);
 struct data *data_newuser(void *);
-struct data *data_newrange(unsigned, unsigned);
+struct data *data_newrange(long, long);
 void	     data_delete(struct data *);
 void	     data_setfield(struct data *, char *);
 void	     data_log(struct data *);

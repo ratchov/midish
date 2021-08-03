@@ -122,7 +122,7 @@ data_newuser(void *addr)
  * allocate a new data structure and initialize with the given range
  */
 struct data *
-data_newrange(unsigned min, unsigned max)
+data_newrange(long min, long max)
 {
 	struct data *o;
 	o = data_newnil();
@@ -240,12 +240,7 @@ data_log(struct data *o)
 		log_puts("(user)");
 		break;
 	case DATA_LONG:
-		if (o->val.num < 0) {
-			log_puts("-");
-			log_putu((unsigned) - o->val.num );
-		} else {
-			log_putu((unsigned)   o->val.num);
-		}
+		log_puti(o->val.num);
 		break;
 	case DATA_STRING:
 		log_puts("\"");
@@ -267,9 +262,9 @@ data_log(struct data *o)
 		log_puts("}");
 		break;
 	case DATA_RANGE:
-		log_putu(o->val.range.min);
+		log_puti(o->val.range.min);
 		log_puts(":");
-		log_putu(o->val.range.max);
+		log_puti(o->val.range.max);
 		break;
 	default:
 		log_puts("(unknown type)");

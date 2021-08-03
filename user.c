@@ -662,15 +662,17 @@ data_getchan(struct data *o, unsigned *res_dev, unsigned *res_ch, int input)
  */
 unsigned
 data_getrange(struct data *d, unsigned min, unsigned max,
-    unsigned *lo, unsigned *hi)
+    unsigned *rlo, unsigned *rhi)
 {
+	long lo, hi;
+
     	if (d->type == DATA_LONG) {
-		*lo = *hi = d->val.num;
+		lo = hi = d->val.num;
 	} else if (d->type == DATA_LIST) {
 		d = d->val.list;
 		if (!d) {
-			*lo = min;
-			*hi = max;
+			*rlo = min;
+			*rhi = max;
 			return 1;
 		}
 		if (!d->next || d->next->next ||
@@ -678,19 +680,21 @@ data_getrange(struct data *d, unsigned min, unsigned max,
 			cons_err("exactly 0 or 2 numbers expected in range spec");
 			return 0;
 		}
-		*lo = d->val.num;
-		*hi = d->next->val.num;
+		lo = d->val.num;
+		hi = d->next->val.num;
 	} else if (d->type == DATA_RANGE) {
-		*lo = d->val.range.min;
-		*hi = d->val.range.max;
+		lo = d->val.range.min;
+		hi = d->val.range.max;
 	} else {
 		cons_err("range or number expected in range spec");
 		return 0;
 	}
-	if (*lo < min || *lo > max || *hi < min || *hi > max || *lo > *hi) {
+	if (lo < min || lo > max || hi < min || hi > max || lo > hi) {
 		cons_err("range values out of bounds");
 		return 0;
 	}
+	*rlo = lo;
+	*rhi = hi;
 	return 1;
 }
 

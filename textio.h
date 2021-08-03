@@ -32,7 +32,7 @@ void textout_delete(struct textout *);
 void textout_shiftleft(struct textout *);
 void textout_shiftright(struct textout *);
 void textout_putstr(struct textout *, char *);
-void textout_putlong(struct textout *, unsigned long);
+void textout_putlong(struct textout *, long);
 void textout_putbyte(struct textout *, unsigned);
 
 /* ------------------------------------------------- stdin/stdout --- */

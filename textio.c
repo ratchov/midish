@@ -187,11 +187,11 @@ textout_putstr(struct textout *o, char *str)
 }
 
 void
-textout_putlong(struct textout *o, unsigned long val)
+textout_putlong(struct textout *o, long val)
 {
 	char buf[sizeof(val) * 3 + 1];
 
-	snprintf(buf, sizeof(buf), "%lu", val);
+	snprintf(buf, sizeof(buf), "%ld", val);
 	textout_putstr(o, buf);
 }
 
