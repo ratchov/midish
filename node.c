@@ -400,11 +400,13 @@ node_exec_for(struct node *o, struct exec *x, struct data **r)
 	unsigned result;
 	struct data *list, *i;
 	struct var *v;
+
 	if (node_exec(o->list, x, &list) == RESULT_ERR) {
 		return RESULT_ERR;
 	}
-	if (list->type != DATA_LIST) {
-		cons_errs(x->procname, "argument to 'for' must be a list");
+	if (list->type != DATA_LIST && list->type != DATA_RANGE) {
+		cons_errs(x->procname,
+		    "argument to 'for' must be a list or range");
 		return RESULT_ERR;
 	}
 	v = exec_varlookup(x, o->data->val.ref);
@@ -412,15 +414,36 @@ node_exec_for(struct node *o, struct exec *x, struct data **r)
 		v = var_new(x->locals, o->data->val.ref, data_newnil());
 	}
 	result = RESULT_OK;
-	for (i = list->val.list; i != NULL; i = i->next) {
-		data_assign(v->data, i);
-		result = node_exec(o->list->next, x, r);
-		if (result == RESULT_CONTINUE) {
-			continue;
-		} else if (result == RESULT_BREAK) {
-			break;
-		} else if (result != RESULT_OK) {
-			break;
+	if (list->type == DATA_LIST) {
+		for (i = list->val.list; i != NULL; i = i->next) {
+			data_assign(v->data, i);
+			result = node_exec(o->list->next, x, r);
+			if (result == RESULT_CONTINUE) {
+				continue;
+			} else if (result == RESULT_BREAK) {
+				break;
+			} else if (result != RESULT_OK) {
+				break;
+			}
+		}
+	} else {
+		if (list->val.range.min <= list->val.range.max) {
+			i = data_newlong(list->val.range.min);
+			while (1) {
+				data_assign(v->data, i);
+				result = node_exec(o->list->next, x, r);
+				if (result == RESULT_CONTINUE) {
+					continue;
+				} else if (result == RESULT_BREAK) {
+					break;
+				} else if (result != RESULT_OK) {
+					break;
+				}
+				if (i->val.num == list->val.range.max)
+					break;
+				i->val.num++;
+			}
+			data_delete(i);
 		}
 	}
 	data_delete(list);
