@@ -1037,21 +1037,6 @@ evctl_done(void)
 }
 
 /*
- * return 1 if the controller is reserved
- */
-unsigned
-evctl_isreserved(unsigned num)
-{
-	if (num == BANK_HI || num == DATAENT_HI || (num >= 32 && num < 64) ||
-	    num == RPN_HI || num == RPN_LO ||
-	    num == NRPN_HI || num == NRPN_LO) {
-		return 1;
-	} else {
-		return 0;
-	}
-}
-
-/*
  * find the sysex pattern corresponding to the given name
  */
 unsigned

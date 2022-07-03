@@ -716,10 +716,6 @@ data_getctlset(struct data *d, unsigned *res)
 			cons_err("controller number out of range 0..31");
 			return 0;
 		}
-		if (evctl_isreserved(d->val.num)) {
-			cons_erru(d->val.num, "controller number reserved");
-			return 0;
-		}
 		ctlset |= (1 << d->val.num);
 		d = d->next;
 	}
@@ -806,10 +802,6 @@ data_getctl(struct data *d, unsigned *num)
     	if (d->type == DATA_LONG) {
 		if (d->val.num < 0 || d->val.num > EV_MAXCOARSE) {
 			cons_err("7bit ctl number out of bounds");
-			return 0;
-		}
-		if (evctl_isreserved(d->val.num)) {
-			cons_err("controller is reserved for bank, rpn, nrpn");
 			return 0;
 		}
 		*num = d->val.num;
