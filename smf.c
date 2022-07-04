@@ -20,6 +20,7 @@
 #include <string.h>
 
 #include "utils.h"
+#include "mididev.h"
 #include "sysex.h"
 #include "track.h"
 #include "song.h"
@@ -592,7 +593,9 @@ smf_gettrack(struct smf *o, struct song *s, struct songtrk *t)
 	struct songsx *songsx;
 	struct seqev *pos, *se;
 	struct sysex *sx;
+	struct mididev *dev;
 	struct ev ev, rev;
+	unsigned xctlset, evset;
 	unsigned c;
 
 	if (!smf_getheader(o, smftype_track)) {
@@ -731,6 +734,23 @@ smf_gettrack(struct smf *o, struct song *s, struct songtrk *t)
 			if (ev.cmd == EV_NON && ev.note_vel == 0) {
 				ev.cmd = EV_NOFF;
 				ev.note_vel = EV_NOFF_DEFAULTVEL;
+			}
+
+			/*
+			 * Pack events according to device setup.
+			 *
+			 * XXX: this needs to be done in
+			 * doevset/doxctl by converting the whole
+			 * project whenever events configuration
+			 * is changed.
+			 */
+			dev = mididev_byunit[ev.dev];
+			if (dev) {
+				xctlset = dev->oxctlset;
+				evset = dev->oevset;
+			} else {
+				xctlset = 0;
+				evset = CONV_XPC | CONV_NRPN | CONV_RPN;
 			}
 			if (conv_packev(&slist, 0U,
 				CONV_XPC | CONV_NRPN | CONV_RPN, &ev, &rev)) {

@@ -17,6 +17,7 @@
 #include <limits.h>
 #include "utils.h"
 #include "name.h"
+#include "mididev.h"
 #include "song.h"
 #include "filt.h"
 #include "textio.h"
@@ -1192,6 +1193,8 @@ load_track(struct load *o, struct track *t)
 	struct seqev *pos, *se;
 	struct statelist slist;
 	struct ev ev, rev;
+	struct mididev *dev;
+	unsigned int xctlset, evset;
 
 	if (!load_getsym(o))
 		return 0;
@@ -1225,8 +1228,23 @@ load_track(struct load *o, struct track *t)
 				return 0;
 			}
 			if (ev.cmd != EV_NULL) {
-				if (conv_packev(&slist, 0U,
-					CONV_XPC | CONV_NRPN | CONV_RPN,
+				/*
+				 * Pack events according to device setup.
+				 *
+				 * XXX: this needs to be done in
+				 * doevset/doxctl by converting the whole
+				 * project whenever events configuration
+				 * is changed.
+				 */
+				dev = mididev_byunit[ev.dev];
+				if (dev) {
+					xctlset = dev->oxctlset;
+					evset = dev->oevset;
+				} else {
+					xctlset = 0;
+					evset = CONV_XPC | CONV_NRPN | CONV_RPN;
+				}
+				if (conv_packev(&slist, xctlset, evset,
 					&ev, &rev)) {
 					se = seqev_new();
 					se->ev = rev;

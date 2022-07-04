@@ -108,10 +108,10 @@ norm.o:		norm.c utils.h ev.h defs.h norm.h pool.h mux.h filt.h \
 parse.o:	parse.c data.h parse.h node.h utils.h exec.h name.h \
 		str.h cons.h tty.h
 pool.o:		pool.c utils.h pool.h
-saveload.o:	saveload.c utils.h name.h str.h song.h track.h ev.h \
+saveload.o:	saveload.c utils.h name.h str.h mididev.h song.h track.h ev.h \
 		defs.h frame.h state.h filt.h sysex.h metro.h timo.h \
 		textio.h saveload.h conv.h version.h cons.h tty.h
-smf.o:		smf.c utils.h sysex.h track.h ev.h defs.h song.h name.h \
+smf.o:		smf.c utils.h mididev.h sysex.h track.h ev.h defs.h song.h name.h \
 		str.h frame.h state.h filt.h metro.h timo.h smf.h cons.h \
 		tty.h conv.h
 song.o:		song.c utils.h mididev.h mux.h track.h ev.h defs.h \
