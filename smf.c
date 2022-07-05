@@ -744,16 +744,16 @@ smf_gettrack(struct smf *o, struct song *s, struct songtrk *t)
 			 * project whenever events configuration
 			 * is changed.
 			 */
-			dev = mididev_byunit[ev.dev];
-			if (dev) {
+			if ((evinfo[ev.cmd].flags & EV_HAS_DEV) &&
+			    (dev = mididev_byunit[ev.dev]) != NULL) {
 				xctlset = dev->oxctlset;
 				evset = dev->oevset;
 			} else {
 				xctlset = 0;
 				evset = CONV_XPC | CONV_NRPN | CONV_RPN;
 			}
-			if (conv_packev(&slist, 0U,
-				CONV_XPC | CONV_NRPN | CONV_RPN, &ev, &rev)) {
+			if (conv_packev(&slist, xctlset, evset,
+				&ev, &rev)) {
 				se = seqev_new();
 				se->ev = rev;
 				seqev_ins(pos, se);

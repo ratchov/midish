@@ -1236,8 +1236,8 @@ load_track(struct load *o, struct track *t)
 				 * project whenever events configuration
 				 * is changed.
 				 */
-				dev = mididev_byunit[ev.dev];
-				if (dev) {
+				if ((evinfo[ev.cmd].flags & EV_HAS_DEV) &&
+				    (dev = mididev_byunit[ev.dev]) != NULL) {
 					xctlset = dev->oxctlset;
 					evset = dev->oevset;
 				} else {
