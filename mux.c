@@ -783,6 +783,7 @@ mux_stopreq(void)
 	struct mididev *dev;
 	static unsigned char mmc_stop[] = { 0xf0, 0x7f, 0x7f, 0x06, 0x01, 0xf7 };
 
+	mux_reqphase = MUX_STOP;
 	if (mux_phase < MUX_STOP)
 		mux_stopcb();
 
