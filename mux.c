@@ -381,9 +381,7 @@ mux_mtcstart(unsigned mtcpos)
 	 */
 	if (mux_debug)
 		log_puts("mux_mtcstart: generated clk start\n");
-	mux_sendstart();
 	mux_startcb();
-	mux_flush();
 }
 
 /*
@@ -402,11 +400,8 @@ mux_mtctick(unsigned delta)
 		 * if in manual mode, dont trigger the 0-th tick (ie
 		 * the start signal).
 		 */
-		if (!mux_manualstart || mux_phase != MUX_START) {
-			mux_sendtic();
+		if (!mux_manualstart || mux_phase != MUX_START)
 			mux_ticcb();
-			mux_flush();
-		}
 	}
 }
 
@@ -425,9 +420,7 @@ mux_mtcstop(void)
 	if (mux_phase >= MUX_START) {
 		if (mux_debug)
 			log_puts("mux_mtcstop: generated stop\n");
-		mux_sendstop();
 		mux_stopcb();
-		mux_flush();
 	}
 }
 
@@ -532,9 +525,11 @@ mux_ticcb(void)
 		}
 		if (mux_phase == MUX_NEXT) {
 			mux_curtic++;
+			mux_sendtic();
 			song_movecb(usong);
 		} else if (mux_phase == MUX_FIRST) {
 			mux_curtic = 0;
+			mux_sendtic();
 			song_startcb(usong);
 		}
 		if (mididev_clksrc == NULL)
@@ -566,6 +561,8 @@ mux_startcb(void)
 		song_gotocb(usong, LOC_MTC, 0);
 	}
 	mux_chgphase(MUX_START);
+	mux_sendstart();
+	mux_flush();
 }
 
 /*
@@ -576,8 +573,11 @@ mux_stopcb(void)
 {
 	if (mux_debug)
 		log_puts("mux_stopcb: got stop\n");
+	if (mux_phase >= MUX_START && mux_phase <= MUX_NEXT)
+		mux_sendstop();
 	mux_chgphase(mux_reqphase);
 	song_stopcb(usong);
+	mux_flush();
 }
 
 /*
@@ -783,9 +783,6 @@ mux_stopreq(void)
 	struct mididev *dev;
 	static unsigned char mmc_stop[] = { 0xf0, 0x7f, 0x7f, 0x06, 0x01, 0xf7 };
 
-	mux_reqphase = MUX_STOP;
-	if (mux_phase > MUX_START && mux_phase < MUX_STOP)
-		mux_sendstop();
 	if (mux_phase < MUX_STOP)
 		mux_stopcb();
 
