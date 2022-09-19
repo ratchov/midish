@@ -1276,7 +1276,7 @@ song_mtcpos(struct song *o, unsigned where, unsigned offs)
 		delta -= offs;
 		if (!seqptr_eot(p)) {
 			delta = seqptr_ticskip(p, delta);
-			while (!seqptr_evget(p))
+			while (seqptr_evget(p))
 				; /* nothing */
 		}
 		tick += delta;
