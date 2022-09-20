@@ -268,16 +268,13 @@ A MIDI sound module and a MIDI keyboard
 (without any MIDI devices midish will be probably useless).
 
 <li>
-A POSIX unix-like operating system with "raw" MIDI support.
-Works on OpenBSD (its development platform)
-and Linux.
+A POSIX unix-like operating system with raw, ALSA or sndio MIDI support.
 
 <li>
-A ``C'' complier (gcc), the ``make'' utility, and other common
-unix tools
+Basic development tools (C complier, make utility, etc)
 
 <li>
-The ALSA or sndio libraries.
+The ALSA or sndio libraries on Linux and OpenBSD respectively.
 
 </ul>
 
@@ -325,8 +322,7 @@ Example:
 </pre>
 
 <li>
-Compile midish, just type ``make'', this will build
-midish.
+Compile midish, just type ``make''.
 
 <li>
 Install binaries, documentation and examples by
@@ -335,7 +331,7 @@ typing ``make install'', possibly as root.
 <li>
 If there isn't a ``/etc/midishrc'' file,
 then copy the sample file by
-typing in your shell:
+typing:
 
 <pre>
 cp midishrc /etc
@@ -371,29 +367,15 @@ see next section for details.
 <h3><a name="section_1_3">1.3 Invocation</a></h3>
 
 <p>
-Midish is a MIDI sequencer/filter driven by a command-line
-interpreter (like a shell).
-
-Once midish started, the interpreter prompts
-for commands.
-
-Then, it can be used to configure MIDI devices,
-create tracks, define channel/controller mappings,
-route events from one device to another, play/record a song etc.
-
-To start midish, just type:
-
-<pre>
-midish
-</pre>
-
-<p>
-Then, commands are issued interactively on the midish prompt,
-example:
+Once started, midish prompts for commands. Example:
 
 <pre>
 print "hello world"
 </pre>
+
+It can be used to configure MIDI devices,
+create tracks, define channel/controller mappings,
+route events from one device to another, play/record a song etc.
 
 <p>
 Once MIDI devices are set up, one of the performance modes
