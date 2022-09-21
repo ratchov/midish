@@ -1,4 +1,4 @@
-load "sign.sng"
+load "sign.msh"
 g 1
 t 60
 g 2 

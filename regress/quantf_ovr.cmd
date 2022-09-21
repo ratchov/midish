@@ -1,4 +1,4 @@
-load "quant_ovr.sng"
+load "quant_ovr.msh"
 g 0
 ct t
 sel 16

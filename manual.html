@@ -643,7 +643,7 @@ send EOF character (control-D) to quit
 [0000:00]&gt; tnew pi1                          # create track "pi1"
 [0000:00]&gt; r                                 # start recording
 [0006:02]&gt; s                                 # stop recording
-[0000:00]&gt; save "mysong"                     # save the song into a file
+[0000:00]&gt; save "mysong.msh"                 # save the song into a file
 [0000:00]&gt;                                   # EOF (control-D) to quit
 </pre>
 
@@ -692,7 +692,7 @@ play the demo song:
 
 <pre>
 send EOF character (control-D) to quit
-[0000:00]&gt; load "sample.sng"         # load the file
+[0000:00]&gt; load "sample.msh"         # load the file
 [0000:00]&gt; p                         # start playback
 [0004:02]&gt; s                         # stop playback
 </pre>
@@ -2062,7 +2062,7 @@ and 0 otherwise.
 A song can be saved into a file as follows:
 
 <pre>
-save "myfile"
+save "myfile.msh"
 </pre>
 
 <p>
@@ -2070,7 +2070,7 @@ In a similar way, the song can be load from a file
 as follows:
 
 <pre>
-load "myfile"
+load "myfile.msh"
 </pre>
 
 <p>
@@ -4350,7 +4350,7 @@ send EOF character (control-D) to quit
 }
 [0000:00]&gt; i
 [0000:00]&gt; s
-[0000:00]&gt; save "piano-bass"
+[0000:00]&gt; save "piano-bass.msh"
 </pre>
 
 <p>
@@ -4382,7 +4382,7 @@ send EOF character (control-D) to quit
 [0000:00]&gt; tquanta 75                        # quantize to 75%
 [0000:00]&gt; p                                 # play
 [0001:02]&gt; s                                 # stop playing
-[0000:00]&gt; save "myrythm"                    # save to a file
+[0000:00]&gt; save "myrythm.msh"                # save to a file
 [0000:00]&gt;                                   # hit ^D to quit
 </pre>
 

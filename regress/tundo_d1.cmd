@@ -1,3 +1,3 @@
-load "tundo.sng"
+load "tundo.msh"
 ct t; g 1; sel 1; tclr; u
 g 0; sel 0; ct nil; ci nil; co nil

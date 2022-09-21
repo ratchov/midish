@@ -1,4 +1,4 @@
-load "sign2.sng"
+load "sign2.msh"
 g 1 
 sel 1
 mcut

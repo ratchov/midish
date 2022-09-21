@@ -35,13 +35,13 @@ install:	${PROGS}
 		cp ${PROGS} smfplay smfrec ${DESTDIR}${BIN_DIR}
 		cp ${PROGS:=.1} smfplay.1 smfrec.1 ${DESTDIR}${MAN1_DIR}
 		cp README manual.html ${DESTDIR}${DOC_DIR}
-		cp midishrc sample.sng ${DESTDIR}${EXAMPLES_DIR}
+		cp midishrc sample.msh ${DESTDIR}${EXAMPLES_DIR}
 
 uninstall:
 		cd ${DESTDIR}${BIN_DIR} && rm -f ${PROGS} smfplay smfrec
 		cd ${DESTDIR}${MAN1_DIR} && rm -f ${PROGS:=.1} smfplay.1 smfrec.1
 		cd ${DESTDIR}${DOC_DIR} && rm -f README manual.html
-		cd ${DESTDIR}${EXAMPLES_DIR} && rm -f midishrc sample.sng 
+		cd ${DESTDIR}${EXAMPLES_DIR} && rm -f midishrc sample.msh
 
 check:		midish
 		@cd regress && ./run-test *.cmd

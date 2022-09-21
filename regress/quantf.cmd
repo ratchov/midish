@@ -1,4 +1,4 @@
-load "quant.sng"
+load "quant.msh"
 g 0
 ct t
 sel 16

@@ -1,4 +1,4 @@
-load "quant_m.sng"
+load "quant_m.msh"
 ct t
 g 2
 sel 3
