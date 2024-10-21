@@ -1,22 +1,16 @@
 #!/bin/sh
 
 #
-# for each command line argument, run the assocated test,
-# as follows:
+# For each command-line argument, run the corresponding test as follows:
 #
-#	- load the expected result $testname.res and 
-#	  save it in $testname.tmp1
+# - Load the expected result $testname.res and save it in $testname.tmp1
 #
-#	- run $testname.cmd and save the actual result 
-#	  in $testname.tmp2
+# - Run $testname.cmd and save the actual result in $testname.tmp2
 #
-#	- check that there is no difference between 
-#	  actual and expected results. If there is difference
-#	  the test is failed and $testname.diff and
-#	  $testname.log files are kept.
+# - Check that there are no differences between the actual and the
+#   expected results. If there are, the resulting $testname.diff and
+#   and $testname.log files are kept.
 #
-
-#set -x
 
 if [ -z "$*" ]; then
 	set -- *.cmd
