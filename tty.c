@@ -660,6 +660,7 @@ el_onkey(void *arg, int key)
 			el_setmode(EL_MODE_EDIT);
 		}
 	} else if (key == (TTY_KEY_CTRL | 'L')) {
+		tty_tclrscr();
 		el_resize(NULL, tty_twidth);
 	} else if (key == (TTY_KEY_CTRL | 'G')) {
 		if (el_mode != EL_MODE_EDIT)
@@ -1129,6 +1130,13 @@ void
 tty_tclear(void)
 {
 	tty_toutput("\r\x1b[K", 4);
+	tty_tcursx = 0;
+}
+
+void
+tty_tclrscr(void)
+{
+	tty_toutput("\x1b[H\x1b[J", 6);
 	tty_tcursx = 0;
 }
 

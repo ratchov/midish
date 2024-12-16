@@ -71,6 +71,7 @@ void tty_toutput(char *, int);
 void tty_tsetcurs(int);
 void tty_tputs(int, int, char *, int);
 void tty_tclear(void);
+void tty_tclrscr(void);
 void tty_tendl(void);
 
 extern struct tty_ops *tty_ops;
