@@ -613,6 +613,11 @@ el_onkey(void *arg, int key)
 		endpos = el_used;
 		el_used = el_curs;
 		el_refresh(el_curs, endpos);
+	} else if (key == (TTY_KEY_CTRL | 'U')) {
+		el_setmode(EL_MODE_EDIT);
+		endpos = el_used;
+		el_used = el_curs = 0;
+		el_refresh(0, endpos);
 	} else if (key == TTY_KEY_UP || key == (TTY_KEY_CTRL | 'P')) {
 		el_setmode(EL_MODE_EDIT);
 		if (el_curline != el_hist.head) {
