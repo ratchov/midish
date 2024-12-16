@@ -510,7 +510,7 @@ el_onkey(void *arg, int key)
 {
 	char text[4];
 	int endpos;
-	size_t max;
+	size_t max, count;
 
 	if (key == 0) {
 		el_ops->onchar(el_arg, -1);
@@ -553,6 +553,16 @@ el_onkey(void *arg, int key)
 			return;
 		max = el_used;
 		el_replace(el_curs, el_curs + 1, NULL, 0);
+		el_refresh(el_curs, max);
+	} else if (key == (TTY_KEY_CTRL | 'W')) {
+		el_setmode(EL_MODE_EDIT);
+		max = el_used;
+		endpos = el_curs;
+		while (el_curs > 0 && el_buf[el_curs - 1] == ' ')
+			el_curs--;
+		while (el_curs > 0 && el_buf[el_curs - 1] != ' ')
+			el_curs--;
+		el_replace(el_curs, endpos, NULL, 0);
 		el_refresh(el_curs, max);
 	} else if (key == TTY_KEY_BS || key == (TTY_KEY_CTRL | 'H')) {
 		if (el_mode == EL_MODE_COMPL) {
