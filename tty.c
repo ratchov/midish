@@ -953,16 +953,6 @@ tty_oninput(unsigned int c)
 				return;
 			} else {
 				switch (c) {
-				case 'O':
-				case 'N':
-					/*
-					 * SS2 and SS3 are supposed to
-					 * have no modifiers, and to
-					 * be terminated by the next
-					 * char. As in 2015 certain
-					 * terminals use modifiers, we
-					 * treat these as CSI
-					 */
 				case '[':
 					tty_tstate = TTY_TSTATE_CSI;
 					tty_escbuf[0] = 0x1b;
@@ -970,6 +960,17 @@ tty_oninput(unsigned int c)
 					tty_nescpar = 0;
 					break;
 				default:
+					if (c == '@' || (c >= 'A' && c <= 'Z')) {
+					alt_key:
+						key = c | TTY_KEY_ALT;
+						tty_ops->onkey(tty_arg, key);
+						tty_tstate = TTY_TSTATE_ANY;
+						return;
+					}
+					if (c >= 'a' && c <= 'z') {
+						c -= 'a' - 'A';
+						goto alt_key;
+					}
 					tty_tstate = TTY_TSTATE_ERROR;
 				}
 			}
