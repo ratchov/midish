@@ -702,6 +702,11 @@ When devices are set up, put the corresponding dnew
 commands in the user's ``$HOME/.midishrc''. It will be
 automatically executed the next time midish is run.
 
+<p>
+If midish is sent SIGUSR1, it reopens all MIDI ports
+that are registered with ``dnew`` but were not present
+during the initialization.
+
 <h2><a name="inputs">3 Inputs</a></h2>
 
 <p>
