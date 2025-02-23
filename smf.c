@@ -587,7 +587,7 @@ smf_getsysex(struct smf *o, struct sysex *sx)
 unsigned
 smf_gettrack(struct smf *o, struct song *s, struct songtrk *t)
 {
-	unsigned delta, i, status, type, length, abspos;
+	unsigned delta, i, status, type, length;
 	unsigned tempo, num, den, dummy;
 	struct statelist slist;
 	struct songsx *songsx;
@@ -602,7 +602,6 @@ smf_gettrack(struct smf *o, struct song *s, struct songtrk *t)
 		return 0;
 	}
 	status = 0;
-	abspos = 0;
 	track_clear(&t->track);
 	pos = t->track.first;
 	songsx = (struct songsx *)s->sxlist;	/* first (and unique) sysex in song */
@@ -618,7 +617,6 @@ smf_gettrack(struct smf *o, struct song *s, struct songtrk *t)
 		if (!smf_getvar(o, &delta)) {
 			goto err;
 		}
-		abspos += delta;
 		pos->delta += delta;
 		if (!smf_getc(o, &c)) {
 			goto err;;
@@ -758,13 +756,6 @@ smf_gettrack(struct smf *o, struct song *s, struct songtrk *t)
 				se->ev = rev;
 				seqev_ins(pos, se);
 			}
-			/*
-			log_puts("ev: ");
-			log_putu(abspos);
-			log_puts(" ");
-			ev_log(&ev);
-			log_puts("\n");
-			*/
 		} else if (c < 0x80) {
 			if (status == 0) {
 				cons_err("bad status");
