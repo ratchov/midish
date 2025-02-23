@@ -115,7 +115,7 @@ norm_shut(void)
 	struct state *s, *snext;
 	struct ev ca;
 
-	for (s = norm_slist.first; s != NULL; s = s->next) {
+	for (s = norm_slist.first; s != NULL; s = snext) {
 		snext = s->next;
 		if (!(s->tag & TAG_PASS))
 			continue;
