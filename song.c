@@ -850,7 +850,6 @@ song_ticplay(struct song *o)
 {
 	struct songtrk *i;
 	struct state *st, *sr;
-	unsigned id;
 
 	while ((st = seqptr_evget(o->metaptr)))
 		song_metaput(o, st);
@@ -860,7 +859,6 @@ song_ticplay(struct song *o)
 	}
 	metro_tic(&o->metro, o->beat, o->tic);
 	SONG_FOREACH_TRK(o, i) {
-		id = i->trackptr->statelist.serial;
 		while ((st = seqptr_evget(i->trackptr))) {
 			if (st->phase & EV_PHASE_FIRST)
 				st->tag = i->mute ? 0 : 1;

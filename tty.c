@@ -510,7 +510,7 @@ el_onkey(void *arg, int key)
 {
 	char text[4];
 	int endpos;
-	size_t max, count;
+	size_t max;
 
 	if (key == 0) {
 		el_ops->onchar(el_arg, -1);
