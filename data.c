@@ -452,6 +452,7 @@ unsigned
 data_add(struct data *op1, struct data *op2)
 {
 	struct data **i;
+	char *s1, *s2;
 
 	if (op1->type == DATA_LONG && op2->type == DATA_LONG) {
 		op1->val.num += op2->val.num;
@@ -464,6 +465,15 @@ data_add(struct data *op1, struct data *op2)
 			; /* nothing */
 		*i = op2->val.list;
 		op2->val.list = NULL;
+		return 1;
+	} else if (op1->type == DATA_STRING && op2->type == DATA_STRING) {
+		/*
+		 * concatenate 2 strings
+		 */
+		s1 = op1->val.str;
+		s2 = op2->val.str;
+		op1->val.str = str_cat(s1, s2);
+		str_delete(s1);
 		return 1;
 	}
 	cons_err("bad types in addition");

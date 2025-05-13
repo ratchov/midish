@@ -22,5 +22,6 @@ void	 str_delete(char *);
 void	 str_log(char *);
 unsigned str_eq(char *, char *);
 unsigned str_len(char *);
+char	*str_cat(char *, char *);
 
 #endif /* MIDISH_STR_H */

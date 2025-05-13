@@ -21,6 +21,7 @@
  * length
  */
 
+#include <string.h>
 #include "utils.h"
 #include "str.h"
 
@@ -108,4 +109,25 @@ str_len(char *s)
 		n++;
 	}
 	return n;
+}
+
+/*
+ * concatenate two strings.
+ */
+char *
+str_cat(char *s1, char *s2)
+{
+	size_t n1, n2;
+	char *buf;
+
+	n1 = str_len(s1);
+	n2 = str_len(s2);
+
+	buf = xmalloc(n1 + n2 + 1, "str");
+
+	memcpy(buf, s1, n1);
+	memcpy(buf + n1, s2, n2);
+
+	buf[n1 + n2] = 0;
+	return buf;
 }
