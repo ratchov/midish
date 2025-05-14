@@ -6,7 +6,6 @@
 prefix=/usr/local		# where to install midish
 alsa=no				# do we want alsa support ?
 sndio=no			# do we want sndio support ?
-progs=midish			# programs to build
 vars=				# variables definitions passed as-is
 bindir=				# path where to install binaries
 datadir=			# path where to install doc and examples
@@ -120,7 +119,6 @@ sed \
 -e "s:@rt_ldadd@:$rt_ldadd:" \
 -e "s:@sndio_ldadd@:$sndio_ldadd:" \
 -e "s:@alsa_ldadd@:$alsa_ldadd:" \
--e "s:@progs@:$progs:" \
 -e "s:@vars@:$vars:" \
 < Makefile.in >Makefile
 

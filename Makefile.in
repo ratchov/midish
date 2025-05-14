@@ -12,6 +12,7 @@ INCLUDE = @include@
 LIB = @lib@
 DEFS = @defs@
 @vars@
+
 #
 # binaries, documentation, man pages and examples will be installed in 
 # ${BIN_DIR}, ${MAN1_DIR}, ${DOC_DIR} and ${EXAMPLES_DIR}
@@ -21,24 +22,19 @@ MAN1_DIR = @mandir@/man1
 DOC_DIR = @datadir@/doc/midish
 EXAMPLES_DIR = @datadir@/examples/midish
 
-#
-# programs to build and install
-#
-PROGS = @progs@
+all:		midish
 
-all:		${PROGS}
-
-install:	${PROGS}
+install:	midish
 		mkdir -p ${DESTDIR}${BIN_DIR} ${DESTDIR}${MAN1_DIR} \
 		    ${DESTDIR}${DOC_DIR} ${DESTDIR}${EXAMPLES_DIR}
-		cp ${PROGS} smfplay smfrec ${DESTDIR}${BIN_DIR}
-		cp ${PROGS:=.1} smfplay.1 smfrec.1 ${DESTDIR}${MAN1_DIR}
+		cp midish smfplay smfrec ${DESTDIR}${BIN_DIR}
+		cp midish.1 smfplay.1 smfrec.1 ${DESTDIR}${MAN1_DIR}
 		cp README manual.html ${DESTDIR}${DOC_DIR}
 		cp midishrc sample.msh ${DESTDIR}${EXAMPLES_DIR}
 
 uninstall:
-		cd ${DESTDIR}${BIN_DIR} && rm -f ${PROGS} smfplay smfrec
-		cd ${DESTDIR}${MAN1_DIR} && rm -f ${PROGS:=.1} smfplay.1 smfrec.1
+		cd ${DESTDIR}${BIN_DIR} && rm -f midish smfplay smfrec
+		cd ${DESTDIR}${MAN1_DIR} && rm -f midish.1 smfplay.1 smfrec.1
 		cd ${DESTDIR}${DOC_DIR} && rm -f README manual.html
 		cd ${DESTDIR}${EXAMPLES_DIR} && rm -f midishrc sample.msh
 
@@ -46,7 +42,7 @@ check:		midish
 		@cd regress && ./run-test *.cmd
 
 clean:
-		rm -f -- ${PROGS} *.o
+		rm -f -- midish ${OBJS}
 		cd regress && rm -f -- *.tmp1 *.tmp2 *.log *.diff
 
 distclean:	clean
@@ -54,14 +50,14 @@ distclean:	clean
 
 # ---------------------------------------------------------- dependencies ---
 
-MIDISH_OBJS = \
+OBJS = \
 builtin.o cons.o conv.o data.o ev.o exec.o filt.o frame.o help.o \
 main.o mdep.o mdep_raw.o mdep_alsa.o mdep_sndio.o metro.o mididev.o \
 mixout.o mux.o name.o node.o norm.o parse.o pool.o saveload.o smf.o song.o \
 state.o str.o sysex.o textio.o timo.o track.o tty.o undo.o user.o utils.o
 
-midish:		${MIDISH_OBJS}
-		${CC} ${LDFLAGS} ${LIB} -o midish ${MIDISH_OBJS} \
+midish:		${OBJS}
+		${CC} ${LDFLAGS} ${LIB} -o midish ${OBJS} \
 		${RT_LDADD} ${ALSA_LDADD} ${SNDIO_LDADD}
 
 .c.o:
