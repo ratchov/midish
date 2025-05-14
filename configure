@@ -12,10 +12,9 @@ bindir=				# path where to install binaries
 datadir=			# path where to install doc and examples
 mandir=				# path where to install man pages
 defs=				# no extra #defines
-lib=				# path to readline library
-include=			# path to readline header files
+lib=				# extra path to libraries
+include=			# extra path to header files
 rt_ldadd=			# extra -l's for posix real-time extensions
-readline_ldadd=-lreadline	# extra -l's for GNU readline(3)
 sndio_ldadd=			# extra -l's for sndio(7)
 alsa_ldadd=			# extra -l's for ALSA
 
@@ -29,7 +28,6 @@ case `uname` in
 		;;
 	OpenBSD)
 		sndio=yes
-		readline_ldadd="$readline_ldadd -lncurses"
 		;;
 esac
 
@@ -120,7 +118,6 @@ sed \
 -e "s:@include@:$include:" \
 -e "s:@lib@:$lib:" \
 -e "s:@rt_ldadd@:$rt_ldadd:" \
--e "s:@readline_ldadd@:$readline_ldadd:" \
 -e "s:@sndio_ldadd@:$sndio_ldadd:" \
 -e "s:@alsa_ldadd@:$alsa_ldadd:" \
 -e "s:@progs@:$progs:" \

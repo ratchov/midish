@@ -2,7 +2,6 @@
 # extra -l options for respective libraries
 #
 RT_LDADD = @rt_ldadd@
-READLINE_LDADD = @readline_ldadd@
 ALSA_LDADD = @alsa_ldadd@
 SNDIO_LDADD = @sndio_ldadd@
 
