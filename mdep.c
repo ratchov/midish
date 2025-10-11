@@ -200,7 +200,7 @@ mux_mdep_wait(int docons)
 			cons_quit = 1;
 			log_puts("Keyboard interrupt (send twice to quit).\n");
 		} else {
-			log_puts("\n-- interrupt --\n");
+			log_puts("\n");
 			return 0;
 		}
 	}
