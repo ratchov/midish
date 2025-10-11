@@ -59,10 +59,10 @@
 #define MIDI_BUFSIZE	1024
 #define MAXFDS		(DEFAULT_MAXNDEVS + 1)
 
-volatile sig_atomic_t cons_quit = 0, resize_flag = 0, cont_flag = 0, usr1_flag = 0;
+volatile sig_atomic_t int_flag = 0, resize_flag = 0, cont_flag = 0, usr1_flag = 0;
 struct timespec ts, ts_last;
 
-int cons_eof, cons_isatty;
+int cons_eof, cons_isatty, cons_quit;
 
 #if defined(__APPLE__) && !defined(CLOCK_MONOTONIC)
 #define CLOCK_MONOTONIC 0
@@ -191,12 +191,18 @@ mux_mdep_wait(int docons)
 		}
 	} else
 		tty_pfds = NULL;
-	if (cons_quit) {
-		fprintf(stderr, "\n--interrupt--\n");
-		cons_quit = 0;
-		if (cons_isatty)
+	if (int_flag) {
+		int_flag = 0;
+		if (cons_isatty) {
 			tty_int();
-		return 0;
+			if (cons_quit)
+				return 0;
+			cons_quit = 1;
+			log_puts("Keyboard interrupt (send twice to quit).\n");
+		} else {
+			log_puts("\n-- interrupt --\n");
+			return 0;
+		}
 	}
 	if (resize_flag) {
 		resize_flag = 0;
@@ -294,6 +300,8 @@ mux_mdep_wait(int docons)
 			revents = tty_revents(tty_pfds);
 			if (revents & POLLHUP)
 				cons_eof = 1;
+			if (revents & POLLIN)
+				cons_quit = 0;
 		} else {
 			if (tty_pfds->revents & POLLIN) {
 				res = read(STDIN_FILENO, midibuf, MIDI_BUFSIZE);
@@ -359,9 +367,9 @@ mux_sleep(unsigned millisecs)
 void
 cons_mdep_sigint(int s)
 {
-	if (cons_quit)
+	if (int_flag)
 		_exit(1);
-	cons_quit = 1;
+	int_flag = 1;
 }
 
 void
