@@ -1234,7 +1234,7 @@ tty_revents(struct pollfd *pfds)
 			tty_oninput(buf[i]);
 		tty_tflush();
 	}
-	return 0;
+	return pfds[0].revents & POLLIN;
 }
 
 void
