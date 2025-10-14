@@ -1248,11 +1248,11 @@ user_mainloop(void)
 	while (!done && mux_mdep_wait(1))
 		; /* nothing */
 
+	song_delete(usong);
+	usong = NULL;
 	lex_done(&parse);
 	parse_done(&parse);
 	exec_delete(exec);
-	song_delete(usong);
-	usong = NULL;
 	mididev_listdone();
 	seqptr_pool_done();
 	sysex_pool_done();
