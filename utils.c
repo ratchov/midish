@@ -39,14 +39,6 @@
  */
 #define LOG_BUFSZ	8192
 
-/*
- * store a character in the log
- */
-#define LOG_PUTC(c) do {			\
-	if (log_used < LOG_BUFSZ)		\
-		log_buf[log_used++] = (c);	\
-} while (0)
-
 char log_buf[LOG_BUFSZ];	/* buffer where traces are stored */
 unsigned int log_used = 0;	/* bytes used in the buffer */
 unsigned int log_sync = 1;	/* if true, flush after each '\n' */
