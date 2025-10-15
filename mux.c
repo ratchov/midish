@@ -144,7 +144,7 @@ mux_open(void)
 	mux_reqphase = MUX_STOP;
 	mux_phase = MUX_STOP;
 	mux_wallclock = 0;
-	log_sync = 1;
+	log_sync = 0;
 }
 
 /*
