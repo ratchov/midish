@@ -122,18 +122,18 @@ mux_mdep_open(void)
 	sigemptyset(&set);
 	sigaddset(&set, SIGPIPE);
 	if (sigprocmask(SIG_BLOCK, &set, NULL)) {
-		log_perror("mux_mdep_open: sigprocmask");
+		logx(1, "%s: sigprocmask: %s", __func__, strerror(errno));
 		exit(1);
 	}
 	if (clock_gettime(CLOCK_MONOTONIC, &ts_last) < 0) {
-		log_perror("mux_mdep_open: clock_gettime");
+		logx(1, "%s: clock_gettime: %s", __func__, strerror(errno));
 		exit(1);
 	}
         sa.sa_flags = SA_RESTART;
         sa.sa_handler = mdep_sigalrm;
         sigfillset(&sa.sa_mask);
         if (sigaction(SIGALRM, &sa, NULL) < 0) {
-		log_perror("mux_mdep_open: sigaction");
+		logx(1, "%s: sigaction: %s", __func__, strerror(errno));
 		exit(1);
 	}
 	it.it_interval.tv_sec = 0;
@@ -141,7 +141,7 @@ mux_mdep_open(void)
 	it.it_value.tv_sec = 0;
 	it.it_value.tv_usec = TIMER_USEC;
 	if (setitimer(ITIMER_REAL, &it, NULL) < 0) {
-		log_perror("mux_mdep_open: setitimer");
+		logx(1, "%s: setitimer: %s", __func__, strerror(errno));
 		exit(1);
 	}
 }
@@ -159,7 +159,7 @@ mux_mdep_close(void)
 	it.it_interval.tv_sec = 0;
 	it.it_interval.tv_usec = 0;
 	if (setitimer(ITIMER_REAL, &it, NULL) < 0) {
-		log_perror("mux_mdep_close: setitimer");
+		logx(1, "%s: setitimer: %s", __func__, strerror(errno));
 		exit(1);
 	}
 }
@@ -198,9 +198,9 @@ mux_mdep_wait(int docons)
 			if (cons_quit)
 				return 0;
 			cons_quit = 1;
-			log_puts("Keyboard interrupt (send twice to quit).\n");
+			logx(1, "Keyboard interrupt (send twice to quit).");
 		} else {
-			log_puts("\n");
+			logx(1, "");
 			return 0;
 		}
 	}
@@ -221,8 +221,7 @@ mux_mdep_wait(int docons)
 				mididev_close(dev);
 				mididev_open(dev);
 				if (!dev->eof) {
-					log_puti(dev->unit);
-					log_puts(": device reopened\n");
+					logx(1, "%d: device reopened", dev->unit);
 				}
 			}
 		}
@@ -238,7 +237,7 @@ mux_mdep_wait(int docons)
 	}
 	res = poll(pfds, nfds, -1);
 	if (res < 0 && errno != EINTR) {
-		log_perror("mux_mdep_wait: poll");
+		logx(1, "%s: poll: %s", __func__, strerror(errno));
 		exit(1);
 	}
 	if (res > 0) {
@@ -266,7 +265,7 @@ mux_mdep_wait(int docons)
 	}
 	if (mux_isopen) {
 		if (clock_gettime(CLOCK_MONOTONIC, &ts) < 0) {
-			log_perror("mux_mdep_wait: clock_gettime");
+			logx(1, "%s: clock_gettime: %s", __func__, strerror(errno));
 			panic();
 		}
 
@@ -290,7 +289,7 @@ mux_mdep_wait(int docons)
 				 * delta is too large (eg. the program was
 				 * suspended and then resumed), just ignore it
 				 */
-				log_puts("ignored huge clock delta\n");
+					logx(1, "ignored huge clock delta");
 			}
 		}
 	}
@@ -307,7 +306,7 @@ mux_mdep_wait(int docons)
 				res = read(STDIN_FILENO, midibuf, MIDI_BUFSIZE);
 				if (res < 0) {
 					cons_eof = 1;
-					log_perror("stdin");
+					logx(1, "stdin: %s", strerror(errno));
 				} else if (res == 0) {
 					cons_eof = 1;
 					user_onchar(NULL, -1);
@@ -334,7 +333,7 @@ mux_sleep(unsigned millisecs)
 	struct timespec ts;
 
 	if (clock_gettime(CLOCK_MONOTONIC, &ts_last) < 0) {
-		log_perror("mux_sleep: clock_gettime");
+		logx(1, "%s: clock_gettime: %s", __func__, strerror(errno));
 		exit(1);
 	}
 
@@ -354,11 +353,11 @@ mux_sleep(unsigned millisecs)
 		if (res >= 0)
 			break;
 		if (errno != EINTR) {
-			log_perror("mux_sleep: poll");
+			logx(1, "%s: poll: %s", __func__, strerror(errno));
 			exit(1);
 		}
 		if (clock_gettime(CLOCK_MONOTONIC, &ts_last) < 0) {
-			log_perror("mux_sleep: clock_gettime");
+			logx(1, "%s: clock_gettime: %s", __func__, strerror(errno));
 			exit(1);
 		}
 	}
@@ -384,22 +383,22 @@ cons_init(struct el_ops *el_ops, void *el_arg)
 	sa.sa_flags = SA_RESTART;
 	sa.sa_handler = cons_mdep_sigint;
 	if (sigaction(SIGINT, &sa, NULL) < 0) {
-		log_perror("cons_mdep_init: sigaction(int)");
+		logx(1, "%s: sigaction(int): %s", __func__, strerror(errno));
 		exit(1);
 	}
 	sa.sa_handler = mdep_sigwinch;
 	if (sigaction(SIGWINCH, &sa, NULL) < 0) {
-		log_perror("cons_mdep_init: sigaction(winch) failed");
+		logx(1, "%s: sigaction(winch) failed: %s", __func__, strerror(errno));
 		exit(1);
 	}	
 	sa.sa_handler = mdep_sigcont;
 	if (sigaction(SIGCONT, &sa, NULL) < 0) {
-		log_perror("cons_mdep_init: sigaction(cont) failed");
+		logx(1, "%s: sigaction(cont) failed: %s", __func__, strerror(errno));
 		exit(1);
 	}
 	sa.sa_handler = mdep_sigusr1;
 	if (sigaction(SIGUSR1, &sa, NULL) < 0) {
-		log_perror("cons_mdep_init: sigaction(usr1) failed");
+		logx(1, "%s: sigaction(usr1) failed: %s", __func__, strerror(errno));
 		exit(1);
 	}
 	if (!user_flag_batch && !user_flag_verb && tty_init()) {
@@ -424,19 +423,19 @@ cons_done(void)
 	sa.sa_flags = SA_RESTART;
 	sa.sa_handler = SIG_DFL;
 	if (sigaction(SIGINT, &sa, NULL) < 0) {
-		log_perror("cons_mdep_done: sigaction(int)");
+		logx(1, "%s: sigaction(int): %s", __func__, strerror(errno));
 		exit(1);
 	}
 	if (sigaction(SIGWINCH, &sa, NULL) < 0) {
-		log_perror("cons_mdep_done: sigaction(winch)");
+		logx(1, "%s: sigaction(winch): %s", __func__, strerror(errno));
 		exit(1);
 	}
 	if (sigaction(SIGCONT, &sa, NULL) < 0) {
-		log_perror("cons_mdep_done: sigaction(cont)");
+		logx(1, "%s: sigaction(cont): %s", __func__, strerror(errno));
 		exit(1);
 	}
 	if (sigaction(SIGUSR1, &sa, NULL) < 0) {
-		log_perror("cons_mdep_done: sigaction(usr1)");
+		logx(1, "%s: sigaction(usr1): %s", __func__, strerror(errno));
 		exit(1);
 	}
 }

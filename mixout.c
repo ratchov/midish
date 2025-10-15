@@ -55,17 +55,16 @@ mixout_start(void)
 	statelist_init(&mixout_slist);
 	timo_set(&mixout_timo, mixout_timocb, NULL);
 	timo_add(&mixout_timo, MIXOUT_TIMO);
-	if (mixout_debug) {
-		log_puts("mixout_start()\n");
-	}
+	if (mixout_debug)
+		logx(1, "%s", __func__);
 }
 
 void
 mixout_stop(void)
 {
-	if (mixout_debug) {
-		log_puts("mixout_stop()\n");
-	}
+	if (mixout_debug)
+		logx(1, "%s", __func__);
+
 	timo_del(&mixout_timo);
 	statelist_done(&mixout_slist);
 }
@@ -76,50 +75,28 @@ mixout_putev(struct ev *ev, unsigned id)
 	struct state *os;
 	struct ev ca;
 
-	if (mixout_debug >= 3) {
-		log_puts("mixout_putev: ");
-		ev_log(ev);
-		log_puts(" (");
-		log_putu(id);
-		log_puts(")\n");
-	}
+	if (mixout_debug >= 3)
+		logx(1, "%s: {ev:%p} (%u)", __func__, ev, id);
 
 	os = statelist_lookup(&mixout_slist, ev);
 	if (os != NULL && os->tag != id) {
 		if (os->tag < id) {
 			if (mixout_debug) {
-				log_puts("mixout_putev: ");
-				ev_log(ev);
-				log_puts(" (");
-				log_putu(id);
-				log_puts(": ignored after ");
-				ev_log(&os->ev);
-				log_puts(" (");
-				log_putu(os->tag);
-				log_puts(")\n");
+				logx(1, "%s: {ev:%p} (%d): ignored after {ev:%p} (%d)",
+				    __func__, ev, id, &os->ev, os->tag);
 			}
 			return;
 		}
 		if (state_cancel(os, &ca)) {
 			if (mixout_debug) {
-				log_puts("mixout_putev: ");
-				ev_log(ev);
-				log_puts(" (");
-				log_putu(id);
-				log_puts(": will kick older: ");
-				ev_log(&os->ev);
-				log_puts(" (");
-				log_putu(os->tag);
-				log_puts(")\n");
+				logx(1, "%s: {ev:%p} (%d): will kick older {ev:%p} (%d)",
+				    __func__, ev, id, &os->ev, os->tag);
 			}
 			statelist_update(&mixout_slist, &ca);
 			mux_putev(&ca);
 		}
-		if (mixout_debug) {
-			log_puts("mixout_putev: ");
-			ev_log(ev);
-			log_puts(" won\n");
-		}
+		if (mixout_debug)
+			logx(1, "%s: {ev:%p}: won", __func__, ev);
 	}
 	os = statelist_update(&mixout_slist, ev);
 	os->tag = id;
@@ -127,14 +104,10 @@ mixout_putev(struct ev *ev, unsigned id)
 	if ((os->flags & (STATE_BOGUS | STATE_NESTED)) == 0)
 		mux_putev(ev);
 	else {
-		if (mixout_debug) {
-			log_puts("mixout_putev: ");
-			ev_log(ev);
-			log_puts(" nested or bogus\n");
-		}
+		if (mixout_debug)
+			logx(1, "%s: {ev:%p} nested or bogus", __func__, ev);
 	}
 }
-
 
 void
 mixout_timocb(void *addr)
@@ -151,11 +124,9 @@ mixout_timocb(void *addr)
 			state_del(i);
 		} else if (i->phase == (EV_PHASE_FIRST | EV_PHASE_LAST)) {
 			if (i->tic >= MIXOUT_MAXTICS) {
-				if (mixout_debug >= 2) {
-					log_puts("mixout_timo: ");
-					state_log(i);
-					log_puts(": timed out\n");
-				}
+				if (mixout_debug >= 2)
+					logx(1, "%s: {state:%p}: timed out", __func__, i);
+
 				statelist_rm(&mixout_slist, i);
 				state_del(i);
 			} else {

@@ -155,7 +155,7 @@ song_done(struct song *o)
 	sysexlist_done(&o->recsx);
 	metro_done(&o->metro);
 	if (o->undo != NULL) {
-		log_puts("undo data not freed\n");
+		logx(1, "%s: undo data not freed", __func__);
 		panic();
 	}
 }
@@ -491,12 +491,7 @@ song_playconfev(struct song *o, struct songchan *c, struct ev *in)
 	struct ev ev = *in;
 
 	if (!EV_ISVOICE(&ev)) {
-		log_puts("song_playconfev: ");
-		log_puts(c->name.str);
-		log_puts(": ");
-		ev_log(&ev);
-		log_puts(": not a voice event");
-		log_puts("\n");
+		logx(1, "%s: %s: {ev:%p}: not a voice event", __func__, c->name.str, &ev);
 		return;
 	}
 	ev.dev = c->dev;
@@ -738,13 +733,13 @@ song_loop_rec(struct song *o)
 
 	if (seqptr_ticdel(o->playptr, o->loop_tstart,
 		&o->rec_replay) != o->loop_tstart) {
-		log_puts("song_loop_rec: events in the way\n");
+		logx(1, "%s: events in the way", __func__);
 		panic();
 	}
 	seqptr_ticput(o->playptr, o->loop_tstart);
 
 	if (song_debug)
-		log_puts("song_loop_rec: starting replay\n");
+		logx(1, "%s: starting replay", __func__);
 }
 
 /*
@@ -904,27 +899,22 @@ song_confrestore(struct statelist *slist, int all, unsigned prio)
 			continue;
 		if (s->tag) {
 			if (song_debug) {
-				log_puts("song_strestore: ");
-				ev_log(&s->ev);
-				log_puts(": not restored (tagged)\n");
+				logx(1, "%s: {ev:%p}: not restored (tagged)",
+				    __func__, &s->ev);
 			}
 			continue;
 		}
 		if (!(s->phase & EV_PHASE_LAST) && !all) {
 			if (song_debug) {
-				log_puts("song_strestore: ");
-				ev_log(&s->ev);
-				log_puts(": not restored (unterminated)\n");
+				logx(1, "%s: {ev:%p}: not restored (unterminated)",
+				    __func__, &s->ev);
 			}
 			continue;
 		}
 		if (state_restore(s, &re)) {
 			if (song_debug) {
-				log_puts("song_strestore: ");
-				ev_log(&s->ev);
-				log_puts(": restored -> ");
-				ev_log(&re);
-				log_puts("\n");
+				logx(1, "%s: {ev:%p}: restored -> {ev:%p}",
+				    __func__, &s->ev, &re);
 			}
 			mixout_putev(&re, prio);
 		}
@@ -945,20 +935,16 @@ song_confcancel(struct statelist *slist, unsigned prio)
 		if (s->tag) {
 			if (state_cancel(s, &ca)) {
 				if (song_debug) {
-					log_puts("song_stcancel: ");
-					ev_log(&s->ev);
-					log_puts(": canceled -> ");
-					ev_log(&ca);
-					log_puts("\n");
+					logx(1, "%s: {ev:%p}: canceled -> {ev:%p}",
+					    __func__, &s->ev, &ca);
 				}
 				mixout_putev(&ca, prio);
 			}
 			s->tag = 0;
 		} else {
 			if (song_debug) {
-				log_puts("song_stcancel: ");
-				ev_log(&s->ev);
-				log_puts(": not canceled (no tag)\n");
+				logx(1, "%s: {ev:%p}: not canceled (no tag)",
+				    __func__, &s->ev);
 			}
 		}
 	}
@@ -1106,7 +1092,7 @@ song_startcb(struct song *o)
 {
 
 	if (song_debug) {
-		log_puts("song_startcb:\n");
+		logx(1, "%s:", __func__);
 	}
 	if (o->mode >= SONG_PLAY) {
 		song_ticplay(o);
@@ -1124,7 +1110,7 @@ song_stopcb(struct song *o)
 	struct songtrk *t;
 
 	if (song_debug)
-		log_puts("song_stopcb:\n");
+		logx(1, "%s:", __func__);
 
 	/*
 	 * stop all sounding notes
@@ -1166,20 +1152,19 @@ song_evcb(struct song *o, struct ev *ev)
 			return;
 		if (o->tap_cnt == 0) {
 			if (o->tap_mode == SONG_TAP_START) {
-				log_puts("start triggered\n");
+				logx(1, "start triggered");
 				o->tap_cnt = -1;
 				mux_ticcb();
 			} else {
-				log_puts("measuring tempo...\n");
+				logx(1, "measuring tempo...");
 				o->tap_time = mux_wallclock;
 			}
 		} else if (o->tap_mode == SONG_TAP_TEMPO && o->tap_cnt == 1) {
 			usec24 = (long)(mux_wallclock - o->tap_time) / o->tpb;
-			log_puts("start triggered, tempo = ");
-			log_putu(60 * 24000000 / o->tpb / usec24);
-			log_puts("\n");
+			logx(1, "start triggered, tempo = %u", 
+			    60 * 24000000 / o->tpb / usec24);
 			if (usec24 < TEMPO_MIN || usec24 > TEMPO_MAX) {
-				log_puts("tempo out of range, aborted\n");
+				logx(1, "tempo out of range, aborted");
 				o->tap_cnt = 0;
 				return;
 			}
@@ -1242,9 +1227,9 @@ void
 song_sysexcb(struct song *o, struct sysex *sx)
 {
 	if (song_debug)
-		log_puts("song_sysexcb:\n");
+		logx(1, "%s:", __func__);
 	if (sx == NULL) {
-		log_puts("got null sx\n");
+		logx(1, "%s: got null sx", __func__);
 		return;
 	}
 	if (o->mode >= SONG_REC)
@@ -1336,7 +1321,7 @@ song_loc(struct song *o, unsigned how, unsigned where, unsigned offs)
 		offs = 0;
 		break;
 	default:
-		log_puts("song_loc: bad argument\n");
+		logx(1, "%s: bad argument", __func__);
 		panic();
 	}
 	pos = 0;
@@ -1420,7 +1405,7 @@ song_loc(struct song *o, unsigned how, unsigned where, unsigned offs)
 		track_clear(&o->rec);
 #ifdef SONG_DEBUG
 	if (!track_isempty(&o->rec)) {
-		log_puts("song_loc: rec track not empty\n");
+		logx(1, "%s: rec track not empty", __func__);
 		panic();
 	}
 #endif
@@ -1447,17 +1432,13 @@ song_loc(struct song *o, unsigned how, unsigned where, unsigned offs)
 	for (s = o->metaptr->statelist.first; s != NULL; s = s->next) {
 		if (EV_ISMETA(&s->ev)) {
 			if (song_debug) {
-				log_puts("song_loc: ");
-				ev_log(&s->ev);
-				log_puts(": restoring meta-event\n");
+				logx(1, "%s: {ev:%p}: restoring meta-event", __func__, &s->ev);
 			}
 			song_metaput(o, s);
 			s->tag = 1;
 		} else {
 			if (song_debug) {
-				log_puts("song_loc: ");
-				ev_log(&s->ev);
-				log_puts(": not restored (not tagged)\n");
+				logx(1, "%s: {ev:%p}: not restored (not tagged)", __func__, &s->ev);
 			}
 			s->tag = 0;
 		}
@@ -1474,21 +1455,7 @@ song_loc(struct song *o, unsigned how, unsigned where, unsigned offs)
 	cons_putpos(o->measure, o->beat, o->tic);
 
 	if (song_debug) {
-		log_puts("song_loc: ");
-		log_putu(where);
-		log_puts(" -> ");
-		log_putu(o->measure);
-		log_puts(":");
-		log_putu(o->beat);
-		log_puts(":");
-		log_putu(o->tic);
-		log_puts("(");
-		log_putu(o->abspos);
-		log_puts(") +");
-		log_putu(pos);
-		log_puts("/");
-		log_putu(usec24);
-		log_puts("\n");
+		logx(1, "%s: %u -> %u:%u:%u(%d) + %lld/%ld", __func__, where, o->measure, o->beat, o->tic, o->abspos, pos, usec24);
 	}
 	return pos;
 }
@@ -1646,7 +1613,7 @@ song_play(struct song *o)
 	mux_flush();
 
 	if (song_debug) {
-		log_puts("song_play: waiting for a start event...\n");
+		logx(1, "%s: waiting for a start event...", __func__);
 	}
 }
 
@@ -1662,7 +1629,7 @@ song_record(struct song *o)
 
 	song_getcurtrk(o, &t);
 	if (!t || t->mute) {
-		log_puts("song_record: no current track (or muted)\n");
+		logx(1, "%s: no current track (or muted)", __func__);
 	}
 
 	m = (o->mode >= SONG_IDLE) ? o->measure : o->curpos;
@@ -1671,7 +1638,7 @@ song_record(struct song *o)
 	mux_startreq(o->tap_mode != SONG_TAP_OFF);
 	mux_flush();
 	if (song_debug) {
-		log_puts("song_record: waiting for a start event...\n");
+		logx(1, "%s: waiting for a start event...", __func__);
 	}
 }
 
@@ -1689,7 +1656,7 @@ song_idle(struct song *o)
 	mux_flush();
 
 	if (song_debug) {
-		log_puts("song_idle: started loop...\n");
+		logx(1, "%s: started loop...", __func__);
 	}
 }
 

@@ -17,7 +17,7 @@
 /*
  * ev is an "extended" midi event
  */
-
+#include <stdio.h>
 #include "utils.h"
 #include "ev.h"
 #include "str.h"
@@ -143,13 +143,9 @@ struct evctl evctl_tab[EV_MAXCOARSE + 1];
 char *
 ev_getstr(struct ev *ev)
 {
-	if (ev->cmd >= EV_NUMCMD) {
+	if (ev->cmd >= EV_NUMCMD)
 		return NULL;
-		/*
-		log_puts("ev_getstr: invalid cmd\n");
-		panic();
-		*/
-	}
+
 	return evinfo[ev->cmd].ev;
 }
 
@@ -311,9 +307,7 @@ ev_match(struct ev *st, struct ev *ev)
 				return 0;
 			break;
 		}
-		log_puts("ev_match: ");
-		ev_log(st);
-		log_puts(": bad event type\n");
+		logx(1, "%s: {ev:%p}: bad event type", __func__, st);
 		panic();
 		break;
 	}
@@ -323,68 +317,49 @@ ev_match(struct ev *st, struct ev *ev)
 /*
  * dump the event structure on stderr, for debug purposes
  */
-void
-ev_log(struct ev *ev)
+size_t
+ev_fmt(char *buf, size_t bufsz, struct ev *ev)
 {
 	char *cmdstr;
+
 	cmdstr = ev_getstr(ev);
-	if (cmdstr == NULL) {
-		log_puts("unkw(");
-		log_putu(ev->cmd);
-		log_puts(")");
-	} else {
-		log_puts(cmdstr);
-		switch(ev->cmd) {
-		case EV_NON:
-		case EV_NOFF:
-		case EV_KAT:
-		case EV_CTL:
-		case EV_NRPN:
-		case EV_RPN:
-		case EV_XPC:
-		case EV_XCTL:
-			log_puts(" {");
-			log_putx(ev->dev);
-			log_puts(" ");
-			log_putx(ev->ch);
-			log_puts("} ");
-			log_putx(ev->v0);
-			log_puts(" ");
-			log_putx(ev->v1);
-			break;
-		case EV_BEND:
-		case EV_CAT:
-		case EV_PC:
-			log_puts(" {");
-			log_putx(ev->dev);
-			log_puts(" ");
-			log_putx(ev->ch);
-			log_puts("} ");
-			log_putx(ev->v0);
-			break;
-		case EV_TEMPO:
-			log_puts(" ");
-			log_putu((unsigned)ev->tempo_usec24);
-			break;
-		case EV_TIMESIG:
-			log_puts(" ");
-			log_putx(ev->timesig_beats);
-			log_puts(" ");
-			log_putx(ev->timesig_tics);
-			break;
+	if (cmdstr == NULL)
+		return snprintf(buf, bufsz, "unkw(%d)", ev->cmd);
+
+	switch(ev->cmd) {
+	case EV_NON:
+	case EV_NOFF:
+	case EV_KAT:
+	case EV_CTL:
+	case EV_NRPN:
+	case EV_RPN:
+	case EV_XPC:
+	case EV_XCTL:
+		return snprintf(buf, bufsz, "%s {%x %x} %02x %02x",
+		    cmdstr, ev->dev, ev->ch, ev->v0, ev->v1);
+	case EV_BEND:
+	case EV_CAT:
+	case EV_PC:
+		return snprintf(buf, bufsz, "%s {%x %x} %02x",
+		    cmdstr, ev->dev, ev->ch, ev->v0);
+	case EV_TEMPO:
+		return snprintf(buf, bufsz, "%s %u", cmdstr, ev->tempo_usec24);
+	case EV_TIMESIG:
+		return snprintf(buf, bufsz, "%s %u %u", cmdstr, ev->v0, ev->v1);
+	default:
+		if (!EV_ISSX(ev))
+			return snprintf(buf, bufsz, "%s", cmdstr);
+
+		switch (evinfo[ev->cmd].nparams) {
+		case 0:
+			return snprintf(buf, bufsz,
+			    "%s %x", cmdstr, ev->dev);
+		case 1:
+			return snprintf(buf, bufsz,
+			    "%s %x %02x", cmdstr, ev->dev, ev->v0);
 		default:
-			if (EV_ISSX(ev)) {
-				log_puts(" ");
-				log_putx(ev->dev);
-				if (evinfo[ev->cmd].nparams >= 1) {
-					log_puts(" ");
-					log_putx(ev->v0);
-				}
-				if (evinfo[ev->cmd].nparams >= 2) {
-					log_puts(" ");
-					log_putx(ev->v1);
-				}
-			}
+			return snprintf(buf, bufsz,
+			    "%s %x %02x %02x", cmdstr, ev->dev, ev->v0, ev->v1);
 		}
 	}
 }
@@ -498,58 +473,48 @@ evspec_reset(struct evspec *o)
 	o->v1_max  = evinfo[o->cmd].v1_max;
 }
 
-/*
- * dump the event structure on stderr (debug purposes)
- */
-void
-evspec_log(struct evspec *o)
+size_t
+evspec_fmt(char *buf, size_t bufsz, struct evspec *o)
 {
+	char *p = buf, *end = buf + bufsz;
 	unsigned i;
 
 	i = 0;
 	for (;;) {
 		if (i == EV_NUMCMD) {
-			log_puts("unk(");
-			log_putu(o->cmd);
-			log_puts(")");
+			p += snprintf(p, p < end ? end - p : 0,
+			    "unk(%d)", o->cmd);
 			break;
 		}
 		if (o->cmd == i) {
 			if (evinfo[i].spec == NULL) {
-				log_puts("bad(");
-				log_putu(o->cmd);
-				log_puts(")");
+				p += snprintf(p, p < end ? end - p : 0,
+				    "bad(%d)", o->cmd);
 			} else {
-				log_puts(evinfo[i].spec);
+				p += snprintf(p, p < end ? end - p : 0,
+				    "%s", evinfo[i].spec);
 			}
 			break;
 		}
 		i++;
 	}
 	if (evinfo[o->cmd].flags & EV_HAS_DEV) {
-		log_puts(" ");
-		log_putu(o->dev_min);
-		log_puts(":");
-		log_putu(o->dev_max);
+		p += snprintf(p, p < end ? end - p : 0,
+		    " %u:%u", o->dev_min, o->dev_max);
 	}
 	if (evinfo[o->cmd].flags & EV_HAS_CH) {
-		log_puts(" ");
-		log_putu(o->ch_min);
-		log_puts(":");
-		log_putu(o->ch_max);
+		p += snprintf(p, p < end ? end - p : 0,
+		    " %u:%u", o->ch_min, o->ch_max);
 	}
 	if (evinfo[o->cmd].nparams >= 1) {
-		log_puts(" ");
-		log_putu(o->v0_min);
-		log_puts(":");
-		log_putu(o->v0_max);
+		p += snprintf(p, p < end ? end - p : 0,
+		    " %u:%u", o->v0_min, o->v0_max);
 	}
 	if (evinfo[o->cmd].nparams >= 2) {
-		log_puts(" ");
-		log_putu(o->v1_min);
-		log_puts(":");
-		log_putu(o->v1_max);
+		p += snprintf(p, p < end ? end - p : 0,
+		    " %u:%u", o->v1_min, o->v1_max);
 	}
+	return p - buf;
 }
 
 /*
@@ -1134,10 +1099,6 @@ evpat_set(unsigned cmd, char *name, unsigned char *pattern, unsigned size)
 	evinfo[cmd].v0_max = EV_MAXFINE;
 	evinfo[cmd].v1_min = 0;
 	evinfo[cmd].v1_max = EV_MAXFINE;
-#if 0
-	log_puts("evpat: nparams = ");
-	log_putu(evinfo[cmd].nparams);
-	log_puts("\n");
-#endif
+
 	return 1;
 }

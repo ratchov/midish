@@ -34,9 +34,7 @@ unsigned filt_debug = 0;
 void
 rule_log(struct evspec *from, struct  evspec *to)
 {
-	evspec_log(from);
-	log_puts(" > ");
-	evspec_log(to);
+	logx(1, "{evspec:%p} -> {evspec:%p}", from, to);
 }
 
 /*
@@ -84,9 +82,7 @@ filtnode_mksrc(struct filtnode **root, struct evspec *from)
 	for (ps = root; (s = *ps) != NULL;) {
 		if (evspec_isec(&s->es, from) && !evspec_in(from, &s->es)) {
 			if (filt_debug) {
-				log_puts("filtnode_mksrc: ");
-				evspec_log(&s->es);
-				log_puts(": src intersect\n");
+				logx(1, "%s: {evspec:%p}: src intersect", __func__, &s->es);
 			}
 			filtnode_del(ps);
 			continue;
@@ -100,23 +96,16 @@ filtnode_mksrc(struct filtnode **root, struct evspec *from)
 	for (ps = root; (s = *ps) != NULL;) {
 		if (evspec_eq(from, &s->es)) {
 			if (filt_debug)
-				log_puts("filtnode_mksrc: exact match\n");
+				logx(1, "%s: exact match", __func__);
 			return s;
 		}
 		if (evspec_in(from, &s->es)) {
-			if (filt_debug) {
-				log_puts("filtnode_mksrc: ");
-				evspec_log(from);
-				log_puts(" in ");
-				evspec_log(&s->es);
-				log_puts("\n");
-			}
+			if (filt_debug)
+				logx(1, "%s: {evspec:%p} in {evspec:%p}", __func__, from, &s->es);
 			break;
 		}
 		if (filt_debug) {
-			log_puts("filtnode_mksrc: ");
-			evspec_log(from);
-			log_puts(": skipped\n");
+			logx(1, "%s: {evspec:%p}: skipped", __func__, from);
 		}
 		ps = &s->next;
 	}
@@ -142,9 +131,8 @@ filtnode_mkdst(struct filtnode *s, struct evspec *to)
 		    to->cmd == EVSPEC_EMPTY ||
 		    d->es.cmd == EVSPEC_EMPTY) {
 			if (filt_debug) {
-				log_puts("filtnode_mkdst: ");
-				rule_log(&s->es, &d->es);
-				log_puts(": src intersect\n");
+				logx(1, "%s: {evspec:%p} > {evspec:%p}: src intersect",
+				    __func__, &s->es, &d->es);
 			}
 			filtnode_del(pd);
 			continue;
@@ -229,24 +217,18 @@ filt_do(struct filt *o, struct ev *in, struct ev *out)
 	for (s = o->map;; s = s->next) {
 		if (s == NULL)
 			break;
-		if (filt_debug) {
-			log_puts("filt_do: in = ");
-			ev_log(in);
-			log_puts("\n");
-		}
+		if (filt_debug)
+			logx(1, "%s: in = {ev:%p}", __func__, in);
 		if (evspec_matchev(&s->es, in)) {
 			for (d = s->dstlist; d != NULL; d = d->next) {
 				if (d->es.cmd == EVSPEC_EMPTY)
 					continue;
 				ev_map(in, &s->es, &d->es, &out[nev]);
 				if (filt_debug) {
-					log_puts("filt_do: (");
-					rule_log(&s->es, &d->es);
-					log_puts("): ");
-					ev_log(in);
-					log_puts(" -> ");
-					ev_log(&out[nev]);
-					log_puts("\n");
+					logx(1, "%s: "
+					    "{evspec:%p} > {evspec:%p}: "
+					    "{ev:%p} -> {ev:%p}", __func__,
+					    &s->es, &d->es, in, &out[nev]);
 				}
 				nev++;
 			}
@@ -287,9 +269,9 @@ filt_mapdel(struct filt *f, struct evspec *from, struct evspec *to)
 			for (pd = &s->dstlist; (d = *pd) != NULL;) {
 				if (evspec_in(&d->es, to)) {
 					if (filt_debug) {
-						log_puts("filt_mapdel: ");
-						rule_log(&s->es, &d->es);
-						log_puts(": removed\n");
+						logx(1, "%s: "
+						    "{evspec:%p} > {evspec:%p}: removed",
+						    __func__, &s->es, &d->es);
 					}
 					filtnode_del(pd);
 					continue;
@@ -299,9 +281,7 @@ filt_mapdel(struct filt *f, struct evspec *from, struct evspec *to)
 		}
 		if (s->dstlist == NULL) {
 			if (filt_debug) {
-				log_puts("filt_mapdel: ");
-				evspec_log(&s->es);
-				log_puts(": empty, removed\n");
+				logx(1, "%s: {evspec:%p}: empty, removed", __func__, &s->es);
 			}
 			filtnode_del(ps);
 			continue;
@@ -318,11 +298,8 @@ filt_mapnew(struct filt *f, struct evspec *from, struct evspec *to)
 {
 	struct filtnode *s;
 
-	if (filt_debug) {
-		log_puts("filt_mapnew: adding ");
-		rule_log(from, to);
-		log_puts("\n");
-	}
+	if (filt_debug)
+		logx(1, "%s: {evspec:%p} > {evspec:%p}: added", __func__, from, to);
 
 	/*
 	 * check if ranges are ok, do nothing if they are not
@@ -364,11 +341,8 @@ filt_chgin(struct filt *o, struct evspec *from, struct evspec *to, int swap)
 			newspec = s->es;
 		}
 		if (filt_debug) {
-			log_puts("filt_chgin: ");
-			evspec_log(&s->es);
-			log_puts(" -> ");
-			evspec_log(&newspec);
-			log_puts("\n");
+			logx(1, "%s: {evspec:%p} -> {evspec:%p}",
+			    __func__, &s->es, &newspec);
 		}
 		while ((d = s->dstlist) != NULL) {
 			filt_mapnew(o, &newspec, &d->es);
@@ -396,11 +370,8 @@ filt_chgout(struct filt *o, struct evspec *from, struct evspec *to, int swap)
 				newspec = d->es;
 			}
 			if (filt_debug) {
-				log_puts("filt_chgout: ");
-				evspec_log(&d->es);
-				log_puts(" -> ");
-				evspec_log(&newspec);
-				log_puts("\n");
+				logx(1, "%s: {evspec:%p} -> {evspec:%p}",
+				    __func__, &d->es, &newspec);
 			}
 			filt_mapnew(o, &s->es, &newspec);
 			filtnode_del(&s->dstlist);
@@ -415,12 +386,12 @@ filt_transp(struct filt *f, struct evspec *from, int plus)
 	struct filtnode *s;
 
 	if (from->cmd != EVSPEC_ANY && from->cmd != EVSPEC_NOTE) {
-		log_puts("filt_transp: set must contain notes\n");
+		logx(1, "%s: set must contain notes", __func__);
 		return;
 	}
 	if (from->cmd == EVSPEC_NOTE &&
 	    (from->v0_min != 0 || from->v0_max != EV_MAXCOARSE)) {
-		log_puts("filt_transp: note range must be full\n");
+		logx(1, "%s: note range must be full", __func__);
 		return;
 	}
 
@@ -434,7 +405,7 @@ filt_vcurve(struct filt *f, struct evspec *from, int weight)
 	struct filtnode *s;
 
 	if (from->cmd != EVSPEC_ANY && from->cmd != EVSPEC_NOTE) {
-		log_puts("filt_vcurve: set must contain notes\n");
+		logx(1, "%s: set must contain notes", __func__);
 		return;
 	}
 	s = filtnode_mksrc(&f->vcurve, from);

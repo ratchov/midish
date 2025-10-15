@@ -186,7 +186,7 @@ blt_print(struct exec *o, struct data **r)
 
 	arg = exec_varlookup(o, "...");
 	if (!arg) {
-		log_puts("blt_print: no variable argument list\n");
+		logx(1, "%s: no variable argument list", __func__);
 		return 0;
 	}
 
@@ -219,7 +219,7 @@ blt_h(struct exec *o, struct data **r)
 
 	arg = exec_varlookup(o, "...");
 	if (!arg) {
-		log_puts("blt_h: no variable argument list\n");
+		logx(1, "%s: no variable argument list", __func__);
 		return 0;
 	}
 
@@ -275,7 +275,7 @@ blt_cc(struct exec *o, struct data **r, int input)
 
 	arg = exec_varlookup(o, "channame");
 	if (!arg) {
-		log_puts("blt_cc: channame: no such param\n");
+		logx(1, "%s: channame: no such param", __func__);
 		return 0;
 	}
 	if (arg->data->type == DATA_NIL) {
@@ -338,7 +338,7 @@ blt_cx(struct exec *o, struct data **r)
 
 	arg = exec_varlookup(o, "sysexname");
 	if (!arg) {
-		log_puts("blt_setx: 'sysexname': no such param\n");
+		logx(1, "%s: 'sysexname': no such param", __func__);
 		return 0;
 	}
 	if (arg->data->type == DATA_NIL) {
@@ -501,7 +501,7 @@ blt_setq(struct exec *o, struct data **r)
 
 	arg = exec_varlookup(o, "step");
 	if (!arg) {
-		log_puts("blt_setq: step: no such param\n");
+		logx(1, "%s: step: no such param", __func__);
 		return 0;
 	}
 	if (!song_try_curquant(usong)) {
@@ -573,7 +573,7 @@ blt_ct(struct exec *o, struct data **r)
 
 	arg = exec_varlookup(o, "trackname");
 	if (!arg) {
-		log_puts("blt_sett: 'trackname': no such param\n");
+		logx(1, "%s: 'trackname': no such param", __func__);
 		return 0;
 	}
 	if (arg->data->type == DATA_NIL) {
@@ -610,7 +610,7 @@ blt_cf(struct exec *o, struct data **r)
 
 	arg = exec_varlookup(o, "filtname");
 	if (!arg) {
-		log_puts("blt_setf: filtname: no such param\n");
+		logx(1, "%s: filtname: no such param", __func__);
 		return 0;
 	}
 	if (arg->data->type == DATA_NIL) {
@@ -1480,7 +1480,7 @@ blt_evpat(struct exec *o, struct data **r)
 	pattern = xmalloc(EV_PATSIZE, "evpat");
 	arg = exec_varlookup(o, "pattern");
 	if (!arg) {
-		log_puts("exec_lookupev: no such var\n");
+		logx(1, "%s: no such var", __func__);
 		panic();
 	}
 	if (arg->data->type != DATA_LIST) {
@@ -1787,7 +1787,7 @@ blt_tsetf(struct exec *o, struct data **r)
 	}
 	arg = exec_varlookup(o, "filtname");
 	if (!arg) {
-		log_puts("blt_tsetf: filtname: no such param\n");
+		logx(1, "%s: filtname: no such param", __func__);
 		return 0;
 	}
 	if (arg->data->type == DATA_NIL) {
@@ -3328,7 +3328,7 @@ blt_xadd(struct exec *o, struct data **r)
 	}
 	arg = exec_varlookup(o, "data");
 	if (!arg) {
-		log_puts("exec_lookupev: no such var\n");
+		logx(1, "%s: no such var", __func__);
 		panic();
 	}
 	if (arg->data->type != DATA_LIST) {
@@ -3387,7 +3387,7 @@ blt_ximport(struct exec *o, struct data **r)
 	}
 	arg = exec_varlookup(o, "path");
 	if (!arg) {
-		log_puts("blt_ximport: path: no such param\n");
+		logx(1, "%s: path: no such param", __func__);
 		return 0;
 	}
 	if (arg->data->type != DATA_STRING) {
@@ -3414,7 +3414,7 @@ blt_xexport(struct exec *o, struct data **r)
 	}
 	arg = exec_varlookup(o, "path");
 	if (!arg) {
-		log_puts("blt_xexport: path: no such param\n");
+		logx(1, "%s: path: no such param", __func__);
 		return 0;
 	}
 	if (arg->data->type != DATA_STRING) {
@@ -3459,7 +3459,7 @@ blt_dnew(struct exec *o, struct data **r)
 	}
 	arg = exec_varlookup(o, "path");
 	if (!arg) {
-		log_puts("blt_dnew: path: no such param\n");
+		logx(1, "%s: path: no such param", __func__);
 		return 0;
 	}
 	if (arg->data->type == DATA_NIL) {
@@ -3513,7 +3513,7 @@ blt_dmtcrx(struct exec *o, struct data **r)
 	}
 	arg = exec_varlookup(o, "devnum");
 	if (!arg) {
-		log_puts("blt_dmtcrx: no such var\n");
+		logx(1, "%s: no such var", __func__);
 		panic();
 	}
 	if (arg->data->type == DATA_NIL) {
@@ -3575,7 +3575,7 @@ blt_dclkrx(struct exec *o, struct data **r)
 	}
 	arg = exec_varlookup(o, "devnum");
 	if (!arg) {
-		log_puts("blt_dclkrx: no such var\n");
+		logx(1, "%s: devnum: no such var", __func__);
 		panic();
 	}
 	if (arg->data->type == DATA_NIL) {

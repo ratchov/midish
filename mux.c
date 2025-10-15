@@ -89,8 +89,9 @@ unsigned mux_manualstart = 1;
 void *mux_addr;
 unsigned long mux_wallclock;
 
-
 struct statelist mux_istate, mux_ostate;
+
+const char *mux_phasestr[] = {"STARTWAIT", "START", "FIRST", "NEXT", "STOP"};
 
 /*
  * the following are defined in mdep.c
@@ -99,7 +100,6 @@ void mux_mdep_open(void);
 void mux_mdep_close(void);
 
 void mux_sendstop(void);
-void mux_logphase(unsigned phase);
 void mux_chgphase(unsigned phase);
 
 /*
@@ -173,33 +173,6 @@ mux_close(void)
 	timo_done();
 }
 
-#ifdef MUX_DEBUG
-void
-mux_logphase(unsigned phase)
-{
-	switch(phase) {
-	case MUX_STARTWAIT:
-		log_puts("STARTWAIT");
-		break;
-	case MUX_START:
-		log_puts("START");
-		break;
-	case MUX_FIRST:
-		log_puts("FIRST");
-		break;
-	case MUX_NEXT:
-		log_puts("NEXT");
-		break;
-	case MUX_STOP:
-		log_puts("STOP");
-		break;
-	default:
-		log_puts("unknown");
-		break;
-	}
-}
-#endif
-
 /*
  * change the current phase
  */
@@ -207,11 +180,7 @@ void
 mux_chgphase(unsigned phase)
 {
 #ifdef MUX_DEBUG
-	log_puts("mux_phase: ");
-	mux_logphase(mux_phase);
-	log_puts(" -> ");
-	mux_logphase(phase);
-	log_puts("\n");
+	logx(1, "%s: %s -> %s", __func__, mux_phasestr[mux_phase], mux_phasestr[phase]);
 #endif
 	mux_phase = phase;
 }
@@ -287,23 +256,17 @@ mux_putev(struct ev *ev)
 
 #ifdef MUX_DEBUG
 	if (mux_debug) {
-		log_puts("mux_putev: ");
-		ev_log(ev);
-		log_puts("\n");
+		logx(1, "%s: {ev:%p}", __func__, ev);
 	}
 #endif
 
 	if (!EV_ISVOICE(ev) && !EV_ISSX(ev)) {
-		log_puts("mux_putev: ");
-		ev_log(ev);
-		log_puts(": only voice events allowed\n");
+		logx(0, "%s: {ev:%p}: only voice events allowed", __func__, ev);
 		panic();
 	}
 	unit = ev->dev;
 	if (unit >= DEFAULT_MAXNDEVS) {
-		log_puts("mux_putev: ");
-		ev_log(ev);
-		log_puts(": bogus unit number\n");
+		logx(0, "%s: {ev:%p}: bad dev number", __func__, ev);
 		panic();
 	}
 	dev = mididev_byunit[unit];
@@ -350,7 +313,7 @@ mux_mtcstart(unsigned mtcpos)
 	 */
 	if (mux_phase >= MUX_START && mux_phase <= MUX_NEXT) {
 		if (mux_debug)
-			log_puts("mux_mtcstart: triggered stop\n");
+			logx(1, "%s: triggered stop", __func__);
 		mux_mtcstop();
 	}
 
@@ -359,7 +322,7 @@ mux_mtcstart(unsigned mtcpos)
 	 */
 	if (mux_phase == MUX_STOP) {
 		if (mux_debug)
-			log_puts("mux_mtcstart: ignored mtc start (stopped)\n");
+			logx(1, "%s: ignored mtc start (stopped)", __func__);
 		return;
 	}
 
@@ -371,7 +334,7 @@ mux_mtcstart(unsigned mtcpos)
 		mux_curpos = song_gotocb(usong, LOC_MTC, mtcpos);
 		mux_nextpos = mux_ticlength;
 		if (mux_curpos >= mux_nextpos) {
-			log_puts("mux_mtcstart: offset larger than 1 tick\n");
+			logx(1, "%s: offset larger than 1 tick", __func__);
 			panic();
 		}
 	}
@@ -380,7 +343,7 @@ mux_mtcstart(unsigned mtcpos)
 	 * generate clock start
 	 */
 	if (mux_debug)
-		log_puts("mux_mtcstart: generated clk start\n");
+		logx(1, "%s: generated clk start", __func__);
 	mux_startcb();
 }
 
@@ -419,7 +382,7 @@ mux_mtcstop(void)
 
 	if (mux_phase >= MUX_START) {
 		if (mux_debug)
-			log_puts("mux_mtcstop: generated stop\n");
+			logx(1, "%s: generated stop", __func__);
 		mux_stopcb();
 	}
 }
@@ -484,7 +447,7 @@ mux_timercb(unsigned long delta)
 		switch (mux_phase) {
 		case MUX_STARTWAIT:
 			if (!mux_manualstart) {
-				log_puts("mux_timercb: startwait: bad state\n");
+				logx(1, "%s: startwait: bad state", __func__);
 				panic();
 			}
 			break;
@@ -545,9 +508,9 @@ void
 mux_startcb(void)
 {
 	if (mux_debug)
-		log_puts("mux_startcb: got start event\n");
+		logx(1, "%s: got start event", __func__);
 	if (mux_phase != MUX_STARTWAIT) {
-		log_puts("mux_startcb: ignored MIDI start (not ready)\n");
+		logx(1, "%s: ignored MIDI start (not ready)", __func__);
 		return;
 	}
 
@@ -572,7 +535,7 @@ void
 mux_stopcb(void)
 {
 	if (mux_debug)
-		log_puts("mux_stopcb: got stop\n");
+		logx(1, "%s: got stop", __func__);
 	if (mux_phase >= MUX_START && mux_phase <= MUX_NEXT)
 		mux_sendstop();
 	mux_chgphase(mux_reqphase);
@@ -604,11 +567,8 @@ mux_evcb(unsigned unit, struct ev *ev)
 	struct mididev *dev = mididev_byunit[ev->dev];
 
 #ifdef MUX_DEBUG
-	if (mux_debug) {
-		log_puts("mux_evcb: ");
-		ev_log(ev);
-		log_puts("\n");
-	}
+	if (mux_debug)
+		logx(1, "%s: {ev:%p}", __func__, ev);
 #endif
 	if (conv_packev(&mux_istate, dev->ixctlset, dev->ievset, ev, &rev)) {
 		norm_evcb(&rev);
@@ -753,13 +713,13 @@ mux_startreq(int manualstart)
 	mux_manualstart = manualstart;
 	mux_reqphase = MUX_STARTWAIT;
 	if (mux_phase != MUX_STOP) {
-		log_puts("bad state to call mux_startreq()\n");
+		logx(1, "%s: bad state", __func__);
 		panic();
 	}
 	mux_chgphase(MUX_STARTWAIT);
 	if (!mididev_clksrc && !mididev_mtcsrc) {
 		if (mux_debug)
-			log_puts("mux_startreq: generated mtc start\n");
+			logx(1, "%s: generated mtc start", __func__);
 		mux_curpos = 0;
 		mux_nextpos = MUX_START_DELAY;
 		mux_mtcstart(0xdeadbeef);

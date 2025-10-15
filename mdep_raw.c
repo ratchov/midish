@@ -16,9 +16,11 @@
 #ifdef USE_RAW
 #include <sys/types.h>
 #include <unistd.h>
+#include <errno.h>
 #include <fcntl.h>
 #include <poll.h>
 #include <stdio.h>
+#include <string.h>
 #include "utils.h"
 #include "cons.h"
 #include "mididev.h"
@@ -88,13 +90,13 @@ raw_open(struct mididev *addr)
 	} else if (dev->mididev.mode == (MIDIDEV_MODE_IN | MIDIDEV_MODE_OUT)) {
 		mode = O_RDWR;
 	} else {
-		log_puts("raw_open: not allowed mode\n");
+		logx(1, "%s: not allowed mode", __func__);
 		panic();
 		mode = 0;
 	}
 	dev->fd = open(dev->path, mode, 0666);
 	if (dev->fd < 0) {
-		log_perror(dev->path);
+		logx(1, "%s: %s", dev->path, strerror(errno));
 		dev->mididev.eof = 1;
 		return;
 	}
@@ -119,7 +121,7 @@ raw_read(struct mididev *addr, unsigned char *buf, unsigned count)
 
 	res = read(dev->fd, buf, count);
 	if (res < 0) {
-		log_perror(dev->path);
+		logx(1, "%s: %s", dev->path, strerror(errno));
 		dev->mididev.eof = 1;
 		return 0;
 	}
@@ -134,7 +136,7 @@ raw_write(struct mididev *addr, unsigned char *buf, unsigned count)
 
 	res = write(dev->fd, buf, count);
 	if (res < 0) {
-		log_perror(dev->path);
+		logx(1, "%s: %s", dev->path, strerror(errno));
 		dev->mididev.eof = 1;
 		return 0;
 	}

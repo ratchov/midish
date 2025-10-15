@@ -109,8 +109,7 @@ mtc_setfps(struct mtc *mtc, unsigned id)
 		break;
 	default:
 		if (mtc->tps != 0) {
-			log_putu(id);
-			log_puts(": not supported MTC frame rate\n");
+			logx(1, "%s: %u: not supported MTC frame rate", __func__, id);
 		}
 		mtc->tps = 0;
 		return 0;
@@ -125,7 +124,7 @@ void
 mtc_timo(struct mtc *mtc)
 {
 	if (mididev_debug)
-		log_puts("mtc_timo: stopped\n");
+		logx(1, "%s: stopped", __func__);
 	mtc->state = MTC_STOP;
 	mux_mtcstop();
 }
@@ -143,7 +142,7 @@ mtc_tick(struct mtc *mtc, unsigned data)
 		return;
 	if (data >> 4 != mtc->qfr) {
 		if (mididev_debug)
-			log_puts("mtc sync err\n");
+			logx(1, "%s: mtc sync err (ignored)", __func__);
 		return;
 	}
 	if (mtc->state == MTC_RUN) {
@@ -172,9 +171,7 @@ mtc_tick(struct mtc *mtc, unsigned data)
 			delta += MTC_PERIOD;
 		if (delta >= MTC_PERIOD / 2)
 			delta -= MTC_PERIOD;
-		log_puts("mtc_tick: went off by ");
-		log_puti(delta);
-		log_puts(" ticks\n");
+		logx(1, "%s: went off by %d ticks", __func__, delta);
 		if (delta > 0 && delta < MTC_SEC / 6) {
 			mux_mtctick(delta);
 			mtc->pos = pos;
@@ -212,11 +209,9 @@ mtc_full(struct mtc *mtc, struct sysex *x)
 	    MTC_SEC * data[7] +
 	    mtc->tps * 4 * data[8];
 	mtc->state = MTC_START;
-	if (mididev_debug) {
-		log_puts("mtc_full: start at ");
-		log_putu(mtc->pos);
-		log_puts("\n");
-	}
+	if (mididev_debug)
+		logx(1, "%s: start at %d", __func__, mtc->pos);
+
 	mux_mtcstart(mtc->pos);
 }
 
@@ -296,20 +291,11 @@ mididev_flush(struct mididev *o)
 {
 	unsigned count, todo;
 	unsigned char *buf;
-	unsigned i;
 
 	if (!o->eof) {
 		if (mididev_debug && o->oused > 0) {
-			log_puts("mididev_flush: ");
-			log_putu(timo_abstime / 24);
-			log_puts(": dev ");
-			log_putu(o->unit);
-			log_puts(":");
-			for (i = 0; i < o->oused; i++) {
-				log_puts(" ");
-				log_putx(o->obuf[i]);
-			}
-			log_puts("\n");
+			logx(1, "%s: %u: %u: {hexdump:%p,%u}", __func__,
+			    timo_abstime / 24, o->unit, o->obuf, o->oused);
 		}
 		todo = o->oused;
 		buf = o->obuf;
@@ -334,23 +320,15 @@ void
 mididev_inputcb(struct mididev *o, unsigned char *buf, unsigned count)
 {
 	struct ev ev;
-	unsigned i, data;
+	unsigned data;
 
 	if (!(o->mode & MIDIDEV_MODE_IN)) {
-		log_puts("received data from output only device\n");
+		logx(1, "received data from output only device");
 		return;
 	}
 	if (mididev_debug) {
-		log_puts("mididev_inputcb: ");
-		log_putu(timo_abstime / 24);
-		log_puts(": dev ");
-		log_putu(o->unit);
-		log_puts(":");
-		for (i = 0; i < count; i++) {
-			log_puts(" ");
-			log_putx(buf[i]);
-		}
-		log_puts("\n");
+		logx(1, "%s: %u: %u: {hexdump:%p,%u}", __func__,
+		    timo_abstime / 24, o->unit, buf, count);
 	}
 	while (count != 0) {
 		data = *buf;
@@ -377,9 +355,7 @@ mididev_inputcb(struct mididev *o, unsigned char *buf, unsigned count)
 				break;
 			default:
 				if (mididev_debug) {
-					log_puts("mididev_inputcb: ");
-					log_putx(data);
-					log_puts(" : skipped unimplemented message\n");
+					logx(1, "%s: %02x: skipped unimplemented message", __func__, data);
 				}
 				break;
 			}
@@ -391,9 +367,7 @@ mididev_inputcb(struct mididev *o, unsigned char *buf, unsigned count)
 				 * midi spec says messages can be aborted
 				 * by status byte, so don't trigger an error
 				 */
-				log_puts("mididev_inputcb: ");
-				log_putx(o->istatus);
-				log_puts(": skipped aborted message\n");
+				logx(1, "%s: %02x: skipped aborted message", __func__, o->istatus);
 			}
 			o->istatus = data;
 			o->icount = 0;
@@ -401,7 +375,7 @@ mididev_inputcb(struct mididev *o, unsigned char *buf, unsigned count)
 			case MIDI_SYSEXSTART:
 				if (o->isysex) {
 					if (mididev_debug)
-						log_puts("mididev_inputcb: previous sysex aborted\n");
+						logx(1, "%s: previous sysex aborted", __func__);
 					sysex_del(o->isysex);
 				}
 				o->isysex = sysex_new(o->unit);
@@ -424,7 +398,7 @@ mididev_inputcb(struct mididev *o, unsigned char *buf, unsigned count)
 				 */
 				if (o->isysex) {
 					if (mididev_debug)
-						log_puts("mididev_inputcb: current sysex aborted\n");
+						logx(1, "%s: current sysex aborted", __func__);
 					sysex_del(o->isysex);
 					o->isysex = NULL;
 				}
@@ -706,7 +680,7 @@ mididev_detach(unsigned unit)
 			return 1;
 		}
 	}
-	log_puts("mididev_detach: the device is not in the list\n");
+	logx(1, "%s: the device is not in the list", __func__);
 	panic();
 	return 0;
 }

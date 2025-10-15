@@ -262,53 +262,49 @@ void
 lex_done(struct parse *l)
 {
 	if (l->lstate != LEX_ANY)
-		log_puts("lex_done: unterminated token\n");
+		logx(1, "%s: unterminated token", __func__);
+}
+
+size_t
+lex_tokfmt(char *buf, size_t bufsz, unsigned id, unsigned long val)
+{
+	unsigned i;
+
+	if (id == TOK_ENDLINE)
+		return snprintf(buf, bufsz, "\\n");
+
+
+	for (i = 0; i < LEX_NKW; i++) {
+		if (lex_kw[i].id == id)
+			return snprintf(buf, bufsz, "%s", lex_kw[i].str);
+	}
+	for (i = 0; i < LEX_NOP; i++) {
+		if (lex_op[i].id == id)
+			return snprintf(buf, bufsz, "%s", lex_op[i].str);
+	}
+	switch (id) {
+	case TOK_EOF:
+		return snprintf(buf, bufsz, "EOF");
+	case TOK_ERR:
+		return snprintf(buf, bufsz, "ERR");
+	case TOK_IDENT:
+		return snprintf(buf, bufsz, "@%s", (char *)val);
+	case TOK_NUM:
+		return snprintf(buf, bufsz, "@%lu", val);
+	case TOK_STRING:
+		return snprintf(buf, bufsz, "\"%s\"", (char *)val);
+	default:
+		return snprintf(buf, bufsz, "UNK");
+	}
 }
 
 void
 lex_toklog(unsigned id, unsigned long val)
 {
-	unsigned i;
+	char buf[64];
 
-	if (id == TOK_ENDLINE) {
-		log_puts("\\n");
-		return;
-	}
-	for (i = 0; i < LEX_NKW; i++) {
-		if (lex_kw[i].id == id) {
-			log_puts(lex_kw[i].str);
-			return;
-		}
-	}
-	for (i = 0; i < LEX_NOP; i++) {
-		if (lex_op[i].id == id) {
-			log_puts(lex_op[i].str);
-			return;
-		}
-	}
-	switch (id) {
-	case TOK_EOF:
-		log_puts("EOF");
-		break;
-	case TOK_ERR:
-		log_puts("ERR");
-		break;
-	case TOK_IDENT:
-		log_puts("@");
-		log_puts((char *)val);
-		break;
-	case TOK_NUM:
-		log_putu(val);
-		break;
-	case TOK_STRING:
-		log_puts("\"");
-		log_puts((char *)val);
-		log_puts("\"");
-		break;
-	default:
-		log_puts("UNKNOWN");
-		break;
-	}
+	lex_tokfmt(buf, sizeof(buf), id, val);
+	logx(1, "%s", buf);
 }
 
 void
@@ -527,7 +523,7 @@ lex_handle(struct parse *l, int c)
 			}
 			break;
 		default:
-			log_puts("lex_handle: bad state\n");
+			logx(1, "%s: bad state", __func__);
 			panic();
 		}
 	}
@@ -566,9 +562,9 @@ void
 parse_done(struct parse *p)
 {
 	if (p->sp->pstate != PARSE_PROG)
-		log_puts("parse_done: unterminated rule\n");
+		logx(1, "%s: unterminated rule", __func__);
 	if (p->sp - p->stack > 0)
-		log_puts("parse_done: stack not empty\n");
+		logx(1, "%s: stack not empty", __func__);
 }
 
 /*
@@ -619,6 +615,21 @@ parse_found(struct parse *p)
 	p->root = NULL;
 }
 
+void
+parse_log(struct parse *p)
+{
+	char istr[PARSE_STACKLEN * 2 + 1], *ip = istr;
+	struct pst *sp;
+
+	for (sp = p->stack; sp != p->sp; sp++) {
+		*ip++ = '.';
+		*ip++ = ' ';
+	}
+	*ip++ = 0;
+
+	logx(1, "%s%s", istr, parse_pstates[sp->pstate]);
+}
+
 /*
  * process the given token
  */
@@ -632,16 +643,12 @@ parse_cb(void *arg, unsigned id, unsigned long val)
 
 	if (parse_debug) {
 		lex_toklog(id, val);
-		log_puts("\n");
 	}
 
 	for (;;) {
-		if (parse_debug) {
-			for (sp = p->stack; sp != p->sp; sp++)
-				log_puts(".  ");
-			log_puts(parse_pstates[sp->pstate]);
-			log_puts("\n");
-		}
+		if (parse_debug)
+			parse_log(p);
+
 		if (id == TOK_ERR) {
 			parse_err(p, NULL);
 			id = 0;
@@ -1231,7 +1238,7 @@ parse_cb(void *arg, unsigned id, unsigned long val)
 			id = 0;
 			break;
 		default:
-			log_puts("parse_handle: bad state\n");
+			logx(1, "%s: bad state", __func__);
 			panic();
 		}
 	}

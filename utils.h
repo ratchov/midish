@@ -19,17 +19,18 @@
 
 #include <stddef.h>
 
+#define logx(n, ...)						\
+	do {							\
+		if (log_level >= (n))				\
+			log_do(__VA_ARGS__);			\
+	} while (0)
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 void log_putc(char *, size_t);
-void log_puts(char *);
-void log_putx(unsigned long);
-void log_putu(unsigned long);
-void log_puti(long);
-void log_perror(char *);
-void log_putp(void *);
+void log_do(const char *, ...) __attribute__((__format__ (printf, 1, 2)));
 void panic(void);
 void log_flush(void);
 
@@ -40,6 +41,17 @@ void xfree(void *);
 #ifdef __cplusplus
 }
 #endif
+
+/*
+ * Log levels:
+ *
+ * 0 - fatal errors: bugs, asserts, internal errors.
+ * 1 - warnings: bugs in clients, failed allocations, non-fatal errors.
+ * 2 - misc information (hardware parameters, incoming clients)
+ * 3 - structural changes (eg. new streams, new parameters ...)
+ * 4 - data blocks and messages
+ */
+extern int log_level;
 
 extern unsigned log_sync;
 

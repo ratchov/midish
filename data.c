@@ -28,7 +28,7 @@
  *	- an user type 'void *addr' pointer
  *	- a list of values
  */
-
+#include <stdio.h>
 #include "utils.h"
 #include "str.h"
 #include "cons.h"
@@ -183,7 +183,7 @@ data_listremove(struct data *o, struct data *v)
 		}
 		i = &(*i)->next;
 	}
-	log_puts("data_listremove: not found\n");
+	logx(1, "%s: not found", __func__);
 	panic();
 }
 
@@ -213,7 +213,7 @@ data_clear(struct data *o)
 	case DATA_RANGE:
 		break;
 	default:
-		log_puts("data_clear: unknown type\n");
+		logx(1, "%s: unknown type", __func__);
 		panic();
 		break;
 	}
@@ -227,48 +227,36 @@ data_delete(struct data *o)
 	xfree(o);
 }
 
-void
-data_log(struct data *o)
+size_t
+data_fmt(char *buf, size_t bufsz, struct data *o)
 {
+	char *p = buf, *end = buf + bufsz;
 	struct data *i;
 
 	switch(o->type) {
 	case DATA_NIL:
-		log_puts("(nil)");
-		break;
+		return snprintf(buf, bufsz, "(nil)");
 	case DATA_USER:
-		log_puts("(user)");
-		break;
+		return snprintf(buf, bufsz, "(user)");
 	case DATA_LONG:
-		log_puti(o->val.num);
-		break;
+		return snprintf(buf, bufsz, "%ld", o->val.num);
 	case DATA_STRING:
-		log_puts("\"");
-		log_puts(o->val.str);
-		log_puts("\"");
-		break;
+		return snprintf(buf, bufsz, "\"%s\"", o->val.str);
 	case DATA_REF:
-		log_puts("@");
-		str_log(o->val.ref);
-		break;
+		return snprintf(buf, bufsz, "@%s", o->val.ref ? o->val.ref : "null");
 	case DATA_LIST:
-		log_puts("{");
+		p += snprintf(p, p < end ? end - p : 0, "{");
 		for (i = o->val.list; i != NULL; i = i->next) {
-			data_log(i);
-			if (i->next) {
-				log_puts(" ");
-			}
+			p += data_fmt(p, p < end ? end - p : 0, i);
+			if (i->next)
+				p += snprintf(p, p < end ? end - p : 0, " ");
 		}
-		log_puts("}");
-		break;
+		p += snprintf(p, p < end ? end - p : 0, "}");
+		return p - buf;
 	case DATA_RANGE:
-		log_puti(o->val.range.min);
-		log_puts(":");
-		log_puti(o->val.range.max);
-		break;
+		return snprintf(buf, bufsz, "%ld:%ld", o->val.range.min, o->val.range.max);
 	default:
-		log_puts("(unknown type)");
-		break;
+		return snprintf(buf, bufsz, "(unknown type)");
 	}
 }
 
@@ -280,7 +268,7 @@ data_assign(struct data *dst, struct data *src)
 {
 	struct data *n, *i, **j;
 	if (dst == src) {
-		log_puts("data_assign: src and dst are the same\n");
+		logx(1, "%s: src and dst are the same", __func__);
 		panic();
 	}
 	data_clear(dst);
@@ -317,11 +305,10 @@ data_assign(struct data *dst, struct data *src)
 		dst->val.range.max = src->val.range.max;
 		break;
 	default:
-		log_puts("data_assign: bad data type\n");
+		logx(1, "%s: bad data type", __func__);
 		panic();
 	}
 }
-
 
 /*
  * return 1 if op1 et op2 are identical, 0 overwise
@@ -361,7 +348,7 @@ data_id(struct data *op1, struct data *op2)
 		    op1->val.range.max == op2->val.range.max;
 		break;
 	default:
-		log_puts("data_id: bad data types\n");
+		logx(1, "%s: bad data types", __func__);
 		panic();
 	}
 	/* not reached */
@@ -392,7 +379,7 @@ data_eval(struct data *o)
 	case DATA_RANGE:
 		return 1;
 	default:
-		log_puts("data_eval: bad data type\n");
+		logx(1, "%s: bad data type", __func__);
 		panic();
 	}
 	/* not reached */

@@ -220,7 +220,7 @@ smf_put32(struct smf *o, unsigned *used, unsigned val)
 		(*used) += 4;
 	} else {
 		if (o->index + 4 > o->length) {
-			log_puts("smf_put32: bad chunk length\n");
+			logx(1, "%s: bad chunk length", __func__);
 			panic();
 		}
 		buf[0] = (val >> 24) & 0xff;
@@ -243,7 +243,7 @@ smf_put24(struct smf *o, unsigned *used, unsigned val)
 		(*used) += 3;
 	} else {
 		if (o->index + 3 > o->length) {
-			log_puts("smf_put24: bad chunk length\n");
+			logx(1, "%s: bad chunk length", __func__);
 			panic();
 		}
 		buf[0] = (val >> 16) & 0xff;
@@ -265,7 +265,7 @@ smf_put16(struct smf *o, unsigned *used, unsigned val)
 		(*used) += 2;
 	} else {
 		if (o->index + 2 > o->length) {
-			log_puts("smf_put16: bad chunk length\n");
+			logx(1, "%s: bad chunk length", __func__);
 			panic();
 		}
 		buf[0] = (val >> 8) & 0xff;
@@ -286,7 +286,7 @@ smf_putc(struct smf *o, unsigned *used, unsigned val)
 		(*used) ++;
 	} else {
 		if (o->index + 1 > o->length) {
-			log_puts("smf_putc: bad chunk length\n");
+			logx(1, "%s: bad chunk length", __func__);
 			panic();
 		}
 		fputc((int)val & 0xff, o->file);
@@ -315,7 +315,7 @@ smf_putvar(struct smf *o, unsigned *used, unsigned val)
 				(*used) += index;
 			} else {
 				if (o->index + index > o->length) {
-					log_puts("smf_putvar: bad chunk length\n");
+					logx(1, "%s: bad chunk length", __func__);
 					panic();
 				}
 				o->index += index;
@@ -324,7 +324,7 @@ smf_putvar(struct smf *o, unsigned *used, unsigned val)
 			return;
 		}
 	}
-	log_puts("smf_putvar: bogus value\n");
+	logx(1, "%s: bogus value", __func__);
 	panic();
 #undef MAXBYTES
 }
@@ -412,7 +412,7 @@ smf_puttrack(struct smf *o, unsigned *used, struct song *s, struct track *t)
 				denom = 4;
 				break;
 			default:
-				log_puts("smf_puttrack: bad time signature\n");
+				logx(1, "%s: bad time signature", __func__);
 				panic();
 			}
 			smf_putvar(o, used, delta);
@@ -655,18 +655,9 @@ smf_gettrack(struct smf *o, struct song *s, struct songtrk *t)
 				if (!smf_getc(o, &dummy)) {
 					goto err;
 				}
-				/*
-				log_puts("cc=");
-				log_putu(dummy);
-				log_puts(", dd=");
-				*/
 				if (!smf_getc(o, &dummy)) {
 					goto err;
 				}
-				/*
-				log_putu(dummy);
-				log_puts("\n");
-				*/
 				goto putev;
 			} else {
 			ignoremeta:
@@ -701,10 +692,6 @@ smf_gettrack(struct smf *o, struct song *s, struct songtrk *t)
 				sysexlist_put(&songsx->sx, sx);
 			} else {
 				cons_err("corrupted sysex message, ignored");
-				/*
-				sysex_log(sx);
-				log_puts("\n");
-				*/
 				sysex_del(sx);
 			}
 		} else if (c >= 0x80 && c < 0xf0) {

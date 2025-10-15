@@ -217,7 +217,7 @@ void
 seqptr_link(struct seqptr *sp1, struct seqptr *sp2)
 {
 	if (sp1->link != NULL || sp2->link != NULL) {
-		log_puts("seqptr structures already linked\n");
+		logx(1, "%s: seqptr structures already linked", __func__);
 		panic();
 	}
 	sp1->link = sp2;
@@ -429,11 +429,11 @@ seqptr_framerm(struct seqptr *sp, struct track *f)
 	unsigned save_delta, sdelta, phase;
 
 	if (sp->delta != sp->pos->delta) {
-		log_puts("seqptr_framerm: not called at event position\n");
+		logx(1, "%s: not called at event position", __func__);
 		panic();
 	}
 	if (sp->pos->ev.cmd == EV_NULL) {
-		log_puts("seqptr_framerm: no event to remove\n");
+		logx(1, "%s: no event to remove", __func__);
 		panic();
 	}
 
@@ -468,7 +468,7 @@ seqptr_framerm(struct seqptr *sp, struct track *f)
 			/*
 			 * XXX: this can't happen, call panic() here ?
 			 */
-			log_puts("seqptr_framerm: unterminated frame\n");
+			logx(1, "%s: unterminated frame", __func__);
 			track_clear(f);
 			return;
 		}
@@ -627,9 +627,7 @@ seqptr_rmlast(struct seqptr *sp, struct state **pst)
 	struct seqev *i, *prev, *cur, *next;
 
 #ifdef FRAME_DEBUG
-	log_puts("seqptr_rmlast: ");
-	ev_log(&st->ev);
-	log_puts(" removing last event\n");
+	logx(1, "%s: {ev:%p}: removing last event", __func__, &st->ev);
 #endif
 	/*
 	 * start a the first event of the frame and iterate until the
@@ -688,9 +686,7 @@ seqptr_rmprev(struct seqptr *sp, struct state **pst)
 	struct seqev *i, *next;
 
 #ifdef FRAME_DEBUG
-	log_puts("seqptr_rmprev: ");
-	ev_log(&st->ev);
-	log_puts(" removing whole frame\n");
+	logx(1, "%s: {ev:%p}: removing whole frame", __func__, &st->ev);
 #endif
 	/*
 	 * start a the first event of the frame and iterate until the
@@ -807,9 +803,7 @@ seqptr_evmerge2(struct seqptr *pd, struct statelist *slist1, struct ev *ev2,
 		 * frame
 		 */
 		if (!(phase2 & EV_PHASE_FIRST)) {
-			log_puts("seqptr_evmerge2: ");
-			ev_log(ev2);
-			log_puts(": missing state\n");
+			logx(1, "%s: {ev:%p}: missing state", __func__, ev2);
 			panic();
 		}
 	}
@@ -1149,7 +1143,7 @@ track_quantize(struct track *src, struct evspec *es,
 		delta = tic + ofs - qtic;
 #ifdef FRAME_DEBUG
 		if (delta < 0) {
-			log_puts("track_quantize: delta < 0\n");
+			logx(1, "%s: delta < 0", __func__);
 			panic();
 		}
 #endif
@@ -1197,11 +1191,8 @@ track_quantize(struct track *src, struct evspec *es,
 	seqptr_del(qp);
 	track_done(&qt);
 	if (notes > 0) {
-		log_puts("quantize: ");
-		log_putu(notes);
-		log_puts(" notes, fluctuation = ");
-		log_putu(100 * fluct / notes);
-		log_puts("% of a tick\n");
+		logx(1, "quantize: %d notes, fluctuation = %d%% of a tick",
+		    notes, 100 * fluct / notes);
 	}
 }
 
@@ -1260,7 +1251,7 @@ track_quantize_frame(struct track *src, struct evspec *es,
 		delta = tic + ofs - qtic;
 #ifdef FRAME_DEBUG
 		if (delta < 0) {
-			log_puts("track_quantize_frame: delta < 0\n");
+			logx(1, "%s: delta < 0", __func__);
 			panic();
 		}
 #endif
@@ -1279,8 +1270,8 @@ track_quantize_frame(struct track *src, struct evspec *es,
 			 */
 #ifdef FRAME_DEBUG
 			if (sp->pos->ev.cmd != EV_NULL) {
-				ev_log(&sp->pos->ev);
-				log_puts(": skipped (not ours)\n");
+				logx(1, "%s: {ev:%p}: skipped (not ours)",
+				    __func__, &sp->pos->ev);
 			}
 #endif
 			seqptr_evget(sp);
@@ -1295,8 +1286,8 @@ track_quantize_frame(struct track *src, struct evspec *es,
 			 */
 #ifdef FRAME_DEBUG
 			if (sp->pos->ev.cmd != EV_NULL) {
-				ev_log(&sp->pos->ev);
-				log_puts(": skipped (conflict)\n");
+				logx(1, "%s: {ev:%p}: skipped (conflict)",
+				    __func__, &sp->pos->ev);
 			}
 #endif
 			seqptr_evget(sp);
@@ -1331,11 +1322,8 @@ track_quantize_frame(struct track *src, struct evspec *es,
 	track_done(&qt);
 
 	if (notes > 0) {
-		log_puts("quantize: ");
-		log_putu(notes);
-		log_puts(" notes, fluctuation = ");
-		log_putu(100 * fluct / notes);
-		log_puts("% of a tick\n");
+		logx(1, "quantize: %d notes, fluctuation = %d%% of a tick",
+		    notes, 100 * fluct / notes);
 	}
 }
 
@@ -1619,14 +1607,10 @@ track_check(struct track *src)
 		}
 		if (st->phase & EV_PHASE_FIRST) {
 			if (st->flags & STATE_BOGUS) {
-				log_puts("track_check: ");
-				ev_log(&st->ev);
-				log_puts(": bogus\n");
+				logx(1, "%s: {ev:%p}: bogus", __func__, &st->ev);
 				st->tag = 0;
 			} else if (st->flags & STATE_NESTED) {
-				log_puts("track_check: ");
-				ev_log(&st->ev);
-				log_puts(": nested\n");
+				logx(1, "%s: {ev:%p}: nested", __func__, &st->ev);
 				st->tag = 0;
 			} else {
 				st->tag = 1;
@@ -1640,9 +1624,7 @@ track_check(struct track *src)
 			if (dst == NULL || !state_eq(dst, &st->ev)) {
 				seqptr_evput(sp, &st->ev);
 			} else {
-				log_puts("track_check: ");
-				ev_log(&st->ev);
-				log_puts(": duplicated\n");
+				logx(1, "%s: {ev:%p}: duplicated", __func__, &st->ev);
 			}
 		}
 	}
@@ -1653,9 +1635,7 @@ track_check(struct track *src)
 	for (st = sp->statelist.first; st != NULL; st = stnext) {
 		stnext = st->next;
 		if (!(st->phase & EV_PHASE_LAST)) {
-			log_puts("track_check: ");
-			ev_log(&st->ev);
-			log_puts(": unterminated\n");
+			logx(1, "%s: {ev:%p}: unterminated", __func__, &st->ev);
 			seqptr_rmprev(sp, &st);
 		}
 	}
@@ -1744,11 +1724,7 @@ track_findmeasure(struct track *t, unsigned m)
 	seqptr_del(sp);
 
 #ifdef FRAME_DEBUG
-	log_puts("track_findmeasure: ");
-	log_putu(m);
-	log_puts(" -> ");
-	log_putu(tic);
-	log_puts("\n");
+	logx(1, "%s: %u -> %u", __func__, m, tic);
 #endif
 
 	return tic;
@@ -1862,10 +1838,7 @@ track_confev(struct track *src, struct ev *ev)
 	struct state *st;
 
 	if (ev_phase(ev) != (EV_PHASE_FIRST | EV_PHASE_LAST)) {
-		log_puts("track_confev: ");
-		ev_log(ev);
-		log_puts(": bad phase, ignored");
-		log_puts("\n");
+		logx(1, "%s: {ev:%p}: bad phase, ignored", __func__, ev);
 		return;
 	}
 

@@ -28,7 +28,7 @@
  * list of argument names and 'code' is the tree containing the
  * instructions of the procedure
  */
-
+#include <stdio.h>
 #include "utils.h"
 #include "exec.h"
 #include "data.h"
@@ -65,20 +65,6 @@ var_delete(struct name **list, struct var *o)
 	}
 	name_done(&o->name);
 	xfree(o);
-}
-
-/*
- * print "name = value" on stderr
- */
-void
-var_log(struct var *o)
-{
-	str_log(o->name.str);
-	log_puts(" = ");
-	if (o->data != NULL)
-		data_log(o->data);
-	else
-		log_puts("<null>");
 }
 
 /*
@@ -134,32 +120,6 @@ proc_empty(struct name **first)
 }
 
 /*
- * dump a procedure on stderr in the following format:
- * 	name (arg1, arg2, ...)
- *	code_tree
- */
-void
-proc_log(struct proc *o)
-{
-	struct name *i;
-	str_log(o->name.str);
-	log_puts("(");
-	if (o->args) {
-		i = o->args;
-		for (;;) {
-			log_puts(i->str);
-			i = i->next;
-			if (!i) {
-				break;
-			}
-			log_puts(", ");
-		}
-	}
-	log_puts(")\n");
-	node_log(o->code, 0);
-}
-
-/*
  * create a new empty execution environment
  */
 struct exec *
@@ -184,7 +144,7 @@ void
 exec_delete(struct exec *o)
 {
 	if (o->depth != 0) {
-		log_puts("exec_done: depth != 0\n");
+		logx(1, "%s: depth != 0", __func__);
 		panic();
 	}
 	var_empty(&o->globals);
@@ -257,19 +217,20 @@ exec_newvar(struct exec *o, char *name, struct data *val)
 void
 exec_dumpprocs(struct exec *o)
 {
-	struct proc *p;
+	char buf[128], *end = buf + sizeof(buf), *p;
+	struct proc *proc;
 	struct name *n;
 
-	PROC_FOREACH(p, o->procs) {
-		log_puts(p->name.str);
-		log_puts("(");
-		for (n = p->args; n != NULL; n = n->next) {
-			log_puts(n->str);
-			if (n->next) {
-				log_puts(", ");
-			}
+	PROC_FOREACH(proc, o->procs) {
+		p = buf;
+		p += snprintf(buf, sizeof(buf), "%s(", proc->name.str);
+		for (n = proc->args; n != NULL; n = n->next) {
+			p += snprintf(p, p < end ? end - p : 0, "%s", n->str);
+			if (n->next)
+				p += snprintf(p, p < end ? end - p : 0, ", ");
 		}
-		log_puts(")\n");
+		p += snprintf(p, p < end ? end - p : 0, ")");
+		logx(1, "%s", buf);
 	}
 }
 
@@ -283,12 +244,9 @@ void
 exec_dumpvars(struct exec *o)
 {
 	struct var *v;
-	VAR_FOREACH(v, o->globals) {
-		log_puts(v->name.str);
-		log_puts(" = ");
-		data_log(v->data);
-		log_puts("\n");
-	}
+
+	VAR_FOREACH(v, o->globals)
+		logx(1, "%s = {data:%p}", v->name.str, v->data);
 }
 
 /*

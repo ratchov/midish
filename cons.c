@@ -65,65 +65,38 @@ cons_ready(void)
 	}
 }
 
-/*
- * follows routines that report user non-fatal errors please use them
- * instead of log_xxx (the latter are only for debugging)
- */
-
 void
 cons_err(char *mesg)
 {
-	log_puts(mesg);
-	log_puts("\n");
+	logx(1, "%s", mesg);
 }
 
 void
 cons_errs(char *s, char *mesg)
 {
-	log_puts(s);
-	log_puts(": ");
-	log_puts(mesg);
-	log_puts("\n");
+	logx(1, "%s: %s", s, mesg);
 }
 
 void
 cons_erru(unsigned long u, char *mesg)
 {
-	log_putu(u);
-	log_puts(": ");
-	log_puts(mesg);
-	log_puts("\n");
+	logx(1, "%lu: %s", u, mesg);
 }
 
 void
 cons_errss(char *s0, char *s1, char *mesg)
 {
-	log_puts(s0);
-	log_puts(": ");
-	log_puts(s1);
-	log_puts(": ");
-	log_puts(mesg);
-	log_puts("\n");
+	logx(1, "%s: %s: %s", s0, s1, mesg);
 }
 
 void
 cons_errsu(char *s, unsigned long u, char *mesg)
 {
-	log_puts(s);
-	log_puts(": ");
-	log_putu(u);
-	log_puts(": ");
-	log_puts(mesg);
-	log_puts("\n");
+	logx(1, "%s: %lu: %s", s, u, mesg);
 }
 
 void
 cons_erruu(unsigned long u0, unsigned long u1, char *mesg)
 {
-	log_putu(u0);
-	log_puts(": ");
-	log_putu(u1);
-	log_puts(": ");
-	log_puts(mesg);
-	log_puts("\n");
+	logx(1, "%lu: %lu: %s", u0, u1, mesg);
 }

@@ -18,7 +18,7 @@
  * this module implements the tree containing interpreter code. Each
  * node of the tree represents one instruction.
  */
-
+#include <stdio.h>
 #include "utils.h"
 #include "str.h"
 #include "data.h"
@@ -57,26 +57,35 @@ node_delete(struct node *o)
 	xfree(o);
 }
 
+size_t
+node_fmt(char *buf, size_t bufsz, struct node *o)
+{
+	char *p = buf, *end = buf + bufsz;
+
+	if (o == NULL)
+		return snprintf(buf, bufsz, "<EMPTY>");
+
+	p += snprintf(buf, sizeof(buf), "%s", o->vmt->name);
+	if (o->data) {
+		p += snprintf(p, p < end ? end - p : 0, "(");
+		p += data_fmt(p, p < end ? end - p : 0, o->data);
+		p += snprintf(p, p < end ? end - p : 0, ")");
+	}
+	return p - buf;
+}
+
 void
 node_log(struct node *o, unsigned depth)
 {
+	char nodestr[128];
 #define NODE_MAXDEPTH 30
 	static char str[2 * NODE_MAXDEPTH + 1] = "";
 	struct node *i;
 
-	log_puts(str);
-	log_puts(o != NULL && o->next != NULL ? "+-" : "\\-");
-	if (o == NULL) {
-		log_puts("<EMPTY>\n");
-		return;
-	}
-	log_puts(o->vmt->name);
-	if (o->data) {
-		log_puts("(");
-		data_log(o->data);
-		log_puts(")");
-	}
-	log_puts(depth >= NODE_MAXDEPTH && o->list ? "[...]\n" : "\n");
+	node_fmt(nodestr, sizeof(nodestr), o);
+
+	logx(1, "%s%s<%s>", str, (o != NULL && o->next != NULL) ? "+-" : "\\-", nodestr);
+
 	if (depth < NODE_MAXDEPTH) {
 		str[2 * depth] = o->next ? '|' : ' ';
 		str[2 * depth + 1] = ' ';
@@ -89,7 +98,6 @@ node_log(struct node *o, unsigned depth)
 #undef NODE_MAXDEPTH
 }
 
-
 void
 node_insert(struct node **n, struct node *e)
 {
@@ -101,7 +109,7 @@ void
 node_replace(struct node **n, struct node *e)
 {
 	if (e->list != NULL) {
-		log_puts("node_replace: e->list != NULL\n");
+		logx(1, "%s: e->list != NULL", __func__);
 		panic();
 	}
 	e->list = *n;

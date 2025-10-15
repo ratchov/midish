@@ -84,9 +84,7 @@ sndio_open(struct mididev *addr)
 		mode |= MIO_IN;
 	dev->hdl = mio_open(dev->path, mode, 0);
 	if (dev->hdl == NULL) {
-		log_puts("sndio_open: ");
-		log_puts(dev->path);
-		log_puts(": failed to open device\n");
+		logx(1, "%s: failed to open device", dev->path);
 		dev->mididev.eof = 1;
 		return;
 	}
@@ -111,9 +109,7 @@ sndio_read(struct mididev *addr, unsigned char *buf, unsigned count)
 
 	res = mio_read(dev->hdl, buf, count);
 	if (res == 0 && mio_eof(dev->hdl)) {
-		log_puts("sndio_read: ");
-		log_puts(dev->path);
-		log_puts(": read failed\n");
+		logx(1, "%s: read failed", dev->path);
 		dev->mididev.eof = 1;
 		return 0;
 	}
@@ -128,9 +124,7 @@ sndio_write(struct mididev *addr, unsigned char *buf, unsigned count)
 
 	res = mio_write(dev->hdl, buf, count);
 	if (res < count) {
-		log_puts("sndio_write: ");
-		log_puts(dev->path);
-		log_puts(": short write\n");
+		logx(1, "%s: short write", dev->path);
 		dev->mididev.eof = 1;
 		return 0;
 	}

@@ -51,11 +51,11 @@ exec_cb(struct exec *e, struct node *root)
 	struct data *data;
 
 	if (root == NULL) {
-		log_puts("syntax error\n");
+		logx(1, "syntax error");
 		return;
 	}
 	if (e->result == RESULT_EXIT) {
-		log_puts("exitting, skiped\n");
+		logx(1, "exitting, skiped");
 		return;
 	}
 	e->result = node_exec(root, e, &data);
@@ -137,7 +137,7 @@ exec_lookupchan_getnum(struct exec *o, char *var,
 
 	arg = exec_varlookup(o, var);
 	if (!arg) {
-		log_puts("exec_lookupchan_getnum: no such var\n");
+		logx(1, "%s: %s: no such var", __func__, var);
 		panic();
 	}
 	if (!data_getchan(arg->data, dev, ch, input)) {
@@ -159,7 +159,7 @@ exec_lookupchan_getref(struct exec *o, char *var,
 
 	arg = exec_varlookup(o, var);
 	if (!arg) {
-		log_puts("exec_lookupchan: no such var\n");
+		logx(1, "%s: %s: no such var", __func__, var);
 		panic();
 	}
 	if (arg->data->type == DATA_REF) {
@@ -246,7 +246,7 @@ exec_lookupev(struct exec *o, char *name, struct ev *ev, int input)
 
 	arg = exec_varlookup(o, name);
 	if (!arg) {
-		log_puts("exec_lookupev: no such var\n");
+		logx(1, "%s: %s: no such var", __func__, name);
 		panic();
 	}
 	d = arg->data;
@@ -351,7 +351,7 @@ exec_lookupevspec(struct exec *o, char *name, struct evspec *e, int input)
 
 	arg = exec_varlookup(o, name);
 	if (!arg) {
-		log_puts("exec_lookupev: no such var\n");
+		logx(1, "%s: %s: no such var", __func__, name);
 		panic();
 	}
 	d = arg->data;
@@ -498,9 +498,7 @@ exec_lookupevspec(struct exec *o, char *name, struct evspec *e, int input)
 	}
 
 #if 0
-	log_puts("lookupevspec: ");
-	evspec_log(e);
-	log_puts("\n");
+	logx(1, "%s: {evspec:%p}", __func__, e);
 #endif
 
 	return 1;
@@ -522,7 +520,7 @@ exec_lookupctl(struct exec *o, char *var, unsigned *num)
 
 	arg = exec_varlookup(o, var);
 	if (!arg) {
-		log_puts("exec_lookupctl: no such var\n");
+		logx(1, "%s: %s: no such var", __func__, var);
 		panic();
 	}
 	return data_getctl(arg->data, num);
@@ -572,7 +570,7 @@ data_print(struct data *d)
 		textout_putlong(tout, d->val.range.max);
 		break;
 	default:
-		log_puts("data_print: unknown type\n");
+		logx(1, "%s: unknown type", __func__);
 		break;
 	}
 }
@@ -588,7 +586,7 @@ exec_lookupval(struct exec *o, char *n, unsigned isfine, unsigned *r)
 
 	arg = exec_varlookup(o, n);
 	if (!arg) {
-		log_puts("exec_lookupval: no such var\n");
+		logx(1, "%s: no such var", __func__);
 		panic();
 	}
 	if (arg->data->type == DATA_NIL) {

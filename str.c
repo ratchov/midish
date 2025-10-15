@@ -36,7 +36,7 @@ str_new(char *val)
 	char *s, *buf;
 
 	if (val == NULL) {
-		log_puts("str_new: NULL pointer argument\n");
+		logx(1, "%s: NULL pointer argument", __func__);
 		panic();
 	}
 	cnt = str_len(val) + 1;
@@ -55,24 +55,10 @@ void
 str_delete(char *s)
 {
 	if (s == NULL) {
-		log_puts("str_delete: NULL pointer argument\n");
+		logx(1, "%s: NULL pointer argument", __func__);
 		panic();
 	}
 	xfree(s);
-}
-
-/*
- * print the string to stderr; can be safely used even if the string
- * is NULL
- */
-void
-str_log(char *s)
-{
-	if (s == NULL) {
-		log_puts("<nullstring>");
-	} else {
-		log_puts(s);
-	}
 }
 
 /*
@@ -84,7 +70,7 @@ str_eq(char *s1, char *s2)
 {
 
 	if (s1 == NULL || s2 == NULL) {
-		log_puts("std_id: NULL pointer argument\n");
+		logx(1, "%s: NULL pointer argument", __func__);
 		panic();
 	}
 	for (;;) {

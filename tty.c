@@ -315,7 +315,7 @@ el_replace(size_t start, size_t end, char *text, size_t textsize)
 	int i, off;
 
 	if (el_used - (end - start) + textsize > EL_LINEMAX) {
-		log_puts("text to paste too long (ignored)\n");
+		logx(1, "text to paste too long (ignored)");
 		return;
 	}
 
@@ -421,8 +421,7 @@ el_compladd(char *s)
 	for (l = el_compl.head; l != NULL; l = l->next) {
 		cmp = strcmp(l->text, s);
 		if (cmp == 0) {
-			log_puts(s);
-			log_puts(": duplicate completion item\n");
+			logx(1, "%s: duplicate completion item", s);
 			panic();
 		}
 		if (cmp > 0)
@@ -822,7 +821,7 @@ tty_init(void)
 	if (!isatty(STDIN_FILENO) || !isatty(STDOUT_FILENO))
 		return 0;
 	if (tcgetattr(STDIN_FILENO, &tty_tattr) < 0) {
-		log_perror("can't get tty attributes: tcgetattr");
+		logx(1, "can't get tty attributes: tcgetattr: %s", strerror(errno));
 		return 0;
 	}
 	tty_ops = NULL;
@@ -838,7 +837,7 @@ tty_done(void)
 		tty_tclear();
 		tty_tflush();
 		if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &tty_tattr) < 0)
-			log_perror("can't flush tty: tcsetattr");
+			logx(1, "can't flush tty: tcsetattr: %s", strerror(errno));
 		tty_initialized = 0;
 	}
 }
@@ -1081,7 +1080,7 @@ tty_winch(void)
 		if (tty_twidth <= 0)
 			tty_twidth = 80;
 	} else {
-		log_perror("TIOCGWINSZ");
+		logx(1, "TIOCGWINSZ: %s", strerror(errno));
 		tty_twidth = 80;
 	}
 	tty_ops->resize(tty_arg, tty_twidth);
@@ -1107,7 +1106,7 @@ tty_reset(void)
 	tio.c_cc[VMIN] = 1;
 	tio.c_cc[VTIME] = 0;
 	if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &tio) < 0)
-		log_perror("tcsetattr");
+		logx(1, "tcsetattr: %s", strerror(errno));
 	tty_winch();
 }
 
@@ -1119,7 +1118,7 @@ tty_tflush(void)
 	if (tty_oused > 0) {
 		n = write(STDOUT_FILENO, tty_obuf, tty_oused);
 		if (n < 0) {
-			log_perror("stdout");
+			logx(1, "stdout: %s", strerror(errno));
 			return;
 		}
 		tty_oused = 0;
@@ -1222,7 +1221,7 @@ tty_revents(struct pollfd *pfds)
 	if (pfds[0].revents & POLLIN) {
 		n = read(STDIN_FILENO, buf, sizeof(buf));
 		if (n < 0) {
-			log_perror("stdin");
+			logx(1, "stdin: %s", strerror(errno));
 			tty_ops->onkey(tty_arg, 0);
 			return POLLHUP;
 		}

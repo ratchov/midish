@@ -31,6 +31,7 @@
  *
  */
 
+#include <stdio.h>
 #include "utils.h"
 #include "pool.h"
 #include "state.h"
@@ -63,34 +64,35 @@ state_del(struct state *s)
 	pool_del(&state_pool, s);
 }
 
-/*
- * dump the state to stderr
- */
-void
-state_log(struct state *s)
+size_t
+state_fmt(char *buf, size_t bufsz, struct state *s)
 {
-	ev_log(&s->ev);
-	if (s->flags & STATE_NEW) {
-		log_puts(" NEW");
-	}
-	if (s->flags & STATE_CHANGED) {
-		log_puts(" CHANGED");
-	}
-	if (s->flags & STATE_BOGUS) {
-		log_puts(" BOGUS");
-	}
-	if (s->flags & STATE_NESTED) {
-		log_puts(" NESTED");
-	}
-	if (s->phase & EV_PHASE_FIRST) {
-		log_puts(" FIRST");
-	}
-	if (s->phase & EV_PHASE_NEXT) {
-		log_puts(" NEXT");
-	}
-	if (s->phase & EV_PHASE_LAST) {
-		log_puts(" LAST");
-	}
+	char *p = buf, *end = buf + bufsz;
+
+	p += ev_fmt(buf, bufsz, &s->ev);
+
+	if (s->flags & STATE_NEW)
+		p += snprintf(p, p < end ? end - p : 0, " NEW");
+
+	if (s->flags & STATE_CHANGED)
+		p += snprintf(p, p < end ? end - p : 0, " CHANGED");
+
+	if (s->flags & STATE_BOGUS)
+		p += snprintf(p, p < end ? end - p : 0, " BOGUS");
+
+	if (s->flags & STATE_NESTED)
+		p += snprintf(p, p < end ? end - p : 0, " NESTED");
+
+	if (s->phase & EV_PHASE_FIRST)
+		p += snprintf(p, p < end ? end - p : 0, " FIRST");
+
+	if (s->phase & EV_PHASE_NEXT)
+		p += snprintf(p, p < end ? end - p : 0, " NEXT");
+
+	if (s->phase & EV_PHASE_LAST)
+		p += snprintf(p, p < end ? end - p : 0, " LAST");
+
+	return p - buf;
 }
 
 /*
@@ -116,11 +118,8 @@ state_match(struct state *st, struct ev *ev)
 
 	res = ev_match(&st->ev, ev);
 #ifdef STATE_DEBUG
-	if (res) {
-		log_puts("state_match: ");
-		ev_log(&st->ev);
-		log_puts(": ok\n");
-	}
+	if (res)
+		logx(1, "%s: {ev:%p}: matched", __func__, &st->ev);
 #endif
 	return res;
 }
@@ -214,7 +213,7 @@ state_eq(struct state *st, struct ev *ev)
 			return 0;
 		}
 	} else {
-		log_puts("state_eq: not defined\n");
+		logx(1, "%s: not defined", __func__);
 		panic();
 	}
 	return 1;
@@ -268,7 +267,7 @@ state_cancel(struct state *st, struct ev *rev)
 		 * other events have their EV_PHASE_LAST bit set, so
 		 * we never come here
 		 */
-		log_puts("state_cancel: unknown event type\n");
+		logx(1, "%s: unknown event type", __func__);
 		panic();
 	}
 	return 1;
@@ -293,7 +292,7 @@ state_restore(struct state *st, struct ev *rev)
 		 * we never use this function for NOTE events, so
 		 * if we're here, there is problem somewhere...
 		 */
-		log_puts("state_restore: can't restore note events\n");
+		logx(1, "%s: can't restore note events", __func__);
 		panic();
 	}
 
@@ -338,9 +337,7 @@ statelist_done(struct statelist *o)
 		 * the EV_CTL case is here for conv_xxx() functions
 		 */
 		if (!(i->phase & EV_PHASE_LAST) && i->ev.cmd != EV_CTL) {
-			log_puts("statelist_done: ");
-			ev_log(&i->ev);
-			log_puts(": unterminated frame\n");
+			logx(1, "%s: {ev:%p}: unterminated frame", __func__, &i->ev);
 		}
 		inext = i->next;
 		statelist_rm(o, i);
@@ -354,11 +351,10 @@ statelist_dump(struct statelist *o)
 {
 	struct state *i;
 
-	log_puts("statelist_dump:\n");
-	for (i = o->first; i != NULL; i = i->next) {
-		ev_log(&i->ev);
-		log_puts("\n");
-	}
+	logx(1, "%s:", __func__);
+
+	for (i = o->first; i != NULL; i = i->next)
+		logx(1, "{ev:%p}", &i->ev);
 }
 
 /*
@@ -482,9 +478,7 @@ statelist_update(struct statelist *statelist, struct ev *ev)
 			st->flags = STATE_NEW | STATE_NESTED;
 			statelist_add(statelist, st);
 #ifdef STATE_DEBUG
-			log_puts("statelist_update: ");
-			ev_log(ev);
-			log_puts(": nested events, stacked\n");
+			logx(1, "%s: {ev:%p}: stacked (nested)", __func__, ev);
 #endif
 		}
 		break;
@@ -495,9 +489,7 @@ statelist_update(struct statelist *statelist, struct ev *ev)
 			phase |= EV_PHASE_FIRST;
 			phase &= ~EV_PHASE_NEXT;
 #ifdef STATE_DEBUG
-			log_puts("statelist_update: ");
-			ev_log(ev);
-			log_puts(": missing first event\n");
+			logx(1, "%s: {ev:%p}: first missing", __func__, ev);
 #endif
 		}
 		break;
@@ -509,16 +501,14 @@ statelist_update(struct statelist *statelist, struct ev *ev)
 		/* nothing */
 		break;
 	default:
-		log_puts("statelist_update: bad phase\n");
+		logx(1, "%s: bad phase", __func__);
 		panic();
 	}
 
 	state_copyev(st, ev, phase);
 	statelist->changed = 1;
 #ifdef STATE_DEBUG
-	log_puts("statelist_update: updated: ");
-	state_log(st);
-	log_puts("\n");
+	logx(1, "%s: updated: {state:%p}", __func__, st);
 #endif
 	return st;
 }
@@ -546,9 +536,7 @@ statelist_outdate(struct statelist *o)
 		 */
 		if (i->phase == EV_PHASE_LAST) {
 #ifdef STATE_DEBUG
-			log_puts("statelist_outdate: ");
-			state_log(i);
-			log_puts(": removed\n");
+			logx(1, "%s: {state:%p}: removed", __func__, i);
 #endif
 			statelist_rm(o, i);
 			state_del(i);

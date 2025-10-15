@@ -127,9 +127,7 @@ ev_output(struct ev *e, struct textout *f)
 				}
 			} else {
 				textout_putstr(f, "# ignored event\n");
-				log_puts("ignoring event: ");
-				ev_log(e);
-				log_puts("\n");
+				logx(1, "ignoring event: {ev:%p}", e);
 			}
 			break;
 		}
@@ -634,7 +632,7 @@ void
 load_ungetchar(struct load *o, int c)
 {
 	if (o->lookchar >= 0) {
-		log_puts("load_ungetchar: lookchar already set\n");
+		logx(1, "%s: lookchar already set", __func__);
 		panic();
 	}
 	o->lookchar = c;
@@ -836,7 +834,7 @@ void
 load_ungetsym(struct load *o)
 {
 	if (o->lookavail) {
-		log_puts("load_ungetsym: looksym already set\n");
+		logx(1, "%s: looksym already set", __func__);
 		panic();
 	}
 	o->lookavail = 1;

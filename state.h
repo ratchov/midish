@@ -71,7 +71,7 @@ void	      state_pool_init(unsigned);
 void	      state_pool_done(void);
 struct state *state_new(void);
 void	      state_del(struct state *);
-void	      state_log(struct state *);
+size_t	      state_fmt(char *, size_t, struct state *);
 void	      state_copyev(struct state *, struct ev *, unsigned);
 unsigned      state_match(struct state *, struct ev *);
 unsigned      state_inspec(struct state *, struct evspec *);

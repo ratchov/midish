@@ -60,14 +60,6 @@ seqev_del(struct seqev *se)
 	pool_del(&seqev_pool, se);
 }
 
-void
-seqev_dump(struct seqev *i)
-{
-	log_putu(i->delta);
-	log_puts("\t");
-	ev_log(&i->ev);
-}
-
 /*
  * initialise the track
  */
@@ -109,12 +101,7 @@ track_dump(struct track *o)
 
 	for (i = o->first; i != NULL; i = i->next) {
 		tic += i->delta;
-		log_putu(num);
-		log_puts("\t");
-		log_putu(tic);
-		log_puts("\t+");
-		seqev_dump(i);
-		log_puts("\n");
+		logx(1, "%d\t%d\t+%d\t{ev:%p}", num, tic, i->delta, &i->ev);
 		num++;
 	}
 }
@@ -205,7 +192,7 @@ seqev_rm(struct seqev *pos)
 {
 #ifdef TRACK_DEBUG
 	if (pos->ev.cmd == EV_NULL) {
-		log_puts("seqev_rm: unexpected end of track\n");
+		logx(1, "%s: unexpected end of track", __func__);
 		panic();
 	}
 #endif
@@ -300,7 +287,7 @@ track_chanmap(struct track *o, char *map)
 			dev = se->ev.dev;
 			ch  = se->ev.ch;
 			if (dev >= DEFAULT_MAXNDEVS || ch >= 16) {
-				log_puts("track_chanmap: bogus dev/ch pair, stopping\n");
+				logx(1, "%s: bogus dev/ch pair, stopping", __func__);
 				break;
 			}
 			map[dev * 16 + ch] = 1;

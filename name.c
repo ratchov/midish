@@ -60,17 +60,6 @@ name_delete(struct name *o)
 }
 
 void
-name_log(struct name *o)
-{
-	for (; o != NULL; o = o->next) {
-		str_log(o->str);
-		if (o->next) {
-			log_puts(".");
-		}
-	}
-}
-
-void
 name_insert(struct name **first, struct name *i)
 {
 	i->next = *first;
@@ -104,7 +93,7 @@ name_remove(struct name **first, struct name *v)
 		}
 		i = &(*i)->next;
 	}
-	log_puts("name_remove: not found\n");
+	logx(1, "%s: not found", __func__);
 	panic();
 }
 

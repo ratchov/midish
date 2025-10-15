@@ -133,17 +133,15 @@ void
 sysex_log(struct sysex *o)
 {
 	struct chunk *ck;
-	unsigned i;
-	log_puts("unit = ");
-	log_putx(o->unit);
-	log_puts(", data = { ");
+	unsigned count;
+
 	for (ck = o->first; ck != NULL; ck = ck->next) {
-		for (i = 0; i < ck->used; i++) {
-			log_putx(ck->data[i]);
-			log_puts(" ");
-		}
+		count = ck->used;
+		if (count > 16)
+			count = 16;
+		logx(1, "unit = %x, data = {{hexdump:%p,%u}%s}",
+		    o->unit, ck->data, count, (count < ck->used) ? " ..." : "");
 	}
-	log_puts("}");
 }
 
 /*
@@ -302,22 +300,9 @@ void
 sysexlist_log(struct sysexlist *o)
 {
 	struct sysex *e;
-	unsigned i;
-	log_puts("sysex_log:\n");
+
 	for (e = o->first; e != NULL; e = e->next) {
-		log_puts("unit = ");
-		log_putx(e->unit);
-		log_puts(", data = { ");
-		if (e->first) {
-			for (i = 0; i < e->first->used; i++) {
-				if (i > 16) {
-					log_puts("... ");
-					break;
-				}
-				log_putx(e->first->data[i]);
-				log_puts(" ");
-			}
-		}
-		log_puts("}\n");
+		if (e->first)
+			sysex_log(e);
 	}
 }

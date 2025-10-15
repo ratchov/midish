@@ -71,7 +71,7 @@ norm_start(void)
 	timo_set(&norm_timo, norm_timocb, NULL);
 	timo_add(&norm_timo, NORM_TIMO);
 	if (norm_debug) {
-		log_puts("norm_start()\n");
+		logx(1, "%s", __func__);
 	}
 }
 
@@ -85,17 +85,14 @@ norm_stop(void)
 	struct ev ca;
 
 	if (norm_debug) {
-		log_puts("norm_stop()\n");
+		logx(1, "%s", __func__);
 	}
 	for (s = norm_slist.first; s != NULL; s = snext) {
 		snext = s->next;
 		if (state_cancel(s, &ca)) {
 			if (norm_debug) {
-				log_puts("norm_stop: ");
-				ev_log(&s->ev);
-				log_puts(": cancelled by: ");
-				ev_log(&ca);
-				log_puts("\n");
+				logx(1, "%s: {ev:%p}: cancelled by: {ev:%p}",
+				    __func__, &s->ev, &ca);
 			}
 			s = statelist_update(&norm_slist, &ca);
 			norm_putev(&s->ev);
@@ -121,11 +118,8 @@ norm_shut(void)
 			continue;
 		if (state_cancel(s, &ca)) {
 			if (norm_debug) {
-				log_puts("norm_shut: ");
-				ev_log(&s->ev);
-				log_puts(": cancelled by: ");
-				ev_log(&ca);
-				log_puts("\n");
+				logx(1, "%s: {ev:%p}: cancelled by: {ev:%p}",
+				    __func__, &s->ev, &ca);
 			}
 			s = statelist_update(&norm_slist, &ca);
 			norm_putev(&s->ev);
@@ -161,9 +155,7 @@ norm_kill(struct ev *ev)
 			norm_putev(&st->ev);
 		}
 		st->tag &= ~TAG_PASS;
-		log_puts("norm_kill: ");
-		ev_log(&st->ev);
-		log_puts(": killed\n");
+		logx(1, "%s: {ev:%p}: killed", __func__, &st->ev);
 	}
 }
 
@@ -176,13 +168,11 @@ norm_evcb(struct ev *ev)
 	struct state *st;
 
 	if (norm_debug) {
-		log_puts("norm_run: ");
-		ev_log(ev);
-		log_puts("\n");
+		logx(1, "%s: {ev:%p}", __func__, ev);
 	}
 #ifdef NORM_DEBUG
 	if (!EV_ISVOICE(ev) && !EV_ISSX(ev)) {
-		log_puts("norm_evcb: only voice events allowed\n");
+		logx(1, "%s: only voice events allowed", __func__);
 		panic();
 	}
 #endif
@@ -198,9 +188,7 @@ norm_evcb(struct ev *ev)
 		if (st->flags & (STATE_BOGUS | STATE_NESTED)) {
 			st->tag = 0;
 			if (norm_debug) {
-				log_puts("norm_evcb: ");
-				ev_log(ev);
-				log_puts(": bogus/nested frame\n");
+				logx(1, "%s: {ev:%p}: bogus/nested frame", __func__, ev);
 			}
 			norm_kill(ev);
 		} else

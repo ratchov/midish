@@ -45,6 +45,7 @@ undo_new(struct song *s, int type, char *func, char *name)
 void
 undo_pop(struct song *s)
 {
+	char *sep, *name;
 	struct songtrk *t;
 	struct undo_fdel_trk *p;
 	struct sysex *x;
@@ -57,14 +58,18 @@ undo_pop(struct song *s)
 			return;
 		s->undo = u->next;
 		if (u->func) {
-			log_puts("undo:");
-			log_puts(" ");
-			log_puts(u->func);
+			/*
+			 * XXX: add a proper undo_fmt() function to print
+			 * the real thing
+			 */
 			if (u->name) {
-				log_puts(" ");
-				log_puts(u->name);
+				sep = " ";
+				name = u->name;
+			} else {
+				sep = "";
+				name = "";
 			}
-			log_puts("\n");
+			logx(1, "undo: %s%s%s", u->func, sep, name);
 			done = 1;
 		}
 		switch (u->type) {
@@ -145,14 +150,12 @@ undo_pop(struct song *s)
 			}
 			break;
 		default:
-			log_puts("undo_pop: bad type\n");
+			logx(1, "%s: bad type", __func__);
 			panic();
 		}
 		s->undo_size -= u->size;
 #ifdef SONG_DEBUG
-		log_puts("undo: size -> ");
-		log_puti(s->undo_size);
-		log_puts("\n");
+		logx(1, "%s: undo: size -> %u", __func__, s->undo_size);
 #endif
 		xfree(u);
 	}
@@ -166,6 +169,10 @@ undo_clear(struct song *s, struct undo **pos)
 
 	while ((u = *pos) != NULL) {
 		*pos = u->next;
+#ifdef SONG_DEBUG
+		logx(1, "%s: %s: freeed", __func__,
+		    u->func ? u->func : "null");
+#endif
 		switch (u->type) {
 		case UNDO_EMPTY:
 			break;
@@ -219,15 +226,10 @@ undo_clear(struct song *s, struct undo **pos)
 		case UNDO_SCALE:
 			break;
 		default:
-			log_puts("undo_clear: bad type\n");
+			logx(1, "%s: bad type", __func__);
 			panic();
 		}
 		s->undo_size -= u->size;
-#ifdef SONG_DEBUG
-		log_puts("undo: freed ");
-		log_puts(u->func);
-		log_puts("\n");
-#endif
 		xfree(u);
 	}
 }
@@ -242,11 +244,8 @@ undo_push(struct song *s, struct undo *u)
 	s->undo = u;
 	s->undo_size += u->size;
 #ifdef SONG_DEBUG
-	log_puts("undo: ");
-	log_puts(u->func);
-	log_puts(", size -> ");
-	log_puti(s->undo_size);
-	log_puts("\n");
+	logx(1, "%s: %s, size -> %d", __func__,
+	    u->func ? u->func : "null", s->undo_size);
 #endif
 
 	/*
@@ -413,7 +412,7 @@ track_undorestore(struct track *t, struct track_data *u)
 	for (n = u->nins; n > 0; n--) {
 		if (pos->ev.cmd == EV_NULL) {
 			if (n != 1) {
-				log_puts("can't remove eot event\n");
+				logx(1, "%s: can't remove eot event", __func__);
 				panic();
 			}
 			pos->delta = 0;
@@ -433,7 +432,7 @@ track_undorestore(struct track *t, struct track_data *u)
 	for (n = u->nrm; n > 0; n--) {
 		if (e->ev.cmd == EV_NULL) {
 			if (n != 1) {
-				log_puts("can't insert eot event\n");
+				logx(1, "%s: can't insert eot event", __func__);
 				panic();
 			}
 			t->eot.delta = e->delta;
@@ -471,7 +470,7 @@ undo_track_diff(struct song *s)
 	unsigned size;
 
 	if (u == NULL || u->type != UNDO_TRACK) {
-		log_puts("undo_track_diff: no data to diff\n");
+		logx(1, "%s: no data to diff", __func__);
 		return;
 	}
 	size = track_undodiff(u->u.track.track, &u->u.track.data);

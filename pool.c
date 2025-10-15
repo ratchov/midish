@@ -46,9 +46,7 @@ pool_init(struct pool *o, char *name, unsigned itemsize, unsigned itemnum)
 
 	o->data = xmalloc(itemsize * itemnum, "pool");
 	if (!o->data) {
-		log_puts("pool_init(");
-		log_puts(name);
-		log_puts("): out of memory\n");
+		logx(1, "%s: %s: out of memory", __func__, name);
 		panic();
 	}
 	o->first = NULL;
@@ -83,22 +81,13 @@ pool_done(struct pool *o)
 	xfree(o->data);
 #ifdef POOL_DEBUG
 	if (o->used != 0) {
-		log_puts("pool_done(");
-		log_puts(o->name);
-		log_puts("): WARNING ");
-		log_putu(o->used);
-		log_puts(" items still allocated\n");
+		logx(1, "%s: %s: WARNING: %u items still allocated", __func__, o->name, o->used);
 	}
 	if (pool_debug) {
-		log_puts("pool_done(");
-		log_puts(o->name);
-		log_puts("): using ");
-		log_putu((1023 + o->itemnum * o->itemsize) / 1024);
-		log_puts("kB maxused = ");
-		log_putu(100 * o->maxused / o->itemnum);
-		log_puts("% allocs = ");
-		log_putu(100 * o->newcnt / o->itemnum);
-		log_puts("%\n");
+		logx(1, "%s: %s: using %dkB, max = %d%%, allocs = %d%%", __func__,
+		    o->name, (1023 + o->itemnum * o->itemsize) / 1024,
+		    100 * o->maxused / o->itemnum,
+		    100 * o->newcnt / o->itemnum);
 	}
 #endif
 }
@@ -118,9 +107,7 @@ pool_new(struct pool *o)
 	struct poolent *e;
 
 	if (!o->first) {
-		log_puts("pool_new(");
-		log_puts(o->name);
-		log_puts("): pool is empty\n");
+		logx(1, "%s: %s: pool is empty", __func__, o->name);
 		panic();
 	}
 
@@ -163,9 +150,7 @@ pool_del(struct pool *o, void *p)
 	 * entries than the poll size
 	 */
 	if (o->used == 0) {
-		log_puts("pool_del(");
-		log_puts(o->name);
-		log_puts("): pool is full\n");
+		logx(1, "%s: %s: pool is full", __func__, o->name);
 		panic();
 	}
 	o->used--;

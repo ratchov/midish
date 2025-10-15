@@ -21,11 +21,17 @@
  */
 #include <errno.h>
 #include <signal.h>
+#include <stdarg.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include "utils.h"
+#include "ev.h"
+#include "data.h"
+#include "snfmt.h"
+#include "state.h"
 #include "tty.h"
 
 /*
@@ -44,6 +50,39 @@
 char log_buf[LOG_BUFSZ];	/* buffer where traces are stored */
 unsigned int log_used = 0;	/* bytes used in the buffer */
 unsigned int log_sync = 1;	/* if true, flush after each '\n' */
+
+int log_level = 1;
+
+size_t
+hexdump_fmt(char *buf, size_t size, unsigned char *blob, size_t blob_size)
+{
+	char *p = buf, *end = buf + size;
+	const char *sep = "";
+	size_t i;
+
+	for (i = 0; i < blob_size; i++) {
+		p += snprintf(p, p < end ? end - p : 0, "%s%02x", sep, blob[i]);
+		sep = " ";
+	}
+
+	return p - buf;
+}
+
+int
+log_fmt(char *buf, size_t size, const char *fmt, union snfmt_arg *args)
+{
+	if (strcmp(fmt, "ev:%p") == 0)
+		return ev_fmt(buf, size, args[0].p);
+	if (strcmp(fmt, "evspec:%p") == 0)
+		return evspec_fmt(buf, size, args[0].p);
+	if (strcmp(fmt, "data:%p") == 0)
+		return data_fmt(buf, size, args[0].p);
+	if (strcmp(fmt, "hexdump:%p,%u") == 0)
+		return hexdump_fmt(buf, size, args[0].p, args[1].u);
+	if (strcmp(fmt, "state:%p") == 0)
+		return state_fmt(buf, size, args[0].p);
+	return -1;
+}
 
 /*
  * write the log buffer on stderr
@@ -75,89 +114,29 @@ log_putc(char *data, size_t count)
 }
 
 /*
- * store a string in the log
+ * log a single line to stderr
  */
 void
-log_puts(char *msg)
+log_do(const char *fmt, ...)
 {
-	char *p = msg;
-	int c;
+	va_list ap;
+	int n, save_errno = errno;
 
-	while ((c = *p++) != '\0') {
-		LOG_PUTC(c);
-		if (log_sync && c == '\n')
+	va_start(ap, fmt);
+	n = snfmt_va(log_fmt, log_buf + log_used, sizeof(log_buf) - log_used, fmt, ap);
+	va_end(ap);
+
+	if (n != -1) {
+		log_used += n;
+
+		if (log_used >= sizeof(log_buf))
+			log_used = sizeof(log_buf) - 1;
+		log_buf[log_used++] = '\n';
+
+		if (log_sync)
 			log_flush();
 	}
-}
-
-/*
- * store a hex in the log
- */
-void
-log_putx(unsigned long num)
-{
-	char dig[sizeof(num) * 2], *p = dig, c;
-	unsigned int ndig;
-
-	if (num != 0) {
-		for (ndig = 0; num != 0; ndig++) {
-			*p++ = num & 0xf;
-			num >>= 4;
-		}
-		for (; ndig != 0; ndig--) {
-			c = *(--p);
-			c += (c < 10) ? '0' : 'a' - 10;
-			LOG_PUTC(c);
-		}
-	} else
-		LOG_PUTC('0');
-}
-
-/*
- * store an unsigned decimal in the log
- */
-void
-log_putu(unsigned long num)
-{
-	char dig[sizeof(num) * 3], *p = dig;
-	unsigned int ndig;
-
-	if (num != 0) {
-		for (ndig = 0; num != 0; ndig++) {
-			*p++ = num % 10;
-			num /= 10;
-		}
-		for (; ndig != 0; ndig--)
-			LOG_PUTC(*(--p) + '0');
-	} else
-		LOG_PUTC('0');
-}
-
-/*
- * store a signed decimal in the log
- */
-void
-log_puti(long num)
-{
-	if (num < 0) {
-		LOG_PUTC('-');
-		num = -num;
-	}
-	log_putu(num);
-}
-
-/*
- * same as perror() but messages goes to the log buffer
- */
-void
-log_perror(char *str)
-{
-	int n = errno;
-
-	log_puts(str);
-	log_puts(": ");
-	log_puts(strerror(n));
-	log_puts("\n");
+	errno = save_errno;
 }
 
 /*
@@ -183,9 +162,7 @@ xmalloc(size_t size, char *tag)
 
 	p = malloc(size);
 	if (p == NULL) {
-		log_puts("failed to allocate ");
-		log_putx(size);
-		log_puts(" bytes\n");
+		logx(1, "failed to allocate %zu bytes", size);
 		panic();
 	}
 	return p;
@@ -199,7 +176,7 @@ xfree(void *p)
 {
 #ifdef DEBUG
 	if (p == NULL) {
-		log_puts("xfree with NULL arg\n");
+		logx(1, "xfree with NULL arg");
 		panic();
 	}
 #endif
