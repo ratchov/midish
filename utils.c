@@ -14,7 +14,7 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 /*
- * log_xxx() routines are used to quickly store traces into a trace buffer.
+ * logx() quickly stores traces into a trace buffer.
  * This allows traces to be collected during time sensitive operations without
  * disturbing them. The buffer can be flushed on standard error later, when
  * slow syscalls are no longer disruptive, e.g. at the end of the poll() loop.
