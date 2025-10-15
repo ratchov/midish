@@ -237,6 +237,12 @@ mux_mdep_wait(int docons)
 		nfds += dev->ops->pollfd(dev, pfd, POLLIN);
 		dev->pfd = pfd;
 	}
+
+	/*
+	 * if editor was hiddent to write to std{err,out}, show it
+	 */
+	el_show();
+
 	res = poll(pfds, nfds, -1);
 	if (res < 0 && errno != EINTR) {
 		logx(1, "%s: poll: %s", __func__, strerror(errno));

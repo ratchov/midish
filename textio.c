@@ -160,11 +160,10 @@ textout_putstr(struct textout *o, char *str)
 			break;
 
 		if (o->col == 0) {
+			if (o->isconsole)
+				el_hide();
 			for (i = 0; i < o->indent; i++) {
-				if (o->isconsole)
-					log_putc(buf, sizeof(buf));
-				else
-					fwrite(buf, sizeof(buf), 1, o->file);
+				fwrite(buf, sizeof(buf), 1, o->file);
 				o->col += 8;
 			}
 		}
@@ -178,10 +177,7 @@ textout_putstr(struct textout *o, char *str)
 			o->col++;
 		}
 
-		if (o->isconsole)
-			log_putc(str, p - str);
-		else
-			fwrite(str, p - str, 1, o->file);
+		fwrite(str, p - str, 1, o->file);
 		str = p;
 	}
 }

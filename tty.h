@@ -27,7 +27,6 @@ int tty_revents(struct pollfd *);
 void tty_winch(void);
 void tty_int(void);
 void tty_reset(void);
-void tty_write(void *, size_t);
 
 struct el_ops {
 	/*
@@ -50,6 +49,8 @@ struct el_ops {
 
 void el_init(struct el_ops *, void *);
 void el_done(void);
+void el_hide(void);
+void el_show(void);
 void el_setprompt(char *);
 void el_compladd(char *);
 

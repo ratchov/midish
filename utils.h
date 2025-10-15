@@ -29,7 +29,6 @@
 extern "C" {
 #endif
 
-void log_putc(char *, size_t);
 void log_do(const char *, ...) __attribute__((__format__ (printf, 1, 2)));
 void panic(void);
 void log_flush(void);

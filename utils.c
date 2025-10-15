@@ -92,25 +92,9 @@ log_flush(void)
 {
 	if (log_used == 0)
 		return;
-	tty_write(log_buf, log_used);
+	el_hide();
+	write(STDERR_FILENO, log_buf, log_used);
 	log_used = 0;
-}
-
-/*
- * store a string in the log
- */
-void
-log_putc(char *data, size_t count)
-{
-	int c;
-
-	while (count > 0) {
-		c = *data++;
-		LOG_PUTC(c);
-		if (log_sync && c == '\n')
-			log_flush();
-		count--;
-	}
 }
 
 /*

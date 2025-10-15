@@ -133,6 +133,7 @@ int tty_tcursx;					/* terminal cursor x pos */
 char tty_obuf[1024];				/* output buffer */
 int tty_oused;					/* bytes used in tty_obuf */
 int tty_initialized;
+int tty_cleared;
 
 struct tty_ops *tty_ops;
 void *tty_arg;
@@ -815,6 +816,25 @@ el_done(void)
 	textbuf_done(&el_hist);
 }
 
+void
+el_hide(void)
+{
+	if (tty_initialized && !tty_cleared) {
+		tty_tclear();
+		tty_tflush();
+		tty_cleared = 1;
+	}
+}
+
+void
+el_show(void)
+{
+	if (tty_initialized && tty_cleared) {
+		tty_ops->draw(tty_arg);
+		tty_cleared = 0;
+	}
+}
+
 int
 tty_init(void)
 {
@@ -1234,17 +1254,4 @@ tty_revents(struct pollfd *pfds)
 		tty_tflush();
 	}
 	return pfds[0].revents & POLLIN;
-}
-
-void
-tty_write(void *buf, size_t len)
-{
-	if (!tty_initialized) {
-		write(STDERR_FILENO, buf, len);
-		return;
-	}
-	tty_tclear();
-	tty_tflush();
-	write(STDOUT_FILENO, buf, len);
-	tty_ops->draw(tty_arg);
 }
