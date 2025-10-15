@@ -197,8 +197,10 @@ mux_mdep_wait(int docons)
 			tty_int();
 			if (cons_quit)
 				return 0;
-			cons_quit = 1;
-			logx(1, "Keyboard interrupt (send twice to quit).");
+			else {
+				logx(1, "Keyboard interrupt (send twice to quit).");
+				cons_quit = 1;
+			}
 		} else {
 			logx(1, "");
 			return 0;
