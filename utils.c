@@ -22,6 +22,7 @@
 #include <errno.h>
 #include <signal.h>
 #include <stdarg.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -40,7 +41,7 @@
 #define LOG_BUFSZ	8192
 
 char log_buf[LOG_BUFSZ];	/* buffer where traces are stored */
-unsigned int log_used = 0;	/* bytes used in the buffer */
+size_t log_used = 0;		/* bytes used in the buffer */
 unsigned int log_sync = 1;	/* if true, flush after each '\n' */
 
 int log_level = 1;
