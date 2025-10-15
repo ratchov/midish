@@ -1970,7 +1970,7 @@ load_metro(struct load *o, struct metro *m)
 					return 0;
 				if (ev.cmd != EV_NON) {
 					load_err(o, "'hi' must be followed "
-					    "by a 'non' event\n");
+					    "by a 'non' event");
 				} else
 					m->hi = ev;
 			} else {
@@ -2138,7 +2138,7 @@ load_song(struct load *o, struct song *s)
 					return 0;
 				if (num < 0x80 || num > 0x200) {
 					load_err(o, "warning, tempo factor "
-					    "out of bounds\n");
+					    "out of bounds");
 				} else
 					s->tempo_factor = num;
 			} else if (str_eq(o->strval, "curtrk")) {
@@ -2264,7 +2264,7 @@ load_song(struct load *o, struct song *s)
 				if (!load_getsym(o))
 					return 0;
 				if (o->id != TOK_WORD) {
-					load_err(o, "expected tap mode\n");
+					load_err(o, "expected tap mode");
 					goto unknown;
 				}
 				if (str_eq(o->strval, "off"))
@@ -2274,7 +2274,7 @@ load_song(struct load *o, struct song *s)
 				else if (str_eq(o->strval, "tempo"))
 					s->tap_mode = SONG_TAP_TEMPO;
 				else {
-					load_err(o, "unknown tap mode\n");
+					load_err(o, "unknown tap mode");
 					goto unknown;
 				}
 				if (!load_nl(o))

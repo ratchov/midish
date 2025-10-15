@@ -934,7 +934,7 @@ parse_cb(void *arg, unsigned id, unsigned long val)
 			if (id == 0)
 				return;
 			if (id != TOK_RPAR) {
-				parse_err(p, "')' expected\n");
+				parse_err(p, "')' expected");
 				break;
 			}
 			id = 0;
@@ -1185,13 +1185,13 @@ parse_cb(void *arg, unsigned id, unsigned long val)
 				sp->pstate = PARSE_PROC_3;
 				break;
 			}
-			parse_err(p, "arg name or block expected\n");
+			parse_err(p, "arg name or block expected");
 			break;
 		case PARSE_PROC_3:
 			if (id == 0)
 				return;
 			if (id != TOK_LBRACE) {
-				parse_err(p, "'{' expected\n");
+				parse_err(p, "'{' expected");
 				break;
 			}
 			sp->pnode = &(*sp->pnode)->list;
