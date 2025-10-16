@@ -117,7 +117,7 @@ exec_lookuptrack(struct exec *o, char *var, struct songtrk **res)
 	}
 	t = song_trklookup(usong, name);
 	if (t == NULL) {
-		cons_errs(name, "no such track");
+		logx(1, "%s: no such track", name);
 		return 0;
 	}
 	*res = t;
@@ -165,11 +165,11 @@ exec_lookupchan_getref(struct exec *o, char *var,
 	if (arg->data->type == DATA_REF) {
 		i = song_chanlookup(usong, arg->data->val.ref, input);
 	} else {
-		cons_err("bad channel name");
+		logx(1, "bad channel name");
 		return 0;
 	}
 	if (i == NULL) {
-		cons_errs(arg->data->val.ref, "no such chan");
+		logx(1, "%s: no such chan", arg->data->val.ref);
 		return 0;
 	}
 	*res = i;
@@ -191,7 +191,7 @@ exec_lookupfilt(struct exec *o, char *var, struct songfilt **res)
 	}
 	f = song_filtlookup(usong, name);
 	if (f == NULL) {
-		cons_errs(name, "no such filt");
+		logx(1, "%s: no such filt", name);
 		return 0;
 	}
 	*res = f;
@@ -213,7 +213,7 @@ exec_lookupsx(struct exec *o, char *var, struct songsx **res)
 	}
 	t = song_sxlookup(usong, name);
 	if (t == NULL) {
-		cons_errs(name, "no such sysex");
+		logx(1, "%s: no such sysex", name);
 		return 0;
 	}
 	*res = t;
@@ -252,19 +252,19 @@ exec_lookupev(struct exec *o, char *name, struct ev *ev, int input)
 	d = arg->data;
 
 	if (d->type != DATA_LIST) {
-		cons_err("event spec must be a list");
+		logx(1, "event spec must be a list");
 		return 0;
 	}
 	d = d->val.list;
 	if (!d || d->type != DATA_REF ||
 	    !ev_str2cmd(ev, d->val.ref) ||
 	    (!EV_ISVOICE(ev) && !EV_ISSX(ev))) {
-		cons_err("bad status in event spec");
+		logx(1, "bad status in event spec");
 		return 0;
 	}
 	d = d->next;
 	if (!d) {
-		cons_err("channel and/or device missing in event spec");
+		logx(1, "channel and/or device missing in event spec");
 		return 0;
 	}
 	if (evinfo[ev->cmd].flags & EV_HAS_CH) {
@@ -275,11 +275,11 @@ exec_lookupev(struct exec *o, char *name, struct ev *ev, int input)
 		ev->ch = ch;
 	} else {
 		if (d->type != DATA_LONG) {
-			cons_err("device number expected in event spec");
+			logx(1, "device number expected in event spec");
 			return 0;
 		}
 		if (d->val.num < 0 || d->val.num >= DEFAULT_MAXNDEVS) {
-			cons_err("device number out of range in event spec");
+			logx(1, "device number out of range in event spec");
 			return 0;
 		}
 		ev->dev = d->val.num;
@@ -298,7 +298,7 @@ exec_lookupev(struct exec *o, char *name, struct ev *ev, int input)
 		    d->type != DATA_LONG ||
 		    d->val.num < 0 ||
 		    d->val.num > evinfo[ev->cmd].v0_max) {
-			cons_err("bad v0 in event spec");
+			logx(1, "bad v0 in event spec");
 			return 0;
 		} else
 			ev->v0 = d->val.num;
@@ -306,7 +306,7 @@ exec_lookupev(struct exec *o, char *name, struct ev *ev, int input)
 	d = d->next;
 	if (evinfo[ev->cmd].nparams < 2) {
 		if (d != NULL) {
-			cons_err("extra data in event spec");
+			logx(1, "extra data in event spec");
 			return 0;
 		}
 	} else {
@@ -314,7 +314,7 @@ exec_lookupev(struct exec *o, char *name, struct ev *ev, int input)
 		    d->type != DATA_LONG ||
 		    d->val.num < 0 ||
 		    d->val.num > evinfo[ev->cmd].v1_max) {
-			cons_err("bad v1 in event spec");
+			logx(1, "bad v1 in event spec");
 			return 0;
 		}
 		ev->v1 = d->val.num;
@@ -356,7 +356,7 @@ exec_lookupevspec(struct exec *o, char *name, struct evspec *e, int input)
 	}
 	d = arg->data;
 	if (d->type != DATA_LIST) {
-		cons_err("list expected in event range spec");
+		logx(1, "list expected in event range spec");
 		return 0;
 	}
 	evspec_reset(e);
@@ -370,7 +370,7 @@ exec_lookupevspec(struct exec *o, char *name, struct evspec *e, int input)
 	}
 	if (d->type != DATA_REF ||
 	    !evspec_str2cmd(e, d->val.ref)) {
-		cons_err("bad status in event spec");
+		logx(1, "bad status in event spec");
 		return 0;
 	}
 	if (!(evinfo[e->cmd].flags & EV_HAS_DEV))
@@ -395,7 +395,7 @@ exec_lookupevspec(struct exec *o, char *name, struct evspec *e, int input)
 	if (d->type == DATA_REF) {
 		i = song_chanlookup(usong, d->val.ref, input);
 		if (i == NULL) {
-			cons_err("no such chan name");
+			logx(1, "no such chan name");
 			return 0;
 		}
 		e->dev_min = e->dev_max = i->dev;
@@ -419,12 +419,12 @@ exec_lookupevspec(struct exec *o, char *name, struct evspec *e, int input)
 			e->ch_min = lo;
 			e->ch_max = hi;
 		} else {
-			cons_err("bad channel range spec");
+			logx(1, "bad channel range spec");
 			return 0;
 		}
 	} else if (d->type == DATA_LONG) {
 		if (d->val.num < 0 || d->val.num > EV_MAXDEV) {
-			cons_err("bad device number");
+			logx(1, "bad device number");
 			return 0;
 		}
 		e->dev_min = e->dev_max = d->val.num;
@@ -432,7 +432,7 @@ exec_lookupevspec(struct exec *o, char *name, struct evspec *e, int input)
 		e->ch_max = (evinfo[e->cmd].flags & EV_HAS_CH) ?
 			EV_MAXCH : e->ch_min;
 	} else {
-		cons_err("list or ref expected as channel range spec");
+		logx(1, "list or ref expected as channel range spec");
 		return 0;
 	}
 
@@ -503,7 +503,7 @@ exec_lookupevspec(struct exec *o, char *name, struct evspec *e, int input)
 
 	return 1;
  toomany:
-	cons_err("too many ranges/values in event spec");
+	logx(1, "too many ranges/values in event spec");
 	return 0;
 }
 
@@ -595,13 +595,13 @@ exec_lookupval(struct exec *o, char *n, unsigned isfine, unsigned *r)
 	} else if (arg->data->type == DATA_LONG) {
 		   max = isfine ? EV_MAXFINE : EV_MAXCOARSE;
 		   if (arg->data->val.num < 0 || arg->data->val.num > max) {
-			   cons_err("controller value out of range");
+			   logx(1, "controller value out of range");
 			   return 0;
 		   }
 		   *r = arg->data->val.num;
 		   return 1;
 	} else {
-		cons_err("bad type of controller value");
+		logx(1, "bad type of controller value");
 		return 0;
 	}
 }
@@ -624,14 +624,14 @@ data_getchan(struct data *o, unsigned *res_dev, unsigned *res_ch, int input)
 		    o->next->next != NULL ||
 		    o->type != DATA_LONG ||
 		    o->next->type != DATA_LONG) {
-			cons_err("bad {dev midichan} pair");
+			logx(1, "bad {dev midichan} pair");
 			return 0;
 		}
 		dev = o->val.num;
 		ch = o->next->val.num;
 		if (ch < 0 || ch > EV_MAXCH ||
 		    dev < 0 || dev > EV_MAXDEV) {
-			cons_err("bad dev/midichan ranges");
+			logx(1, "bad dev/midichan ranges");
 			return 0;
 		}
 		*res_dev = dev;
@@ -640,14 +640,14 @@ data_getchan(struct data *o, unsigned *res_dev, unsigned *res_ch, int input)
 	} else if (o->type == DATA_REF) {
 		i = song_chanlookup(usong, o->val.ref, input);
 		if (i == NULL) {
-			cons_errs(o->val.ref, "no such chan name");
+			logx(1, "%s: no such chan name", o->val.ref);
 			return 0;
 		}
 		*res_dev = i->dev;
 		*res_ch = i->ch;
 		return 1;
 	} else {
-		cons_err("bad channel specification");
+		logx(1, "bad channel specification");
 		return 0;
 	}
 }
@@ -675,7 +675,7 @@ data_getrange(struct data *d, unsigned min, unsigned max,
 		}
 		if (!d->next || d->next->next ||
 		    d->type != DATA_LONG || d->next->type != DATA_LONG) {
-			cons_err("exactly 0 or 2 numbers expected in range spec");
+			logx(1, "exactly 0 or 2 numbers expected in range spec");
 			return 0;
 		}
 		lo = d->val.num;
@@ -684,11 +684,11 @@ data_getrange(struct data *d, unsigned min, unsigned max,
 		lo = d->val.range.min;
 		hi = d->val.range.max;
 	} else {
-		cons_err("range or number expected in range spec");
+		logx(1, "range or number expected in range spec");
 		return 0;
 	}
 	if (lo < min || lo > max || hi < min || hi > max || lo > hi) {
-		cons_err("range values out of bounds");
+		logx(1, "range values out of bounds");
 		return 0;
 	}
 	*rlo = lo;
@@ -707,11 +707,11 @@ data_getctlset(struct data *d, unsigned *res)
 	ctlset = 0;
 	while (d) {
 		if (d->type != DATA_LONG) {
-			cons_err("not-a-number in controller set");
+			logx(1, "not-a-number in controller set");
 			return 0;
 		}
 		if (d->val.num < 0 || d->val.num >= 32) {
-			cons_err("controller number out of range 0..31");
+			logx(1, "controller number out of range 0..31");
 			return 0;
 		}
 		ctlset |= (1 << d->val.num);
@@ -734,7 +734,7 @@ data_getxev(struct data *d, unsigned *res)
 	while (d) {
 		if (d->type != DATA_REF) {
 		err:
-			cons_err("xpc, rpn, or nrpn expected as flag");
+			logx(1, "xpc, rpn, or nrpn expected as flag");
 			return 0;
 		}
 		i = 0;
@@ -767,7 +767,7 @@ data_matchsysex(struct data *d, struct sysex *sx, unsigned *res)
 	ck = sx->first;
 	while (d) {
 		if (d->type != DATA_LONG) {
-			cons_err("not-a-number in sysex pattern");
+			logx(1, "not-a-number in sysex pattern");
 			return 0;
 		}
 		for (;;) {
@@ -799,17 +799,17 @@ data_getctl(struct data *d, unsigned *num)
 {
     	if (d->type == DATA_LONG) {
 		if (d->val.num < 0 || d->val.num > EV_MAXCOARSE) {
-			cons_err("7bit ctl number out of bounds");
+			logx(1, "7bit ctl number out of bounds");
 			return 0;
 		}
 		*num = d->val.num;
 	} else if (d->type == DATA_REF) {
 		if (!evctl_lookup(d->val.ref, num)) {
-			cons_errs(d->val.ref, "no such controller");
+			logx(1, "%s: no such controller", d->val.ref);
 			return 0;
 		}
 	} else {
-		cons_err("number or identifier expected in ctl spec");
+		logx(1, "number or identifier expected in ctl spec");
 		return 0;
 	}
 	return 1;
@@ -1230,7 +1230,7 @@ user_mainloop(void)
 	if (!user_flag_batch) {
 		exec_runrcfile(exec);
 		if (mididev_list == NULL)
-			cons_err("Warning, no MIDI devices configured.");
+			logx(1, "Warning, no MIDI devices configured.");
 	}
 
 	/*

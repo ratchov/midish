@@ -1674,7 +1674,7 @@ unsigned
 song_try_mode(struct song *o, unsigned reqmode)
 {
 	if (o->mode > reqmode) {
-		cons_err("song in use, use ``s'' to release it");
+		logx(1, "song in use, use ``s'' to release it");
 		return 0;
 	}
 	return 1;
@@ -1732,7 +1732,7 @@ unsigned
 song_try_trk(struct song *o, struct songtrk *f)
 {
 	if (o->mode >= SONG_PLAY) {
-		cons_err("track in use, use ``s'' or ``i'' to release it");
+		logx(1, "track in use, use ``s'' or ``i'' to release it");
 		return 0;
 	}
 	return 1;
@@ -1754,7 +1754,7 @@ unsigned
 song_try_sx(struct song *o, struct songsx *x)
 {
 	if (o->mode >= SONG_REC && (o->cursx == x)) {
-		cons_err("sysex in use, use ``s'' or ``i'' to stop recording");
+		logx(1, "sysex in use, use ``s'' or ``i'' to stop recording");
 		return 0;
 	}
 	return 1;
@@ -1764,7 +1764,7 @@ unsigned
 song_try_meta(struct song *o)
 {
 	if (o->mode >= SONG_PLAY) {
-		cons_err("meta track in use, use ``s'' or ``i'' to release it");
+		logx(1, "meta track in use, use ``s'' or ``i'' to release it");
 		return 0;
 	}
 	return 1;
@@ -1779,19 +1779,19 @@ song_try_ev(struct song *o, unsigned cmd)
 
 	SONG_FOREACH_TRK(o, t) {
 		if (track_evcnt(&t->track, cmd)) {
-			cons_errs(t->name.str, "event in use by track");
+			logx(1, "%s: event in use by track", t->name.str);
 			return 0;
 		}
 	}
 	SONG_FOREACH_CHAN(o, c) {
 		if (track_evcnt(&c->conf, cmd)) {
-			cons_errs(c->name.str, "event in use by input");
+			logx(1, "%s: event in use by input", c->name.str);
 			return 0;
 		}
 	}
 	SONG_FOREACH_FILT(o, f) {
 		if (filt_evcnt(&f->filt, cmd)) {
-			cons_errs(f->name.str, "event in use by filter");
+			logx(1, "%s: event in use by filter", f->name.str);
 			return 0;
 		}
 	}

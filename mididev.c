@@ -629,11 +629,11 @@ mididev_attach(unsigned unit, char *path, unsigned mode)
 	struct mididev *dev;
 
 	if (unit >= DEFAULT_MAXNDEVS) {
-		cons_err("given unit is too large");
+		logx(1, "given unit is too large");
 		return 0;
 	}
 	if (mididev_byunit[unit] != NULL) {
-		cons_err("device already exists");
+		logx(1, "device already exists");
 		return 0;
 	}
 #if defined(USE_SNDIO)
@@ -661,13 +661,13 @@ mididev_detach(unsigned unit)
 	struct mididev **i, *dev;
 
 	if (unit >= DEFAULT_MAXNDEVS || mididev_byunit[unit] == NULL) {
-		cons_err("no such device");
+		logx(1, "no such device");
 		return 0;
 	}
 
 	if (mididev_byunit[unit] == mididev_clksrc ||
 	    mididev_byunit[unit] == mididev_mtcsrc) {
-		cons_err("cant detach master device");
+		logx(1, "cant detach master device");
 		return 0;
 	}
 

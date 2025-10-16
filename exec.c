@@ -258,7 +258,7 @@ exec_lookupname(struct exec *o, char *name, char **val)
 	struct var *var;
 	var = exec_varlookup(o, name);
 	if (var == NULL || var->data->type != DATA_REF) {
-		cons_errss(o->procname, name, "must be set to a reference");
+		logx(1, "%s: %s: must be set to a reference", o->procname, name);
 		return 0;
 	}
 	*val = var->data->val.ref;
@@ -274,7 +274,7 @@ exec_lookupstring(struct exec *o, char *name, char **val)
 	struct var *var;
 	var = exec_varlookup(o, name);
 	if (var == NULL || var->data->type != DATA_STRING) {
-		cons_errss(o->procname, name, "must be set to a string");
+		logx(1, "%s: %s: must be set to a string", o->procname, name);
 		return 0;
 	}
 	*val = var->data->val.str;
@@ -291,7 +291,7 @@ exec_lookuplong(struct exec *o, char *name, long *val)
 	struct var *var;
 	var = exec_varlookup(o, name);
 	if (var == NULL || var->data->type != DATA_LONG) {
-		cons_errss(o->procname, name, "must be set to a number");
+		logx(1, "%s: %s: must be set to a number", o->procname, name);
 		return 0;
 	}
 	*val = var->data->val.num;
@@ -307,7 +307,7 @@ exec_lookuplist(struct exec *o, char *name, struct data **val)
 	struct var *var;
 	var = exec_varlookup(o, name);
 	if (var == NULL || var->data->type != DATA_LIST) {
-		cons_errss(o->procname, name, "must be set to a list");
+		logx(1, "%s: %s: must be set to a list", o->procname, name);
 		return 0;
 	}
 	*val = var->data->val.list;
@@ -326,7 +326,7 @@ exec_lookupbool(struct exec *o, char *name, long *val)
 
 	var = exec_varlookup(o, name);
 	if (var == NULL) {
-		cons_errss(o->procname, name, "must be set to a bool");
+		logx(1, "%s: %s: must be set to a bool", o->procname, name);
 		return 0;
 	}
 	res = data_eval(var->data);

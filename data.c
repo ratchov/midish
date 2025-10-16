@@ -399,7 +399,7 @@ data_neg(struct data *op1)
 		op1->val.num = - op1->val.num;
 		return 1;
 	}
-	cons_err("bad types in unary minus");
+	logx(1, "bad types in unary minus");
 	return 0;
 }
 
@@ -410,7 +410,7 @@ data_bitnot(struct data *op1)
 		op1->val.num = ~ op1->val.num;
 		return 1;
 	}
-	cons_err("bad type in bitwise not ('~')");
+	logx(1, "bad type in bitwise not ('~')");
 	return 0;
 }
 
@@ -463,7 +463,7 @@ data_add(struct data *op1, struct data *op2)
 		str_delete(s1);
 		return 1;
 	}
-	cons_err("bad types in addition");
+	logx(1, "bad types in addition");
 	return 0;
 }
 
@@ -497,7 +497,7 @@ data_sub(struct data *op1, struct data *op2)
 		}
 		return 1;
 	}
-	cons_err("bad types in substraction");
+	logx(1, "bad types in substraction");
 	return 0;
 }
 
@@ -508,7 +508,7 @@ data_mul(struct data *op1, struct data *op2)
 		op1->val.num *= op2->val.num;
 		return 1;
 	}
-	cons_err("bad types in multiplication ('*')");
+	logx(1, "bad types in multiplication ('*')");
 	return 0;
 }
 
@@ -517,13 +517,13 @@ data_div(struct data *op1, struct data *op2)
 {
 	if (op1->type == DATA_LONG && op2->type == DATA_LONG) {
 		if (op2->val.num == 0) {
-			cons_err("division by zero");
+			logx(1, "division by zero");
 			return 0;
 		}
 		op1->val.num /= op2->val.num;
 		return 1;
 	}
-	cons_err("bad types in division ('/') ");
+	logx(1, "bad types in division ('/') ");
 	return 0;
 }
 
@@ -532,13 +532,13 @@ data_mod(struct data *op1, struct data *op2)
 {
 	if (op1->type == DATA_LONG && op2->type == DATA_LONG) {
 		if (op2->val.num == 0) {
-			cons_err("division by zero");
+			logx(1, "division by zero");
 			return 0;
 		}
 		op1->val.num %= op2->val.num;
 		return 1;
 	}
-	cons_err("bad types in division ('%')");
+	logx(1, "bad types in division ('%%')");
 	return 0;
 }
 
@@ -549,7 +549,7 @@ data_lshift(struct data *op1, struct data *op2)
 		op1->val.num <<= op2->val.num;
 		return 1;
 	}
-	cons_err("bad types in left shift ('<<')");
+	logx(1, "bad types in left shift ('<<')");
 	return 0;
 }
 
@@ -560,7 +560,7 @@ data_rshift(struct data *op1, struct data *op2)
 		op1->val.num >>= op2->val.num;
 		return 1;
 	}
-	cons_err("bad types in right shift ('>>')");
+	logx(1, "bad types in right shift ('>>')");
 	return 0;
 }
 
@@ -571,7 +571,7 @@ data_bitor(struct data *op1, struct data *op2)
 		op1->val.num |= op2->val.num;
 		return 1;
 	}
-	cons_err("bad types in bitwise or ('|')");
+	logx(1, "bad types in bitwise or ('|')");
 	return 0;
 }
 
@@ -582,7 +582,7 @@ data_bitand(struct data *op1, struct data *op2)
 		op1->val.num &= op2->val.num;
 		return 1;
 	}
-	cons_err("bad types in bitwise and ('&')");
+	logx(1, "bad types in bitwise and ('&')");
 	return 0;
 }
 
@@ -594,7 +594,7 @@ data_bitxor(struct data *op1, struct data *op2)
 		op1->val.num ^= op2->val.num;
 		return 1;
 	}
-	cons_err("bad types in bitwise xor ('^')");
+	logx(1, "bad types in bitwise xor ('^')");
 	return 0;
 }
 
@@ -632,7 +632,7 @@ unsigned
 data_lt(struct data *op1, struct data *op2)
 {
 	if (op1->type != DATA_LONG || op2->type != DATA_LONG) {
-		cons_err("bad types in '<'");
+		logx(1, "bad types in '<'");
 		return 0;
 	}
 	op1->val.num = op1->val.num < op2->val.num ? 1 : 0;
@@ -643,7 +643,7 @@ unsigned
 data_le(struct data *op1, struct data *op2)
 {
 	if (op1->type != DATA_LONG || op2->type != DATA_LONG) {
-		cons_err("bad types in '<='");
+		logx(1, "bad types in '<='");
 		return 0;
 	}
 	op1->val.num = op1->val.num <= op2->val.num ? 1 : 0;
@@ -654,7 +654,7 @@ unsigned
 data_gt(struct data *op1, struct data *op2)
 {
 	if (op1->type != DATA_LONG || op2->type != DATA_LONG) {
-		cons_err("bad types in '>'");
+		logx(1, "bad types in '>'");
 		return 0;
 	}
 	op1->val.num = op1->val.num > op2->val.num ? 1 : 0;
@@ -665,7 +665,7 @@ unsigned
 data_ge(struct data *op1, struct data *op2)
 {
 	if (op1->type != DATA_LONG || op2->type != DATA_LONG) {
-		cons_err("bad types in '>='");
+		logx(1, "bad types in '>='");
 		return 0;
 	}
 	op1->val.num = op1->val.num >= op2->val.num ? 1 : 0;

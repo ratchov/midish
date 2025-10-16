@@ -641,7 +641,7 @@ load_ungetchar(struct load *o, int c)
 void
 load_err(struct load *o, char *msg)
 {
-	cons_erruu(o->line + 1, o->col + 1, msg);
+	logx(1, "%u: %u: %s", o->line + 1, o->col + 1, msg);
 }
 
 unsigned
@@ -2019,8 +2019,7 @@ load_song(struct load *o, struct song *s)
 					return 0;
 				}
 				if (o->longval > FORMAT_VERSION) {
-					cons_err("Warning: midish version "
-					    "too old to read this file.");
+					logx(1, "Warning: midish version too old to read this file.");
 				}
 				o->format = o->longval;
 				if (!load_nl(o))

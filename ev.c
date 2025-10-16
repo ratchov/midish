@@ -702,22 +702,22 @@ evspec_isamap(struct evspec *from, struct evspec *to)
 {
 	if ((from->cmd == EVSPEC_NOTE && to->cmd != EVSPEC_NOTE) ||
 	    (from->cmd != EVSPEC_NOTE && to->cmd == EVSPEC_NOTE)) {
-		cons_err("note may only be used in both map args");
+		logx(1, "note may only be used in both map args");
 		return 0;
 	}
 	if ((from->cmd == EVSPEC_ANY && to->cmd != EVSPEC_ANY) ||
 	    (from->cmd != EVSPEC_ANY && to->cmd == EVSPEC_ANY)) {
-		cons_err("any may only be used in both map args");
+		logx(1, "any may only be used in both map args");
 		return 0;
 	}
 	if (evinfo[from->cmd].flags & EV_HAS_DEV &&
 	    from->dev_max - from->dev_min != to->dev_max - to->dev_min) {
-		cons_err("dev ranges must have the same size");
+		logx(1, "dev ranges must have the same size");
 		return 0;
 	}
 	if (evinfo[from->cmd].flags & EV_HAS_CH &&
 	    from->ch_max - from->ch_min != to->ch_max - to->ch_min) {
-		cons_err("chan ranges must have the same size");
+		logx(1, "chan ranges must have the same size");
 		return 0;
 	}
 	switch (evinfo[from->cmd].nparams) {
@@ -727,14 +727,14 @@ evspec_isamap(struct evspec *from, struct evspec *to)
 			break;
 		case 1:
 			if (to->v0_max != to->v0_min) {
-				cons_err("v0 ranges not empty");
+				logx(1, "v0 ranges not empty");
 				return 0;
 			}
 			break;
 		case 2:
 			if (to->v0_max != to->v0_min ||
 			    to->v1_max != to->v1_min) {
-				cons_err("v0/v1 ranges not empty");
+				logx(1, "v0/v1 ranges not empty");
 				return 0;
 			}
 			break;
@@ -744,25 +744,25 @@ evspec_isamap(struct evspec *from, struct evspec *to)
 		switch (evinfo[to->cmd].nparams) {
 		case 0:
 			if (from->v0_max != from->v0_min) {
-				cons_err("v0 ranges not empty");
+				logx(1, "v0 ranges not empty");
 				return 0;
 			}
 			break;
 		case 1:
 			if (from->v0_max - from->v0_min !=
 				to->v0_max - to->v0_min) {
-				cons_err("v0 ranges not of the same sizes");
+				logx(1, "v0 ranges not of the same sizes");
 				return 0;
 			}
 			break;
 		case 2:
 			if (to->v0_max != to->v0_min) {
-				cons_err("v0 range not empty");
+				logx(1, "v0 range not empty");
 				return 0;
 			}
 			if (from->v0_max - from->v0_min !=
 				to->v1_max - to->v1_min) {
-				cons_err("v0/v1 ranges not of the same sizes");
+				logx(1, "v0/v1 ranges not of the same sizes");
 				return 0;
 			}
 			break;
@@ -773,18 +773,18 @@ evspec_isamap(struct evspec *from, struct evspec *to)
 		case 0:
 			if (from->v0_max != from->v0_min ||
 			    from->v1_max != from->v1_min) {
-				cons_err("v0/v1 ranges not empty");
+				logx(1, "v0/v1 ranges not empty");
 				return 0;
 			}
 			break;
 		case 1:
 			if (from->v0_max != from->v0_min) {
-				cons_err("v0 range not empty");
+				logx(1, "v0 range not empty");
 				return 0;
 			}
 			if (from->v1_max - from->v1_min !=
 				to->v0_max - to->v0_min) {
-				cons_err("v1/v0 ranges not of the same sizes");
+				logx(1, "v1/v0 ranges not of the same sizes");
 				return 0;
 			}
 			break;
@@ -793,7 +793,7 @@ evspec_isamap(struct evspec *from, struct evspec *to)
 				to->v0_max - to->v0_min ||
 			    from->v1_max - from->v1_min !=
 				to->v1_max - to->v1_min) {
-				cons_err("x0/v1 ranges not of the same sizes");
+				logx(1, "x0/v1 ranges not of the same sizes");
 				return 0;
 			}
 			break;
@@ -1053,7 +1053,7 @@ evpat_set(unsigned cmd, char *name, unsigned char *pattern, unsigned size)
 	 * check pattern
 	 */
 	if (size < 2 || pattern[0] != 0xf0 || pattern[size - 1] != 0xf7) {
-		cons_err("sysex pattern must be in the 0xf0 ... 0xf7 format");
+		logx(1, "sysex pattern must be in the 0xf0 ... 0xf7 format");
 		return 0;
 	}
 	has_v0_hi = has_v0_lo = has_v1_hi = has_v1_lo = 0;
@@ -1073,21 +1073,21 @@ evpat_set(unsigned cmd, char *name, unsigned char *pattern, unsigned size)
 			break;
 		default:
 			if (pattern[i] > 0x7f) {
-				cons_err("sysex pattern data out of range");
+				logx(1, "sysex pattern data out of range");
 				return 0;
 			}
 		}
 	}
 	if (has_v0_hi > 1 || has_v0_lo > 1 || has_v1_hi > 1 || has_v1_lo > 1) {
-		cons_err("duplicate atom in sysex pattern");
+		logx(1, "duplicate atom in sysex pattern");
 		return 0;
 	}
 	if (has_v0_lo && !has_v0_hi) {
-		cons_err("v0_lo but no v0_hi in sysex pattern");
+		logx(1, "v0_lo but no v0_hi in sysex pattern");
 		return 0;
 	}
 	if (has_v1_lo && !has_v1_hi) {
-		cons_err("v1_lo but no v1_hi in sysex pattern");
+		logx(1, "v1_lo but no v1_hi in sysex pattern");
 		return 0;
 	}
 	evinfo[cmd].pattern = pattern;

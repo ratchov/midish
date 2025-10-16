@@ -54,7 +54,7 @@ smf_open(struct smf *o, char *path, char *mode)
 {
 	o->file = fopen(path, mode);
 	if (!o->file) {
-		cons_errs(path, "failed to open file");
+		logx(1, "%s: failed to open file", path);
 		return 0;
 	}
 	o->length = 0;
@@ -79,7 +79,7 @@ smf_get32(struct smf *o, unsigned *val)
 {
 	unsigned char buf[4];
 	if (o->index + 4 > o->length || fread(buf, 1, 4, o->file) != 4) {
-		cons_err("failed to read 32bit number");
+		logx(1, "failed to read 32bit number");
 		return 0;
 	}
 	*val = (buf[0] << 24) + (buf[1] << 16) + (buf[2] << 8) + buf[3];
@@ -95,7 +95,7 @@ smf_get24(struct smf *o, unsigned *val)
 {
 	unsigned char buf[4];
 	if (o->index + 3 > o->length || fread(buf, 1, 3, o->file) != 3) {
-		cons_err("failed to read 24bit number");
+		logx(1, "failed to read 24bit number");
 		return 0;
 	}
 	*val = (buf[0] << 16) + (buf[1] << 8) + buf[2];
@@ -111,7 +111,7 @@ smf_get16(struct smf *o, unsigned *val)
 {
 	unsigned char buf[4];
 	if (o->index + 2 > o->length || fread(buf, 1, 2, o->file) != 2) {
-		cons_err("failed to read 16bit number");
+		logx(1, "failed to read 16bit number");
 		return 0;
 	}
 	*val =  (buf[0] << 8) + buf[1];
@@ -127,7 +127,7 @@ smf_getc(struct smf *o, unsigned *res)
 {
 	int c;
 	if (o->index + 1 > o->length || (c = fgetc(o->file)) < 0) {
-		cons_err("failed to read one byte");
+		logx(1, "failed to read one byte");
 		return 0;
 	}
 	o->index++;
@@ -147,7 +147,7 @@ smf_getvar(struct smf *o, unsigned *val)
 	bits = 0;
 	for (;;) {
 		if (o->index + 1 > o->length || (c = fgetc(o->file)) == EOF) {
-			cons_err("failed to read varlength number");
+			logx(1, "failed to read varlength number");
 			return 0;
 		}
 		o->index++;
@@ -161,7 +161,7 @@ smf_getvar(struct smf *o, unsigned *val)
 		 * smf spec forbids more than 32bit per integer
 		 */
 		if (bits > 32) {
-			cons_err("overflow while reading varlength number");
+			logx(1, "overflow while reading varlength number");
 			return 0;
 		}
 	}
@@ -180,15 +180,15 @@ smf_getheader(struct smf *o, char *hdr)
 	char buf[4];
 	unsigned len;
 	if (o->index != o->length) {
-		cons_err("chunk not finished");
+		logx(1, "chunk not finished");
 		return 0;
 	}
 	if (fread(buf, 1, 4, o->file) != 4) {
-		cons_err("failed to read header");
+		logx(1, "failed to read header");
 		return 0;
 	}
 	if (memcmp(buf, hdr, 4) != 0) {
-		cons_err("header corrupted");
+		logx(1, "header corrupted");
 		return 0;
 	}
 	o->index = 0;
@@ -669,7 +669,7 @@ smf_gettrack(struct smf *o, struct song *s, struct songtrk *t)
 			}
 		} else if (c == 0xf7) {
 			/* raw data */
-			cons_err("raw data (status = 0xF7) not implemented");
+			logx(1, "raw data (status = 0xF7) not implemented");
 			status = 0;
 			if (!smf_getvar(o, &length)) {
 				goto err;
@@ -691,7 +691,7 @@ smf_gettrack(struct smf *o, struct song *s, struct songtrk *t)
 			if (sysex_check(sx)) {
 				sysexlist_put(&songsx->sx, sx);
 			} else {
-				cons_err("corrupted sysex message, ignored");
+				logx(1, "corrupted sysex message, ignored");
 				sysex_del(sx);
 			}
 		} else if (c >= 0x80 && c < 0xf0) {
@@ -745,12 +745,12 @@ smf_gettrack(struct smf *o, struct song *s, struct songtrk *t)
 			}
 		} else if (c < 0x80) {
 			if (status == 0) {
-				cons_err("bad status");
+				logx(1, "bad status");
 				goto err;
 			}
 			goto runningstatus;
 		} else {
-			cons_err("bad event");
+			logx(1, "bad event");
 			goto err;
 		}
 	}
@@ -893,21 +893,21 @@ song_importsmf(char *filename)
 		goto bad2;
 	}
 	if (format != 1 && format != 0) {
-		cons_err("only smf format 0 or 1 can be imported");
+		logx(1, "only smf format 0 or 1 can be imported");
 		goto bad2;
 	}
 	if (!smf_get16(&f, &ntrks)) {
 		goto bad2;
 	}
 	if (ntrks >= 256) {
-		cons_err("too many tracks in midi file");
+		logx(1, "too many tracks in midi file");
 		goto bad2;
 	}
 	if (!smf_get16(&f, &timecode)) {
 		goto bad2;
 	}
 	if ((timecode & 0x8000) != 0) {
-		cons_err("SMPTE timecode is not supported");
+		logx(1, "SMPTE timecode is not supported");
 		goto bad2;
 	}
 
@@ -950,7 +950,7 @@ syx_import(char *path, struct sysexlist *l, int unit)
 
 	f = fopen(path, "r");
 	if (f == NULL) {
-		cons_errs(path, "failed to open file");
+		logx(1, "%s: failed to open file", path);
 		return 0;
 	}
 	sysexlist_clear(l);
@@ -961,7 +961,7 @@ syx_import(char *path, struct sysexlist *l, int unit)
 		if (c == 0xf0)
 			sx = sysex_new(unit);
 		if (sx == NULL) {
-			cons_errs(path, "corrupted .syx file");
+			logx(1, "%s: corrupted .syx file", path);
 			goto err;
 		}
 		sysex_add(sx, c);
@@ -971,7 +971,7 @@ syx_import(char *path, struct sysexlist *l, int unit)
 				sx = NULL;
 				continue;
 			} else {
-				cons_err("corrupted sysex message, ignored");
+				logx(1, "corrupted sysex message, ignored");
 				sysex_del(sx);
 				goto err;
 			}
@@ -995,14 +995,14 @@ syx_export(char *path, struct sysexlist *l)
 
 	f = fopen(path, "w");
 	if (f == NULL) {
-		cons_errs(path, "failed to open file");
+		logx(1, "%s: failed to open file", path);
 		return 0;
 	}
 	for (x = l->first; x != NULL; x = x->next) {
 		for (c = x->first; c != NULL; c = c->next) {
 			n = fwrite(c->data, 1, c->used, f);
 			if (n != c->used) {
-				cons_errs(path, "write failed");
+				logx(1, "%s: write failed", path);
 				fclose(f);
 				return 0;
 			}

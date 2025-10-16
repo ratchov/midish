@@ -64,39 +64,3 @@ cons_ready(void)
 		fflush(stdout);
 	}
 }
-
-void
-cons_err(char *mesg)
-{
-	logx(1, "%s", mesg);
-}
-
-void
-cons_errs(char *s, char *mesg)
-{
-	logx(1, "%s: %s", s, mesg);
-}
-
-void
-cons_erru(unsigned long u, char *mesg)
-{
-	logx(1, "%lu: %s", u, mesg);
-}
-
-void
-cons_errss(char *s0, char *s1, char *mesg)
-{
-	logx(1, "%s: %s: %s", s0, s1, mesg);
-}
-
-void
-cons_errsu(char *s, unsigned long u, char *mesg)
-{
-	logx(1, "%s: %lu: %s", s, u, mesg);
-}
-
-void
-cons_erruu(unsigned long u0, unsigned long u1, char *mesg)
-{
-	logx(1, "%lu: %lu: %s", u0, u1, mesg);
-}

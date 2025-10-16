@@ -53,7 +53,7 @@ sndio_new(char *path, unsigned mode)
 	struct sndio *dev;
 
 	if (path == NULL) {
-		cons_err("path must be set for raw devices");
+		logx(1, "path must be set for raw devices");
 		return NULL;
 	}
 	dev = xmalloc(sizeof(struct sndio), "sndio");

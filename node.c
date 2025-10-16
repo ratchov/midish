@@ -131,7 +131,7 @@ node_exec(struct node *o, struct exec *x, struct data **r)
 {
 	unsigned result;
 	if (x->depth == EXEC_MAXDEPTH) {
-		cons_err("too many nested operations");
+		logx(1, "too many nested operations");
 		return RESULT_ERR;
 	}
 	*r = NULL;
@@ -199,7 +199,7 @@ node_exec_proc(struct node *o, struct exec *x, struct data **r)
 	args = NULL;
 	for (a = o->data->val.list->next; a != NULL; a = a->next) {
 		if (name_lookup(&args, a->val.ref)) {
-			cons_err("duplicate arguments in proc definition");
+			logx(1, "duplicate arguments in proc definition");
 			name_empty(&args);
 			return RESULT_ERR;
 		}
@@ -277,7 +277,7 @@ node_exec_var(struct node *o, struct exec *x, struct data **r)
 
 	v = exec_varlookup(x, o->data->val.ref);
 	if (v == NULL) {
-		cons_errss(x->procname, o->data->val.ref, "no such variable");
+		logx(1, "%s: %s: no such variable", x->procname, o->data->val.ref);
 		return RESULT_ERR;
 	}
 	*r = data_newnil();
@@ -326,7 +326,7 @@ node_exec_call(struct node *o, struct exec *x, struct data **r)
 
 	p = exec_proclookup(x, o->data->val.ref);
 	if (p == NULL) {
-		cons_errs(o->data->val.ref, "no such proc");
+		logx(1, "%s: no such proc", o->data->val.ref);
 		goto finish;
 	}
 	valist = NULL;
@@ -337,7 +337,7 @@ node_exec_call(struct node *o, struct exec *x, struct data **r)
 			break;
 		}
 		if (argv == NULL) {
-			cons_errs(o->data->val.ref, "to few arguments");
+			logx(1, "%s: to few arguments", o->data->val.ref);
 			goto finish;
 		}
 		if (node_exec(argv, x, r) == RESULT_ERR) {
@@ -348,7 +348,7 @@ node_exec_call(struct node *o, struct exec *x, struct data **r)
 		*r = NULL;
 	}
 	if (valist == NULL && argv != NULL) {
-		cons_errs(o->data->val.ref, "to many arguments");
+		logx(1, "%s: to many arguments", o->data->val.ref);
 		goto finish;
 	}
 	while (argv != NULL) {
@@ -413,8 +413,7 @@ node_exec_for(struct node *o, struct exec *x, struct data **r)
 		return RESULT_ERR;
 	}
 	if (list->type != DATA_LIST && list->type != DATA_RANGE) {
-		cons_errs(x->procname,
-		    "argument to 'for' must be a list or range");
+		logx(1, "%s: argument to 'for' must be a list or range", x->procname);
 		return RESULT_ERR;
 	}
 	v = exec_varlookup(x, o->data->val.ref);
@@ -536,11 +535,11 @@ node_exec_range(struct node *o, struct exec *x, struct data **r)
 	if (!node_exec(o->list->next, x, &max))
 		return RESULT_ERR;
 	if (min->type != DATA_LONG || max->type != DATA_LONG) {
-		cons_err("cannot create a range with non integers");
+		logx(1, "cannot create a range with non integers");
 		return RESULT_ERR;
 	}
 	if (min->val.num > max->val.num) {
-		cons_err("max > min, cant create a valid range");
+		logx(1, "max > min, cant create a valid range");
 		return RESULT_ERR;
 	}
 	*r = data_newrange(min->val.num, max->val.num);

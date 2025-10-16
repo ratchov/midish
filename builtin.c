@@ -119,7 +119,7 @@ blt_builtinlist(struct exec *o, struct data **r)
 unsigned
 blt_version(struct exec *o, struct data **r)
 {
-	cons_err(VERSION);
+	logx(1, "%s", VERSION);
 	return 1;
 }
 
@@ -161,7 +161,7 @@ blt_debug(struct exec *o, struct data **r)
 	} else if (str_eq(flag, "timo")) {
 		timo_debug = value;
 	} else {
-		cons_errs(o->procname, "unknuwn debug-flag");
+		logx(1, "%s: unknuwn debug-flag", o->procname);
 		return 0;
 	}
 	return 1;
@@ -205,7 +205,7 @@ blt_err(struct exec *o, struct data **r)
 	if (!exec_lookupstring(o, "message", &msg)) {
 		return 0;
 	}
-	cons_err(msg);
+	logx(1, "%s", msg);
 	return 0;
 }
 
@@ -228,19 +228,19 @@ blt_h(struct exec *o, struct data **r)
 		name = "intro";
 	} else if (d->next == NULL) {
 		if (d->type != DATA_REF) {
-			cons_errs(o->procname, "keyword expected");
+			logx(1, "%s: keyword expected", o->procname);
 			return 0;
 		}
 		name = d->val.str;
 	} else {
-		cons_errs(o->procname, "only one keyword expected");
+		logx(1, "%s: only one keyword expected", o->procname);
 		return 0;
 	}
 
 	h = help_list;
 	while (1) {
 		if (h->key == NULL) {
-			cons_errss(o->procname, name, "no help available");
+			logx(1, "%s: %s: no help available", o->procname, name);
 			return 0;
 		}
 		if (str_eq(h->key, name))
@@ -379,11 +379,11 @@ blt_setunit(struct exec *o, struct data **r)
 		return 0;
 	}
 	if ((tpu % DEFAULT_TPU) != 0 || tpu < DEFAULT_TPU) {
-		cons_errs(o->procname, "tpu must be multiple of 96 tics");
+		logx(1, "%s: tpu must be multiple of 96 tics", o->procname);
 		return 0;
 	}
 	if (tpu > TPU_MAX) {
-		cons_errs(o->procname, "tpu too large");
+		logx(1, "%s: tpu too large", o->procname);
 		return 0;
 	}
 	if (!song_try_mode(usong, 0)) {
@@ -426,7 +426,7 @@ blt_goto(struct exec *o, struct data **r)
 		return 0;
 	}
 	if (measure < 0) {
-		cons_errs(o->procname, "measure cant be negative");
+		logx(1, "%s: measure cant be negative", o->procname);
 		return 0;
 	}
 	if (!song_try_curpos(usong)) {
@@ -456,7 +456,7 @@ blt_sel(struct exec *o, struct data **r)
 		return 0;
 	}
 	if (len < 0) {
-		cons_errs(o->procname, "'measures' parameter cant be negative");
+		logx(1, "%s: 'measures' parameter cant be negative", o->procname);
 		return 0;
 	}
 	if (!song_try_curlen(usong)) {
@@ -513,19 +513,17 @@ blt_setq(struct exec *o, struct data **r)
 	} else if (arg->data->type == DATA_LONG) {
 		step = arg->data->val.num;
 		if (step < 1 || step > 96) {
-			cons_errs(o->procname,
-			    "the step must be in the 1..96 range");
+			logx(1, "%s: the step must be in the 1..96 range", o->procname);
 			return 0;
 		}
 		if (usong->tics_per_unit % step != 0) {
-			cons_errs(o->procname,
-			    "the step must divide the unit note");
+			logx(1, "%s: the step must divide the unit note", o->procname);
 			return 0;
 		}
 		usong->curquant = usong->tics_per_unit / step;
 		return 1;
 	}
-	cons_errs(o->procname, "the step must nil or integer");
+	logx(1, "%s: the step must nil or integer", o->procname);
 	return 0;
 }
 
@@ -548,7 +546,7 @@ blt_fac(struct exec *o, struct data **r)
 		return 0;
 	}
 	if (tpu < 50 || tpu > 200) {
-		cons_errs(o->procname, "factor must be between 50 and 200");
+		logx(1, "%s: factor must be between 50 and 200", o->procname);
 		return 0;
 	}
 	usong->tempo_factor = 0x100 * 100 / tpu;
@@ -618,12 +616,11 @@ blt_cf(struct exec *o, struct data **r)
 	} else if (arg->data->type == DATA_REF) {
 		f = song_filtlookup(usong, arg->data->val.ref);
 		if (!f) {
-			cons_errss(o->procname, arg->data->val.ref,
-			    "no such filt");
+			logx(1, "%s: %s: no such filt", o->procname, arg->data->val.ref);
 			return 0;
 		}
 	} else {
-		cons_errs(o->procname, "bad filter name");
+		logx(1, "%s: bad filter name", o->procname);
 		return 0;
 	}
 	song_setcurtrk(usong, NULL);
@@ -972,10 +969,10 @@ blt_idle(struct exec *o, struct data **r)
 {
 	song_idle(usong);
 	if (user_flag_batch) {
-		cons_err("press ^C to stop idling");
+		logx(1, "press ^C to stop idling");
 		while (mux_mdep_wait(0))
 			; /* nothing */
-		cons_err("idling stopped");
+		logx(1, "idling stopped");
 		song_stop(usong);
 	}
 	return 1;
@@ -985,16 +982,15 @@ unsigned
 blt_play(struct exec *o, struct data **r)
 {
 	if (usong->tap_mode && (mididev_clksrc || mididev_mtcsrc)) {
-		cons_errs(o->procname,
-		    "can't start in tap mode with external clock");
+		logx(1, "%s: can't start in tap mode with external clock", o->procname);
 		return 0;
 	}
 	song_play(usong);
 	if (user_flag_batch) {
-		cons_err("press ^C to stop playback");
+		logx(1, "press ^C to stop playback");
 		while (!usong->complete && mux_mdep_wait(0))
 			; /* nothing */
-		cons_err("playback stopped");
+		logx(1, "playback stopped");
 		song_stop(usong);
 	}
 	return 1;
@@ -1004,16 +1000,15 @@ unsigned
 blt_rec(struct exec *o, struct data **r)
 {
 	if (usong->tap_mode && (mididev_clksrc || mididev_mtcsrc)) {
-		cons_errs(o->procname,
-		    "can't start in tap mode with external clock");
+		logx(1, "%s: can't start in tap mode with external clock", o->procname);
 		return 0;
 	}
 	song_record(usong);
 	if (user_flag_batch) {
-		cons_err("press ^C to stop recording");
+		logx(1, "press ^C to stop recording");
 		while (mux_mdep_wait(0))
 			; /* nothing */
-		cons_err("recording stopped");
+		logx(1, "recording stopped");
 		song_stop(usong);
 	}
 	return 1;
@@ -1035,8 +1030,7 @@ blt_tempo(struct exec *o, struct data **r)
 		return 0;
 	}
 	if (tempo < 40 || tempo > 240) {
-		cons_errs(o->procname,
-		    "tempo must be between 40 and 240 beats per measure");
+		logx(1, "%s: tempo must be between 40 and 240 beats per measure", o->procname);
 		return 0;
 	}
 	if (!song_try_meta(usong)) {
@@ -1075,14 +1069,12 @@ blt_mins(struct exec *o, struct data **r)
 		sig = sig->next;
 		if (sig->val.num != 1 && sig->val.num != 2 &&
 		    sig->val.num != 4 && sig->val.num != 8) {
-			cons_errs(o->procname,
-			    "denominator must be 1, 2, 4 or 8");
+			logx(1, "%s: denominator must be 1, 2, 4 or 8", o->procname);
 			return 0;
 		}
 		tpb = usong->tics_per_unit / sig->val.num;
 	} else {
-		cons_errs(o->procname,
-		    "signature must be {num denom} or {} list");
+		logx(1, "%s: signature must be {num denom} or {} list", o->procname);
 		return 0;
 	}
 	if (!song_try_meta(usong)) {
@@ -1429,7 +1421,7 @@ blt_ctlunconf(struct exec *o, struct data **r)
 		return 0;
 	}
 	if (!evctl_lookup(name, &num)) {
-		cons_errss(o->procname, name, "no such controller");
+		logx(1, "%s: %s: no such controller", o->procname, name);
 		return 0;
 	}
 	evctl_unconf(num);
@@ -1464,13 +1456,13 @@ blt_evpat(struct exec *o, struct data **r)
 	}
 	for (cmd = 0; cmd < EV_NUMCMD; cmd++) {
 		if (evinfo[cmd].ev && str_eq(evinfo[cmd].ev, ref)) {
-			cons_errs(o->procname, "name already in use");
+			logx(1, "%s: name already in use", o->procname);
 			return 0;
 		}
 	}
 	for (cmd = EV_PAT0;; cmd++) {
 		if (cmd == EV_PAT0 + EV_NPAT) {
-			cons_errs(o->procname, "too many sysex patterns");
+			logx(1, "%s: too many sysex patterns", o->procname);
 			return 0;
 		}
 		if (evinfo[cmd].ev == NULL)
@@ -1484,20 +1476,19 @@ blt_evpat(struct exec *o, struct data **r)
 		panic();
 	}
 	if (arg->data->type != DATA_LIST) {
-		cons_errs(o->procname, "data must be a list");
+		logx(1, "%s: data must be a list", o->procname);
 		goto err1;
 	}
 	size = 0;
 	for (byte = arg->data->val.list; byte != NULL; byte = byte->next) {
 		if (size == EV_PATSIZE) {
-			cons_errs(o->procname, "pattern too long");
+			logx(1, "%s: pattern too long", o->procname);
 			goto err1;
 		}
 		if (byte->type == DATA_LONG) {
 			if (byte->val.num < 0 ||
 			    byte->val.num > 0xff) {
-				cons_errs(o->procname,
-				    "out of range byte in sysex pattern");
+				logx(1, "%s: out of range byte in sysex pattern", o->procname);
 				goto err1;
 			}
 			pattern[size++] = byte->val.num;
@@ -1513,13 +1504,12 @@ blt_evpat(struct exec *o, struct data **r)
 			} else if (str_eq(byte->val.ref, "v1_lo")) {
 				spec = EV_PATV1_LO;
 			} else {
-				cons_errs(o->procname,
-				    "bad atom in sysex pattern");
+				logx(1, "%s: bad atom in sysex pattern", o->procname);
 				goto err1;
 			}
 			pattern[size++] = spec;
 		} else {
-			cons_errs(o->procname, "bad pattern");
+			logx(1, "%s: bad pattern", o->procname);
 			goto err1;
 		}
 	}
@@ -1549,8 +1539,7 @@ blt_metro(struct exec *o, struct data **r)
 		return 0;
 	}
 	if (!metro_str2mask(&usong->metro, mstr, &mask)) {
-		cons_errs(o->procname,
-		    "mode must be 'on', 'off' or 'rec'");
+		logx(1, "%s: mode must be 'on', 'off' or 'rec'", o->procname);
 		return 0;
 	}
 	metro_setmask(&usong->metro, mask);
@@ -1567,7 +1556,7 @@ blt_metrocf(struct exec *o, struct data **r)
 		return 0;
 	}
 	if (evhi.cmd != EV_NON && evlo.cmd != EV_NON) {
-		cons_errs(o->procname, "note-on event expected");
+		logx(1, "%s: note-on event expected", o->procname);
 		return 0;
 	}
 	metro_shut(&usong->metro);
@@ -1592,8 +1581,7 @@ blt_tap(struct exec *o, struct data **r)
 	} else if (str_eq(mstr, "tempo")) {
 		mode = SONG_TAP_TEMPO;
 	} else {
-		cons_errs(o->procname,
-		    "mode must be 'off', 'start' or 'tempo'");
+		logx(1, "%s: mode must be 'off', 'start' or 'tempo'", o->procname);
 		return 0;
 	}
 	usong->tap_mode = mode;
@@ -1672,7 +1660,7 @@ blt_tnew(struct exec *o, struct data **r)
 	}
 	t = song_trklookup(usong, tren);
 	if (t != NULL) {
-		cons_errs(o->procname, "track already exists");
+		logx(1, "%s: track already exists", o->procname);
 		return 0;
 	}
 	t = undo_tnew_do(usong, o->procname, tren);
@@ -1686,7 +1674,7 @@ blt_tdel(struct exec *o, struct data **r)
 
 	song_getcurtrk(usong, &t);
 	if (t == NULL) {
-		cons_errs(o->procname, "no current track");
+		logx(1, "%s: no current track", o->procname);
 		return 0;
 	}
 	if (!song_try_trk(usong, t)) {
@@ -1704,15 +1692,14 @@ blt_tren(struct exec *o, struct data **r)
 
 	song_getcurtrk(usong, &t);
 	if (t == NULL) {
-		cons_errs(o->procname, "no current track");
+		logx(1, "%s: no current track", o->procname);
 		return 0;
 	}
 	if (!exec_lookupname(o, "newname", &name)) {
 		return 0;
 	}
 	if (song_trklookup(usong, name)) {
-		cons_errs(o->procname,
-		    "name already used by another track");
+		logx(1, "%s: name already used by another track", o->procname);
 		return 0;
 	}
 	undo_setstr(usong, o->procname, &t->name.str, name);
@@ -1750,7 +1737,7 @@ blt_taddev(struct exec *o, struct data **r)
 	}
 	song_getcurtrk(usong, &t);
 	if (t == NULL) {
-		cons_errs(o->procname, "no current track");
+		logx(1, "%s: no current track", o->procname);
 		return 0;
 	}
 	if (!song_try_trk(usong, t)) {
@@ -1760,7 +1747,7 @@ blt_taddev(struct exec *o, struct data **r)
 
 	if (beat < 0 || (unsigned)beat >= bpm ||
 	    tic  < 0 || (unsigned)tic  >= tpb) {
-		cons_errs(o->procname, "beat/tick must fit in the measure");
+		logx(1, "%s: beat/tick must fit in the measure", o->procname);
 		return 0;
 	}
 	undo_track_save(usong, &t->track, o->procname, t->name.str);
@@ -1782,7 +1769,7 @@ blt_tsetf(struct exec *o, struct data **r)
 
 	song_getcurtrk(usong, &t);
 	if (t == NULL) {
-		cons_errs(o->procname, "no current track");
+		logx(1, "%s: no current track", o->procname);
 		return 0;
 	}
 	arg = exec_varlookup(o, "filtname");
@@ -1795,11 +1782,11 @@ blt_tsetf(struct exec *o, struct data **r)
 	} else if (arg->data->type == DATA_REF) {
 		f = song_filtlookup(usong, arg->data->val.ref);
 		if (!f) {
-			cons_errs(o->procname, "no such filt");
+			logx(1, "%s: no such filt", o->procname);
 			return 0;
 		}
 	} else {
-		cons_errs(o->procname, "bad filt name");
+		logx(1, "%s: bad filt name", o->procname);
 		return 0;
 	}
 	t->curfilt = f;
@@ -1814,7 +1801,7 @@ blt_tgetf(struct exec *o, struct data **r)
 
 	song_getcurtrk(usong, &t);
 	if (t == NULL) {
-		cons_errs(o->procname, "no current track");
+		logx(1, "%s: no current track", o->procname);
 		return 0;
 	}
 	if (t->curfilt) {
@@ -1832,7 +1819,7 @@ blt_tcheck(struct exec *o, struct data **r)
 
 	song_getcurtrk(usong, &t);
 	if (t == NULL) {
-		cons_errs(o->procname, "no current track");
+		logx(1, "%s: no current track", o->procname);
 		return 0;
 	}
 	if (!song_try_trk(usong, t)) {
@@ -1851,7 +1838,7 @@ blt_trewrite(struct exec *o, struct data **r)
 
 	song_getcurtrk(usong, &t);
 	if (t == NULL) {
-		cons_errs(o->procname, "no current track");
+		logx(1, "%s: no current track", o->procname);
 		return 0;
 	}
 	if (!song_try_trk(usong, t)) {
@@ -1871,7 +1858,7 @@ blt_tcut(struct exec *o, struct data **r)
 
 	song_getcurtrk(usong, &t);
 	if (t == NULL) {
-		cons_errs(o->procname, "no current track");
+		logx(1, "%s: no current track", o->procname);
 		return 0;
 	}
 	if (!song_try_trk(usong, t)) {
@@ -1899,7 +1886,7 @@ blt_tins(struct exec *o, struct data **r)
 
 	song_getcurtrk(usong, &t);
 	if (t == NULL) {
-		cons_errs(o->procname, "no current track");
+		logx(1, "%s: no current track", o->procname);
 		return 0;
 	}
 	if (!exec_lookuplong(o, "amount", &amount)) {
@@ -1929,7 +1916,7 @@ blt_tclr(struct exec *o, struct data **r)
 
 	song_getcurtrk(usong, &t);
 	if (t == NULL) {
-		cons_errs(o->procname, "no current track");
+		logx(1, "%s: no current track", o->procname);
 		return 0;
 	}
 	if (!song_try_trk(usong, t)) {
@@ -1958,7 +1945,7 @@ blt_tpaste(struct exec *o, struct data **r)
 
 	song_getcurtrk(usong, &t);
 	if (t == NULL) {
-		cons_errs(o->procname, "no current track");
+		logx(1, "%s: no current track", o->procname);
 		return 0;
 	}
 	if (!song_try_trk(usong, t)) {
@@ -1991,7 +1978,7 @@ blt_tcopy(struct exec *o, struct data **r)
 
 	song_getcurtrk(usong, &t);
 	if (t == NULL) {
-		cons_errs(o->procname, "no current track");
+		logx(1, "%s: no current track", o->procname);
 		return 0;
 	}
 	if (!song_try_trk(usong, t)) {
@@ -2023,7 +2010,7 @@ blt_tmerge(struct exec *o, struct data **r)
 	}
 	song_getcurtrk(usong, &dst);
 	if (dst == NULL) {
-		cons_errs(o->procname, "no current track");
+		logx(1, "%s: no current track", o->procname);
 		return 0;
 	}
 	if (!song_try_trk(usong, dst)) {
@@ -2044,14 +2031,14 @@ blt_tquant_common(struct exec *o, struct data **r, int all)
 
 	song_getcurtrk(usong, &t);
 	if (t == NULL) {
-		cons_errs(o->procname, "no current track");
+		logx(1, "%s: no current track", o->procname);
 		return 0;
 	}
 	if (!exec_lookuplong(o, "rate", &rate)) {
 		return 0;
 	}
 	if (rate > 100) {
-		cons_errs(o->procname, "rate must be between 0 and 100");
+		logx(1, "%s: rate must be between 0 and 100", o->procname);
 		return 0;
 	}
 	if (!song_try_trk(usong, t)) {
@@ -2083,7 +2070,7 @@ blt_tquant_common(struct exec *o, struct data **r, int all)
 unsigned
 blt_tquant(struct exec *o, struct data **r)
 {
-	cons_err("warning, tquant is deprecated, use tquanta instead");
+	logx(1, "warning, tquant is deprecated, use tquanta instead");
 	return blt_tquant_common(o, r, 1);
 }
 
@@ -2108,14 +2095,14 @@ blt_ttransp(struct exec *o, struct data **r)
 
 	song_getcurtrk(usong, &t);
 	if (t == NULL) {
-		cons_errs(o->procname, "no current track");
+		logx(1, "%s: no current track", o->procname);
 		return 0;
 	}
 	if (!exec_lookuplong(o, "halftones", &halftones)) {
 		return 0;
 	}
 	if (halftones < -64 || halftones >= 63) {
-		cons_errs(o->procname, "argument not in the -64..63 range");
+		logx(1, "%s: argument not in the -64..63 range", o->procname);
 		return 0;
 	}
 	if (!song_try_trk(usong, t)) {
@@ -2144,13 +2131,13 @@ blt_tvcurve(struct exec *o, struct data **r)
 
 	song_getcurtrk(usong, &t);
 	if (t == NULL) {
-		cons_errs(o->procname, "no current track");
+		logx(1, "%s: no current track", o->procname);
 		return 0;
 	}
 	if (!exec_lookuplong(o, "weight", &weight))
 		return 0;
 	if (weight < -63 || weight > 63) {
-		cons_errs(o->procname, "weight must be in the -63..63 range");
+		logx(1, "%s: weight must be in the -63..63 range", o->procname);
 		return 0;
 	}
 	if (!song_try_trk(usong, t)) {
@@ -2179,7 +2166,7 @@ blt_tevmap(struct exec *o, struct data **r)
 
 	song_getcurtrk(usong, &t);
 	if (t == NULL) {
-		cons_errs(o->procname, "no current track");
+		logx(1, "%s: no current track", o->procname);
 		return 0;
 	}
 	if (!exec_lookupevspec(o, "from", &from, 0) ||
@@ -2214,7 +2201,7 @@ blt_tclist(struct exec *o, struct data **r)
 
 	song_getcurtrk(usong, &t);
 	if (t == NULL) {
-		cons_errs(o->procname, "no current track");
+		logx(1, "%s: no current track", o->procname);
 		return 0;
 	}
 	*r = data_newlist(NULL);
@@ -2245,7 +2232,7 @@ blt_tinfo(struct exec *o, struct data **r)
 
 	song_getcurtrk(usong, &t);
 	if (t == NULL) {
-		cons_errs(o->procname, "no current track");
+		logx(1, "%s: no current track", o->procname);
 		return 0;
 	}
 	textout_putstr(tout, "{\n");
@@ -2361,7 +2348,7 @@ blt_tdump(struct exec *o, struct data **r)
 
 	song_getcurtrk(usong, &t);
 	if (t == NULL) {
-		cons_errs(o->procname, "no current track");
+		logx(1, "%s: no current track", o->procname);
 		return 0;
 	}
 
@@ -2498,16 +2485,16 @@ blt_cnew(struct exec *o, struct data **r, int input)
 	}
 	c = song_chanlookup(usong, name, input);
 	if (c != NULL) {
-		cons_errss(o->procname, name, "already exists");
+		logx(1, "%s: %s: already exists", o->procname, name);
 		return 0;
 	}
 	c = song_chanlookup_bynum(usong, dev, ch, input);
 	if (c != NULL) {
-		cons_errs(o->procname, "dev/chan number already in use");
+		logx(1, "%s: dev/chan number already in use", o->procname);
 		return 0;
 	}
 	if (dev > EV_MAXDEV || ch > EV_MAXCH) {
-		cons_errs(o->procname, "dev/chan number out of bounds");
+		logx(1, "%s: dev/chan number out of bounds", o->procname);
 		return 0;
 	}
 	if (!song_try_curchan(usong, input)) {
@@ -2536,7 +2523,7 @@ blt_cdel(struct exec *o, struct data **r, int input)
 
 	song_getcurchan(usong, &c, input);
 	if (c == NULL) {
-		cons_errs(o->procname, "no current chan");
+		logx(1, "%s: no current chan", o->procname);
 		return 0;
 	}
 	if (!song_try_chan(usong, c, input)) {
@@ -2566,18 +2553,18 @@ blt_cren(struct exec *o, struct data **r, int input)
 
 	song_getcurchan(usong, &c, input);
 	if (c == NULL) {
-		cons_errs(o->procname, "no current chan");
+		logx(1, "%s: no current chan", o->procname);
 		return 0;
 	}
 	if (!exec_lookupname(o, "newname", &name)) {
 		return 0;
 	}
 	if (song_chanlookup(usong, name, input)) {
-		cons_errss(o->procname, name, "channel name already in use");
+		logx(1, "%s: %s: channel name already in use", o->procname, name);
 		return 0;
 	}
 	if (c->filt && song_filtlookup(usong, name)) {
-		cons_errss(o->procname, name, "filt name already in use");
+		logx(1, "%s: %s: filt name already in use", o->procname, name);
 		return 0;
 	}
 	undo_setstr(usong, o->procname, &c->name.str, name);
@@ -2608,7 +2595,7 @@ blt_cset(struct exec *o, struct data **r, int input)
 
 	song_getcurchan(usong, &c, input);
 	if (c == NULL) {
-		cons_errs(o->procname, "no current chan");
+		logx(1, "%s: no current chan", o->procname);
 		return 0;
 	}
 	if (!exec_lookupchan_getnum(o, "channum", &dev, &ch, input)) {
@@ -2616,7 +2603,7 @@ blt_cset(struct exec *o, struct data **r, int input)
 	}
 	i = song_chanlookup_bynum(usong, dev, ch, input);
 	if (i != NULL) {
-		cons_errs(o->procname, "dev/chan number already used");
+		logx(1, "%s: dev/chan number already used", o->procname);
 		return 0;
 	}
 	if (!song_try_chan(usong, c, input)) {
@@ -2668,7 +2655,7 @@ blt_cgetc(struct exec *o, struct data **r, int input)
 
 	song_getcurchan(usong, &c, input);
 	if (c == NULL) {
-		cons_errs(o->procname, "no current chan");
+		logx(1, "%s: no current chan", o->procname);
 		return 0;
 	}
 	*r = data_newlong(c->ch);
@@ -2694,7 +2681,7 @@ blt_cgetd(struct exec *o, struct data **r, int input)
 
 	song_getcurchan(usong, &c, input);
 	if (c == NULL) {
-		cons_errs(o->procname, "no current chan");
+		logx(1, "%s: no current chan", o->procname);
 		return 0;
 	}
 	*r = data_newlong(c->dev);
@@ -2721,24 +2708,22 @@ blt_caddev(struct exec *o, struct data **r, int input)
 
 	song_getcurchan(usong, &c, input);
 	if (c == NULL) {
-		cons_errs(o->procname, "no current chan");
+		logx(1, "%s: no current chan", o->procname);
 		return 0;
 	}
 	if (!exec_lookupev(o, "event", &ev, input)) {
 		return 0;
 	}
 	if (!EV_ISVOICE(&ev)) {
-		cons_errs(o->procname,
-		    "only voice events can be added to channels");
+		logx(1, "%s: only voice events can be added to channels", o->procname);
 		return 0;
 	}
 	if (ev.ch != c->ch || ev.dev != c->dev) {
-		cons_errs(o->procname,
-		    "event device or channel mismatch channel ones");
+		logx(1, "%s: event device or channel mismatch channel ones", o->procname);
 		return 0;
 	}
 	if (ev_phase(&ev) != (EV_PHASE_FIRST | EV_PHASE_LAST)) {
-		cons_errs(o->procname, "event must be stateless");
+		logx(1, "%s: event must be stateless", o->procname);
 		return 0;
 	}
 	undo_track_save(usong, &c->conf, o->procname, c->name.str);
@@ -2770,7 +2755,7 @@ blt_crmev(struct exec *o, struct data **r, int input)
 	}
 	song_getcurchan(usong, &c, input);
 	if (c == NULL) {
-		cons_errs(o->procname, "no current chan");
+		logx(1, "%s: no current chan", o->procname);
 		return 0;
 	}
 	if (!exec_lookupevspec(o, "evspec", &es, input)) {
@@ -2801,7 +2786,7 @@ blt_cinfo(struct exec *o, struct data **r, int input)
 
 	song_getcurchan(usong, &c, input);
 	if (c == NULL) {
-		cons_errs(o->procname, "no current chan");
+		logx(1, "%s: no current chan", o->procname);
 		return 0;
 	}
 	track_output(&c->conf, tout);
@@ -2847,7 +2832,7 @@ blt_fnew(struct exec *o, struct data **r)
 	}
 	i = song_filtlookup(usong, name);
 	if (i != NULL) {
-		cons_errs(o->procname, "filt already exists");
+		logx(1, "%s: filt already exists", o->procname);
 		return 0;
 	}
 	undo_fnew_do(usong, o->procname, name);
@@ -2861,7 +2846,7 @@ blt_fdel(struct exec *o, struct data **r)
 
 	song_getcurfilt(usong, &f);
 	if (f == NULL) {
-		cons_errs(o->procname, "no current filt");
+		logx(1, "%s: no current filt", o->procname);
 		return 0;
 	}
 	undo_fdel_do(usong, f, o->procname);
@@ -2877,20 +2862,19 @@ blt_fren(struct exec *o, struct data **r)
 
 	song_getcurfilt(usong, &f);
 	if (f == NULL) {
-		cons_errs(o->procname, "no current filt");
+		logx(1, "%s: no current filt", o->procname);
 		return 0;
 	}
 	if (!exec_lookupname(o, "newname", &name)) {
 		return 0;
 	}
 	if (song_filtlookup(usong, name)) {
-		cons_errss(o->procname, name, "filt name already in use");
+		logx(1, "%s: %s: filt name already in use", o->procname, name);
 		return 0;
 	}
 	SONG_FOREACH_CHAN(usong, c) {
 		if (c->filt == f) {
-			cons_errss(o->procname, name,
-			    "rename channel to rename this filter");
+			logx(1, "%s: %s: rename channel to rename this filter", o->procname, name);
 			return 0;
 		}
 	}
@@ -2919,7 +2903,7 @@ blt_finfo(struct exec *o, struct data **r)
 
 	song_getcurfilt(usong, &f);
 	if (f == NULL) {
-		cons_errs(o->procname, "no current filt");
+		logx(1, "%s: no current filt", o->procname);
 		return 0;
 	}
 	filt_output(&f->filt, tout);
@@ -2934,7 +2918,7 @@ blt_freset(struct exec *o, struct data **r)
 
 	song_getcurfilt(usong, &f);
 	if (f == NULL) {
-		cons_errs(o->procname, "no current filt");
+		logx(1, "%s: no current filt", o->procname);
 		return 0;
 	}
 	if (mux_isopen)
@@ -2952,7 +2936,7 @@ blt_fmap(struct exec *o, struct data **r)
 
 	song_getcurfilt(usong, &f);
 	if (f == NULL) {
-		cons_errs(o->procname, "no current filt");
+		logx(1, "%s: no current filt", o->procname);
 		return 0;
 	}
 	if (!exec_lookupevspec(o, "from", &from, 1) ||
@@ -2974,7 +2958,7 @@ blt_funmap(struct exec *o, struct data **r)
 
 	song_getcurfilt(usong, &f);
 	if (f == NULL) {
-		cons_errs(o->procname, "no current filt");
+		logx(1, "%s: no current filt", o->procname);
 		return 0;
 	}
 	if (!exec_lookupevspec(o, "from", &from, 1) ||
@@ -2997,7 +2981,7 @@ blt_ftransp(struct exec *o, struct data **r)
 
 	song_getcurfilt(usong, &f);
 	if (f == NULL) {
-		cons_errs(o->procname, "no current filt");
+		logx(1, "%s: no current filt", o->procname);
 		return 0;
 	}
 	if (!exec_lookupevspec(o, "evspec", &es, 0) ||
@@ -3005,13 +2989,13 @@ blt_ftransp(struct exec *o, struct data **r)
 		return 0;
 	}
 	if (plus < -63 || plus > 63) {
-		cons_errs(o->procname, "plus must be in the -63..63 range");
+		logx(1, "%s: plus must be in the -63..63 range", o->procname);
 		return 0;
 	}
 	if ((es.cmd != EVSPEC_ANY && es.cmd != EVSPEC_NOTE) ||
 	    (es.cmd == EVSPEC_NOTE &&
 		(es.v0_min != 0 || es.v0_max != EV_MAXCOARSE))) {
-		cons_errs(o->procname, "set must contain full range notes");
+		logx(1, "%s: set must contain full range notes", o->procname);
 		return 0;
 	}
 	if (mux_isopen)
@@ -3030,7 +3014,7 @@ blt_fvcurve(struct exec *o, struct data **r)
 
 	song_getcurfilt(usong, &f);
 	if (f == NULL) {
-		cons_errs(o->procname, "no current filt");
+		logx(1, "%s: no current filt", o->procname);
 		return 0;
 	}
 	if (!exec_lookupevspec(o, "evspec", &es, 0) ||
@@ -3038,11 +3022,11 @@ blt_fvcurve(struct exec *o, struct data **r)
 		return 0;
 	}
 	if (weight < -63 || weight > 63) {
-		cons_errs(o->procname, "plus must be in the -63..63 range");
+		logx(1, "%s: plus must be in the -63..63 range", o->procname);
 		return 0;
 	}
 	if (es.cmd != EVSPEC_ANY && es.cmd != EVSPEC_NOTE) {
-		cons_errs(o->procname, "set must contain notes");
+		logx(1, "%s: set must contain notes", o->procname);
 		return 0;
 	}
 	if (mux_isopen)
@@ -3060,7 +3044,7 @@ blt_fchgxxx(struct exec *o, struct data **r, int input, int swap)
 
 	song_getcurfilt(usong, &f);
 	if (f == NULL) {
-		cons_errs(o->procname, "no current filt");
+		logx(1, "%s: no current filt", o->procname);
 		return 0;
 	}
 	if (!exec_lookupevspec(o, "from", &from, input) ||
@@ -3068,8 +3052,7 @@ blt_fchgxxx(struct exec *o, struct data **r, int input, int swap)
 		return 0;
 	}
 	if (evspec_isec(&from, &to)) {
-		cons_errs(o->procname,
-		    "\"from\" and \"to\" event ranges must be disjoint");
+		logx(1, "%s: \"from\" and \"to\" event ranges must be disjoint", o->procname);
 	}
 	if (mux_isopen)
 		norm_shut();
@@ -3145,7 +3128,7 @@ blt_xnew(struct exec *o, struct data **r)
 	}
 	c = song_sxlookup(usong, name);
 	if (c != NULL) {
-		cons_errs(o->procname, "sysex already exists");
+		logx(1, "%s: sysex already exists", o->procname);
 		return 0;
 	}
 	if (!song_try_cursx(usong)) {
@@ -3162,7 +3145,7 @@ blt_xdel(struct exec *o, struct data **r)
 
 	song_getcursx(usong, &c);
 	if (c == NULL) {
-		cons_errs(o->procname, "no current sysex");
+		logx(1, "%s: no current sysex", o->procname);
 		return 0;
 	}
 	if (!song_try_sx(usong, c)) {
@@ -3180,14 +3163,14 @@ blt_xren(struct exec *o, struct data **r)
 
 	song_getcursx(usong, &c);
 	if (c == NULL) {
-		cons_errs(o->procname, "no current sysex");
+		logx(1, "%s: no current sysex", o->procname);
 		return 0;
 	}
 	if (!exec_lookupname(o, "newname", &name)) {
 		return 0;
 	}
 	if (song_sxlookup(usong, name)) {
-		cons_errss(o->procname, name, "already in use");
+		logx(1, "%s: %s: already in use", o->procname, name);
 		return 0;
 	}
 	if (!song_try_sx(usong, c)) {
@@ -3206,7 +3189,7 @@ blt_xinfo(struct exec *o, struct data **r)
 
 	song_getcursx(usong, &c);
 	if (c == NULL) {
-		cons_errs(o->procname, "no current sysex");
+		logx(1, "%s: no current sysex", o->procname);
 		return 0;
 	}
 	textout_putstr(tout, "{\n");
@@ -3243,7 +3226,7 @@ blt_xrm(struct exec *o, struct data **r)
 
 	song_getcursx(usong, &c);
 	if (c == NULL) {
-		cons_errs(o->procname, "no current sysex");
+		logx(1, "%s: no current sysex", o->procname);
 		return 0;
 	}
 	if (!exec_lookuplist(o, "data", &d)) {
@@ -3277,7 +3260,7 @@ blt_xsetd(struct exec *o, struct data **r)
 
 	song_getcursx(usong, &c);
 	if (c == NULL) {
-		cons_errs(o->procname, "no current sysex");
+		logx(1, "%s: no current sysex", o->procname);
 		return 0;
 	}
 	if (!exec_lookuplong(o, "devnum", &unit) ||
@@ -3285,7 +3268,7 @@ blt_xsetd(struct exec *o, struct data **r)
 		return 0;
 	}
 	if (unit < 0 || unit >= DEFAULT_MAXNDEVS) {
-		cons_errs(o->procname, "devnum out of range");
+		logx(1, "%s: devnum out of range", o->procname);
 		return 0;
 	}
 	if (!song_try_sx(usong, c)) {
@@ -3316,14 +3299,14 @@ blt_xadd(struct exec *o, struct data **r)
 
 	song_getcursx(usong, &c);
 	if (c == NULL) {
-		cons_errs(o->procname, "no current sysex");
+		logx(1, "%s: no current sysex", o->procname);
 		return 0;
 	}
 	if (!exec_lookuplong(o, "devnum", &unit)) {
 		return 0;
 	}
 	if (unit < 0 || unit >= DEFAULT_MAXNDEVS) {
-		cons_errs(o->procname, "devnum out of range");
+		logx(1, "%s: devnum out of range", o->procname);
 		return 0;
 	}
 	arg = exec_varlookup(o, "data");
@@ -3332,7 +3315,7 @@ blt_xadd(struct exec *o, struct data **r)
 		panic();
 	}
 	if (arg->data->type != DATA_LIST) {
-		cons_errs(o->procname, "data must be a list of numbers");
+		logx(1, "%s: data must be a list of numbers", o->procname);
 		return 0;
 	}
 	if (!song_try_sx(usong, c)) {
@@ -3341,19 +3324,19 @@ blt_xadd(struct exec *o, struct data **r)
 	x = sysex_new(unit);
 	for (byte = arg->data->val.list; byte != 0; byte = byte->next) {
 		if (byte->type != DATA_LONG) {
-			cons_errs(o->procname, "only bytes allowed as data");
+			logx(1, "%s: only bytes allowed as data", o->procname);
 			sysex_del(x);
 			return 0;
 		}
 		if (byte->val.num < 0 || byte->val.num > 0xff) {
-			cons_errs(o->procname, "data out of range");
+			logx(1, "%s: data out of range", o->procname);
 			sysex_del(x);
 			return 0;
 		}
 		sysex_add(x, byte->val.num);
 	}
 	if (!sysex_check(x)) {
-		cons_errs(o->procname, "bad sysex format");
+		logx(1, "%s: bad sysex format", o->procname);
 		sysex_del(x);
 		return 0;
 	}
@@ -3375,14 +3358,14 @@ blt_ximport(struct exec *o, struct data **r)
 
 	song_getcursx(usong, &c);
 	if (c == NULL) {
-		cons_errs(o->procname, "no current sysex");
+		logx(1, "%s: no current sysex", o->procname);
 		return 0;
 	}
 	if (!exec_lookuplong(o, "devnum", &unit)) {
 		return 0;
 	}
 	if (unit < 0 || unit >= DEFAULT_MAXNDEVS) {
-		cons_errs(o->procname, "devnum out of range");
+		logx(1, "%s: devnum out of range", o->procname);
 		return 0;
 	}
 	arg = exec_varlookup(o, "path");
@@ -3391,7 +3374,7 @@ blt_ximport(struct exec *o, struct data **r)
 		return 0;
 	}
 	if (arg->data->type != DATA_STRING) {
-		cons_errs(o->procname, "path must be string");
+		logx(1, "%s: path must be string", o->procname);
 		return 0;
 	}
 	path = arg->data->val.str;
@@ -3409,7 +3392,7 @@ blt_xexport(struct exec *o, struct data **r)
 
 	song_getcursx(usong, &c);
 	if (c == NULL) {
-		cons_errs(o->procname, "no current sysex");
+		logx(1, "%s: no current sysex", o->procname);
 		return 0;
 	}
 	arg = exec_varlookup(o, "path");
@@ -3418,7 +3401,7 @@ blt_xexport(struct exec *o, struct data **r)
 		return 0;
 	}
 	if (arg->data->type != DATA_STRING) {
-		cons_errs(o->procname, "path must be string");
+		logx(1, "%s: path must be string", o->procname);
 		return 0;
 	}
 	path = arg->data->val.str;
@@ -3467,7 +3450,7 @@ blt_dnew(struct exec *o, struct data **r)
 	} else if (arg->data->type == DATA_STRING) {
 		path = arg->data->val.str;
 	} else {
-		cons_errs(o->procname, "path must be string or nil");
+		logx(1, "%s: path must be string or nil", o->procname);
 		return 0;
 	}
 	if (str_eq(modename, "ro")) {
@@ -3477,8 +3460,7 @@ blt_dnew(struct exec *o, struct data **r)
 	} else if (str_eq(modename, "rw")) {
 		mode = MIDIDEV_MODE_IN | MIDIDEV_MODE_OUT;
 	} else {
-		cons_errss(o->procname, modename,
-		    "bad mode (allowed: ro, wo, rw)");
+		logx(1, "%s: %s: bad mode (allowed: ro, wo, rw)", o->procname, modename);
 		return 0;
 	}
 	return mididev_attach(unit, path, mode);
@@ -3523,14 +3505,14 @@ blt_dmtcrx(struct exec *o, struct data **r)
 		unit = arg->data->val.num;
 		if (unit < 0 || unit >= DEFAULT_MAXNDEVS ||
 		    !mididev_byunit[unit]) {
-			cons_errs(o->procname, "bad device number");
+			logx(1, "%s: bad device number", o->procname);
 			return 0;
 		}
 		mididev_mtcsrc = mididev_byunit[unit];
 		mididev_clksrc = NULL;
 		return 1;
 	}
-	cons_errs(o->procname, "bad argument type for 'unit'");
+	logx(1, "%s: bad argument type for 'unit'", o->procname);
 	return 0;
 }
 
@@ -3552,7 +3534,7 @@ blt_dmmctx(struct exec *o, struct data **r)
 		if (n->type != DATA_LONG ||
 		    n->val.num < 0 || n->val.num >= DEFAULT_MAXNDEVS ||
 		    !mididev_byunit[n->val.num]) {
-			cons_errs(o->procname, "bad device number");
+			logx(1, "%s: bad device number", o->procname);
 			return 0;
 		}
 		tx[n->val.num] = 1;
@@ -3585,14 +3567,14 @@ blt_dclkrx(struct exec *o, struct data **r)
 		unit = arg->data->val.num;
 		if (unit < 0 || unit >= DEFAULT_MAXNDEVS ||
 		    !mididev_byunit[unit]) {
-			cons_errs(o->procname, "bad device number");
+			logx(1, "%s: bad device number", o->procname);
 			return 0;
 		}
 		mididev_clksrc = mididev_byunit[unit];
 		mididev_mtcsrc = NULL;
 		return 1;
 	}
-	cons_errs(o->procname, "bad argument type for 'unit'");
+	logx(1, "%s: bad argument type for 'unit'", o->procname);
 	return 0;
 }
 
@@ -3614,7 +3596,7 @@ blt_dclktx(struct exec *o, struct data **r)
 		if (n->type != DATA_LONG ||
 		    n->val.num < 0 || n->val.num >= DEFAULT_MAXNDEVS ||
 		    !mididev_byunit[n->val.num]) {
-			cons_errs(o->procname, "bad device number");
+			logx(1, "%s: bad device number", o->procname);
 			return 0;
 		}
 		tx[n->val.num] = 1;
@@ -3639,11 +3621,11 @@ blt_dclkrate(struct exec *o, struct data **r)
 		return 0;
 	}
 	if (unit < 0 || unit >= DEFAULT_MAXNDEVS || !mididev_byunit[unit]) {
-		cons_errs(o->procname, "bad device number");
+		logx(1, "%s: bad device number", o->procname);
 		return 0;
 	}
 	if (tpu < DEFAULT_TPU || (tpu % DEFAULT_TPU)) {
-		cons_errs(o->procname, "device tpu must be multiple of 96");
+		logx(1, "%s: device tpu must be multiple of 96", o->procname);
 		return 0;
 	}
 	mididev_byunit[unit]->ticrate = tpu;
@@ -3661,7 +3643,7 @@ blt_dinfo(struct exec *o, struct data **r)
 		return 0;
 	}
 	if (unit < 0 || unit >= DEFAULT_MAXNDEVS || !mididev_byunit[unit]) {
-		cons_errs(o->procname, "bad device number");
+		logx(1, "%s: bad device number", o->procname);
 		return 0;
 	}
 	dev = mididev_byunit[unit];
@@ -3752,7 +3734,7 @@ blt_dixctl(struct exec *o, struct data **r)
 		return 0;
 	}
 	if (unit < 0 || unit >= DEFAULT_MAXNDEVS || !mididev_byunit[unit]) {
-		cons_errs(o->procname, "bad device number");
+		logx(1, "%s: bad device number", o->procname);
 		return 0;
 	}
 	if (!data_getctlset(list, &ctlset)) {
@@ -3777,7 +3759,7 @@ blt_doxctl(struct exec *o, struct data **r)
 		return 0;
 	}
 	if (unit < 0 || unit >= DEFAULT_MAXNDEVS || !mididev_byunit[unit]) {
-		cons_errs(o->procname, "bad device number");
+		logx(1, "%s: bad device number", o->procname);
 		return 0;
 	}
 	if (!data_getctlset(list, &ctlset)) {
@@ -3802,7 +3784,7 @@ blt_diev(struct exec *o, struct data **r)
 		return 0;
 	}
 	if (unit < 0 || unit >= DEFAULT_MAXNDEVS || !mididev_byunit[unit]) {
-		cons_errs(o->procname, "bad device number");
+		logx(1, "%s: bad device number", o->procname);
 		return 0;
 	}
 	if (!data_getxev(list, &flags)) {
@@ -3827,7 +3809,7 @@ blt_doev(struct exec *o, struct data **r)
 		return 0;
 	}
 	if (unit < 0 || unit >= DEFAULT_MAXNDEVS || !mididev_byunit[unit]) {
-		cons_errs(o->procname, "bad device number");
+		logx(1, "%s: bad device number", o->procname);
 		return 0;
 	}
 	if (!data_getxev(list, &flags)) {

@@ -58,7 +58,7 @@ raw_new(char *path, unsigned mode)
 	struct raw *dev;
 
 	if (path == NULL) {
-		cons_err("path must be set for raw devices");
+		logx(1, "path must be set for raw devices");
 		return NULL;
 	}
 	dev = xmalloc(sizeof(struct raw), "raw");

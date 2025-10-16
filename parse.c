@@ -310,7 +310,7 @@ lex_toklog(unsigned id, unsigned long val)
 void
 lex_err(struct parse *l, char *msg)
 {
-	cons_errsu(l->filename, l->line, msg);
+	logx(1, "%s: %u: %s", l->filename, l->line, msg);
 	l->lstate = LEX_ERROR;
 	l->tokcb(l->tokarg, TOK_ERR, 0);
 }
@@ -595,7 +595,7 @@ void
 parse_err(struct parse *p, char *msg)
 {
 	if (msg)
-		cons_errsu(p->filename, p->line, msg);
+		logx(1, "%s: %u: %s", p->filename, p->line, msg);
 	node_delete(p->root);
 	p->root = NULL;
 	p->sp = p->stack;

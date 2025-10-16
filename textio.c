@@ -56,7 +56,7 @@ textin_new(char *filename)
 	} else {
 		o->file = fopen(filename, "r");
 		if (o->file == NULL) {
-			cons_errs(filename, "failed to open input file");
+			logx(1, "%s: failed to open input file", filename);
 			xfree(o);
 			return 0;
 		}
@@ -113,7 +113,7 @@ textout_new(char *filename)
 	if (filename != NULL) {
 		o->file = fopen(filename, "w");
 		if (o->file == NULL) {
-			cons_errs(filename, "failed to open output file");
+			logx(1, "%s: failed to open output file", filename);
 			xfree(o);
 			return 0;
 		}

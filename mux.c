@@ -161,7 +161,7 @@ mux_close(void)
 	mux_flush();
 	for (i = mididev_list; i != NULL; i = i->next) {
 		if (i->isysex) {
-			cons_err("lost incomplete sysex");
+			logx(1, "lost incomplete sysex");
 			sysex_del(i->isysex);
 		}
 		mididev_close(i);
@@ -415,7 +415,7 @@ mux_timercb(unsigned long delta)
 		if (dev->isensto) {
 			if (dev->isensto <= delta) {
 				dev->isensto = 0;
-				cons_erru(dev->unit, "sensing timeout, disabled");
+				logx(1, "%u: sensing timeout, disabled", dev->unit);
 			} else {
 				dev->isensto -= delta;
 			}
@@ -552,7 +552,7 @@ mux_ackcb(unsigned unit)
 	struct mididev *dev = mididev_byunit[unit];
 
 	if (dev->isensto == 0) {
-		cons_erru(dev->unit, "sensing enabled");
+		logx(1, "%u: sensing enabled", dev->unit);
 		dev->isensto = MIDIDEV_ISENSTO;
 	}
 }
