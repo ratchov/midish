@@ -305,6 +305,9 @@ el_enter(void)
 	/* append new line */
 	el_buf[el_used++] = '\n';
 
+	/* the onchar call-back may output to std{out,err} flush the output */
+	tty_tflush();
+
 	/* invoke caller handler */
 	while (el_used-- > 0)
 		el_ops->onchar(el_arg, *p++);
@@ -561,6 +564,7 @@ el_onkey(void *arg, int key)
 	size_t max;
 
 	if (key == 0) {
+		tty_tflush();
 		el_ops->onchar(el_arg, -1);
 		return;
 	}
