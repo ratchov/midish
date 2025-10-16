@@ -40,7 +40,7 @@ struct textin
 struct textout
 {
 	FILE *file;
-	unsigned indent, isconsole, col;
+	unsigned indent, col;
 };
 
 /* -------------------------------------------------------- input --- */
@@ -117,11 +117,9 @@ textout_new(char *filename)
 			xfree(o);
 			return 0;
 		}
-		o->isconsole = 0;
-	} else {
+	} else
 		o->file = stdout;
-		o->isconsole = 1;
-	}
+
 	o->indent = 0;
 	o->col = 0;
 	return o;
@@ -130,9 +128,9 @@ textout_new(char *filename)
 void
 textout_delete(struct textout *o)
 {
-	if (!o->isconsole) {
+	if (o->file != stdout)
 		fclose(o->file);
-	}
+
 	xfree(o);
 }
 
