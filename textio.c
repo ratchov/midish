@@ -160,8 +160,6 @@ textout_putstr(struct textout *o, char *str)
 			break;
 
 		if (o->col == 0) {
-			if (o->isconsole)
-				el_hide();
 			for (i = 0; i < o->indent; i++) {
 				fwrite(buf, sizeof(buf), 1, o->file);
 				o->col += 8;
