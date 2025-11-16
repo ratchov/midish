@@ -310,6 +310,15 @@ mux_mdep_wait(int docons)
 			if (revents & POLLIN)
 				cons_quit = 0;
 		} else {
+			/*
+			 * For pipes POLLHUP is set when the other end
+			 * is closed (even if there's buffered data that we
+			 * can read). So we've to ignore POLLHUP and keep
+			 * reading as long as POLLIN is set. Once all the
+			 * data has been read, unlike OpenBSD, Linux wont set
+			 * POLLIN anymore. So then we've to use POLLHUP to
+			 * detect the EOF.
+			 */
 			if (tty_pfds->revents & POLLIN) {
 				res = read(STDIN_FILENO, midibuf, MIDI_BUFSIZE);
 				if (res < 0) {
@@ -322,6 +331,9 @@ mux_mdep_wait(int docons)
 					for (i = 0; i < res; i++)
 						user_onchar(NULL, midibuf[i]);
 				}
+			} else if (tty_pfds->revents & POLLHUP) {
+				cons_eof = 1;
+				user_onchar(NULL, -1);
 			}
 		}
 	}
