@@ -512,14 +512,10 @@ lex_handle(struct parse *l, int c)
 			}
 
 			l->opindex++;
-			if (l->opindex == LEX_NOP) {
-			bad_op:
+			if (l->opindex == LEX_NOP || strncmp(lex_op[l->opindex].str,
+				lex_op[l->opindex - 1].str, l->used) != 0) {
 				lex_err(l, "bad operator");
 				break;
-			}
-			for (i = 0; i < l->used; i++) {
-				if (lex_op[i].str[i] != lex_op[i].str[i])
-					goto bad_op;
 			}
 			break;
 		default:
