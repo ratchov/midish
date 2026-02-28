@@ -202,7 +202,7 @@ mux_mdep_wait(int docons)
 				cons_quit = 1;
 			}
 		} else {
-			logx(1, "");
+			logx(1, "%s", "");
 			return 0;
 		}
 	}
