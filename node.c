@@ -65,7 +65,7 @@ node_fmt(char *buf, size_t bufsz, struct node *o)
 	if (o == NULL)
 		return snprintf(buf, bufsz, "<EMPTY>");
 
-	p += snprintf(buf, sizeof(buf), "%s", o->vmt->name);
+	p += snprintf(buf, bufsz, "%s", o->vmt->name);
 	if (o->data) {
 		p += snprintf(p, p < end ? end - p : 0, "(");
 		p += data_fmt(p, p < end ? end - p : 0, o->data);
