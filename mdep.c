@@ -239,7 +239,12 @@ mux_mdep_wait(int docons)
 	}
 
 	/*
-	 * if editor was hiddent to write to std{err,out}, show it
+	 * write logx() output to stderr (may hide the editor)
+	 */
+	log_flush();
+
+	/*
+	 * if editor was hidden to write to std{err,out}, show it
 	 */
 	el_show();
 
@@ -301,7 +306,6 @@ mux_mdep_wait(int docons)
 			}
 		}
 	}
-	log_flush();
 	if (tty_pfds) {
 		if (cons_isatty) {
 			revents = tty_revents(tty_pfds);

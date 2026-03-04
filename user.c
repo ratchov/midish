@@ -1260,5 +1260,6 @@ user_mainloop(void)
 	evctl_done();
 	textio_done();
 	cons_done();
+	log_flush();
 	return exitcode;
 }
