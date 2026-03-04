@@ -62,6 +62,9 @@
 volatile sig_atomic_t int_flag = 0, resize_flag = 0, cont_flag = 0, usr1_flag = 0;
 struct timespec ts, ts_last;
 
+char cons_buf[128];
+size_t cons_head = 0, cons_tail = 0;
+
 int cons_eof, cons_isatty, cons_quit;
 
 #if defined(__APPLE__) && !defined(CLOCK_MONOTONIC)
@@ -172,15 +175,27 @@ mux_mdep_close(void)
 int
 mux_mdep_wait(int docons)
 {
-	int i, res, revents;
+	int res, revents;
 	nfds_t nfds;
 	struct pollfd *pfd, *tty_pfds, pfds[MAXFDS];
 	struct mididev *dev;
 	unsigned char midibuf[MIDI_BUFSIZE];
 	long long delta_nsec;
 
+	/* XXX: move this out of mux_mdep_wait() and drop the docons flag */
+	if (docons) {
+		if (cons_tail > cons_head) {
+			user_onchar(NULL, cons_buf[cons_head++]);
+			return 1;
+		}
+		if (cons_eof) {
+			user_onchar(NULL, -1);
+			return 1;
+		}
+	}
+
 	nfds = 0;
-	if (docons && !cons_eof) {
+	if (cons_head == cons_tail && !cons_eof) {
 		tty_pfds = &pfds[nfds];		
 		if (cons_isatty)
 			nfds += tty_pollfd(tty_pfds);
@@ -324,20 +339,18 @@ mux_mdep_wait(int docons)
 			 * detect the EOF.
 			 */
 			if (tty_pfds->revents & POLLIN) {
-				res = read(STDIN_FILENO, midibuf, MIDI_BUFSIZE);
+				res = read(STDIN_FILENO, cons_buf, sizeof(cons_buf));
 				if (res < 0) {
 					cons_eof = 1;
 					logx(1, "stdin: %s", strerror(errno));
 				} else if (res == 0) {
 					cons_eof = 1;
-					user_onchar(NULL, -1);
 				} else {
-					for (i = 0; i < res; i++)
-						user_onchar(NULL, midibuf[i]);
+					cons_head = 0;
+					cons_tail = res;
 				}
 			} else if (tty_pfds->revents & POLLHUP) {
 				cons_eof = 1;
-				user_onchar(NULL, -1);
 			}
 		}
 	}
