@@ -1243,8 +1243,19 @@ user_mainloop(void)
 	cons_putpos(usong->curpos, 0, 0);
 
 	done = 0;
-	while (!done && mux_mdep_wait(1))
-		; /* nothing */
+	while (1) {
+		if (done) {
+			if (!user_flag_batch || usong->mode == 0)
+				break;
+			song_stop(usong);
+		}
+		if (user_flag_batch) {
+			if (usong->mode == SONG_PLAY && usong->complete)
+				song_stop(usong);
+		}
+		if (!mux_mdep_wait(!user_flag_batch || usong->mode == 0))
+			done = 1;
+	}
 
 	song_delete(usong);
 	usong = NULL;
