@@ -305,6 +305,7 @@ snfmt_va(snfmt_func *func, char *buf, size_t bufsz, const char *fmt, va_list ap)
 
 		wptr += ret;
 		fmt = ctx.fmt;
+		va_end(ap);
 		va_copy(ap, ctx.ap);
 		va_end(ctx.ap);
 	}
